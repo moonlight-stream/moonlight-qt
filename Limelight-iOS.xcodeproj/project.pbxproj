@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FBC18AE3188A2AB500D5D34E /* MainFrame.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBC18AE2188A2AB500D5D34E /* MainFrame.storyboard */; };
+		FBC18B2B188A3B9100D5D34E /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */; };
+		FBC18B2F188A4E0500D5D34E /* VideoDepacketizer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */; };
 		FBF6AE75188A274100B50578 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE74188A274100B50578 /* Foundation.framework */; };
 		FBF6AE77188A274100B50578 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE76188A274100B50578 /* CoreGraphics.framework */; };
 		FBF6AE79188A274100B50578 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE78188A274100B50578 /* UIKit.framework */; };
@@ -35,6 +38,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FBC18AE2188A2AB500D5D34E /* MainFrame.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = MainFrame.storyboard; path = ../MainFrame.storyboard; sourceTree = "<group>"; };
+		FBC18B29188A3B9100D5D34E /* MainFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainFrameViewController.h; sourceTree = "<group>"; };
+		FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
+		FBC18B2D188A4E0500D5D34E /* VideoDepacketizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoDepacketizer.h; path = Video/VideoDepacketizer.h; sourceTree = "<group>"; };
+		FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoDepacketizer.m; path = Video/VideoDepacketizer.m; sourceTree = "<group>"; };
 		FBF6AE71188A274100B50578 /* Limelight-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Limelight-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBF6AE74188A274100B50578 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FBF6AE76188A274100B50578 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -81,6 +89,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FBC18B2C188A4DC900D5D34E /* Video */ = {
+			isa = PBXGroup;
+			children = (
+				FBC18B2D188A4E0500D5D34E /* VideoDepacketizer.h */,
+				FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */,
+			);
+			name = Video;
+			sourceTree = "<group>";
+		};
 		FBF6AE68188A274100B50578 = {
 			isa = PBXGroup;
 			children = (
@@ -115,11 +132,15 @@
 		FBF6AE7C188A274100B50578 /* Limelight-iOS */ = {
 			isa = PBXGroup;
 			children = (
+				FBC18B2C188A4DC900D5D34E /* Video */,
+				FBC18AE2188A2AB500D5D34E /* MainFrame.storyboard */,
 				FBF6AE85188A274100B50578 /* AppDelegate.h */,
 				FBF6AE86188A274100B50578 /* AppDelegate.m */,
 				FBF6AE8B188A274100B50578 /* Images.xcassets */,
 				FBF6AE88188A274100B50578 /* Limelight_iOS.xcdatamodeld */,
 				FBF6AE7D188A274100B50578 /* Supporting Files */,
+				FBC18B29188A3B9100D5D34E /* MainFrameViewController.h */,
+				FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */,
 			);
 			path = "Limelight-iOS";
 			sourceTree = "<group>";
@@ -200,6 +221,9 @@
 				LastUpgradeCheck = 0500;
 				ORGANIZATIONNAME = "Diego Waxemberg";
 				TargetAttributes = {
+					FBF6AE70188A274100B50578 = {
+						DevelopmentTeam = DM46QST4M7;
+					};
 					FBF6AE90188A274100B50578 = {
 						TestTargetID = FBF6AE70188A274100B50578;
 					};
@@ -228,6 +252,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBC18AE3188A2AB500D5D34E /* MainFrame.storyboard in Resources */,
 				FBF6AE81188A274100B50578 /* InfoPlist.strings in Resources */,
 				FBF6AE8C188A274100B50578 /* Images.xcassets in Resources */,
 			);
@@ -248,9 +273,11 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FBC18B2F188A4E0500D5D34E /* VideoDepacketizer.m in Sources */,
 				FBF6AE87188A274100B50578 /* AppDelegate.m in Sources */,
 				FBF6AE8A188A274100B50578 /* Limelight_iOS.xcdatamodeld in Sources */,
 				FBF6AE83188A274100B50578 /* main.m in Sources */,
+				FBC18B2B188A3B9100D5D34E /* MainFrameViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -371,6 +398,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Limelight-iOS/Limelight-iOS-Prefix.pch";
 				INFOPLIST_FILE = "Limelight-iOS/Limelight-iOS-Info.plist";
@@ -384,6 +412,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "Limelight-iOS/Limelight-iOS-Prefix.pch";
 				INFOPLIST_FILE = "Limelight-iOS/Limelight-iOS-Info.plist";
@@ -453,6 +482,7 @@
 				FBF6AEA5188A274100B50578 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		FBF6AEA6188A274100B50578 /* Build configuration list for PBXNativeTarget "Limelight-iOSTests" */ = {
 			isa = XCConfigurationList;
@@ -461,6 +491,7 @@
 				FBF6AEA8188A274100B50578 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 
