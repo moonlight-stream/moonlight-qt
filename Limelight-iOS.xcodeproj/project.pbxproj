@@ -10,6 +10,8 @@
 		FBC18AE3188A2AB500D5D34E /* MainFrame.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBC18AE2188A2AB500D5D34E /* MainFrame.storyboard */; };
 		FBC18B2B188A3B9100D5D34E /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */; };
 		FBC18B2F188A4E0500D5D34E /* VideoDepacketizer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */; };
+		FBC18B32188A5A1100D5D34E /* VideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B31188A5A1100D5D34E /* VideoDecoder.m */; };
+		FBC18B34188A5D6700D5D34E /* notpadded.h264 in Resources */ = {isa = PBXBuildFile; fileRef = FBC18B33188A5D6700D5D34E /* notpadded.h264 */; };
 		FBF6AE75188A274100B50578 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE74188A274100B50578 /* Foundation.framework */; };
 		FBF6AE77188A274100B50578 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE76188A274100B50578 /* CoreGraphics.framework */; };
 		FBF6AE79188A274100B50578 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE78188A274100B50578 /* UIKit.framework */; };
@@ -43,6 +45,9 @@
 		FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
 		FBC18B2D188A4E0500D5D34E /* VideoDepacketizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoDepacketizer.h; path = Video/VideoDepacketizer.h; sourceTree = "<group>"; };
 		FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoDepacketizer.m; path = Video/VideoDepacketizer.m; sourceTree = "<group>"; };
+		FBC18B30188A5A1100D5D34E /* VideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDecoder.h; sourceTree = "<group>"; };
+		FBC18B31188A5A1100D5D34E /* VideoDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoDecoder.m; sourceTree = "<group>"; };
+		FBC18B33188A5D6700D5D34E /* notpadded.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = notpadded.h264; sourceTree = "<group>"; };
 		FBF6AE71188A274100B50578 /* Limelight-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Limelight-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBF6AE74188A274100B50578 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FBF6AE76188A274100B50578 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -94,6 +99,8 @@
 			children = (
 				FBC18B2D188A4E0500D5D34E /* VideoDepacketizer.h */,
 				FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */,
+				FBC18B30188A5A1100D5D34E /* VideoDecoder.h */,
+				FBC18B31188A5A1100D5D34E /* VideoDecoder.m */,
 			);
 			name = Video;
 			sourceTree = "<group>";
@@ -148,6 +155,7 @@
 		FBF6AE7D188A274100B50578 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				FBC18B33188A5D6700D5D34E /* notpadded.h264 */,
 				FBF6AE7E188A274100B50578 /* Limelight-iOS-Info.plist */,
 				FBF6AE7F188A274100B50578 /* InfoPlist.strings */,
 				FBF6AE82188A274100B50578 /* main.m */,
@@ -255,6 +263,7 @@
 				FBC18AE3188A2AB500D5D34E /* MainFrame.storyboard in Resources */,
 				FBF6AE81188A274100B50578 /* InfoPlist.strings in Resources */,
 				FBF6AE8C188A274100B50578 /* Images.xcassets in Resources */,
+				FBC18B34188A5D6700D5D34E /* notpadded.h264 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -275,6 +284,7 @@
 			files = (
 				FBC18B2F188A4E0500D5D34E /* VideoDepacketizer.m in Sources */,
 				FBF6AE87188A274100B50578 /* AppDelegate.m in Sources */,
+				FBC18B32188A5A1100D5D34E /* VideoDecoder.m in Sources */,
 				FBF6AE8A188A274100B50578 /* Limelight_iOS.xcdatamodeld in Sources */,
 				FBF6AE83188A274100B50578 /* main.m in Sources */,
 				FBC18B2B188A3B9100D5D34E /* MainFrameViewController.m in Sources */,
@@ -338,6 +348,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = NO;
+				DSTROOT = "/tmp/$(PROJECT_NAME).dst";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -354,6 +365,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
 				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = Limelight;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
@@ -378,6 +390,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				COPY_PHASE_STRIP = YES;
+				DSTROOT = "/tmp/$(PROJECT_NAME).dst";
 				ENABLE_NS_ASSERTIONS = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -387,6 +400,7 @@
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				IPHONEOS_DEPLOYMENT_TARGET = 7.0;
+				PRODUCT_NAME = Limelight;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
