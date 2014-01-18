@@ -39,6 +39,9 @@
                                 </state>
                                 <connections>
                                     <action selector="StreamButton:" destination="wb7-af-jn8" eventType="touchUpInside" id="u2m-8A-Tor"/>
+                                    <segue destination="OIm-0n-i9v" kind="popover" popoverAnchorView="taW-Um-zc6" id="RqQ-bq-Vkc">
+                                        <popoverArrowDirection key="popoverArrowDirection" up="YES" down="YES" left="YES" right="YES"/>
+                                    </segue>
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Nz-KX-Du4" userLabel="Pair Btn">
@@ -62,6 +65,28 @@
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ZYl-Xu-QyD" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="109" y="-320"/>
+        </scene>
+        <!--Stream Frame View Controller-->
+        <scene sceneID="RuD-qk-7nb">
+            <objects>
+                <viewController storyboardIdentifier="MainFrame" id="OIm-0n-i9v" customClass="StreamFrameViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="NG3-N1-D4k"/>
+                        <viewControllerLayoutGuide type="bottom" id="3MH-n6-BSR"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="VPm-Ae-rc4" userLabel="RenderView" customClass="StreamView">
+                        <rect key="frame" x="0.0" y="0.0" width="768" height="1024"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                    </view>
+                    <navigationItem key="navigationItem" id="aB9-My-tz5"/>
+                    <connections>
+                        <outlet property="renderView" destination="VPm-Ae-rc4" id="Xf2-AW-9Cg"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="hON-k2-Efa" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1252" y="-312"/>
         </scene>
     </scenes>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">

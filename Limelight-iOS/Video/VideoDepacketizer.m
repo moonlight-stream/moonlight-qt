@@ -31,59 +31,42 @@ static int BUFFER_LENGTH = 131072;
     }
     while ([inStream streamStatus] != NSStreamStatusAtEnd)
     {
-    unsigned int len = 0;
-    NSLog(@"Reading File\n");
-    NSLog(@"stream pointer: %p", inStream);
-    NSLog(@"self pointer: %p", self);
-    NSLog(@"byte buffer pointer: %p", self.byteBuffer);
-    len = [(NSInputStream *)inStream read:self.byteBuffer maxLength:BUFFER_LENGTH];
-    if (len)
-    {
-        NSLog(@"len: %u\n", len);
-        BOOL firstStart = false;
-        for (int i = 0; i < len - 4; i++) {
-            if (self.byteBuffer[i] == 0 && self.byteBuffer[i+1] == 0
-                && self.byteBuffer[i+2] == 0 && self.byteBuffer[i+3] == 1)
-            {
-                NSLog(@"i: %d", i);
+        unsigned int len = 0;
+        //NSLog(@"Reading File\n");
+        //NSLog(@"stream pointer: %p", inStream);
+        //NSLog(@"self pointer: %p", self);
+        //NSLog(@"byte buffer pointer: %p", self.byteBuffer);
+        len = [(NSInputStream *)inStream read:self.byteBuffer maxLength:BUFFER_LENGTH];
+        if (len)
+        {
+            NSLog(@"len: %u\n", len);
+            BOOL firstStart = false;
+            for (int i = 0; i < len - 4; i++) {
                 self.offset++;
-                if (firstStart)
+                if (self.byteBuffer[i] == 0 && self.byteBuffer[i+1] == 0
+                    && self.byteBuffer[i+2] == 0 && self.byteBuffer[i+3] == 1)
                 {
-                    // decode the first i-1 bytes
-                    [self.decoder decode:self.byteBuffer length:i-1];
-                    [inStream setProperty:[[NSNumber alloc] initWithInt:self.offset-4] forKey:NSStreamFileCurrentOffsetKey];
-                    self.offset -= 4;
-                } else
-                {
-                    firstStart = true;
+                    NSLog(@"i: %d", i);
+                    
+                    if (firstStart)
+                    {
+                        // decode the first i-1 bytes
+                        [self.decoder decode:self.byteBuffer length:i-1];
+                        [inStream setProperty:[[NSNumber alloc] initWithInt:self.offset-4] forKey:NSStreamFileCurrentOffsetKey];
+                        self.offset -= 4;
+                        break;
+                    } else
+                    {
+                        firstStart = true;
+                    }
                 }
             }
         }
-    }
-    else
-    {
-        NSLog(@"No Buffer!");
-    }
-    }
-
-    
-}
-
-- (void)stream:(NSStream *)stream handleEvent:(NSStreamEvent)eventCode
-{
-    switch (eventCode)
-    {
-        case NSStreamEventHasBytesAvailable:
+        else
         {
-                        break;
+            NSLog(@"No Buffer!");
         }
-        default:
-        {
-            NSLog(@"eventCode: %u", eventCode);
-        }
-
     }
 }
-
 
 @end

@@ -1,0 +1,14 @@
+prefix=/Users/diegowaxemberg/Downloads/build-ffmpeg/build/built/armv7
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libavresample
+Description: Libav audio resampling library
+Version: 1.1.0
+Requires: libavutil = 52.48.101
+Requires.private: 
+Conflicts:
+Libs: -L${libdir} -lavresample -lm -lz
+Libs.private: 
+Cflags: -I${includedir}

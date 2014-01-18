@@ -23,12 +23,6 @@
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
-    VideoDepacketizer* depacketizer = [[VideoDepacketizer alloc] init];
-    
-    NSString* path = [[NSBundle mainBundle] pathForResource:@"notpadded"
-                                                     ofType:@"h264"];
-    NSLog(@"Path: %@", path);
-    [depacketizer readFile:path];
 }
 
 - (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
