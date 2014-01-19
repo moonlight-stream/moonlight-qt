@@ -9,11 +9,13 @@
 #import <Foundation/Foundation.h>
 #import "VideoDecoder.h"
 
-@interface VideoDepacketizer : NSObject <NSStreamDelegate>
+@interface VideoDepacketizer : NSOperation <NSStreamDelegate>
 @property uint8_t* byteBuffer;
 @property unsigned int offset;
 @property VideoDecoder* decoder;
+@property NSString* file;
+@property UIView* target;
 
-- (void) readFile:(NSString*) file;
+- (id) initWithFile:(NSString*) file renderTarget:(UIView*)renderTarget;
 
 @end

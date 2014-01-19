@@ -10,6 +10,5 @@
 #import "StreamView.h"
 
 @interface StreamFrameViewController : UIViewController
-@property (strong, nonatomic) IBOutlet StreamView *renderView;
 
 @end

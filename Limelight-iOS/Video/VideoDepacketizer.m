@@ -11,10 +11,18 @@
 @implementation VideoDepacketizer
 static int BUFFER_LENGTH = 131072;
 
-- (void) readFile:(NSString*) file
+- (id)initWithFile:(NSString *)file renderTarget:(UIView*)renderTarget
+{
+    self = [super init];
+    self.file = file;
+    self.target = renderTarget;
+    return self;
+}
+
+- (void)main
 {
     NSLog(@"Allocating input stream\n");
-    NSInputStream* inStream = [[NSInputStream alloc] initWithFileAtPath:file];
+    NSInputStream* inStream = [[NSInputStream alloc] initWithFileAtPath:self.file];
     NSLog(@"Allocating byteBuffer");
     self.byteBuffer = malloc(BUFFER_LENGTH);
     NSLog(@"byte pointer: %p", self.byteBuffer);
@@ -39,21 +47,20 @@ static int BUFFER_LENGTH = 131072;
         len = [(NSInputStream *)inStream read:self.byteBuffer maxLength:BUFFER_LENGTH];
         if (len)
         {
-            NSLog(@"len: %u\n", len);
             BOOL firstStart = false;
             for (int i = 0; i < len - 4; i++) {
                 self.offset++;
                 if (self.byteBuffer[i] == 0 && self.byteBuffer[i+1] == 0
                     && self.byteBuffer[i+2] == 0 && self.byteBuffer[i+3] == 1)
                 {
-                    NSLog(@"i: %d", i);
-                    
                     if (firstStart)
                     {
                         // decode the first i-1 bytes
-                        [self.decoder decode:self.byteBuffer length:i-1];
+                        [self.decoder decode:self.byteBuffer length:i];
+                        [self renderFrame];
                         [inStream setProperty:[[NSNumber alloc] initWithInt:self.offset-4] forKey:NSStreamFileCurrentOffsetKey];
-                        self.offset -= 4;
+                        self.offset -= 1;
+                        
                         break;
                     } else
                     {
@@ -67,6 +74,12 @@ static int BUFFER_LENGTH = 131072;
             NSLog(@"No Buffer!");
         }
     }
+
+}
+
+- (void) renderFrame
+{
+    [self.target performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:NULL waitUntilDone:FALSE];
 }
 
 @end

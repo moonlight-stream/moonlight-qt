@@ -23,6 +23,7 @@
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
+    [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 
 - (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component

@@ -18,15 +18,21 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    [self.renderView setNeedsDisplay];
+    StreamView* streamView = [[StreamView alloc] initWithFrame:self.view.frame];
+    streamView.backgroundColor = [UIColor blackColor];
     
+    [self.view addSubview:streamView];
+    
+    [streamView setNeedsDisplay];
+
 	// Do any additional setup after loading the view.
-    VideoDepacketizer* depacketizer = [[VideoDepacketizer alloc] init];
-    
     NSString* path = [[NSBundle mainBundle] pathForResource:@"notpadded"
                                                      ofType:@"h264"];
     NSLog(@"Path: %@", path);
-    [depacketizer readFile:path];
+    VideoDepacketizer* depacketizer = [[VideoDepacketizer alloc] initWithFile:path renderTarget:streamView];
+    NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
+    [opQueue addOperation:depacketizer];
+
     
 }
 

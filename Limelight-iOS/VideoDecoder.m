@@ -21,8 +21,6 @@
         }
     }*/
     int decStat = nv_avc_decode(buffer, length);
-    NSLog(@"Decode Status: %d", decStat);
-    
 }
 
 - (id) init
@@ -125,23 +123,7 @@ int nv_avc_init(int width, int height, int perf_lvl, int thread_count) {
 	decoder_ctx->height = height;
 	decoder_ctx->pix_fmt = PIX_FMT_YUV420P;
     
-	// Little-endian makes the AV_PIX_FMT constants look wierd
-	if (perf_lvl & NATIVE_COLOR_RGB0) {
-		render_pix_fmt = AV_PIX_FMT_0BGR;
-	}
-	else if (perf_lvl & NATIVE_COLOR_0RGB) {
-		render_pix_fmt = AV_PIX_FMT_BGR0;
-	}
-	else if (perf_lvl & NATIVE_COLOR_RGBA) {
-		render_pix_fmt = AV_PIX_FMT_ABGR;
-	}
-	else if (perf_lvl & NATIVE_COLOR_ARGB) {
-		render_pix_fmt = AV_PIX_FMT_BGRA;
-	}
-	else {
-		// Default
-		render_pix_fmt = AV_PIX_FMT_ABGR;
-	}
+	render_pix_fmt = AV_PIX_FMT_RGBA;
     
 	err = avcodec_open2(decoder_ctx, decoder, NULL);
 	if (err < 0) {
