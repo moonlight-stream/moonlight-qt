@@ -21,16 +21,10 @@ static int BUFFER_LENGTH = 131072;
 
 - (void)main
 {
-    NSLog(@"Allocating input stream\n");
     NSInputStream* inStream = [[NSInputStream alloc] initWithFileAtPath:self.file];
-    NSLog(@"Allocating byteBuffer");
     self.byteBuffer = malloc(BUFFER_LENGTH);
-    NSLog(@"byte pointer: %p", self.byteBuffer);
-    [inStream setDelegate:self];
-    
-    NSLog(@"Allocating decoder");
     self.decoder = [[VideoDecoder alloc]init];
-    NSLog(@"old self pointer: %p", self);
+    
     
     [inStream open];
     while ([inStream streamStatus] != NSStreamStatusOpen) {
@@ -40,10 +34,7 @@ static int BUFFER_LENGTH = 131072;
     while ([inStream streamStatus] != NSStreamStatusAtEnd)
     {
         unsigned int len = 0;
-        //NSLog(@"Reading File\n");
-        //NSLog(@"stream pointer: %p", inStream);
-        //NSLog(@"self pointer: %p", self);
-        //NSLog(@"byte buffer pointer: %p", self.byteBuffer);
+
         len = [(NSInputStream *)inStream read:self.byteBuffer maxLength:BUFFER_LENGTH];
         if (len)
         {
@@ -55,9 +46,11 @@ static int BUFFER_LENGTH = 131072;
                 {
                     if (firstStart)
                     {
-                        // decode the first i-1 bytes
+                        // decode the first i-1 bytes and render a frame
                         [self.decoder decode:self.byteBuffer length:i];
-                        [self renderFrame];
+                        [self.target performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:NULL waitUntilDone:FALSE];
+                        
+                        // move offset back to beginning of start sequence
                         [inStream setProperty:[[NSNumber alloc] initWithInt:self.offset-4] forKey:NSStreamFileCurrentOffsetKey];
                         self.offset -= 1;
                         
@@ -75,11 +68,6 @@ static int BUFFER_LENGTH = 131072;
         }
     }
 
-}
-
-- (void) renderFrame
-{
-    [self.target performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:NULL waitUntilDone:FALSE];
 }
 
 @end
