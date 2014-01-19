@@ -31,11 +31,11 @@ static int BUFFER_LENGTH = 131072;
         NSLog(@"stream status: %d", [inStream streamStatus]);
         sleep(1);
     }
-    while ([inStream streamStatus] != NSStreamStatusAtEnd)
+    while (true)
     {
         unsigned int len = 0;
 
-        len = [(NSInputStream *)inStream read:self.byteBuffer maxLength:BUFFER_LENGTH];
+        len = [inStream read:self.byteBuffer maxLength:BUFFER_LENGTH];
         if (len)
         {
             BOOL firstStart = false;
@@ -64,7 +64,12 @@ static int BUFFER_LENGTH = 131072;
         }
         else
         {
-            NSLog(@"No Buffer!");
+            NSLog(@"No Buffer! restarting file!");
+            // move offset back to beginning of start sequence
+            self.offset = 0;
+            [inStream close];
+            inStream = [[NSInputStream alloc] initWithFileAtPath:self.file];
+            [inStream open];
         }
     }
 

@@ -7,18 +7,23 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FBBC539C188ACAB3004D2BA0 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC538B188ACA99004D2BA0 /* libavcodec.a */; };
-		FBBC539D188ACAB3004D2BA0 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC538C188ACA99004D2BA0 /* libavdevice.a */; };
-		FBBC539E188ACAB3004D2BA0 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC538D188ACA99004D2BA0 /* libavfilter.a */; };
-		FBBC539F188ACAB3004D2BA0 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC538E188ACA99004D2BA0 /* libavformat.a */; };
-		FBBC53A0188ACAB3004D2BA0 /* libavresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC538F188ACA99004D2BA0 /* libavresample.a */; };
-		FBBC53A1188ACAB3004D2BA0 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC5390188ACA99004D2BA0 /* libavutil.a */; };
-		FBBC53A2188ACAB3004D2BA0 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC5391188ACA99004D2BA0 /* libswresample.a */; };
-		FBBC53A3188ACAB3004D2BA0 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC5392188ACA99004D2BA0 /* libswscale.a */; };
 		FBBC53A5188ACD01004D2BA0 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53A4188ACD01004D2BA0 /* libz.dylib */; };
 		FBBC53A8188AD1D3004D2BA0 /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBBC53A7188AD1D3004D2BA0 /* StreamFrameViewController.m */; };
 		FBBC53AB188AD48D004D2BA0 /* VideoRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBBC53AA188AD48D004D2BA0 /* VideoRenderer.m */; };
 		FBBC53AE188AE27D004D2BA0 /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = FBBC53AD188AE27D004D2BA0 /* StreamView.m */; };
+		FBBC53E4188BA7C7004D2BA0 /* libopus.la in Resources */ = {isa = PBXBuildFile; fileRef = FBBC53D4188BA7C7004D2BA0 /* libopus.la */; };
+		FBBC53E5188BA7C7004D2BA0 /* opus.pc in Resources */ = {isa = PBXBuildFile; fileRef = FBBC53D6188BA7C7004D2BA0 /* opus.pc */; };
+		FBBC53E7188BA7C7004D2BA0 /* libopus.la in Resources */ = {isa = PBXBuildFile; fileRef = FBBC53E0188BA7C7004D2BA0 /* libopus.la */; };
+		FBBC53E8188BA7C7004D2BA0 /* opus.pc in Resources */ = {isa = PBXBuildFile; fileRef = FBBC53E2188BA7C7004D2BA0 /* opus.pc */; };
+		FBBC53F1188BA7FC004D2BA0 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53E9188BA7FC004D2BA0 /* libavcodec.a */; };
+		FBBC53F2188BA7FC004D2BA0 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53EA188BA7FC004D2BA0 /* libavdevice.a */; };
+		FBBC53F3188BA7FC004D2BA0 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53EB188BA7FC004D2BA0 /* libavfilter.a */; };
+		FBBC53F4188BA7FC004D2BA0 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53EC188BA7FC004D2BA0 /* libavformat.a */; };
+		FBBC53F5188BA7FC004D2BA0 /* libavresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53ED188BA7FC004D2BA0 /* libavresample.a */; };
+		FBBC53F6188BA7FC004D2BA0 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53EE188BA7FC004D2BA0 /* libavutil.a */; };
+		FBBC53F7188BA7FC004D2BA0 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53EF188BA7FC004D2BA0 /* libswresample.a */; };
+		FBBC53F8188BA7FC004D2BA0 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53F0188BA7FC004D2BA0 /* libswscale.a */; };
+		FBBC53F9188BA82E004D2BA0 /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53D3188BA7C7004D2BA0 /* libopus.a */; };
 		FBC18AE3188A2AB500D5D34E /* MainFrame.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FBC18AE2188A2AB500D5D34E /* MainFrame.storyboard */; };
 		FBC18B2B188A3B9100D5D34E /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */; };
 		FBC18B2F188A4E0500D5D34E /* VideoDepacketizer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */; };
@@ -1164,6 +1169,28 @@
 		FBBC53AA188AD48D004D2BA0 /* VideoRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoRenderer.m; path = Video/VideoRenderer.m; sourceTree = "<group>"; };
 		FBBC53AC188AE27D004D2BA0 /* StreamView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamView.h; sourceTree = "<group>"; };
 		FBBC53AD188AE27D004D2BA0 /* StreamView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamView.m; sourceTree = "<group>"; };
+		FBBC53CE188BA7C7004D2BA0 /* opus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
+		FBBC53CF188BA7C7004D2BA0 /* opus_defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_defines.h; sourceTree = "<group>"; };
+		FBBC53D0188BA7C7004D2BA0 /* opus_multistream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
+		FBBC53D1188BA7C7004D2BA0 /* opus_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
+		FBBC53D3188BA7C7004D2BA0 /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopus.a; sourceTree = "<group>"; };
+		FBBC53D4188BA7C7004D2BA0 /* libopus.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libopus.la; sourceTree = "<group>"; };
+		FBBC53D6188BA7C7004D2BA0 /* opus.pc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = opus.pc; sourceTree = "<group>"; };
+		FBBC53DA188BA7C7004D2BA0 /* opus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
+		FBBC53DB188BA7C7004D2BA0 /* opus_defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_defines.h; sourceTree = "<group>"; };
+		FBBC53DC188BA7C7004D2BA0 /* opus_multistream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
+		FBBC53DD188BA7C7004D2BA0 /* opus_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
+		FBBC53DF188BA7C7004D2BA0 /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopus.a; sourceTree = "<group>"; };
+		FBBC53E0188BA7C7004D2BA0 /* libopus.la */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = libopus.la; sourceTree = "<group>"; };
+		FBBC53E2188BA7C7004D2BA0 /* opus.pc */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = opus.pc; sourceTree = "<group>"; };
+		FBBC53E9188BA7FC004D2BA0 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libavcodec.a"; sourceTree = "<group>"; };
+		FBBC53EA188BA7FC004D2BA0 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libavdevice.a"; sourceTree = "<group>"; };
+		FBBC53EB188BA7FC004D2BA0 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libavfilter.a"; sourceTree = "<group>"; };
+		FBBC53EC188BA7FC004D2BA0 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libavformat.a"; sourceTree = "<group>"; };
+		FBBC53ED188BA7FC004D2BA0 /* libavresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavresample.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libavresample.a"; sourceTree = "<group>"; };
+		FBBC53EE188BA7FC004D2BA0 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libavutil.a"; sourceTree = "<group>"; };
+		FBBC53EF188BA7FC004D2BA0 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libswresample.a"; sourceTree = "<group>"; };
+		FBBC53F0188BA7FC004D2BA0 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = "Limelight-iOS/libs/ffmpeg/armv7/lib/libswscale.a"; sourceTree = "<group>"; };
 		FBC18AE2188A2AB500D5D34E /* MainFrame.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = MainFrame.storyboard; path = ../MainFrame.storyboard; sourceTree = "<group>"; };
 		FBC18B29188A3B9100D5D34E /* MainFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainFrameViewController.h; sourceTree = "<group>"; };
 		FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
@@ -1198,14 +1225,15 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBBC53A5188ACD01004D2BA0 /* libz.dylib in Frameworks */,
-				FBBC539C188ACAB3004D2BA0 /* libavcodec.a in Frameworks */,
-				FBBC539D188ACAB3004D2BA0 /* libavdevice.a in Frameworks */,
-				FBBC539E188ACAB3004D2BA0 /* libavfilter.a in Frameworks */,
-				FBBC539F188ACAB3004D2BA0 /* libavformat.a in Frameworks */,
-				FBBC53A0188ACAB3004D2BA0 /* libavresample.a in Frameworks */,
-				FBBC53A1188ACAB3004D2BA0 /* libavutil.a in Frameworks */,
-				FBBC53A2188ACAB3004D2BA0 /* libswresample.a in Frameworks */,
-				FBBC53A3188ACAB3004D2BA0 /* libswscale.a in Frameworks */,
+				FBBC53F9188BA82E004D2BA0 /* libopus.a in Frameworks */,
+				FBBC53F1188BA7FC004D2BA0 /* libavcodec.a in Frameworks */,
+				FBBC53F2188BA7FC004D2BA0 /* libavdevice.a in Frameworks */,
+				FBBC53F3188BA7FC004D2BA0 /* libavfilter.a in Frameworks */,
+				FBBC53F4188BA7FC004D2BA0 /* libavformat.a in Frameworks */,
+				FBBC53F5188BA7FC004D2BA0 /* libavresample.a in Frameworks */,
+				FBBC53F6188BA7FC004D2BA0 /* libavutil.a in Frameworks */,
+				FBBC53F7188BA7FC004D2BA0 /* libswresample.a in Frameworks */,
+				FBBC53F8188BA7FC004D2BA0 /* libswscale.a in Frameworks */,
 				FBF6AE77188A274100B50578 /* CoreGraphics.framework in Frameworks */,
 				FBF6AE7B188A274100B50578 /* CoreData.framework in Frameworks */,
 				FBF6AE79188A274100B50578 /* UIKit.framework in Frameworks */,
@@ -1230,10 +1258,8 @@
 		FB27273B188A8BB20093CCC9 /* libs */ = {
 			isa = PBXGroup;
 			children = (
-				FB27273C188A8BB20093CCC9 /* armv7 */,
-				FB2727A7188A8BB20093CCC9 /* armv7s */,
-				FB272812188A8BB20093CCC9 /* i386 */,
-				FB27287D188A8BB20093CCC9 /* universal */,
+				FBBC53CA188BA7C7004D2BA0 /* opus */,
+				FBBC53C8188BA7AF004D2BA0 /* ffmpeg */,
 			);
 			path = libs;
 			sourceTree = "<group>";
@@ -3842,6 +3868,118 @@
 			path = pkgconfig;
 			sourceTree = "<group>";
 		};
+		FBBC53C8188BA7AF004D2BA0 /* ffmpeg */ = {
+			isa = PBXGroup;
+			children = (
+				FB27273C188A8BB20093CCC9 /* armv7 */,
+				FB2727A7188A8BB20093CCC9 /* armv7s */,
+				FB272812188A8BB20093CCC9 /* i386 */,
+				FB27287D188A8BB20093CCC9 /* universal */,
+			);
+			name = ffmpeg;
+			sourceTree = "<group>";
+		};
+		FBBC53CA188BA7C7004D2BA0 /* opus */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53CB188BA7C7004D2BA0 /* dist-armv7 */,
+				FBBC53D7188BA7C7004D2BA0 /* dist-armv7s */,
+			);
+			path = opus;
+			sourceTree = "<group>";
+		};
+		FBBC53CB188BA7C7004D2BA0 /* dist-armv7 */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53CC188BA7C7004D2BA0 /* include */,
+				FBBC53D2188BA7C7004D2BA0 /* lib */,
+			);
+			path = "dist-armv7";
+			sourceTree = "<group>";
+		};
+		FBBC53CC188BA7C7004D2BA0 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53CD188BA7C7004D2BA0 /* opus */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		FBBC53CD188BA7C7004D2BA0 /* opus */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53CE188BA7C7004D2BA0 /* opus.h */,
+				FBBC53CF188BA7C7004D2BA0 /* opus_defines.h */,
+				FBBC53D0188BA7C7004D2BA0 /* opus_multistream.h */,
+				FBBC53D1188BA7C7004D2BA0 /* opus_types.h */,
+			);
+			path = opus;
+			sourceTree = "<group>";
+		};
+		FBBC53D2188BA7C7004D2BA0 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53D3188BA7C7004D2BA0 /* libopus.a */,
+				FBBC53D4188BA7C7004D2BA0 /* libopus.la */,
+				FBBC53D5188BA7C7004D2BA0 /* pkgconfig */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		FBBC53D5188BA7C7004D2BA0 /* pkgconfig */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53D6188BA7C7004D2BA0 /* opus.pc */,
+			);
+			path = pkgconfig;
+			sourceTree = "<group>";
+		};
+		FBBC53D7188BA7C7004D2BA0 /* dist-armv7s */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53D8188BA7C7004D2BA0 /* include */,
+				FBBC53DE188BA7C7004D2BA0 /* lib */,
+			);
+			path = "dist-armv7s";
+			sourceTree = "<group>";
+		};
+		FBBC53D8188BA7C7004D2BA0 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53D9188BA7C7004D2BA0 /* opus */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		FBBC53D9188BA7C7004D2BA0 /* opus */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53DA188BA7C7004D2BA0 /* opus.h */,
+				FBBC53DB188BA7C7004D2BA0 /* opus_defines.h */,
+				FBBC53DC188BA7C7004D2BA0 /* opus_multistream.h */,
+				FBBC53DD188BA7C7004D2BA0 /* opus_types.h */,
+			);
+			path = opus;
+			sourceTree = "<group>";
+		};
+		FBBC53DE188BA7C7004D2BA0 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53DF188BA7C7004D2BA0 /* libopus.a */,
+				FBBC53E0188BA7C7004D2BA0 /* libopus.la */,
+				FBBC53E1188BA7C7004D2BA0 /* pkgconfig */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		FBBC53E1188BA7C7004D2BA0 /* pkgconfig */ = {
+			isa = PBXGroup;
+			children = (
+				FBBC53E2188BA7C7004D2BA0 /* opus.pc */,
+			);
+			path = pkgconfig;
+			sourceTree = "<group>";
+		};
 		FBC18B2C188A4DC900D5D34E /* Video */ = {
 			isa = PBXGroup;
 			children = (
@@ -3875,6 +4013,14 @@
 		FBF6AE73188A274100B50578 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FBBC53E9188BA7FC004D2BA0 /* libavcodec.a */,
+				FBBC53EA188BA7FC004D2BA0 /* libavdevice.a */,
+				FBBC53EB188BA7FC004D2BA0 /* libavfilter.a */,
+				FBBC53EC188BA7FC004D2BA0 /* libavformat.a */,
+				FBBC53ED188BA7FC004D2BA0 /* libavresample.a */,
+				FBBC53EE188BA7FC004D2BA0 /* libavutil.a */,
+				FBBC53EF188BA7FC004D2BA0 /* libswresample.a */,
+				FBBC53F0188BA7FC004D2BA0 /* libswscale.a */,
 				FBBC53A4188ACD01004D2BA0 /* libz.dylib */,
 				FBBC5331188ACA99004D2BA0 /* armv7s */,
 				FBBC52C6188ACA92004D2BA0 /* armv7s */,
@@ -4031,6 +4177,10 @@
 				FBC18AE3188A2AB500D5D34E /* MainFrame.storyboard in Resources */,
 				FBF6AE8C188A274100B50578 /* Images.xcassets in Resources */,
 				FBC18B34188A5D6700D5D34E /* notpadded.h264 in Resources */,
+				FBBC53E7188BA7C7004D2BA0 /* libopus.la in Resources */,
+				FBBC53E5188BA7C7004D2BA0 /* opus.pc in Resources */,
+				FBBC53E4188BA7C7004D2BA0 /* libopus.la in Resources */,
+				FBBC53E8188BA7C7004D2BA0 /* opus.pc in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -4461,11 +4611,13 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/ffmpeg/armv7/include/**",
 				);
 				INFOPLIST_FILE = "Limelight-iOS/Limelight-iOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/armv7/lib",
+					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/ffmpeg/armv7/lib",
+					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/opus/dist-armv7/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -4484,11 +4636,13 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/ffmpeg/armv7/include/**",
 				);
 				INFOPLIST_FILE = "Limelight-iOS/Limelight-iOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/armv7/lib",
+					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/ffmpeg/armv7/lib",
+					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/opus/dist-armv7/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;

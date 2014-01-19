@@ -7,7 +7,7 @@
 //
 
 #import "VideoDecoder.h"
-#import "avcodec.h"
+#import "libs/ffmpeg/armv7/include/libavcodec/avcodec.h"
 #import "swscale.h"
 #include <pthread.h>
 
