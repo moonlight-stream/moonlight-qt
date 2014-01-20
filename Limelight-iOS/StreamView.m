@@ -20,9 +20,6 @@
     CGImageRef image;
     unsigned char* pixelData;
 }
-static bool firstFrame = true;
-
-
 
 - (id)initWithFrame:(CGRect)frame
 {
@@ -46,17 +43,18 @@ static bool firstFrame = true;
 // An empty implementation adversely affects performance during animation.
 - (void)drawRect:(CGRect)rect
 {
-    
-    if (!nv_avc_get_rgb_frame(pixelData, width*height*4))
-    {
-        NSLog(@"failed to decode frame!");
+    if (![VideoRenderer isRendering]) {
         return;
     }
+    if (!nv_avc_get_rgb_frame((char*)pixelData, width*height*4))
+    {
+        //NSLog(@"no new decoded frame!");
+        //return;
+    }
     
-    bitmapContext = CGBitmapContextCreate(pixelData, width, height, bitsPerComponent, bytesPerRow, colorSpace, kCGImageAlphaPremultipliedLast);
+    bitmapContext = CGBitmapContextCreate(pixelData, width, height, bitsPerComponent, bytesPerRow, colorSpace, kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little);
     image = CGBitmapContextCreateImage(bitmapContext);
     
-    ;
     struct CGContext* context = UIGraphicsGetCurrentContext();
 
     CGContextRotateCTM(context, -M_PI_2);

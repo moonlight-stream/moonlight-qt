@@ -11,41 +11,6 @@
 #import "swscale.h"
 #include <pthread.h>
 
-@implementation VideoDecoder
-- (void)decode:(uint8_t *)buffer length:(unsigned int)length
-{
-    /*for (int i = 0; i < length; i++) {
-        printf("%02x ", buffer[i]);
-        if (i != 0 && i % 16 == 0) {
-            NSLog(@"");
-        }
-    }*/
-    int decStat = nv_avc_decode(buffer, length);
-}
-
-- (id) init
-{
-    self = [super init];
-    nv_avc_init(1280, 720, 0, 2);
-    return self;
-}
-
-// General decoder and renderer state
-AVPacket pkt;
-AVCodec* decoder;
-AVCodecContext* decoder_ctx;
-AVFrame* yuv_frame;
-AVFrame* dec_frame;
-pthread_mutex_t mutex;
-
-// Color conversion and rendering
-AVFrame* rgb_frame;
-char* rgb_frame_buf;
-struct SwsContext* scaler_ctx;
-int render_pix_fmt;
-
-#define BYTES_PER_PIXEL 4
-
 // Disables the deblocking filter at the cost of image quality
 #define DISABLE_LOOP_FILTER         0x1
 // Uses the low latency decode flag (disables multithreading)
@@ -68,6 +33,30 @@ int render_pix_fmt;
 #define NATIVE_COLOR_ARGB       0x200
 // Native color format: RGBA
 #define NATIVE_COLOR_RGBA       0x400
+
+@implementation VideoDecoder
+- (id) init
+{
+    self = [super init];
+    nv_avc_init(1280, 720, DISABLE_LOOP_FILTER | FAST_DECODE | FAST_BILINEAR_FILTERING, 1);
+    return self;
+}
+
+// General decoder and renderer state
+AVPacket pkt;
+AVCodec* decoder;
+AVCodecContext* decoder_ctx;
+AVFrame* yuv_frame;
+AVFrame* dec_frame;
+pthread_mutex_t mutex;
+
+// Color conversion and rendering
+AVFrame* rgb_frame;
+char* rgb_frame_buf;
+struct SwsContext* scaler_ctx;
+int render_pix_fmt;
+
+#define BYTES_PER_PIXEL 4
 
 // This function must be called before
 // any other decoding functions
@@ -123,7 +112,7 @@ int nv_avc_init(int width, int height, int perf_lvl, int thread_count) {
 	decoder_ctx->height = height;
 	decoder_ctx->pix_fmt = PIX_FMT_YUV420P;
     
-	render_pix_fmt = AV_PIX_FMT_RGBA;
+	render_pix_fmt = AV_PIX_FMT_BGR0;
     
 	err = avcodec_open2(decoder_ctx, decoder, NULL);
 	if (err < 0) {
@@ -323,7 +312,7 @@ int nv_avc_get_input_padding_size(void) {
 // packets must be decoded in order
 // indata must be inlen + FF_INPUT_BUFFER_PADDING_SIZE in length
 int nv_avc_decode(unsigned char* indata, int inlen) {
-	int err;
+	int err = 0;
 	int got_pic = 0;
     
 	pkt.data = indata;

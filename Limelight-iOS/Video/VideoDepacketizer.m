@@ -47,7 +47,7 @@ static int BUFFER_LENGTH = 131072;
                     if (firstStart)
                     {
                         // decode the first i-1 bytes and render a frame
-                        [self.decoder decode:self.byteBuffer length:i];
+                        //[self.decoder decode:self.byteBuffer length:i];
                         [self.target performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:NULL waitUntilDone:FALSE];
                         
                         // move offset back to beginning of start sequence

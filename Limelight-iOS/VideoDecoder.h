@@ -9,7 +9,6 @@
 #import <Foundation/Foundation.h>
 
 @interface VideoDecoder : NSObject
-- (void) decode:(uint8_t*)buffer length:(unsigned int)length;
 int nv_avc_init(int width, int height, int perf_lvl, int thread_count);
 void nv_avc_destroy(void);
 

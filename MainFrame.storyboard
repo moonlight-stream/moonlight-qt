@@ -31,7 +31,7 @@
                                 </connections>
                             </pickerView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="taW-Um-zc6" userLabel="Start Stream Btn">
-                                <rect key="frame" x="317" y="421" width="391" height="141"/>
+                                <rect key="frame" x="317" y="145" width="391" height="141"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="26"/>
                                 <state key="normal" title="Start Streaming Steam!">
@@ -58,6 +58,7 @@
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
+                        <outlet property="HostField" destination="iC2-gT-zgS" id="JsQ-oS-2QL"/>
                         <outlet property="StreamConfigs" destination="rnA-uG-hAA" id="LPP-jQ-5eW"/>
                         <segue destination="OIm-0n-i9v" kind="modal" identifier="createStreamFrame" modalPresentationStyle="fullScreen" id="MOD-9A-3Sk"/>
                     </connections>

@@ -14,6 +14,12 @@
 @end
 
 @implementation MainFrameViewController
+static NSString* hostAddr;
+
++ (const char*)getHostAddr
+{
+    return [hostAddr UTF8String];
+}
 
 - (void)PairButton:(UIButton *)sender
 {
@@ -23,7 +29,19 @@
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
+    //67339056
+    hostAddr = self.HostField.text;
+    NSString* host = [NSString stringWithFormat:@"http://%@:47989/launch?uniqueid=0&appid=67339056", self.HostField.text];
+    NSLog(@"host: %@", host);
+
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
+    
+    NSURL* url = [[NSURL alloc] initWithString:host];
+    NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
+    [request setHTTPMethod:@"GET"];
+    NSURLResponse* response = nil;
+    NSData *response1 = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:NULL];
+    NSLog(@"url response: %@", response1);
 }
 
 - (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
