@@ -33,8 +33,6 @@ static NSString* hostAddr;
     hostAddr = self.HostField.text;
     NSString* host = [NSString stringWithFormat:@"http://%@:47989/launch?uniqueid=0&appid=67339056", self.HostField.text];
     NSLog(@"host: %@", host);
-
-    [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
     
     NSURL* url = [[NSURL alloc] initWithString:host];
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
@@ -42,6 +40,8 @@ static NSString* hostAddr;
     NSURLResponse* response = nil;
     NSData *response1 = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:NULL];
     NSLog(@"url response: %@", response1);
+    
+    [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 
 - (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component

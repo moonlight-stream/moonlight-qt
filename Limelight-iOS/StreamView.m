@@ -56,7 +56,9 @@
     image = CGBitmapContextCreateImage(bitmapContext);
     
     struct CGContext* context = UIGraphicsGetCurrentContext();
-
+    
+    CGContextSetBlendMode(context, kCGBlendModeCopy);
+    CGContextSetInterpolationQuality(context, kCGInterpolationNone);
     CGContextRotateCTM(context, -M_PI_2);
     CGContextScaleCTM(context, -(float)self.frame.size.width/self.frame.size.height, (float)self.frame.size.height/self.frame.size.width);
     CGContextDrawImage(context, rect, image);
