@@ -27,7 +27,7 @@ static bool render = false;
         if (render)
         {
             [self.renderTarget performSelectorOnMainThread:@selector(setNeedsDisplay) withObject:NULL waitUntilDone:TRUE];
-            usleep(25000);
+            usleep(10000);
         } else {
             sleep(1);
         }

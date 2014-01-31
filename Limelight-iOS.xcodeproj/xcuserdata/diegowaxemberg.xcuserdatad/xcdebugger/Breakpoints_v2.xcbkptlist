@@ -15,7 +15,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "23"
             endingLineNumber = "23"
-            landmarkName = "ThreadProc(void* context)"
+            landmarkName = "ThreadProc()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -31,7 +31,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "21"
             endingLineNumber = "21"
-            landmarkName = "ThreadProc(void* context)"
+            landmarkName = "ThreadProc()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>
@@ -47,7 +47,7 @@
             endingColumnNumber = "9223372036854775807"
             startingLineNumber = "95"
             endingLineNumber = "95"
-            landmarkName = "PltCreateThread(ThreadEntry entry, void* context, PLT_THREAD *thread)"
+            landmarkName = "PltCloseThread()"
             landmarkType = "7">
          </BreakpointContent>
       </BreakpointProxy>

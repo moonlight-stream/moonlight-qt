@@ -7,17 +7,12 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		FB05E4BE1896D83700E0CAC7 /* ConnectionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = FB05E4BD1896D83700E0CAC7 /* ConnectionHandler.m */; };
+		FB05E4C01899730B00E0CAC7 /* AdSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB05E4BF1899730B00E0CAC7 /* AdSupport.framework */; };
+		FB05E4C51899EC7F00E0CAC7 /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB05E4C11899E81500E0CAC7 /* libxml2.dylib */; };
 		FB4E9460188BB80700CCC583 /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4E945F188BB80700CCC583 /* Connection.m */; };
 		FB4E948B188BCC2900CCC583 /* VideoRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4E948A188BCC2900CCC583 /* VideoRenderer.m */; };
-		FB4E949D188BF49B00CCC583 /* ByteBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E948D188BF49B00CCC583 /* ByteBuffer.c */; };
-		FB4E949E188BF49B00CCC583 /* Config.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E948F188BF49B00CCC583 /* Config.c */; };
-		FB4E949F188BF49B00CCC583 /* ControlStream.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E9490188BF49B00CCC583 /* ControlStream.c */; };
-		FB4E94A0188BF49B00CCC583 /* Handshake.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E9491188BF49B00CCC583 /* Handshake.c */; };
-		FB4E94A1188BF49B00CCC583 /* LinkedBlockingQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E9493188BF49B00CCC583 /* LinkedBlockingQueue.c */; };
-		FB4E94A2188BF49B00CCC583 /* PlatformSockets.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E9496188BF49B00CCC583 /* PlatformSockets.c */; };
-		FB4E94A3188BF49B00CCC583 /* PlatformThreads.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E9498188BF49B00CCC583 /* PlatformThreads.c */; };
-		FB4E94A4188BF49B00CCC583 /* VideoDepacketizer.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E949B188BF49B00CCC583 /* VideoDepacketizer.c */; };
-		FB4E94A5188BF49B00CCC583 /* VideoStream.c in Sources */ = {isa = PBXBuildFile; fileRef = FB4E949C188BF49B00CCC583 /* VideoStream.c */; };
+		FBBC0240188E13A800CEB8E5 /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB4E945C188BB6FA00CCC583 /* liblimelight-common.a */; };
 		FBBC53A5188ACD01004D2BA0 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FBBC53A4188ACD01004D2BA0 /* libz.dylib */; };
 		FBBC53A8188AD1D3004D2BA0 /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBBC53A7188AD1D3004D2BA0 /* StreamFrameViewController.m */; };
 		FBBC53AE188AE27D004D2BA0 /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = FBBC53AD188AE27D004D2BA0 /* StreamView.m */; };
@@ -38,7 +33,6 @@
 		FBC18B2B188A3B9100D5D34E /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */; };
 		FBC18B2F188A4E0500D5D34E /* VideoDepacketizer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */; };
 		FBC18B32188A5A1100D5D34E /* VideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC18B31188A5A1100D5D34E /* VideoDecoder.m */; };
-		FBC18B34188A5D6700D5D34E /* notpadded.h264 in Resources */ = {isa = PBXBuildFile; fileRef = FBC18B33188A5D6700D5D34E /* notpadded.h264 */; };
 		FBF6AE75188A274100B50578 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE74188A274100B50578 /* Foundation.framework */; };
 		FBF6AE77188A274100B50578 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE76188A274100B50578 /* CoreGraphics.framework */; };
 		FBF6AE79188A274100B50578 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FBF6AE78188A274100B50578 /* UIKit.framework */; };
@@ -66,6 +60,11 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		FB05E4BC1896D83700E0CAC7 /* ConnectionHandler.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ConnectionHandler.h; sourceTree = "<group>"; };
+		FB05E4BD1896D83700E0CAC7 /* ConnectionHandler.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConnectionHandler.m; sourceTree = "<group>"; };
+		FB05E4BF1899730B00E0CAC7 /* AdSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AdSupport.framework; path = System/Library/Frameworks/AdSupport.framework; sourceTree = SDKROOT; };
+		FB05E4C11899E81500E0CAC7 /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
+		FB05E4C31899EC4100E0CAC7 /* libxml2.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.2.dylib; path = usr/lib/libxml2.2.dylib; sourceTree = SDKROOT; };
 		FB272728188A8A000093CCC9 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "../ffmpeg-built/universal/lib/libavcodec.a"; sourceTree = "<group>"; };
 		FB27272A188A8B3C0093CCC9 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavcodec.a; path = "Limelight-iOS/libs/armv7s/lib/libavcodec.a"; sourceTree = "<group>"; };
 		FB27272B188A8B3C0093CCC9 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavdevice.a; path = "Limelight-iOS/libs/armv7s/lib/libavdevice.a"; sourceTree = "<group>"; };
@@ -990,22 +989,6 @@
 		FB4E9487188BC39600CCC583 /* liblimelight-common.a.dSYM */ = {isa = PBXFileReference; lastKnownFileType = wrapper.dsym; path = "liblimelight-common.a.dSYM"; sourceTree = "<group>"; };
 		FB4E9489188BCC2900CCC583 /* VideoRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoRenderer.h; sourceTree = "<group>"; };
 		FB4E948A188BCC2900CCC583 /* VideoRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoRenderer.m; sourceTree = "<group>"; };
-		FB4E948D188BF49B00CCC583 /* ByteBuffer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ByteBuffer.c; path = "../limelight-common-c/limelight-common/ByteBuffer.c"; sourceTree = "<group>"; };
-		FB4E948E188BF49B00CCC583 /* ByteBuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ByteBuffer.h; path = "../limelight-common-c/limelight-common/ByteBuffer.h"; sourceTree = "<group>"; };
-		FB4E948F188BF49B00CCC583 /* Config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Config.c; path = "../limelight-common-c/limelight-common/Config.c"; sourceTree = "<group>"; };
-		FB4E9490188BF49B00CCC583 /* ControlStream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ControlStream.c; path = "../limelight-common-c/limelight-common/ControlStream.c"; sourceTree = "<group>"; };
-		FB4E9491188BF49B00CCC583 /* Handshake.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = Handshake.c; path = "../limelight-common-c/limelight-common/Handshake.c"; sourceTree = "<group>"; };
-		FB4E9492188BF49B00CCC583 /* Limelight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Limelight.h; path = "../limelight-common-c/limelight-common/Limelight.h"; sourceTree = "<group>"; };
-		FB4E9493188BF49B00CCC583 /* LinkedBlockingQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = LinkedBlockingQueue.c; path = "../limelight-common-c/limelight-common/LinkedBlockingQueue.c"; sourceTree = "<group>"; };
-		FB4E9494188BF49B00CCC583 /* LinkedBlockingQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LinkedBlockingQueue.h; path = "../limelight-common-c/limelight-common/LinkedBlockingQueue.h"; sourceTree = "<group>"; };
-		FB4E9495188BF49B00CCC583 /* Platform.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Platform.h; path = "../limelight-common-c/limelight-common/Platform.h"; sourceTree = "<group>"; };
-		FB4E9496188BF49B00CCC583 /* PlatformSockets.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PlatformSockets.c; path = "../limelight-common-c/limelight-common/PlatformSockets.c"; sourceTree = "<group>"; };
-		FB4E9497188BF49B00CCC583 /* PlatformSockets.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PlatformSockets.h; path = "../limelight-common-c/limelight-common/PlatformSockets.h"; sourceTree = "<group>"; };
-		FB4E9498188BF49B00CCC583 /* PlatformThreads.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = PlatformThreads.c; path = "../limelight-common-c/limelight-common/PlatformThreads.c"; sourceTree = "<group>"; };
-		FB4E9499188BF49B00CCC583 /* PlatformThreads.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = PlatformThreads.h; path = "../limelight-common-c/limelight-common/PlatformThreads.h"; sourceTree = "<group>"; };
-		FB4E949A188BF49B00CCC583 /* Video.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Video.h; path = "../limelight-common-c/limelight-common/Video.h"; sourceTree = "<group>"; };
-		FB4E949B188BF49B00CCC583 /* VideoDepacketizer.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = VideoDepacketizer.c; path = "../limelight-common-c/limelight-common/VideoDepacketizer.c"; sourceTree = "<group>"; };
-		FB4E949C188BF49B00CCC583 /* VideoStream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = VideoStream.c; path = "../limelight-common-c/limelight-common/VideoStream.c"; sourceTree = "<group>"; };
 		FBBC52C9188ACA92004D2BA0 /* avcodec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = avcodec.h; sourceTree = "<group>"; };
 		FBBC52CA188ACA92004D2BA0 /* avfft.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = avfft.h; sourceTree = "<group>"; };
 		FBBC52CB188ACA92004D2BA0 /* dxva2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dxva2.h; sourceTree = "<group>"; };
@@ -1230,7 +1213,6 @@
 		FBC18B2E188A4E0500D5D34E /* VideoDepacketizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoDepacketizer.m; path = Video/VideoDepacketizer.m; sourceTree = "<group>"; };
 		FBC18B30188A5A1100D5D34E /* VideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDecoder.h; sourceTree = "<group>"; };
 		FBC18B31188A5A1100D5D34E /* VideoDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoDecoder.m; sourceTree = "<group>"; };
-		FBC18B33188A5D6700D5D34E /* notpadded.h264 */ = {isa = PBXFileReference; lastKnownFileType = file; path = notpadded.h264; sourceTree = "<group>"; };
 		FBF6AE71188A274100B50578 /* Limelight-iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Limelight-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FBF6AE74188A274100B50578 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FBF6AE76188A274100B50578 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -1256,6 +1238,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FB05E4C51899EC7F00E0CAC7 /* libxml2.dylib in Frameworks */,
+				FB05E4C01899730B00E0CAC7 /* AdSupport.framework in Frameworks */,
+				FBBC0240188E13A800CEB8E5 /* liblimelight-common.a in Frameworks */,
 				FBBC53A5188ACD01004D2BA0 /* libz.dylib in Frameworks */,
 				FBBC53F9188BA82E004D2BA0 /* libopus.a in Frameworks */,
 				FBBC53F1188BA7FC004D2BA0 /* libavcodec.a in Frameworks */,
@@ -3528,29 +3513,6 @@
 			path = "../../../Library/Developer/Xcode/DerivedData/limelight-common-c-cfonfottpvhxxcgrusjsydwkdaco/Build/Products/Debug-iphoneos";
 			sourceTree = "<group>";
 		};
-		FB4E948C188BF48300CCC583 /* Limelight-Common */ = {
-			isa = PBXGroup;
-			children = (
-				FB4E948D188BF49B00CCC583 /* ByteBuffer.c */,
-				FB4E948E188BF49B00CCC583 /* ByteBuffer.h */,
-				FB4E948F188BF49B00CCC583 /* Config.c */,
-				FB4E9490188BF49B00CCC583 /* ControlStream.c */,
-				FB4E9491188BF49B00CCC583 /* Handshake.c */,
-				FB4E9492188BF49B00CCC583 /* Limelight.h */,
-				FB4E9493188BF49B00CCC583 /* LinkedBlockingQueue.c */,
-				FB4E9494188BF49B00CCC583 /* LinkedBlockingQueue.h */,
-				FB4E9495188BF49B00CCC583 /* Platform.h */,
-				FB4E949B188BF49B00CCC583 /* VideoDepacketizer.c */,
-				FB4E9496188BF49B00CCC583 /* PlatformSockets.c */,
-				FB4E9497188BF49B00CCC583 /* PlatformSockets.h */,
-				FB4E9498188BF49B00CCC583 /* PlatformThreads.c */,
-				FB4E9499188BF49B00CCC583 /* PlatformThreads.h */,
-				FB4E949A188BF49B00CCC583 /* Video.h */,
-				FB4E949C188BF49B00CCC583 /* VideoStream.c */,
-			);
-			name = "Limelight-Common";
-			sourceTree = "<group>";
-		};
 		FBBC52C6188ACA92004D2BA0 /* armv7s */ = {
 			isa = PBXGroup;
 			children = (
@@ -4056,6 +4018,7 @@
 				FB4E945F188BB80700CCC583 /* Connection.m */,
 				FB4E9489188BCC2900CCC583 /* VideoRenderer.h */,
 				FB4E948A188BCC2900CCC583 /* VideoRenderer.m */,
+				FBF6AE7D188A274100B50578 /* Supporting Files */,
 			);
 			name = Video;
 			sourceTree = "<group>";
@@ -4063,7 +4026,6 @@
 		FBF6AE68188A274100B50578 = {
 			isa = PBXGroup;
 			children = (
-				FB4E948C188BF48300CCC583 /* Limelight-Common */,
 				FBF6AE7C188A274100B50578 /* Limelight-iOS */,
 				FBF6AE99188A274100B50578 /* Limelight-iOSTests */,
 				FBF6AE73188A274100B50578 /* Frameworks */,
@@ -4083,6 +4045,9 @@
 		FBF6AE73188A274100B50578 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FB05E4C31899EC4100E0CAC7 /* libxml2.2.dylib */,
+				FB05E4C11899E81500E0CAC7 /* libxml2.dylib */,
+				FB05E4BF1899730B00E0CAC7 /* AdSupport.framework */,
 				FB4E9485188BC39600CCC583 /* Debug-iphoneos */,
 				FB4E9461188BC09600CCC583 /* liblimelight-common.a */,
 				FB4E945C188BB6FA00CCC583 /* liblimelight-common.a */,
@@ -4126,13 +4091,14 @@
 				FBF6AE86188A274100B50578 /* AppDelegate.m */,
 				FBF6AE8B188A274100B50578 /* Images.xcassets */,
 				FBF6AE88188A274100B50578 /* Limelight_iOS.xcdatamodeld */,
-				FBF6AE7D188A274100B50578 /* Supporting Files */,
 				FBC18B29188A3B9100D5D34E /* MainFrameViewController.h */,
 				FBC18B2A188A3B9100D5D34E /* MainFrameViewController.m */,
 				FBBC53A6188AD1D3004D2BA0 /* StreamFrameViewController.h */,
 				FBBC53A7188AD1D3004D2BA0 /* StreamFrameViewController.m */,
 				FBBC53AC188AE27D004D2BA0 /* StreamView.h */,
 				FBBC53AD188AE27D004D2BA0 /* StreamView.m */,
+				FB05E4BC1896D83700E0CAC7 /* ConnectionHandler.h */,
+				FB05E4BD1896D83700E0CAC7 /* ConnectionHandler.m */,
 			);
 			path = "Limelight-iOS";
 			sourceTree = "<group>";
@@ -4140,7 +4106,6 @@
 		FBF6AE7D188A274100B50578 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
-				FBC18B33188A5D6700D5D34E /* notpadded.h264 */,
 				FBF6AE7E188A274100B50578 /* Limelight-iOS-Info.plist */,
 				FBF6AE7F188A274100B50578 /* InfoPlist.strings */,
 				FBF6AE82188A274100B50578 /* main.m */,
@@ -4247,7 +4212,6 @@
 			files = (
 				FBC18AE3188A2AB500D5D34E /* MainFrame.storyboard in Resources */,
 				FBF6AE8C188A274100B50578 /* Images.xcassets in Resources */,
-				FBC18B34188A5D6700D5D34E /* notpadded.h264 in Resources */,
 				FBBC53E7188BA7C7004D2BA0 /* libopus.la in Resources */,
 				FBBC53E5188BA7C7004D2BA0 /* opus.pc in Resources */,
 				FBBC53E4188BA7C7004D2BA0 /* libopus.la in Resources */,
@@ -4270,16 +4234,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB4E94A4188BF49B00CCC583 /* VideoDepacketizer.c in Sources */,
-				FB4E94A0188BF49B00CCC583 /* Handshake.c in Sources */,
-				FB4E94A5188BF49B00CCC583 /* VideoStream.c in Sources */,
-				FB4E94A2188BF49B00CCC583 /* PlatformSockets.c in Sources */,
-				FB4E949F188BF49B00CCC583 /* ControlStream.c in Sources */,
-				FB4E94A1188BF49B00CCC583 /* LinkedBlockingQueue.c in Sources */,
-				FB4E949D188BF49B00CCC583 /* ByteBuffer.c in Sources */,
-				FB4E94A3188BF49B00CCC583 /* PlatformThreads.c in Sources */,
-				FB4E949E188BF49B00CCC583 /* Config.c in Sources */,
 				FB4E948B188BCC2900CCC583 /* VideoRenderer.m in Sources */,
+				FB05E4BE1896D83700E0CAC7 /* ConnectionHandler.m in Sources */,
 				FBC18B2F188A4E0500D5D34E /* VideoDepacketizer.m in Sources */,
 				FBF6AE87188A274100B50578 /* AppDelegate.m in Sources */,
 				FBBC53A8188AD1D3004D2BA0 /* StreamFrameViewController.m in Sources */,
@@ -4697,6 +4653,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/ffmpeg/armv7/include/**",
 					"/Users/diegowaxemberg/Documents/Repositories/limelight-common-c/limelight-common",
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = "Limelight-iOS/Limelight-iOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -4726,6 +4683,7 @@
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight-iOS/libs/ffmpeg/armv7/include/**",
 					"/Users/diegowaxemberg/Documents/Repositories/limelight-common-c/limelight-common",
+					/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.0.sdk/usr/include/libxml2,
 				);
 				INFOPLIST_FILE = "Limelight-iOS/Limelight-iOS-Info.plist";
 				LIBRARY_SEARCH_PATHS = (

@@ -8,6 +8,7 @@
 
 #import "MainFrameViewController.h"
 #import "VideoDepacketizer.h"
+#import "ConnectionHandler.h"
 
 @interface MainFrameViewController ()
 
@@ -24,23 +25,18 @@ static NSString* hostAddr;
 - (void)PairButton:(UIButton *)sender
 {
     NSLog(@"Pair Button Pressed!");
+    hostAddr = self.HostField.text;
+    [ConnectionHandler pairWithHost:hostAddr];
 }
 
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
-    //67339056
     hostAddr = self.HostField.text;
-    NSString* host = [NSString stringWithFormat:@"http://%@:47989/launch?uniqueid=0&appid=67339056", self.HostField.text];
-    NSLog(@"host: %@", host);
-    
-    NSURL* url = [[NSURL alloc] initWithString:host];
-    NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
-    [request setHTTPMethod:@"GET"];
-    NSURLResponse* response = nil;
-    NSData *response1 = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:NULL];
-    NSLog(@"url response: %@", response1);
-    
+    [ConnectionHandler streamWithHost:hostAddr viewController:self];
+}
+
+- (void) segueIntoStream {
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 
@@ -71,6 +67,7 @@ static NSString* hostAddr;
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
     self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)",@"1280x720 (60Hz)",@"1920x1080 (30Hz)",@"1920x1080 (60Hz)",nil];
+    self.HostField.text = @"neyer.case.edu";
 }
 
 - (void)didReceiveMemoryWarning

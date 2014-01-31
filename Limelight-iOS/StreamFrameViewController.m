@@ -11,6 +11,7 @@
 #import "VideoDepacketizer.h"
 #import "Connection.h"
 #import "VideoRenderer.h"
+#import "ConnectionHandler.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -42,14 +43,8 @@
     // Repositions and resizes the view.
     CGRect contentRect = CGRectMake(0,0, self.view.frame.size.width, self.view.frame.size.height);
     streamView.bounds = contentRect;
-	
-   /* // Do any additional setup after loading the view.
-    NSString* path = [[NSBundle mainBundle] pathForResource:@"notpadded"
-                                                     ofType:@"h264"];
-    NSLog(@"Path: %@", path);
-    VideoDepacketizer* depacketizer = [[VideoDepacketizer alloc] initWithFile:path renderTarget:streamView];*/
 
-    Connection* conn = [[Connection alloc] initWithHost:inet_addr([MainFrameViewController getHostAddr]) width:1280 height:720];
+    Connection* conn = [[Connection alloc] initWithHost:inet_addr([[ConnectionHandler resolveHost:[NSString stringWithUTF8String:[MainFrameViewController getHostAddr]]] UTF8String]) width:1280 height:720];
     
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:conn];
