@@ -72,6 +72,16 @@ static MainFrameViewController* viewCont;
     return [idString substringFromIndex:24];
 }
 
++ (NSString*) getName
+{
+    NSString* name = [UIDevice currentDevice].name;
+    NSLog(@"Device Name: %@", name);
+    
+    //sanitize name
+    name = [name stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    return name;
+}
+
 - (id) initForStream:(NSString*)host
 {
     self = [super init];
@@ -129,8 +139,6 @@ static MainFrameViewController* viewCont;
             NSURLResponse* response = nil;
             NSData *response1 = [NSURLConnection sendSynchronousRequest:request returningResponse:&response error:NULL];
             
-            NSLog(@"url response: %@", response1);
-            
             
             [viewCont performSelector:@selector(segueIntoStream) onThread:[NSThread mainThread] withObject:nil waitUntilDone:NO];
             break;
@@ -151,26 +159,26 @@ static MainFrameViewController* viewCont;
             if(pairState)
             {
                 UIAlertView* alert = [[UIAlertView alloc]initWithTitle:@"Pairing"
-                                           message:[NSString stringWithFormat:@"Already paired to:\n %@", self.hostName]
-                                          delegate:nil
-                                 cancelButtonTitle:@"Okay"
-                                 otherButtonTitles:nil, nil];
+                                                               message:[NSString stringWithFormat:@"Already paired to:\n %@", self.hostName]
+                                                              delegate:nil
+                                                     cancelButtonTitle:@"Okay"
+                                                     otherButtonTitles:nil, nil];
                 [self showAlert:alert];
                 NSLog(@"Showing alertview");
                 break;
             }
             
             // this will hang until it pairs successfully or unsuccessfully
-            NSData* pairResponse = [self httpRequest:[NSString stringWithFormat:@"pair?uniqueid=%@", [ConnectionHandler getId]]];
+            NSData* pairResponse = [self httpRequest:[NSString stringWithFormat:@"pair?uniqueid=%@&devicename=%@", [ConnectionHandler getId], [ConnectionHandler getName]]];
             
             void* buffer = [self getXMLBufferFromData:pairResponse];
             if (buffer == NULL) {
                 NSLog(@"ERROR: Unable to allocate pair buffer.");
                 UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Pairing"
-                                            message:[NSString stringWithFormat:@"Failed to pair with host:\n %@", self.hostName]
-                                           delegate:nil
-                                  cancelButtonTitle:@"Okay"
-                                  otherButtonTitles:nil, nil];
+                                                                message:[NSString stringWithFormat:@"Failed to pair with host:\n %@", self.hostName]
+                                                               delegate:nil
+                                                      cancelButtonTitle:@"Okay"
+                                                      otherButtonTitles:nil, nil];
                 [self showAlert:alert];
                 break;
             }
@@ -191,18 +199,18 @@ static MainFrameViewController* viewCont;
                     
                     if (xmlStrcmp(sessionid, (xmlChar*)"0")) {
                         UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Pairing"
-                                                    message:[NSString stringWithFormat:@"Successfully paired to host:\n %@", self.hostName]
-                                                   delegate:nil
-                                          cancelButtonTitle:@"Okay"
-                                          otherButtonTitles:nil, nil];
+                                                                        message:[NSString stringWithFormat:@"Successfully paired to host:\n %@", self.hostName]
+                                                                       delegate:nil
+                                                              cancelButtonTitle:@"Okay"
+                                                              otherButtonTitles:nil, nil];
                         [self showAlert:alert];
-                                              
+                        
                     } else {
                         UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Pairing"
-                                                    message:[NSString stringWithFormat:@"Pairing was declined by host:\n %@", self.hostName]
-                                                   delegate:nil
-                                          cancelButtonTitle:@"Okay"
-                                          otherButtonTitles:nil, nil];
+                                                                        message:[NSString stringWithFormat:@"Pairing was declined by host:\n %@", self.hostName]
+                                                                       delegate:nil
+                                                              cancelButtonTitle:@"Okay"
+                                                              otherButtonTitles:nil, nil];
                         [self showAlert:alert];
                     }
                     
@@ -235,10 +243,10 @@ static MainFrameViewController* viewCont;
     if (buffer == NULL) {
         NSLog(@"ERROR: Unable to allocate pair state buffer.");
         UIAlertView* alert = [[UIAlertView alloc] initWithTitle:@"Pairing"
-                                    message:[NSString stringWithFormat:@"Failed to get pair state with host:\n %@", self.hostName]
-                                   delegate:nil
-                          cancelButtonTitle:@"Okay"
-                          otherButtonTitles:nil, nil];
+                                                        message:[NSString stringWithFormat:@"Failed to get pair state with host:\n %@", self.hostName]
+                                                       delegate:nil
+                                              cancelButtonTitle:@"Okay"
+                                              otherButtonTitles:nil, nil];
         [self showAlert:alert];
         return -1;
     }
@@ -283,6 +291,7 @@ cleanup:
     
     NSMutableURLRequest* request = [[NSMutableURLRequest alloc] initWithURL:url];
     [request setHTTPMethod:@"GET"];
+    [request setTimeoutInterval:7];
     
     NSURLResponse* response = nil;
     NSError* error = nil;
@@ -291,7 +300,6 @@ cleanup:
     if (error != nil) {
         NSLog(@"An error occured making HTTP request: %@\n Caused by: %@", [error localizedDescription], [error localizedFailureReason]);
     }
-    
     return responseData;
 }
 
@@ -302,17 +310,19 @@ cleanup:
         NSLog(@"ERROR: No data to get XML from!");
         return NULL;
     }
-    void* buffer = malloc([data length]);
+    char* buffer = malloc([data length] + 1);
     if (buffer == NULL) {
         NSLog(@"ERROR: Unable to allocate XML buffer.");
         return NULL;
     }
     [data getBytes:buffer length:[data length]];
+    buffer[[data length]] = 0;
     
-    
+    NSLog(@"Buffer: %s", buffer);
     //#allthejank
-    void* newBuffer = (void*)[[[NSString stringWithUTF8String:buffer]stringByReplacingOccurrencesOfString:@"utf-16" withString:@"UTF-8" options:NSCaseInsensitiveSearch range:NSMakeRange(0, [data length])] UTF8String];
+    void* newBuffer = (void*)[[[NSString stringWithUTF8String:buffer]stringByReplacingOccurrencesOfString:@"UTF-16" withString:@"UTF-8" options:NSCaseInsensitiveSearch range:NSMakeRange(0, [data length])] UTF8String];
     
+    NSLog(@"New Buffer: %s", newBuffer);
     free(buffer);
     return newBuffer;
 }
