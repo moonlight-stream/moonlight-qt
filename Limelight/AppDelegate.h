@@ -1,9 +1,9 @@
 //
 //  AppDelegate.h
-//  Limelight
+//  Limelight-iOS
 //
-//  Created by Diego Waxemberg on 8/30/14.
-//  Copyright (c) 2014 Limelight Stream. All rights reserved.
+//  Created by Diego Waxemberg on 1/17/14.
+//  Copyright (c) 2014 Diego Waxemberg. All rights reserved.
 //
 
 #import <UIKit/UIKit.h>
@@ -18,5 +18,6 @@
 
 - (void)saveContext;
 - (NSURL *)applicationDocumentsDirectory;
++ (NSOperationQueue*) getMainOpQueue;
 
 @end
