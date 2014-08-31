@@ -1,0 +1,477 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
+		FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF319B2C406004C83CF /* CoreGraphics.framework */; };
+		FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF519B2C406004C83CF /* UIKit.framework */; };
+		FB290CF819B2C406004C83CF /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF719B2C406004C83CF /* CoreData.framework */; };
+		FB290CFE19B2C406004C83CF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FB290CFC19B2C406004C83CF /* InfoPlist.strings */; };
+		FB290D0019B2C406004C83CF /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290CFF19B2C406004C83CF /* main.m */; };
+		FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D0319B2C406004C83CF /* AppDelegate.m */; };
+		FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */; };
+		FB290D0919B2C406004C83CF /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB290D0819B2C406004C83CF /* Images.xcassets */; };
+		FB290D1019B2C406004C83CF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290D0F19B2C406004C83CF /* XCTest.framework */; };
+		FB290D1119B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
+		FB290D1219B2C406004C83CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF519B2C406004C83CF /* UIKit.framework */; };
+		FB290D1319B2C406004C83CF /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF719B2C406004C83CF /* CoreData.framework */; };
+		FB290D1B19B2C406004C83CF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FB290D1919B2C406004C83CF /* InfoPlist.strings */; };
+		FB290D1D19B2C406004C83CF /* LimelightTests.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D1C19B2C406004C83CF /* LimelightTests.m */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		FB290D1419B2C406004C83CF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FB290CE619B2C406004C83CF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = FB290CED19B2C406004C83CF;
+			remoteInfo = Limelight;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		FB290CEE19B2C406004C83CF /* Limelight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Limelight.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB290CF119B2C406004C83CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		FB290CF319B2C406004C83CF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		FB290CF519B2C406004C83CF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
+		FB290CF719B2C406004C83CF /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		FB290CFB19B2C406004C83CF /* Limelight-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "Limelight-Info.plist"; sourceTree = "<group>"; };
+		FB290CFD19B2C406004C83CF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		FB290CFF19B2C406004C83CF /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		FB290D0119B2C406004C83CF /* Limelight-Prefix.pch */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Limelight-Prefix.pch"; sourceTree = "<group>"; };
+		FB290D0219B2C406004C83CF /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		FB290D0319B2C406004C83CF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		FB290D0619B2C406004C83CF /* Limelight.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Limelight.xcdatamodel; sourceTree = "<group>"; };
+		FB290D0819B2C406004C83CF /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
+		FB290D0E19B2C406004C83CF /* LimelightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LimelightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB290D0F19B2C406004C83CF /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
+		FB290D1819B2C406004C83CF /* LimelightTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "LimelightTests-Info.plist"; sourceTree = "<group>"; };
+		FB290D1A19B2C406004C83CF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		FB290D1C19B2C406004C83CF /* LimelightTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LimelightTests.m; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		FB290CEB19B2C406004C83CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */,
+				FB290CF819B2C406004C83CF /* CoreData.framework in Frameworks */,
+				FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */,
+				FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB290D0B19B2C406004C83CF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB290D1019B2C406004C83CF /* XCTest.framework in Frameworks */,
+				FB290D1319B2C406004C83CF /* CoreData.framework in Frameworks */,
+				FB290D1219B2C406004C83CF /* UIKit.framework in Frameworks */,
+				FB290D1119B2C406004C83CF /* Foundation.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		FB290CE519B2C406004C83CF = {
+			isa = PBXGroup;
+			children = (
+				FB290CF919B2C406004C83CF /* Limelight */,
+				FB290D1619B2C406004C83CF /* LimelightTests */,
+				FB290CF019B2C406004C83CF /* Frameworks */,
+				FB290CEF19B2C406004C83CF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		FB290CEF19B2C406004C83CF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FB290CEE19B2C406004C83CF /* Limelight.app */,
+				FB290D0E19B2C406004C83CF /* LimelightTests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		FB290CF019B2C406004C83CF /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				FB290CF119B2C406004C83CF /* Foundation.framework */,
+				FB290CF319B2C406004C83CF /* CoreGraphics.framework */,
+				FB290CF519B2C406004C83CF /* UIKit.framework */,
+				FB290CF719B2C406004C83CF /* CoreData.framework */,
+				FB290D0F19B2C406004C83CF /* XCTest.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		FB290CF919B2C406004C83CF /* Limelight */ = {
+			isa = PBXGroup;
+			children = (
+				FB290D0219B2C406004C83CF /* AppDelegate.h */,
+				FB290D0319B2C406004C83CF /* AppDelegate.m */,
+				FB290D0819B2C406004C83CF /* Images.xcassets */,
+				FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */,
+				FB290CFA19B2C406004C83CF /* Supporting Files */,
+			);
+			path = Limelight;
+			sourceTree = "<group>";
+		};
+		FB290CFA19B2C406004C83CF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				FB290CFB19B2C406004C83CF /* Limelight-Info.plist */,
+				FB290CFC19B2C406004C83CF /* InfoPlist.strings */,
+				FB290CFF19B2C406004C83CF /* main.m */,
+				FB290D0119B2C406004C83CF /* Limelight-Prefix.pch */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+		FB290D1619B2C406004C83CF /* LimelightTests */ = {
+			isa = PBXGroup;
+			children = (
+				FB290D1C19B2C406004C83CF /* LimelightTests.m */,
+				FB290D1719B2C406004C83CF /* Supporting Files */,
+			);
+			path = LimelightTests;
+			sourceTree = "<group>";
+		};
+		FB290D1719B2C406004C83CF /* Supporting Files */ = {
+			isa = PBXGroup;
+			children = (
+				FB290D1819B2C406004C83CF /* LimelightTests-Info.plist */,
+				FB290D1919B2C406004C83CF /* InfoPlist.strings */,
+			);
+			name = "Supporting Files";
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		FB290CED19B2C406004C83CF /* Limelight */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB290D2019B2C406004C83CF /* Build configuration list for PBXNativeTarget "Limelight" */;
+			buildPhases = (
+				FB290CEA19B2C406004C83CF /* Sources */,
+				FB290CEB19B2C406004C83CF /* Frameworks */,
+				FB290CEC19B2C406004C83CF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Limelight;
+			productName = Limelight;
+			productReference = FB290CEE19B2C406004C83CF /* Limelight.app */;
+			productType = "com.apple.product-type.application";
+		};
+		FB290D0D19B2C406004C83CF /* LimelightTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB290D2319B2C406004C83CF /* Build configuration list for PBXNativeTarget "LimelightTests" */;
+			buildPhases = (
+				FB290D0A19B2C406004C83CF /* Sources */,
+				FB290D0B19B2C406004C83CF /* Frameworks */,
+				FB290D0C19B2C406004C83CF /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FB290D1519B2C406004C83CF /* PBXTargetDependency */,
+			);
+			name = LimelightTests;
+			productName = LimelightTests;
+			productReference = FB290D0E19B2C406004C83CF /* LimelightTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		FB290CE619B2C406004C83CF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+				ORGANIZATIONNAME = "Limelight Stream";
+				TargetAttributes = {
+					FB290D0D19B2C406004C83CF = {
+						TestTargetID = FB290CED19B2C406004C83CF;
+					};
+				};
+			};
+			buildConfigurationList = FB290CE919B2C406004C83CF /* Build configuration list for PBXProject "Limelight" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = FB290CE519B2C406004C83CF;
+			productRefGroup = FB290CEF19B2C406004C83CF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				FB290CED19B2C406004C83CF /* Limelight */,
+				FB290D0D19B2C406004C83CF /* LimelightTests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		FB290CEC19B2C406004C83CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB290CFE19B2C406004C83CF /* InfoPlist.strings in Resources */,
+				FB290D0919B2C406004C83CF /* Images.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB290D0C19B2C406004C83CF /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB290D1B19B2C406004C83CF /* InfoPlist.strings in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		FB290CEA19B2C406004C83CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */,
+				FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */,
+				FB290D0019B2C406004C83CF /* main.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB290D0A19B2C406004C83CF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB290D1D19B2C406004C83CF /* LimelightTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		FB290D1519B2C406004C83CF /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = FB290CED19B2C406004C83CF /* Limelight */;
+			targetProxy = FB290D1419B2C406004C83CF /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		FB290CFC19B2C406004C83CF /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FB290CFD19B2C406004C83CF /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+		FB290D1919B2C406004C83CF /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FB290D1A19B2C406004C83CF /* en */,
+			);
+			name = InfoPlist.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		FB290D1E19B2C406004C83CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		FB290D1F19B2C406004C83CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				COPY_PHASE_STRIP = YES;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		FB290D2119B2C406004C83CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Debug;
+		};
+		FB290D2219B2C406004C83CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				WRAPPER_EXTENSION = app;
+			};
+			name = Release;
+		};
+		FB290D2419B2C406004C83CF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Limelight.app/Limelight";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "LimelightTests/LimelightTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Debug;
+		};
+		FB290D2519B2C406004C83CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Limelight.app/Limelight";
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(SDKROOT)/Developer/Library/Frameworks",
+					"$(inherited)",
+					"$(DEVELOPER_FRAMEWORKS_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				INFOPLIST_FILE = "LimelightTests/LimelightTests-Info.plist";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUNDLE_LOADER)";
+				WRAPPER_EXTENSION = xctest;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		FB290CE919B2C406004C83CF /* Build configuration list for PBXProject "Limelight" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB290D1E19B2C406004C83CF /* Debug */,
+				FB290D1F19B2C406004C83CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FB290D2019B2C406004C83CF /* Build configuration list for PBXNativeTarget "Limelight" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB290D2119B2C406004C83CF /* Debug */,
+				FB290D2219B2C406004C83CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+		FB290D2319B2C406004C83CF /* Build configuration list for PBXNativeTarget "LimelightTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB290D2419B2C406004C83CF /* Debug */,
+				FB290D2519B2C406004C83CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				FB290D0619B2C406004C83CF /* Limelight.xcdatamodel */,
+			);
+			currentVersion = FB290D0619B2C406004C83CF /* Limelight.xcdatamodel */;
+			path = Limelight.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = FB290CE619B2C406004C83CF /* Project object */;
+}
