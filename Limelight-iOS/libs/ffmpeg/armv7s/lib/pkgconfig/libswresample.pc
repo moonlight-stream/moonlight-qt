@@ -1,0 +1,14 @@
+prefix=/Users/diegowaxemberg/Downloads/build-ffmpeg/build/built/armv7s
+exec_prefix=${prefix}
+libdir=${prefix}/lib
+includedir=${prefix}/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 0.17.104
+Requires: libavutil = 52.48.101
+Requires.private: 
+Conflicts:
+Libs: -L${libdir} -lswresample -lm
+Libs.private: 
+Cflags: -I${includedir}

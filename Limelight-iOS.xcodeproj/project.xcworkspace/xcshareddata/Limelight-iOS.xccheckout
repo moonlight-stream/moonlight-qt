@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>EF82C59B-751E-49DC-BD4F-CAB151CFCF08</string>
+	<key>IDESourceControlProjectName</key>
+	<string>Limelight-iOS</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>C8722A1B-5422-4080-8DCF-F008E289FAE0</key>
+		<string>ssh://github.com/limelight-stream/limelight-ios.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Limelight-iOS.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>C8722A1B-5422-4080-8DCF-F008E289FAE0</key>
+		<string>../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>ssh://github.com/limelight-stream/limelight-ios.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>110</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>C8722A1B-5422-4080-8DCF-F008E289FAE0</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>C8722A1B-5422-4080-8DCF-F008E289FAE0</string>
+			<key>IDESourceControlWCCName</key>
+			<string>Limelight-iOS</string>
+		</dict>
+	</array>
+</dict>
+</plist>
