@@ -313,17 +313,67 @@ typedef struct AVOption {
  */
 typedef struct AVOptionRange {
     const char *str;
-    double value_min, value_max;             ///< For string ranges this represents the min/max length, for dimensions this represents the min/max pixel count
-    double component_min, component_max;     ///< For string this represents the unicode range for chars, 0-127 limits to ASCII
-    int is_range;                            ///< if set to 1 the struct encodes a range, if set to 0 a single value
+    /**
+     * Value range.
+     * For string ranges this represents the min/max length.
+     * For dimensions this represents the min/max pixel count or width/height in multi-component case.
+     */
+    double value_min, value_max;
+    /**
+     * Value's component range.
+     * For string this represents the unicode range for chars, 0-127 limits to ASCII.
+     */
+    double component_min, component_max;
+    /**
+     * Range flag.
+     * If set to 1 the struct encodes a range, if set to 0 a single value.
+     */
+    int is_range;
 } AVOptionRange;
 
 /**
- * List of AVOptionRange structs
+ * List of AVOptionRange structs.
  */
 typedef struct AVOptionRanges {
+    /**
+     * Array of option ranges.
+     *
+     * Most of option types use just one component.
+     * Following describes multi-component option types:
+     *
+     * AV_OPT_TYPE_IMAGE_SIZE:
+     * component index 0: range of pixel count (width * height).
+     * component index 1: range of width.
+     * component index 2: range of height.
+     *
+     * @note To obtain multi-component version of this structure, user must
+     *       provide AV_OPT_MULTI_COMPONENT_RANGE to av_opt_query_ranges or
+     *       av_opt_query_ranges_default function.
+     *
+     * Multi-component range can be read as in following example:
+     *
+     * @code
+     * int range_index, component_index;
+     * AVOptionRanges *ranges;
+     * AVOptionRange *range[3]; //may require more than 3 in the future.
+     * av_opt_query_ranges(&ranges, obj, key, AV_OPT_MULTI_COMPONENT_RANGE);
+     * for (range_index = 0; range_index < ranges->nb_ranges; range_index++) {
+     *     for (component_index = 0; component_index < ranges->nb_components; component_index++)
+     *         range[component_index] = ranges->range[ranges->nb_ranges * component_index + range_index];
+     *     //do something with range here.
+     * }
+     * av_opt_freep_ranges(&ranges);
+     * @endcode
+     */
     AVOptionRange **range;
+    /**
+     * Number of ranges per component.
+     */
     int nb_ranges;
+    /**
+     * Number of componentes.
+     */
+    int nb_components;
 } AVOptionRanges;
 
 
@@ -491,6 +541,24 @@ int av_opt_flag_is_set(void *obj, const char *field_name, const char *flag_name)
  */
 int av_opt_set_dict(void *obj, struct AVDictionary **options);
 
+
+/**
+ * Set all the options from a given dictionary on an object.
+ *
+ * @param obj a struct whose first element is a pointer to AVClass
+ * @param options options to process. This dictionary will be freed and replaced
+ *                by a new one containing all options not found in obj.
+ *                Of course this new dictionary needs to be freed by caller
+ *                with av_dict_free().
+ * @param search_flags A combination of AV_OPT_SEARCH_*.
+ *
+ * @return 0 on success, a negative AVERROR if some option was found in obj,
+ *         but could not be set.
+ *
+ * @see av_dict_copy()
+ */
+int av_opt_set_dict2(void *obj, struct AVDictionary **options, int search_flags);
+
 /**
  * Extract a key-value pair from the beginning of a string.
  *
@@ -557,6 +625,13 @@ int av_opt_eval_q     (void *obj, const AVOption *o, const char *val, AVRational
  *  object.
  */
 #define AV_OPT_SEARCH_FAKE_OBJ   0x0002
+
+/**
+ *  Allows av_opt_query_ranges and av_opt_query_ranges_default to return more than
+ *  one component for certain option types.
+ *  @see AVOptionRanges for details.
+ */
+#define AV_OPT_MULTI_COMPONENT_RANGE 0x1000
 
 /**
  * Look for an option in an object. Consider only options which
@@ -739,12 +814,15 @@ void av_opt_freep_ranges(AVOptionRanges **ranges);
  *
  * @param flags is a bitmask of flags, undefined flags should not be set and should be ignored
  *              AV_OPT_SEARCH_FAKE_OBJ indicates that the obj is a double pointer to a AVClass instead of a full instance
+ *              AV_OPT_MULTI_COMPONENT_RANGE indicates that function may return more than one component, @see AVOptionRanges
  *
  * The result must be freed with av_opt_freep_ranges.
  *
- * @return >= 0 on success, a negative errro code otherwise
+ * @return number of compontents returned on success, a negative errro code otherwise
  */
 int av_opt_query_ranges(AVOptionRanges **, void *obj, const char *key, int flags);
+
+int av_opt_copy(void *dest, void *src);
 
 /**
  * Get a default list of allowed ranges for the given option.
@@ -754,10 +832,11 @@ int av_opt_query_ranges(AVOptionRanges **, void *obj, const char *key, int flags
  *
  * @param flags is a bitmask of flags, undefined flags should not be set and should be ignored
  *              AV_OPT_SEARCH_FAKE_OBJ indicates that the obj is a double pointer to a AVClass instead of a full instance
+ *              AV_OPT_MULTI_COMPONENT_RANGE indicates that function may return more than one component, @see AVOptionRanges
  *
  * The result must be freed with av_opt_free_ranges.
  *
- * @return >= 0 on success, a negative errro code otherwise
+ * @return number of compontents returned on success, a negative errro code otherwise
  */
 int av_opt_query_ranges_default(AVOptionRanges **, void *obj, const char *key, int flags);
 
