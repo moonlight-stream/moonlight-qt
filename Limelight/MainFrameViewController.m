@@ -67,7 +67,6 @@ static NSString* hostAddr;
     [super viewDidLoad];
 	// Do any additional setup after loading the view.
     self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)",@"1280x720 (60Hz)",@"1920x1080 (30Hz)",@"1920x1080 (60Hz)",nil];
-    self.HostField.text = @"neyer.case.edu";
 }
 
 - (void)didReceiveMemoryWarning

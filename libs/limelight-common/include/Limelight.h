@@ -111,6 +111,26 @@ int LiSendMouseButtonEvent(char action, int button);
 #define MODIFIER_ALT 0x04
 int LiSendKeyboardEvent(short keyCode, char keyAction, char modifiers);
 
+#define A_FLAG     0x1000
+#define B_FLAG     0x2000
+#define X_FLAG     0x4000
+#define Y_FLAG     0x8000
+#define UP_FLAG    0x0001
+#define DOWN_FLAG  0x0002
+#define LEFT_FLAG  0x0004
+#define RIGHT_FLAG 0x0008
+#define LB_FLAG    0x0100
+#define RB_FLAG    0x0200
+#define PLAY_FLAG  0x0010
+#define BACK_FLAG  0x0020
+#define LS_CLK_FLAG  0x0040
+#define RS_CLK_FLAG  0x0080
+#define SPECIAL_FLAG 0x0400
+int LiSendControllerEvent(short buttonFlags, char leftTrigger, char rightTrigger,
+	short leftStickX, short leftStickY, short rightStickX, short rightStickY);
+
+int LiSendScrollEvent(char scrollClicks);
+
 #ifdef __cplusplus
 }
 #endif

@@ -839,7 +839,6 @@
 					"$(PROJECT_DIR)/libs/FFmpeg/lib",
 					"$(PROJECT_DIR)/libs/limelight-common/lib",
 					"$(PROJECT_DIR)/libs/opus/lib",
-					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight/libs/FFmpeg/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;
@@ -865,7 +864,6 @@
 					"$(PROJECT_DIR)/libs/FFmpeg/lib",
 					"$(PROJECT_DIR)/libs/limelight-common/lib",
 					"$(PROJECT_DIR)/libs/opus/lib",
-					"/Users/diegowaxemberg/Documents/Repositories/Limelight-iOS/Limelight/libs/FFmpeg/lib",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WRAPPER_EXTENSION = app;

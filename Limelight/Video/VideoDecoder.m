@@ -120,7 +120,7 @@ int nv_avc_init(int width, int height, int perf_lvl, int thread_count) {
 		}
         
 		err = avpicture_fill((AVPicture*)rgb_frame,
-                             rgb_frame_buf,
+                             (unsigned char*)rgb_frame_buf,
                              render_pix_fmt,
                              decoder_ctx->width,
                              decoder_ctx->height);
@@ -217,9 +217,11 @@ static int update_rgb_frame(void) {
 		return 0;
 	}
     
+    const unsigned char* data = (unsigned char*)our_yuv_frame->data;
+    
 	// Convert the YUV image to RGB
 	err = sws_scale(scaler_ctx,
-                    our_yuv_frame->data,
+                    &data,
                     our_yuv_frame->linesize,
                     0,
                     decoder_ctx->height,
@@ -245,7 +247,7 @@ static int render_rgb_to_buffer(char* buffer, int size) {
                            render_pix_fmt,
                            decoder_ctx->width,
                            decoder_ctx->height,
-                           buffer,
+                           (unsigned char*)buffer,
                            size);
 	if (err < 0) {
 	//	__android_log_write(ANDROID_LOG_ERROR, "NVAVCDEC",
@@ -269,7 +271,7 @@ int nv_avc_get_raw_frame(char* buffer, int size) {
                            decoder_ctx->pix_fmt,
                            decoder_ctx->width,
                            decoder_ctx->height,
-                           buffer,
+                           (unsigned char*)buffer,
                            size);
     
 	av_frame_free(&our_yuv_frame);
