@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="5056" systemVersion="14A329f" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="dgh-JZ-Q7z">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6245" systemVersion="14A386a" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="dgh-JZ-Q7z">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="3733"/>
+        <deployment defaultVersion="1808" identifier="iOS"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
     </dependencies>
     <scenes>
         <!--Main Frame View Controller-->
@@ -16,23 +17,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <textField appearanceType="aqua" opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce PC Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="1q6-JB-JyL">
-                                <rect key="frame" x="20" y="45" width="280" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
-                                <textInputTraits key="textInputTraits" autocorrectionType="no" returnKeyType="done" enablesReturnKeyAutomatically="YES"/>
-                            </textField>
-                            <pickerView appearanceType="aqua" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0xb-lk-PHK">
-                                <rect key="frame" x="0.0" y="83" width="320" height="162"/>
-                                <autoresizingMask key="autoresizingMask" widthSizable="YES" flexibleMaxY="YES"/>
-                                <connections>
-                                    <outlet property="dataSource" destination="dgh-JZ-Q7z" id="R0Y-EX-neJ"/>
-                                    <outlet property="delegate" destination="dgh-JZ-Q7z" id="mkk-oI-y7K"/>
-                                </connections>
-                            </pickerView>
-                            <button appearanceType="aqua" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="J5M-pv-UHA">
-                                <rect key="frame" x="20" y="231" width="280" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="J5M-pv-UHA">
+                                <rect key="frame" x="82" y="231" width="156" height="30"/>
                                 <state key="normal" title="Start Streaming Steam">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
                                 </state>
@@ -40,9 +26,8 @@
                                     <action selector="StreamButton:" destination="dgh-JZ-Q7z" eventType="touchUpInside" id="3Bj-I0-bKs"/>
                                 </connections>
                             </button>
-                            <button appearanceType="aqua" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ATh-Tf-xRL">
+                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ATh-Tf-xRL">
                                 <rect key="frame" x="137" y="269" width="46" height="30"/>
-                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="46" id="mm8-gm-flQ"/>
                                 </constraints>
@@ -53,27 +38,41 @@
                                     <action selector="PairButton:" destination="dgh-JZ-Q7z" eventType="touchUpInside" id="jHN-B5-hsw"/>
                                 </connections>
                             </button>
+                            <pickerView contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0xb-lk-PHK">
+                                <rect key="frame" x="0.0" y="286" width="320" height="162"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="dgh-JZ-Q7z" id="R0Y-EX-neJ"/>
+                                    <outlet property="delegate" destination="dgh-JZ-Q7z" id="mkk-oI-y7K"/>
+                                </connections>
+                            </pickerView>
+                            <pickerView contentMode="scaleToFill" verticalHuggingPriority="249" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nFR-to-qQs">
+                                <rect key="frame" x="0.0" y="20" width="320" height="216"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="dgh-JZ-Q7z" id="C28-Eh-A6L"/>
+                                    <outlet property="delegate" destination="dgh-JZ-Q7z" id="dTy-8g-aj1"/>
+                                </connections>
+                            </pickerView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
-                            <constraint firstAttribute="centerX" secondItem="0xb-lk-PHK" secondAttribute="centerX" id="EN8-nj-InR"/>
-                            <constraint firstItem="J5M-pv-UHA" firstAttribute="top" secondItem="0xb-lk-PHK" secondAttribute="bottom" constant="-14" id="Fwm-ht-YIW"/>
-                            <constraint firstItem="1q6-JB-JyL" firstAttribute="top" secondItem="0HR-9w-kvY" secondAttribute="bottom" constant="25" id="I05-VM-Byl"/>
-                            <constraint firstItem="0xb-lk-PHK" firstAttribute="top" secondItem="1q6-JB-JyL" secondAttribute="bottom" constant="8" symbolic="YES" id="JUS-RK-mpl"/>
-                            <constraint firstItem="1q6-JB-JyL" firstAttribute="leading" secondItem="J5M-pv-UHA" secondAttribute="leading" id="QbW-wK-06K"/>
-                            <constraint firstItem="1q6-JB-JyL" firstAttribute="leading" secondItem="eqF-iA-Rqx" secondAttribute="leading" constant="20" symbolic="YES" id="X1l-68-WXh"/>
-                            <constraint firstItem="0xb-lk-PHK" firstAttribute="width" secondItem="eqF-iA-Rqx" secondAttribute="width" id="YXg-JU-HOP"/>
-                            <constraint firstItem="ATh-Tf-xRL" firstAttribute="top" secondItem="J5M-pv-UHA" secondAttribute="bottom" constant="8" symbolic="YES" id="ZaE-Uw-gIG"/>
-                            <constraint firstItem="1q6-JB-JyL" firstAttribute="trailing" secondItem="J5M-pv-UHA" secondAttribute="trailing" id="a4A-wo-bng"/>
-                            <constraint firstItem="ATh-Tf-xRL" firstAttribute="centerX" secondItem="J5M-pv-UHA" secondAttribute="centerX" id="ggX-Oh-h0J"/>
-                            <constraint firstAttribute="centerX" secondItem="J5M-pv-UHA" secondAttribute="centerX" id="sea-rp-rrt"/>
+                            <constraint firstItem="0xb-lk-PHK" firstAttribute="leading" secondItem="2rs-P3-zn7" secondAttribute="leading" id="350-bN-0q6"/>
+                            <constraint firstAttribute="centerX" secondItem="J5M-pv-UHA" secondAttribute="centerX" id="5jf-C1-faJ"/>
+                            <constraint firstAttribute="centerX" secondItem="0xb-lk-PHK" secondAttribute="centerX" id="By0-u3-3MA"/>
+                            <constraint firstItem="0xb-lk-PHK" firstAttribute="centerX" secondItem="J5M-pv-UHA" secondAttribute="centerX" id="Gab-EA-Il5"/>
+                            <constraint firstItem="0xb-lk-PHK" firstAttribute="top" secondItem="J5M-pv-UHA" secondAttribute="bottom" constant="25" id="RNw-zD-7u7"/>
+                            <constraint firstItem="0xb-lk-PHK" firstAttribute="top" secondItem="ATh-Tf-xRL" secondAttribute="bottom" constant="-13" id="TN4-kv-Yli"/>
+                            <constraint firstItem="J5M-pv-UHA" firstAttribute="top" secondItem="nFR-to-qQs" secondAttribute="bottom" constant="-5" id="Vcz-ix-cdp"/>
+                            <constraint firstItem="nFR-to-qQs" firstAttribute="top" secondItem="0HR-9w-kvY" secondAttribute="bottom" id="XWH-Vw-VfH"/>
+                            <constraint firstItem="0xb-lk-PHK" firstAttribute="centerX" secondItem="ATh-Tf-xRL" secondAttribute="centerX" id="bEv-zi-oip"/>
+                            <constraint firstItem="ATh-Tf-xRL" firstAttribute="top" secondItem="J5M-pv-UHA" secondAttribute="bottom" constant="8" id="gNc-KC-Q9G"/>
+                            <constraint firstAttribute="centerX" secondItem="nFR-to-qQs" secondAttribute="centerX" id="h9S-ek-7bf"/>
                         </constraints>
                     </view>
                     <toolbarItems/>
                     <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
                     <connections>
-                        <outlet property="HostField" destination="1q6-JB-JyL" id="a9N-Vm-gQC"/>
-                        <outlet property="StreamConfigs" destination="0xb-lk-PHK" id="whL-Jt-2e4"/>
+                        <outlet property="HostPicker" destination="nFR-to-qQs" id="lTE-tT-lYY"/>
+                        <outlet property="StreamConfigs" destination="0xb-lk-PHK" id="VxB-Ur-PNy"/>
                         <segue destination="mI3-9F-XwU" kind="modal" identifier="createStreamFrame" id="cPc-eP-un1"/>
                     </connections>
                 </viewController>

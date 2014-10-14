@@ -7,13 +7,16 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "MDNSManager.h"
 
-@interface MainFrameViewController : UIViewController <UIPickerViewDataSource,UIPickerViewDelegate>
+@interface MainFrameViewController : UIViewController <UIPickerViewDataSource, UIPickerViewDelegate, MDNSCallback>
+@property (strong, nonatomic) IBOutlet UIPickerView *HostPicker;
 - (IBAction)StreamButton:(UIButton *)sender;
 - (IBAction)PairButton:(UIButton *)sender;
-@property (strong, nonatomic) IBOutlet UITextField *HostField;
+
 @property (strong, nonatomic) IBOutlet UIPickerView *StreamConfigs;
 @property (strong, nonatomic) NSArray* streamConfigVals;
+@property (strong, nonatomic) NSArray* hostPickerVals;
 
 + (const char*)getHostAddr;
 - (void) segueIntoStream;
