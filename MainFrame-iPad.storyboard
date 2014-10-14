@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6245" systemVersion="14A386a" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="wb7-af-jn8">
     <dependencies>
-        <deployment defaultVersion="1808" identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
     </dependencies>
     <scenes>
@@ -17,20 +16,15 @@
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce PC Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="iC2-gT-zgS">
-                                <rect key="frame" x="20" y="107" width="984" height="30"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="22"/>
-                                <textInputTraits key="textInputTraits"/>
-                            </textField>
-                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rnA-uG-hAA">
-                                <rect key="frame" x="0.0" y="211" width="1024" height="216"/>
+                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bJR-sz-8uh">
+                                <rect key="frame" x="0.0" y="80" width="1024" height="216"/>
                                 <connections>
-                                    <outlet property="dataSource" destination="wb7-af-jn8" id="25E-op-oh6"/>
-                                    <outlet property="delegate" destination="wb7-af-jn8" id="gjZ-oj-THD"/>
+                                    <outlet property="dataSource" destination="wb7-af-jn8" id="EW1-pG-aj0"/>
+                                    <outlet property="delegate" destination="wb7-af-jn8" id="Piq-cV-gxM"/>
                                 </connections>
                             </pickerView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="taW-Um-zc6" userLabel="Start Stream Btn">
-                                <rect key="frame" x="317" y="145" width="391" height="141"/>
+                                <rect key="frame" x="317" y="273" width="391" height="141"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="26"/>
                                 <state key="normal" title="Start Streaming Steam!">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -39,6 +33,13 @@
                                     <action selector="StreamButton:" destination="wb7-af-jn8" eventType="touchUpInside" id="u2m-8A-Tor"/>
                                 </connections>
                             </button>
+                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rnA-uG-hAA">
+                                <rect key="frame" x="0.0" y="380" width="1024" height="216"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="wb7-af-jn8" id="25E-op-oh6"/>
+                                    <outlet property="delegate" destination="wb7-af-jn8" id="gjZ-oj-THD"/>
+                                </connections>
+                            </pickerView>
                             <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Nz-KX-Du4" userLabel="Pair Btn">
                                 <rect key="frame" x="439" y="595" width="147" height="36"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="26"/>
@@ -54,7 +55,7 @@
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
-                        <outlet property="HostField" destination="iC2-gT-zgS" id="JsQ-oS-2QL"/>
+                        <outlet property="HostPicker" destination="bJR-sz-8uh" id="pWB-P3-ZJ2"/>
                         <outlet property="StreamConfigs" destination="rnA-uG-hAA" id="LPP-jQ-5eW"/>
                         <segue destination="OIm-0n-i9v" kind="modal" identifier="createStreamFrame" modalPresentationStyle="fullScreen" id="MOD-9A-3Sk"/>
                     </connections>

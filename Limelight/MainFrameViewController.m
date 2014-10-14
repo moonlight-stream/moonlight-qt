@@ -9,13 +9,11 @@
 #import "MainFrameViewController.h"
 #import "VideoDepacketizer.h"
 #import "ConnectionHandler.h"
-
-@interface MainFrameViewController ()
-
-@end
+#import "Computer.h"
 
 @implementation MainFrameViewController
-static NSString* hostAddr;
+NSString* hostAddr;
+MDNSManager* mDNSManager;
 
 + (const char*)getHostAddr
 {
@@ -25,14 +23,12 @@ static NSString* hostAddr;
 - (void)PairButton:(UIButton *)sender
 {
     NSLog(@"Pair Button Pressed!");
-    hostAddr = self.HostField.text;
     [ConnectionHandler pairWithHost:hostAddr];
 }
 
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
-    hostAddr = self.HostField.text;
     [ConnectionHandler streamWithHost:hostAddr viewController:self];
 }
 
@@ -42,11 +38,24 @@ static NSString* hostAddr;
 
 - (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
 {
-    return [self.streamConfigVals objectAtIndex:row];
+    if (pickerView == self.StreamConfigs) {
+        return [self.streamConfigVals objectAtIndex:row];
+    } else if (pickerView == self.HostPicker) {
+        return ((Computer*)([self.hostPickerVals objectAtIndex:row])).displayName;
+    } else {
+        return nil;
+    }
 }
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
+    //self.hostPickerVals = [mDNSManager getFoundHosts];
+    
+    //[self.HostPicker reloadAllComponents];
+    if (pickerView == self.HostPicker) {
+        hostAddr = ((Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]])).hostName;
+    }
+    
     //TODO: figure out how to save this info!!
 }
 
@@ -59,14 +68,29 @@ static NSString* hostAddr;
 // returns the # of rows in each component..
 - (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
 {
-    return 4;
+    if (pickerView == self.StreamConfigs) {
+        return self.streamConfigVals.count;
+    } else if (pickerView == self.HostPicker) {
+        return self.hostPickerVals.count;
+    } else {
+        return 0;
+    }
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-	// Do any additional setup after loading the view.
-    self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)",@"1280x720 (60Hz)",@"1920x1080 (30Hz)",@"1920x1080 (60Hz)",nil];
+
+    self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
+    self.hostPickerVals = [[NSArray alloc] init];
+    
+    mDNSManager = [[MDNSManager alloc] initWithCallback:self];
+    [mDNSManager searchForHosts];
+}
+
+- (void)updateHosts:(NSArray *)hosts {
+    self.hostPickerVals = hosts;
+    [self.HostPicker reloadAllComponents];
 }
 
 - (void)didReceiveMemoryWarning

@@ -38,6 +38,8 @@
 		FB290E7919B37D81004C83CF /* MainFrame-iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */; };
 		FB290E7B19B38036004C83CF /* MainFrame-iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
+		FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F119EDB08B00929691 /* MDNSManager.m */; };
+		FBAB29F619EDE0F800929691 /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F519EDE0F800929691 /* Computer.m */; };
 		FBD8B40519C906230032E027 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B3FD19C906230032E027 /* libavcodec.a */; };
 		FBD8B40619C906230032E027 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B3FE19C906230032E027 /* libavdevice.a */; };
 		FBD8B40719C906230032E027 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B3FF19C906230032E027 /* libavfilter.a */; };
@@ -106,6 +108,10 @@
 		FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainFrame-iPad.storyboard"; sourceTree = SOURCE_ROOT; };
 		FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainFrame-iPhone.storyboard"; sourceTree = SOURCE_ROOT; };
 		FB7E794319C8B71B00A15F68 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
+		FBAB29F119EDB08B00929691 /* MDNSManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MDNSManager.m; sourceTree = "<group>"; };
+		FBAB29F319EDB0C400929691 /* MDNSManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDNSManager.h; sourceTree = "<group>"; };
+		FBAB29F419EDE0F800929691 /* Computer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Computer.h; sourceTree = "<group>"; };
+		FBAB29F519EDE0F800929691 /* Computer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Computer.m; sourceTree = "<group>"; };
 		FBD8B3FD19C906230032E027 /* libavcodec.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavcodec.a; sourceTree = "<group>"; };
 		FBD8B3FE19C906230032E027 /* libavdevice.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavdevice.a; sourceTree = "<group>"; };
 		FBD8B3FF19C906230032E027 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libavfilter.a; sourceTree = "<group>"; };
@@ -300,6 +306,10 @@
 				FB290D0819B2C406004C83CF /* Images.xcassets */,
 				FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */,
 				FB290CFA19B2C406004C83CF /* Supporting Files */,
+				FBAB29F119EDB08B00929691 /* MDNSManager.m */,
+				FBAB29F319EDB0C400929691 /* MDNSManager.h */,
+				FBAB29F419EDE0F800929691 /* Computer.h */,
+				FBAB29F519EDE0F800929691 /* Computer.m */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -697,9 +707,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB290D3D19B2C6E3004C83CF /* VideoDepacketizer.m in Sources */,
+				FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */,
 				FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */,
 				FB290D3E19B2C6E3004C83CF /* VideoRenderer.m in Sources */,
 				FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */,
+				FBAB29F619EDE0F800929691 /* Computer.m in Sources */,
 				FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
 				FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */,
