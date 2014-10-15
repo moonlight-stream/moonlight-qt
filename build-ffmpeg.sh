@@ -1,7 +1,7 @@
 #!/bin/bash
 
-SYSROOT_iPHONE="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS7.1.sdk"
-SYSROOT_SIMULATOR="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator7.1.sdk"
+SYSROOT_iPHONE="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneOS.platform/Developer/SDKs/iPhoneOS.sdk"
+SYSROOT_SIMULATOR="/Applications/Xcode.app/Contents/Developer/Platforms/iPhoneSimulator.platform/Developer/SDKs/iPhoneSimulator.sdk"
 CC_IPHONE="xcrun -sdk iphoneos clang"
 CC_SIMULATOR="xcrun -sdk iphonesimulator clang"
 function build_one {
