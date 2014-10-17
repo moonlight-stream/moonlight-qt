@@ -10,6 +10,7 @@
 #import "VideoDepacketizer.h"
 #import "ConnectionHandler.h"
 #import "Computer.h"
+#import "CryptoManager.h"
 
 @implementation MainFrameViewController
 NSString* hostAddr;
@@ -86,6 +87,7 @@ MDNSManager* mDNSManager;
     
     mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [mDNSManager searchForHosts];
+    [[[CryptoManager alloc] init] generateKeyPairUsingSSl];
 }
 
 - (void)updateHosts:(NSArray *)hosts {
