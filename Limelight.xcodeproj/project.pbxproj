@@ -843,7 +843,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(PROJECT_DIR)/libs/**",
-					"/usr/include/libxml2/**",
+					"$(SDKROOT)/usr/include/libxml2/**",
 				);
 				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
@@ -868,7 +868,7 @@
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
 					"$(PROJECT_DIR)/libs/**",
-					"/usr/include/libxml2/**",
+					"$(SDKROOT)/usr/include/libxml2/**",
 				);
 				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
