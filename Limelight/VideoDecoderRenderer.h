@@ -14,6 +14,8 @@
 
 - (id)initWithView:(UIView*)view;
 
+- (size_t)updateBufferForRange:(CMBlockBufferRef)existingBuffer data:(unsigned char *)data offset:(int)offset length:(int)nalLength;
+
 - (void)submitDecodeBuffer:(unsigned char *)data length:(int)length;
 
 @end
