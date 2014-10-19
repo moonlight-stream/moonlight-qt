@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98A03B4A19F3514B00861ACA /* liblimelight-common.a */; };
 		FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
 		FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF319B2C406004C83CF /* CoreGraphics.framework */; };
 		FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF519B2C406004C83CF /* UIKit.framework */; };
@@ -30,7 +31,6 @@
 		FB290D3C19B2C6E3004C83CF /* VideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D3219B2C6E3004C83CF /* VideoDecoder.m */; };
 		FB290D3D19B2C6E3004C83CF /* VideoDepacketizer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D3419B2C6E3004C83CF /* VideoDepacketizer.m */; };
 		FB290D3E19B2C6E3004C83CF /* VideoRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D3619B2C6E3004C83CF /* VideoRenderer.m */; };
-		FB290DB519B2C814004C83CF /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DAB19B2C814004C83CF /* liblimelight-common.a */; };
 		FB290DB719B2C870004C83CF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB619B2C870004C83CF /* libz.dylib */; };
 		FB290DB919B2C877004C83CF /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB819B2C877004C83CF /* libbz2.dylib */; };
 		FB290DC219B2E966004C83CF /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DC119B2E966004C83CF /* libopus.a */; };
@@ -56,6 +56,20 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		98A03B4919F3514B00861ACA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FB290E2E19B37A4E004C83CF;
+			remoteInfo = "limelight-common";
+		};
+		98A03B4B19F3517100861ACA /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = FB290E2D19B37A4E004C83CF;
+			remoteInfo = "limelight-common";
+		};
 		FB290D1419B2C406004C83CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = FB290CE619B2C406004C83CF /* Project object */;
@@ -73,6 +87,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
 		FB290CEE19B2C406004C83CF /* Limelight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Limelight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB290CF119B2C406004C83CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FB290CF319B2C406004C83CF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -310,6 +325,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */,
 				FBCC0E9B19EF9703009729EB /* libssl.a in Frameworks */,
 				FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */,
 				FB290DC419B2E98F004C83CF /* libxml2.dylib in Frameworks */,
@@ -323,7 +339,6 @@
 				FB290DC219B2E966004C83CF /* libopus.a in Frameworks */,
 				FB290CF819B2C406004C83CF /* CoreData.framework in Frameworks */,
 				FBCC0E9A19EF9703009729EB /* libcrypto.a in Frameworks */,
-				FB290DB519B2C814004C83CF /* liblimelight-common.a in Frameworks */,
 				FBD8B40B19C906230032E027 /* libswresample.a in Frameworks */,
 				FBD8B40819C906230032E027 /* libavformat.a in Frameworks */,
 				FBD8B40519C906230032E027 /* libavcodec.a in Frameworks */,
@@ -347,9 +362,18 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		98A03B4619F3514B00861ACA /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				98A03B4A19F3514B00861ACA /* liblimelight-common.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		FB290CE519B2C406004C83CF = {
 			isa = PBXGroup;
 			children = (
+				98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */,
 				FB290CF919B2C406004C83CF /* Limelight */,
 				FB290D1619B2C406004C83CF /* LimelightTests */,
 				FB290CF019B2C406004C83CF /* Frameworks */,
@@ -845,6 +869,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				98A03B4C19F3517100861ACA /* PBXTargetDependency */,
 			);
 			name = Limelight;
 			productName = Limelight;
@@ -895,6 +920,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 98A03B4619F3514B00861ACA /* Products */;
+					ProjectRef = 98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */;
+				},
+				{
 					ProductGroup = FBC8622F19F346A60087327B /* Products */;
 					ProjectRef = FBC8622E19F346A60087327B /* limelight-common.xcodeproj */;
 				},
@@ -908,6 +937,13 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
+		98A03B4A19F3514B00861ACA /* liblimelight-common.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "liblimelight-common.a";
+			remoteRef = 98A03B4919F3514B00861ACA /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		FBC8623319F346A60087327B /* liblimelight-common.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
@@ -974,6 +1010,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		98A03B4C19F3517100861ACA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "limelight-common";
+			targetProxy = 98A03B4B19F3517100861ACA /* PBXContainerItemProxy */;
+		};
 		FB290D1519B2C406004C83CF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = FB290CED19B2C406004C83CF /* Limelight */;
@@ -1083,14 +1124,14 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/libs/**",
+					"$(PROJECT_DIR)/limelight-common-c/limelight-common",
 					"$(SDKROOT)/usr/include/libxml2/**",
+					"$(PROJECT_DIR)/libs/**",
 				);
 				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libs/FFmpeg/lib",
-					"$(PROJECT_DIR)/libs/limelight-common/lib",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
 				);
@@ -1109,14 +1150,14 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/libs/**",
+					"$(PROJECT_DIR)/limelight-common-c/limelight-common",
 					"$(SDKROOT)/usr/include/libxml2/**",
+					"$(PROJECT_DIR)/libs/**",
 				);
 				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"$(PROJECT_DIR)/libs/FFmpeg/lib",
-					"$(PROJECT_DIR)/libs/limelight-common/lib",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
 				);
