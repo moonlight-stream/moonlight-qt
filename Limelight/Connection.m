@@ -28,10 +28,17 @@ static OpusDecoder *opusDecoder;
 #define PCM_BUFFER_SIZE 1024
 #define OUTPUT_BUS 0
 
-static short* decodedPcmBuffer;
-static int filledPcmBuffer;
+struct AUDIO_BUFFER_QUEUE_ENTRY {
+    struct AUDIO_BUFFER_QUEUE_ENTRY *next;
+    int length;
+    int offset;
+    char data[0];
+};
+
+static short decodedPcmBuffer[512];
+static NSLock *audioLock;
+static struct AUDIO_BUFFER_QUEUE_ENTRY *audioBufferQueue;
 static AudioComponentInstance audioUnit;
-static bool started = false;
 static VideoDecoderRenderer* renderer;
 
 void DrSetup(int width, int height, int fps, void* context, int drFlags)
@@ -81,17 +88,12 @@ void ArInit(void)
     
     opusDecoder = opus_decoder_create(48000, 2, &err);
     
-    decodedPcmBuffer = malloc(PCM_BUFFER_SIZE);
+    audioLock = [[NSLock alloc] init];
 }
 
 void ArRelease(void)
 {
     printf("Release audio\n");
-    
-    if (decodedPcmBuffer != NULL) {
-        free(decodedPcmBuffer);
-        decodedPcmBuffer = NULL;
-    }
     
     if (opusDecoder != NULL) {
         opus_decoder_destroy(opusDecoder);
@@ -102,6 +104,7 @@ void ArRelease(void)
 void ArStart(void)
 {
     printf("Start audio\n");
+    AudioOutputUnitStart(audioUnit);
 }
 
 void ArStop(void)
@@ -111,17 +114,31 @@ void ArStop(void)
 
 void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
 {
-
-    if (!started) {
-        AudioOutputUnitStart(audioUnit);
-        started = true;
-    }
-    filledPcmBuffer = opus_decode(opusDecoder, (unsigned char*)sampleData, sampleLength, decodedPcmBuffer, PCM_BUFFER_SIZE / 2, 0);
-    if (filledPcmBuffer > 0) {
+    int decodedLength = opus_decode(opusDecoder, (unsigned char*)sampleData, sampleLength, decodedPcmBuffer, PCM_BUFFER_SIZE / 2, 0);
+    if (decodedLength > 0) {
         // Return of opus_decode is samples per channel
-        filledPcmBuffer *= 4;
+        decodedLength *= 4;
         
-        NSLog(@"pcmBuffer: %d", filledPcmBuffer);        
+        struct AUDIO_BUFFER_QUEUE_ENTRY *newEntry = malloc(sizeof(*newEntry) + decodedLength);
+        if (newEntry != NULL) {
+            newEntry->next = NULL;
+            newEntry->length = decodedLength;
+            newEntry->offset = 0;
+            memcpy(newEntry->data, decodedPcmBuffer, decodedLength);
+            
+            [audioLock lock];
+            if (audioBufferQueue == NULL) {
+                audioBufferQueue = newEntry;
+            }
+            else {
+                struct AUDIO_BUFFER_QUEUE_ENTRY *lastEntry = audioBufferQueue;
+                while (lastEntry->next != NULL) {
+                    lastEntry = lastEntry->next;
+                }
+                lastEntry->next = newEntry;
+            }
+            [audioLock unlock];
+        }
     }
 }
 
@@ -193,15 +210,15 @@ void ClDisplayTransientMessage(char* message)
     clCallbacks.displayMessage = ClDisplayMessage;
     clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
     
-    //////// Don't think any of this is used /////////
+    // Configure the audio session for our app
     NSError *audioSessionError = nil;
     AVAudioSession* audioSession = [AVAudioSession sharedInstance];
-    [audioSession setPreferredSampleRate:48000.0 error:&audioSessionError];
     
+    [audioSession setPreferredSampleRate:48000.0 error:&audioSessionError];
     [audioSession setCategory: AVAudioSessionCategoryPlayAndRecord error: &audioSessionError];
     [audioSession setPreferredOutputNumberOfChannels:2 error:&audioSessionError];
+    [audioSession setPreferredIOBufferDuration:0.005 error:&audioSessionError];
     [audioSession setActive: YES error: &audioSessionError];
-    //////////////////////////////////////////////////
     
     OSStatus status;
     
@@ -217,27 +234,26 @@ void ClDisplayTransientMessage(char* message)
     if (status) {
         NSLog(@"Unable to instantiate new AudioComponent: %d", (int32_t)status);
     }
-
     
     AudioStreamBasicDescription audioFormat = {0};
     audioFormat.mSampleRate = 48000;
     audioFormat.mBitsPerChannel = 16;
     audioFormat.mFormatID = kAudioFormatLinearPCM;
-    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger;
-    audioFormat.mFramesPerPacket = 1;
+    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
     audioFormat.mChannelsPerFrame = 2;
-    audioFormat.mBytesPerFrame = 960;
-    audioFormat.mBytesPerPacket = 960;
+    audioFormat.mBytesPerFrame = audioFormat.mChannelsPerFrame * (audioFormat.mBitsPerChannel / 8);
+    audioFormat.mBytesPerPacket = audioFormat.mBytesPerFrame;
+    audioFormat.mFramesPerPacket = audioFormat.mBytesPerPacket / audioFormat.mBytesPerFrame;
     audioFormat.mReserved = 0;
-    
+
     status = AudioUnitSetProperty(audioUnit,
                                   kAudioUnitProperty_StreamFormat,
-                                  kAudioUnitScope_Output,
+                                  kAudioUnitScope_Input,
                                   OUTPUT_BUS,
                                   &audioFormat,
                                   sizeof(audioFormat));
     if (status) {
-        NSLog(@"Unable to set audio unit to output: %d", (int32_t)status);
+        NSLog(@"Unable to set audio unit to input: %d", (int32_t)status);
     }
     
     AURenderCallbackStruct callbackStruct = {0};
@@ -246,7 +262,7 @@ void ClDisplayTransientMessage(char* message)
     
     status = AudioUnitSetProperty(audioUnit,
                                   kAudioUnitProperty_SetRenderCallback,
-                                  kAudioUnitScope_Global,
+                                  kAudioUnitScope_Input,
                                   OUTPUT_BUS,
                                   &callbackStruct,
                                   sizeof(callbackStruct));
@@ -272,15 +288,60 @@ static OSStatus playbackCallback(void *inRefCon,
     // Fill them up as much as you can. Remember to set the size value in each buffer to match how
     // much data is in the buffer.
     
-    NSLog(@"Playback callback");
-    
     for (int i = 0; i < ioData->mNumberBuffers; i++) {
         ioData->mBuffers[i].mNumberChannels = 2;
-        int min = MIN(ioData->mBuffers[i].mDataByteSize, filledPcmBuffer);
-        NSLog(@"Min: %d", min);
-        memcpy(ioData->mBuffers[i].mData, decodedPcmBuffer, min);
-        ioData->mBuffers[i].mDataByteSize = min;
-        filledPcmBuffer -= min;
+        
+        if (ioData->mBuffers[i].mDataByteSize != 0) {
+            int thisBufferOffset = 0;
+            
+        FillBufferAgain:
+            // Make sure there's data to write
+            if (ioData->mBuffers[i].mDataByteSize - thisBufferOffset == 0) {
+                continue;
+            }
+            
+            // Wait for a buffer to be available
+            // FIXME: This needs optimization to avoid busy waiting for buffers
+            struct AUDIO_BUFFER_QUEUE_ENTRY *audioEntry = NULL;
+            while (audioEntry == NULL)
+            {
+                [audioLock lock];
+                if (audioBufferQueue != NULL) {
+                    // Dequeue this entry temporarily
+                    audioEntry = audioBufferQueue;
+                    audioBufferQueue = audioBufferQueue->next;
+                }
+                [audioLock unlock];
+            }
+            
+            // Figure out how much data we can write
+            int min = MIN(ioData->mBuffers[i].mDataByteSize - thisBufferOffset, audioEntry->length);
+            
+            // Copy data to the audio buffer
+            memcpy(&ioData->mBuffers[i].mData[thisBufferOffset], &audioEntry->data[audioEntry->offset], min);
+            thisBufferOffset += min;
+            
+            if (min < audioEntry->length) {
+                // This entry still has unused data
+                audioEntry->length -= min;
+                audioEntry->offset += min;
+                
+                // Requeue the entry
+                [audioLock lock];
+                audioEntry->next = audioBufferQueue;
+                audioBufferQueue = audioEntry;
+                [audioLock unlock];
+            }
+            else {
+                // This entry is fully depleted so free it
+                free(audioEntry);
+                
+                // Try to grab another sample to fill this buffer with
+                goto FillBufferAgain;
+            }
+
+            ioData->mBuffers[i].mDataByteSize = thisBufferOffset;
+        }
     }
     
     return noErr;
