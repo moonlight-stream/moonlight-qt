@@ -1,0 +1,3 @@
+[submodule "limelight-common-c"]
+	path = limelight-common-c
+	url = git@github.com:limelight-stream/limelight-common-c.git
