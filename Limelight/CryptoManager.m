@@ -17,6 +17,13 @@
     
 }
 
+- (NSData*) readCertFromFile {
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
+    return [NSData dataWithContentsOfFile:certFile];
+}
+
 - (void) generateKeyPairUsingSSl {
     NSLog(@"Generating Certificate: ");
     CertKeyPair certKeyPair = generateCertKeyPair();

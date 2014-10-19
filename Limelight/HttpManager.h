@@ -9,6 +9,8 @@
 #import <Foundation/Foundation.h>
 
 @interface HttpManager : NSObject
+- (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName;
 - (NSString*) generatePIN;
-- (NSString*) saltPIN:(NSString*)PIN;
+- (NSData*) saltPIN:(NSString*)PIN;
+- (NSURL*) newPairRequestWithSalt:(NSData*)salt andCert:(NSData*)cert;
 @end
