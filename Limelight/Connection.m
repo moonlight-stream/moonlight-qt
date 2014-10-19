@@ -125,6 +125,41 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
     }
 }
 
+void ClStageStarting(int stage)
+{
+    NSLog(@"Starting stage: %d", stage);
+}
+
+void ClStageComplete(int stage)
+{
+    NSLog(@"Stage %d complete", stage);
+}
+
+void ClStageFailed(int stage, long errorCode)
+{
+    NSLog(@"Stage %d failed: %ld", stage, errorCode);
+}
+
+void ClConnectionStarted(void)
+{
+    NSLog(@"Connection started");
+}
+
+void ClConnectionTerminated(long errorCode)
+{
+    NSLog(@"ConnectionTerminated: %ld", errorCode);
+}
+
+void ClDisplayMessage(char* message)
+{
+    NSLog(@"DisplayMessage: %s", message);
+}
+
+void ClDisplayTransientMessage(char* message)
+{
+    NSLog(@"DisplayTransientMessage: %s", message);
+}
+
 -(id) initWithHost:(int)ipaddr width:(int)width height:(int)height renderer:(VideoDecoderRenderer*)renderer
 {
     self = [super init];
@@ -133,6 +168,9 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
     streamConfig.width = width;
     streamConfig.height = height;
     streamConfig.fps = 30;
+    streamConfig.bitrate = 5000;
+    streamConfig.packetSize = 1024;
+    // FIXME: RI AES members
     
     drCallbacks.setup = DrSetup;
     drCallbacks.start = DrStart;
@@ -146,6 +184,13 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
     arCallbacks.release = ArRelease;
     arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
     
+    clCallbacks.stageStarting = ClStageStarting;
+    clCallbacks.stageComplete = ClStageComplete;
+    clCallbacks.stageFailed = ClStageFailed;
+    clCallbacks.connectionStarted = ClConnectionStarted;
+    clCallbacks.connectionTerminated = ClConnectionTerminated;
+    clCallbacks.displayMessage = ClDisplayMessage;
+    clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
     
     //////// Don't think any of this is used /////////
     NSError *audioSessionError = nil;
