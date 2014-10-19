@@ -7,8 +7,6 @@
 //
 
 #import "StreamView.h"
-#import "VideoDecoder.h"
-#import "VideoRenderer.h"
 
 @implementation StreamView {
     size_t width;
@@ -43,14 +41,9 @@
 // An empty implementation adversely affects performance during animation.
 - (void)drawRect:(CGRect)rect
 {
-    if (![VideoRenderer isRendering]) {
+    /*if (![VideoRenderer isRendering]) {
         return;
-    }
-    if (!nv_avc_get_rgb_frame((char*)pixelData, width*height*4))
-    {
-        //NSLog(@"no new decoded frame!");
-        //return;
-    }
+    }*/
     
     bitmapContext = CGBitmapContextCreate(pixelData, width, height, bitsPerComponent, bytesPerRow, colorSpace, kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little);
     image = CGBitmapContextCreateImage(bitmapContext);

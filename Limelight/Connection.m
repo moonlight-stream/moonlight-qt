@@ -12,8 +12,6 @@
 
 #include "Limelight.h"
 #include "opus.h"
-#include "VideoDecoder.h"
-#include "VideoRenderer.h"
 
 @implementation Connection {
     IP_ADDRESS host;
@@ -39,15 +37,13 @@ bool started = false;
 void DrSetup(int width, int height, int fps, void* context, int drFlags)
 {
     printf("Setup video\n");
-    nv_avc_init(width, height, DISABLE_LOOP_FILTER | FAST_DECODE | FAST_BILINEAR_FILTERING, 2);
 }
 
 void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 {
-    unsigned char* data = (unsigned char*) malloc(decodeUnit->fullLength + nv_avc_get_input_padding_size());
+    unsigned char* data = (unsigned char*) malloc(decodeUnit->fullLength);
     if (data != NULL) {
         int offset = 0;
-        int err;
         
         PLENTRY entry = decodeUnit->bufferList;
         while (entry != NULL) {
@@ -56,10 +52,7 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
             entry = entry->next;
         }
         
-        err = nv_avc_decode(data, decodeUnit->fullLength);
-        if (err != 0) {
-            printf("Decode failed: %d\n", err);
-        }
+        // FIXME: Submit data to decoder
         
         free(data);
     }
@@ -68,19 +61,16 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 void DrStart(void)
 {
     printf("Start video\n");
-    [VideoRenderer startRendering];
 }
 
 void DrStop(void)
 {
     printf("Stop video\n");
-    [VideoRenderer stopRendering];
 }
 
 void DrRelease(void)
 {
     printf("Release video\n");
-    nv_avc_destroy();
 }
 
 void ArInit(void)
@@ -131,9 +121,7 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
         // Return of opus_decode is samples per channel
         filledPcmBuffer *= 4;
         
-        NSLog(@"pcmBuffer: %d", filledPcmBuffer);
-        //[audioRendererBlock lock];
-        
+        NSLog(@"pcmBuffer: %d", filledPcmBuffer);        
     }
 }
 

@@ -8,9 +8,8 @@
 
 #import "StreamFrameViewController.h"
 #import "MainFrameViewController.h"
-#import "VideoDepacketizer.h"
 #import "Connection.h"
-#import "VideoRenderer.h"
+#import "VideoDecoderRenderer.h"
 #import "ConnectionHandler.h"
 
 #include <sys/socket.h>
@@ -48,8 +47,7 @@
     
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:conn];
-    [opQueue addOperation:[[VideoRenderer alloc]initWithTarget:streamView]];
-    
+    [opQueue addOperation:[[VideoDecoderRenderer alloc]initWithTarget:streamView]];
 }
 
 - (void)didReceiveMemoryWarning
