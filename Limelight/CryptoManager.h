@@ -11,5 +11,6 @@
 @interface CryptoManager : NSObject <NSURLConnectionDelegate>
 
 - (void) generateKeyPairUsingSSl;
+- (NSString*) getUniqueID;
 
 @end

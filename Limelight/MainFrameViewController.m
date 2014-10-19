@@ -11,6 +11,7 @@
 #import "ConnectionHandler.h"
 #import "Computer.h"
 #import "CryptoManager.h"
+#import "HttpManager.h"
 
 @implementation MainFrameViewController
 NSString* hostAddr;
@@ -87,7 +88,10 @@ MDNSManager* mDNSManager;
     
     mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [mDNSManager searchForHosts];
-    [[[CryptoManager alloc] init] generateKeyPairUsingSSl];
+    CryptoManager* cryptMan = [[CryptoManager alloc] init];
+    [cryptMan getUniqueID];
+    HttpManager* hMan = [[HttpManager alloc] init];
+    [hMan saltPIN:[hMan generatePIN]];
 }
 
 - (void)updateHosts:(NSArray *)hosts {

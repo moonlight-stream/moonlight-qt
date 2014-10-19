@@ -41,6 +41,7 @@
 		FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F119EDB08B00929691 /* MDNSManager.m */; };
 		FBAB29F619EDE0F800929691 /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F519EDE0F800929691 /* Computer.m */; };
 		FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29FB19EE13AA00929691 /* CryptoManager.m */; };
+		FBC8622D19F0BEFB0087327B /* HttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC8622C19F0BEFB0087327B /* HttpManager.m */; };
 		FBCC0E9A19EF9703009729EB /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9819EF9703009729EB /* libcrypto.a */; };
 		FBCC0E9B19EF9703009729EB /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9919EF9703009729EB /* libssl.a */; };
 		FBCC0E9D19F00659009729EB /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FBCC0E9C19F00659009729EB /* mkcert.c */; };
@@ -61,6 +62,13 @@
 			proxyType = 1;
 			remoteGlobalIDString = FB290CED19B2C406004C83CF;
 			remoteInfo = Limelight;
+		};
+		FBC8623219F346A60087327B /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = FBC8622E19F346A60087327B /* limelight-common.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FB290E2E19B37A4E004C83CF;
+			remoteInfo = "limelight-common";
 		};
 /* End PBXContainerItemProxy section */
 
@@ -118,6 +126,9 @@
 		FBAB29F519EDE0F800929691 /* Computer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Computer.m; sourceTree = "<group>"; };
 		FBAB29FA19EE13AA00929691 /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
 		FBAB29FB19EE13AA00929691 /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
+		FBC8622B19F0BEFB0087327B /* HttpManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpManager.h; sourceTree = "<group>"; };
+		FBC8622C19F0BEFB0087327B /* HttpManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HttpManager.m; sourceTree = "<group>"; };
+		FBC8622E19F346A60087327B /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "../../limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
 		FBCC0E4C19EF9703009729EB /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		FBCC0E4D19EF9703009729EB /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		FBCC0E4E19EF9703009729EB /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -358,6 +369,7 @@
 		FB290CF019B2C406004C83CF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FBC8622E19F346A60087327B /* limelight-common.xcodeproj */,
 				FB7E794319C8B71B00A15F68 /* libiconv.dylib */,
 				FB290DC319B2E98F004C83CF /* libxml2.dylib */,
 				FB290DB819B2C877004C83CF /* libbz2.dylib */,
@@ -401,6 +413,8 @@
 				FBAB29FB19EE13AA00929691 /* CryptoManager.m */,
 				FBCC0E9E19F00697009729EB /* mkcert.h */,
 				FBCC0E9C19F00659009729EB /* mkcert.c */,
+				FBC8622B19F0BEFB0087327B /* HttpManager.h */,
+				FBC8622C19F0BEFB0087327B /* HttpManager.m */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -526,6 +540,14 @@
 				FBD8B3FC19C906230032E027 /* lib */,
 			);
 			path = FFmpeg;
+			sourceTree = "<group>";
+		};
+		FBC8622F19F346A60087327B /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FBC8623319F346A60087327B /* liblimelight-common.a */,
+			);
+			name = Products;
 			sourceTree = "<group>";
 		};
 		FBCC0E4919EF9703009729EB /* openssl */ = {
@@ -871,6 +893,12 @@
 			mainGroup = FB290CE519B2C406004C83CF;
 			productRefGroup = FB290CEF19B2C406004C83CF /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = FBC8622F19F346A60087327B /* Products */;
+					ProjectRef = FBC8622E19F346A60087327B /* limelight-common.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				FB290CED19B2C406004C83CF /* Limelight */,
@@ -878,6 +906,16 @@
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		FBC8623319F346A60087327B /* liblimelight-common.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "liblimelight-common.a";
+			remoteRef = FBC8623219F346A60087327B /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
 		FB290CEC19B2C406004C83CF /* Resources */ = {
@@ -909,6 +947,7 @@
 				FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */,
 				FB290D3D19B2C6E3004C83CF /* VideoDepacketizer.m in Sources */,
 				FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */,
+				FBC8622D19F0BEFB0087327B /* HttpManager.m in Sources */,
 				FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */,
 				FB290D3E19B2C6E3004C83CF /* VideoRenderer.m in Sources */,
 				FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */,
