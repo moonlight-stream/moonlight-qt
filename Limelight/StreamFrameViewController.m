@@ -42,12 +42,14 @@
     // Repositions and resizes the view.
     CGRect contentRect = CGRectMake(0,0, self.view.frame.size.width, self.view.frame.size.height);
     streamView.bounds = contentRect;
+    
+    VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]init];
 
-    Connection* conn = [[Connection alloc] initWithHost:inet_addr([[ConnectionHandler resolveHost:[NSString stringWithUTF8String:[MainFrameViewController getHostAddr]]] UTF8String]) width:1280 height:720];
+    Connection* conn = [[Connection alloc] initWithHost:inet_addr([[ConnectionHandler resolveHost:[NSString stringWithUTF8String:[MainFrameViewController getHostAddr]]] UTF8String]) width:1280 height:720
+                                               renderer: renderer];
     
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:conn];
-    [opQueue addOperation:[[VideoDecoderRenderer alloc]initWithTarget:streamView]];
 }
 
 - (void)didReceiveMemoryWarning

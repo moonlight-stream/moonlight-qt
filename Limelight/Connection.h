@@ -7,10 +7,11 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "VideoDecoderRenderer.h"
 
 @interface Connection : NSOperation <NSStreamDelegate>
 
--(id) initWithHost:(int)ipaddr width:(int)width height:(int)height;
+-(id) initWithHost:(int)ipaddr width:(int)width height:(int)height renderer:(VideoDecoderRenderer*)renderer;
 -(void) main;
 
 @end

@@ -8,10 +8,12 @@
 
 #import <Foundation/Foundation.h>
 
-@interface VideoDecoderRenderer : NSOperation
+@import AVFoundation;
 
-- (id)initWithTarget:(UIView *)target;
+@interface VideoDecoderRenderer : NSObject
 
-@property UIView* renderTarget;
+- (id)init;
+
+- (void)submitDecodeBuffer:(unsigned char *)data length:(int)length;
 
 @end

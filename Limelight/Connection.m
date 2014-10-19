@@ -7,6 +7,7 @@
 //
 
 #import "Connection.h"
+
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
 
@@ -29,10 +30,9 @@ static OpusDecoder *opusDecoder;
 
 static short* decodedPcmBuffer;
 static int filledPcmBuffer;
-NSLock* audioRendererBlock;
-AudioComponentInstance audioUnit;
-bool started = false;
-
+static AudioComponentInstance audioUnit;
+static bool started = false;
+static VideoDecoderRenderer* renderer;
 
 void DrSetup(int width, int height, int fps, void* context, int drFlags)
 {
@@ -52,7 +52,7 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
             entry = entry->next;
         }
         
-        // FIXME: Submit data to decoder
+        [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
         
         free(data);
     }
@@ -125,7 +125,7 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
     }
 }
 
--(id) initWithHost:(int)ipaddr width:(int)width height:(int)height
+-(id) initWithHost:(int)ipaddr width:(int)width height:(int)height renderer:(VideoDecoderRenderer*)renderer
 {
     self = [super init];
     host = ipaddr;
@@ -237,7 +237,6 @@ static OSStatus playbackCallback(void *inRefCon,
         filledPcmBuffer -= min;
     }
     
-    //[audioRendererBlock unlock];
     return noErr;
 }
 
