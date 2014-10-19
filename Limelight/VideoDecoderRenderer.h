@@ -12,7 +12,7 @@
 
 @interface VideoDecoderRenderer : NSObject
 
-- (id)init;
+- (id)initWithView:(UIView*)view;
 
 - (void)submitDecodeBuffer:(unsigned char *)data length:(int)length;
 

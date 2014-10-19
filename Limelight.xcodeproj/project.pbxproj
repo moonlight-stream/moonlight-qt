@@ -29,7 +29,6 @@
 		FB290D3819B2C6E3004C83CF /* ConnectionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2919B2C6E3004C83CF /* ConnectionHandler.m */; };
 		FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */; };
 		FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */; };
-		FB290D3B19B2C6E3004C83CF /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2F19B2C6E3004C83CF /* StreamView.m */; };
 		FB290DB719B2C870004C83CF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB619B2C870004C83CF /* libz.dylib */; };
 		FB290DB919B2C877004C83CF /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB819B2C877004C83CF /* libbz2.dylib */; };
 		FB290DC219B2E966004C83CF /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DC119B2E966004C83CF /* libopus.a */; };
@@ -106,8 +105,6 @@
 		FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
 		FB290D2C19B2C6E3004C83CF /* StreamFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamFrameViewController.h; sourceTree = "<group>"; };
 		FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamFrameViewController.m; sourceTree = "<group>"; };
-		FB290D2E19B2C6E3004C83CF /* StreamView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamView.h; sourceTree = "<group>"; };
-		FB290D2F19B2C6E3004C83CF /* StreamView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamView.m; sourceTree = "<group>"; };
 		FB290DA919B2C814004C83CF /* Limelight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Limelight.h; sourceTree = "<group>"; };
 		FB290DAB19B2C814004C83CF /* liblimelight-common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "liblimelight-common.a"; sourceTree = "<group>"; };
 		FB290DB619B2C870004C83CF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
@@ -398,8 +395,6 @@
 				FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */,
 				FB290D2C19B2C6E3004C83CF /* StreamFrameViewController.h */,
 				FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */,
-				FB290D2E19B2C6E3004C83CF /* StreamView.h */,
-				FB290D2F19B2C6E3004C83CF /* StreamView.m */,
 				FB290D0219B2C406004C83CF /* AppDelegate.h */,
 				FB290D0319B2C406004C83CF /* AppDelegate.m */,
 				FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */,
@@ -965,7 +960,6 @@
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
 				FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */,
 				FB290D3719B2C6E3004C83CF /* Connection.m in Sources */,
-				FB290D3B19B2C6E3004C83CF /* StreamView.m in Sources */,
 				FBCC0E9D19F00659009729EB /* mkcert.c in Sources */,
 				FB290D3819B2C6E3004C83CF /* ConnectionHandler.m in Sources */,
 			);

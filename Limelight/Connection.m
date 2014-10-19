@@ -160,10 +160,11 @@ void ClDisplayTransientMessage(char* message)
     NSLog(@"DisplayTransientMessage: %s", message);
 }
 
--(id) initWithHost:(int)ipaddr width:(int)width height:(int)height renderer:(VideoDecoderRenderer*)renderer
+-(id) initWithHost:(int)ipaddr width:(int)width height:(int)height renderer:(VideoDecoderRenderer*)myRenderer
 {
     self = [super init];
     host = ipaddr;
+    renderer = myRenderer;
     
     streamConfig.width = width;
     streamConfig.height = height;

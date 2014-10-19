@@ -27,23 +27,8 @@
     [super viewDidLoad];
     
     [UIApplication sharedApplication].idleTimerDisabled = YES;
-
-    StreamView* streamView = [[StreamView alloc] initWithFrame:self.view.frame];
-    streamView.backgroundColor = [UIColor blackColor];
     
-    [self.view addSubview:streamView];
-    [streamView setNeedsDisplay];
-    
-    CGAffineTransform transform = CGAffineTransformMakeTranslation((streamView.frame.size.height/2) - (streamView.frame.size.width/2), (streamView.frame.size.width/2) - (streamView.frame.size.height/2));
-    transform = CGAffineTransformRotate(transform, M_PI_2);
-    transform = CGAffineTransformScale(transform, -1, -1);
-    streamView.transform = transform;
-    
-    // Repositions and resizes the view.
-    CGRect contentRect = CGRectMake(0,0, self.view.frame.size.width, self.view.frame.size.height);
-    streamView.bounds = contentRect;
-    
-    VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]init];
+    VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:self.view];
 
     Connection* conn = [[Connection alloc] initWithHost:inet_addr([[ConnectionHandler resolveHost:[NSString stringWithUTF8String:[MainFrameViewController getHostAddr]]] UTF8String]) width:1280 height:720
                                                renderer: renderer];
