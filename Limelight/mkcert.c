@@ -6,6 +6,7 @@
 
 #include <openssl/pem.h>
 #include <openssl/conf.h>
+#include <openssl/pkcs12.h>
 
 #ifndef OPENSSL_NO_ENGINE
 #include <openssl/engine.h>
@@ -13,7 +14,7 @@
 
 static const int NUM_BITS = 2048;
 static const int SERIAL = 0;
-static const int NUM_YEARS = 20;
+static const int NUM_YEARS = 10;
 
 int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years);
 int add_ext(X509 *cert, int nid, char *value);
@@ -22,12 +23,21 @@ struct CertKeyPair generateCertKeyPair() {
     BIO *bio_err;
     X509 *x509 = NULL;
     EVP_PKEY *pkey = NULL;
+    PKCS12 *p12 = NULL;
+   
     CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
-    
     bio_err = BIO_new_fp(stderr, BIO_NOCLOSE);
     
-    mkcert(&x509, &pkey, NUM_BITS, SERIAL, NUM_YEARS);
+    SSLeay_add_all_algorithms();
+    ERR_load_crypto_strings();
     
+    mkcert(&x509, &pkey, NUM_BITS, SERIAL, NUM_YEARS);
+
+    p12 = PKCS12_create("limelight", "GameStream", pkey, x509, NULL, 0, 0, 0, 0, 0);
+    if (p12 == NULL) {
+        printf("Error generating a valid PKCS12 certificate.\n");
+    }
+
     // Debug Print statements
     //RSA_print_fp(stdout, pkey->pkey.rsa, 0);
     //X509_print_fp(stdout, x509);
@@ -43,21 +53,26 @@ struct CertKeyPair generateCertKeyPair() {
     CRYPTO_mem_leaks(bio_err);
     BIO_free(bio_err);
     
-    return (CertKeyPair){x509, pkey};
+    return (CertKeyPair){x509, pkey, p12};
 }
 
 void freeCertKeyPair(struct CertKeyPair certKeyPair) {
     X509_free(certKeyPair.x509);
     EVP_PKEY_free(certKeyPair.pkey);
+    PKCS12_free(certKeyPair.p12);
 }
 
-void saveCertKeyPair(const char* certFile, const char* keyPairFile, CertKeyPair certKeyPair) {
+void saveCertKeyPair(const char* certFile, const char* p12File, const char* keyPairFile, CertKeyPair certKeyPair) {
     FILE* certFilePtr = fopen(certFile, "w");
     FILE* keyPairFilePtr = fopen(keyPairFile, "w");
+    FILE* p12FilePtr = fopen(p12File, "wb");
     
+    //TODO: error check
     PEM_write_PrivateKey(keyPairFilePtr, certKeyPair.pkey, NULL, NULL, 0, NULL, NULL);
     PEM_write_X509(certFilePtr, certKeyPair.x509);
+    i2d_PKCS12_fp(p12FilePtr, certKeyPair.p12);
     
+    fclose(p12FilePtr);
     fclose(certFilePtr);
     fclose(keyPairFilePtr);
 }
@@ -91,7 +106,7 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years) {
         goto err;
     }
     
-    X509_set_version(x, 3);
+    X509_set_version(x, 2);
     ASN1_INTEGER_set(X509_get_serialNumber(x), serial);
     X509_gmtime_adj(X509_get_notBefore(x), 0);
     X509_gmtime_adj(X509_get_notAfter(x), (long)60*60*24*365*years);
@@ -121,6 +136,7 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years) {
     
     *x509p = x;
     *pkeyp = pk;
+    
     return(1);
 err:
     return(0);

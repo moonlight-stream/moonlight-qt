@@ -8,10 +8,11 @@
 
 #import <Foundation/Foundation.h>
 
-@interface CryptoManager : NSObject <NSURLConnectionDelegate>
+@interface CryptoManager : NSObject
 
-- (void) generateKeyPairUsingSSl;
-- (NSString*) getUniqueID;
-- (NSData*) readCertFromFile;
-
++ (void) generateKeyPairUsingSSl;
++ (NSString*) getUniqueID;
++ (NSData*) readCertFromFile;
++ (NSData*) readKeyFromFile;
++ (NSData*) readP12FromFile;
 @end

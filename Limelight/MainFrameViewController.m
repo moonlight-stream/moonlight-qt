@@ -14,7 +14,7 @@
 #import "HttpManager.h"
 
 @implementation MainFrameViewController
-NSString* hostAddr;
+NSString* hostAddr = @"cement-truck.case.edu";
 MDNSManager* mDNSManager;
 
 + (const char*)getHostAddr
@@ -87,20 +87,20 @@ MDNSManager* mDNSManager;
     self.hostPickerVals = [[NSArray alloc] init];
     
     mDNSManager = [[MDNSManager alloc] initWithCallback:self];
-    [mDNSManager searchForHosts];
-    CryptoManager* cryptMan = [[CryptoManager alloc] init];
-    NSString* uniqueId = [cryptMan getUniqueID];
-    [cryptMan generateKeyPairUsingSSl];
-    NSData* cert = [cryptMan readCertFromFile];
-    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddr uniqueId:uniqueId deviceName:@"roth"];
+    //[mDNSManager searchForHosts];
+    
+    [CryptoManager generateKeyPairUsingSSl];
+    NSString* uniqueId = [CryptoManager getUniqueID];
+    NSData* cert = [CryptoManager readCertFromFile];
+    
+    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddr uniqueId:uniqueId deviceName:@"roth" cert:cert];
     NSString* PIN = [hMan generatePIN];
     NSData* saltedPIN = [hMan saltPIN:PIN];
     NSLog(@"PIN: %@, saltedPIN: %@", PIN, saltedPIN);
-    NSURL* pairUrl = [hMan newPairRequestWithSalt:saltedPIN andCert:cert];
+    NSURL* pairUrl = [hMan newPairRequest];
     NSURLRequest* pairRequest = [[NSURLRequest alloc] initWithURL:pairUrl];
-    NSLog(@"making pair request: %@", [pairRequest description]);
-    NSData* pairData = [NSURLConnection sendSynchronousRequest:pairRequest returningResponse:nil error:nil];
-    NSLog(@"Pair response: %@", [pairData description]);
+    // NSLog(@"making pair request: %@", [pairRequest description]);
+    [NSURLConnection connectionWithRequest:pairRequest delegate:hMan];
 }
 
 - (void)updateHosts:(NSArray *)hosts {

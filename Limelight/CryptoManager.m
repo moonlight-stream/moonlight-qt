@@ -12,33 +12,44 @@
 
 @implementation CryptoManager
 
-- (void)connection:(NSURLConnection *)connection willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge {
-    
-    
-}
-
-- (NSData*) readCertFromFile {
+// TODO: these three methods are almost identical, fix the copy-pasta
++ (NSData*) readCertFromFile {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
     return [NSData dataWithContentsOfFile:certFile];
 }
 
-- (void) generateKeyPairUsingSSl {
-    NSLog(@"Generating Certificate: ");
-    CertKeyPair certKeyPair = generateCertKeyPair();
-    
++ (NSData*) readP12FromFile {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
-    NSString *keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
+    NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
+    return [NSData dataWithContentsOfFile:p12File];
+}
+
++ (NSData*) readKeyFromFile {
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *keyFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
+    return [NSData dataWithContentsOfFile:keyFile];
+}
+
++ (void) generateKeyPairUsingSSl {
+    NSLog(@"Generating Certificate... ");
+    CertKeyPair certKeyPair = generateCertKeyPair();
     
-    NSLog(@"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
-    saveCertKeyPair([certFile UTF8String], [keyPairFile UTF8String], certKeyPair);
+    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString* documentsDirectory = [paths objectAtIndex:0];
+    NSString* certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
+    NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
+    NSString* p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
+    
+    //NSLog(@"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
+    saveCertKeyPair([certFile UTF8String], [p12File UTF8String], [keyPairFile UTF8String], certKeyPair);
     freeCertKeyPair(certKeyPair);
 }
 
-- (NSString*) getUniqueID {
++ (NSString*) getUniqueID {
     // generate a UUID
     NSUUID* uuid = [ASIdentifierManager sharedManager].advertisingIdentifier;
     NSString* idString = [NSString stringWithString:[uuid UUIDString]];
