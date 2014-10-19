@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98A03B4A19F3514B00861ACA /* liblimelight-common.a */; };
+		98A03B5019F3598400861ACA /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */; };
+		98A03B5119F35AAC00861ACA /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9819EF9703009729EB /* libcrypto.a */; };
 		FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
 		FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF319B2C406004C83CF /* CoreGraphics.framework */; };
 		FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF519B2C406004C83CF /* UIKit.framework */; };
@@ -27,10 +29,6 @@
 		FB290D3819B2C6E3004C83CF /* ConnectionHandler.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2919B2C6E3004C83CF /* ConnectionHandler.m */; };
 		FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */; };
 		FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */; };
-		FB290D3B19B2C6E3004C83CF /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2F19B2C6E3004C83CF /* StreamView.m */; };
-		FB290D3C19B2C6E3004C83CF /* VideoDecoder.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D3219B2C6E3004C83CF /* VideoDecoder.m */; };
-		FB290D3D19B2C6E3004C83CF /* VideoDepacketizer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D3419B2C6E3004C83CF /* VideoDepacketizer.m */; };
-		FB290D3E19B2C6E3004C83CF /* VideoRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D3619B2C6E3004C83CF /* VideoRenderer.m */; };
 		FB290DB719B2C870004C83CF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB619B2C870004C83CF /* libz.dylib */; };
 		FB290DB919B2C877004C83CF /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB819B2C877004C83CF /* libbz2.dylib */; };
 		FB290DC219B2E966004C83CF /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DC119B2E966004C83CF /* libopus.a */; };
@@ -42,17 +40,8 @@
 		FBAB29F619EDE0F800929691 /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F519EDE0F800929691 /* Computer.m */; };
 		FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29FB19EE13AA00929691 /* CryptoManager.m */; };
 		FBC8622D19F0BEFB0087327B /* HttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC8622C19F0BEFB0087327B /* HttpManager.m */; };
-		FBCC0E9A19EF9703009729EB /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9819EF9703009729EB /* libcrypto.a */; };
 		FBCC0E9B19EF9703009729EB /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9919EF9703009729EB /* libssl.a */; };
 		FBCC0E9D19F00659009729EB /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FBCC0E9C19F00659009729EB /* mkcert.c */; };
-		FBD8B40519C906230032E027 /* libavcodec.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B3FD19C906230032E027 /* libavcodec.a */; };
-		FBD8B40619C906230032E027 /* libavdevice.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B3FE19C906230032E027 /* libavdevice.a */; };
-		FBD8B40719C906230032E027 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B3FF19C906230032E027 /* libavfilter.a */; };
-		FBD8B40819C906230032E027 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B40019C906230032E027 /* libavformat.a */; };
-		FBD8B40919C906230032E027 /* libavresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B40119C906230032E027 /* libavresample.a */; };
-		FBD8B40A19C906230032E027 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B40219C906230032E027 /* libavutil.a */; };
-		FBD8B40B19C906230032E027 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B40319C906230032E027 /* libswresample.a */; };
-		FBD8B40C19C906230032E027 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBD8B40419C906230032E027 /* libswscale.a */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -88,6 +77,8 @@
 
 /* Begin PBXFileReference section */
 		98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
+		98A03B4E19F3598400861ACA /* VideoDecoderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoDecoderRenderer.h; path = Limelight/VideoDecoderRenderer.h; sourceTree = SOURCE_ROOT; };
+		98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoDecoderRenderer.m; path = Limelight/VideoDecoderRenderer.m; sourceTree = SOURCE_ROOT; };
 		FB290CEE19B2C406004C83CF /* Limelight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Limelight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB290CF119B2C406004C83CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FB290CF319B2C406004C83CF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -114,14 +105,6 @@
 		FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
 		FB290D2C19B2C6E3004C83CF /* StreamFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamFrameViewController.h; sourceTree = "<group>"; };
 		FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamFrameViewController.m; sourceTree = "<group>"; };
-		FB290D2E19B2C6E3004C83CF /* StreamView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamView.h; sourceTree = "<group>"; };
-		FB290D2F19B2C6E3004C83CF /* StreamView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamView.m; sourceTree = "<group>"; };
-		FB290D3119B2C6E3004C83CF /* VideoDecoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDecoder.h; sourceTree = "<group>"; };
-		FB290D3219B2C6E3004C83CF /* VideoDecoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoDecoder.m; sourceTree = "<group>"; };
-		FB290D3319B2C6E3004C83CF /* VideoDepacketizer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDepacketizer.h; sourceTree = "<group>"; };
-		FB290D3419B2C6E3004C83CF /* VideoDepacketizer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoDepacketizer.m; sourceTree = "<group>"; };
-		FB290D3519B2C6E3004C83CF /* VideoRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoRenderer.h; sourceTree = "<group>"; };
-		FB290D3619B2C6E3004C83CF /* VideoRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoRenderer.m; sourceTree = "<group>"; };
 		FB290DA919B2C814004C83CF /* Limelight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Limelight.h; sourceTree = "<group>"; };
 		FB290DAB19B2C814004C83CF /* liblimelight-common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "liblimelight-common.a"; sourceTree = "<group>"; };
 		FB290DB619B2C870004C83CF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
@@ -325,25 +308,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				98A03B5119F35AAC00861ACA /* libcrypto.a in Frameworks */,
 				98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */,
 				FBCC0E9B19EF9703009729EB /* libssl.a in Frameworks */,
 				FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */,
 				FB290DC419B2E98F004C83CF /* libxml2.dylib in Frameworks */,
-				FBD8B40719C906230032E027 /* libavfilter.a in Frameworks */,
 				FB290DB919B2C877004C83CF /* libbz2.dylib in Frameworks */,
-				FBD8B40919C906230032E027 /* libavresample.a in Frameworks */,
 				FB290DB719B2C870004C83CF /* libz.dylib in Frameworks */,
-				FBD8B40C19C906230032E027 /* libswscale.a in Frameworks */,
-				FBD8B40A19C906230032E027 /* libavutil.a in Frameworks */,
 				FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */,
 				FB290DC219B2E966004C83CF /* libopus.a in Frameworks */,
 				FB290CF819B2C406004C83CF /* CoreData.framework in Frameworks */,
-				FBCC0E9A19EF9703009729EB /* libcrypto.a in Frameworks */,
-				FBD8B40B19C906230032E027 /* libswresample.a in Frameworks */,
-				FBD8B40819C906230032E027 /* libavformat.a in Frameworks */,
-				FBD8B40519C906230032E027 /* libavcodec.a in Frameworks */,
 				FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */,
-				FBD8B40619C906230032E027 /* libavdevice.a in Frameworks */,
 				FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -420,8 +395,6 @@
 				FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */,
 				FB290D2C19B2C6E3004C83CF /* StreamFrameViewController.h */,
 				FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */,
-				FB290D2E19B2C6E3004C83CF /* StreamView.h */,
-				FB290D2F19B2C6E3004C83CF /* StreamView.m */,
 				FB290D0219B2C406004C83CF /* AppDelegate.h */,
 				FB290D0319B2C406004C83CF /* AppDelegate.m */,
 				FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */,
@@ -475,12 +448,8 @@
 		FB290D3019B2C6E3004C83CF /* Video */ = {
 			isa = PBXGroup;
 			children = (
-				FB290D3119B2C6E3004C83CF /* VideoDecoder.h */,
-				FB290D3219B2C6E3004C83CF /* VideoDecoder.m */,
-				FB290D3319B2C6E3004C83CF /* VideoDepacketizer.h */,
-				FB290D3419B2C6E3004C83CF /* VideoDepacketizer.m */,
-				FB290D3519B2C6E3004C83CF /* VideoRenderer.h */,
-				FB290D3619B2C6E3004C83CF /* VideoRenderer.m */,
+				98A03B4E19F3598400861ACA /* VideoDecoderRenderer.h */,
+				98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */,
 			);
 			path = Video;
 			sourceTree = "<group>";
@@ -981,21 +950,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */,
-				FB290D3D19B2C6E3004C83CF /* VideoDepacketizer.m in Sources */,
+				98A03B5019F3598400861ACA /* VideoDecoderRenderer.m in Sources */,
 				FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */,
 				FBC8622D19F0BEFB0087327B /* HttpManager.m in Sources */,
 				FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */,
-				FB290D3E19B2C6E3004C83CF /* VideoRenderer.m in Sources */,
 				FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */,
 				FBAB29F619EDE0F800929691 /* Computer.m in Sources */,
 				FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
 				FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */,
 				FB290D3719B2C6E3004C83CF /* Connection.m in Sources */,
-				FB290D3B19B2C6E3004C83CF /* StreamView.m in Sources */,
 				FBCC0E9D19F00659009729EB /* mkcert.c in Sources */,
 				FB290D3819B2C6E3004C83CF /* ConnectionHandler.m in Sources */,
-				FB290D3C19B2C6E3004C83CF /* VideoDecoder.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1074,7 +1040,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -1107,7 +1073,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 7.1;
+				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				SDKROOT = iphoneos;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
@@ -1131,7 +1097,6 @@
 				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/libs/FFmpeg/lib",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
 				);
@@ -1157,7 +1122,6 @@
 				INFOPLIST_FILE = "Limelight/Limelight-Info.plist";
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(PROJECT_DIR)/libs/FFmpeg/lib",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
 				);

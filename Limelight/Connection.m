@@ -7,13 +7,12 @@
 //
 
 #import "Connection.h"
+
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
 
 #include "Limelight.h"
 #include "opus.h"
-#include "VideoDecoder.h"
-#include "VideoRenderer.h"
 
 @implementation Connection {
     IP_ADDRESS host;
@@ -31,23 +30,20 @@ static OpusDecoder *opusDecoder;
 
 static short* decodedPcmBuffer;
 static int filledPcmBuffer;
-NSLock* audioRendererBlock;
-AudioComponentInstance audioUnit;
-bool started = false;
-
+static AudioComponentInstance audioUnit;
+static bool started = false;
+static VideoDecoderRenderer* renderer;
 
 void DrSetup(int width, int height, int fps, void* context, int drFlags)
 {
     printf("Setup video\n");
-    nv_avc_init(width, height, DISABLE_LOOP_FILTER | FAST_DECODE | FAST_BILINEAR_FILTERING, 2);
 }
 
 void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 {
-    unsigned char* data = (unsigned char*) malloc(decodeUnit->fullLength + nv_avc_get_input_padding_size());
+    unsigned char* data = (unsigned char*) malloc(decodeUnit->fullLength);
     if (data != NULL) {
         int offset = 0;
-        int err;
         
         PLENTRY entry = decodeUnit->bufferList;
         while (entry != NULL) {
@@ -56,10 +52,7 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
             entry = entry->next;
         }
         
-        err = nv_avc_decode(data, decodeUnit->fullLength);
-        if (err != 0) {
-            printf("Decode failed: %d\n", err);
-        }
+        [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
         
         free(data);
     }
@@ -68,19 +61,16 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 void DrStart(void)
 {
     printf("Start video\n");
-    [VideoRenderer startRendering];
 }
 
 void DrStop(void)
 {
     printf("Stop video\n");
-    [VideoRenderer stopRendering];
 }
 
 void DrRelease(void)
 {
     printf("Release video\n");
-    nv_avc_destroy();
 }
 
 void ArInit(void)
@@ -131,20 +121,57 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
         // Return of opus_decode is samples per channel
         filledPcmBuffer *= 4;
         
-        NSLog(@"pcmBuffer: %d", filledPcmBuffer);
-        //[audioRendererBlock lock];
-        
+        NSLog(@"pcmBuffer: %d", filledPcmBuffer);        
     }
 }
 
--(id) initWithHost:(int)ipaddr width:(int)width height:(int)height
+void ClStageStarting(int stage)
+{
+    NSLog(@"Starting stage: %d", stage);
+}
+
+void ClStageComplete(int stage)
+{
+    NSLog(@"Stage %d complete", stage);
+}
+
+void ClStageFailed(int stage, long errorCode)
+{
+    NSLog(@"Stage %d failed: %ld", stage, errorCode);
+}
+
+void ClConnectionStarted(void)
+{
+    NSLog(@"Connection started");
+}
+
+void ClConnectionTerminated(long errorCode)
+{
+    NSLog(@"ConnectionTerminated: %ld", errorCode);
+}
+
+void ClDisplayMessage(char* message)
+{
+    NSLog(@"DisplayMessage: %s", message);
+}
+
+void ClDisplayTransientMessage(char* message)
+{
+    NSLog(@"DisplayTransientMessage: %s", message);
+}
+
+-(id) initWithHost:(int)ipaddr width:(int)width height:(int)height renderer:(VideoDecoderRenderer*)myRenderer
 {
     self = [super init];
     host = ipaddr;
+    renderer = myRenderer;
     
     streamConfig.width = width;
     streamConfig.height = height;
     streamConfig.fps = 30;
+    streamConfig.bitrate = 5000;
+    streamConfig.packetSize = 1024;
+    // FIXME: RI AES members
     
     drCallbacks.setup = DrSetup;
     drCallbacks.start = DrStart;
@@ -158,6 +185,13 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
     arCallbacks.release = ArRelease;
     arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
     
+    clCallbacks.stageStarting = ClStageStarting;
+    clCallbacks.stageComplete = ClStageComplete;
+    clCallbacks.stageFailed = ClStageFailed;
+    clCallbacks.connectionStarted = ClConnectionStarted;
+    clCallbacks.connectionTerminated = ClConnectionTerminated;
+    clCallbacks.displayMessage = ClDisplayMessage;
+    clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
     
     //////// Don't think any of this is used /////////
     NSError *audioSessionError = nil;
@@ -249,7 +283,6 @@ static OSStatus playbackCallback(void *inRefCon,
         filledPcmBuffer -= min;
     }
     
-    //[audioRendererBlock unlock];
     return noErr;
 }
 
