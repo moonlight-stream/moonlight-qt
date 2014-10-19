@@ -88,9 +88,18 @@ MDNSManager* mDNSManager;
     mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [mDNSManager searchForHosts];
     CryptoManager* cryptMan = [[CryptoManager alloc] init];
-    [cryptMan getUniqueID];
-    HttpManager* hMan = [[HttpManager alloc] init];
-    [hMan saltPIN:[hMan generatePIN]];
+    NSString* uniqueId = [cryptMan getUniqueID];
+    [cryptMan generateKeyPairUsingSSl];
+    NSData* cert = [cryptMan readCertFromFile];
+    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddr uniqueId:uniqueId deviceName:@"roth"];
+    NSString* PIN = [hMan generatePIN];
+    NSData* saltedPIN = [hMan saltPIN:PIN];
+    NSLog(@"PIN: %@, saltedPIN: %@", PIN, saltedPIN);
+    NSURL* pairUrl = [hMan newPairRequestWithSalt:saltedPIN andCert:cert];
+    NSURLRequest* pairRequest = [[NSURLRequest alloc] initWithURL:pairUrl];
+    NSLog(@"making pair request: %@", [pairRequest description]);
+    NSData* pairData = [NSURLConnection sendSynchronousRequest:pairRequest returningResponse:nil error:nil];
+    NSLog(@"Pair response: %@", [pairData description]);
 }
 
 - (void)updateHosts:(NSArray *)hosts {

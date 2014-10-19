@@ -9,7 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "MDNSManager.h"
 
-@interface MainFrameViewController : UIViewController <UIPickerViewDataSource, UIPickerViewDelegate, MDNSCallback>
+@interface MainFrameViewController : UIViewController <UIPickerViewDataSource, UIPickerViewDelegate, MDNSCallback, NSURLConnectionDelegate>
 @property (strong, nonatomic) IBOutlet UIPickerView *HostPicker;
 - (IBAction)StreamButton:(UIButton *)sender;
 - (IBAction)PairButton:(UIButton *)sender;

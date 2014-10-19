@@ -28,15 +28,21 @@ static const NSString* PORT = @"47984";
     return self;
 }
 
-- (NSURL*) newPairRequestWithSalt:(NSString*)salt andCert:(NSString*)cert {
-    NSURL* url = [[NSURL alloc] initWithString:
-                  [NSString stringWithFormat:@"http://%@:%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=getservercert&salt=%@&clientcert=%@",
-                                                _host, PORT, _uniqueId, _deviceName, salt, cert]];
+- (NSURL*) newPairRequestWithSalt:(NSData*)salt andCert:(NSData*)cert {
+    NSLog(@"host: %@ \nport: %@ \nuniqueID: %@ \ndeviceName: %@ \nsalt: %@ \ncert: %@", _host, PORT, _uniqueId, _deviceName, salt, cert);
+    NSString* urlString = [[NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=getservercert&salt=%@&clientcert=%@", _baseURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:cert]] stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSURL* url = [[NSURL alloc] initWithString:urlString];
+    NSLog(@"pair url: %@", url);
     return url;
 }
 
-- (void) initiatePairing {
-    
+- (NSString*) bytesToHex:(NSData*)data {
+    const unsigned char* bytes = [data bytes];
+    NSMutableString *hex = [[NSMutableString alloc] init];
+    for (int i = 0; i < [data length]; i++) {
+        [hex appendFormat:@"%02X" , bytes[i]];
+    }
+    return hex;
 }
 
 - (NSString*) generatePIN {

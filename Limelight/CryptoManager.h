@@ -12,5 +12,6 @@
 
 - (void) generateKeyPairUsingSSl;
 - (NSString*) getUniqueID;
+- (NSData*) readCertFromFile;
 
 @end
