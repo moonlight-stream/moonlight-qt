@@ -11,6 +11,8 @@
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
 
+#include <dispatch/dispatch.h>
+
 #include "Limelight.h"
 #include "opus.h"
 
@@ -40,6 +42,7 @@ struct AUDIO_BUFFER_QUEUE_ENTRY {
 static short decodedPcmBuffer[512];
 static NSLock *audioLock;
 static struct AUDIO_BUFFER_QUEUE_ENTRY *audioBufferQueue;
+static dispatch_semaphore_t audioQueueSemaphore;
 static int audioBufferQueueLength;
 static AudioComponentInstance audioUnit;
 static VideoDecoderRenderer* renderer;
@@ -92,6 +95,8 @@ void ArInit(void)
     opusDecoder = opus_decoder_create(48000, 2, &err);
     
     audioLock = [[NSLock alloc] init];
+    
+    audioQueueSemaphore = dispatch_semaphore_create(0);
 }
 
 void ArRelease(void)
@@ -136,9 +141,15 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
                 // Clear all values from the buffer queue
                 struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
                 while (audioBufferQueue != NULL) {
+                    // Unlink the current entry
                     entry = audioBufferQueue;
                     audioBufferQueue = entry->next;
+                    
+                    // Decrease the semaphore count and queue length
                     audioBufferQueueLength--;
+                    dispatch_semaphore_wait(audioQueueSemaphore, DISPATCH_TIME_NOW);
+                    
+                    // Free the entry
                     free(entry);
                 }
             }
@@ -153,9 +164,13 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
                 }
                 lastEntry->next = newEntry;
             }
-            audioBufferQueueLength++;
             
+            // Increment the queue size and unlock
+            audioBufferQueueLength++;
             [audioLock unlock];
+            
+            // Signal the other thread
+            dispatch_semaphore_signal(audioQueueSemaphore);
         }
     }
 }
@@ -319,10 +334,13 @@ static OSStatus playbackCallback(void *inRefCon,
             }
             
             // Wait for a buffer to be available
-            // FIXME: This needs optimization to avoid busy waiting for buffers
             struct AUDIO_BUFFER_QUEUE_ENTRY *audioEntry = NULL;
             while (audioEntry == NULL)
             {
+                // Wait for an entry to be present in the queue
+                dispatch_semaphore_wait(audioQueueSemaphore, DISPATCH_TIME_FOREVER);
+                
+                // If there's an entry there, dequeue it
                 [audioLock lock];
                 if (audioBufferQueue != NULL) {
                     // Dequeue this entry temporarily
@@ -351,6 +369,7 @@ static OSStatus playbackCallback(void *inRefCon,
                 audioBufferQueue = audioEntry;
                 audioBufferQueueLength++;
                 [audioLock unlock];
+                dispatch_semaphore_signal(audioQueueSemaphore);
             }
             else {
                 // This entry is fully depleted so free it
