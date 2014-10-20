@@ -39,38 +39,43 @@
 #define FRAME_START_PREFIX_SIZE 4
 #define NALU_START_PREFIX_SIZE 3
 
-- (size_t)updateBufferForRange:(CMBlockBufferRef)existingBuffer data:(unsigned char *)data offset:(int)offset length:(int)nalLength
+#define NAL_LENGTH_PREFIX_SIZE 4
+
+- (void)updateBufferForRange:(CMBlockBufferRef)existingBuffer data:(unsigned char *)data offset:(int)offset length:(int)nalLength
 {
     OSStatus status;
     size_t oldOffset = CMBlockBufferGetDataLength(existingBuffer);
     
+    // Append a 4 byte buffer to this block for the length prefix
     status = CMBlockBufferAppendMemoryBlock(existingBuffer, NULL,
-                                            ((4 + nalLength) - NALU_START_PREFIX_SIZE),
+                                            NAL_LENGTH_PREFIX_SIZE,
                                             kCFAllocatorDefault, NULL, 0,
-                                            ((4 + nalLength) - NALU_START_PREFIX_SIZE), 0);
+                                            NAL_LENGTH_PREFIX_SIZE, 0);
     if (status != noErr) {
         NSLog(@"CMBlockBufferAppendMemoryBlock failed: %d", (int)status);
-        return 0;
+        return;
     }
     
+    // Write the length prefix to the new buffer
     int dataLength = nalLength - NALU_START_PREFIX_SIZE;
     const uint8_t lengthBytes[] = {(uint8_t)(dataLength >> 24), (uint8_t)(dataLength >> 16),
         (uint8_t)(dataLength >> 8), (uint8_t)dataLength};
     status = CMBlockBufferReplaceDataBytes(lengthBytes, existingBuffer,
-                                           oldOffset, 4);
+                                           oldOffset, NAL_LENGTH_PREFIX_SIZE);
     if (status != noErr) {
         NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
-        return 0;
+        return;
     }
     
-    status = CMBlockBufferReplaceDataBytes(&data[offset+NALU_START_PREFIX_SIZE], existingBuffer,
-                                           oldOffset + 4, dataLength);
+    // Append the rest of the data by simply attaching a reference to the buffer
+    status = CMBlockBufferAppendMemoryBlock(existingBuffer, &data[offset+NALU_START_PREFIX_SIZE],
+                                            dataLength,
+                                            kCFAllocatorNull, // Don't deallocate data on free
+                                            NULL, 0, dataLength, 0);
     if (status != noErr) {
         NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
-        return 0;
+        return;
     }
-    
-    return 4 + dataLength;
 }
 
 - (void)submitDecodeBuffer:(unsigned char *)data length:(int)length
@@ -110,7 +115,7 @@
                                                                          2, /* count of parameter sets */
                                                                          parameterSetPointers,
                                                                          parameterSetSizes,
-                                                                         4 /* size of length prefix */,
+                                                                         NAL_LENGTH_PREFIX_SIZE,
                                                                          &formatDesc);
             if (status != noErr) {
                 NSLog(@"Failed to create format description: %d", (int)status);
