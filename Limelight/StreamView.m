@@ -26,9 +26,7 @@
     UITouch *touch = [[event allTouches] anyObject];
     CGPoint currentLocation = [touch locationInView:self];
     
-    NSLog(@"Touch move");
-    
-    if (touchLocation.x != currentLocation.x &&
+    if (touchLocation.x != currentLocation.x ||
         touchLocation.y != currentLocation.y)
     {
         LiSendMouseMoveEvent(touchLocation.x - currentLocation.x,
@@ -43,9 +41,12 @@
     NSLog(@"Touch up");
     
     if (!touchMoved) {
+        NSLog(@"Sending left mouse button press");
+        
         LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
         
-        usleep(50 * 1000);
+        // Wait 100 ms to simulate a real button press
+        usleep(100 * 1000);
         
         LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
     }
