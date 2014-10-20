@@ -25,7 +25,7 @@
     displayLayer.bounds = view.bounds;
     displayLayer.backgroundColor = [UIColor greenColor].CGColor;
     displayLayer.position = CGPointMake(CGRectGetMidX(view.bounds), CGRectGetMidY(view.bounds));
-    displayLayer.videoGravity = AVLayerVideoGravityResize;
+    displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
     [view.layer addSublayer:displayLayer];
     
     // We need some parameter sets before we can properly start decoding frames
@@ -36,31 +36,66 @@
     return self;
 }
 
-#define ES_START_PREFIX_SIZE 4
+#define FRAME_START_PREFIX_SIZE 4
+#define NALU_START_PREFIX_SIZE 3
+
+- (size_t)updateBufferForRange:(CMBlockBufferRef)existingBuffer data:(unsigned char *)data offset:(int)offset length:(int)nalLength
+{
+    OSStatus status;
+    size_t oldOffset = CMBlockBufferGetDataLength(existingBuffer);
+    
+    status = CMBlockBufferAppendMemoryBlock(existingBuffer, NULL,
+                                            ((4 + nalLength) - NALU_START_PREFIX_SIZE),
+                                            kCFAllocatorDefault, NULL, 0,
+                                            ((4 + nalLength) - NALU_START_PREFIX_SIZE), 0);
+    if (status != noErr) {
+        NSLog(@"CMBlockBufferAppendMemoryBlock failed: %d", (int)status);
+        return 0;
+    }
+    
+    int dataLength = nalLength - NALU_START_PREFIX_SIZE;
+    const uint8_t lengthBytes[] = {(uint8_t)(dataLength >> 24), (uint8_t)(dataLength >> 16),
+        (uint8_t)(dataLength >> 8), (uint8_t)dataLength};
+    status = CMBlockBufferReplaceDataBytes(lengthBytes, existingBuffer,
+                                           oldOffset, 4);
+    if (status != noErr) {
+        NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
+        return 0;
+    }
+    
+    status = CMBlockBufferReplaceDataBytes(&data[offset+NALU_START_PREFIX_SIZE], existingBuffer,
+                                           oldOffset + 4, dataLength);
+    if (status != noErr) {
+        NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
+        return 0;
+    }
+    
+    return 4 + dataLength;
+}
+
 - (void)submitDecodeBuffer:(unsigned char *)data length:(int)length
 {
-    unsigned char nalType = data[ES_START_PREFIX_SIZE] & 0x1F;
+    unsigned char nalType = data[FRAME_START_PREFIX_SIZE] & 0x1F;
     OSStatus status;
     
     if (formatDesc == NULL && (nalType == 0x7 || nalType == 0x8)) {
         if (waitingForSps && nalType == 0x7) {
             NSLog(@"Got SPS");
-            spsData = [NSData dataWithBytes:&data[ES_START_PREFIX_SIZE] length:length - ES_START_PREFIX_SIZE];
+            spsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForSps = false;
         }
         // Nvidia's stream has 2 PPS NALUs so we'll wait for both of them
         else if ((waitingForPpsA || waitingForPpsB) && nalType == 0x8) {
             // Read the NALU's PPS index to figure out which PPS this is
-            printf("PPS BYTE: %02x", data[ES_START_PREFIX_SIZE + 1]);
             if (waitingForPpsA) {
                 NSLog(@"Got PPS 1");
-                ppsDataA = [NSData dataWithBytes:&data[ES_START_PREFIX_SIZE] length:length - ES_START_PREFIX_SIZE];
+                ppsDataA = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
                 waitingForPpsA = false;
-                ppsDataAFirstByte = data[ES_START_PREFIX_SIZE + 1];
+                ppsDataAFirstByte = data[FRAME_START_PREFIX_SIZE + 1];
             }
-            else if (data[ES_START_PREFIX_SIZE + 1] != ppsDataAFirstByte) {
+            else if (data[FRAME_START_PREFIX_SIZE + 1] != ppsDataAFirstByte) {
                 NSLog(@"Got PPS 2");
-                ppsDataA = [NSData dataWithBytes:&data[ES_START_PREFIX_SIZE] length:length - ES_START_PREFIX_SIZE];
+                ppsDataA = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
                 waitingForPpsB = false;
             }
         }
@@ -100,29 +135,39 @@
     
     // Now we're decoding actual frame data here
     CMBlockBufferRef blockBuffer;
-    status = CMBlockBufferCreateWithMemoryBlock(NULL, data, length, kCFAllocatorNull, NULL, 0, length, 0, &blockBuffer);
+    
+    status = CMBlockBufferCreateEmpty(NULL, 0, 0, &blockBuffer);
     if (status != noErr) {
-        NSLog(@"CMBlockBufferCreateWithMemoryBlock failed: %d", (int)status);
+        NSLog(@"CMBlockBufferCreateEmpty failed: %d", (int)status);
         return;
     }
+
+    int lastOffset = -1;
+    for (int i = 0; i < length - FRAME_START_PREFIX_SIZE; i++) {
+        // Search for a NALU
+        if (data[i] == 0 && data[i+1] == 0 && data[i+2] == 1) {
+            // It's the start of a new NALU
+            if (lastOffset != -1) {
+                // We've seen a start before this so enqueue that NALU
+                [self updateBufferForRange:blockBuffer data:data offset:lastOffset length:i - lastOffset];
+            }
+            
+            lastOffset = i;
+        }
+    }
     
-    // Compute the new length prefix to replace the 00 00 00 01
-    int dataLength = length - ES_START_PREFIX_SIZE;
-    const uint8_t lengthBytes[] = {(uint8_t)(dataLength >> 24), (uint8_t)(dataLength >> 16),
-        (uint8_t)(dataLength >> 8), (uint8_t)dataLength};
-    status = CMBlockBufferReplaceDataBytes(lengthBytes, blockBuffer, 0, 4);
-    if (status != noErr) {
-        NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
-        return;
+    if (lastOffset != -1) {
+        // Enqueue the remaining data
+        [self updateBufferForRange:blockBuffer data:data offset:lastOffset length:length - lastOffset];
     }
     
     CMSampleBufferRef sampleBuffer;
-    const size_t sampleSizeArray[] = {length};
     
     status = CMSampleBufferCreate(kCFAllocatorDefault,
-                                  blockBuffer, true, NULL,
+                                  blockBuffer,
+                                  true, NULL,
                                   NULL, formatDesc, 1, 0,
-                                  NULL, 1, sampleSizeArray,
+                                  NULL, 0, NULL,
                                   &sampleBuffer);
     if (status != noErr) {
         NSLog(@"CMSampleBufferCreate failed: %d", (int)status);
