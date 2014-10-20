@@ -11,9 +11,10 @@
 #import "Computer.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
+#import "PairManager.h"
 
 @implementation MainFrameViewController
-NSString* hostAddr = @"cement-truck.case.edu";
+NSString* hostAddr;
 MDNSManager* mDNSManager;
 
 + (const char*)getHostAddr
@@ -24,7 +25,15 @@ MDNSManager* mDNSManager;
 - (void)PairButton:(UIButton *)sender
 {
     NSLog(@"Pair Button Pressed!");
-    [ConnectionHandler pairWithHost:hostAddr];
+    [CryptoManager generateKeyPairUsingSSl];
+    NSString* uniqueId = [CryptoManager getUniqueID];
+    NSData* cert = [CryptoManager readCertFromFile];
+    
+    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddr uniqueId:uniqueId deviceName:@"roth" cert:cert];
+    PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:cert];
+    
+    NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
+    [opQueue addOperation:pMan];
 }
 
 - (void)StreamButton:(UIButton *)sender
@@ -50,9 +59,9 @@ MDNSManager* mDNSManager;
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
-    //self.hostPickerVals = [mDNSManager getFoundHosts];
+    self.hostPickerVals = [mDNSManager getFoundHosts];
     
-    //[self.HostPicker reloadAllComponents];
+    [self.HostPicker reloadAllComponents];
     if (pickerView == self.HostPicker) {
         hostAddr = ((Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]])).hostName;
     }
@@ -85,21 +94,9 @@ MDNSManager* mDNSManager;
     self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
     self.hostPickerVals = [[NSArray alloc] init];
     
+    
     mDNSManager = [[MDNSManager alloc] initWithCallback:self];
-    //[mDNSManager searchForHosts];
-    
-    [CryptoManager generateKeyPairUsingSSl];
-    NSString* uniqueId = [CryptoManager getUniqueID];
-    NSData* cert = [CryptoManager readCertFromFile];
-    
-    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddr uniqueId:uniqueId deviceName:@"roth" cert:cert];
-    NSString* PIN = [hMan generatePIN];
-    NSData* saltedPIN = [hMan saltPIN:PIN];
-    NSLog(@"PIN: %@, saltedPIN: %@", PIN, saltedPIN);
-    NSURL* pairUrl = [hMan newPairRequest];
-    NSURLRequest* pairRequest = [[NSURLRequest alloc] initWithURL:pairUrl];
-    // NSLog(@"making pair request: %@", [pairRequest description]);
-    [NSURLConnection connectionWithRequest:pairRequest delegate:hMan];
+    [mDNSManager searchForHosts];
 }
 
 - (void)updateHosts:(NSArray *)hosts {

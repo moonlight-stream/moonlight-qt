@@ -9,8 +9,19 @@
 #import <Foundation/Foundation.h>
 
 @interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+
++ (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag;
+
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert;
-- (NSString*) generatePIN;
-- (NSData*) saltPIN:(NSString*)PIN;
-- (NSURL*) newPairRequest;
+- (NSURLRequest*) newPairRequest:(NSData*)salt;
+- (NSURLRequest*) newUnpairRequest;
+- (NSURLRequest*) newChallengeRequest:(NSData*)challenge;
+- (NSURLRequest*) newChallengeRespRequest:(NSData*)challengeResp;
+- (NSURLRequest*) newClientSecretRespRequest:(NSString*)clientPairSecret;
+- (NSURLRequest*) newPairChallenge;
+- (NSURLRequest*) newAppListRequest;
+- (NSURLRequest*) newServerInfoRequest;
+- (NSData*) executeRequestSynchronously:(NSURLRequest*)request;
 @end
+
+
