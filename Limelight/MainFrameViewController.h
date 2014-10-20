@@ -19,10 +19,8 @@
 @property (strong, nonatomic) NSArray* streamConfigVals;
 @property (strong, nonatomic) NSArray* hostPickerVals;
 
-+ (int) getResolvedHost;
-+ (NSData*) getRiKey;
-+ (int) getRiKeyId;
-
 - (void) segueIntoStream;
+
++ (NSString*) getHost;
 
 @end

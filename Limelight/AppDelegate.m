@@ -18,13 +18,7 @@ static NSOperationQueue* mainQueue;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
-    mainQueue = [[NSOperationQueue alloc]init];
     return YES;
-}
-
-+ (NSOperationQueue*) getMainOpQueue
-{
-    return mainQueue;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application

@@ -9,28 +9,20 @@
 #import "StreamManager.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
-#import "PairManager.h"
+#import "Utils.h"
+#import "Connection.h"
+#import "StreamConfiguration.h"
 
 @implementation StreamManager {
-    MainFrameViewController* _viewCont;
     NSString* _host;
-    NSData* _riKey;
-    int _riKeyId;
+    UIView* _renderView;
 }
 
-- (id) initWithHost:(NSString*)host andViewController:(MainFrameViewController *)viewCont {
+- (id) initWithHost:(NSString*)host renderView:(UIView*)view {
     self = [super init];
     _host = host;
-    _viewCont = viewCont;
+    _renderView = view;
     return self;
-}
-
-- (NSData*) getRiKey {
-    return _riKey;
-}
-
-- (int) getRiKeyId {
-    return _riKeyId;
 }
 
 - (void)main {
@@ -39,12 +31,27 @@
     NSData* cert = [CryptoManager readCertFromFile];
     
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_host uniqueId:uniqueId deviceName:@"roth" cert:cert];
-    _riKey = [PairManager randomBytes:16];
-    _riKeyId = arc4random();
+    NSData* riKey = [Utils randomBytes:16];
+    int riKeyId = arc4random();
     
-    NSData* launchResp = [hMan executeRequestSynchronously:[hMan newLaunchRequest:@"67339056" width:1280 height:720 refreshRate:60 rikey:[PairManager bytesToHex:_riKey] rikeyid:_riKeyId]];
+    NSData* launchResp = [hMan executeRequestSynchronously:[hMan newLaunchRequest:@"67339056" width:1920 height:1080 refreshRate:30 rikey:[Utils bytesToHex:riKey] rikeyid:riKeyId]];
     [HttpManager getStringFromXML:launchResp tag:@"gamesession"];
-    [_viewCont segueIntoStream];
+    
+    VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
+    
+    StreamConfiguration* config = [[StreamConfiguration alloc] init];
+    config.host = [Utils resolveHost:_host];
+    config.width = 1920;
+    config.height = 1080;
+    config.frameRate = 30;
+    config.bitRate = 10000;
+    config.riKey = riKey;
+    config.riKeyId = riKeyId;
+    
+    Connection* conn = [[Connection alloc] initWithConfig:config renderer:renderer];
+    
+    NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
+    [opQueue addOperation:conn];
 }
 
 @end

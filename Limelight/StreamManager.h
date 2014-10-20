@@ -7,12 +7,9 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "MainFrameViewController.h"
 
 @interface StreamManager : NSOperation
 
-- (id) initWithHost:(NSString*)host andViewController:(MainFrameViewController*)viewCont;
-- (NSData*) getRiKey;
-- (int) getRiKeyId;
+- (id) initWithHost:(NSString*)host renderView:(UIView*)view;
 
 @end

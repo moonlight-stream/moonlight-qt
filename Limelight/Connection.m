@@ -193,22 +193,22 @@ void ClDisplayTransientMessage(char* message)
     NSLog(@"DisplayTransientMessage: %s", message);
 }
 
--(id) initWithHost:(int)ipaddr key:(NSData*)rikey keyId:(int)rikeyid width:(int)width height:(int)height refreshRate:(int)refreshRate renderer:(VideoDecoderRenderer*)myRenderer
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer
 {
     self = [super init];
-    host = ipaddr;
+    host = config.host;
     renderer = myRenderer;
     
-    streamConfig.width = width;
-    streamConfig.height = height;
-    streamConfig.fps = 60;
-    streamConfig.bitrate = 5000;
+    streamConfig.width = config.width;
+    streamConfig.height = config.height;
+    streamConfig.fps = config.frameRate;
+    streamConfig.bitrate = config.bitRate;
     streamConfig.packetSize = 1024;
     
-    memcpy(streamConfig.remoteInputAesKey, [rikey bytes], [rikey length]);
+    memcpy(streamConfig.remoteInputAesKey, [config.riKey bytes], [config.riKey length]);
     memset(streamConfig.remoteInputAesIv, 0, 16);
-    rikeyid = htonl(rikeyid);
-    memcpy(streamConfig.remoteInputAesIv, &rikeyid, sizeof(rikeyid));
+    int riKeyId = htonl(config.riKeyId);
+    memcpy(streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
     
     drCallbacks.setup = DrSetup;
     drCallbacks.start = DrStart;

@@ -18,6 +18,5 @@
 
 - (void)saveContext;
 - (NSURL *)applicationDocumentsDirectory;
-+ (NSOperationQueue*) getMainOpQueue;
 
 @end

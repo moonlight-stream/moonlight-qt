@@ -10,7 +10,7 @@
 #import "MainFrameViewController.h"
 #import "Connection.h"
 #import "VideoDecoderRenderer.h"
-#import "ConnectionHandler.h"
+#import "StreamManager.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -24,12 +24,9 @@
 
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
-    VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:self.view];
-
-    Connection* conn = [[Connection alloc] initWithHost:[MainFrameViewController getResolvedHost] key:[MainFrameViewController getRiKey] keyId:[MainFrameViewController getRiKeyId] width:1280 height:720 refreshRate:60 renderer:renderer];
-    
+    StreamManager* streamMan = [[StreamManager alloc] initWithHost:[MainFrameViewController getHost] renderView:self.view];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
-    [opQueue addOperation:conn];
+    [opQueue addOperation:streamMan];
 }
 
 - (void)didReceiveMemoryWarning

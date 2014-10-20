@@ -7,7 +7,6 @@
 //
 
 #import "MainFrameViewController.h"
-#import "ConnectionHandler.h"
 #import "Computer.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
@@ -20,22 +19,11 @@
     MDNSManager* _mDNSManager;
     Computer* _selectedHost;
     UIAlertView* _pairAlert;
-    StreamManager* _streamMan;
 }
-static int resolvedHost;
-static NSData* riKey;
-static int riKeyId;
+static NSString* host;
 
-+ (int) getResolvedHost {
-    return resolvedHost;
-}
-
-+ (NSData*) getRiKey {
-    return riKey;
-}
-
-+ (int) getRiKeyId {
-    return riKeyId;
++ (NSString*) getHost {
+    return host;
 }
 
 - (void)PairButton:(UIButton *)sender
@@ -77,14 +65,7 @@ static int riKeyId;
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
-    _streamMan = [[StreamManager alloc] initWithHost:_selectedHost.hostName andViewController:self];
-    [_opQueue addOperation:_streamMan];
-}
-
-- (void) segueIntoStream {
-    resolvedHost = [_selectedHost resolveHost];
-    riKey = [_streamMan getRiKey];
-    riKeyId = [_streamMan getRiKeyId];
+    host = _selectedHost.hostName;
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 

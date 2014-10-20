@@ -23,7 +23,4 @@
 - (NSData*) saltPIN:(NSString*)PIN;
 - (void) initiatePair;
 
-+ (NSData*) randomBytes:(NSInteger)length;
-+ (NSString*) bytesToHex:(NSData*)data;
-
 @end

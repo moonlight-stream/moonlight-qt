@@ -8,10 +8,11 @@
 
 #import <Foundation/Foundation.h>
 #import "VideoDecoderRenderer.h"
+#import "StreamConfiguration.h"
 
 @interface Connection : NSOperation <NSStreamDelegate>
 
--(id) initWithHost:(int)ipaddr key:(NSData*)rikey keyId:(int)rikeyid width:(int)width height:(int)height refreshRate:(int)refreshRate renderer:(VideoDecoderRenderer*)myRenderer;
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer;
 -(void) main;
 
 @end
