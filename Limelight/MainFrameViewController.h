@@ -18,7 +18,7 @@
 @property (strong, nonatomic) NSArray* streamConfigVals;
 @property (strong, nonatomic) NSArray* hostPickerVals;
 
-+ (const char*)getHostAddr;
+- (int) getHostAddr;
 - (void) segueIntoStream;
 
 @end

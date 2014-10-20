@@ -20,7 +20,6 @@
 
 - (id) initWithCallback:(id<MDNSCallback>) callback;
 - (void) searchForHosts;
-- (NSArray*) getFoundHosts;
 
 @end
 

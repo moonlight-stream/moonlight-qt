@@ -20,7 +20,13 @@
 
 @end
 
-@implementation StreamFrameViewController
+@implementation StreamFrameViewController {
+    int _host;
+}
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    _host = [sender getHostAddr];
+}
 
 - (void)viewDidLoad
 {
@@ -30,7 +36,7 @@
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:self.view];
 
-    Connection* conn = [[Connection alloc] initWithHost:inet_addr([[ConnectionHandler resolveHost:[NSString stringWithUTF8String:[MainFrameViewController getHostAddr]]] UTF8String]) width:1280 height:720
+    Connection* conn = [[Connection alloc] initWithHost:_host width:1280 height:720
                                                renderer: renderer];
     
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];

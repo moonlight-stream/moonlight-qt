@@ -12,14 +12,17 @@
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "PairManager.h"
+#import "Connection.h"
+#import "VideoDecoderRenderer.h"
 
-@implementation MainFrameViewController
-NSString* hostAddr;
-MDNSManager* mDNSManager;
+@implementation MainFrameViewController {
+    NSOperationQueue* _opQueue;
+    MDNSManager* _mDNSManager;
+    Computer* _selectedHost;
+}
 
-+ (const char*)getHostAddr
-{
-    return [hostAddr UTF8String];
+- (int)getHostAddr {
+    return [_selectedHost resolveHost];
 }
 
 - (void)PairButton:(UIButton *)sender
@@ -29,17 +32,16 @@ MDNSManager* mDNSManager;
     NSString* uniqueId = [CryptoManager getUniqueID];
     NSData* cert = [CryptoManager readCertFromFile];
     
-    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddr uniqueId:uniqueId deviceName:@"roth" cert:cert];
+    HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:uniqueId deviceName:@"roth" cert:cert];
     PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:cert];
-    
-    NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
-    [opQueue addOperation:pMan];
+
+    [_opQueue addOperation:pMan];
 }
 
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
-    [ConnectionHandler streamWithHost:hostAddr viewController:self];
+    [self segueIntoStream];
 }
 
 - (void) segueIntoStream {
@@ -59,11 +61,8 @@ MDNSManager* mDNSManager;
 
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
-    self.hostPickerVals = [mDNSManager getFoundHosts];
-    
-    [self.HostPicker reloadAllComponents];
     if (pickerView == self.HostPicker) {
-        hostAddr = ((Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]])).hostName;
+        _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]]);
     }
     
     //TODO: figure out how to save this info!!
@@ -95,13 +94,15 @@ MDNSManager* mDNSManager;
     self.hostPickerVals = [[NSArray alloc] init];
     
     
-    mDNSManager = [[MDNSManager alloc] initWithCallback:self];
-    [mDNSManager searchForHosts];
+    _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
+    [_mDNSManager searchForHosts];
+    _opQueue = [[NSOperationQueue alloc] init];
 }
 
 - (void)updateHosts:(NSArray *)hosts {
     self.hostPickerVals = hosts;
     [self.HostPicker reloadAllComponents];
+    _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]]);
 }
 
 - (void)didReceiveMemoryWarning
