@@ -29,8 +29,8 @@
     if (touchLocation.x != currentLocation.x ||
         touchLocation.y != currentLocation.y)
     {
-        LiSendMouseMoveEvent(touchLocation.x - currentLocation.x,
-                             touchLocation.y - currentLocation.y);
+        LiSendMouseMoveEvent(currentLocation.x - touchLocation.x,
+                             currentLocation.y - touchLocation.y );
         
         touchMoved = true;
         touchLocation = currentLocation;
