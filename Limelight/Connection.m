@@ -65,9 +65,8 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
             entry = entry->next;
         }
         
+        // This function will take our buffer
         [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
-        
-        free(data);
     }
 }
 
