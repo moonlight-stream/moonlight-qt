@@ -23,7 +23,7 @@
     
     displayLayer = [[AVSampleBufferDisplayLayer alloc] init];
     displayLayer.bounds = view.bounds;
-    displayLayer.backgroundColor = [UIColor greenColor].CGColor;
+    displayLayer.backgroundColor = [UIColor blackColor].CGColor;
     displayLayer.position = CGPointMake(CGRectGetMidX(view.bounds), CGRectGetMidY(view.bounds));
     displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
     [view.layer addSublayer:displayLayer];
