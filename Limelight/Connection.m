@@ -106,7 +106,6 @@ void ArRelease(void)
 void ArStart(void)
 {
     printf("Start audio\n");
-    AudioOutputUnitStart(audioUnit);
 }
 
 void ArStop(void)
@@ -292,6 +291,13 @@ void ClDisplayTransientMessage(char* message)
         NSLog(@"Unable to initialize audioUnit: %d", (int32_t)status);
     }
     
+    // We start here because it seems to need some warmup time
+    // before it starts accepting samples
+    status = AudioOutputUnitStart(audioUnit);
+    if (status) {
+        NSLog(@"Unable to start audioUnit: %d", (int32_t)status);
+    }
+    
     return self;
 }
 
@@ -305,8 +311,14 @@ static OSStatus playbackCallback(void *inRefCon,
     // Fill them up as much as you can. Remember to set the size value in each buffer to match how
     // much data is in the buffer.
     
+    bool ranOutOfData = false;
     for (int i = 0; i < ioData->mNumberBuffers; i++) {
         ioData->mBuffers[i].mNumberChannels = 2;
+        
+        if (ranOutOfData) {
+            ioData->mBuffers[i].mDataByteSize = 0;
+            continue;
+        }
         
         if (ioData->mBuffers[i].mDataByteSize != 0) {
             int thisBufferOffset = 0;
@@ -317,19 +329,22 @@ static OSStatus playbackCallback(void *inRefCon,
                 continue;
             }
             
-            // Wait for a buffer to be available
-            // FIXME: This needs optimization to avoid busy waiting for buffers
             struct AUDIO_BUFFER_QUEUE_ENTRY *audioEntry = NULL;
-            while (audioEntry == NULL)
-            {
-                [audioLock lock];
-                if (audioBufferQueue != NULL) {
-                    // Dequeue this entry temporarily
-                    audioEntry = audioBufferQueue;
-                    audioBufferQueue = audioBufferQueue->next;
-                    audioBufferQueueLength--;
-                }
-                [audioLock unlock];
+            
+            [audioLock lock];
+            if (audioBufferQueue != NULL) {
+                // Dequeue this entry temporarily
+                audioEntry = audioBufferQueue;
+                audioBufferQueue = audioBufferQueue->next;
+                audioBufferQueueLength--;
+            }
+            [audioLock unlock];
+            
+            if (audioEntry == NULL) {
+                // No data left
+                ranOutOfData = true;
+                ioData->mBuffers[i].mDataByteSize = thisBufferOffset;
+                continue;
             }
             
             // Figure out how much data we can write
