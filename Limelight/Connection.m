@@ -35,9 +35,12 @@ struct AUDIO_BUFFER_QUEUE_ENTRY {
     char data[0];
 };
 
+#define MAX_QUEUE_ENTRIES 10
+
 static short decodedPcmBuffer[512];
 static NSLock *audioLock;
 static struct AUDIO_BUFFER_QUEUE_ENTRY *audioBufferQueue;
+static int audioBufferQueueLength;
 static AudioComponentInstance audioUnit;
 static VideoDecoderRenderer* renderer;
 
@@ -127,6 +130,19 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
             memcpy(newEntry->data, decodedPcmBuffer, decodedLength);
             
             [audioLock lock];
+            if (audioBufferQueueLength > MAX_QUEUE_ENTRIES) {
+                NSLog(@"Audio player too slow. Dropping all decoded samples!");
+                
+                // Clear all values from the buffer queue
+                struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
+                while (audioBufferQueue != NULL) {
+                    entry = audioBufferQueue;
+                    audioBufferQueue = entry->next;
+                    audioBufferQueueLength--;
+                    free(entry);
+                }
+            }
+            
             if (audioBufferQueue == NULL) {
                 audioBufferQueue = newEntry;
             }
@@ -137,6 +153,8 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
                 }
                 lastEntry->next = newEntry;
             }
+            audioBufferQueueLength++;
+            
             [audioLock unlock];
         }
     }
@@ -185,7 +203,7 @@ void ClDisplayTransientMessage(char* message)
     
     streamConfig.width = width;
     streamConfig.height = height;
-    streamConfig.fps = 30;
+    streamConfig.fps = 60;
     streamConfig.bitrate = 5000;
     streamConfig.packetSize = 1024;
     // FIXME: RI AES members
@@ -310,6 +328,7 @@ static OSStatus playbackCallback(void *inRefCon,
                     // Dequeue this entry temporarily
                     audioEntry = audioBufferQueue;
                     audioBufferQueue = audioBufferQueue->next;
+                    audioBufferQueueLength--;
                 }
                 [audioLock unlock];
             }
@@ -330,6 +349,7 @@ static OSStatus playbackCallback(void *inRefCon,
                 [audioLock lock];
                 audioEntry->next = audioBufferQueue;
                 audioBufferQueue = audioEntry;
+                audioBufferQueueLength++;
                 [audioLock unlock];
             }
             else {
