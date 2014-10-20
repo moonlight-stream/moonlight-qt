@@ -26,11 +26,13 @@
 - (int) resolveHost
 {
     struct hostent *hostent;
-    
+
     if (inet_addr([self.hostName UTF8String]) != INADDR_NONE)
     {
         // Already an IP address
-        return inet_addr([self.hostName UTF8String]);
+        int addr = inet_addr([self.hostName UTF8String]);
+        NSLog(@"host address: %d", addr);
+        return addr;
     }
     else
     {
@@ -39,7 +41,9 @@
         {
             char* ipstr = inet_ntoa(*(struct in_addr*)hostent->h_addr_list[0]);
             NSLog(@"Resolved %@ -> %s", self.hostName, ipstr);
-            return inet_addr(ipstr);
+            int addr = inet_addr(ipstr);
+            NSLog(@"host address: %d", addr);
+            return addr;
         }
         else
         {

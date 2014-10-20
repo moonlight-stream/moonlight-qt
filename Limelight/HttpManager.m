@@ -150,6 +150,11 @@ static const NSString* PORT = @"47984";
     return [self createRequestFromString:urlString];
 }
 
+- (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid {
+    NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=1&rikey=%@&rikeyid=%d", _baseURL, _uniqueId, appId, width, height, refreshRate, rikey, rikeyid];
+    return [self createRequestFromString:urlString];
+}
+
 - (NSString*) bytesToHex:(NSData*)data {
     const unsigned char* bytes = [data bytes];
     NSMutableString *hex = [[NSMutableString alloc] init];

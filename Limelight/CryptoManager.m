@@ -18,6 +18,9 @@
 
 @implementation CryptoManager
 static const int SHA1_DIGEST_LENGTH = 20;
+static NSData* key = nil;
+static NSData* cert = nil;
+static NSData* p12 = nil;
 
 - (NSData*) createAESKeyFromSalt:(NSData*)saltedPIN {
     return [[self SHA1HashData:saltedPIN] subdataWithRange:NSMakeRange(0, 16)];
@@ -142,24 +145,47 @@ static const int SHA1_DIGEST_LENGTH = 20;
 
 // TODO: these three methods are almost identical, fix the copy-pasta
 + (NSData*) readCertFromFile {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
-    return [NSData dataWithContentsOfFile:certFile];
+    if (cert == nil) {
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [paths objectAtIndex:0];
+        NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
+        cert = [NSData dataWithContentsOfFile:certFile];
+    }
+    return cert;
 }
 
 + (NSData*) readP12FromFile {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
-    return [NSData dataWithContentsOfFile:p12File];
+    if (p12 == nil) {
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [paths objectAtIndex:0];
+        NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
+        p12 = [NSData dataWithContentsOfFile:p12File];
+    }
+    return p12;
 }
 
 + (NSData*) readKeyFromFile {
+    if (key == nil) {
+        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString *documentsDirectory = [paths objectAtIndex:0];
+        NSString *keyFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
+        key = [NSData dataWithContentsOfFile:keyFile];
+    }
+    return key;
+}
+
++ (bool) keyPairExists {
     NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
     NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *keyFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
-    return [NSData dataWithContentsOfFile:keyFile];
+    NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
+    NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
+    
+    bool keyFileExists = [[NSFileManager defaultManager] fileExistsAtPath:keyFile];
+    bool p12FileExists = [[NSFileManager defaultManager] fileExistsAtPath:p12File];
+    bool certFileExists = [[NSFileManager defaultManager] fileExistsAtPath:certFile];
+    
+    return keyFileExists && p12FileExists && certFileExists;
 }
 
 + (NSData *)getSignatureFromCert:(NSData *)cert {
@@ -177,18 +203,21 @@ static const int SHA1_DIGEST_LENGTH = 20;
 }
 
 + (void) generateKeyPairUsingSSl {
-    NSLog(@"Generating Certificate... ");
-    CertKeyPair certKeyPair = generateCertKeyPair();
-    
-    NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-    NSString* documentsDirectory = [paths objectAtIndex:0];
-    NSString* certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
-    NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
-    NSString* p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
-    
-    //NSLog(@"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
-    saveCertKeyPair([certFile UTF8String], [p12File UTF8String], [keyPairFile UTF8String], certKeyPair);
-    freeCertKeyPair(certKeyPair);
+    if (![CryptoManager keyPairExists]) {
+        
+        NSLog(@"Generating Certificate... ");
+        CertKeyPair certKeyPair = generateCertKeyPair();
+        
+        NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSString* documentsDirectory = [paths objectAtIndex:0];
+        NSString* certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
+        NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
+        NSString* p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
+        
+        //NSLog(@"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
+        saveCertKeyPair([certFile UTF8String], [p12File UTF8String], [keyPairFile UTF8String], certKeyPair);
+        freeCertKeyPair(certKeyPair);
+    }
 }
 
 + (NSString*) getUniqueID {
@@ -200,7 +229,7 @@ static const int SHA1_DIGEST_LENGTH = 20;
     // and remove the '-' to get a 16 character string
     NSMutableString* uniqueId = [NSMutableString stringWithString:[idString substringFromIndex:19]];
     [uniqueId deleteCharactersInRange:NSMakeRange(4, 1)];
-
+    
     //NSLog(@"Unique ID: %@", uniqueId);
     return [NSString stringWithString:uniqueId];
 }

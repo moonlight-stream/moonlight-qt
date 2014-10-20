@@ -11,7 +11,7 @@
 
 @interface Connection : NSOperation <NSStreamDelegate>
 
--(id) initWithHost:(int)ipaddr width:(int)width height:(int)height renderer:(VideoDecoderRenderer*)renderer;
+-(id) initWithHost:(int)ipaddr key:(NSData*)rikey keyId:(int)rikeyid width:(int)width height:(int)height refreshRate:(int)refreshRate renderer:(VideoDecoderRenderer*)myRenderer;
 -(void) main;
 
 @end

@@ -37,6 +37,7 @@
 		FB290E7919B37D81004C83CF /* MainFrame-iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */; };
 		FB290E7B19B38036004C83CF /* MainFrame-iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */; };
 		FB63FCF219F43EBC00227761 /* PairManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB63FCF119F43EBC00227761 /* PairManager.m */; };
+		FB63FCF719F573BE00227761 /* StreamManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB63FCF619F573BE00227761 /* StreamManager.m */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
 		FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F119EDB08B00929691 /* MDNSManager.m */; };
 		FBAB29F619EDE0F800929691 /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F519EDE0F800929691 /* Computer.m */; };
@@ -123,6 +124,8 @@
 		FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainFrame-iPhone.storyboard"; sourceTree = SOURCE_ROOT; };
 		FB63FCF019F43EBC00227761 /* PairManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairManager.h; sourceTree = "<group>"; };
 		FB63FCF119F43EBC00227761 /* PairManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PairManager.m; sourceTree = "<group>"; };
+		FB63FCF519F573BE00227761 /* StreamManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamManager.h; sourceTree = "<group>"; };
+		FB63FCF619F573BE00227761 /* StreamManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamManager.m; sourceTree = "<group>"; };
 		FB7E794319C8B71B00A15F68 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 		FBAB29F119EDB08B00929691 /* MDNSManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MDNSManager.m; sourceTree = "<group>"; };
 		FBAB29F319EDB0C400929691 /* MDNSManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDNSManager.h; sourceTree = "<group>"; };
@@ -327,6 +330,8 @@
 				FBC8622C19F0BEFB0087327B /* HttpManager.m */,
 				984C441619F48D1D0061A500 /* StreamView.h */,
 				984C441719F48D1D0061A500 /* StreamView.m */,
+				FB63FCF519F573BE00227761 /* StreamManager.h */,
+				FB63FCF619F573BE00227761 /* StreamManager.m */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -682,6 +687,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */,
+				FB63FCF719F573BE00227761 /* StreamManager.m in Sources */,
 				FB63FCF219F43EBC00227761 /* PairManager.m in Sources */,
 				98A03B5019F3598400861ACA /* VideoDecoderRenderer.m in Sources */,
 				FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */,

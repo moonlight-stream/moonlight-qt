@@ -16,28 +16,17 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-@interface StreamFrameViewController ()
-
-@end
-
-@implementation StreamFrameViewController {
-    int _host;
-}
-
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    _host = [sender getHostAddr];
-}
+@implementation StreamFrameViewController
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
+
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:self.view];
 
-    Connection* conn = [[Connection alloc] initWithHost:_host width:1280 height:720
-                                               renderer: renderer];
+    Connection* conn = [[Connection alloc] initWithHost:[MainFrameViewController getResolvedHost] key:[MainFrameViewController getRiKey] keyId:[MainFrameViewController getRiKeyId] width:1280 height:720 refreshRate:60 renderer:renderer];
     
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:conn];

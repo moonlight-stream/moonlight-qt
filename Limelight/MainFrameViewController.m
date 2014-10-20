@@ -11,18 +11,31 @@
 #import "Computer.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
-#import "PairManager.h"
 #import "Connection.h"
 #import "VideoDecoderRenderer.h"
+#import "StreamManager.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
     MDNSManager* _mDNSManager;
     Computer* _selectedHost;
+    UIAlertView* _pairAlert;
+    StreamManager* _streamMan;
+}
+static int resolvedHost;
+static NSData* riKey;
+static int riKeyId;
+
++ (int) getResolvedHost {
+    return resolvedHost;
 }
 
-- (int)getHostAddr {
-    return [_selectedHost resolveHost];
++ (NSData*) getRiKey {
+    return riKey;
+}
+
++ (int) getRiKeyId {
+    return riKeyId;
 }
 
 - (void)PairButton:(UIButton *)sender
@@ -33,18 +46,45 @@
     NSData* cert = [CryptoManager readCertFromFile];
     
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:uniqueId deviceName:@"roth" cert:cert];
-    PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:cert];
+    PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:cert callback:self];
 
     [_opQueue addOperation:pMan];
+}
+
+- (void)showPIN:(NSString *)PIN {
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing" message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [_pairAlert show];
+    });
+}
+
+- (void)pairFailed:(NSString *)message {
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [_pairAlert dismissWithClickedButtonIndex:0 animated:NO];
+        _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Failed" message:message delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [_pairAlert show];
+    });
+}
+
+- (void)pairSuccessful {
+    dispatch_sync(dispatch_get_main_queue(), ^{
+        [_pairAlert dismissWithClickedButtonIndex:0 animated:NO];
+        _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Succesful" message:@"Successfully paired to host" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
+        [_pairAlert show];
+    });
 }
 
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
-    [self segueIntoStream];
+    _streamMan = [[StreamManager alloc] initWithHost:_selectedHost.hostName andViewController:self];
+    [_opQueue addOperation:_streamMan];
 }
 
 - (void) segueIntoStream {
+    resolvedHost = [_selectedHost resolveHost];
+    riKey = [_streamMan getRiKey];
+    riKeyId = [_streamMan getRiKeyId];
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 
