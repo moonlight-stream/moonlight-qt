@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		984C441819F48D1D0061A500 /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = 984C441719F48D1D0061A500 /* StreamView.m */; };
 		98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98A03B4A19F3514B00861ACA /* liblimelight-common.a */; };
 		98A03B5019F3598400861ACA /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */; };
 		98A03B5119F35AAC00861ACA /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9819EF9703009729EB /* libcrypto.a */; };
@@ -76,6 +77,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		984C441619F48D1D0061A500 /* StreamView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamView.h; sourceTree = "<group>"; };
+		984C441719F48D1D0061A500 /* StreamView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamView.m; sourceTree = "<group>"; };
 		98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
 		98A03B4E19F3598400861ACA /* VideoDecoderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoDecoderRenderer.h; path = Limelight/VideoDecoderRenderer.h; sourceTree = SOURCE_ROOT; };
 		98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoDecoderRenderer.m; path = Limelight/VideoDecoderRenderer.m; sourceTree = SOURCE_ROOT; };
@@ -412,6 +415,8 @@
 				FBCC0E9C19F00659009729EB /* mkcert.c */,
 				FBC8622B19F0BEFB0087327B /* HttpManager.h */,
 				FBC8622C19F0BEFB0087327B /* HttpManager.m */,
+				984C441619F48D1D0061A500 /* StreamView.h */,
+				984C441719F48D1D0061A500 /* StreamView.m */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -959,6 +964,7 @@
 				FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
 				FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */,
+				984C441819F48D1D0061A500 /* StreamView.m in Sources */,
 				FB290D3719B2C6E3004C83CF /* Connection.m in Sources */,
 				FBCC0E9D19F00659009729EB /* mkcert.c in Sources */,
 				FB290D3819B2C6E3004C83CF /* ConnectionHandler.m in Sources */,
