@@ -11,8 +11,6 @@
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
 
-#include <dispatch/dispatch.h>
-
 #include "Limelight.h"
 #include "opus.h"
 
@@ -42,7 +40,6 @@ struct AUDIO_BUFFER_QUEUE_ENTRY {
 static short decodedPcmBuffer[512];
 static NSLock *audioLock;
 static struct AUDIO_BUFFER_QUEUE_ENTRY *audioBufferQueue;
-static dispatch_semaphore_t audioQueueSemaphore;
 static int audioBufferQueueLength;
 static AudioComponentInstance audioUnit;
 static VideoDecoderRenderer* renderer;
@@ -65,9 +62,8 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
             entry = entry->next;
         }
         
+        // This function will take our buffer
         [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
-        
-        free(data);
     }
 }
 
@@ -95,8 +91,6 @@ void ArInit(void)
     opusDecoder = opus_decoder_create(48000, 2, &err);
     
     audioLock = [[NSLock alloc] init];
-    
-    audioQueueSemaphore = dispatch_semaphore_create(0);
 }
 
 void ArRelease(void)
@@ -112,7 +106,6 @@ void ArRelease(void)
 void ArStart(void)
 {
     printf("Start audio\n");
-    AudioOutputUnitStart(audioUnit);
 }
 
 void ArStop(void)
@@ -141,15 +134,9 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
                 // Clear all values from the buffer queue
                 struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
                 while (audioBufferQueue != NULL) {
-                    // Unlink the current entry
                     entry = audioBufferQueue;
                     audioBufferQueue = entry->next;
-                    
-                    // Decrease the semaphore count and queue length
                     audioBufferQueueLength--;
-                    dispatch_semaphore_wait(audioQueueSemaphore, DISPATCH_TIME_NOW);
-                    
-                    // Free the entry
                     free(entry);
                 }
             }
@@ -164,13 +151,9 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
                 }
                 lastEntry->next = newEntry;
             }
-            
-            // Increment the queue size and unlock
             audioBufferQueueLength++;
-            [audioLock unlock];
             
-            // Signal the other thread
-            dispatch_semaphore_signal(audioQueueSemaphore);
+            [audioLock unlock];
         }
     }
 }
@@ -312,6 +295,13 @@ void ClDisplayTransientMessage(char* message)
         NSLog(@"Unable to initialize audioUnit: %d", (int32_t)status);
     }
     
+    // We start here because it seems to need some warmup time
+    // before it starts accepting samples
+    status = AudioOutputUnitStart(audioUnit);
+    if (status) {
+        NSLog(@"Unable to start audioUnit: %d", (int32_t)status);
+    }
+    
     return self;
 }
 
@@ -325,8 +315,14 @@ static OSStatus playbackCallback(void *inRefCon,
     // Fill them up as much as you can. Remember to set the size value in each buffer to match how
     // much data is in the buffer.
     
+    bool ranOutOfData = false;
     for (int i = 0; i < ioData->mNumberBuffers; i++) {
         ioData->mBuffers[i].mNumberChannels = 2;
+        
+        if (ranOutOfData) {
+            ioData->mBuffers[i].mDataByteSize = 0;
+            continue;
+        }
         
         if (ioData->mBuffers[i].mDataByteSize != 0) {
             int thisBufferOffset = 0;
@@ -337,22 +333,22 @@ static OSStatus playbackCallback(void *inRefCon,
                 continue;
             }
             
-            // Wait for a buffer to be available
             struct AUDIO_BUFFER_QUEUE_ENTRY *audioEntry = NULL;
-            while (audioEntry == NULL)
-            {
-                // Wait for an entry to be present in the queue
-                dispatch_semaphore_wait(audioQueueSemaphore, DISPATCH_TIME_FOREVER);
-                
-                // If there's an entry there, dequeue it
-                [audioLock lock];
-                if (audioBufferQueue != NULL) {
-                    // Dequeue this entry temporarily
-                    audioEntry = audioBufferQueue;
-                    audioBufferQueue = audioBufferQueue->next;
-                    audioBufferQueueLength--;
-                }
-                [audioLock unlock];
+            
+            [audioLock lock];
+            if (audioBufferQueue != NULL) {
+                // Dequeue this entry temporarily
+                audioEntry = audioBufferQueue;
+                audioBufferQueue = audioBufferQueue->next;
+                audioBufferQueueLength--;
+            }
+            [audioLock unlock];
+            
+            if (audioEntry == NULL) {
+                // No data left
+                ranOutOfData = true;
+                ioData->mBuffers[i].mDataByteSize = thisBufferOffset;
+                continue;
             }
             
             // Figure out how much data we can write
@@ -373,7 +369,6 @@ static OSStatus playbackCallback(void *inRefCon,
                 audioBufferQueue = audioEntry;
                 audioBufferQueueLength++;
                 [audioLock unlock];
-                dispatch_semaphore_signal(audioQueueSemaphore);
             }
             else {
                 // This entry is fully depleted so free it
