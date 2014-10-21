@@ -16,7 +16,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="320" height="568"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="J5M-pv-UHA">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="J5M-pv-UHA">
                                 <rect key="frame" x="82" y="231" width="156" height="30"/>
                                 <state key="normal" title="Start Streaming Steam">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -25,7 +25,7 @@
                                     <action selector="StreamButton:" destination="dgh-JZ-Q7z" eventType="touchUpInside" id="3Bj-I0-bKs"/>
                                 </connections>
                             </button>
-                            <button opaque="NO" contentMode="scaleToFill" misplaced="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ATh-Tf-xRL">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ATh-Tf-xRL">
                                 <rect key="frame" x="137" y="269" width="46" height="30"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="46" id="mm8-gm-flQ"/>
@@ -37,38 +37,42 @@
                                     <action selector="PairButton:" destination="dgh-JZ-Q7z" eventType="touchUpInside" id="jHN-B5-hsw"/>
                                 </connections>
                             </button>
-                            <pickerView contentMode="scaleToFill" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="0xb-lk-PHK">
-                                <rect key="frame" x="0.0" y="286" width="320" height="162"/>
-                                <connections>
-                                    <outlet property="dataSource" destination="dgh-JZ-Q7z" id="R0Y-EX-neJ"/>
-                                    <outlet property="delegate" destination="dgh-JZ-Q7z" id="mkk-oI-y7K"/>
-                                </connections>
-                            </pickerView>
-                            <pickerView contentMode="scaleToFill" verticalHuggingPriority="249" misplaced="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nFR-to-qQs">
+                            <pickerView contentMode="scaleToFill" verticalHuggingPriority="249" translatesAutoresizingMaskIntoConstraints="NO" id="nFR-to-qQs">
                                 <rect key="frame" x="0.0" y="20" width="320" height="216"/>
                                 <connections>
                                     <outlet property="dataSource" destination="dgh-JZ-Q7z" id="C28-Eh-A6L"/>
                                     <outlet property="delegate" destination="dgh-JZ-Q7z" id="dTy-8g-aj1"/>
                                 </connections>
                             </pickerView>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="unc-nO-WPH">
-                                <rect key="frame" x="82" y="193" width="156" height="30"/>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="unc-nO-WPH">
+                                <rect key="frame" x="82" y="179" width="156" height="30"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                             </textField>
+                            <pickerView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0xb-lk-PHK">
+                                <rect key="frame" x="0.0" y="269" width="320" height="162"/>
+                                <connections>
+                                    <outlet property="dataSource" destination="dgh-JZ-Q7z" id="R0Y-EX-neJ"/>
+                                    <outlet property="delegate" destination="dgh-JZ-Q7z" id="mkk-oI-y7K"/>
+                                </connections>
+                            </pickerView>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="0xb-lk-PHK" firstAttribute="leading" secondItem="2rs-P3-zn7" secondAttribute="leading" id="350-bN-0q6"/>
                             <constraint firstAttribute="centerX" secondItem="J5M-pv-UHA" secondAttribute="centerX" id="5jf-C1-faJ"/>
+                            <constraint firstItem="unc-nO-WPH" firstAttribute="top" secondItem="0HR-9w-kvY" secondAttribute="bottom" constant="159" id="A1r-Mh-dg7"/>
                             <constraint firstAttribute="centerX" secondItem="0xb-lk-PHK" secondAttribute="centerX" id="By0-u3-3MA"/>
                             <constraint firstItem="0xb-lk-PHK" firstAttribute="centerX" secondItem="J5M-pv-UHA" secondAttribute="centerX" id="Gab-EA-Il5"/>
-                            <constraint firstItem="0xb-lk-PHK" firstAttribute="top" secondItem="J5M-pv-UHA" secondAttribute="bottom" constant="25" id="RNw-zD-7u7"/>
-                            <constraint firstItem="0xb-lk-PHK" firstAttribute="top" secondItem="ATh-Tf-xRL" secondAttribute="bottom" constant="-13" id="TN4-kv-Yli"/>
+                            <constraint firstItem="unc-nO-WPH" firstAttribute="leading" secondItem="J5M-pv-UHA" secondAttribute="leading" id="Qk0-0J-79M"/>
+                            <constraint firstItem="0xb-lk-PHK" firstAttribute="top" secondItem="J5M-pv-UHA" secondAttribute="bottom" constant="8" id="RNw-zD-7u7"/>
+                            <constraint firstItem="0xb-lk-PHK" firstAttribute="top" secondItem="ATh-Tf-xRL" secondAttribute="bottom" constant="-30" id="TN4-kv-Yli"/>
                             <constraint firstItem="J5M-pv-UHA" firstAttribute="top" secondItem="nFR-to-qQs" secondAttribute="bottom" constant="-5" id="Vcz-ix-cdp"/>
                             <constraint firstItem="nFR-to-qQs" firstAttribute="top" secondItem="0HR-9w-kvY" secondAttribute="bottom" id="XWH-Vw-VfH"/>
                             <constraint firstItem="0xb-lk-PHK" firstAttribute="centerX" secondItem="ATh-Tf-xRL" secondAttribute="centerX" id="bEv-zi-oip"/>
+                            <constraint firstItem="J5M-pv-UHA" firstAttribute="top" secondItem="unc-nO-WPH" secondAttribute="bottom" constant="22" id="dU2-fJ-SU7"/>
                             <constraint firstItem="ATh-Tf-xRL" firstAttribute="top" secondItem="J5M-pv-UHA" secondAttribute="bottom" constant="8" id="gNc-KC-Q9G"/>
+                            <constraint firstItem="unc-nO-WPH" firstAttribute="trailing" secondItem="J5M-pv-UHA" secondAttribute="trailing" id="h4a-vk-mBB"/>
                             <constraint firstAttribute="centerX" secondItem="nFR-to-qQs" secondAttribute="centerX" id="h9S-ek-7bf"/>
                         </constraints>
                     </view>

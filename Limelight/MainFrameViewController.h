@@ -9,6 +9,7 @@
 #import <UIKit/UIKit.h>
 #import "MDNSManager.h"
 #import "PairManager.h"
+#import "StreamConfiguration.h"
 
 @interface MainFrameViewController : UIViewController <UIPickerViewDataSource, UIPickerViewDelegate, MDNSCallback, NSURLConnectionDelegate, PairCallback>
 @property (strong, nonatomic) IBOutlet UIPickerView *HostPicker;
@@ -20,6 +21,6 @@
 @property (strong, nonatomic) NSArray* hostPickerVals;
 @property (strong, nonatomic) IBOutlet UITextField *hostTextField;
 
-+ (NSString*) getHost;
++ (StreamConfiguration*) getStreamConfiguration;
 
 @end

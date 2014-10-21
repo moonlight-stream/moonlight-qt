@@ -24,7 +24,7 @@
 
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
-    StreamManager* streamMan = [[StreamManager alloc] initWithHost:[MainFrameViewController getHost] renderView:self.view];
+    StreamManager* streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration] renderView:self.view];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:streamMan];
 }

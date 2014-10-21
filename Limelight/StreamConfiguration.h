@@ -10,7 +10,8 @@
 
 @interface StreamConfiguration : NSObject
 
-@property int host;
+@property NSString* host;
+@property int hostAddr;
 @property int width;
 @property int height;
 @property int frameRate;

@@ -9,5 +9,5 @@
 #import "StreamConfiguration.h"
 
 @implementation StreamConfiguration
-@synthesize host, width, height, frameRate, bitRate, riKeyId, riKey;
+@synthesize host, hostAddr, width, height, frameRate, bitRate, riKeyId, riKey;
 @end
