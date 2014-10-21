@@ -78,8 +78,8 @@ static StreamConfiguration* streamConfig;
     streamConfig.host = _selectedHost.hostName;
     streamConfig.hostAddr = [Utils resolveHost:_selectedHost.hostName];
     
-    int selectedConf = [self.StreamConfigs selectedRowInComponent:0];
-    NSLog(@"selectedConf: %d", selectedConf);
+    unsigned long selectedConf = [self.StreamConfigs selectedRowInComponent:0];
+    NSLog(@"selectedConf: %ld", selectedConf);
     switch (selectedConf) {
         case 0:
             streamConfig.width = 1280;
