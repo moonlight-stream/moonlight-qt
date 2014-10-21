@@ -47,7 +47,6 @@ static VideoDecoderRenderer* renderer;
 
 void DrSetup(int width, int height, int fps, void* context, int drFlags)
 {
-    printf("Setup video\n");
 }
 
 void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
@@ -70,24 +69,19 @@ void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 
 void DrStart(void)
 {
-    printf("Start video\n");
 }
 
 void DrStop(void)
 {
-    printf("Stop video\n");
 }
 
 void DrRelease(void)
 {
-    printf("Release video\n");
 }
 
 void ArInit(void)
 {
     int err;
-    
-    printf("Init audio\n");
     
     opusDecoder = opus_decoder_create(48000, 2, &err);
     
@@ -96,22 +90,28 @@ void ArInit(void)
 
 void ArRelease(void)
 {
-    printf("Release audio\n");
-    
     if (opusDecoder != NULL) {
         opus_decoder_destroy(opusDecoder);
         opusDecoder = NULL;
+    }
+    
+    // This is safe because we're guaranteed that nobody
+    // is touching this list now
+    struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
+    while (audioBufferQueue != NULL) {
+        entry = audioBufferQueue;
+        audioBufferQueue = entry->next;
+        audioBufferQueueLength--;
+        free(entry);
     }
 }
 
 void ArStart(void)
 {
-    printf("Start audio\n");
 }
 
 void ArStop(void)
 {
-    printf("Stop audio\n");
 }
 
 void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
@@ -161,12 +161,10 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
 
 void ClStageStarting(int stage)
 {
-    NSLog(@"Starting stage: %d", stage);
 }
 
 void ClStageComplete(int stage)
 {
-    NSLog(@"Stage %d complete", stage);
 }
 
 void ClStageFailed(int stage, long errorCode)
