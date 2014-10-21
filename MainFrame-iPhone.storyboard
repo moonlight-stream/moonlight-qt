@@ -48,6 +48,9 @@
                                 <rect key="frame" x="82" y="179" width="156" height="30"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
+                                <connections>
+                                    <outlet property="delegate" destination="dgh-JZ-Q7z" id="DCy-4m-RHG"/>
+                                </connections>
                             </textField>
                             <pickerView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="0xb-lk-PHK">
                                 <rect key="frame" x="0.0" y="307" width="320" height="162"/>

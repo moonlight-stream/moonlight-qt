@@ -11,7 +11,7 @@
 #import "PairManager.h"
 #import "StreamConfiguration.h"
 
-@interface MainFrameViewController : UIViewController <UIPickerViewDataSource, UIPickerViewDelegate, MDNSCallback, NSURLConnectionDelegate, PairCallback>
+@interface MainFrameViewController : UIViewController <UIPickerViewDataSource, UIPickerViewDelegate, MDNSCallback, NSURLConnectionDelegate, PairCallback, UITextFieldDelegate>
 @property (strong, nonatomic) IBOutlet UIPickerView *HostPicker;
 - (IBAction)StreamButton:(UIButton *)sender;
 - (IBAction)PairButton:(UIButton *)sender;
