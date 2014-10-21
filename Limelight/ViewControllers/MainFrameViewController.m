@@ -34,6 +34,12 @@ static StreamConfiguration* streamConfig;
         _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
         NSLog(@"Using custom host: %@", self.hostTextField.text);
     }
+    
+    if (![self validatePcSelected]) {
+        NSLog(@"No valid PC selected");
+        return;
+    }
+    
     [CryptoManager generateKeyPairUsingSSl];
     NSString* uniqueId = [CryptoManager getUniqueID];
     NSData* cert = [CryptoManager readCertFromFile];
@@ -74,6 +80,12 @@ static StreamConfiguration* streamConfig;
         _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
         NSLog(@"Using custom host: %@", self.hostTextField.text);
     }
+    
+    if (![self validatePcSelected]) {
+        NSLog(@"No valid PC selected");
+        return;
+    }
+    
     streamConfig = [[StreamConfiguration alloc] init];
     streamConfig.host = _selectedHost.hostName;
     streamConfig.hostAddr = [Utils resolveHost:_selectedHost.hostName];
@@ -193,6 +205,19 @@ static StreamConfiguration* streamConfig;
     [self.HostPicker reloadAllComponents];
     
     [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
+}
+
+- (BOOL)validatePcSelected {
+    if (_selectedHost == NULL) {
+        UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"No PC Selected"
+                                                                       message:@"You must select a PC to continue."
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+        return FALSE;
+    }
+    
+    return TRUE;
 }
 
 - (void)didReceiveMemoryWarning
