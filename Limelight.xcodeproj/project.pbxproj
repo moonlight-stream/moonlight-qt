@@ -11,6 +11,7 @@
 		98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98A03B4A19F3514B00861ACA /* liblimelight-common.a */; };
 		98A03B5019F3598400861ACA /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */; };
 		98A03B5119F35AAC00861ACA /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9819EF9703009729EB /* libcrypto.a */; };
+		98B175B419F5DAFC00DA2AED /* ControllerSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = 98B175B319F5DAFC00DA2AED /* ControllerSupport.m */; };
 		FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
 		FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF319B2C406004C83CF /* CoreGraphics.framework */; };
 		FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF519B2C406004C83CF /* UIKit.framework */; };
@@ -85,6 +86,8 @@
 		98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
 		98A03B4E19F3598400861ACA /* VideoDecoderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoDecoderRenderer.h; path = Limelight/VideoDecoderRenderer.h; sourceTree = SOURCE_ROOT; };
 		98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoDecoderRenderer.m; path = Limelight/VideoDecoderRenderer.m; sourceTree = SOURCE_ROOT; };
+		98B175B219F5DAFC00DA2AED /* ControllerSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControllerSupport.h; sourceTree = "<group>"; };
+		98B175B319F5DAFC00DA2AED /* ControllerSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ControllerSupport.m; sourceTree = "<group>"; };
 		FB290CEE19B2C406004C83CF /* Limelight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Limelight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB290CF119B2C406004C83CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FB290CF319B2C406004C83CF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -337,6 +340,8 @@
 				FB8945EE19F5C3CD00339C8A /* Utils.m */,
 				FB8945F019F5C76C00339C8A /* StreamConfiguration.h */,
 				FB8945F119F5C76C00339C8A /* StreamConfiguration.m */,
+				98B175B219F5DAFC00DA2AED /* ControllerSupport.h */,
+				98B175B319F5DAFC00DA2AED /* ControllerSupport.m */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -705,6 +710,7 @@
 				FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */,
 				FBAB29F619EDE0F800929691 /* Computer.m in Sources */,
 				FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */,
+				98B175B419F5DAFC00DA2AED /* ControllerSupport.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
 				FB8945F219F5C76C00339C8A /* StreamConfiguration.m in Sources */,
 				FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */,

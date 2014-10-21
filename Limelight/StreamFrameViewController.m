@@ -11,18 +11,23 @@
 #import "Connection.h"
 #import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
+#import "ControllerSupport.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-@implementation StreamFrameViewController
+@implementation StreamFrameViewController {
+    ControllerSupport *_controllerSupport;
+}
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
     [UIApplication sharedApplication].idleTimerDisabled = YES;
+    
+    _controllerSupport = [[ControllerSupport alloc] init];
     
     StreamManager* streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration] renderView:self.view];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
