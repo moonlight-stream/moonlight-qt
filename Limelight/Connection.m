@@ -86,6 +86,71 @@ void ArInit(void)
     opusDecoder = opus_decoder_create(48000, 2, &err);
     
     audioLock = [[NSLock alloc] init];
+    
+    // Configure the audio session for our app
+    NSError *audioSessionError = nil;
+    AVAudioSession* audioSession = [AVAudioSession sharedInstance];
+    
+    [audioSession setPreferredSampleRate:48000.0 error:&audioSessionError];
+    [audioSession setCategory: AVAudioSessionCategoryPlayback error: &audioSessionError];
+    [audioSession setPreferredOutputNumberOfChannels:2 error:&audioSessionError];
+    [audioSession setPreferredIOBufferDuration:0.005 error:&audioSessionError];
+    [audioSession setActive: YES error: &audioSessionError];
+    
+    OSStatus status;
+    
+    AudioComponentDescription audioDesc;
+    audioDesc.componentType = kAudioUnitType_Output;
+    audioDesc.componentSubType = kAudioUnitSubType_RemoteIO;
+    audioDesc.componentFlags = 0;
+    audioDesc.componentFlagsMask = 0;
+    audioDesc.componentManufacturer = kAudioUnitManufacturer_Apple;
+    
+    status = AudioComponentInstanceNew(AudioComponentFindNext(NULL, &audioDesc), &audioUnit);
+    
+    if (status) {
+        NSLog(@"Unable to instantiate new AudioComponent: %d", (int32_t)status);
+    }
+    
+    AudioStreamBasicDescription audioFormat = {0};
+    audioFormat.mSampleRate = 48000;
+    audioFormat.mBitsPerChannel = 16;
+    audioFormat.mFormatID = kAudioFormatLinearPCM;
+    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
+    audioFormat.mChannelsPerFrame = 2;
+    audioFormat.mBytesPerFrame = audioFormat.mChannelsPerFrame * (audioFormat.mBitsPerChannel / 8);
+    audioFormat.mBytesPerPacket = audioFormat.mBytesPerFrame;
+    audioFormat.mFramesPerPacket = audioFormat.mBytesPerPacket / audioFormat.mBytesPerFrame;
+    audioFormat.mReserved = 0;
+    
+    status = AudioUnitSetProperty(audioUnit,
+                                  kAudioUnitProperty_StreamFormat,
+                                  kAudioUnitScope_Input,
+                                  OUTPUT_BUS,
+                                  &audioFormat,
+                                  sizeof(audioFormat));
+    if (status) {
+        NSLog(@"Unable to set audio unit to input: %d", (int32_t)status);
+    }
+    
+    AURenderCallbackStruct callbackStruct = {0};
+    callbackStruct.inputProc = playbackCallback;
+    callbackStruct.inputProcRefCon = NULL;
+    
+    status = AudioUnitSetProperty(audioUnit,
+                                  kAudioUnitProperty_SetRenderCallback,
+                                  kAudioUnitScope_Input,
+                                  OUTPUT_BUS,
+                                  &callbackStruct,
+                                  sizeof(callbackStruct));
+    if (status) {
+        NSLog(@"Unable to set audio unit callback: %d", (int32_t)status);
+    }
+    
+    status = AudioUnitInitialize(audioUnit);
+    if (status) {
+        NSLog(@"Unable to initialize audioUnit: %d", (int32_t)status);
+    }
 }
 
 void ArRelease(void)
@@ -94,6 +159,15 @@ void ArRelease(void)
         opus_decoder_destroy(opusDecoder);
         opusDecoder = NULL;
     }
+    
+    OSStatus status = AudioUnitUninitialize(audioUnit);
+    if (status) {
+        NSLog(@"Unable to uninitialize audioUnit: %d", (int32_t)status);
+    }
+    
+    // Audio session is now inactive
+    AVAudioSession* audioSession = [AVAudioSession sharedInstance];
+    [audioSession setActive: YES error: nil];
     
     // This is safe because we're guaranteed that nobody
     // is touching this list now
@@ -108,10 +182,18 @@ void ArRelease(void)
 
 void ArStart(void)
 {
+    OSStatus status = AudioOutputUnitStart(audioUnit);
+    if (status) {
+        NSLog(@"Unable to start audioUnit: %d", (int32_t)status);
+    }
 }
 
 void ArStop(void)
 {
+    OSStatus status = AudioOutputUnitStop(audioUnit);
+    if (status) {
+        NSLog(@"Unable to stop audioUnit: %d", (int32_t)status);
+    }
 }
 
 void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
@@ -240,78 +322,6 @@ void ClDisplayTransientMessage(char* message)
     _clCallbacks.connectionTerminated = ClConnectionTerminated;
     _clCallbacks.displayMessage = ClDisplayMessage;
     _clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
-    
-    // Configure the audio session for our app
-    NSError *audioSessionError = nil;
-    AVAudioSession* audioSession = [AVAudioSession sharedInstance];
-    
-    [audioSession setPreferredSampleRate:48000.0 error:&audioSessionError];
-    [audioSession setCategory: AVAudioSessionCategoryPlayAndRecord error: &audioSessionError];
-    [audioSession setPreferredOutputNumberOfChannels:2 error:&audioSessionError];
-    [audioSession setPreferredIOBufferDuration:0.005 error:&audioSessionError];
-    [audioSession setActive: YES error: &audioSessionError];
-    
-    OSStatus status;
-    
-    AudioComponentDescription audioDesc;
-    audioDesc.componentType = kAudioUnitType_Output;
-    audioDesc.componentSubType = kAudioUnitSubType_RemoteIO;
-    audioDesc.componentFlags = 0;
-    audioDesc.componentFlagsMask = 0;
-    audioDesc.componentManufacturer = kAudioUnitManufacturer_Apple;
-    
-    status = AudioComponentInstanceNew(AudioComponentFindNext(NULL, &audioDesc), &audioUnit);
-    
-    if (status) {
-        NSLog(@"Unable to instantiate new AudioComponent: %d", (int32_t)status);
-    }
-    
-    AudioStreamBasicDescription audioFormat = {0};
-    audioFormat.mSampleRate = 48000;
-    audioFormat.mBitsPerChannel = 16;
-    audioFormat.mFormatID = kAudioFormatLinearPCM;
-    audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
-    audioFormat.mChannelsPerFrame = 2;
-    audioFormat.mBytesPerFrame = audioFormat.mChannelsPerFrame * (audioFormat.mBitsPerChannel / 8);
-    audioFormat.mBytesPerPacket = audioFormat.mBytesPerFrame;
-    audioFormat.mFramesPerPacket = audioFormat.mBytesPerPacket / audioFormat.mBytesPerFrame;
-    audioFormat.mReserved = 0;
-
-    status = AudioUnitSetProperty(audioUnit,
-                                  kAudioUnitProperty_StreamFormat,
-                                  kAudioUnitScope_Input,
-                                  OUTPUT_BUS,
-                                  &audioFormat,
-                                  sizeof(audioFormat));
-    if (status) {
-        NSLog(@"Unable to set audio unit to input: %d", (int32_t)status);
-    }
-    
-    AURenderCallbackStruct callbackStruct = {0};
-    callbackStruct.inputProc = playbackCallback;
-    callbackStruct.inputProcRefCon = NULL;
-    
-    status = AudioUnitSetProperty(audioUnit,
-                                  kAudioUnitProperty_SetRenderCallback,
-                                  kAudioUnitScope_Input,
-                                  OUTPUT_BUS,
-                                  &callbackStruct,
-                                  sizeof(callbackStruct));
-    if (status) {
-        NSLog(@"Unable to set audio unit callback: %d", (int32_t)status);
-    }
-    
-    status = AudioUnitInitialize(audioUnit);
-    if (status) {
-        NSLog(@"Unable to initialize audioUnit: %d", (int32_t)status);
-    }
-    
-    // We start here because it seems to need some warmup time
-    // before it starts accepting samples
-    status = AudioOutputUnitStart(audioUnit);
-    if (status) {
-        NSLog(@"Unable to start audioUnit: %d", (int32_t)status);
-    }
     
     return self;
 }
