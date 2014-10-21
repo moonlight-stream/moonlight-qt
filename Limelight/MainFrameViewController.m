@@ -29,6 +29,10 @@ static NSString* host;
 - (void)PairButton:(UIButton *)sender
 {
     NSLog(@"Pair Button Pressed!");
+    if ([self.hostTextField.text length] > 0) {
+        _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
+        NSLog(@"Using custom host: %@", self.hostTextField.text);
+    }
     [CryptoManager generateKeyPairUsingSSl];
     NSString* uniqueId = [CryptoManager getUniqueID];
     NSData* cert = [CryptoManager readCertFromFile];
@@ -65,6 +69,10 @@ static NSString* host;
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
+    if ([self.hostTextField.text length] > 0) {
+        _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
+        NSLog(@"Using custom host: %@", self.hostTextField.text);
+    }
     host = _selectedHost.hostName;
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }

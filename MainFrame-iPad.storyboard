@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6245" systemVersion="14A389" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="wb7-af-jn8">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14A388a" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="wb7-af-jn8">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
     </dependencies>
     <scenes>
         <!--Main Frame View Controller-->
@@ -50,6 +50,11 @@
                                     <action selector="PairButton:" destination="wb7-af-jn8" eventType="touchUpInside" id="Ct1-6m-aYg"/>
                                 </connections>
                             </button>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="OCq-Pr-kFE">
+                                <rect key="frame" x="374" y="235" width="276" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                     </view>
@@ -57,6 +62,7 @@
                     <connections>
                         <outlet property="HostPicker" destination="bJR-sz-8uh" id="pWB-P3-ZJ2"/>
                         <outlet property="StreamConfigs" destination="rnA-uG-hAA" id="LPP-jQ-5eW"/>
+                        <outlet property="hostTextField" destination="OCq-Pr-kFE" id="HS2-KF-inc"/>
                         <segue destination="OIm-0n-i9v" kind="modal" identifier="createStreamFrame" modalPresentationStyle="fullScreen" id="MOD-9A-3Sk"/>
                     </connections>
                 </viewController>

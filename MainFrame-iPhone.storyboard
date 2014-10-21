@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6245" systemVersion="14A389" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="dgh-JZ-Q7z">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14A388a" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="dgh-JZ-Q7z">
     <dependencies>
-        <deployment defaultVersion="2048" identifier="iOS"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6238"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
     </dependencies>
     <scenes>
         <!--Main Frame View Controller-->
@@ -52,6 +51,11 @@
                                     <outlet property="delegate" destination="dgh-JZ-Q7z" id="dTy-8g-aj1"/>
                                 </connections>
                             </pickerView>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="unc-nO-WPH">
+                                <rect key="frame" x="82" y="193" width="156" height="30"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="14"/>
+                                <textInputTraits key="textInputTraits"/>
+                            </textField>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
                         <constraints>
@@ -73,6 +77,7 @@
                     <connections>
                         <outlet property="HostPicker" destination="nFR-to-qQs" id="lTE-tT-lYY"/>
                         <outlet property="StreamConfigs" destination="0xb-lk-PHK" id="VxB-Ur-PNy"/>
+                        <outlet property="hostTextField" destination="unc-nO-WPH" id="MbD-KQ-MoG"/>
                         <segue destination="mI3-9F-XwU" kind="modal" identifier="createStreamFrame" id="cPc-eP-un1"/>
                     </connections>
                 </viewController>

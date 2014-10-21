@@ -18,8 +18,7 @@
 @property (strong, nonatomic) IBOutlet UIPickerView *StreamConfigs;
 @property (strong, nonatomic) NSArray* streamConfigVals;
 @property (strong, nonatomic) NSArray* hostPickerVals;
-
-- (void) segueIntoStream;
+@property (strong, nonatomic) IBOutlet UITextField *hostTextField;
 
 + (NSString*) getHost;
 
