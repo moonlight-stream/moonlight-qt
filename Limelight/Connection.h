@@ -19,6 +19,7 @@
 @interface Connection : NSOperation <NSStreamDelegate>
 
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionTerminatedCallback:(id<ConTermCallback>)callback;
+-(void) terminate;
 -(void) main;
 
 @end

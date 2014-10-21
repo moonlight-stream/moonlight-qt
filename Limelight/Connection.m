@@ -182,8 +182,8 @@ void ClConnectionStarted(void)
 void ClConnectionTerminated(long errorCode)
 {
     NSLog(@"ConnectionTerminated: %ld", errorCode);
+    
     [_callback connectionTerminated];
-    NSLog(@"Tried calling callback");
 }
 
 void ClDisplayMessage(char* message)
@@ -194,6 +194,16 @@ void ClDisplayMessage(char* message)
 void ClDisplayTransientMessage(char* message)
 {
     NSLog(@"DisplayTransientMessage: %s", message);
+}
+
+-(void) terminate
+{
+    // We dispatch this async to get out because this can be invoked
+    // on a thread inside common and we don't want to deadlock
+    dispatch_async(dispatch_get_main_queue(), ^{
+        // This is safe to call even before LiStartConnection
+        LiStopConnection();
+    });
 }
 
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionTerminatedCallback:(id<ConTermCallback>)callback

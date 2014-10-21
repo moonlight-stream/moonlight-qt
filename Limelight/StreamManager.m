@@ -15,6 +15,7 @@
     StreamConfiguration* _config;
     UIView* _renderView;
     id<ConTermCallback> _callback;
+    Connection* _connection;
 }
 
 - (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionTerminatedCallback:(id<ConTermCallback>)callback {
@@ -49,9 +50,14 @@
     }
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
-    Connection* conn = [[Connection alloc] initWithConfig:_config renderer:renderer connectionTerminatedCallback:_callback];
+    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionTerminatedCallback:_callback];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
-    [opQueue addOperation:conn];
+    [opQueue addOperation:_connection];
+}
+
+- (void) stopStream
+{
+    [_connection terminate];
 }
 
 - (void) launchApp:(HttpManager*)hMan {

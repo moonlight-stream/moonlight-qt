@@ -18,6 +18,7 @@
 
 @implementation StreamFrameViewController {
     ControllerSupport *_controllerSupport;
+    StreamManager *_streamMan;
 }
 
 - (void)viewDidLoad
@@ -28,18 +29,29 @@
     
     _controllerSupport = [[ControllerSupport alloc] init];
     
-    StreamManager* streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration] renderView:self.view connectionTerminatedCallback:self];
+    _streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration] renderView:self.view connectionTerminatedCallback:self];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
-    [opQueue addOperation:streamMan];
+    [opQueue addOperation:_streamMan];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(applicationWillResignActive:)
+                                                 name:UIApplicationWillResignActiveNotification
+                                               object:nil];
+}
+
+- (void)applicationWillResignActive:(NSNotification *)notification {
+    [_streamMan stopStream];
+    [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
 }
 
 - (void)connectionTerminated {
-    NSLog(@"StreamFrame - Connection Terminated");
     UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection terminated unexpectedly" preferredStyle:UIAlertControllerStyleAlert];
     [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
         [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
     }]];
     [self presentViewController:conTermAlert animated:YES completion:nil];
+    
+    [_streamMan stopStream];
 }
 
 - (void)didReceiveMemoryWarning

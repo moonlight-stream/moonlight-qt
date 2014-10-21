@@ -13,4 +13,6 @@
 @interface StreamManager : NSOperation
 
 - (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionTerminatedCallback:(id<ConTermCallback>)callback;
+- (void) stopStream;
+
 @end
