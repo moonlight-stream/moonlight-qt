@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14A389" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="wb7-af-jn8">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14A388a" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" useAutolayout="YES" initialViewController="wb7-af-jn8">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
     </dependencies>
@@ -109,7 +109,24 @@
                     <view key="view" contentMode="scaleToFill" id="VPm-Ae-rc4" userLabel="RenderView" customClass="StreamView">
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <activityIndicatorView opaque="NO" clearsContextBeforeDrawing="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="white" translatesAutoresizingMaskIntoConstraints="NO" id="iOs-1X-mSU">
+                                <rect key="frame" x="502" y="374" width="20" height="20"/>
+                            </activityIndicatorView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Label" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dDs-kT-po6">
+                                <rect key="frame" x="491" y="402" width="42" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="dDs-kT-po6" firstAttribute="top" secondItem="iOs-1X-mSU" secondAttribute="bottom" constant="8" id="VZj-wk-dHp"/>
+                            <constraint firstAttribute="centerY" secondItem="iOs-1X-mSU" secondAttribute="centerY" id="YAN-0k-Rds"/>
+                            <constraint firstAttribute="centerX" secondItem="dDs-kT-po6" secondAttribute="centerX" id="bLr-5Z-OH3"/>
+                            <constraint firstAttribute="centerX" secondItem="iOs-1X-mSU" secondAttribute="centerX" id="ruD-8B-gj3"/>
+                        </constraints>
                     </view>
                     <nil key="simulatedStatusBarMetrics"/>
                     <nil key="simulatedTopBarMetrics"/>
@@ -117,6 +134,8 @@
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
                     <connections>
+                        <outlet property="spinner" destination="iOs-1X-mSU" id="LSl-lr-7fF"/>
+                        <outlet property="stageLabel" destination="dDs-kT-po6" id="ziI-M8-UVf"/>
                         <segue destination="wb7-af-jn8" kind="modal" identifier="returnToMainFrame" id="Ryr-0y-o43"/>
                     </connections>
                 </viewController>

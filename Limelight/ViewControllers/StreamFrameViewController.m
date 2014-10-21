@@ -24,7 +24,9 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
+    
+    [self.stageLabel setText:@"Starting App"];
+    
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
     _controllerSupport = [[ControllerSupport alloc] init];
@@ -48,6 +50,10 @@
 
 - (void) connectionStarted {
     printf("Connection started\n");
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.spinner stopAnimating];
+        [self.stageLabel setText:@"Waiting for first frame..."];
+    });
 }
 
 - (void)connectionTerminated:(long)errorCode {
@@ -64,6 +70,11 @@
 
 - (void) stageStarting:(char*)stageName {
     printf("Starting %s\n", stageName);
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSString* lowerCase = [NSString stringWithFormat:@"%s in progress...", stageName];
+        NSString* titleCase = [[[lowerCase substringToIndex:1] uppercaseString] stringByAppendingString:[lowerCase substringFromIndex:1]];
+        [self.stageLabel setText:titleCase];
+    });
 }
 
 - (void) stageComplete:(char*)stageName {
@@ -72,7 +83,7 @@
 - (void) stageFailed:(char*)stageName withError:(long)errorCode {
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
                                                                    message:[NSString stringWithFormat:@"%s failed with error %ld",
-                                                                             stageName, errorCode]
+                                                                            stageName, errorCode]
                                                             preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
         [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
