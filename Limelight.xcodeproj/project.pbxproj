@@ -21,7 +21,6 @@
 		FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D0319B2C406004C83CF /* AppDelegate.m */; };
 		FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */; };
 		FB290D0919B2C406004C83CF /* Images.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB290D0819B2C406004C83CF /* Images.xcassets */; };
-		FB290D1019B2C406004C83CF /* XCTest.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290D0F19B2C406004C83CF /* XCTest.framework */; };
 		FB290D1119B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
 		FB290D1219B2C406004C83CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF519B2C406004C83CF /* UIKit.framework */; };
 		FB290D1319B2C406004C83CF /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF719B2C406004C83CF /* CoreData.framework */; };
@@ -73,13 +72,6 @@
 			remoteGlobalIDString = FB290CED19B2C406004C83CF;
 			remoteInfo = Limelight;
 		};
-		FBC8623219F346A60087327B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = FBC8622E19F346A60087327B /* limelight-common.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = FB290E2E19B37A4E004C83CF;
-			remoteInfo = "limelight-common";
-		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -104,7 +96,6 @@
 		FB290D0619B2C406004C83CF /* Limelight.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Limelight.xcdatamodel; sourceTree = "<group>"; };
 		FB290D0819B2C406004C83CF /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
 		FB290D0E19B2C406004C83CF /* LimelightTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = LimelightTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB290D0F19B2C406004C83CF /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		FB290D1819B2C406004C83CF /* LimelightTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "LimelightTests-Info.plist"; sourceTree = "<group>"; };
 		FB290D1A19B2C406004C83CF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FB290D1C19B2C406004C83CF /* LimelightTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LimelightTests.m; sourceTree = "<group>"; };
@@ -114,8 +105,6 @@
 		FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
 		FB290D2C19B2C6E3004C83CF /* StreamFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamFrameViewController.h; sourceTree = "<group>"; };
 		FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamFrameViewController.m; sourceTree = "<group>"; };
-		FB290DA919B2C814004C83CF /* Limelight.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Limelight.h; sourceTree = "<group>"; };
-		FB290DAB19B2C814004C83CF /* liblimelight-common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = "liblimelight-common.a"; sourceTree = "<group>"; };
 		FB290DB619B2C870004C83CF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		FB290DB819B2C877004C83CF /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = usr/lib/libbz2.dylib; sourceTree = SDKROOT; };
 		FB290DBC19B2E966004C83CF /* opus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
@@ -145,7 +134,6 @@
 		FBAB29FB19EE13AA00929691 /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
 		FBC8622B19F0BEFB0087327B /* HttpManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpManager.h; sourceTree = "<group>"; };
 		FBC8622C19F0BEFB0087327B /* HttpManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HttpManager.m; sourceTree = "<group>"; };
-		FBC8622E19F346A60087327B /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "../../limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
 		FBCC0E4C19EF9703009729EB /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		FBCC0E4D19EF9703009729EB /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		FBCC0E4E19EF9703009729EB /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -251,7 +239,6 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB290D1019B2C406004C83CF /* XCTest.framework in Frameworks */,
 				FB290D1319B2C406004C83CF /* CoreData.framework in Frameworks */,
 				FB290D1219B2C406004C83CF /* UIKit.framework in Frameworks */,
 				FB290D1119B2C406004C83CF /* Foundation.framework in Frameworks */,
@@ -292,7 +279,6 @@
 		FB290CF019B2C406004C83CF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				FBC8622E19F346A60087327B /* limelight-common.xcodeproj */,
 				FB7E794319C8B71B00A15F68 /* libiconv.dylib */,
 				FB290DC319B2E98F004C83CF /* libxml2.dylib */,
 				FB290DB819B2C877004C83CF /* libbz2.dylib */,
@@ -302,7 +288,6 @@
 				FB290CF319B2C406004C83CF /* CoreGraphics.framework */,
 				FB290CF519B2C406004C83CF /* UIKit.framework */,
 				FB290CF719B2C406004C83CF /* CoreData.framework */,
-				FB290D0F19B2C406004C83CF /* XCTest.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -394,35 +379,9 @@
 			isa = PBXGroup;
 			children = (
 				FBCC0E4919EF9703009729EB /* openssl */,
-				FB290DA719B2C814004C83CF /* limelight-common */,
 				FB290DAC19B2C814004C83CF /* opus */,
 			);
 			path = libs;
-			sourceTree = "<group>";
-		};
-		FB290DA719B2C814004C83CF /* limelight-common */ = {
-			isa = PBXGroup;
-			children = (
-				FB290DA819B2C814004C83CF /* include */,
-				FB290DAA19B2C814004C83CF /* lib */,
-			);
-			path = "limelight-common";
-			sourceTree = "<group>";
-		};
-		FB290DA819B2C814004C83CF /* include */ = {
-			isa = PBXGroup;
-			children = (
-				FB290DA919B2C814004C83CF /* Limelight.h */,
-			);
-			path = include;
-			sourceTree = "<group>";
-		};
-		FB290DAA19B2C814004C83CF /* lib */ = {
-			isa = PBXGroup;
-			children = (
-				FB290DAB19B2C814004C83CF /* liblimelight-common.a */,
-			);
-			path = lib;
 			sourceTree = "<group>";
 		};
 		FB290DAC19B2C814004C83CF /* opus */ = {
@@ -459,14 +418,6 @@
 				FB290DC119B2E966004C83CF /* libopus.a */,
 			);
 			path = lib;
-			sourceTree = "<group>";
-		};
-		FBC8622F19F346A60087327B /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				FBC8623319F346A60087327B /* liblimelight-common.a */,
-			);
-			name = Products;
 			sourceTree = "<group>";
 		};
 		FBCC0E4919EF9703009729EB /* openssl */ = {
@@ -648,10 +599,6 @@
 					ProductGroup = 98A03B4619F3514B00861ACA /* Products */;
 					ProjectRef = 98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */;
 				},
-				{
-					ProductGroup = FBC8622F19F346A60087327B /* Products */;
-					ProjectRef = FBC8622E19F346A60087327B /* limelight-common.xcodeproj */;
-				},
 			);
 			projectRoot = "";
 			targets = (
@@ -667,13 +614,6 @@
 			fileType = archive.ar;
 			path = "liblimelight-common.a";
 			remoteRef = 98A03B4919F3514B00861ACA /* PBXContainerItemProxy */;
-			sourceTree = BUILT_PRODUCTS_DIR;
-		};
-		FBC8623319F346A60087327B /* liblimelight-common.a */ = {
-			isa = PBXReferenceProxy;
-			fileType = archive.ar;
-			path = "liblimelight-common.a";
-			remoteRef = FBC8623219F346A60087327B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
