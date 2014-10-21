@@ -15,15 +15,16 @@
 #include "opus.h"
 
 @implementation Connection {
-    IP_ADDRESS host;
-    STREAM_CONFIGURATION streamConfig;
-    CONNECTION_LISTENER_CALLBACKS clCallbacks;
-    DECODER_RENDERER_CALLBACKS drCallbacks;
-    AUDIO_RENDERER_CALLBACKS arCallbacks;
+    IP_ADDRESS _host;
+    STREAM_CONFIGURATION _streamConfig;
+    CONNECTION_LISTENER_CALLBACKS _clCallbacks;
+    DECODER_RENDERER_CALLBACKS _drCallbacks;
+    AUDIO_RENDERER_CALLBACKS _arCallbacks;
+    
 }
 
 static OpusDecoder *opusDecoder;
-
+static id<ConTermCallback> _callback;
 
 #define PCM_BUFFER_SIZE 1024
 #define OUTPUT_BUS 0
@@ -181,6 +182,8 @@ void ClConnectionStarted(void)
 void ClConnectionTerminated(long errorCode)
 {
     NSLog(@"ConnectionTerminated: %ld", errorCode);
+    [_callback connectionTerminated];
+    NSLog(@"Tried calling callback");
 }
 
 void ClDisplayMessage(char* message)
@@ -193,42 +196,42 @@ void ClDisplayTransientMessage(char* message)
     NSLog(@"DisplayTransientMessage: %s", message);
 }
 
--(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionTerminatedCallback:(id<ConTermCallback>)callback
 {
     self = [super init];
-    host = config.hostAddr;
+    _host = config.hostAddr;
     renderer = myRenderer;
+    _callback = callback;
+    _streamConfig.width = config.width;
+    _streamConfig.height = config.height;
+    _streamConfig.fps = config.frameRate;
+    _streamConfig.bitrate = config.bitRate;
+    _streamConfig.packetSize = 1024;
     
-    streamConfig.width = config.width;
-    streamConfig.height = config.height;
-    streamConfig.fps = config.frameRate;
-    streamConfig.bitrate = config.bitRate;
-    streamConfig.packetSize = 1024;
-    
-    memcpy(streamConfig.remoteInputAesKey, [config.riKey bytes], [config.riKey length]);
-    memset(streamConfig.remoteInputAesIv, 0, 16);
+    memcpy(_streamConfig.remoteInputAesKey, [config.riKey bytes], [config.riKey length]);
+    memset(_streamConfig.remoteInputAesIv, 0, 16);
     int riKeyId = htonl(config.riKeyId);
-    memcpy(streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
+    memcpy(_streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
     
-    drCallbacks.setup = DrSetup;
-    drCallbacks.start = DrStart;
-    drCallbacks.stop = DrStop;
-    drCallbacks.release = DrRelease;
-    drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
+    _drCallbacks.setup = DrSetup;
+    _drCallbacks.start = DrStart;
+    _drCallbacks.stop = DrStop;
+    _drCallbacks.release = DrRelease;
+    _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
     
-    arCallbacks.init = ArInit;
-    arCallbacks.start = ArStart;
-    arCallbacks.stop = ArStop;
-    arCallbacks.release = ArRelease;
-    arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
+    _arCallbacks.init = ArInit;
+    _arCallbacks.start = ArStart;
+    _arCallbacks.stop = ArStop;
+    _arCallbacks.release = ArRelease;
+    _arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
     
-    clCallbacks.stageStarting = ClStageStarting;
-    clCallbacks.stageComplete = ClStageComplete;
-    clCallbacks.stageFailed = ClStageFailed;
-    clCallbacks.connectionStarted = ClConnectionStarted;
-    clCallbacks.connectionTerminated = ClConnectionTerminated;
-    clCallbacks.displayMessage = ClDisplayMessage;
-    clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
+    _clCallbacks.stageStarting = ClStageStarting;
+    _clCallbacks.stageComplete = ClStageComplete;
+    _clCallbacks.stageFailed = ClStageFailed;
+    _clCallbacks.connectionStarted = ClConnectionStarted;
+    _clCallbacks.connectionTerminated = ClConnectionTerminated;
+    _clCallbacks.displayMessage = ClDisplayMessage;
+    _clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
     
     // Configure the audio session for our app
     NSError *audioSessionError = nil;
@@ -388,7 +391,7 @@ static OSStatus playbackCallback(void *inRefCon,
 
 -(void) main
 {
-    LiStartConnection(host, &streamConfig, &clCallbacks, &drCallbacks, &arCallbacks, NULL, 0);
+    LiStartConnection(_host, &_streamConfig, &_clCallbacks, &_drCallbacks, &_arCallbacks, NULL, 0);
 }
 
 

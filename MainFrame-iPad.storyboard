@@ -71,7 +71,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="ZYl-Xu-QyD" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="179" y="-318"/>
+            <point key="canvasLocation" x="-375" y="-162"/>
         </scene>
         <!--Stream Frame View Controller-->
         <scene sceneID="RuD-qk-7nb">
@@ -91,6 +91,9 @@
                     <nil key="simulatedBottomBarMetrics"/>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <simulatedScreenMetrics key="simulatedDestinationMetrics"/>
+                    <connections>
+                        <segue destination="wb7-af-jn8" kind="modal" identifier="returnToMainFrame" id="Ryr-0y-o43"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="hON-k2-Efa" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

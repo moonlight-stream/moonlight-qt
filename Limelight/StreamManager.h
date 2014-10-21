@@ -8,9 +8,9 @@
 
 #import <Foundation/Foundation.h>
 #import "StreamConfiguration.h"
+#import "Connection.h"
 
 @interface StreamManager : NSOperation
 
-- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view;
-
+- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionTerminatedCallback:(id<ConTermCallback>)callback;
 @end

@@ -10,17 +10,18 @@
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Utils.h"
-#import "Connection.h"
 
 @implementation StreamManager {
     StreamConfiguration* _config;
     UIView* _renderView;
+    id<ConTermCallback> _callback;
 }
 
-- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view {
+- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionTerminatedCallback:(id<ConTermCallback>)callback {
     self = [super init];
     _config = config;
     _renderView = view;
+    _callback = callback;
     _config.riKey = [Utils randomBytes:16];
     _config.riKeyId = arc4random();
     _config.bitRate = 10000;
@@ -48,8 +49,7 @@
     }
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
-    Connection* conn = [[Connection alloc] initWithConfig:_config renderer:renderer];
-    
+    Connection* conn = [[Connection alloc] initWithConfig:_config renderer:renderer connectionTerminatedCallback:_callback];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:conn];
 }

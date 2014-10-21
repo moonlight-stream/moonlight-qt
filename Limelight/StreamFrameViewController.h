@@ -6,8 +6,10 @@
 //  Copyright (c) 2014 Diego Waxemberg. All rights reserved.
 //
 
+#import "Connection.h"
+
 #import <UIKit/UIKit.h>
 
-@interface StreamFrameViewController : UIViewController
+@interface StreamFrameViewController : UIViewController <ConTermCallback>
 
 @end

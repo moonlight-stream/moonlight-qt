@@ -10,9 +10,15 @@
 #import "VideoDecoderRenderer.h"
 #import "StreamConfiguration.h"
 
+@protocol ConTermCallback <NSObject>
+
+- (void) connectionTerminated;
+
+@end
+
 @interface Connection : NSOperation <NSStreamDelegate>
 
--(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer;
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionTerminatedCallback:(id<ConTermCallback>)callback;
 -(void) main;
 
 @end

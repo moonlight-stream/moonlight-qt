@@ -8,7 +8,6 @@
 
 #import "StreamFrameViewController.h"
 #import "MainFrameViewController.h"
-#import "Connection.h"
 #import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
 #import "ControllerSupport.h"
@@ -29,9 +28,18 @@
     
     _controllerSupport = [[ControllerSupport alloc] init];
     
-    StreamManager* streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration] renderView:self.view];
+    StreamManager* streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration] renderView:self.view connectionTerminatedCallback:self];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:streamMan];
+}
+
+- (void)connectionTerminated {
+    NSLog(@"StreamFrame - Connection Terminated");
+    UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection terminated unexpectedly" preferredStyle:UIAlertControllerStyleAlert];
+    [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+    }]];
+    [self presentViewController:conTermAlert animated:YES completion:nil];
 }
 
 - (void)didReceiveMemoryWarning

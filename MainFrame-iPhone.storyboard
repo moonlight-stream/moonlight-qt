@@ -108,6 +108,9 @@
                     <nil key="simulatedStatusBarMetrics"/>
                     <nil key="simulatedTopBarMetrics"/>
                     <nil key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <segue destination="dgh-JZ-Q7z" kind="modal" identifier="returnToMainFrame" id="djB-MF-L5D"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="pqv-jd-33O" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
