@@ -11,5 +11,7 @@
 #import <UIKit/UIKit.h>
 
 @interface StreamFrameViewController : UIViewController <ConnectionCallbacks>
+@property (strong, nonatomic) IBOutlet UILabel *stageLabel;
+@property (strong, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
 
 @end
