@@ -26,7 +26,7 @@
 static const NSString* PORT = @"47984";
 
 + (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag {
-    xmlDocPtr docPtr = xmlParseMemory([xml bytes], [xml length]);
+    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
     
     if (docPtr == NULL) {
         NSLog(@"ERROR: An error occured trying to parse xml.");
