@@ -15,5 +15,6 @@
 
 - (id) initWithHost:(NSNetService*)host;
 - (id) initWithIp:(NSString*)host;
+- (id) initPlaceholder;
 
 @end

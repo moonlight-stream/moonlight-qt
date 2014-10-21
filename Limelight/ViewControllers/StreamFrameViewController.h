@@ -10,6 +10,6 @@
 
 #import <UIKit/UIKit.h>
 
-@interface StreamFrameViewController : UIViewController <ConTermCallback>
+@interface StreamFrameViewController : UIViewController <ConnectionCallbacks>
 
 @end

@@ -67,7 +67,7 @@
             return addr;
         } else {
             NSLog(@"Failed to resolve host: %d", h_errno);
-            return -1;
+            return 0;
         }
     }
 }

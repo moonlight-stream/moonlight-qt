@@ -20,11 +20,10 @@
     CONNECTION_LISTENER_CALLBACKS _clCallbacks;
     DECODER_RENDERER_CALLBACKS _drCallbacks;
     AUDIO_RENDERER_CALLBACKS _arCallbacks;
-    
 }
 
 static OpusDecoder *opusDecoder;
-static id<ConTermCallback> _callback;
+static id<ConnectionCallbacks> _callbacks;
 
 #define PCM_BUFFER_SIZE 1024
 #define OUTPUT_BUS 0
@@ -243,37 +242,37 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
 
 void ClStageStarting(int stage)
 {
+    [_callbacks stageStarting:(char*)LiGetStageName(stage)];
 }
 
 void ClStageComplete(int stage)
 {
+    [_callbacks stageComplete:(char*)LiGetStageName(stage)];
 }
 
 void ClStageFailed(int stage, long errorCode)
 {
-    printf("Stage %d failed: %ld\n", stage, errorCode);
+    [_callbacks stageFailed:(char*)LiGetStageName(stage) withError:errorCode];
 }
 
 void ClConnectionStarted(void)
 {
-    printf("Connection started\n");
+    [_callbacks connectionStarted];
 }
 
 void ClConnectionTerminated(long errorCode)
 {
-    printf("ConnectionTerminated: %ld\n", errorCode);
-    
-    [_callback connectionTerminated];
+    [_callbacks connectionTerminated: errorCode];
 }
 
 void ClDisplayMessage(char* message)
 {
-    printf("DisplayMessage: %s\n", message);
+    [_callbacks displayMessage: message];
 }
 
 void ClDisplayTransientMessage(char* message)
 {
-    printf("DisplayTransientMessage: %s\n", message);
+    [_callbacks displayTransientMessage: message];
 }
 
 -(void) terminate
@@ -286,12 +285,12 @@ void ClDisplayTransientMessage(char* message)
     });
 }
 
--(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionTerminatedCallback:(id<ConTermCallback>)callback
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks
 {
     self = [super init];
     _host = config.hostAddr;
     renderer = myRenderer;
-    _callback = callback;
+    _callbacks = callbacks;
     _streamConfig.width = config.width;
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;

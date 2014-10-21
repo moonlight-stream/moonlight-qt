@@ -10,15 +10,22 @@
 #import "VideoDecoderRenderer.h"
 #import "StreamConfiguration.h"
 
-@protocol ConTermCallback <NSObject>
+@protocol ConnectionCallbacks <NSObject>
 
-- (void) connectionTerminated;
+- (void) connectionStarted;
+- (void) connectionTerminated:(long)errorCode;
+- (void) stageStarting:(char*)stageName;
+- (void) stageComplete:(char*)stageName;
+- (void) stageFailed:(char*)stageName withError:(long)errorCode;
+- (void) launchFailed;
+- (void) displayMessage:(char*)message;
+- (void) displayTransientMessage:(char*)message;
 
 @end
 
 @interface Connection : NSOperation <NSStreamDelegate>
 
--(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionTerminatedCallback:(id<ConTermCallback>)callback;
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks;
 -(void) terminate;
 -(void) main;
 

@@ -34,9 +34,20 @@ static StreamConfiguration* streamConfig;
         _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
         NSLog(@"Using custom host: %@", self.hostTextField.text);
     }
+    
+    if (![self validatePcSelected]) {
+        NSLog(@"No valid PC selected");
+        return;
+    }
+    
     [CryptoManager generateKeyPairUsingSSl];
     NSString* uniqueId = [CryptoManager getUniqueID];
     NSData* cert = [CryptoManager readCertFromFile];
+    
+    if ([Utils resolveHost:_selectedHost.hostName] == 0) {
+        [self displayDnsFailedDialog];
+        return;
+    }
     
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:uniqueId deviceName:@"roth" cert:cert];
     PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:cert callback:self];
@@ -67,6 +78,14 @@ static StreamConfiguration* streamConfig;
     });
 }
 
+- (void)displayDnsFailedDialog {
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Network Error"
+                                                                   message:@"Failed to resolve host."
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
@@ -74,9 +93,19 @@ static StreamConfiguration* streamConfig;
         _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
         NSLog(@"Using custom host: %@", self.hostTextField.text);
     }
+    
+    if (![self validatePcSelected]) {
+        NSLog(@"No valid PC selected");
+        return;
+    }
+    
     streamConfig = [[StreamConfiguration alloc] init];
     streamConfig.host = _selectedHost.hostName;
     streamConfig.hostAddr = [Utils resolveHost:_selectedHost.hostName];
+    if (streamConfig.hostAddr == 0) {
+        [self displayDnsFailedDialog];
+        return;
+    }
     
     unsigned long selectedConf = [self.StreamConfigs selectedRowInComponent:0];
     NSLog(@"selectedConf: %ld", selectedConf);
@@ -122,10 +151,19 @@ static StreamConfiguration* streamConfig;
     }
 }
 
+- (void)setSelectedHost:(NSInteger)selectedIndex
+{
+    _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:selectedIndex]);
+    if (_selectedHost.hostName == NULL) {
+        // This must be the placeholder computer
+        _selectedHost = NULL;
+    }
+}
+
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
     if (pickerView == self.HostPicker) {
-        _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]]);
+        [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
     }
     
     //TODO: figure out how to save this info!!
@@ -154,10 +192,12 @@ static StreamConfiguration* streamConfig;
     [super viewDidLoad];
 
     self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
-    self.hostPickerVals = [[NSArray alloc] init];
     [self.StreamConfigs selectRow:1 inComponent:0 animated:NO];
     
     _opQueue = [[NSOperationQueue alloc] init];
+    
+    // Initialize the host picker list
+    [self updateHosts:[[NSArray alloc] init]];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -172,9 +212,29 @@ static StreamConfiguration* streamConfig;
 }
 
 - (void)updateHosts:(NSArray *)hosts {
-    self.hostPickerVals = hosts;
+    NSMutableArray *hostPickerValues = [[NSMutableArray alloc] initWithArray:hosts];
+    
+    if ([hostPickerValues count] == 0) {
+        [hostPickerValues addObject:[[Computer alloc] initPlaceholder]];
+    }
+    
+    self.hostPickerVals = hostPickerValues;
     [self.HostPicker reloadAllComponents];
-    _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]]);
+    
+    [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
+}
+
+- (BOOL)validatePcSelected {
+    if (_selectedHost == NULL) {
+        UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"No PC Selected"
+                                                                       message:@"You must select a PC to continue."
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+        [self presentViewController:alert animated:YES completion:nil];
+        return FALSE;
+    }
+    
+    return TRUE;
 }
 
 - (void)didReceiveMemoryWarning
