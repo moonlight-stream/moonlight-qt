@@ -173,4 +173,26 @@ static StreamConfiguration* streamConfig;
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
 }
+
+- (BOOL)shouldAutorotate {
+    return YES;
+}
+
+- (NSUInteger)supportedInterfaceOrientations {
+    NSString *deviceType = [UIDevice currentDevice].model;
+    if ([deviceType containsString:@"iPhone"] || [deviceType containsString:@"iPod"]) {
+        return UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
+    } else {
+        return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
+    }
+}
+
+- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
+    NSString *deviceType = [UIDevice currentDevice].model;
+    if ([deviceType containsString:@"iPhone"] || [deviceType containsString:@"iPod"]) {
+        return UIInterfaceOrientationPortrait;
+    } else {
+        return UIInterfaceOrientationLandscapeLeft;
+    }
+}
 @end
