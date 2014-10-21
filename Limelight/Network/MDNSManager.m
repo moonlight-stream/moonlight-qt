@@ -61,12 +61,21 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 
 - (void)netService:(NSNetService *)sender didNotResolve:(NSDictionary *)errorDict {
     NSLog(@"Did not resolve address for: %@\n%@", sender, [errorDict description]);
+    
+    // Schedule a retry in 2 seconds
+    [NSTimer scheduledTimerWithTimeInterval:2.0
+                                     target:self
+                                   selector:@selector(retryResolveTimerCallback:)
+                                   userInfo:nil
+                                    repeats:NO];
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didFindService:(NSNetService *)aNetService moreComing:(BOOL)moreComing {
     NSLog(@"Found service: %@", aNetService);
     [aNetService setDelegate:self];
     [aNetService resolveWithTimeout:5];
+    
+    [services removeObject:aNetService];
     [services addObject:aNetService];
 }
 
@@ -82,12 +91,12 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     // Schedule a retry in 2 seconds
     [NSTimer scheduledTimerWithTimeInterval:2.0
                                      target:self
-                                   selector:@selector(retryTimerCallback:)
+                                   selector:@selector(retrySearchTimerCallback:)
                                    userInfo:nil
                                     repeats:NO];
 }
 
-- (void)retryTimerCallback:(NSTimer *)timer {
+- (void)retrySearchTimerCallback:(NSTimer *)timer {
     // Check if we've been stopped since this was queued
     if (!scanActive) {
         return;
@@ -96,6 +105,21 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     NSLog(@"Retrying mDNS search");
     [mDNSBrowser stop];
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
+}
+
+- (void)retryResolveTimerCallback:(NSTimer *)timer {
+    // Check if we've been stopped since this was queued
+    if (!scanActive) {
+        return;
+    }
+    
+    NSLog(@"Retrying mDNS resolution");
+    for (NSNetService* service in services) {
+        if (service.hostName == nil) {
+            [service setDelegate:self];
+            [service resolveWithTimeout:5];
+        }
+    }
 }
 
 @end
