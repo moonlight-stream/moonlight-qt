@@ -31,8 +31,13 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void) searchForHosts {
-    NSLog(@"Searching for hosts...");
+    NSLog(@"Starting mDNS discovery");
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
+}
+
+- (void) stopSearching {
+    NSLog(@"Stopping mDNS discovery");
+    [mDNSBrowser stop];
 }
 
 - (NSArray*) getFoundHosts {
