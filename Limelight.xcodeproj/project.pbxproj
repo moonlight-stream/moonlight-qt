@@ -41,6 +41,8 @@
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
 		FB8945EF19F5C3CD00339C8A /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8945EE19F5C3CD00339C8A /* Utils.m */; };
 		FB8945F219F5C76C00339C8A /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8945F119F5C76C00339C8A /* StreamConfiguration.m */; };
+		FB8945F619F626BA00339C8A /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = FB8945F519F626BA00339C8A /* Launch Screen.xib */; };
+		FB8945F819F62A2B00339C8A /* store_icon_1024x1024.png in Resources */ = {isa = PBXBuildFile; fileRef = FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */; };
 		FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F119EDB08B00929691 /* MDNSManager.m */; };
 		FBAB29F619EDE0F800929691 /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F519EDE0F800929691 /* Computer.m */; };
 		FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29FB19EE13AA00929691 /* CryptoManager.m */; };
@@ -133,6 +135,8 @@
 		FB8945EE19F5C3CD00339C8A /* Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
 		FB8945F019F5C76C00339C8A /* StreamConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamConfiguration.h; sourceTree = "<group>"; };
 		FB8945F119F5C76C00339C8A /* StreamConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamConfiguration.m; sourceTree = "<group>"; };
+		FB8945F519F626BA00339C8A /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = "<group>"; };
+		FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = store_icon_1024x1024.png; sourceTree = "<group>"; };
 		FBAB29F119EDB08B00929691 /* MDNSManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MDNSManager.m; sourceTree = "<group>"; };
 		FBAB29F319EDB0C400929691 /* MDNSManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDNSManager.h; sourceTree = "<group>"; };
 		FBAB29F419EDE0F800929691 /* Computer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Computer.h; sourceTree = "<group>"; };
@@ -306,6 +310,7 @@
 		FB290CF919B2C406004C83CF /* Limelight */ = {
 			isa = PBXGroup;
 			children = (
+				FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */,
 				FB63FCF019F43EBC00227761 /* PairManager.h */,
 				FB63FCF119F43EBC00227761 /* PairManager.m */,
 				FB290D3019B2C6E3004C83CF /* Video */,
@@ -342,6 +347,7 @@
 				FB8945F119F5C76C00339C8A /* StreamConfiguration.m */,
 				98B175B219F5DAFC00DA2AED /* ControllerSupport.h */,
 				98B175B319F5DAFC00DA2AED /* ControllerSupport.m */,
+				FB8945F519F626BA00339C8A /* Launch Screen.xib */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -678,9 +684,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB290E7919B37D81004C83CF /* MainFrame-iPad.storyboard in Resources */,
+				FB8945F819F62A2B00339C8A /* store_icon_1024x1024.png in Resources */,
 				FB290CFE19B2C406004C83CF /* InfoPlist.strings in Resources */,
 				FB290E7B19B38036004C83CF /* MainFrame-iPhone.storyboard in Resources */,
 				FB290D0919B2C406004C83CF /* Images.xcassets in Resources */,
+				FB8945F619F626BA00339C8A /* Launch Screen.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -839,7 +847,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
@@ -867,7 +874,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
-				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
