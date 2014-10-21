@@ -93,7 +93,7 @@ static StreamConfiguration* streamConfig;
             break;
         case 2:
             streamConfig.width = 1920;
-            streamConfig.height = 720;
+            streamConfig.height = 1080;
             streamConfig.frameRate = 30;
             break;
         case 3:
