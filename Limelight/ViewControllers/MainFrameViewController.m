@@ -157,9 +157,18 @@ static StreamConfiguration* streamConfig;
     self.hostPickerVals = [[NSArray alloc] init];
     [self.StreamConfigs selectRow:1 inComponent:0 animated:NO];
     
+    _opQueue = [[NSOperationQueue alloc] init];
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
     _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [_mDNSManager searchForHosts];
-    _opQueue = [[NSOperationQueue alloc] init];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+    [_mDNSManager stopSearching];
 }
 
 - (void)updateHosts:(NSArray *)hosts {
