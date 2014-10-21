@@ -26,6 +26,19 @@ static NSLock *controllerStreamLock;
         
         if (controller != NULL) {
             NSLog(@"Controller connected!");
+            controller.controllerPausedHandler = ^(GCController *controller) {
+                // We call LiSendControllerEvent while holding a lock to prevent
+                // multiple simultaneous calls since this function isn't thread safe.
+                [controllerStreamLock lock];
+                LiSendControllerEvent(PLAY_FLAG, 0, 0, 0, 0, 0, 0);
+                
+                // Pause for 100 ms
+                usleep(100 * 1000);
+                
+                LiSendControllerEvent(0, 0, 0, 0, 0, 0, 0);
+                [controllerStreamLock unlock];
+            };
+            
             if (controller.extendedGamepad != NULL) {
                 controller.extendedGamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *element) {
                     short buttonFlags;
