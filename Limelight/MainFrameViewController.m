@@ -13,6 +13,7 @@
 #import "Connection.h"
 #import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
+#import "Utils.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -20,15 +21,19 @@
     Computer* _selectedHost;
     UIAlertView* _pairAlert;
 }
-static NSString* host;
+static StreamConfiguration* streamConfig;
 
-+ (NSString*) getHost {
-    return host;
++ (StreamConfiguration*) getStreamConfiguration {
+    return streamConfig;
 }
 
 - (void)PairButton:(UIButton *)sender
 {
     NSLog(@"Pair Button Pressed!");
+    if ([self.hostTextField.text length] > 0) {
+        _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
+        NSLog(@"Using custom host: %@", self.hostTextField.text);
+    }
     [CryptoManager generateKeyPairUsingSSl];
     NSString* uniqueId = [CryptoManager getUniqueID];
     NSData* cert = [CryptoManager readCertFromFile];
@@ -65,7 +70,44 @@ static NSString* host;
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
-    host = _selectedHost.hostName;
+    if ([self.hostTextField.text length] > 0) {
+        _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
+        NSLog(@"Using custom host: %@", self.hostTextField.text);
+    }
+    streamConfig = [[StreamConfiguration alloc] init];
+    streamConfig.host = _selectedHost.hostName;
+    streamConfig.hostAddr = [Utils resolveHost:_selectedHost.hostName];
+    
+    int selectedConf = [self.StreamConfigs selectedRowInComponent:0];
+    NSLog(@"selectedConf: %d", selectedConf);
+    switch (selectedConf) {
+        case 0:
+            streamConfig.width = 1280;
+            streamConfig.height = 720;
+            streamConfig.frameRate = 30;
+            break;
+        case 1:
+            streamConfig.width = 1280;
+            streamConfig.height = 720;
+            streamConfig.frameRate = 60;
+            break;
+        case 2:
+            streamConfig.width = 1920;
+            streamConfig.height = 720;
+            streamConfig.frameRate = 30;
+            break;
+        case 3:
+            streamConfig.width = 1920;
+            streamConfig.height = 1080;
+            streamConfig.frameRate = 60;
+            break;
+        default:
+            streamConfig.width = 1280;
+            streamConfig.height = 720;
+            streamConfig.frameRate = 60;
+            break;
+    }
+    NSLog(@"StreamConfig: %@, %d, %dx%dx%d", streamConfig.host, streamConfig.hostAddr, streamConfig.width, streamConfig.height, streamConfig.frameRate);
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 

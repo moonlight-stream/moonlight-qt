@@ -196,7 +196,7 @@ void ClDisplayTransientMessage(char* message)
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer
 {
     self = [super init];
-    host = config.host;
+    host = config.hostAddr;
     renderer = myRenderer;
     
     streamConfig.width = config.width;

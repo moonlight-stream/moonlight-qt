@@ -7,9 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "StreamConfiguration.h"
 
 @interface StreamManager : NSOperation
 
-- (id) initWithHost:(NSString*)host renderView:(UIView*)view;
+- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view;
 
 @end

@@ -14,5 +14,6 @@
 @property BOOL paired;
 
 - (id) initWithHost:(NSNetService*)host;
+- (id) initWithIp:(NSString*)host;
 
 @end

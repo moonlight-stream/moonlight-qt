@@ -19,4 +19,13 @@
     return self;
 }
 
+- (id) initWithIp:(NSString*)host {
+    self = [super init];
+    
+    self.hostName = host;
+    self.displayName = host;
+    
+    return self;
+}
+
 @end
