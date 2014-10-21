@@ -41,7 +41,7 @@ static NSLock *controllerStreamLock;
             
             if (controller.extendedGamepad != NULL) {
                 controller.extendedGamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *element) {
-                    short buttonFlags;
+                    short buttonFlags = 0;
                     short leftStickX, leftStickY;
                     short rightStickX, rightStickY;
                     char leftTrigger, rightTrigger;
@@ -78,7 +78,7 @@ static NSLock *controllerStreamLock;
             }
             else if (controller.gamepad != NULL) {
                 controller.gamepad.valueChangedHandler = ^(GCGamepad *gamepad, GCControllerElement *element) {
-                    short buttonFlags;
+                    short buttonFlags = 0;
                     
                     UPDATE_BUTTON(A_FLAG, gamepad.buttonA.pressed);
                     UPDATE_BUTTON(B_FLAG, gamepad.buttonB.pressed);
