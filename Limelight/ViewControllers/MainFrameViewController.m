@@ -201,7 +201,7 @@ static StreamConfiguration* streamConfig;
     if ([deviceType containsString:@"iPhone"] || [deviceType containsString:@"iPod"]) {
         return UIInterfaceOrientationPortrait;
     } else {
-        return UIInterfaceOrientationLandscapeLeft;
+        return UIInterfaceOrientationLandscapeRight;
     }
 }
 @end
