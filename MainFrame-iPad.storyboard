@@ -16,15 +16,19 @@
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
-                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="bJR-sz-8uh">
+                            <pickerView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bJR-sz-8uh">
                                 <rect key="frame" x="0.0" y="80" width="1024" height="216"/>
                                 <connections>
                                     <outlet property="dataSource" destination="wb7-af-jn8" id="EW1-pG-aj0"/>
                                     <outlet property="delegate" destination="wb7-af-jn8" id="Piq-cV-gxM"/>
                                 </connections>
                             </pickerView>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="taW-Um-zc6" userLabel="Start Stream Btn">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="taW-Um-zc6" userLabel="Start Stream Btn">
                                 <rect key="frame" x="317" y="273" width="391" height="141"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="391" id="f7x-eA-edG"/>
+                                    <constraint firstAttribute="height" constant="141" id="sdD-TL-lHS"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="26"/>
                                 <state key="normal" title="Start Streaming Steam!">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -33,15 +37,19 @@
                                     <action selector="StreamButton:" destination="wb7-af-jn8" eventType="touchUpInside" id="u2m-8A-Tor"/>
                                 </connections>
                             </button>
-                            <pickerView contentMode="scaleToFill" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="rnA-uG-hAA">
+                            <pickerView contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="rnA-uG-hAA">
                                 <rect key="frame" x="0.0" y="380" width="1024" height="216"/>
                                 <connections>
                                     <outlet property="dataSource" destination="wb7-af-jn8" id="25E-op-oh6"/>
                                     <outlet property="delegate" destination="wb7-af-jn8" id="gjZ-oj-THD"/>
                                 </connections>
                             </pickerView>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Nz-KX-Du4" userLabel="Pair Btn">
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="0Nz-KX-Du4" userLabel="Pair Btn">
                                 <rect key="frame" x="439" y="595" width="147" height="36"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="36" id="C4p-5e-fbL"/>
+                                    <constraint firstAttribute="width" constant="147" id="I0J-8h-40c"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="26"/>
                                 <state key="normal" title="Pair with PC">
                                     <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
@@ -50,8 +58,11 @@
                                     <action selector="PairButton:" destination="wb7-af-jn8" eventType="touchUpInside" id="Ct1-6m-aYg"/>
                                 </connections>
                             </button>
-                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="OCq-Pr-kFE">
-                                <rect key="frame" x="374" y="235" width="276" height="30"/>
+                            <textField opaque="NO" clipsSubviews="YES" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="center" borderStyle="roundedRect" placeholder="Geforce Host" minimumFontSize="17" translatesAutoresizingMaskIntoConstraints="NO" id="OCq-Pr-kFE">
+                                <rect key="frame" x="233" y="235" width="601" height="30"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="601" id="haa-mB-l8k"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="14"/>
                                 <textInputTraits key="textInputTraits"/>
                                 <connections>
@@ -60,6 +71,20 @@
                             </textField>
                         </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="taW-Um-zc6" firstAttribute="top" secondItem="OCq-Pr-kFE" secondAttribute="bottom" constant="8" symbolic="YES" id="7GU-HB-BX8"/>
+                            <constraint firstItem="OCq-Pr-kFE" firstAttribute="leading" secondItem="ugc-rC-3gm" secondAttribute="leading" constant="233" id="DM7-XL-gaO"/>
+                            <constraint firstAttribute="centerX" secondItem="rnA-uG-hAA" secondAttribute="centerX" id="EBV-fm-cGh"/>
+                            <constraint firstItem="taW-Um-zc6" firstAttribute="top" secondItem="ugc-rC-3gm" secondAttribute="top" constant="273" id="Gki-EV-x7L"/>
+                            <constraint firstItem="rnA-uG-hAA" firstAttribute="trailing" secondItem="bJR-sz-8uh" secondAttribute="trailing" id="RKH-ES-jQD"/>
+                            <constraint firstItem="rnA-uG-hAA" firstAttribute="leading" secondItem="bJR-sz-8uh" secondAttribute="leading" id="UNO-rw-Z5K"/>
+                            <constraint firstItem="taW-Um-zc6" firstAttribute="centerX" secondItem="rnA-uG-hAA" secondAttribute="centerX" id="clq-Co-82x"/>
+                            <constraint firstItem="Shd-7C-CVq" firstAttribute="top" secondItem="rnA-uG-hAA" secondAttribute="bottom" constant="172" id="gRA-PG-Iqy"/>
+                            <constraint firstItem="Shd-7C-CVq" firstAttribute="top" secondItem="0Nz-KX-Du4" secondAttribute="bottom" constant="137" id="nJf-9A-cfP"/>
+                            <constraint firstItem="rnA-uG-hAA" firstAttribute="centerX" secondItem="0Nz-KX-Du4" secondAttribute="centerX" id="toQ-ei-Pr0"/>
+                            <constraint firstItem="rnA-uG-hAA" firstAttribute="top" secondItem="bJR-sz-8uh" secondAttribute="bottom" constant="84" id="zMG-gd-Hxd"/>
+                            <constraint firstItem="rnA-uG-hAA" firstAttribute="leading" secondItem="ugc-rC-3gm" secondAttribute="leading" id="znq-P0-UWg"/>
+                        </constraints>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
