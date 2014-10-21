@@ -46,7 +46,7 @@
         [_callbacks launchFailed];
         return;
     }
-    else if ([currentGame isEqualToString:@"0"]) {
+    else if (![currentGame isEqualToString:@"0"]) {
         // App already running, resume it
         if (![self resumeApp:hMan]) {
             [_callbacks launchFailed];
