@@ -44,6 +44,11 @@ static StreamConfiguration* streamConfig;
     NSString* uniqueId = [CryptoManager getUniqueID];
     NSData* cert = [CryptoManager readCertFromFile];
     
+    if ([Utils resolveHost:_selectedHost.hostName] == 0) {
+        [self displayDnsFailedDialog];
+        return;
+    }
+    
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:uniqueId deviceName:@"roth" cert:cert];
     PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:cert callback:self];
 
@@ -73,6 +78,14 @@ static StreamConfiguration* streamConfig;
     });
 }
 
+- (void)displayDnsFailedDialog {
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Network Error"
+                                                                   message:@"Failed to resolve host."
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
@@ -89,6 +102,10 @@ static StreamConfiguration* streamConfig;
     streamConfig = [[StreamConfiguration alloc] init];
     streamConfig.host = _selectedHost.hostName;
     streamConfig.hostAddr = [Utils resolveHost:_selectedHost.hostName];
+    if (streamConfig.hostAddr == 0) {
+        [self displayDnsFailedDialog];
+        return;
+    }
     
     unsigned long selectedConf = [self.StreamConfigs selectedRowInComponent:0];
     NSLog(@"selectedConf: %ld", selectedConf);
