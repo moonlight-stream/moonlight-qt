@@ -38,7 +38,8 @@ static const NSString* PORT = @"47984";
     
     // Check root status_code
     if (![HttpManager verifyStatus: rootNode]) {
-        //TODO: handle error
+        NSLog(@"ERROR: Request returned with failure status");
+        return NULL;
     }
     
     // Skip the root node
@@ -229,6 +230,7 @@ static const NSString* PORT = @"47984";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     NSLog(@"connection error: %@", error);
+    dispatch_semaphore_signal(_requestLock);
 }
 
 @end

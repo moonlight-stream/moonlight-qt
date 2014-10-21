@@ -29,7 +29,9 @@
     
     _controllerSupport = [[ControllerSupport alloc] init];
     
-    _streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration] renderView:self.view connectionTerminatedCallback:self];
+    _streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration]
+                                            renderView:self.view
+                                   connectionCallbacks:self];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:_streamMan];
     
@@ -44,7 +46,13 @@
     [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
 }
 
-- (void)connectionTerminated {
+- (void) connectionStarted {
+    printf("Connection started\n");
+}
+
+- (void)connectionTerminated:(long)errorCode {
+    printf("Connection terminated: %ld\n", errorCode);
+    
     UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection terminated unexpectedly" preferredStyle:UIAlertControllerStyleAlert];
     [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
         [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
@@ -52,6 +60,36 @@
     [self presentViewController:conTermAlert animated:YES completion:nil];
     
     [_streamMan stopStream];
+}
+
+- (void) stageStarting:(char*)stageName {
+    printf("Starting %s\n", stageName);
+}
+
+- (void) stageComplete:(char*)stageName {
+}
+
+- (void) stageFailed:(char*)stageName withError:(long)errorCode {
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
+                                                                   message:[NSString stringWithFormat:@"%s failed with error %ld",
+                                                                             stageName, errorCode]
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+    }]];
+    [self presentViewController:alert animated:YES completion:nil];
+}
+
+- (void) launchFailed {
+    
+}
+
+- (void) displayMessage:(char*)message {
+    printf("Display message: %s\n", message);
+}
+
+- (void) displayTransientMessage:(char*)message {
+    printf("Display transient message: %s\n", message);
 }
 
 - (void)didReceiveMemoryWarning

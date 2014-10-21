@@ -14,15 +14,15 @@
 @implementation StreamManager {
     StreamConfiguration* _config;
     UIView* _renderView;
-    id<ConTermCallback> _callback;
+    id<ConnectionCallbacks> _callbacks;
     Connection* _connection;
 }
 
-- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionTerminatedCallback:(id<ConTermCallback>)callback {
+- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionCallbacks:(id<ConnectionCallbacks>)callbacks {
     self = [super init];
     _config = config;
     _renderView = view;
-    _callback = callback;
+    _callbacks = callbacks;
     _config.riKey = [Utils randomBytes:16];
     _config.riKeyId = arc4random();
     _config.bitRate = 10000;
@@ -50,7 +50,7 @@
     }
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
-    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionTerminatedCallback:_callback];
+    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:_connection];
 }
@@ -60,7 +60,7 @@
     [_connection terminate];
 }
 
-- (void) launchApp:(HttpManager*)hMan {
+- (BOOL) launchApp:(HttpManager*)hMan {
     NSData* launchResp = [hMan executeRequestSynchronously:
                           [hMan newLaunchRequest:@"67339056"
                                            width:_config.width
@@ -68,14 +68,24 @@
                                      refreshRate:_config.frameRate
                                            rikey:[Utils bytesToHex:_config.riKey]
                                          rikeyid:_config.riKeyId]];
-    [HttpManager getStringFromXML:launchResp tag:@"gamesession"];
+    NSString *gameSession = [HttpManager getStringFromXML:launchResp tag:@"gamesession"];
+    if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
+        return FALSE;
+    }
+    
+    return TRUE;
 }
 
-- (void) resumeApp:(HttpManager*)hMan {
+- (BOOL) resumeApp:(HttpManager*)hMan {
     NSData* resumeResp = [hMan executeRequestSynchronously:
                           [hMan newResumeRequestWithRiKey:[Utils bytesToHex:_config.riKey]
                                                   riKeyId:_config.riKeyId]];
-    [HttpManager getStringFromXML:resumeResp tag:@"gamesession"];
+    NSString *resume = [HttpManager getStringFromXML:resumeResp tag:@"resume"];
+    if (resume == NULL || [resume isEqualToString:@"0"]) {
+        return FALSE;
+    }
+    
+    return TRUE;
 }
 
 @end
