@@ -7,11 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		984C441819F48D1D0061A500 /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = 984C441719F48D1D0061A500 /* StreamView.m */; };
 		98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98A03B4A19F3514B00861ACA /* liblimelight-common.a */; };
-		98A03B5019F3598400861ACA /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = 98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */; };
 		98A03B5119F35AAC00861ACA /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9819EF9703009729EB /* libcrypto.a */; };
-		98B175B419F5DAFC00DA2AED /* ControllerSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = 98B175B319F5DAFC00DA2AED /* ControllerSupport.m */; };
 		FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
 		FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF319B2C406004C83CF /* CoreGraphics.framework */; };
 		FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF519B2C406004C83CF /* UIKit.framework */; };
@@ -26,28 +23,30 @@
 		FB290D1319B2C406004C83CF /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF719B2C406004C83CF /* CoreData.framework */; };
 		FB290D1B19B2C406004C83CF /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = FB290D1919B2C406004C83CF /* InfoPlist.strings */; };
 		FB290D1D19B2C406004C83CF /* LimelightTests.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D1C19B2C406004C83CF /* LimelightTests.m */; };
-		FB290D3719B2C6E3004C83CF /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2719B2C6E3004C83CF /* Connection.m */; };
-		FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */; };
-		FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */; };
 		FB290DB719B2C870004C83CF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB619B2C870004C83CF /* libz.dylib */; };
 		FB290DB919B2C877004C83CF /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB819B2C877004C83CF /* libbz2.dylib */; };
 		FB290DC419B2E98F004C83CF /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DC319B2E98F004C83CF /* libxml2.dylib */; };
 		FB290E7919B37D81004C83CF /* MainFrame-iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */; };
 		FB290E7B19B38036004C83CF /* MainFrame-iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */; };
-		FB63FCF219F43EBC00227761 /* PairManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB63FCF119F43EBC00227761 /* PairManager.m */; };
-		FB63FCF719F573BE00227761 /* StreamManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB63FCF619F573BE00227761 /* StreamManager.m */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
-		FB8945EF19F5C3CD00339C8A /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8945EE19F5C3CD00339C8A /* Utils.m */; };
-		FB8945F219F5C76C00339C8A /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8945F119F5C76C00339C8A /* StreamConfiguration.m */; };
-		FB8945F619F626BA00339C8A /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = FB8945F519F626BA00339C8A /* Launch Screen.xib */; };
-		FB8945F819F62A2B00339C8A /* store_icon_1024x1024.png in Resources */ = {isa = PBXBuildFile; fileRef = FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */; };
 		FB89460219F63CB600339C8A /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB89460119F63CB600339C8A /* libopus.a */; };
-		FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F119EDB08B00929691 /* MDNSManager.m */; };
-		FBAB29F619EDE0F800929691 /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F519EDE0F800929691 /* Computer.m */; };
-		FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29FB19EE13AA00929691 /* CryptoManager.m */; };
-		FBC8622D19F0BEFB0087327B /* HttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBC8622C19F0BEFB0087327B /* HttpManager.m */; };
+		FB89462819F646E200339C8A /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460619F646E200339C8A /* CryptoManager.m */; };
+		FB89462919F646E200339C8A /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FB89460719F646E200339C8A /* mkcert.c */; };
+		FB89462A19F646E200339C8A /* ControllerSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460B19F646E200339C8A /* ControllerSupport.m */; };
+		FB89462B19F646E200339C8A /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460D19F646E200339C8A /* StreamView.m */; };
+		FB89462C19F646E200339C8A /* HttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461019F646E200339C8A /* HttpManager.m */; };
+		FB89462D19F646E200339C8A /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461219F646E200339C8A /* MDNSManager.m */; };
+		FB89462E19F646E200339C8A /* PairManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461419F646E200339C8A /* PairManager.m */; };
+		FB89462F19F646E200339C8A /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461719F646E200339C8A /* Connection.m */; };
+		FB89463019F646E200339C8A /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461919F646E200339C8A /* StreamConfiguration.m */; };
+		FB89463119F646E200339C8A /* StreamManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461B19F646E200339C8A /* StreamManager.m */; };
+		FB89463219F646E200339C8A /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461D19F646E200339C8A /* VideoDecoderRenderer.m */; };
+		FB89463319F646E200339C8A /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89462019F646E200339C8A /* Computer.m */; };
+		FB89463419F646E200339C8A /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89462219F646E200339C8A /* Utils.m */; };
+		FB89463519F646E200339C8A /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89462519F646E200339C8A /* MainFrameViewController.m */; };
+		FB89463619F646E200339C8A /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89462719F646E200339C8A /* StreamFrameViewController.m */; };
+		FB89463819F6473800339C8A /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = FB89463719F6473800339C8A /* Launch Screen.xib */; };
 		FBCC0E9B19EF9703009729EB /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FBCC0E9919EF9703009729EB /* libssl.a */; };
-		FBCC0E9D19F00659009729EB /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FBCC0E9C19F00659009729EB /* mkcert.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -75,13 +74,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		984C441619F48D1D0061A500 /* StreamView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamView.h; sourceTree = "<group>"; };
-		984C441719F48D1D0061A500 /* StreamView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamView.m; sourceTree = "<group>"; };
 		98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
-		98A03B4E19F3598400861ACA /* VideoDecoderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = VideoDecoderRenderer.h; path = Limelight/VideoDecoderRenderer.h; sourceTree = SOURCE_ROOT; };
-		98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = VideoDecoderRenderer.m; path = Limelight/VideoDecoderRenderer.m; sourceTree = SOURCE_ROOT; };
-		98B175B219F5DAFC00DA2AED /* ControllerSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControllerSupport.h; sourceTree = "<group>"; };
-		98B175B319F5DAFC00DA2AED /* ControllerSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ControllerSupport.m; sourceTree = "<group>"; };
 		FB290CEE19B2C406004C83CF /* Limelight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Limelight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB290CF119B2C406004C83CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FB290CF319B2C406004C83CF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
@@ -99,41 +92,44 @@
 		FB290D1819B2C406004C83CF /* LimelightTests-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "LimelightTests-Info.plist"; sourceTree = "<group>"; };
 		FB290D1A19B2C406004C83CF /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FB290D1C19B2C406004C83CF /* LimelightTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = LimelightTests.m; sourceTree = "<group>"; };
-		FB290D2619B2C6E3004C83CF /* Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Connection.h; sourceTree = "<group>"; };
-		FB290D2719B2C6E3004C83CF /* Connection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Connection.m; sourceTree = "<group>"; };
-		FB290D2A19B2C6E3004C83CF /* MainFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainFrameViewController.h; sourceTree = "<group>"; };
-		FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
-		FB290D2C19B2C6E3004C83CF /* StreamFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamFrameViewController.h; sourceTree = "<group>"; };
-		FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamFrameViewController.m; sourceTree = "<group>"; };
 		FB290DB619B2C870004C83CF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		FB290DB819B2C877004C83CF /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = usr/lib/libbz2.dylib; sourceTree = SDKROOT; };
 		FB290DC319B2E98F004C83CF /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 		FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainFrame-iPad.storyboard"; sourceTree = SOURCE_ROOT; };
 		FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainFrame-iPhone.storyboard"; sourceTree = SOURCE_ROOT; };
-		FB63FCF019F43EBC00227761 /* PairManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairManager.h; sourceTree = "<group>"; };
-		FB63FCF119F43EBC00227761 /* PairManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PairManager.m; sourceTree = "<group>"; };
-		FB63FCF519F573BE00227761 /* StreamManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamManager.h; sourceTree = "<group>"; };
-		FB63FCF619F573BE00227761 /* StreamManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamManager.m; sourceTree = "<group>"; };
 		FB7E794319C8B71B00A15F68 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
-		FB8945ED19F5C3CD00339C8A /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
-		FB8945EE19F5C3CD00339C8A /* Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
-		FB8945F019F5C76C00339C8A /* StreamConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamConfiguration.h; sourceTree = "<group>"; };
-		FB8945F119F5C76C00339C8A /* StreamConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamConfiguration.m; sourceTree = "<group>"; };
-		FB8945F519F626BA00339C8A /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = "<group>"; };
-		FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = store_icon_1024x1024.png; sourceTree = "<group>"; };
-		FB8945FC19F63CB600339C8A /* opus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
-		FB8945FD19F63CB600339C8A /* opus_defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_defines.h; sourceTree = "<group>"; };
-		FB8945FE19F63CB600339C8A /* opus_multistream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
-		FB8945FF19F63CB600339C8A /* opus_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
 		FB89460119F63CB600339C8A /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopus.a; sourceTree = "<group>"; };
-		FBAB29F119EDB08B00929691 /* MDNSManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MDNSManager.m; sourceTree = "<group>"; };
-		FBAB29F319EDB0C400929691 /* MDNSManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDNSManager.h; sourceTree = "<group>"; };
-		FBAB29F419EDE0F800929691 /* Computer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Computer.h; sourceTree = "<group>"; };
-		FBAB29F519EDE0F800929691 /* Computer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Computer.m; sourceTree = "<group>"; };
-		FBAB29FA19EE13AA00929691 /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
-		FBAB29FB19EE13AA00929691 /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
-		FBC8622B19F0BEFB0087327B /* HttpManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpManager.h; sourceTree = "<group>"; };
-		FBC8622C19F0BEFB0087327B /* HttpManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HttpManager.m; sourceTree = "<group>"; };
+		FB89460519F646E200339C8A /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
+		FB89460619F646E200339C8A /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
+		FB89460719F646E200339C8A /* mkcert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mkcert.c; sourceTree = "<group>"; };
+		FB89460819F646E200339C8A /* mkcert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mkcert.h; sourceTree = "<group>"; };
+		FB89460A19F646E200339C8A /* ControllerSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ControllerSupport.h; sourceTree = "<group>"; };
+		FB89460B19F646E200339C8A /* ControllerSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ControllerSupport.m; sourceTree = "<group>"; };
+		FB89460C19F646E200339C8A /* StreamView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamView.h; sourceTree = "<group>"; };
+		FB89460D19F646E200339C8A /* StreamView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamView.m; sourceTree = "<group>"; };
+		FB89460F19F646E200339C8A /* HttpManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpManager.h; sourceTree = "<group>"; };
+		FB89461019F646E200339C8A /* HttpManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HttpManager.m; sourceTree = "<group>"; };
+		FB89461119F646E200339C8A /* MDNSManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDNSManager.h; sourceTree = "<group>"; };
+		FB89461219F646E200339C8A /* MDNSManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MDNSManager.m; sourceTree = "<group>"; };
+		FB89461319F646E200339C8A /* PairManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairManager.h; sourceTree = "<group>"; };
+		FB89461419F646E200339C8A /* PairManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PairManager.m; sourceTree = "<group>"; };
+		FB89461619F646E200339C8A /* Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Connection.h; sourceTree = "<group>"; };
+		FB89461719F646E200339C8A /* Connection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Connection.m; sourceTree = "<group>"; };
+		FB89461819F646E200339C8A /* StreamConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamConfiguration.h; sourceTree = "<group>"; };
+		FB89461919F646E200339C8A /* StreamConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamConfiguration.m; sourceTree = "<group>"; };
+		FB89461A19F646E200339C8A /* StreamManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamManager.h; sourceTree = "<group>"; };
+		FB89461B19F646E200339C8A /* StreamManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamManager.m; sourceTree = "<group>"; };
+		FB89461C19F646E200339C8A /* VideoDecoderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDecoderRenderer.h; sourceTree = "<group>"; };
+		FB89461D19F646E200339C8A /* VideoDecoderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoDecoderRenderer.m; sourceTree = "<group>"; };
+		FB89461F19F646E200339C8A /* Computer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Computer.h; sourceTree = "<group>"; };
+		FB89462019F646E200339C8A /* Computer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Computer.m; sourceTree = "<group>"; };
+		FB89462119F646E200339C8A /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Utils.h; sourceTree = "<group>"; };
+		FB89462219F646E200339C8A /* Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Utils.m; sourceTree = "<group>"; };
+		FB89462419F646E200339C8A /* MainFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MainFrameViewController.h; sourceTree = "<group>"; };
+		FB89462519F646E200339C8A /* MainFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MainFrameViewController.m; sourceTree = "<group>"; };
+		FB89462619F646E200339C8A /* StreamFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamFrameViewController.h; sourceTree = "<group>"; };
+		FB89462719F646E200339C8A /* StreamFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamFrameViewController.m; sourceTree = "<group>"; };
+		FB89463719F6473800339C8A /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = SOURCE_ROOT; };
 		FBCC0E4C19EF9703009729EB /* aes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
 		FBCC0E4D19EF9703009729EB /* asn1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
 		FBCC0E4E19EF9703009729EB /* asn1_mac.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
@@ -211,8 +207,6 @@
 		FBCC0E9619EF9703009729EB /* x509v3.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = x509v3.h; sourceTree = "<group>"; };
 		FBCC0E9819EF9703009729EB /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
 		FBCC0E9919EF9703009729EB /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
-		FBCC0E9C19F00659009729EB /* mkcert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mkcert.c; sourceTree = "<group>"; };
-		FBCC0E9E19F00697009729EB /* mkcert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mkcert.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -295,44 +289,20 @@
 		FB290CF919B2C406004C83CF /* Limelight */ = {
 			isa = PBXGroup;
 			children = (
-				FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */,
-				FB63FCF019F43EBC00227761 /* PairManager.h */,
-				FB63FCF119F43EBC00227761 /* PairManager.m */,
-				FB290D3019B2C6E3004C83CF /* Video */,
-				FB290D2619B2C6E3004C83CF /* Connection.h */,
-				FB290D2719B2C6E3004C83CF /* Connection.m */,
-				FB290D2A19B2C6E3004C83CF /* MainFrameViewController.h */,
-				FB290D2B19B2C6E3004C83CF /* MainFrameViewController.m */,
-				FB290D2C19B2C6E3004C83CF /* StreamFrameViewController.h */,
-				FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */,
+				FB89460419F646E200339C8A /* Crypto */,
+				FB89460919F646E200339C8A /* Input */,
+				FB89460E19F646E200339C8A /* Network */,
+				FB89461519F646E200339C8A /* Stream */,
+				FB89461E19F646E200339C8A /* Utility */,
+				FB89462319F646E200339C8A /* ViewControllers */,
+				FB290CFA19B2C406004C83CF /* Supporting Files */,
 				FB290D0219B2C406004C83CF /* AppDelegate.h */,
 				FB290D0319B2C406004C83CF /* AppDelegate.m */,
 				FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */,
 				FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */,
+				FB89463719F6473800339C8A /* Launch Screen.xib */,
 				FB290D0819B2C406004C83CF /* Images.xcassets */,
 				FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */,
-				FB290CFA19B2C406004C83CF /* Supporting Files */,
-				FBAB29F119EDB08B00929691 /* MDNSManager.m */,
-				FBAB29F319EDB0C400929691 /* MDNSManager.h */,
-				FBAB29F419EDE0F800929691 /* Computer.h */,
-				FBAB29F519EDE0F800929691 /* Computer.m */,
-				FBAB29FA19EE13AA00929691 /* CryptoManager.h */,
-				FBAB29FB19EE13AA00929691 /* CryptoManager.m */,
-				FBCC0E9E19F00697009729EB /* mkcert.h */,
-				FBCC0E9C19F00659009729EB /* mkcert.c */,
-				FBC8622B19F0BEFB0087327B /* HttpManager.h */,
-				FBC8622C19F0BEFB0087327B /* HttpManager.m */,
-				984C441619F48D1D0061A500 /* StreamView.h */,
-				984C441719F48D1D0061A500 /* StreamView.m */,
-				FB63FCF519F573BE00227761 /* StreamManager.h */,
-				FB63FCF619F573BE00227761 /* StreamManager.m */,
-				FB8945ED19F5C3CD00339C8A /* Utils.h */,
-				FB8945EE19F5C3CD00339C8A /* Utils.m */,
-				FB8945F019F5C76C00339C8A /* StreamConfiguration.h */,
-				FB8945F119F5C76C00339C8A /* StreamConfiguration.m */,
-				98B175B219F5DAFC00DA2AED /* ControllerSupport.h */,
-				98B175B319F5DAFC00DA2AED /* ControllerSupport.m */,
-				FB8945F519F626BA00339C8A /* Launch Screen.xib */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -366,59 +336,84 @@
 			name = "Supporting Files";
 			sourceTree = "<group>";
 		};
-		FB290D3019B2C6E3004C83CF /* Video */ = {
-			isa = PBXGroup;
-			children = (
-				98A03B4E19F3598400861ACA /* VideoDecoderRenderer.h */,
-				98A03B4F19F3598400861ACA /* VideoDecoderRenderer.m */,
-			);
-			path = Video;
-			sourceTree = "<group>";
-		};
 		FB290D3F19B2C814004C83CF /* libs */ = {
 			isa = PBXGroup;
 			children = (
-				FB8945F919F63CB600339C8A /* opus */,
 				FBCC0E4919EF9703009729EB /* openssl */,
-				FB290DA719B2C814004C83CF /* limelight-common */,
 			);
 			path = libs;
 			sourceTree = "<group>";
 		};
-		FB290DAC19B2C814004C83CF /* opus */ = {
+		FB89460419F646E200339C8A /* Crypto */ = {
 			isa = PBXGroup;
 			children = (
-				FB8945FA19F63CB600339C8A /* include */,
-				FB89460019F63CB600339C8A /* lib */,
+				FB89460519F646E200339C8A /* CryptoManager.h */,
+				FB89460619F646E200339C8A /* CryptoManager.m */,
+				FB89460719F646E200339C8A /* mkcert.c */,
+				FB89460819F646E200339C8A /* mkcert.h */,
 			);
-			path = opus;
+			path = Crypto;
 			sourceTree = "<group>";
 		};
-		FB8945FA19F63CB600339C8A /* include */ = {
+		FB89460919F646E200339C8A /* Input */ = {
 			isa = PBXGroup;
 			children = (
-				FB8945FB19F63CB600339C8A /* opus */,
+				FB89460A19F646E200339C8A /* ControllerSupport.h */,
+				FB89460B19F646E200339C8A /* ControllerSupport.m */,
+				FB89460C19F646E200339C8A /* StreamView.h */,
+				FB89460D19F646E200339C8A /* StreamView.m */,
 			);
-			path = include;
+			path = Input;
 			sourceTree = "<group>";
 		};
-		FB8945FB19F63CB600339C8A /* opus */ = {
+		FB89460E19F646E200339C8A /* Network */ = {
 			isa = PBXGroup;
 			children = (
-				FB8945FC19F63CB600339C8A /* opus.h */,
-				FB8945FD19F63CB600339C8A /* opus_defines.h */,
-				FB8945FE19F63CB600339C8A /* opus_multistream.h */,
-				FB8945FF19F63CB600339C8A /* opus_types.h */,
+				FB89460F19F646E200339C8A /* HttpManager.h */,
+				FB89461019F646E200339C8A /* HttpManager.m */,
+				FB89461119F646E200339C8A /* MDNSManager.h */,
+				FB89461219F646E200339C8A /* MDNSManager.m */,
+				FB89461319F646E200339C8A /* PairManager.h */,
+				FB89461419F646E200339C8A /* PairManager.m */,
 			);
-			path = opus;
+			path = Network;
 			sourceTree = "<group>";
 		};
-		FB89460019F63CB600339C8A /* lib */ = {
+		FB89461519F646E200339C8A /* Stream */ = {
 			isa = PBXGroup;
 			children = (
-				FB89460119F63CB600339C8A /* libopus.a */,
+				FB89461619F646E200339C8A /* Connection.h */,
+				FB89461719F646E200339C8A /* Connection.m */,
+				FB89461819F646E200339C8A /* StreamConfiguration.h */,
+				FB89461919F646E200339C8A /* StreamConfiguration.m */,
+				FB89461A19F646E200339C8A /* StreamManager.h */,
+				FB89461B19F646E200339C8A /* StreamManager.m */,
+				FB89461C19F646E200339C8A /* VideoDecoderRenderer.h */,
+				FB89461D19F646E200339C8A /* VideoDecoderRenderer.m */,
 			);
-			path = lib;
+			path = Stream;
+			sourceTree = "<group>";
+		};
+		FB89461E19F646E200339C8A /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				FB89461F19F646E200339C8A /* Computer.h */,
+				FB89462019F646E200339C8A /* Computer.m */,
+				FB89462119F646E200339C8A /* Utils.h */,
+				FB89462219F646E200339C8A /* Utils.m */,
+			);
+			path = Utility;
+			sourceTree = "<group>";
+		};
+		FB89462319F646E200339C8A /* ViewControllers */ = {
+			isa = PBXGroup;
+			children = (
+				FB89462419F646E200339C8A /* MainFrameViewController.h */,
+				FB89462519F646E200339C8A /* MainFrameViewController.m */,
+				FB89462619F646E200339C8A /* StreamFrameViewController.h */,
+				FB89462719F646E200339C8A /* StreamFrameViewController.m */,
+			);
+			path = ViewControllers;
 			sourceTree = "<group>";
 		};
 		FBCC0E4919EF9703009729EB /* openssl */ = {
@@ -625,11 +620,10 @@
 			buildActionMask = 2147483647;
 			files = (
 				FB290E7919B37D81004C83CF /* MainFrame-iPad.storyboard in Resources */,
-				FB8945F819F62A2B00339C8A /* store_icon_1024x1024.png in Resources */,
 				FB290CFE19B2C406004C83CF /* InfoPlist.strings in Resources */,
 				FB290E7B19B38036004C83CF /* MainFrame-iPhone.storyboard in Resources */,
 				FB290D0919B2C406004C83CF /* Images.xcassets in Resources */,
-				FB8945F619F626BA00339C8A /* Launch Screen.xib in Resources */,
+				FB89463819F6473800339C8A /* Launch Screen.xib in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -648,24 +642,24 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */,
-				FB63FCF719F573BE00227761 /* StreamManager.m in Sources */,
-				FB63FCF219F43EBC00227761 /* PairManager.m in Sources */,
-				FB8945EF19F5C3CD00339C8A /* Utils.m in Sources */,
-				98A03B5019F3598400861ACA /* VideoDecoderRenderer.m in Sources */,
-				FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */,
-				FBC8622D19F0BEFB0087327B /* HttpManager.m in Sources */,
 				FB290D0719B2C406004C83CF /* Limelight.xcdatamodeld in Sources */,
+				FB89463219F646E200339C8A /* VideoDecoderRenderer.m in Sources */,
 				FB290D0419B2C406004C83CF /* AppDelegate.m in Sources */,
-				FBAB29F619EDE0F800929691 /* Computer.m in Sources */,
-				FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */,
-				98B175B419F5DAFC00DA2AED /* ControllerSupport.m in Sources */,
+				FB89463419F646E200339C8A /* Utils.m in Sources */,
+				FB89463319F646E200339C8A /* Computer.m in Sources */,
+				FB89462F19F646E200339C8A /* Connection.m in Sources */,
+				FB89462919F646E200339C8A /* mkcert.c in Sources */,
+				FB89463019F646E200339C8A /* StreamConfiguration.m in Sources */,
+				FB89462C19F646E200339C8A /* HttpManager.m in Sources */,
+				FB89462D19F646E200339C8A /* MDNSManager.m in Sources */,
+				FB89462B19F646E200339C8A /* StreamView.m in Sources */,
+				FB89463519F646E200339C8A /* MainFrameViewController.m in Sources */,
+				FB89463619F646E200339C8A /* StreamFrameViewController.m in Sources */,
+				FB89462819F646E200339C8A /* CryptoManager.m in Sources */,
+				FB89462E19F646E200339C8A /* PairManager.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
-				FB8945F219F5C76C00339C8A /* StreamConfiguration.m in Sources */,
-				FB290D3919B2C6E3004C83CF /* MainFrameViewController.m in Sources */,
-				984C441819F48D1D0061A500 /* StreamView.m in Sources */,
-				FB290D3719B2C6E3004C83CF /* Connection.m in Sources */,
-				FBCC0E9D19F00659009729EB /* mkcert.c in Sources */,
+				FB89462A19F646E200339C8A /* ControllerSupport.m in Sources */,
+				FB89463119F646E200339C8A /* StreamManager.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
