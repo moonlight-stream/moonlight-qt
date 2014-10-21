@@ -19,7 +19,7 @@
     touchLocation = [touch locationInView:self];
     touchMoved = false;
     
-    NSLog(@"Touch down");
+    printf("Touch down\n");
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -38,10 +38,10 @@
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    NSLog(@"Touch up");
+    printf("Touch up\n");
     
     if (!touchMoved) {
-        NSLog(@"Sending left mouse button press");
+        printf("Sending left mouse button press\n");
         
         LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
         
