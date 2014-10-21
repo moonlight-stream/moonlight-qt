@@ -31,7 +31,6 @@
 		FB290D3A19B2C6E3004C83CF /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */; };
 		FB290DB719B2C870004C83CF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB619B2C870004C83CF /* libz.dylib */; };
 		FB290DB919B2C877004C83CF /* libbz2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DB819B2C877004C83CF /* libbz2.dylib */; };
-		FB290DC219B2E966004C83CF /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DC119B2E966004C83CF /* libopus.a */; };
 		FB290DC419B2E98F004C83CF /* libxml2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290DC319B2E98F004C83CF /* libxml2.dylib */; };
 		FB290E7919B37D81004C83CF /* MainFrame-iPad.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */; };
 		FB290E7B19B38036004C83CF /* MainFrame-iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */; };
@@ -42,6 +41,7 @@
 		FB8945F219F5C76C00339C8A /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = FB8945F119F5C76C00339C8A /* StreamConfiguration.m */; };
 		FB8945F619F626BA00339C8A /* Launch Screen.xib in Resources */ = {isa = PBXBuildFile; fileRef = FB8945F519F626BA00339C8A /* Launch Screen.xib */; };
 		FB8945F819F62A2B00339C8A /* store_icon_1024x1024.png in Resources */ = {isa = PBXBuildFile; fileRef = FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */; };
+		FB89460219F63CB600339C8A /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB89460119F63CB600339C8A /* libopus.a */; };
 		FBAB29F219EDB08B00929691 /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F119EDB08B00929691 /* MDNSManager.m */; };
 		FBAB29F619EDE0F800929691 /* Computer.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29F519EDE0F800929691 /* Computer.m */; };
 		FBAB29FC19EE13AA00929691 /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBAB29FB19EE13AA00929691 /* CryptoManager.m */; };
@@ -107,11 +107,6 @@
 		FB290D2D19B2C6E3004C83CF /* StreamFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamFrameViewController.m; sourceTree = "<group>"; };
 		FB290DB619B2C870004C83CF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
 		FB290DB819B2C877004C83CF /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = usr/lib/libbz2.dylib; sourceTree = SDKROOT; };
-		FB290DBC19B2E966004C83CF /* opus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
-		FB290DBD19B2E966004C83CF /* opus_defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_defines.h; sourceTree = "<group>"; };
-		FB290DBE19B2E966004C83CF /* opus_multistream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
-		FB290DBF19B2E966004C83CF /* opus_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
-		FB290DC119B2E966004C83CF /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopus.a; sourceTree = "<group>"; };
 		FB290DC319B2E98F004C83CF /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 		FB290E7819B37D81004C83CF /* MainFrame-iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainFrame-iPad.storyboard"; sourceTree = SOURCE_ROOT; };
 		FB290E7A19B38036004C83CF /* MainFrame-iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = "MainFrame-iPhone.storyboard"; sourceTree = SOURCE_ROOT; };
@@ -126,6 +121,11 @@
 		FB8945F119F5C76C00339C8A /* StreamConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamConfiguration.m; sourceTree = "<group>"; };
 		FB8945F519F626BA00339C8A /* Launch Screen.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; path = "Launch Screen.xib"; sourceTree = "<group>"; };
 		FB8945F719F62A2B00339C8A /* store_icon_1024x1024.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = store_icon_1024x1024.png; sourceTree = "<group>"; };
+		FB8945FC19F63CB600339C8A /* opus.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
+		FB8945FD19F63CB600339C8A /* opus_defines.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_defines.h; sourceTree = "<group>"; };
+		FB8945FE19F63CB600339C8A /* opus_multistream.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
+		FB8945FF19F63CB600339C8A /* opus_types.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
+		FB89460119F63CB600339C8A /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopus.a; sourceTree = "<group>"; };
 		FBAB29F119EDB08B00929691 /* MDNSManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MDNSManager.m; sourceTree = "<group>"; };
 		FBAB29F319EDB0C400929691 /* MDNSManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDNSManager.h; sourceTree = "<group>"; };
 		FBAB29F419EDE0F800929691 /* Computer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Computer.h; sourceTree = "<group>"; };
@@ -222,13 +222,13 @@
 			files = (
 				98A03B5119F35AAC00861ACA /* libcrypto.a in Frameworks */,
 				98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */,
+				FB89460219F63CB600339C8A /* libopus.a in Frameworks */,
 				FBCC0E9B19EF9703009729EB /* libssl.a in Frameworks */,
 				FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */,
 				FB290DC419B2E98F004C83CF /* libxml2.dylib in Frameworks */,
 				FB290DB919B2C877004C83CF /* libbz2.dylib in Frameworks */,
 				FB290DB719B2C870004C83CF /* libz.dylib in Frameworks */,
 				FB290CF419B2C406004C83CF /* CoreGraphics.framework in Frameworks */,
-				FB290DC219B2E966004C83CF /* libopus.a in Frameworks */,
 				FB290CF819B2C406004C83CF /* CoreData.framework in Frameworks */,
 				FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */,
 				FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */,
@@ -378,8 +378,9 @@
 		FB290D3F19B2C814004C83CF /* libs */ = {
 			isa = PBXGroup;
 			children = (
+				FB8945F919F63CB600339C8A /* opus */,
 				FBCC0E4919EF9703009729EB /* openssl */,
-				FB290DAC19B2C814004C83CF /* opus */,
+				FB290DA719B2C814004C83CF /* limelight-common */,
 			);
 			path = libs;
 			sourceTree = "<group>";
@@ -387,35 +388,35 @@
 		FB290DAC19B2C814004C83CF /* opus */ = {
 			isa = PBXGroup;
 			children = (
-				FB290DBA19B2E966004C83CF /* include */,
-				FB290DC019B2E966004C83CF /* lib */,
+				FB8945FA19F63CB600339C8A /* include */,
+				FB89460019F63CB600339C8A /* lib */,
 			);
 			path = opus;
 			sourceTree = "<group>";
 		};
-		FB290DBA19B2E966004C83CF /* include */ = {
+		FB8945FA19F63CB600339C8A /* include */ = {
 			isa = PBXGroup;
 			children = (
-				FB290DBB19B2E966004C83CF /* opus */,
+				FB8945FB19F63CB600339C8A /* opus */,
 			);
 			path = include;
 			sourceTree = "<group>";
 		};
-		FB290DBB19B2E966004C83CF /* opus */ = {
+		FB8945FB19F63CB600339C8A /* opus */ = {
 			isa = PBXGroup;
 			children = (
-				FB290DBC19B2E966004C83CF /* opus.h */,
-				FB290DBD19B2E966004C83CF /* opus_defines.h */,
-				FB290DBE19B2E966004C83CF /* opus_multistream.h */,
-				FB290DBF19B2E966004C83CF /* opus_types.h */,
+				FB8945FC19F63CB600339C8A /* opus.h */,
+				FB8945FD19F63CB600339C8A /* opus_defines.h */,
+				FB8945FE19F63CB600339C8A /* opus_multistream.h */,
+				FB8945FF19F63CB600339C8A /* opus_types.h */,
 			);
 			path = opus;
 			sourceTree = "<group>";
 		};
-		FB290DC019B2E966004C83CF /* lib */ = {
+		FB89460019F63CB600339C8A /* lib */ = {
 			isa = PBXGroup;
 			children = (
-				FB290DC119B2E966004C83CF /* libopus.a */,
+				FB89460119F63CB600339C8A /* libopus.a */,
 			);
 			path = lib;
 			sourceTree = "<group>";

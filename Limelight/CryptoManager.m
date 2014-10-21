@@ -73,7 +73,7 @@ static NSData* p12 = nil;
 
 - (int) getEncryptSize:(NSData*)data {
     // the size is the length of the data ceiling to the nearest 16 bytes
-    return (([data length] + 15) / 16) * 16;
+    return (((int)[data length] + 15) / 16) * 16;
 }
 
 - (bool) verifySignature:(NSData *)data withSignature:(NSData*)signature andCert:(NSData*)cert {
