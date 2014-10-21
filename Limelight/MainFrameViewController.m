@@ -155,7 +155,7 @@ static StreamConfiguration* streamConfig;
 
     self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
     self.hostPickerVals = [[NSArray alloc] init];
-    
+    [self.StreamConfigs selectRow:1 inComponent:0 animated:NO];
     
     _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [_mDNSManager searchForHosts];
