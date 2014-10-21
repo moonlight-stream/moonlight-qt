@@ -9,10 +9,12 @@
 #import "MDNSManager.h"
 #import "Computer.h"
 
-@implementation MDNSManager : NSObject
-NSNetServiceBrowser* mDNSBrowser;
-NSMutableArray* domains;
-NSMutableArray* services;
+@implementation MDNSManager {
+    NSNetServiceBrowser* mDNSBrowser;
+    NSMutableArray* domains;
+    NSMutableArray* services;
+    BOOL scanActive;
+}
 
 static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 
@@ -32,11 +34,13 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 
 - (void) searchForHosts {
     NSLog(@"Starting mDNS discovery");
+    scanActive = TRUE;
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
 }
 
 - (void) stopSearching {
     NSLog(@"Stopping mDNS discovery");
+    scanActive = FALSE;
     [mDNSBrowser stop];
 }
 
@@ -47,7 +51,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
             [hosts addObject:[[Computer alloc] initWithHost:service]];
         }
     }
-    return [[NSArray alloc] initWithArray:hosts];
+    return hosts;
 }
 
 - (void)netServiceDidResolveAddress:(NSNetService *)service {
@@ -74,6 +78,24 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didNotSearch:(NSDictionary *)errorDict {
     NSLog(@"Did not perform search");
     NSLog(@"%@", [errorDict description]);
+    
+    // Schedule a retry in 2 seconds
+    [NSTimer scheduledTimerWithTimeInterval:2.0
+                                     target:self
+                                   selector:@selector(retryTimerCallback:)
+                                   userInfo:nil
+                                    repeats:NO];
+}
+
+- (void)retryTimerCallback:(NSTimer *)timer {
+    // Check if we've been stopped since this was queued
+    if (!scanActive) {
+        return;
+    }
+    
+    NSLog(@"Retrying mDNS search");
+    [mDNSBrowser stop];
+    [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
 }
 
 @end

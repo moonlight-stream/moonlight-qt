@@ -122,10 +122,19 @@ static StreamConfiguration* streamConfig;
     }
 }
 
+- (void)setSelectedHost:(NSInteger)selectedIndex
+{
+    _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:selectedIndex]);
+    if (_selectedHost.hostName == NULL) {
+        // This must be the placeholder computer
+        _selectedHost = NULL;
+    }
+}
+
 - (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
 {
     if (pickerView == self.HostPicker) {
-        _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]]);
+        [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
     }
     
     //TODO: figure out how to save this info!!
@@ -154,10 +163,12 @@ static StreamConfiguration* streamConfig;
     [super viewDidLoad];
 
     self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
-    self.hostPickerVals = [[NSArray alloc] init];
     [self.StreamConfigs selectRow:1 inComponent:0 animated:NO];
     
     _opQueue = [[NSOperationQueue alloc] init];
+    
+    // Initialize the host picker list
+    [self updateHosts:[[NSArray alloc] init]];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -172,9 +183,16 @@ static StreamConfiguration* streamConfig;
 }
 
 - (void)updateHosts:(NSArray *)hosts {
-    self.hostPickerVals = hosts;
+    NSMutableArray *hostPickerValues = [[NSMutableArray alloc] initWithArray:hosts];
+    
+    if ([hostPickerValues count] == 0) {
+        [hostPickerValues addObject:[[Computer alloc] initPlaceholder]];
+    }
+    
+    self.hostPickerVals = hostPickerValues;
     [self.HostPicker reloadAllComponents];
-    _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:[self.HostPicker selectedRowInComponent:0]]);
+    
+    [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
 }
 
 - (void)didReceiveMemoryWarning
