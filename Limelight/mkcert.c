@@ -83,7 +83,7 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years) {
     RSA *rsa;
     X509_NAME *name = NULL;
     
-    if ((pkeyp == NULL) || (*pkeyp == NULL)) {
+    if (*pkeyp == NULL) {
         if ((pk=EVP_PKEY_new()) == NULL) {
             abort();
             return(0);
@@ -92,7 +92,7 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years) {
         pk = *pkeyp;
     }
     
-    if ((x509p == NULL) || (*x509p == NULL)) {
+    if (*x509p == NULL) {
         if ((x = X509_new()) == NULL) {
             goto err;
         }

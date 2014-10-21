@@ -184,9 +184,8 @@ static const NSString* PORT = @"47984";
 }
 
 - (void)connection:(NSURLConnection *)connection willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge {
-    SecIdentityRef identity = [self getClientCertificate];  // Go get a SecIdentityRef
-    CFArrayRef certs = [self getCertificate:identity]; // Get an array of certificates
-    NSArray *certArray = (__bridge NSArray *)certs;
+    SecIdentityRef identity = [self getClientCertificate];
+    NSArray *certArray = [self getCertificate:identity];
     
     NSURLCredential *newCredential = [NSURLCredential credentialWithIdentity:identity certificates:certArray persistence:NSURLCredentialPersistencePermanent];
     
@@ -194,22 +193,12 @@ static const NSString* PORT = @"47984";
 }
 
 // Returns an array containing the certificate
-- (CFArrayRef)getCertificate:(SecIdentityRef) identity {
+- (NSArray*)getCertificate:(SecIdentityRef) identity {
     SecCertificateRef certificate = nil;
     
     SecIdentityCopyCertificate(identity, &certificate);
-    SecCertificateRef certs[1] = { certificate };
     
-    CFArrayRef certArray = CFArrayCreate(NULL, (const void **) certs, 1, NULL);
-    
-    SecPolicyRef policyRef   = SecPolicyCreateBasicX509();
-    SecTrustRef trustRef;
-    
-    OSStatus status = SecTrustCreateWithCertificates(certArray, policyRef, &trustRef);
-    if (status != noErr) {
-        NSLog(@"Error Creating certificate");
-    }
-    return certArray;
+    return [[NSArray alloc] initWithObjects:(__bridge id)certificate, nil];
 }
 
 // Returns the identity

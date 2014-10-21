@@ -119,13 +119,12 @@ static NSData* p12 = nil;
         return NULL;
     }
     
-    int ret = -1;
     EVP_MD_CTX *mdctx = NULL;
     mdctx = EVP_MD_CTX_create();
-    ret = EVP_DigestSignInit(mdctx, NULL, EVP_sha256(), NULL, pkey);
-    ret = EVP_DigestSignUpdate(mdctx, [data bytes], [data length]);
+    EVP_DigestSignInit(mdctx, NULL, EVP_sha256(), NULL, pkey);
+    EVP_DigestSignUpdate(mdctx, [data bytes], [data length]);
     size_t slen;
-    ret = EVP_DigestSignFinal(mdctx, NULL, &slen);
+    EVP_DigestSignFinal(mdctx, NULL, &slen);
     unsigned char* signature = malloc(slen);
     int result = EVP_DigestSignFinal(mdctx, signature, &slen);
     
