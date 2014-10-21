@@ -43,7 +43,9 @@
     [_callback showPIN:PIN];
     
     NSData* pairResp = [_httpManager executeRequestSynchronously:[_httpManager newPairRequest:salt]];
-    if ([[HttpManager getStringFromXML:pairResp tag:@"paired"] intValue] != 1) {
+    NSString* pairedString;
+    pairedString = [HttpManager getStringFromXML:pairResp tag:@"paired"];
+    if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
         //TODO: better message
         [_callback pairFailed:@"pairResp failed"];
@@ -59,7 +61,8 @@
     NSData* encryptedChallenge = [cryptoMan aesEncrypt:randomChallenge withKey:aesKey];
     
     NSData* challengeResp = [_httpManager executeRequestSynchronously:[_httpManager newChallengeRequest:encryptedChallenge]];
-    if ([[HttpManager getStringFromXML:challengeResp tag:@"paired"] intValue] != 1) {
+    pairedString = [HttpManager getStringFromXML:challengeResp tag:@"paired"];
+    if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
         //TODO: better message
         [_callback pairFailed:@"challengeResp failed"];
@@ -77,7 +80,8 @@
     NSData* challengeRespEncrypted = [cryptoMan aesEncrypt:challengeRespHash withKey:aesKey];
     
     NSData* secretResp = [_httpManager executeRequestSynchronously:[_httpManager newChallengeRespRequest:challengeRespEncrypted]];
-    if ([[HttpManager getStringFromXML:secretResp tag:@"paired"] intValue] != 1) {
+    pairedString = [HttpManager getStringFromXML:secretResp tag:@"paired"];
+    if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
         //TODO: better message
         [_callback pairFailed:@"secretResp failed"];
@@ -105,7 +109,8 @@
     
     NSData* clientPairingSecret = [self concatData:clientSecret with:[cryptoMan signData:clientSecret withKey:[CryptoManager readKeyFromFile]]];
     NSData* clientSecretResp = [_httpManager executeRequestSynchronously:[_httpManager newClientSecretRespRequest:[Utils bytesToHex:clientPairingSecret]]];
-    if (![[HttpManager getStringFromXML:clientSecretResp tag:@"paired"] isEqual:@"1"]) {
+    pairedString = [HttpManager getStringFromXML:clientSecretResp tag:@"paired"];
+    if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
         //TODO: better message
         [_callback pairFailed:@"clientSecretResp failed"];
@@ -113,7 +118,8 @@
     }
     
     NSData* clientPairChallenge = [_httpManager executeRequestSynchronously:[_httpManager newPairChallenge]];
-    if (![[HttpManager getStringFromXML:clientPairChallenge tag:@"paired"] isEqual:@"1"]) {
+    pairedString = [HttpManager getStringFromXML:clientPairChallenge tag:@"paired"];
+    if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
         //TODO: better message
         [_callback pairFailed:@"clientPairChallenge failed"];

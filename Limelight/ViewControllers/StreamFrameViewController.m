@@ -81,7 +81,13 @@
 }
 
 - (void) launchFailed {
-    
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
+                                                                   message:@"Failed to start app"
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+    }]];
+    [self presentViewController:alert animated:YES completion:nil];
 }
 
 - (void) displayMessage:(char*)message {

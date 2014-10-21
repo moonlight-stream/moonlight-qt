@@ -41,12 +41,23 @@
                                                      cert:cert];
     
     NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-    if (![[HttpManager getStringFromXML:serverInfoResp tag:@"currentgame"] isEqualToString:@"0"]) {
+    NSString* currentGame = [HttpManager getStringFromXML:serverInfoResp tag:@"currentgame"];
+    if (currentGame == NULL) {
+        [_callbacks launchFailed];
+        return;
+    }
+    else if ([currentGame isEqualToString:@"0"]) {
         // App already running, resume it
-        [self resumeApp:hMan];
+        if (![self resumeApp:hMan]) {
+            [_callbacks launchFailed];
+            return;
+        }
     } else {
         // Start app
-        [self launchApp:hMan];
+        if (![self launchApp:hMan]) {
+            [_callbacks launchFailed];
+            return;
+        }
     }
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
