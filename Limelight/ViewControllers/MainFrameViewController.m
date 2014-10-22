@@ -114,29 +114,29 @@ static StreamConfiguration* streamConfig;
             streamConfig.width = 1280;
             streamConfig.height = 720;
             streamConfig.frameRate = 30;
+            streamConfig.bitRate = 5000;
             break;
+        default:
         case 1:
             streamConfig.width = 1280;
             streamConfig.height = 720;
             streamConfig.frameRate = 60;
+            streamConfig.bitRate = 10000;
             break;
         case 2:
             streamConfig.width = 1920;
             streamConfig.height = 1080;
             streamConfig.frameRate = 30;
+            streamConfig.bitRate = 10000;
             break;
         case 3:
             streamConfig.width = 1920;
             streamConfig.height = 1080;
             streamConfig.frameRate = 60;
-            break;
-        default:
-            streamConfig.width = 1280;
-            streamConfig.height = 720;
-            streamConfig.frameRate = 60;
+            streamConfig.bitRate = 20000;
             break;
     }
-    NSLog(@"StreamConfig: %@, %d, %dx%dx%d", streamConfig.host, streamConfig.hostAddr, streamConfig.width, streamConfig.height, streamConfig.frameRate);
+    NSLog(@"StreamConfig: %@, %d, %dx%dx%d at %d Mbps", streamConfig.host, streamConfig.hostAddr, streamConfig.width, streamConfig.height, streamConfig.frameRate, streamConfig.bitRate);
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 

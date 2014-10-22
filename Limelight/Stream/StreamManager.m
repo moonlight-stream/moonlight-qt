@@ -25,7 +25,6 @@
     _callbacks = callbacks;
     _config.riKey = [Utils randomBytes:16];
     _config.riKeyId = arc4random();
-    _config.bitRate = 10000;
     return self;
 }
 
