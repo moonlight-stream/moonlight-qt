@@ -41,11 +41,20 @@
     
     NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
     NSString* currentGame = [HttpManager getStringFromXML:serverInfoResp tag:@"currentgame"];
-    if (currentGame == NULL) {
+    NSString* pairStatus = [HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"];
+    if (currentGame == NULL || pairStatus == NULL) {
         [_callbacks launchFailed];
         return;
     }
-    else if (![currentGame isEqualToString:@"0"]) {
+    
+    if (![pairStatus isEqualToString:@"1"]) {
+        // Not paired
+        // TODO: Display better error message
+        [_callbacks launchFailed];
+        return;
+    }
+    
+    if (![currentGame isEqualToString:@"0"]) {
         // App already running, resume it
         if (![self resumeApp:hMan]) {
             [_callbacks launchFailed];
