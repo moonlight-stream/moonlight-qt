@@ -1,4 +1,4 @@
-//
+
 //  MainFrameViewController.m
 //  Limelight-iOS
 //
@@ -14,6 +14,9 @@
 #import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
 #import "Utils.h"
+#import "UIComputerView.h"
+#import "UIAppView.h"
+#import "App.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -27,6 +30,8 @@ static StreamConfiguration* streamConfig;
     return streamConfig;
 }
 
+//TODO: no more pair button
+/*
 - (void)PairButton:(UIButton *)sender
 {
     NSLog(@"Pair Button Pressed!");
@@ -34,7 +39,7 @@ static StreamConfiguration* streamConfig;
         _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
         NSLog(@"Using custom host: %@", self.hostTextField.text);
     }
-    
+
     if (![self validatePcSelected]) {
         NSLog(@"No valid PC selected");
         return;
@@ -54,6 +59,7 @@ static StreamConfiguration* streamConfig;
 
     [_opQueue addOperation:pMan];
 }
+*/
 
 - (void)showPIN:(NSString *)PIN {
     dispatch_sync(dispatch_get_main_queue(), ^{
@@ -86,9 +92,12 @@ static StreamConfiguration* streamConfig;
     [self presentViewController:alert animated:YES completion:nil];
 }
 
+//TODO: No more stream button
+/*
 - (void)StreamButton:(UIButton *)sender
 {
     NSLog(@"Stream Button Pressed!");
+    
     if ([self.hostTextField.text length] > 0) {
         _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
         NSLog(@"Using custom host: %@", self.hostTextField.text);
@@ -139,18 +148,9 @@ static StreamConfiguration* streamConfig;
     NSLog(@"StreamConfig: %@, %d, %dx%dx%d at %d Mbps", streamConfig.host, streamConfig.hostAddr, streamConfig.width, streamConfig.height, streamConfig.frameRate, streamConfig.bitRate);
     [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
+*/
 
-- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
-{
-    if (pickerView == self.StreamConfigs) {
-        return [self.streamConfigVals objectAtIndex:row];
-    } else if (pickerView == self.HostPicker) {
-        return ((Computer*)([self.hostPickerVals objectAtIndex:row])).displayName;
-    } else {
-        return nil;
-    }
-}
-
+/*
 - (void)setSelectedHost:(NSInteger)selectedIndex
 {
     _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:selectedIndex]);
@@ -159,58 +159,71 @@ static StreamConfiguration* streamConfig;
         _selectedHost = NULL;
     }
 }
+*/
 
-- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
-{
-    if (pickerView == self.HostPicker) {
-        [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
-    }
-    
-    //TODO: figure out how to save this info!!
-}
-
-// returns the number of 'columns' to display.
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
-{
-    return 1;
-}
-
-// returns the # of rows in each component..
-- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
-{
-    if (pickerView == self.StreamConfigs) {
-        return self.streamConfigVals.count;
-    } else if (pickerView == self.HostPicker) {
-        return self.hostPickerVals.count;
-    } else {
-        return 0;
-    }
-}
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
 
-    self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
-    [self.StreamConfigs selectRow:1 inComponent:0 animated:NO];
+    NSArray* streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
     
     _opQueue = [[NSOperationQueue alloc] init];
     
     // Initialize the host picker list
-    [self updateHosts:[[NSArray alloc] init]];
+    //[self updateHosts:[[NSArray alloc] init]];
+    
+    Computer* test = [[Computer alloc] initWithIp:@"CEMENT-TRUCK"];
+    
+    
+    UIScrollView* hostScrollView = [[UIScrollView alloc] init];
+    hostScrollView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height / 2);
+    [hostScrollView setShowsHorizontalScrollIndicator:NO];
+    UIComputerView* compView;
+    for (int i = 0; i < 5; i++) {
+        compView = [[UIComputerView alloc] initWithComputer:test];
+        [hostScrollView addSubview:compView];
+        [compView sizeToFit];
+        compView.center = CGPointMake((compView.frame.size.width + 20) * i + compView.frame.size.width, hostScrollView.frame.size.height / 2);
+         
+    }
+    
+    [hostScrollView setContentSize:CGSizeMake(compView.frame.size.width * 5 + compView.frame.size.width, hostScrollView.frame.size.height)];
+    
+
+    UIScrollView* appScrollView = [[UIScrollView alloc] init];
+    appScrollView.frame = CGRectMake(0, hostScrollView.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
+    [appScrollView setShowsHorizontalScrollIndicator:NO];
+    
+    
+    App* testApp = [[App alloc] init];
+    testApp.displayName = @"Left 4 Dead 2";
+    UIAppView* appView;
+    for (int i = 0; i < 5; i++) {
+        appView = [[UIAppView alloc] initWithApp:testApp];
+        [appScrollView addSubview:appView];
+        [appView sizeToFit];
+        appView.center = CGPointMake((appView.frame.size.width + 20) * i + compView.frame.size.width, appScrollView.frame.size.height / 2);
+    }
+    
+    [appScrollView setContentSize:CGSizeMake(appView.frame.size.width * 5 + appView.frame.size.width, appScrollView.frame.size.height)];
+   
+    [self.view addSubview:hostScrollView];
+    [self.view addSubview:appScrollView];
+    
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
-    [super viewDidAppear:animated];
-    _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
-    [_mDNSManager searchForHosts];
+	[super viewDidDisappear:animated];
+    //_mDNSManager = [[MDNSManager alloc] initWithCallback:self];
+   // [_mDNSManager searchForHosts];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
-    [super viewDidDisappear:animated];
-    [_mDNSManager stopSearching];
+	[super viewDidDisappear:animated];
+ //   [_mDNSManager stopSearching];
 }
 
 - (void)updateHosts:(NSArray *)hosts {
@@ -219,11 +232,6 @@ static StreamConfiguration* streamConfig;
     if ([hostPickerValues count] == 0) {
         [hostPickerValues addObject:[[Computer alloc] initPlaceholder]];
     }
-    
-    self.hostPickerVals = hostPickerValues;
-    [self.HostPicker reloadAllComponents];
-    
-    [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
 }
 
 - (BOOL)validatePcSelected {
@@ -256,23 +264,5 @@ static StreamConfiguration* streamConfig;
 
 - (BOOL)shouldAutorotate {
     return YES;
-}
-
-- (NSUInteger)supportedInterfaceOrientations {
-    NSString *deviceType = [UIDevice currentDevice].model;
-    if ([deviceType containsString:@"iPhone"] || [deviceType containsString:@"iPod"]) {
-        return UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
-    } else {
-        return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
-    }
-}
-
-- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
-    NSString *deviceType = [UIDevice currentDevice].model;
-    if ([deviceType containsString:@"iPhone"] || [deviceType containsString:@"iPod"]) {
-        return UIInterfaceOrientationPortrait;
-    } else {
-        return UIInterfaceOrientationLandscapeRight;
-    }
 }
 @end

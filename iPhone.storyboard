@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6250" systemVersion="14A388a" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" initialViewController="dgh-JZ-Q7z">
+    <dependencies>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
+    </dependencies>
+    <scenes>
+        <!--Main Frame View Controller-->
+        <scene sceneID="emz-kO-L7q">
+            <objects>
+                <viewController id="dgh-JZ-Q7z" customClass="MainFrameViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="udy-Vd-ca2"/>
+                        <viewControllerLayoutGuide type="bottom" id="wiU-k0-6Q2"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="RId-Pb-IBX">
+                        <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                    <toolbarItems/>
+                    <simulatedToolbarMetrics key="simulatedBottomBarMetrics"/>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    <connections>
+                        <segue destination="mI3-9F-XwU" kind="modal" identifier="createStreamFrame" id="cPc-eP-un1"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="HNf-lX-GEO" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="199" y="7"/>
+        </scene>
+        <!--Stream Frame View Controller-->
+        <scene sceneID="5Eb-q2-vjt">
+            <objects>
+                <viewController id="mI3-9F-XwU" customClass="StreamFrameViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="DRq-YB-9Rh"/>
+                        <viewControllerLayoutGuide type="bottom" id="KH1-hM-RYW"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="eir-e9-IPE" customClass="StreamView">
+                        <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" hidesWhenStopped="YES" animating="YES" style="white" translatesAutoresizingMaskIntoConstraints="NO" id="0vm-Iv-K4b">
+                                <rect key="frame" x="274" y="150" width="20" height="20"/>
+                            </activityIndicatorView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Stage" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="2HK-Z5-4Ch">
+                                <rect key="frame" x="262" y="178" width="45" height="21"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstAttribute="centerX" secondItem="2HK-Z5-4Ch" secondAttribute="centerX" constant="-0.5" id="Blw-Hy-66z"/>
+                            <constraint firstAttribute="centerX" secondItem="0vm-Iv-K4b" secondAttribute="centerX" id="mCQ-CP-Yik"/>
+                            <constraint firstAttribute="centerY" secondItem="0vm-Iv-K4b" secondAttribute="centerY" id="t8e-qp-g1j"/>
+                            <constraint firstItem="2HK-Z5-4Ch" firstAttribute="top" secondItem="0vm-Iv-K4b" secondAttribute="bottom" constant="8" id="tta-Uo-bBO"/>
+                        </constraints>
+                    </view>
+                    <nil key="simulatedStatusBarMetrics"/>
+                    <nil key="simulatedTopBarMetrics"/>
+                    <nil key="simulatedBottomBarMetrics"/>
+                    <connections>
+                        <outlet property="spinner" destination="0vm-Iv-K4b" id="Lif-zG-6Jh"/>
+                        <outlet property="stageLabel" destination="2HK-Z5-4Ch" id="1bI-Ig-OpD"/>
+                        <segue destination="dgh-JZ-Q7z" kind="modal" identifier="returnToMainFrame" id="djB-MF-L5D"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="pqv-jd-33O" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="930" y="-14"/>
+        </scene>
+    </scenes>
+    <simulatedMetricsContainer key="defaultSimulatedMetrics">
+        <simulatedStatusBarMetrics key="statusBar"/>
+        <simulatedOrientationMetrics key="orientation"/>
+        <simulatedScreenMetrics key="destination" type="retina4"/>
+    </simulatedMetricsContainer>
+</document>
