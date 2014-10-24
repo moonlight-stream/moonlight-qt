@@ -28,12 +28,16 @@
 
 - (void) main {
     NSData* serverInfo = [_httpManager executeRequestSynchronously:[_httpManager newServerInfoRequest]];
+    if (serverInfo == NULL) {
+        [_callback pairFailed:@"Unable to connect to PC"];
+        return;
+    }
+    
     if (![[HttpManager getStringFromXML:serverInfo tag:@"PairStatus"] isEqual:@"1"]) {
         [self initiatePair];
     } else {
-        [_callback pairFailed:@"Already Paired"];
+        [_callback pairFailed:@"This device is already paired."];
     }
-    [_httpManager executeRequestSynchronously:[_httpManager newAppListRequest]];
 }
 
 - (void) initiatePair {
@@ -47,8 +51,7 @@
     pairedString = [HttpManager getStringFromXML:pairResp tag:@"paired"];
     if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
-        //TODO: better message
-        [_callback pairFailed:@"pairResp failed"];
+        [_callback pairFailed:@"Pairing was declined by the target."];
         return;
     }
     
@@ -64,8 +67,7 @@
     pairedString = [HttpManager getStringFromXML:challengeResp tag:@"paired"];
     if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
-        //TODO: better message
-        [_callback pairFailed:@"challengeResp failed"];
+        [_callback pairFailed:@"Pairing stage #2 failed"];
         return;
     }
     
@@ -83,8 +85,7 @@
     pairedString = [HttpManager getStringFromXML:secretResp tag:@"paired"];
     if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
-        //TODO: better message
-        [_callback pairFailed:@"secretResp failed"];
+        [_callback pairFailed:@"Pairing stage #3 failed"];
         return;
     }
     
@@ -94,16 +95,14 @@
     
     if (![cryptoMan verifySignature:serverSecret withSignature:serverSignature andCert:[Utils hexToBytes:plainCert]]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
-        //TODO: better message
-        [_callback pairFailed:@"verifySignature failed"];
+        [_callback pairFailed:@"Server certificate invalid"];
         return;
     }
     
     NSData* serverChallengeRespHash = [cryptoMan SHA1HashData:[self concatData:[self concatData:randomChallenge with:[CryptoManager getSignatureFromCert:[Utils hexToBytes:plainCert]]] with:serverSecret]];
     if (![serverChallengeRespHash isEqual:serverResponse]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
-        //TODO: better message
-        [_callback pairFailed:@"serverChallengeResp failed"];
+        [_callback pairFailed:@"Incorrect PIN"];
         return;
     }
     
@@ -112,8 +111,7 @@
     pairedString = [HttpManager getStringFromXML:clientSecretResp tag:@"paired"];
     if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
-        //TODO: better message
-        [_callback pairFailed:@"clientSecretResp failed"];
+        [_callback pairFailed:@"Pairing stage #4 failed"];
         return;
     }
     
@@ -121,8 +119,7 @@
     pairedString = [HttpManager getStringFromXML:clientPairChallenge tag:@"paired"];
     if (pairedString == NULL || ![pairedString isEqualToString:@"1"]) {
         [_httpManager executeRequestSynchronously:[_httpManager newUnpairRequest]];
-        //TODO: better message
-        [_callback pairFailed:@"clientPairChallenge failed"];
+        [_callback pairFailed:@"Pairing stage #5 failed"];
         return;
     }
     [_callback pairSuccessful];
