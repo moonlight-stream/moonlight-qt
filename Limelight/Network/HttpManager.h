@@ -11,6 +11,7 @@
 @interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
 + (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag;
++ (NSString*) getStatusStringFromXML:(NSData*)xml;
 
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert;
 - (NSURLRequest*) newPairRequest:(NSData*)salt;

@@ -43,27 +43,25 @@
     NSString* currentGame = [HttpManager getStringFromXML:serverInfoResp tag:@"currentgame"];
     NSString* pairStatus = [HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"];
     if (currentGame == NULL || pairStatus == NULL) {
-        [_callbacks launchFailed];
+        [_callbacks launchFailed:@"Failed to connect to PC"];
         return;
     }
     
     if (![pairStatus isEqualToString:@"1"]) {
         // Not paired
-        // TODO: Display better error message
-        [_callbacks launchFailed];
+        [_callbacks launchFailed:@"Device not paired to PC"];
         return;
     }
     
+    // resumeApp and launchApp handle calling launchFailed
     if (![currentGame isEqualToString:@"0"]) {
         // App already running, resume it
         if (![self resumeApp:hMan]) {
-            [_callbacks launchFailed];
             return;
         }
     } else {
         // Start app
         if (![self launchApp:hMan]) {
-            [_callbacks launchFailed];
             return;
         }
     }
@@ -88,7 +86,11 @@
                                            rikey:[Utils bytesToHex:_config.riKey]
                                          rikeyid:_config.riKeyId]];
     NSString *gameSession = [HttpManager getStringFromXML:launchResp tag:@"gamesession"];
-    if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
+    if (launchResp == NULL) {
+        [_callbacks launchFailed:@"Failed to launch app"];
+        return FALSE;
+    } else if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
+        [_callbacks launchFailed:[HttpManager getStatusStringFromXML:launchResp]];
         return FALSE;
     }
     
@@ -100,7 +102,11 @@
                           [hMan newResumeRequestWithRiKey:[Utils bytesToHex:_config.riKey]
                                                   riKeyId:_config.riKeyId]];
     NSString *resume = [HttpManager getStringFromXML:resumeResp tag:@"resume"];
-    if (resume == NULL || [resume isEqualToString:@"0"]) {
+    if (resumeResp == NULL) {
+        [_callbacks launchFailed:@"Failed to resume app"];
+        return FALSE;
+    } else if (resume == NULL || [resume isEqualToString:@"0"]) {
+        [_callbacks launchFailed:[HttpManager getStatusStringFromXML:resumeResp]];
         return FALSE;
     }
     

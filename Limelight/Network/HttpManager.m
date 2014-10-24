@@ -25,6 +25,24 @@
 
 static const NSString* PORT = @"47984";
 
++ (NSString*) getStatusStringFromXML:(NSData*)xml {
+    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
+    
+    if (docPtr == NULL) {
+        NSLog(@"ERROR: An error occured trying to parse xml.");
+        return NULL;
+    }
+    
+    NSString* string;
+    xmlNodePtr rootNode = xmlDocGetRootElement(docPtr);
+    
+    string = [HttpManager getStatusMessage: rootNode];
+    xmlFree(rootNode);
+    xmlFree(docPtr);
+    
+    return string;
+}
+
 + (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag {
     xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
     
@@ -59,6 +77,13 @@ static const NSString* PORT = @"47984";
     xmlFree(docPtr);
     
     return value;
+}
+    
++ (NSString*) getStatusMessage:(xmlNodePtr)docRoot {
+    xmlChar* statusMsgXml = xmlGetProp(docRoot, (const xmlChar*)"status_message");
+    NSString* statusMsg = [NSString stringWithUTF8String:(const char*)statusMsgXml];
+    xmlFree(statusMsgXml);
+    return statusMsg;
 }
 
 + (bool) verifyStatus:(xmlNodePtr)docRoot {

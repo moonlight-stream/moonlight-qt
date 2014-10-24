@@ -17,7 +17,7 @@
 - (void) stageStarting:(char*)stageName;
 - (void) stageComplete:(char*)stageName;
 - (void) stageFailed:(char*)stageName withError:(long)errorCode;
-- (void) launchFailed;
+- (void) launchFailed:(NSString*)message;
 - (void) displayMessage:(char*)message;
 - (void) displayTransientMessage:(char*)message;
 

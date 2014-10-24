@@ -91,9 +91,9 @@
     [self presentViewController:alert animated:YES completion:nil];
 }
 
-- (void) launchFailed {
+- (void) launchFailed:(NSString*)message {
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
-                                                                   message:@"Failed to start app"
+                                                                   message:message
                                                             preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
         [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
