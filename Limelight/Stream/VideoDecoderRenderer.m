@@ -10,10 +10,9 @@
 
 @implementation VideoDecoderRenderer {
     AVSampleBufferDisplayLayer* displayLayer;
-    Boolean waitingForSps, waitingForPpsA, waitingForPpsB;
+    Boolean waitingForSps, waitingForPps;
     
-    NSData *spsData, *ppsDataA, *ppsDataB;
-    unsigned char ppsDataAFirstByte;
+    NSData *spsData, *ppsData;
     CMVideoFormatDescriptionRef formatDesc;
 }
 
@@ -30,8 +29,7 @@
     
     // We need some parameter sets before we can properly start decoding frames
     waitingForSps = true;
-    waitingForPpsA = true;
-    waitingForPpsB = true;
+    waitingForPps = true;
     
     return self;
 }
@@ -114,34 +112,27 @@
     unsigned char nalType = data[FRAME_START_PREFIX_SIZE] & 0x1F;
     OSStatus status;
     
-    if (formatDesc == NULL && (nalType == 0x7 || nalType == 0x8)) {
-        if (waitingForSps && nalType == 0x7) {
+    if (nalType == 0x7 || nalType == 0x8) {
+        if (nalType == 0x7) {
             printf("Got SPS\n");
             spsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForSps = false;
+            
+            // We got a new SPS so wait for a new PPS to match it
+            waitingForPps = true;
         }
-        // Nvidia's stream has 2 PPS NALUs so we'll wait for both of them
-        else if ((waitingForPpsA || waitingForPpsB) && nalType == 0x8) {
-            // Read the NALU's PPS index to figure out which PPS this is
-            if (waitingForPpsA) {
-                printf("Got PPS 1\n");
-                ppsDataA = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
-                waitingForPpsA = false;
-                ppsDataAFirstByte = data[FRAME_START_PREFIX_SIZE + 1];
-            }
-            else if (data[FRAME_START_PREFIX_SIZE + 1] != ppsDataAFirstByte) {
-                printf("Got PPS 2\n");
-                ppsDataA = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
-                waitingForPpsB = false;
-            }
+        else if (nalType == 0x8) {
+            printf("Got PPS\n");
+            ppsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
+            waitingForPps = false;
         }
         
         // See if we've got all the parameter sets we need
-        if (!waitingForSps && !waitingForPpsA && !waitingForPpsB) {
-            const uint8_t* const parameterSetPointers[] = { [spsData bytes], [ppsDataA bytes], [ppsDataB bytes] };
-            const size_t parameterSetSizes[] = { [spsData length], [ppsDataA length], [ppsDataB length] };
+        if (!waitingForSps && !waitingForPps) {
+            const uint8_t* const parameterSetPointers[] = { [spsData bytes], [ppsData bytes] };
+            const size_t parameterSetSizes[] = { [spsData length], [ppsData length] };
             
-            printf("Constructing format description\n");
+            printf("Constructing new format description\n");
             status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
                                                                          2, /* count of parameter sets */
                                                                          parameterSetPointers,
