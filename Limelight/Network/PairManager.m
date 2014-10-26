@@ -32,14 +32,13 @@
         [_callback pairFailed:@"Unable to connect to PC"];
         return;
     }
-    
     if (![[HttpManager getStringFromXML:serverInfo tag:@"currentgame"] isEqual:@"0"]) {
         [_callback pairFailed:@"You must stop streaming before attempting to pair."];
     }
     else if (![[HttpManager getStringFromXML:serverInfo tag:@"PairStatus"] isEqual:@"1"]) {
         [self initiatePair];
     } else {
-        [_callback pairFailed:@"This device is already paired."];
+        [_callback alreadyPaired];
     }
 }
 

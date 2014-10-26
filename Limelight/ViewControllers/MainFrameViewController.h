@@ -10,8 +10,11 @@
 #import "MDNSManager.h"
 #import "PairManager.h"
 #import "StreamConfiguration.h"
+#import "UIComputerView.h"
+#import "UIAppView.h"
+#import "AppManager.h"
 
-@interface MainFrameViewController : UIViewController <MDNSCallback, PairCallback, NSURLConnectionDelegate>
+@interface MainFrameViewController : UIViewController <MDNSCallback, PairCallback, HostCallback, AppCallback, AppAssetCallback, NSURLConnectionDelegate>
 
 + (StreamConfiguration*) getStreamConfiguration;
 

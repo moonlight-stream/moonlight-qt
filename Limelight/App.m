@@ -7,7 +7,9 @@
 //
 
 #import "App.h"
+#import "HttpManager.h"
 
 @implementation App
+@synthesize appId, appName, appImage;
 
 @end

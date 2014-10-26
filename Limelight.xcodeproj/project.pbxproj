@@ -47,6 +47,7 @@
 		FB8946EB19F6AFE100339C8A /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB8946E019F6AFB800339C8A /* libcrypto.a */; };
 		FB8946EC19F6AFE400339C8A /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB8946E119F6AFB800339C8A /* libssl.a */; };
 		FB8946ED19F6AFE800339C8A /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB8946EA19F6AFB800339C8A /* libopus.a */; };
+		FBD3494319FC9C04002D2A60 /* AppManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3494219FC9C04002D2A60 /* AppManager.m */; };
 		FBDE86E019F7A837001C18A8 /* UIComputerView.m in Sources */ = {isa = PBXBuildFile; fileRef = FBDE86DF19F7A837001C18A8 /* UIComputerView.m */; };
 		FBDE86E619F82297001C18A8 /* UIAppView.m in Sources */ = {isa = PBXBuildFile; fileRef = FBDE86E519F82297001C18A8 /* UIAppView.m */; };
 		FBDE86E919F82315001C18A8 /* App.m in Sources */ = {isa = PBXBuildFile; fileRef = FBDE86E819F82315001C18A8 /* App.m */; };
@@ -214,12 +215,14 @@
 		FB8946E719F6AFB800339C8A /* opus_multistream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
 		FB8946E819F6AFB800339C8A /* opus_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
 		FB8946EA19F6AFB800339C8A /* libopus.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopus.a; sourceTree = "<group>"; };
+		FBD3494119FC9C04002D2A60 /* AppManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppManager.h; sourceTree = "<group>"; };
+		FBD3494219FC9C04002D2A60 /* AppManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppManager.m; sourceTree = "<group>"; };
 		FBDE86DE19F7A837001C18A8 /* UIComputerView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIComputerView.h; sourceTree = "<group>"; };
 		FBDE86DF19F7A837001C18A8 /* UIComputerView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIComputerView.m; sourceTree = "<group>"; };
 		FBDE86E419F82297001C18A8 /* UIAppView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = UIAppView.h; sourceTree = "<group>"; };
 		FBDE86E519F82297001C18A8 /* UIAppView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = UIAppView.m; sourceTree = "<group>"; };
-		FBDE86E719F82315001C18A8 /* App.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = App.h; sourceTree = "<group>"; };
-		FBDE86E819F82315001C18A8 /* App.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = App.m; sourceTree = "<group>"; };
+		FBDE86E719F82315001C18A8 /* App.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = App.h; path = ../App.h; sourceTree = "<group>"; };
+		FBDE86E819F82315001C18A8 /* App.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = App.m; path = ../App.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -320,8 +323,6 @@
 				FBDE86DF19F7A837001C18A8 /* UIComputerView.m */,
 				FBDE86E419F82297001C18A8 /* UIAppView.h */,
 				FBDE86E519F82297001C18A8 /* UIAppView.m */,
-				FBDE86E719F82315001C18A8 /* App.h */,
-				FBDE86E819F82315001C18A8 /* App.m */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
@@ -386,6 +387,8 @@
 				FB89461219F646E200339C8A /* MDNSManager.m */,
 				FB89461319F646E200339C8A /* PairManager.h */,
 				FB89461419F646E200339C8A /* PairManager.m */,
+				FBD3494119FC9C04002D2A60 /* AppManager.h */,
+				FBD3494219FC9C04002D2A60 /* AppManager.m */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -410,6 +413,8 @@
 			children = (
 				FB89461F19F646E200339C8A /* Computer.h */,
 				FB89462019F646E200339C8A /* Computer.m */,
+				FBDE86E719F82315001C18A8 /* App.h */,
+				FBDE86E819F82315001C18A8 /* App.m */,
 				FB89462119F646E200339C8A /* Utils.h */,
 				FB89462219F646E200339C8A /* Utils.m */,
 			);
@@ -725,6 +730,7 @@
 				FB89462819F646E200339C8A /* CryptoManager.m in Sources */,
 				FB89462E19F646E200339C8A /* PairManager.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
+				FBD3494319FC9C04002D2A60 /* AppManager.m in Sources */,
 				FB89462A19F646E200339C8A /* ControllerSupport.m in Sources */,
 				FB89463119F646E200339C8A /* StreamManager.m in Sources */,
 			);

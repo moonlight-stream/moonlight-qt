@@ -10,6 +10,7 @@
 
 @interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
++ (NSArray*) getAppListFromXML:(NSData*)xml;
 + (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag;
 + (NSString*) getStatusStringFromXML:(NSData*)xml;
 
@@ -24,6 +25,7 @@
 - (NSURLRequest*) newServerInfoRequest;
 - (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid;
 - (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId;
+- (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
 - (NSData*) executeRequestSynchronously:(NSURLRequest*)request;
 @end
 

@@ -9,8 +9,15 @@
 #import <UIKit/UIKit.h>
 #import "App.h"
 
+@protocol AppCallback <NSObject>
+
+- (void) appClicked:(App*) app;
+
+@end
+
 @interface UIAppView : UIView
 
-- (id) initWithApp:(App*)app;
+- (id) initWithApp:(App*)app andCallback:(id<AppCallback>)callback;
+- (void) updateAppImage;
 
 @end

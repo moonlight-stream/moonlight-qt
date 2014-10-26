@@ -26,6 +26,8 @@
     [super viewDidLoad];
     
     [self.stageLabel setText:@"Starting App"];
+    [self.stageLabel sizeToFit];
+    self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.stageLabel.center.y);
     
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
@@ -53,6 +55,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.spinner stopAnimating];
         [self.stageLabel setText:@"Waiting for first frame..."];
+        [self.stageLabel sizeToFit];
+        self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.stageLabel.center.y);
     });
 }
 
@@ -74,6 +78,8 @@
         NSString* lowerCase = [NSString stringWithFormat:@"%s in progress...", stageName];
         NSString* titleCase = [[[lowerCase substringToIndex:1] uppercaseString] stringByAppendingString:[lowerCase substringFromIndex:1]];
         [self.stageLabel setText:titleCase];
+        [self.stageLabel sizeToFit];
+        self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.stageLabel.center.y);
     });
 }
 

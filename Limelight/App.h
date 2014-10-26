@@ -10,6 +10,8 @@
 
 @interface App : NSObject
 
-@property NSString* displayName;
+@property NSString* appId;
+@property NSString* appName;
+@property UIImage* appImage;
 
 @end

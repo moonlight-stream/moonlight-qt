@@ -42,6 +42,7 @@
     NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
     NSString* currentGame = [HttpManager getStringFromXML:serverInfoResp tag:@"currentgame"];
     NSString* pairStatus = [HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"];
+    NSString* currentClient = [HttpManager getStringFromXML:serverInfoResp tag:@"CurrentClient"];
     if (currentGame == NULL || pairStatus == NULL) {
         [_callbacks launchFailed:@"Failed to connect to PC"];
         return;
@@ -55,6 +56,11 @@
     
     // resumeApp and launchApp handle calling launchFailed
     if (![currentGame isEqualToString:@"0"]) {
+        if (![currentClient isEqualToString:@"1"]) {
+            // The server is streaming to someone else
+            [_callbacks launchFailed:@"There is another stream in progress"];
+            return;
+        }
         // App already running, resume it
         if (![self resumeApp:hMan]) {
             return;
@@ -79,7 +85,7 @@
 
 - (BOOL) launchApp:(HttpManager*)hMan {
     NSData* launchResp = [hMan executeRequestSynchronously:
-                          [hMan newLaunchRequest:@"67339056"
+                          [hMan newLaunchRequest:_config.appID
                                            width:_config.width
                                           height:_config.height
                                      refreshRate:_config.frameRate
