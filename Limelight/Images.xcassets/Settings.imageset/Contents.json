@@ -2,18 +2,16 @@
   "images" : [
     {
       "idiom" : "universal",
-      "scale" : "1x",
-      "filename" : "Left4Dead2-2.jpg"
+      "scale" : "1x"
     },
     {
       "idiom" : "universal",
       "scale" : "2x",
-      "filename" : "Left4Dead2.jpg"
+      "filename" : "settings_2x.png"
     },
     {
       "idiom" : "universal",
-      "scale" : "3x",
-      "filename" : "Left4Dead2-1.jpg"
+      "scale" : "3x"
     }
   ],
   "info" : {

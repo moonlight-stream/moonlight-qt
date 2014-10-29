@@ -16,6 +16,9 @@
 #import "UIComputerView.h"
 #import "UIAppView.h"
 #import "App.h"
+#import "SettingsViewController.h"
+#import "DataManager.h"
+#import "Settings.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -134,60 +137,58 @@ static StreamConfiguration* streamConfig;
         return;
     }
     
-    // TODO: actually allow the user to choose the config
-    unsigned long selectedConf = 1;
-    NSLog(@"selectedConf: %ld", selectedConf);
-    switch (selectedConf) {
-        case 0:
-            streamConfig.width = 1280;
-            streamConfig.height = 720;
-            streamConfig.frameRate = 30;
-            streamConfig.bitRate = 5000;
-            break;
-        default:
-        case 1:
-            streamConfig.width = 1280;
-            streamConfig.height = 720;
-            streamConfig.frameRate = 60;
-            streamConfig.bitRate = 10000;
-            break;
-        case 2:
-            streamConfig.width = 1920;
-            streamConfig.height = 1080;
-            streamConfig.frameRate = 30;
-            streamConfig.bitRate = 10000;
-            break;
-        case 3:
-            streamConfig.width = 1920;
-            streamConfig.height = 1080;
-            streamConfig.frameRate = 60;
-            streamConfig.bitRate = 20000;
-            break;
+    DataManager* dataMan = [[DataManager alloc] init];
+    Settings* streamSettings = [dataMan retrieveSettings];
+    
+    streamConfig.frameRate = [streamSettings.framerate intValue];
+    streamConfig.bitRate = [streamSettings.bitrate intValue];
+    streamConfig.height = [streamSettings.height intValue];
+    streamConfig.width = [streamSettings.width intValue];
+    
+    [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+}
+
+- (void)revealController:(SWRevealViewController *)revealController didMoveToPosition:(FrontViewPosition)position {
+    // If we moved back to the center position, we should save the settings
+    if (position == FrontViewPositionLeft) {
+        [(SettingsViewController*)[revealController rearViewController] saveSettings];
     }
-    NSLog(@"StreamConfig: %@, %d, %dx%dx%d at %d Mbps", streamConfig.host, streamConfig.hostAddr, streamConfig.width, streamConfig.height, streamConfig.frameRate, streamConfig.bitRate);
-    [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
-    NSArray* streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
+    
+    // Change button color
+    _settingsSidebarButton.tintColor = [UIColor colorWithRed:.2 green:.9 blue:0.f alpha:1.f];
+    
+    // Set the side bar button action. When it's tapped, it'll show up the sidebar.
+    _settingsSidebarButton.target = self.revealViewController;
+    _settingsSidebarButton.action = @selector(revealToggle:);
+    
+    // Set the gesture
+    [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
+    
+    [self.revealViewController setDelegate:self];
+    
+    //NSArray* streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
     
     _opQueue = [[NSOperationQueue alloc] init];
     [CryptoManager generateKeyPairUsingSSl];
     _uniqueId = [CryptoManager getUniqueID];
     _cert = [CryptoManager readCertFromFile];
     
-    // Initialize the host picker list
+    // Only initialize the host picker list once
     if (hostList == nil) {
         hostList = [[NSMutableSet alloc] init];
     }
     
+    [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    
     hostScrollView = [[UIScrollView alloc] init];
-    hostScrollView.frame = CGRectMake(0, 0, self.view.frame.size.width, self.view.frame.size.height / 2);
+    hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
     [hostScrollView setShowsHorizontalScrollIndicator:NO];
-
+    
     appScrollView = [[UIScrollView alloc] init];
     appScrollView.frame = CGRectMake(0, hostScrollView.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
     [appScrollView setShowsHorizontalScrollIndicator:NO];
@@ -199,7 +200,8 @@ static StreamConfiguration* streamConfig;
 
 - (void)viewDidAppear:(BOOL)animated
 {
-	[super viewDidDisappear:animated];
+	[super viewDidAppear:animated];
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
     _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [_mDNSManager searchForHosts];
 }

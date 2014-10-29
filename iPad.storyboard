@@ -11,10 +11,20 @@
                     <view key="view" contentMode="scaleToFill" id="Icf-Kt-Ai7">
                         <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                        <subviews>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="xFJ-oz-Sim">
+                                <rect key="frame" x="16" y="20" width="34" height="34"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <state key="normal" backgroundImage="Settings">
+                                    <color key="titleShadowColor" white="0.5" alpha="1" colorSpace="calibratedWhite"/>
+                                </state>
+                            </button>
+                        </subviews>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
+                        <outlet property="settingsButton" destination="xFJ-oz-Sim" id="SqR-wJ-2Gg"/>
                         <segue destination="OIm-0n-i9v" kind="modal" identifier="createStreamFrame" modalPresentationStyle="fullScreen" id="MOD-9A-3Sk"/>
                     </connections>
                 </viewController>
@@ -60,6 +70,9 @@
             <point key="canvasLocation" x="1252" y="-312"/>
         </scene>
     </scenes>
+    <resources>
+        <image name="Settings" width="37" height="37"/>
+    </resources>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar" statusBarStyle="lightContent"/>
         <simulatedOrientationMetrics key="orientation"/>

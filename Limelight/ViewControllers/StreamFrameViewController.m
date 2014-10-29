@@ -25,6 +25,8 @@
 {
     [super viewDidLoad];
     
+    [self.navigationController setNavigationBarHidden:YES animated:YES];
+    
     [self.stageLabel setText:@"Starting App"];
     [self.stageLabel sizeToFit];
     self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.stageLabel.center.y);
@@ -45,9 +47,13 @@
                                                object:nil];
 }
 
+- (void) returnToMainFrame {
+    [self.navigationController popToRootViewControllerAnimated:YES];
+}
+
 - (void)applicationWillResignActive:(NSNotification *)notification {
     [_streamMan stopStream];
-    [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+    [self returnToMainFrame];
 }
 
 - (void) connectionStarted {
@@ -65,7 +71,7 @@
     
     UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection terminated unexpectedly" preferredStyle:UIAlertControllerStyleAlert];
     [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+        [self returnToMainFrame];
     }]];
     [self presentViewController:conTermAlert animated:YES completion:nil];
     
@@ -92,7 +98,7 @@
                                                                             stageName, errorCode]
                                                             preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+        [self returnToMainFrame];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
 }
@@ -102,7 +108,7 @@
                                                                    message:message
                                                             preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+        [self returnToMainFrame];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
 }
