@@ -408,7 +408,18 @@ static OSStatus playbackCallback(void *inRefCon,
 
 -(void) main
 {
-    LiStartConnection(_host, &_streamConfig, &_clCallbacks, &_drCallbacks, &_arCallbacks, NULL, 0);
+    PLATFORM_CALLBACKS dummyPlCallbacks;
+    
+    // Only used on Windows
+    dummyPlCallbacks.threadStart = NULL;
+    
+    LiStartConnection(_host,
+                      &_streamConfig,
+                      &_clCallbacks,
+                      &_drCallbacks,
+                      &_arCallbacks,
+                      &dummyPlCallbacks,
+                      NULL, 0);
 }
 
 
