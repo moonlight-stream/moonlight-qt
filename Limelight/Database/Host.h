@@ -1,5 +1,5 @@
 //
-//  Hosts.h
+//  Host.h
 //  Limelight
 //
 //  Created by Diego Waxemberg on 10/28/14.
@@ -10,7 +10,7 @@
 #import <CoreData/CoreData.h>
 
 
-@interface Hosts : NSManagedObject
+@interface Host : NSManagedObject
 
 @property (nonatomic, retain) NSString * address;
 @property (nonatomic, retain) NSString * name;

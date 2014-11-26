@@ -9,7 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "Settings.h"
 #import "AppDelegate.h"
-#import "Hosts.h"
+#import "Host.h"
 
 @interface DataManager : NSObject
 
@@ -17,6 +17,8 @@
 
 - (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width;
 - (Settings*) retrieveSettings;
-
+- (NSArray*) retrieveHosts;
+- (void) saveHosts;
+- (Host*) createHost:(NSString*)name  hostname:(NSString*)address;
 
 @end

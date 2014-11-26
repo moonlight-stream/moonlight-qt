@@ -50,7 +50,7 @@
 		FBD3494319FC9C04002D2A60 /* AppManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3494219FC9C04002D2A60 /* AppManager.m */; };
 		FBD3495019FF2174002D2A60 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3494F19FF2174002D2A60 /* SettingsViewController.m */; };
 		FBD3495319FF36FB002D2A60 /* SWRevealViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3495219FF36FB002D2A60 /* SWRevealViewController.m */; };
-		FBD3495B1A004411002D2A60 /* Hosts.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3495A1A004411002D2A60 /* Hosts.m */; };
+		FBD3495B1A004411002D2A60 /* Host.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3495A1A004411002D2A60 /* Host.m */; };
 		FBD3495E1A004412002D2A60 /* Settings.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3495D1A004412002D2A60 /* Settings.m */; };
 		FBD349621A0089F6002D2A60 /* DataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD349611A0089F6002D2A60 /* DataManager.m */; };
 		FBDE86E019F7A837001C18A8 /* UIComputerView.m in Sources */ = {isa = PBXBuildFile; fileRef = FBDE86DF19F7A837001C18A8 /* UIComputerView.m */; };
@@ -227,8 +227,8 @@
 		FBD3495119FF36FB002D2A60 /* SWRevealViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWRevealViewController.h; sourceTree = "<group>"; };
 		FBD3495219FF36FB002D2A60 /* SWRevealViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWRevealViewController.m; sourceTree = "<group>"; };
 		FBD349571A003F05002D2A60 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
-		FBD349591A004411002D2A60 /* Hosts.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Hosts.h; path = Database/Hosts.h; sourceTree = "<group>"; };
-		FBD3495A1A004411002D2A60 /* Hosts.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Hosts.m; path = Database/Hosts.m; sourceTree = "<group>"; };
+		FBD349591A004411002D2A60 /* Host.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Host.h; path = Database/Host.h; sourceTree = "<group>"; };
+		FBD3495A1A004411002D2A60 /* Host.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Host.m; path = Database/Host.m; sourceTree = "<group>"; };
 		FBD3495C1A004412002D2A60 /* Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Settings.h; path = Database/Settings.h; sourceTree = "<group>"; };
 		FBD3495D1A004412002D2A60 /* Settings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Settings.m; path = Database/Settings.m; sourceTree = "<group>"; };
 		FBD349601A0089F6002D2A60 /* DataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DataManager.h; path = Database/DataManager.h; sourceTree = "<group>"; };
@@ -620,8 +620,8 @@
 			children = (
 				FBD3495C1A004412002D2A60 /* Settings.h */,
 				FBD3495D1A004412002D2A60 /* Settings.m */,
-				FBD349591A004411002D2A60 /* Hosts.h */,
-				FBD3495A1A004411002D2A60 /* Hosts.m */,
+				FBD349591A004411002D2A60 /* Host.h */,
+				FBD3495A1A004411002D2A60 /* Host.m */,
 				FBD349601A0089F6002D2A60 /* DataManager.h */,
 				FBD349611A0089F6002D2A60 /* DataManager.m */,
 			);
@@ -763,7 +763,7 @@
 				FB89462C19F646E200339C8A /* HttpManager.m in Sources */,
 				FB89462D19F646E200339C8A /* MDNSManager.m in Sources */,
 				FB89462B19F646E200339C8A /* StreamView.m in Sources */,
-				FBD3495B1A004411002D2A60 /* Hosts.m in Sources */,
+				FBD3495B1A004411002D2A60 /* Host.m in Sources */,
 				FB89463519F646E200339C8A /* MainFrameViewController.m in Sources */,
 				FB89463619F646E200339C8A /* StreamFrameViewController.m in Sources */,
 				FB89462819F646E200339C8A /* CryptoManager.m in Sources */,

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="6252" systemVersion="14A388a" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
-    <entity name="Hosts" representedClassName="Hosts" syncable="YES">
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="6252" systemVersion="14C68k" minimumToolsVersion="Automatic" macOSVersion="Automatic" iOSVersion="Automatic">
+    <entity name="Host" representedClassName="Host" syncable="YES">
         <attribute name="address" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
     </entity>
@@ -11,7 +11,7 @@
         <attribute name="width" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
     </entity>
     <elements>
-        <element name="Hosts" positionX="-63" positionY="-18" width="128" height="75"/>
-        <element name="Settings" positionX="142" positionY="-36" width="128" height="103"/>
+        <element name="Host" positionX="0" positionY="0" width="0" height="0"/>
+        <element name="Settings" positionX="0" positionY="0" width="0" height="0"/>
     </elements>
 </model>

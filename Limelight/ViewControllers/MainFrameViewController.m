@@ -116,7 +116,9 @@ static StreamConfiguration* streamConfig;
         Computer* newHost = [[Computer alloc] initWithIp:host];
         [hostList addObject:newHost];
         [self updateHosts:[hostList allObjects]];
-        
+        DataManager* dataMan = [[DataManager alloc] init];
+        [dataMan createHost:newHost.displayName hostname:newHost.hostName];
+        [dataMan saveHosts];
         
         //TODO: get pair state
         
@@ -192,7 +194,8 @@ static StreamConfiguration* streamConfig;
     appScrollView = [[UIScrollView alloc] init];
     appScrollView.frame = CGRectMake(0, hostScrollView.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
     [appScrollView setShowsHorizontalScrollIndicator:NO];
-
+    
+    [self retrieveSavedHosts];
     [self updateHosts:[hostList allObjects]];
     [self.view addSubview:hostScrollView];
     [self.view addSubview:appScrollView];
@@ -200,7 +203,7 @@ static StreamConfiguration* streamConfig;
 
 - (void)viewDidAppear:(BOOL)animated
 {
-	[super viewDidAppear:animated];
+    [super viewDidAppear:animated];
     [self.navigationController setNavigationBarHidden:NO animated:YES];
     _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [_mDNSManager searchForHosts];
@@ -208,8 +211,20 @@ static StreamConfiguration* streamConfig;
 
 - (void)viewDidDisappear:(BOOL)animated
 {
-	[super viewDidDisappear:animated];
+    [super viewDidDisappear:animated];
     [_mDNSManager stopSearching];
+}
+
+- (void) retrieveSavedHosts {
+    //TODO: Get rid of Computer and only use Host
+    
+    DataManager* dataMan = [[DataManager alloc] init];
+    NSArray* hosts = [dataMan retrieveHosts];
+    for (Host* host in hosts) {
+        Computer* comp = [[Computer alloc] initWithIp:host.address];
+        comp.displayName = host.name;
+        [hostList addObject:comp];
+    }
 }
 
 - (void)updateHosts:(NSArray *)hosts {

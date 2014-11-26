@@ -15,7 +15,7 @@
 @implementation SettingsViewController {
     NSInteger _bitrate;
 }
-static NSString* bitrateFormat = @"Bitrate: %d bps";
+static NSString* bitrateFormat = @"Bitrate: %d kbps";
 
 
 - (void)viewDidLoad {

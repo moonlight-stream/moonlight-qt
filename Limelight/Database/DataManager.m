@@ -26,21 +26,20 @@ static NSInteger DEFAULT_WIDTH = 1280;
     settingsToSave.bitrate = [NSNumber numberWithInteger:bitrate];
     settingsToSave.height = [NSNumber numberWithInteger:height];
     settingsToSave.width = [NSNumber numberWithInteger:width];
-    [self saveSettings:settingsToSave];
+    NSError* error;
+    if (![[self.appDelegate managedObjectContext] save:&error]) {
+        NSLog(@"ERROR: Unable to save settings to database");
+    }
+    [self.appDelegate saveContext];
 }
 
 - (Settings*) retrieveSettings {
-    NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription* entity = [NSEntityDescription entityForName:@"Settings" inManagedObjectContext:[self.appDelegate managedObjectContext]];
-    [fetchRequest setEntity:entity];
-    [fetchRequest setAffectedStores:[NSArray arrayWithObjects:[[self.appDelegate persistentStoreCoordinator] persistentStoreForURL:[self.appDelegate getStoreURL]], nil]];
-    
-    NSError* error;
-    NSArray* fetchedRecords = [[self.appDelegate managedObjectContext] executeFetchRequest:fetchRequest error:&error];
-    
+    NSArray* fetchedRecords = [self fetchRecords:@"Settings"];
     if (fetchedRecords.count == 0) {
         // create a new settings object with the default values
+        NSEntityDescription* entity = [NSEntityDescription entityForName:@"Settings" inManagedObjectContext:[self.appDelegate managedObjectContext]];
         Settings* settings = [[Settings alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
+        
         settings.framerate = [NSNumber numberWithInteger:DEFAULT_FRAMERATE];
         settings.bitrate = [NSNumber numberWithInteger:DEFAULT_BITRATE];
         settings.height = [NSNumber numberWithInteger:DEFAULT_HEIGHT];
@@ -52,14 +51,40 @@ static NSInteger DEFAULT_WIDTH = 1280;
     }
 }
 
-- (void) saveSettings:(Settings*)settings {
+- (Host*) createHost:(NSString*)name  hostname:(NSString*)address {
+    NSEntityDescription* entity = [NSEntityDescription entityForName:@"Host" inManagedObjectContext:[self.appDelegate managedObjectContext]];
+    Host* host = [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
+    
+    host.name = name;
+    host.address = address;
+    return host;
+}
+
+- (void) saveHosts {
     NSError* error;
     if (![[self.appDelegate managedObjectContext] save:&error]) {
-        NSLog(@"ERROR: Unable to save settings to database");
+        NSLog(@"ERROR: Unable to save hosts to database");
     }
-    
     [self.appDelegate saveContext];
 }
 
+- (NSArray*) retrieveHosts {
+    return [self fetchRecords:@"Host"];
+}
+
+- (NSArray*) fetchRecords:(NSString*)entityName {
+    NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription* entity = [NSEntityDescription entityForName:entityName inManagedObjectContext:[self.appDelegate managedObjectContext]];
+    [fetchRequest setEntity:entity];
+    [fetchRequest setAffectedStores:[NSArray arrayWithObjects:[[self.appDelegate persistentStoreCoordinator] persistentStoreForURL:[self.appDelegate getStoreURL]], nil]];
+    
+    NSError* error;
+    NSArray* fetchedRecords = [[self.appDelegate managedObjectContext] executeFetchRequest:fetchRequest error:&error];
+    //TODO: handle errors
+    
+    return fetchedRecords;
+    
+}
 
 @end
+
