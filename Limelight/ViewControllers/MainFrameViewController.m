@@ -1,4 +1,3 @@
-//
 //  MainFrameViewController.m
 //  Limelight-iOS
 //
@@ -14,45 +13,30 @@
 #import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
 #import "Utils.h"
+#import "UIComputerView.h"
+#import "UIAppView.h"
+#import "App.h"
+#import "SettingsViewController.h"
+#import "DataManager.h"
+#import "Settings.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
     MDNSManager* _mDNSManager;
     Computer* _selectedHost;
+    NSString* _uniqueId;
+    NSData* _cert;
+    
     UIAlertView* _pairAlert;
+    UIScrollView* hostScrollView;
+    UIScrollView* appScrollView;
 }
+static NSString* deviceName = @"roth";
+static NSMutableSet* hostList;
 static StreamConfiguration* streamConfig;
 
 + (StreamConfiguration*) getStreamConfiguration {
     return streamConfig;
-}
-
-- (void)PairButton:(UIButton *)sender
-{
-    NSLog(@"Pair Button Pressed!");
-    if ([self.hostTextField.text length] > 0) {
-        _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
-        NSLog(@"Using custom host: %@", self.hostTextField.text);
-    }
-    
-    if (![self validatePcSelected]) {
-        NSLog(@"No valid PC selected");
-        return;
-    }
-    
-    [CryptoManager generateKeyPairUsingSSl];
-    NSString* uniqueId = [CryptoManager getUniqueID];
-    NSData* cert = [CryptoManager readCertFromFile];
-    
-    if ([Utils resolveHost:_selectedHost.hostName] == 0) {
-        [self displayDnsFailedDialog];
-        return;
-    }
-    
-    HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:uniqueId deviceName:@"roth" cert:cert];
-    PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:cert callback:self];
-
-    [_opQueue addOperation:pMan];
 }
 
 - (void)showPIN:(NSString *)PIN {
@@ -78,6 +62,26 @@ static StreamConfiguration* streamConfig;
     });
 }
 
+- (void)alreadyPaired {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
+        NSArray* appList = [HttpManager getAppListFromXML:appListResp];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self updateApps:appList];
+        });
+        [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
+    });
+}
+
+- (void) receivedAssetForApp:(App*)app {
+    NSArray* subviews = [appScrollView subviews];
+    for (UIAppView* appView in subviews) {
+        [appView updateAppImage];
+    }
+}
+
 - (void)displayDnsFailedDialog {
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Network Error"
                                                                    message:@"Failed to resolve host."
@@ -86,123 +90,121 @@ static StreamConfiguration* streamConfig;
     [self presentViewController:alert animated:YES completion:nil];
 }
 
-- (void)StreamButton:(UIButton *)sender
-{
-    NSLog(@"Stream Button Pressed!");
-    if ([self.hostTextField.text length] > 0) {
-        _selectedHost = [[Computer alloc] initWithIp:self.hostTextField.text];
-        NSLog(@"Using custom host: %@", self.hostTextField.text);
-    }
-    
-    if (![self validatePcSelected]) {
-        NSLog(@"No valid PC selected");
-        return;
-    }
-    
+- (void) hostClicked:(Computer *)computer {
+    NSLog(@"Clicked host: %@", computer.displayName);
+    _selectedHost = computer;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:computer.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+        if ([[HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"] isEqualToString:@"1"]) {
+            NSLog(@"Already Paired");
+            [self alreadyPaired];
+        } else {
+            NSLog(@"Trying to pair");
+            PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
+            [_opQueue addOperation:pMan];
+        }
+    });
+}
+
+- (void) addHostClicked {
+    NSLog(@"Clicked add host");
+    UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        NSString* host = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
+        Computer* newHost = [[Computer alloc] initWithIp:host];
+        [hostList addObject:newHost];
+        [self updateHosts:[hostList allObjects]];
+        DataManager* dataMan = [[DataManager alloc] init];
+        [dataMan createHost:newHost.displayName hostname:newHost.hostName];
+        [dataMan saveHosts];
+        
+        //TODO: get pair state
+        
+        
+    }]];
+    [alertController addTextFieldWithConfigurationHandler:nil];
+    [self presentViewController:alertController animated:YES completion:nil];
+}
+
+- (void) appClicked:(App *)app {
+    NSLog(@"Clicked app: %@", app.appName);
     streamConfig = [[StreamConfiguration alloc] init];
     streamConfig.host = _selectedHost.hostName;
     streamConfig.hostAddr = [Utils resolveHost:_selectedHost.hostName];
+    streamConfig.appID = app.appId;
     if (streamConfig.hostAddr == 0) {
         [self displayDnsFailedDialog];
         return;
     }
     
-    unsigned long selectedConf = [self.StreamConfigs selectedRowInComponent:0];
-    NSLog(@"selectedConf: %ld", selectedConf);
-    switch (selectedConf) {
-        case 0:
-            streamConfig.width = 1280;
-            streamConfig.height = 720;
-            streamConfig.frameRate = 30;
-            streamConfig.bitRate = 5000;
-            break;
-        default:
-        case 1:
-            streamConfig.width = 1280;
-            streamConfig.height = 720;
-            streamConfig.frameRate = 60;
-            streamConfig.bitRate = 10000;
-            break;
-        case 2:
-            streamConfig.width = 1920;
-            streamConfig.height = 1080;
-            streamConfig.frameRate = 30;
-            streamConfig.bitRate = 10000;
-            break;
-        case 3:
-            streamConfig.width = 1920;
-            streamConfig.height = 1080;
-            streamConfig.frameRate = 60;
-            streamConfig.bitRate = 20000;
-            break;
-    }
-    NSLog(@"StreamConfig: %@, %d, %dx%dx%d at %d Mbps", streamConfig.host, streamConfig.hostAddr, streamConfig.width, streamConfig.height, streamConfig.frameRate, streamConfig.bitRate);
-    [self performSegueWithIdentifier:@"createStreamFrame" sender:self];
-}
-
-- (NSString *)pickerView:(UIPickerView *)pickerView titleForRow:(NSInteger)row forComponent:(NSInteger)component
-{
-    if (pickerView == self.StreamConfigs) {
-        return [self.streamConfigVals objectAtIndex:row];
-    } else if (pickerView == self.HostPicker) {
-        return ((Computer*)([self.hostPickerVals objectAtIndex:row])).displayName;
-    } else {
-        return nil;
-    }
-}
-
-- (void)setSelectedHost:(NSInteger)selectedIndex
-{
-    _selectedHost = (Computer*)([self.hostPickerVals objectAtIndex:selectedIndex]);
-    if (_selectedHost.hostName == NULL) {
-        // This must be the placeholder computer
-        _selectedHost = NULL;
-    }
-}
-
-- (void)pickerView:(UIPickerView *)pickerView didSelectRow:(NSInteger)row inComponent:(NSInteger)component
-{
-    if (pickerView == self.HostPicker) {
-        [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
-    }
+    DataManager* dataMan = [[DataManager alloc] init];
+    Settings* streamSettings = [dataMan retrieveSettings];
     
-    //TODO: figure out how to save this info!!
+    streamConfig.frameRate = [streamSettings.framerate intValue];
+    streamConfig.bitRate = [streamSettings.bitrate intValue];
+    streamConfig.height = [streamSettings.height intValue];
+    streamConfig.width = [streamSettings.width intValue];
+    
+    [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
 }
 
-// returns the number of 'columns' to display.
-- (NSInteger)numberOfComponentsInPickerView:(UIPickerView *)pickerView
-{
-    return 1;
-}
-
-// returns the # of rows in each component..
-- (NSInteger)pickerView:(UIPickerView *)pickerView numberOfRowsInComponent:(NSInteger)component
-{
-    if (pickerView == self.StreamConfigs) {
-        return self.streamConfigVals.count;
-    } else if (pickerView == self.HostPicker) {
-        return self.hostPickerVals.count;
-    } else {
-        return 0;
+- (void)revealController:(SWRevealViewController *)revealController didMoveToPosition:(FrontViewPosition)position {
+    // If we moved back to the center position, we should save the settings
+    if (position == FrontViewPositionLeft) {
+        [(SettingsViewController*)[revealController rearViewController] saveSettings];
     }
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
-    self.streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
-    [self.StreamConfigs selectRow:1 inComponent:0 animated:NO];
+    
+    // Change button color
+    _settingsSidebarButton.tintColor = [UIColor colorWithRed:.2 green:.9 blue:0.f alpha:1.f];
+    
+    // Set the side bar button action. When it's tapped, it'll show up the sidebar.
+    _settingsSidebarButton.target = self.revealViewController;
+    _settingsSidebarButton.action = @selector(revealToggle:);
+    
+    // Set the gesture
+    [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
+    
+    [self.revealViewController setDelegate:self];
+    
+    //NSArray* streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
     
     _opQueue = [[NSOperationQueue alloc] init];
+    [CryptoManager generateKeyPairUsingSSl];
+    _uniqueId = [CryptoManager getUniqueID];
+    _cert = [CryptoManager readCertFromFile];
     
-    // Initialize the host picker list
-    [self updateHosts:[[NSArray alloc] init]];
+    // Only initialize the host picker list once
+    if (hostList == nil) {
+        hostList = [[NSMutableSet alloc] init];
+    }
+    
+    [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    
+    hostScrollView = [[UIScrollView alloc] init];
+    hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
+    [hostScrollView setShowsHorizontalScrollIndicator:NO];
+    
+    appScrollView = [[UIScrollView alloc] init];
+    appScrollView.frame = CGRectMake(0, hostScrollView.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
+    [appScrollView setShowsHorizontalScrollIndicator:NO];
+    
+    [self retrieveSavedHosts];
+    [self updateHosts:[hostList allObjects]];
+    [self.view addSubview:hostScrollView];
+    [self.view addSubview:appScrollView];
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
     _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [_mDNSManager searchForHosts];
 }
@@ -213,17 +215,69 @@ static StreamConfiguration* streamConfig;
     [_mDNSManager stopSearching];
 }
 
-- (void)updateHosts:(NSArray *)hosts {
-    NSMutableArray *hostPickerValues = [[NSMutableArray alloc] initWithArray:hosts];
+- (void) retrieveSavedHosts {
+    //TODO: Get rid of Computer and only use Host
     
-    if ([hostPickerValues count] == 0) {
-        [hostPickerValues addObject:[[Computer alloc] initPlaceholder]];
+    DataManager* dataMan = [[DataManager alloc] init];
+    NSArray* hosts = [dataMan retrieveHosts];
+    for (Host* host in hosts) {
+        Computer* comp = [[Computer alloc] initWithIp:host.address];
+        comp.displayName = host.name;
+        [hostList addObject:comp];
+    }
+}
+
+- (void)updateHosts:(NSArray *)hosts {
+    [hostList addObjectsFromArray:hosts];
+    [[hostScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    UIComputerView* addComp = [[UIComputerView alloc] initForAddWithCallback:self];
+    UIComputerView* compView;
+    float prevEdge = -1;
+    for (Computer* comp in hostList) {
+        compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
+        compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
+        prevEdge = compView.frame.origin.x + compView.frame.size.width;
+        [hostScrollView addSubview:compView];
     }
     
-    self.hostPickerVals = hostPickerValues;
-    [self.HostPicker reloadAllComponents];
+    prevEdge = [self getCompViewX:addComp addComp:addComp prevEdge:prevEdge];
+    addComp.center = CGPointMake(prevEdge, hostScrollView.frame.size.height / 2);
     
-    [self setSelectedHost:[self.HostPicker selectedRowInComponent:0]];
+    [hostScrollView addSubview:addComp];
+    [hostScrollView setContentSize:CGSizeMake(prevEdge + addComp.frame.size.width, hostScrollView.frame.size.height)];
+}
+
+- (float) getCompViewX:(UIComputerView*)comp addComp:(UIComputerView*)addComp prevEdge:(float)prevEdge {
+    if (prevEdge == -1) {
+        return hostScrollView.frame.origin.x + comp.frame.size.width / 2 + addComp.frame.size.width / 2;
+    } else {
+        return prevEdge + addComp.frame.size.width / 2  + comp.frame.size.width / 2;
+    }
+}
+
+- (void) updateApps:(NSArray*)apps {
+    [[appScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    App* fakeApp = [[App alloc] init];
+    fakeApp.appName = @"No App Name";
+    UIAppView* noAppImage = [[UIAppView alloc] initWithApp:fakeApp andCallback:nil];
+    float prevEdge = -1;
+    UIAppView* appView;
+    for (App* app in apps) {
+        appView = [[UIAppView alloc] initWithApp:app andCallback:self];
+        prevEdge = [self getAppViewX:appView noApp:noAppImage prevEdge:prevEdge];
+        appView.center = CGPointMake(prevEdge, appScrollView.frame.size.height / 2);
+        prevEdge = appView.frame.origin.x + appView.frame.size.width;
+        [appScrollView addSubview:appView];
+    }
+    [appScrollView setContentSize:CGSizeMake(prevEdge + noAppImage.frame.size.width, appScrollView.frame.size.height)];
+}
+
+- (float) getAppViewX:(UIAppView*)app noApp:(UIAppView*)noAppImage prevEdge:(float)prevEdge {
+    if (prevEdge == -1) {
+        return appScrollView.frame.origin.x + app.frame.size.width / 2 + noAppImage.frame.size.width / 2;
+    } else {
+        return prevEdge + app.frame.size.width / 2 + noAppImage.frame.size.width / 2;
+    }
 }
 
 - (BOOL)validatePcSelected {
@@ -256,23 +310,5 @@ static StreamConfiguration* streamConfig;
 
 - (BOOL)shouldAutorotate {
     return YES;
-}
-
-- (NSUInteger)supportedInterfaceOrientations {
-    NSString *deviceType = [UIDevice currentDevice].model;
-    if ([deviceType containsString:@"iPhone"] || [deviceType containsString:@"iPod"]) {
-        return UIInterfaceOrientationMaskPortrait | UIInterfaceOrientationMaskPortraitUpsideDown;
-    } else {
-        return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
-    }
-}
-
-- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
-    NSString *deviceType = [UIDevice currentDevice].model;
-    if ([deviceType containsString:@"iPhone"] || [deviceType containsString:@"iPod"]) {
-        return UIInterfaceOrientationPortrait;
-    } else {
-        return UIInterfaceOrientationLandscapeRight;
-    }
 }
 @end

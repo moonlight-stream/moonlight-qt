@@ -100,7 +100,7 @@ static NSOperationQueue* mainQueue;
         return _persistentStoreCoordinator;
     }
     
-    NSURL *storeURL = [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Limelight_iOS.sqlite"];
+    NSURL *storeURL = [self getStoreURL];
     
     NSError *error = nil;
     _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
@@ -141,6 +141,10 @@ static NSOperationQueue* mainQueue;
 - (NSURL *)applicationDocumentsDirectory
 {
     return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
+}
+
+- (NSURL*) getStoreURL {
+    return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Limelight_iOS.sqlite"];
 }
 
 @end

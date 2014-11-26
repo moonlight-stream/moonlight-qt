@@ -28,13 +28,4 @@
     return self;
 }
 
-- (id) initPlaceholder {
-    self = [super init];
-    
-    self.hostName = NULL;
-    self.displayName = @"No computers found";
-    
-    return self;
-}
-
 @end

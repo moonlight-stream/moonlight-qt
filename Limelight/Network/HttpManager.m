@@ -8,6 +8,7 @@
 
 #import "HttpManager.h"
 #import "CryptoManager.h"
+#import "App.h"
 
 #include <libxml2/libxml/xmlreader.h>
 #include <string.h>
@@ -24,6 +25,60 @@
 }
 
 static const NSString* PORT = @"47984";
+
++ (NSArray*) getAppListFromXML:(NSData*)xml {
+    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
+    
+    if (docPtr == NULL) {
+        NSLog(@"ERROR: An error occured trying to parse xml.");
+        return NULL;
+    }
+
+    xmlNodePtr node;
+    xmlNodePtr rootNode = node = xmlDocGetRootElement(docPtr);
+    
+    // Check root status_code
+    if (![HttpManager verifyStatus: rootNode]) {
+        NSLog(@"ERROR: Request returned with failure status");
+        return NULL;
+    }
+    
+    // Skip the root node
+    node = node->children;
+    
+    NSMutableArray* appList = [[NSMutableArray alloc] init];
+    
+    while (node != NULL) {
+        NSLog(@"node: %s", node->name);
+        if (!xmlStrcmp(node->name, (const xmlChar*)"App")) {
+            xmlNodePtr appInfoNode = node->xmlChildrenNode;
+            NSString* appName;
+            NSString* appId;
+            while (appInfoNode != NULL) {
+                NSLog(@"appInfoNode: %s", appInfoNode->name);
+                if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"AppTitle")) {
+                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
+                    appName = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+                    xmlFree(nodeVal);
+                } else if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"ID")) {
+                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
+                    appId = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+                    xmlFree(nodeVal);
+                }
+                appInfoNode = appInfoNode->next;
+            }
+            App* app = [[App alloc] init];
+            app.appName = appName;
+            app.appId = appId;
+            [appList addObject:app];
+        }
+        node = node->next;
+    }
+    xmlFree(rootNode);
+    xmlFree(docPtr);
+    
+    return appList;
+}
 
 + (NSString*) getStatusStringFromXML:(NSData*)xml {
     xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
@@ -198,6 +253,11 @@ static const NSString* PORT = @"47984";
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 
+- (NSURLRequest*) newAppAssetRequestWithAppId:(NSString *)appId {
+    NSString* urlString = [NSString stringWithFormat:@"%@/appasset?uniqueid=%@&appid=%@&AssetType=2&AssetIdx=0", _baseURL, _uniqueId, appId];
+    return [self createRequestFromString:urlString enableTimeout:FALSE];
+}
+
 - (NSString*) bytesToHex:(NSData*)data {
     const unsigned char* bytes = [data bytes];
     NSMutableString *hex = [[NSMutableString alloc] init];
@@ -217,7 +277,11 @@ static const NSString* PORT = @"47984";
 }
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    _requestResp = [HttpManager fixXmlVersion:_respData];
+    if ([[NSString alloc] initWithData:_respData encoding:NSUTF8StringEncoding] != nil) {
+        _requestResp = [HttpManager fixXmlVersion:_respData];
+    } else {
+        _requestResp = _respData;
+    }
     dispatch_semaphore_signal(_requestLock);
 }
 

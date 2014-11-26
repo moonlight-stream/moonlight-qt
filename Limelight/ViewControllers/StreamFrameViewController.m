@@ -25,7 +25,11 @@
 {
     [super viewDidLoad];
     
+    [self.navigationController setNavigationBarHidden:YES animated:YES];
+    
     [self.stageLabel setText:@"Starting App"];
+    [self.stageLabel sizeToFit];
+    self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.stageLabel.center.y);
     
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
@@ -43,9 +47,13 @@
                                                object:nil];
 }
 
+- (void) returnToMainFrame {
+    [self.navigationController popToRootViewControllerAnimated:YES];
+}
+
 - (void)applicationWillResignActive:(NSNotification *)notification {
     [_streamMan stopStream];
-    [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+    [self returnToMainFrame];
 }
 
 - (void) connectionStarted {
@@ -53,6 +61,8 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.spinner stopAnimating];
         [self.stageLabel setText:@"Waiting for first frame..."];
+        [self.stageLabel sizeToFit];
+        self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.stageLabel.center.y);
     });
 }
 
@@ -61,7 +71,7 @@
     
     UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection terminated unexpectedly" preferredStyle:UIAlertControllerStyleAlert];
     [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+        [self returnToMainFrame];
     }]];
     [self presentViewController:conTermAlert animated:YES completion:nil];
     
@@ -74,6 +84,8 @@
         NSString* lowerCase = [NSString stringWithFormat:@"%s in progress...", stageName];
         NSString* titleCase = [[[lowerCase substringToIndex:1] uppercaseString] stringByAppendingString:[lowerCase substringFromIndex:1]];
         [self.stageLabel setText:titleCase];
+        [self.stageLabel sizeToFit];
+        self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.stageLabel.center.y);
     });
 }
 
@@ -86,7 +98,7 @@
                                                                             stageName, errorCode]
                                                             preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+        [self returnToMainFrame];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
 }
@@ -96,7 +108,7 @@
                                                                    message:message
                                                             preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self performSegueWithIdentifier:@"returnToMainFrame" sender:self];
+        [self returnToMainFrame];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
 }
@@ -118,13 +130,4 @@
 - (BOOL)shouldAutorotate {
     return YES;
 }
-
-- (NSUInteger)supportedInterfaceOrientations {
-    return UIInterfaceOrientationMaskLandscapeLeft | UIInterfaceOrientationMaskLandscapeRight;
-}
-
-- (UIInterfaceOrientation)preferredInterfaceOrientationForPresentation {
-    return UIInterfaceOrientationLandscapeRight;
-}
-
 @end

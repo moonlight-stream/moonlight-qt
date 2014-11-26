@@ -14,6 +14,7 @@
 - (void) showPIN:(NSString*)PIN;
 - (void) pairSuccessful;
 - (void) pairFailed:(NSString*)message;
+- (void) alreadyPaired;
 
 @end
 
