@@ -30,6 +30,8 @@
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
     UIScrollView* appScrollView;
+    
+    int currentPosition;
 }
 static NSString* deviceName = @"roth";
 static NSMutableSet* hostList;
@@ -147,6 +149,10 @@ static StreamConfiguration* streamConfig;
     streamConfig.height = [streamSettings.height intValue];
     streamConfig.width = [streamSettings.width intValue];
     
+    
+    if (currentPosition != FrontViewPositionLeft) {
+        [[self revealViewController] revealToggle:self];
+    }
     [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
 }
 
@@ -155,6 +161,7 @@ static StreamConfiguration* streamConfig;
     if (position == FrontViewPositionLeft) {
         [(SettingsViewController*)[revealController rearViewController] saveSettings];
     }
+    currentPosition = position;
 }
 
 - (void)viewDidLoad
@@ -173,7 +180,8 @@ static StreamConfiguration* streamConfig;
     
     [self.revealViewController setDelegate:self];
     
-    //NSArray* streamConfigVals = [[NSArray alloc] initWithObjects:@"1280x720 (30Hz)", @"1280x720 (60Hz)", @"1920x1080 (30Hz)", @"1920x1080 (60Hz)",nil];
+    // Set the current position to the center
+    currentPosition = FrontViewPositionLeft;
     
     _opQueue = [[NSOperationQueue alloc] init];
     [CryptoManager generateKeyPairUsingSSl];
