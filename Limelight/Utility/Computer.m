@@ -28,4 +28,20 @@
     return self;
 }
 
+- (BOOL)isEqual:(id)object {
+    if ([object isKindOfClass:[Computer class]]) {
+        return [self.hostName isEqual:[object valueForKey:@"hostName"]];
+    } else {
+        return NO;
+    }
+}
+
+- (NSUInteger)hash {
+    NSUInteger prime = 31;
+    NSUInteger result = 1;
+    result = prime * result + (self.hostName == nil ? 0 : [self.hostName hash]);
+    
+    return result;
+}
+
 @end

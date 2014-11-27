@@ -171,18 +171,20 @@ static StreamConfiguration* streamConfig;
     // Change button color
     _settingsSidebarButton.tintColor = [UIColor colorWithRed:.2 green:.9 blue:0.f alpha:1.f];
     
-    // Set the side bar button action. When it's tapped, it'll show up the sidebar.
+    // Set the side bar button action. When it's tapped, it'll show the sidebar.
     _settingsSidebarButton.target = self.revealViewController;
     _settingsSidebarButton.action = @selector(revealToggle:);
     
     // Set the gesture
     [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
     
+    // Get callbacks associated with the viewController
     [self.revealViewController setDelegate:self];
     
     // Set the current position to the center
     currentPosition = FrontViewPositionLeft;
     
+    // Set up crypto
     _opQueue = [[NSOperationQueue alloc] init];
     [CryptoManager generateKeyPairUsingSSl];
     _uniqueId = [CryptoManager getUniqueID];
