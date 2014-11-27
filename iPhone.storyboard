@@ -132,7 +132,7 @@
         <scene sceneID="5Eb-q2-vjt">
             <objects>
                 <viewController id="mI3-9F-XwU" customClass="StreamFrameViewController" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="eir-e9-IPE" customClass="StreamView">
+                    <view key="view" multipleTouchEnabled="YES" contentMode="scaleToFill" id="eir-e9-IPE" customClass="StreamView">
                         <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                         <subviews>
@@ -166,7 +166,7 @@
         </scene>
     </scenes>
     <resources>
-        <image name="Settings" width="17" height="17"/>
+        <image name="Settings" width="25" height="25"/>
     </resources>
     <simulatedMetricsContainer key="defaultSimulatedMetrics">
         <simulatedStatusBarMetrics key="statusBar"/>
