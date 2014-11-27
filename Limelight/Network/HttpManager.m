@@ -150,9 +150,10 @@ static const NSString* PORT = @"47984";
 }
 
 + (NSData*) fixXmlVersion:(NSData*) xmlData {
-    NSString* xmlString = [[[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding] stringByReplacingOccurrencesOfString:@"UTF-16" withString:@"UTF-8" options:NSCaseInsensitiveSearch range:NSMakeRange(0, [xmlData length])];
-    //NSLog(@"xmlString: %@", xmlString);
-    return [NSData dataWithBytes:[xmlString UTF8String] length:[xmlString length]];
+    NSString* dataString = [[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding];
+    NSString* xmlString = [dataString stringByReplacingOccurrencesOfString:@"UTF-16" withString:@"UTF-8" options:NSCaseInsensitiveSearch range:NSMakeRange(0, [dataString length])];
+    
+    return [xmlString dataUsingEncoding:NSUTF8StringEncoding];
 }
 
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert {
@@ -272,7 +273,7 @@ static const NSString* PORT = @"47984";
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    NSLog(@"Received data: %@", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+    NSLog(@"\n\nReceived data: %@\n\n", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
     [_respData appendData:data];
 }
 
