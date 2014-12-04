@@ -35,7 +35,7 @@
                         </connections>
                     </collectionView>
                     <navigationItem key="navigationItem" id="pSu-bl-gL9">
-                        <barButtonItem key="leftBarButtonItem" style="plain" id="mSL-ru-nRm">
+                        <barButtonItem key="leftBarButtonItem" style="done" id="mSL-ru-nRm">
                             <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="Tiq-VS-Ua5">
                                 <rect key="frame" x="101" y="236" width="109" height="46"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>

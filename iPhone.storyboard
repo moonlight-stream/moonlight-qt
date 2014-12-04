@@ -36,7 +36,7 @@
                     </collectionView>
                     <toolbarItems/>
                     <navigationItem key="navigationItem" id="1jn-Sf-Xky">
-                        <barButtonItem key="leftBarButtonItem" style="plain" id="zAn-CM-7Yz">
+                        <barButtonItem key="leftBarButtonItem" style="done" id="zAn-CM-7Yz">
                             <button key="customView" opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="pZ9-ft-T24">
                                 <rect key="frame" x="0.0" y="0.0" width="109" height="46"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
