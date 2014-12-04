@@ -17,6 +17,7 @@
 
 @interface MainFrameViewController : UICollectionViewController <MDNSCallback, PairCallback, HostCallback, AppCallback, AppAssetCallback, NSURLConnectionDelegate, SWRevealViewControllerDelegate>
 @property (strong, nonatomic) IBOutlet UIButton *limelightLogoButton;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *computerNameButton;
 
 + (StreamConfiguration*) getStreamConfiguration;
 

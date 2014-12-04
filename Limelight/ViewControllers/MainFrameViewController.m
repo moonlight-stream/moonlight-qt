@@ -70,9 +70,17 @@ static StreamConfiguration* streamConfig;
         appList = [HttpManager getAppListFromXML:appListResp];
         dispatch_async(dispatch_get_main_queue(), ^{
             [self updateApps];
+            _computerNameButton.title = _selectedHost.displayName;
         });
         [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
     });
+}
+
+- (void)showHostSelectionView {
+    appList = [[NSArray alloc] init];
+    _computerNameButton.title = @"";
+    [self.collectionView reloadData];
+    [self.view addSubview:hostScrollView];
 }
 
 - (void) receivedAssetForApp:(App*)app {
@@ -160,6 +168,10 @@ static StreamConfiguration* streamConfig;
     
     // Set the side bar button action. When it's tapped, it'll show up the sidebar.
     [_limelightLogoButton addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
+    
+    // Set the host name button action. When it's tapped, it'll show up the host selection view.
+    [_computerNameButton setTarget:self];
+    [_computerNameButton setAction:@selector(showHostSelectionView)];
     
     // Set the gesture
     [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];

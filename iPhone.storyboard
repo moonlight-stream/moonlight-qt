@@ -47,9 +47,13 @@
                                 </state>
                             </button>
                         </barButtonItem>
+                        <barButtonItem key="rightBarButtonItem" id="L1H-n4-HB7">
+                            <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        </barButtonItem>
                     </navigationItem>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
+                        <outlet property="computerNameButton" destination="L1H-n4-HB7" id="bng-Ky-oQs"/>
                         <outlet property="limelightLogoButton" destination="pZ9-ft-T24" id="yRw-rK-9lQ"/>
                         <segue destination="mI3-9F-XwU" kind="push" identifier="createStreamFrame" id="Vgc-B6-lvM"/>
                     </connections>
