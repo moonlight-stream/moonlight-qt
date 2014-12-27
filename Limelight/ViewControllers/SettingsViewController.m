@@ -48,8 +48,8 @@ static NSString* bitrateFormat = @"Bitrate: %d kbps";
     NSInteger width;
     if ([self.resolutionSelector selectedSegmentIndex] == 2) {
         // Get screen native resolution
-        height = [UIScreen mainScreen].bounds.size.height;
-        width = [UIScreen mainScreen].bounds.size.width;
+        height = [UIScreen mainScreen].bounds.size.height * [UIScreen mainScreen].scale;
+        width = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
         
         UIAlertView *alertResolution = [[UIAlertView alloc] initWithTitle:@"Native resolution"
                                                         message:[NSString stringWithFormat:@"You must select the following resolution in the game settings : %lix%li", (long)width, (long)height]
