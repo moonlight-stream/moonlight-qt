@@ -15,7 +15,7 @@
 
 @property (strong, nonatomic) AppDelegate* appDelegate;
 
-- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width;
+- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls;
 - (Settings*) retrieveSettings;
 - (NSArray*) retrieveHosts;
 - (void) saveHosts;

@@ -21,7 +21,9 @@
     CALayer* _downButton;
     CALayer* _leftButton;
     CALayer* _rightButton;
+    CALayer* _leftStickBackground;
     CALayer* _leftStick;
+    CALayer* _rightStickBackground;
     CALayer* _rightStick;
     CALayer* _startButton;
     CALayer* _selectButton;
@@ -34,12 +36,12 @@
     short leftStickX, leftStickY;
     short rightStickX, rightStickY;
     char leftTrigger, rightTrigger;
-
-    UITouch* lsTouch;
-    UITouch* rsTouch;
-
+    
+    UITouch* _lsTouch;
+    UITouch* _rsTouch;
+    
     UIView* _view;
-    BOOL shouldDrawControls;
+    OnScreenControlsLevel _level;
 }
 
 static const float BUTTON_SIZE = 50;
@@ -85,8 +87,7 @@ static float L2_Y;
 - (id) initWithView:(UIView*)view {
     self = [self init];
     _view = view;
-    shouldDrawControls = YES;
-
+    
     D_PAD_CENTER_X = _view.frame.size.width * .15;
     D_PAD_CENTER_Y = _view.frame.size.height * .55;
     BUTTON_CENTER_X = _view.frame.size.width * .85;
@@ -110,94 +111,133 @@ static float L2_Y;
     R1_Y = _view.frame.size.height * .25;
     R2_X = _view.frame.size.width * .85;
     R2_Y = _view.frame.size.height * .1;
+    
+    _aButton = [CALayer layer];
+    _bButton = [CALayer layer];
+    _xButton = [CALayer layer];
+    _yButton = [CALayer layer];
+    _upButton = [CALayer layer];
+    _downButton = [CALayer layer];
+    _leftButton = [CALayer layer];
+    _rightButton = [CALayer layer];
+    _l1Button = [CALayer layer];
+    _r1Button = [CALayer layer];
+    _l2Button = [CALayer layer];
+    _r2Button = [CALayer layer];
+    _startButton = [CALayer layer];
+    _selectButton = [CALayer layer];
+    _leftStickBackground = [CALayer layer];
+    _rightStickBackground = [CALayer layer];
+    _leftStick = [CALayer layer];
+    _rightStick = [CALayer layer];
 
-    [self drawButtons];
-    [self drawSticks];
     return self;
+}
+
+- (void) setLevel:(OnScreenControlsLevel)level {
+    _level = level;
+    [self updateControls];
+}
+
+- (void) updateControls {
+    switch (_level) {
+        case OnScreenControlsLevelOff:
+            [self hideButtons];
+            [self hideBumpers];
+            [self hideTriggers];
+            [self hideStartSelect];
+            [self hideSticks];
+            break;
+        case OnScreenControlsLevelSimple:
+            [self drawTriggers];
+            [self drawStartSelect];
+            [self hideButtons];
+            [self hideBumpers];
+            [self hideSticks];
+            break;
+        case OnScreenControlsLevelFull:
+            [self drawButtons];
+            [self drawStartSelect];
+            [self drawBumpers];
+            [self drawTriggers];
+            [self drawSticks];
+            break;
+    }
 }
 
 - (void) drawButtons {
     // create A button
-    _aButton = [CALayer layer];
     _aButton.contents = (id) [UIImage imageNamed:@"AButton"].CGImage;
     _aButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_SIZE / 2, BUTTON_CENTER_Y + BUTTON_DIST, BUTTON_SIZE, BUTTON_SIZE);
-
     [_view.layer addSublayer:_aButton];
 
     // create B button
-    _bButton = [CALayer layer];
     _bButton.frame = CGRectMake(BUTTON_CENTER_X + BUTTON_DIST, BUTTON_CENTER_Y - BUTTON_SIZE / 2, BUTTON_SIZE, BUTTON_SIZE);
     _bButton.contents = (id) [UIImage imageNamed:@"BButton"].CGImage;
     [_view.layer addSublayer:_bButton];
 
     // create X Button
-    _xButton = [CALayer layer];
     _xButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_DIST - BUTTON_SIZE, BUTTON_CENTER_Y - BUTTON_SIZE / 2, BUTTON_SIZE, BUTTON_SIZE);
     _xButton.contents = (id) [UIImage imageNamed:@"XButton"].CGImage;
     [_view.layer addSublayer:_xButton];
 
     // create Y Button
-    _yButton = [CALayer layer];
     _yButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_SIZE / 2, BUTTON_CENTER_Y - BUTTON_DIST - BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE);
     _yButton.contents = (id) [UIImage imageNamed:@"YButton"].CGImage;
     [_view.layer addSublayer:_yButton];
 
     // create Down button
-    _downButton = [CALayer layer];
     _downButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_SHORT / 2, D_PAD_CENTER_Y + D_PAD_DIST, D_PAD_SHORT, D_PAD_LONG);
     _downButton.contents = (id) [UIImage imageNamed:@"DownButton"].CGImage;
     [_view.layer addSublayer:_downButton];
 
     // create Right button
-    _rightButton = [CALayer layer];
     _rightButton.frame = CGRectMake(D_PAD_CENTER_X + D_PAD_DIST, D_PAD_CENTER_Y - D_PAD_SHORT / 2, D_PAD_LONG, D_PAD_SHORT);
     _rightButton.contents = (id) [UIImage imageNamed:@"RightButton"].CGImage;
     [_view.layer addSublayer:_rightButton];
 
     // create Up button
-    _upButton = [CALayer layer];
     _upButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_SHORT / 2, D_PAD_CENTER_Y - D_PAD_DIST - D_PAD_LONG, D_PAD_SHORT, D_PAD_LONG);
     _upButton.contents = (id) [UIImage imageNamed:@"UpButton"].CGImage;
     [_view.layer addSublayer:_upButton];
 
     // create Left button
-    _leftButton = [CALayer layer];
     _leftButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_DIST - D_PAD_LONG, D_PAD_CENTER_Y - D_PAD_SHORT / 2, D_PAD_LONG, D_PAD_SHORT);
     _leftButton.contents = (id) [UIImage imageNamed:@"LeftButton"].CGImage;
     [_view.layer addSublayer:_leftButton];
+}
 
+- (void) drawStartSelect {
     // create Start button
-    _startButton = [CALayer layer];
     _startButton.frame = CGRectMake(START_X - START_WIDTH / 2, START_Y - START_HEIGHT / 2, START_WIDTH, START_HEIGHT);
     _startButton.contents = (id) [UIImage imageNamed:@"StartButton"].CGImage;
     [_view.layer addSublayer:_startButton];
 
     // create Select button
-    _selectButton = [CALayer layer];
     _selectButton.frame = CGRectMake(SELECT_X - SELECT_WIDTH / 2, SELECT_Y - SELECT_HEIGHT / 2, SELECT_WIDTH, SELECT_HEIGHT);
     _selectButton.contents = (id) [UIImage imageNamed:@"SelectButton"].CGImage;
     [_view.layer addSublayer:_selectButton];
+}
 
+- (void) drawBumpers {
     // create L1 button
-    _l1Button = [CALayer layer];
     _l1Button.frame = CGRectMake(L1_X - BUMPER_SIZE / 2, L1_Y - BUMPER_SIZE / 2, BUMPER_SIZE, BUMPER_SIZE);
     _l1Button.contents = (id) [UIImage imageNamed:@"L1"].CGImage;
     [_view.layer addSublayer:_l1Button];
-
-    // create L2 button
-    _l2Button = [CALayer layer];
-    _l2Button.frame = CGRectMake(L2_X - TRIGGER_SIZE / 2, L2_Y - TRIGGER_SIZE / 2, TRIGGER_SIZE, TRIGGER_SIZE);
-    _l2Button.contents = (id) [UIImage imageNamed:@"L2"].CGImage;
-    [_view.layer addSublayer:_l2Button];
-
+    
     // create R1 button
-    _r1Button = [CALayer layer];
     _r1Button.frame = CGRectMake(R1_X - BUMPER_SIZE / 2, R1_Y - BUMPER_SIZE / 2, BUMPER_SIZE, BUMPER_SIZE);
     _r1Button.contents = (id) [UIImage imageNamed:@"R1"].CGImage;
     [_view.layer addSublayer:_r1Button];
+}
 
+- (void) drawTriggers {
+    // create L2 button
+    _l2Button.frame = CGRectMake(L2_X - TRIGGER_SIZE / 2, L2_Y - TRIGGER_SIZE / 2, TRIGGER_SIZE, TRIGGER_SIZE);
+    _l2Button.contents = (id) [UIImage imageNamed:@"L2"].CGImage;
+    [_view.layer addSublayer:_l2Button];
+    
     // create R2 button
-    _r2Button = [CALayer layer];
     _r2Button.frame = CGRectMake(R2_X - TRIGGER_SIZE / 2, R2_Y - TRIGGER_SIZE / 2, TRIGGER_SIZE, TRIGGER_SIZE);
     _r2Button.contents = (id) [UIImage imageNamed:@"R2"].CGImage;
     [_view.layer addSublayer:_r2Button];
@@ -205,26 +245,57 @@ static float L2_Y;
 
 - (void) drawSticks {
     // create left analog stick
-    CALayer* leftStickBackground = [CALayer layer];
-    leftStickBackground.frame = CGRectMake(LS_CENTER_X - STICK_OUTER_SIZE / 2, LS_CENTER_Y - STICK_OUTER_SIZE / 2, STICK_OUTER_SIZE, STICK_OUTER_SIZE);
-    leftStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
-    [_view.layer addSublayer:leftStickBackground];
-
+    _leftStickBackground.frame = CGRectMake(LS_CENTER_X - STICK_OUTER_SIZE / 2, LS_CENTER_Y - STICK_OUTER_SIZE / 2, STICK_OUTER_SIZE, STICK_OUTER_SIZE);
+    _leftStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
+    [_view.layer addSublayer:_leftStickBackground];
+    
     _leftStick = [CALayer layer];
     _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
     _leftStick.contents = (id) [UIImage imageNamed:@"StickInner"].CGImage;
     [_view.layer addSublayer:_leftStick];
 
     // create right analog stick
-    CALayer* rightStickBackground = [CALayer layer];
-    rightStickBackground.frame = CGRectMake(RS_CENTER_X - STICK_OUTER_SIZE / 2, RS_CENTER_Y - STICK_OUTER_SIZE / 2, STICK_OUTER_SIZE, STICK_OUTER_SIZE);
-    rightStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
-    [_view.layer addSublayer:rightStickBackground];
-
+    _rightStickBackground.frame = CGRectMake(RS_CENTER_X - STICK_OUTER_SIZE / 2, RS_CENTER_Y - STICK_OUTER_SIZE / 2, STICK_OUTER_SIZE, STICK_OUTER_SIZE);
+    _rightStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
+    [_view.layer addSublayer:_rightStickBackground];
+    
     _rightStick = [CALayer layer];
     _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
     _rightStick.contents = (id) [UIImage imageNamed:@"StickInner"].CGImage;
     [_view.layer addSublayer:_rightStick];
+}
+
+- (void) hideButtons {
+    [_aButton removeFromSuperlayer];
+    [_bButton removeFromSuperlayer];
+    [_xButton removeFromSuperlayer];
+    [_yButton removeFromSuperlayer];
+    [_upButton removeFromSuperlayer];
+    [_downButton removeFromSuperlayer];
+    [_leftButton removeFromSuperlayer];
+    [_rightButton removeFromSuperlayer];
+}
+
+- (void) hideStartSelect {
+    [_startButton removeFromSuperlayer];
+    [_selectButton removeFromSuperlayer];
+}
+
+- (void) hideBumpers {
+    [_l1Button removeFromSuperlayer];
+    [_r1Button removeFromSuperlayer];
+}
+
+- (void) hideTriggers {
+    [_l2Button removeFromSuperlayer];
+    [_r2Button removeFromSuperlayer];
+}
+
+- (void) hideSticks {
+    [_leftStickBackground removeFromSuperlayer];
+    [_rightStickBackground removeFromSuperlayer];
+    [_leftStick removeFromSuperlayer];
+    [_rightStick removeFromSuperlayer];
 }
 
 - (void) handleTouchMovedEvent:(UIEvent*)event {
@@ -241,7 +312,7 @@ static float L2_Y;
         CGPoint touchLocation = [touch locationInView:_view];
         float xLoc = touchLocation.x - STICK_INNER_SIZE / 2;
         float yLoc = touchLocation.y - STICK_INNER_SIZE / 2;
-        if (touch == lsTouch) {
+        if (touch == _lsTouch) {
             if (xLoc > lsMaxX) xLoc = lsMaxX;
             if (xLoc < lsMinX) xLoc = lsMinX;
             if (yLoc > lsMaxY) yLoc = lsMaxY;
@@ -251,8 +322,8 @@ static float L2_Y;
 
             leftStickX = 0x7FFE * (xLoc - LS_CENTER_X) / (lsMaxX - LS_CENTER_X);
             leftStickY = 0x7FFE * (yLoc - LS_CENTER_Y) / (lsMaxY - LS_CENTER_Y);
-
-        } else if (touch == rsTouch) {
+            
+        } else if (touch == _rsTouch) {
             if (xLoc > rsMaxX) xLoc = rsMaxX;
             if (xLoc < rsMinX) xLoc = rsMinX;
             if (yLoc > rsMaxY) yLoc = rsMaxY;
@@ -301,9 +372,9 @@ static float L2_Y;
         } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
             rightTrigger = 1 * 0xFF;
         } else if ([_leftStick.presentationLayer hitTest:touchLocation]) {
-            lsTouch = touch;
+            _lsTouch = touch;
         } else if ([_rightStick.presentationLayer hitTest:touchLocation]) {
-            rsTouch = touch;
+            _rsTouch = touch;
         }
     }
     LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
@@ -344,9 +415,9 @@ static float L2_Y;
         } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
             rightTrigger = 0 * 0xFF;
         }
-        if (touch == lsTouch) {
+        if (touch == _lsTouch) {
             _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
-        } else if (touch == rsTouch) {
+        } else if (touch == _rsTouch) {
             _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
         }
     }

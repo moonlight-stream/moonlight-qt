@@ -90,19 +90,19 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="10000" minValue="0.0" maxValue="50000" id="3nn-MI-9Xu">
-                                <rect key="frame" x="14" y="72" width="204" height="31"/>
+                                <rect key="frame" x="14" y="49" width="204" height="31"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="tintColor" red="0.39215686274509803" green="0.9137254901960784" blue="0.17254901960784313" alpha="1" colorSpace="calibratedRGB"/>
                             </slider>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bitrate: 10000 kbps" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="SBv-Wn-LB7">
-                                <rect key="frame" x="17" y="43" width="151" height="21"/>
+                                <rect key="frame" x="16" y="20" width="151" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="1" id="dLF-qJ-2nY">
-                                <rect key="frame" x="16" y="156" width="200" height="29"/>
+                                <rect key="frame" x="16" y="116" width="200" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="30 Hz"/>
@@ -110,22 +110,22 @@
                                 </segments>
                                 <color key="tintColor" red="0.39215686274509803" green="0.9137254901960784" blue="0.17254901960784313" alpha="1" colorSpace="calibratedRGB"/>
                             </segmentedControl>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Framerate:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Kkv-DF-MAl">
-                                <rect key="frame" x="16" y="127" width="83" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Framerate" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Kkv-DF-MAl">
+                                <rect key="frame" x="16" y="87" width="79" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Resolution:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="8zy-ri-Dqc">
-                                <rect key="frame" x="16" y="206" width="87" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Resolution" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="8zy-ri-Dqc">
+                                <rect key="frame" x="16" y="152" width="82" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" id="PCM-t4-Sha">
-                                <rect key="frame" x="16" y="235" width="200" height="29"/>
+                                <rect key="frame" x="16" y="181" width="200" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="720p"/>
@@ -133,6 +133,22 @@
                                     <segment title="Native"/>
                                 </segments>
                                 <color key="tintColor" red="0.39215686274509803" green="0.9137254901960784" blue="0.17254901960784313" alpha="1" colorSpace="calibratedRGB"/>
+                            </segmentedControl>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="On-Screen Controls" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="HZT-dd-DuQ">
+                                <rect key="frame" x="16" y="217" width="153" height="21"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="2" id="WGf-9d-eAm">
+                                <rect key="frame" x="16" y="246" width="200" height="29"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <segments>
+                                    <segment title="Off"/>
+                                    <segment title="Simple"/>
+                                    <segment title="Full"/>
+                                </segments>
                             </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" cocoaTouchSystemColor="viewFlipsideBackgroundColor"/>
@@ -142,6 +158,7 @@
                         <outlet property="bitrateLabel" destination="SBv-Wn-LB7" id="Wdu-me-Bvd"/>
                         <outlet property="bitrateSlider" destination="3nn-MI-9Xu" id="IuD-Rk-vPp"/>
                         <outlet property="framerateSelector" destination="dLF-qJ-2nY" id="hE3-hk-iwa"/>
+                        <outlet property="onscreenControlSelector" destination="WGf-9d-eAm" id="hob-se-4Sn"/>
                         <outlet property="resolutionSelector" destination="PCM-t4-Sha" id="t60-W2-wkV"/>
                     </connections>
                 </viewController>

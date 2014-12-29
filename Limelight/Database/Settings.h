@@ -16,5 +16,6 @@
 @property (nonatomic, retain) NSNumber * framerate;
 @property (nonatomic, retain) NSNumber * height;
 @property (nonatomic, retain) NSNumber * width;
+@property (nonatomic, retain) NSNumber * onscreenControls;
 
 @end

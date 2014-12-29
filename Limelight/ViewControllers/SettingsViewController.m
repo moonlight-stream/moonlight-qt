@@ -27,9 +27,11 @@ static NSString* bitrateFormat = @"Bitrate: %d kbps";
     _bitrate = [currentSettings.bitrate integerValue];
     NSInteger framerate = [currentSettings.framerate integerValue] == 30 ? 0 : 1;
     NSInteger resolution = [currentSettings.height integerValue] == 720 ? 0 : 1;
+    NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
     
     [self.resolutionSelector setSelectedSegmentIndex:resolution];
     [self.framerateSelector setSelectedSegmentIndex:framerate];
+    [self.onscreenControlSelector setSelectedSegmentIndex:onscreenControls];
     [self.bitrateSlider setValue:_bitrate animated:YES];
     [self.bitrateSlider addTarget:self action:@selector(bitrateSliderMoved) forControlEvents:UIControlEventValueChanged];
     [self.bitrateLabel setText:[NSString stringWithFormat:bitrateFormat, (int)_bitrate]];
@@ -63,8 +65,8 @@ static NSString* bitrateFormat = @"Bitrate: %d kbps";
         height = [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
         width = height == 720 ? 1280 : 1920;
     }
-    
-    [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width];
+    NSInteger onscreenControls = [self.onscreenControlSelector seletedSegmentIndex];
+    [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls];
 }
 
 - (void)didReceiveMemoryWarning {

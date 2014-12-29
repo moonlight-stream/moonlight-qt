@@ -14,6 +14,7 @@
 @property (strong, nonatomic) IBOutlet UISlider *bitrateSlider;
 @property (strong, nonatomic) IBOutlet UISegmentedControl *framerateSelector;
 @property (strong, nonatomic) IBOutlet UISegmentedControl *resolutionSelector;
+@property (strong, nonatomic) IBOutlet UISegmentedControl *onscreenControlSelector;
 
 - (void) saveSettings;
 

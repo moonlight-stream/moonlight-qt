@@ -15,5 +15,6 @@
 @dynamic framerate;
 @dynamic height;
 @dynamic width;
+@dynamic onscreenControls;
 
 @end

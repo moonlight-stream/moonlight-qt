@@ -70,33 +70,33 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Bitrate: 10000 kbps" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="lMt-4H-fkV">
-                                <rect key="frame" x="16" y="58" width="151" height="21"/>
+                                <rect key="frame" x="16" y="39" width="151" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <slider opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" value="10000" minValue="0.0" maxValue="50000" id="JAY-nj-UNz">
-                                <rect key="frame" x="14" y="87" width="213" height="31"/>
+                                <rect key="frame" x="14" y="68" width="213" height="31"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <color key="tintColor" red="0.3921568627" green="0.91372549020000005" blue="0.17254901959999999" alpha="1" colorSpace="calibratedRGB"/>
                             </slider>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Framerate:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Aiv-r8-9k2">
-                                <rect key="frame" x="16" y="156" width="83" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Framerate" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="Aiv-r8-9k2">
+                                <rect key="frame" x="16" y="106" width="79" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Resolution:" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="pYZ-GR-EwO">
-                                <rect key="frame" x="16" y="244" width="87" height="21"/>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Resolution" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="pYZ-GR-EwO">
+                                <rect key="frame" x="16" y="171" width="82" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
                                 <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" id="ckc-Dm-8ex">
-                                <rect key="frame" x="16" y="273" width="209" height="29"/>
+                                <rect key="frame" x="16" y="200" width="209" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="720p"/>
@@ -106,13 +106,29 @@
                                 <color key="tintColor" red="0.3921568627" green="0.91372549020000005" blue="0.17254901959999999" alpha="1" colorSpace="calibratedRGB"/>
                             </segmentedControl>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="1" id="lGK-vl-pdw">
-                                <rect key="frame" x="16" y="185" width="209" height="29"/>
+                                <rect key="frame" x="16" y="135" width="209" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="30 Hz"/>
                                     <segment title="60 Hz"/>
                                 </segments>
                                 <color key="tintColor" red="0.3921568627" green="0.91372549020000005" blue="0.17254901959999999" alpha="1" colorSpace="calibratedRGB"/>
+                            </segmentedControl>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="On-Screen Controls" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" id="LGV-5y-piG">
+                                <rect key="frame" x="16" y="236" width="153" height="21"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" type="system" pointSize="17"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="2" id="qSU-wh-tqA">
+                                <rect key="frame" x="16" y="265" width="209" height="29"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <segments>
+                                    <segment title="Off"/>
+                                    <segment title="Simple"/>
+                                    <segment title="Full"/>
+                                </segments>
                             </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" cocoaTouchSystemColor="viewFlipsideBackgroundColor"/>
@@ -122,6 +138,7 @@
                         <outlet property="bitrateLabel" destination="lMt-4H-fkV" id="ItM-l3-1Jk"/>
                         <outlet property="bitrateSlider" destination="JAY-nj-UNz" id="fHd-v5-9Vo"/>
                         <outlet property="framerateSelector" destination="lGK-vl-pdw" id="Kc8-Zv-hdm"/>
+                        <outlet property="onscreenControlSelector" destination="qSU-wh-tqA" id="j8d-fB-Z2c"/>
                         <outlet property="resolutionSelector" destination="ckc-Dm-8ex" id="rl6-rx-wd3"/>
                     </connections>
                 </viewController>

@@ -9,10 +9,6 @@
 #import "DataManager.h"
 
 @implementation DataManager
-static NSInteger DEFAULT_BITRATE = 10000;
-static NSInteger DEFAULT_FRAMERATE = 60;
-static NSInteger DEFAULT_HEIGHT = 720;
-static NSInteger DEFAULT_WIDTH = 1280;
 
 - (id) init {
     self = [super init];
@@ -20,12 +16,14 @@ static NSInteger DEFAULT_WIDTH = 1280;
     return self;
 }
 
-- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width {
+- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls {
     Settings* settingsToSave = [self retrieveSettings];
     settingsToSave.framerate = [NSNumber numberWithInteger:framerate];
     settingsToSave.bitrate = [NSNumber numberWithInteger:bitrate];
     settingsToSave.height = [NSNumber numberWithInteger:height];
     settingsToSave.width = [NSNumber numberWithInteger:width];
+    settingsToSave.onscreenControls = [NSNumber numberWithInteger:onscreenControls];
+
     NSError* error;
     if (![[self.appDelegate managedObjectContext] save:&error]) {
         NSLog(@"ERROR: Unable to save settings to database");
@@ -40,10 +38,6 @@ static NSInteger DEFAULT_WIDTH = 1280;
         NSEntityDescription* entity = [NSEntityDescription entityForName:@"Settings" inManagedObjectContext:[self.appDelegate managedObjectContext]];
         Settings* settings = [[Settings alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
         
-        settings.framerate = [NSNumber numberWithInteger:DEFAULT_FRAMERATE];
-        settings.bitrate = [NSNumber numberWithInteger:DEFAULT_BITRATE];
-        settings.height = [NSNumber numberWithInteger:DEFAULT_HEIGHT];
-        settings.width = [NSNumber numberWithInteger:DEFAULT_WIDTH];
         return settings;
     } else {
         // we should only ever have 1 settings object stored
