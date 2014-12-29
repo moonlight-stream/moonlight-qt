@@ -29,7 +29,7 @@
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    
+    [onScreenControls handleTouchMovedEvent:event];
     if ([[event allTouches] count] == 1) {
         UITouch *touch = [[event allTouches] anyObject];
         CGPoint currentLocation = [touch locationInView:self];

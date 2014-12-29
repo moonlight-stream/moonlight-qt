@@ -13,4 +13,6 @@
 - (id) initWithView:(UIView*)view;
 - (void) handleTouchDownEvent:(UIEvent*)event;
 - (void) handleTouchUpEvent:(UIEvent*) event;
+- (void) handleTouchMovedEvent:(UIEvent*)event;
+
 @end
