@@ -23,6 +23,12 @@
     CALayer* _rightButton;
     CALayer* _leftStick;
     CALayer* _rightStick;
+    CALayer* _startButton;
+    CALayer* _selectButton;
+    CALayer* _r1Button;
+    CALayer* _r2Button;
+    CALayer* _l1Button;
+    CALayer* _l2Button;
 
     short buttonFlags;
     short leftStickX, leftStickY;
@@ -54,20 +60,56 @@ static float LS_CENTER_Y;
 static float RS_CENTER_X;
 static float RS_CENTER_Y;
 
+static const float START_WIDTH = 50;
+static const float START_HEIGHT = 30;
+static float START_X;
+static float START_Y;
+
+static const float SELECT_WIDTH = 50;
+static const float SELECT_HEIGHT = 30;
+static float SELECT_X;
+static float SELECT_Y;
+
+static const float BUMPER_SIZE = 70;
+static const float TRIGGER_SIZE = 80;
+
+static float R1_X;
+static float R1_Y;
+static float R2_X;
+static float R2_Y;
+static float L1_X;
+static float L1_Y;
+static float L2_X;
+static float L2_Y;
+
 - (id) initWithView:(UIView*)view {
     self = [self init];
     _view = view;
     shouldDrawControls = YES;
 
     D_PAD_CENTER_X = _view.frame.size.width * .15;
-    D_PAD_CENTER_Y = _view.frame.size.height * .5;
+    D_PAD_CENTER_Y = _view.frame.size.height * .55;
     BUTTON_CENTER_X = _view.frame.size.width * .85;
-    BUTTON_CENTER_Y = _view.frame.size.height * .5;
+    BUTTON_CENTER_Y = _view.frame.size.height * .55;
 
     LS_CENTER_X = _view.frame.size.width * .35;
     LS_CENTER_Y = _view.frame.size.height * .75;
     RS_CENTER_X = _view.frame.size.width * .65;
     RS_CENTER_Y = _view.frame.size.height * .75;
+
+    START_X = _view.frame.size.width * .55;
+    START_Y = _view.frame.size.height * .1;
+    SELECT_X = _view.frame.size.width * .45;
+    SELECT_Y = _view.frame.size.height * .1;
+
+    L1_X = _view.frame.size.width * .15;
+    L1_Y = _view.frame.size.height * .25;
+    L2_X = _view.frame.size.width * .15;
+    L2_Y = _view.frame.size.height * .1;
+    R1_X = _view.frame.size.width * .85;
+    R1_Y = _view.frame.size.height * .25;
+    R2_X = _view.frame.size.width * .85;
+    R2_Y = _view.frame.size.height * .1;
 
     [self drawButtons];
     [self drawSticks];
@@ -77,8 +119,9 @@ static float RS_CENTER_Y;
 - (void) drawButtons {
     // create A button
     _aButton = [CALayer layer];
-    _aButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_SIZE / 2, BUTTON_CENTER_Y + BUTTON_DIST, BUTTON_SIZE, BUTTON_SIZE);
     _aButton.contents = (id) [UIImage imageNamed:@"AButton"].CGImage;
+    _aButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_SIZE / 2, BUTTON_CENTER_Y + BUTTON_DIST, BUTTON_SIZE, BUTTON_SIZE);
+
     [_view.layer addSublayer:_aButton];
 
     // create B button
@@ -122,6 +165,42 @@ static float RS_CENTER_Y;
     _leftButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_DIST - D_PAD_LONG, D_PAD_CENTER_Y - D_PAD_SHORT / 2, D_PAD_LONG, D_PAD_SHORT);
     _leftButton.contents = (id) [UIImage imageNamed:@"LeftButton"].CGImage;
     [_view.layer addSublayer:_leftButton];
+
+    // create Start button
+    _startButton = [CALayer layer];
+    _startButton.frame = CGRectMake(START_X - START_WIDTH / 2, START_Y - START_HEIGHT / 2, START_WIDTH, START_HEIGHT);
+    _startButton.contents = (id) [UIImage imageNamed:@"StartButton"].CGImage;
+    [_view.layer addSublayer:_startButton];
+
+    // create Select button
+    _selectButton = [CALayer layer];
+    _selectButton.frame = CGRectMake(SELECT_X - SELECT_WIDTH / 2, SELECT_Y - SELECT_HEIGHT / 2, SELECT_WIDTH, SELECT_HEIGHT);
+    _selectButton.contents = (id) [UIImage imageNamed:@"SelectButton"].CGImage;
+    [_view.layer addSublayer:_selectButton];
+
+    // create L1 button
+    _l1Button = [CALayer layer];
+    _l1Button.frame = CGRectMake(L1_X - BUMPER_SIZE / 2, L1_Y - BUMPER_SIZE / 2, BUMPER_SIZE, BUMPER_SIZE);
+    _l1Button.contents = (id) [UIImage imageNamed:@"L1"].CGImage;
+    [_view.layer addSublayer:_l1Button];
+
+    // create L2 button
+    _l2Button = [CALayer layer];
+    _l2Button.frame = CGRectMake(L2_X - TRIGGER_SIZE / 2, L2_Y - TRIGGER_SIZE / 2, TRIGGER_SIZE, TRIGGER_SIZE);
+    _l2Button.contents = (id) [UIImage imageNamed:@"L2"].CGImage;
+    [_view.layer addSublayer:_l2Button];
+
+    // create R1 button
+    _r1Button = [CALayer layer];
+    _r1Button.frame = CGRectMake(R1_X - BUMPER_SIZE / 2, R1_Y - BUMPER_SIZE / 2, BUMPER_SIZE, BUMPER_SIZE);
+    _r1Button.contents = (id) [UIImage imageNamed:@"R1"].CGImage;
+    [_view.layer addSublayer:_r1Button];
+
+    // create R2 button
+    _r2Button = [CALayer layer];
+    _r2Button.frame = CGRectMake(R2_X - TRIGGER_SIZE / 2, R2_Y - TRIGGER_SIZE / 2, TRIGGER_SIZE, TRIGGER_SIZE);
+    _r2Button.contents = (id) [UIImage imageNamed:@"R2"].CGImage;
+    [_view.layer addSublayer:_r2Button];
 }
 
 - (void) drawSticks {
@@ -170,9 +249,8 @@ static float RS_CENTER_Y;
 
             _leftStick.frame = CGRectMake(xLoc, yLoc, STICK_INNER_SIZE, STICK_INNER_SIZE);
 
-            leftStickX = 0x7FFF * (xLoc - LS_CENTER_X) / (lsMaxX - LS_CENTER_X);
-            leftStickY = 0x7FFF * (yLoc - LS_CENTER_Y) / (lsMaxY - LS_CENTER_Y);
-            NSLog(@"Left Stick: x: %d y: %d", leftStickX, leftStickY);
+            leftStickX = 0x7FFE * (xLoc - LS_CENTER_X) / (lsMaxX - LS_CENTER_X);
+            leftStickY = 0x7FFE * (yLoc - LS_CENTER_Y) / (lsMaxY - LS_CENTER_Y);
 
         } else if (touch == rsTouch) {
             if (xLoc > rsMaxX) xLoc = rsMaxX;
@@ -182,9 +260,8 @@ static float RS_CENTER_Y;
 
             _rightStick.frame = CGRectMake(xLoc, yLoc, STICK_INNER_SIZE, STICK_INNER_SIZE);
 
-            rightStickX = 0x7FFF * (xLoc - RS_CENTER_X) / (rsMaxX - RS_CENTER_X);
-            rightStickY = 0x7FFF * (yLoc - RS_CENTER_Y) / (rsMaxY - RS_CENTER_Y);
-            NSLog(@"Right Stick: x: %d y: %d", rightStickX, rightStickY);
+            rightStickX = 0x7FFE * (xLoc - RS_CENTER_X) / (rsMaxX - RS_CENTER_X);
+            rightStickY = 0x7FFE * (yLoc - RS_CENTER_Y) / (rsMaxY - RS_CENTER_Y);
         }
     }
     LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
@@ -211,27 +288,23 @@ static float RS_CENTER_Y;
             UPDATE_BUTTON(LEFT_FLAG, 1);
         } else if ([_rightButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(RIGHT_FLAG, 1);
+        } else if ([_startButton.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(PLAY_FLAG, 1);
+        } else if ([_selectButton.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(BACK_FLAG, 1);
+        } else if ([_l1Button.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(LB_FLAG, 1);
+        } else if ([_r1Button.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(RB_FLAG, 1);
+        } else if ([_l2Button.presentationLayer hitTest:touchLocation]) {
+            leftTrigger = 1 * 0xFF;
+        } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
+            rightTrigger = 1 * 0xFF;
         } else if ([_leftStick.presentationLayer hitTest:touchLocation]) {
             lsTouch = touch;
         } else if ([_rightStick.presentationLayer hitTest:touchLocation]) {
             rsTouch = touch;
         }
-        /*
-
-         UPDATE_BUTTON(LB_FLAG, gamepad.leftShoulder.pressed);
-         UPDATE_BUTTON(RB_FLAG, gamepad.rightShoulder.pressed);
-
-         leftStickX = gamepad.leftThumbstick.xAxis.value * 0x7FFE;
-         leftStickY = gamepad.leftThumbstick.yAxis.value * 0x7FFE;
-
-         rightStickX = gamepad.rightThumbstick.xAxis.value * 0x7FFE;
-         rightStickY = gamepad.rightThumbstick.yAxis.value * 0x7FFE;
-
-         leftTrigger = gamepad.leftTrigger.value * 0xFF;
-         rightTrigger = gamepad.rightTrigger.value * 0xFF;
-         */
-        // We call LiSendControllerEvent while holding a lock to prevent
-        // multiple simultaneous calls since this function isn't thread safe.
     }
     LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
                           leftStickX, leftStickY, rightStickX, rightStickY);
@@ -258,27 +331,24 @@ static float RS_CENTER_Y;
             UPDATE_BUTTON(LEFT_FLAG, 0);
         } else if ([_rightButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(RIGHT_FLAG, 0);
+        } else if ([_startButton.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(PLAY_FLAG, 0);
+        } else if ([_selectButton.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(BACK_FLAG, 0);
+        } else if ([_l1Button.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(LB_FLAG, 0);
+        } else if ([_r1Button.presentationLayer hitTest:touchLocation]) {
+            UPDATE_BUTTON(RB_FLAG, 0);
+        } else if ([_l2Button.presentationLayer hitTest:touchLocation]) {
+            leftTrigger = 0 * 0xFF;
+        } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
+            rightTrigger = 0 * 0xFF;
         }
         if (touch == lsTouch) {
             _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
         } else if (touch == rsTouch) {
             _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
         }
-        /*
-         UPDATE_BUTTON(LB_FLAG, gamepad.leftShoulder.pressed);
-         UPDATE_BUTTON(RB_FLAG, gamepad.rightShoulder.pressed);
-
-         leftStickX = gamepad.leftThumbstick.xAxis.value * 0x7FFE;
-         leftStickY = gamepad.leftThumbstick.yAxis.value * 0x7FFE;
-
-         rightStickX = gamepad.rightThumbstick.xAxis.value * 0x7FFE;
-         rightStickY = gamepad.rightThumbstick.yAxis.value * 0x7FFE;
-
-         leftTrigger = gamepad.leftTrigger.value * 0xFF;
-         rightTrigger = gamepad.rightTrigger.value * 0xFF;
-         */
-        // We call LiSendControllerEvent while holding a lock to prevent
-        // multiple simultaneous calls since this function isn't thread safe.
     }
     LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
                           leftStickX, leftStickY, rightStickX, rightStickY);
