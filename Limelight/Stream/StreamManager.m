@@ -10,6 +10,7 @@
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Utils.h"
+#import "OnScreenControls.h"
 
 @implementation StreamManager {
     StreamConfiguration* _config;

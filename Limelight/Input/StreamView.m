@@ -8,17 +8,23 @@
 
 #import "StreamView.h"
 #include <Limelight.h>
+#import "OnScreenControls.h"
 
 @implementation StreamView {
     CGPoint touchLocation;
     BOOL touchMoved;
+    OnScreenControls* onScreenControls;
+}
+
+- (void) setupOnScreenControls {
+    onScreenControls = [[OnScreenControls alloc] initWithView:self];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     UITouch *touch = [[event allTouches] anyObject];
     touchLocation = [touch locationInView:self];
     touchMoved = false;
-    
+    [onScreenControls handleTouchDownEvent:event];
     NSLog(@"Touch down");
 }
 
@@ -53,8 +59,7 @@
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     NSLog(@"Touch up");
-    
-    
+    [onScreenControls handleTouchUpEvent:event];
     if (!touchMoved) {
         if ([[event allTouches] count]  == 2) {
             NSLog(@"Sending right mouse button press");

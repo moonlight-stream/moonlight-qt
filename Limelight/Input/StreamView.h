@@ -10,4 +10,6 @@
 
 @interface StreamView : UIView
 
+- (void) setupOnScreenControls;
+
 @end

@@ -11,6 +11,7 @@
 #import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
 #import "ControllerSupport.h"
+#import "StreamView.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -63,6 +64,7 @@
         [self.stageLabel setText:@"Waiting for first frame..."];
         [self.stageLabel sizeToFit];
     });
+    [(StreamView*)self.view setupOnScreenControls];
 }
 
 - (void)connectionTerminated:(long)errorCode {
