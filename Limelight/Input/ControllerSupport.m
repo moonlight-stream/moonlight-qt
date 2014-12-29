@@ -25,7 +25,7 @@ static NSLock *controllerStreamLock;
         GCController *controller = [GCController controllers][i];
         
         if (controller != NULL) {
-            printf("Controller connected!\n");
+            NSLog(@"Controller connected!");
             controller.controllerPausedHandler = ^(GCController *controller) {
                 // We call LiSendControllerEvent while holding a lock to prevent
                 // multiple simultaneous calls since this function isn't thread safe.
@@ -117,7 +117,7 @@ static NSLock *controllerStreamLock;
         [ControllerSupport registerControllerCallbacks];
     }];
     self.disconnectObserver = [[NSNotificationCenter defaultCenter] addObserverForName:GCControllerDidDisconnectNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-        printf("Controller disconnected!\n");
+        NSLog(@"Controller disconnected!");
     }];
     
     [ControllerSupport registerControllerCallbacks];

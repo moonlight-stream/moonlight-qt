@@ -57,7 +57,7 @@
 }
 
 - (void) connectionStarted {
-    printf("Connection started\n");
+    NSLog(@"Connection started");
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.spinner stopAnimating];
         [self.stageLabel setText:@"Waiting for first frame..."];

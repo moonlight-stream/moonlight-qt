@@ -36,8 +36,9 @@
 
 #define FRAME_START_PREFIX_SIZE 4
 #define NALU_START_PREFIX_SIZE 3
-
 #define NAL_LENGTH_PREFIX_SIZE 4
+#define NAL_TYPE_SPS 0x7
+#define NAL_TYPE_PPS 0x8
 
 - (void)updateBufferForRange:(CMBlockBufferRef)existingBuffer data:(unsigned char *)data offset:(int)offset length:(int)nalLength
 {
@@ -58,7 +59,7 @@
                                                 kCFAllocatorDefault,
                                                 NULL, 0, nalLength + 1, 0);
         if (status != noErr) {
-            printf("CMBlockBufferReplaceDataBytes failed: %d\n", (int)status);
+            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
         
@@ -68,18 +69,17 @@
         status = CMBlockBufferReplaceDataBytes(lengthBytes, existingBuffer,
                                                oldOffset, NAL_LENGTH_PREFIX_SIZE);
         if (status != noErr) {
-            printf("CMBlockBufferReplaceDataBytes failed: %d\n", (int)status);
+            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
-    }
-    else {
+    } else {
         // Append a 4 byte buffer to this block for the length prefix
         status = CMBlockBufferAppendMemoryBlock(existingBuffer, NULL,
                                                 NAL_LENGTH_PREFIX_SIZE,
                                                 kCFAllocatorDefault, NULL, 0,
                                                 NAL_LENGTH_PREFIX_SIZE, 0);
         if (status != noErr) {
-            printf("CMBlockBufferAppendMemoryBlock failed: %d\n", (int)status);
+            NSLog(@"CMBlockBufferAppendMemoryBlock failed: %d", (int)status);
             return;
         }
         
@@ -90,7 +90,7 @@
         status = CMBlockBufferReplaceDataBytes(lengthBytes, existingBuffer,
                                                oldOffset, NAL_LENGTH_PREFIX_SIZE);
         if (status != noErr) {
-            printf("CMBlockBufferReplaceDataBytes failed: %d\n", (int)status);
+            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
         
@@ -100,7 +100,7 @@
                                                 kCFAllocatorNull, // Don't deallocate data on free
                                                 NULL, 0, dataLength, 0);
         if (status != noErr) {
-            printf("CMBlockBufferReplaceDataBytes failed: %d\n", (int)status);
+            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
     }
@@ -112,17 +112,16 @@
     unsigned char nalType = data[FRAME_START_PREFIX_SIZE] & 0x1F;
     OSStatus status;
     
-    if (nalType == 0x7 || nalType == 0x8) {
-        if (nalType == 0x7) {
-            printf("Got SPS\n");
+    if (nalType == NAL_TYPE_SPS || nalType == NAL_TYPE_PPS) {
+        if (nalType == NAL_TYPE_SPS) {
+            NSLog(@"Got SPS");
             spsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForSps = false;
             
             // We got a new SPS so wait for a new PPS to match it
             waitingForPps = true;
-        }
-        else if (nalType == 0x8) {
-            printf("Got PPS\n");
+        } else if (nalType == NAL_TYPE_PPS) {
+            NSLog(@"Got PPS");
             ppsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForPps = false;
         }
@@ -132,7 +131,7 @@
             const uint8_t* const parameterSetPointers[] = { [spsData bytes], [ppsData bytes] };
             const size_t parameterSetSizes[] = { [spsData length], [ppsData length] };
             
-            printf("Constructing new format description\n");
+            NSLog(@"Constructing new format description");
             status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
                                                                          2, /* count of parameter sets */
                                                                          parameterSetPointers,
@@ -140,7 +139,7 @@
                                                                          NAL_LENGTH_PREFIX_SIZE,
                                                                          &formatDesc);
             if (status != noErr) {
-                printf("Failed to create format description: %d\n", (int)status);
+                NSLog(@"Failed to create format description: %d", (int)status);
                 formatDesc = NULL;
             }
         }
@@ -169,7 +168,7 @@
     
     status = CMBlockBufferCreateEmpty(NULL, 0, 0, &blockBuffer);
     if (status != noErr) {
-        printf("CMBlockBufferCreateEmpty failed: %d\n", (int)status);
+        NSLog(@"CMBlockBufferCreateEmpty failed: %d", (int)status);
         free(data);
         return;
     }
@@ -204,7 +203,7 @@
                                   NULL, 0, NULL,
                                   &sampleBuffer);
     if (status != noErr) {
-        printf("CMSampleBufferCreate failed: %d\n", (int)status);
+        NSLog(@"CMSampleBufferCreate failed: %d", (int)status);
         CFRelease(blockBuffer);
         return;
     }
@@ -219,8 +218,7 @@
         // P-frame
         CFDictionarySetValue(dict, kCMSampleAttachmentKey_NotSync, kCFBooleanTrue);
         CFDictionarySetValue(dict, kCMSampleAttachmentKey_DependsOnOthers, kCFBooleanTrue);
-    }
-    else {
+    } else {
         // I-frame
         CFDictionarySetValue(dict, kCMSampleAttachmentKey_NotSync, kCFBooleanFalse);
         CFDictionarySetValue(dict, kCMSampleAttachmentKey_DependsOnOthers, kCFBooleanFalse);
