@@ -57,6 +57,7 @@ static float D_PAD_CENTER_Y;
 
 static const float STICK_INNER_SIZE = 80;
 static const float STICK_OUTER_SIZE = 120;
+static const float STICK_DEAD_ZONE = .1;
 static float LS_CENTER_X;
 static float LS_CENTER_Y;
 static float RS_CENTER_X;
@@ -299,40 +300,54 @@ static float L2_Y;
 }
 
 - (void) handleTouchMovedEvent:(UIEvent*)event {
-    float rsMaxX = RS_CENTER_X + STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
-    float rsMaxY = RS_CENTER_Y + STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
-    float rsMinX = RS_CENTER_X - STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
-    float rsMinY = RS_CENTER_Y - STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
-    float lsMaxX = LS_CENTER_X + STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
-    float lsMaxY = LS_CENTER_Y + STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
-    float lsMinX = LS_CENTER_X - STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
-    float lsMinY = LS_CENTER_Y - STICK_OUTER_SIZE / 2 - STICK_INNER_SIZE / 2;
+    float rsMaxX = RS_CENTER_X + STICK_OUTER_SIZE / 2;
+    float rsMaxY = RS_CENTER_Y + STICK_OUTER_SIZE / 2;
+    float rsMinX = RS_CENTER_X - STICK_OUTER_SIZE / 2;
+    float rsMinY = RS_CENTER_Y - STICK_OUTER_SIZE / 2;
+    float lsMaxX = LS_CENTER_X + STICK_OUTER_SIZE / 2;
+    float lsMaxY = LS_CENTER_Y + STICK_OUTER_SIZE / 2;
+    float lsMinX = LS_CENTER_X - STICK_OUTER_SIZE / 2;
+    float lsMinY = LS_CENTER_Y - STICK_OUTER_SIZE / 2;
 
     for (UITouch* touch in [event allTouches]) {
         CGPoint touchLocation = [touch locationInView:_view];
-        float xLoc = touchLocation.x - STICK_INNER_SIZE / 2;
-        float yLoc = touchLocation.y - STICK_INNER_SIZE / 2;
+        float xLoc = touchLocation.x;
+        float yLoc = touchLocation.y;
         if (touch == _lsTouch) {
             if (xLoc > lsMaxX) xLoc = lsMaxX;
             if (xLoc < lsMinX) xLoc = lsMinX;
             if (yLoc > lsMaxY) yLoc = lsMaxY;
             if (yLoc < lsMinY) yLoc = lsMinY;
 
-            _leftStick.frame = CGRectMake(xLoc, yLoc, STICK_INNER_SIZE, STICK_INNER_SIZE);
+            _leftStick.frame = CGRectMake(xLoc - STICK_INNER_SIZE / 2, yLoc - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
 
-            leftStickX = 0x7FFE * (xLoc - LS_CENTER_X) / (lsMaxX - LS_CENTER_X);
-            leftStickY = 0x7FFE * (yLoc - LS_CENTER_Y) / (lsMaxY - LS_CENTER_Y);
-            
+            float xStickVal = (xLoc - LS_CENTER_X) / (lsMaxX - LS_CENTER_X);
+            float yStickVal = (yLoc - LS_CENTER_Y) / (lsMaxY - LS_CENTER_Y);
+            NSLog(@"Left Stick x: %f y: %f", xStickVal, yStickVal);
+
+            if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
+            if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;
+
+            leftStickX = 0x7FFE * xStickVal;
+            leftStickY = 0x7FFE * -yStickVal;
+
         } else if (touch == _rsTouch) {
             if (xLoc > rsMaxX) xLoc = rsMaxX;
             if (xLoc < rsMinX) xLoc = rsMinX;
             if (yLoc > rsMaxY) yLoc = rsMaxY;
             if (yLoc < rsMinY) yLoc = rsMinY;
 
-            _rightStick.frame = CGRectMake(xLoc, yLoc, STICK_INNER_SIZE, STICK_INNER_SIZE);
+            _rightStick.frame = CGRectMake(xLoc - STICK_INNER_SIZE / 2, yLoc - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
 
-            rightStickX = 0x7FFE * (xLoc - RS_CENTER_X) / (rsMaxX - RS_CENTER_X);
-            rightStickY = 0x7FFE * (yLoc - RS_CENTER_Y) / (rsMaxY - RS_CENTER_Y);
+            float xStickVal = (xLoc - RS_CENTER_X) / (rsMaxX - RS_CENTER_X);
+            float yStickVal = (yLoc - RS_CENTER_Y) / (rsMaxY - RS_CENTER_Y);
+            NSLog(@"Right Stick x: %f y: %f", xStickVal, yStickVal);
+
+            if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
+            if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;
+
+            rightStickX = 0x7FFE * xStickVal;
+            rightStickY = 0x7FFE * -yStickVal;
         }
     }
     LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
@@ -417,8 +432,12 @@ static float L2_Y;
         }
         if (touch == _lsTouch) {
             _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
+            leftStickX = 0 * 0x7FFE;
+            leftStickY = 0 * 0x7FFE;
         } else if (touch == _rsTouch) {
             _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
+            rightStickX = 0 * 0x7FFE;
+            rightStickY = 0 * 0x7FFE;
         }
     }
     LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
