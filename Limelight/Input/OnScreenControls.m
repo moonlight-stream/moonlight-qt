@@ -37,8 +37,22 @@
     short rightStickX, rightStickY;
     char leftTrigger, rightTrigger;
     
+    UITouch* _aTouch;
+    UITouch* _bTouch;
+    UITouch* _xTouch;
+    UITouch* _yTouch;
+    UITouch* _upTouch;
+    UITouch* _downTouch;
+    UITouch* _leftTouch;
+    UITouch* _rightTouch;
     UITouch* _lsTouch;
     UITouch* _rsTouch;
+    UITouch* _startTouch;
+    UITouch* _selectTouch;
+    UITouch* _r1Touch;
+    UITouch* _r2Touch;
+    UITouch* _l1Touch;
+    UITouch* _l2Touch;
     
     UIView* _view;
     OnScreenControlsLevel _level;
@@ -299,7 +313,9 @@ static float L2_Y;
     [_rightStick removeFromSuperlayer];
 }
 
-- (void) handleTouchMovedEvent:(UIEvent*)event {
+- (BOOL) handleTouchMovedEvent:(UIEvent*)event {
+    BOOL shouldSendPacket = false;
+    BOOL buttonTouch = false;
     float rsMaxX = RS_CENTER_X + STICK_OUTER_SIZE / 2;
     float rsMaxY = RS_CENTER_Y + STICK_OUTER_SIZE / 2;
     float rsMinX = RS_CENTER_X - STICK_OUTER_SIZE / 2;
@@ -331,6 +347,7 @@ static float L2_Y;
             leftStickX = 0x7FFE * xStickVal;
             leftStickY = 0x7FFE * -yStickVal;
 
+            shouldSendPacket = true;
         } else if (touch == _rsTouch) {
             if (xLoc > rsMaxX) xLoc = rsMaxX;
             if (xLoc < rsMinX) xLoc = rsMinX;
@@ -348,101 +365,199 @@ static float L2_Y;
 
             rightStickX = 0x7FFE * xStickVal;
             rightStickY = 0x7FFE * -yStickVal;
+
+            shouldSendPacket = true;
+        } else if (touch == _aTouch) {
+            buttonTouch = true;
+        } else if (touch == _bTouch) {
+            buttonTouch = true;
+        } else if (touch == _xTouch) {
+            buttonTouch = true;
+        } else if (touch == _yTouch) {
+            buttonTouch = true;
+        } else if (touch == _upTouch) {
+            buttonTouch = true;
+        } else if (touch == _downTouch) {
+            buttonTouch = true;
+        } else if (touch == _leftTouch) {
+            buttonTouch = true;
+        } else if (touch == _rightTouch) {
+            buttonTouch = true;
+        } else if (touch == _startTouch) {
+            buttonTouch = true;
+        } else if (touch == _selectTouch) {
+            buttonTouch = true;
+        } else if (touch == _l1Touch) {
+            buttonTouch = true;
+        } else if (touch == _r1Touch) {
+            buttonTouch = true;
+        } else if (touch == _l2Touch) {
+            buttonTouch = true;
+        } else if (touch == _r2Touch) {
+            buttonTouch = true;
         }
     }
-    LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
+    if (shouldSendPacket) {
+        LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
                           leftStickX, leftStickY, rightStickX, rightStickY);
+    }
+    return shouldSendPacket || buttonTouch;
 }
 
-- (void)handleTouchDownEvent:(UIEvent*)event {
+- (BOOL)handleTouchDownEvent:(UIEvent*)event {
+    BOOL shouldSendPacket = false;
     for (UITouch* touch in [event allTouches]) {
         CGPoint touchLocation = [touch locationInView:_view];
 
         if ([_aButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(A_FLAG, 1);
+            _aTouch = touch;
+            shouldSendPacket = true;
         } else if ([_bButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(B_FLAG, 1);
+            _bTouch = touch;
+            shouldSendPacket = true;
         } else if ([_xButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(X_FLAG, 1);
+            _xTouch = touch;
+            shouldSendPacket = true;
         } else if ([_yButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(Y_FLAG, 1);
+            _yTouch = touch;
+            shouldSendPacket = true;
         } else if ([_upButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(UP_FLAG, 1);
+            _upTouch = touch;
+            shouldSendPacket = true;
         } else if ([_downButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(DOWN_FLAG, 1);
+            _downTouch = touch;
+            shouldSendPacket = true;
         } else if ([_leftButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(LEFT_FLAG, 1);
+            _leftTouch = touch;
+            shouldSendPacket = true;
         } else if ([_rightButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(RIGHT_FLAG, 1);
+            _rightTouch = touch;
+            shouldSendPacket = true;
         } else if ([_startButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(PLAY_FLAG, 1);
+            _startTouch = touch;
+            shouldSendPacket = true;
         } else if ([_selectButton.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(BACK_FLAG, 1);
+            _selectTouch = touch;
+            shouldSendPacket = true;
         } else if ([_l1Button.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(LB_FLAG, 1);
+            _l1Touch = touch;
+            shouldSendPacket = true;
         } else if ([_r1Button.presentationLayer hitTest:touchLocation]) {
             UPDATE_BUTTON(RB_FLAG, 1);
+            _r1Touch = touch;
+            shouldSendPacket = true;
         } else if ([_l2Button.presentationLayer hitTest:touchLocation]) {
             leftTrigger = 1 * 0xFF;
+            _l2Touch = touch;
+            shouldSendPacket = true;
         } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
             rightTrigger = 1 * 0xFF;
+            _r2Touch = touch;
+            shouldSendPacket = true;
         } else if ([_leftStick.presentationLayer hitTest:touchLocation]) {
             _lsTouch = touch;
+            shouldSendPacket = true;
         } else if ([_rightStick.presentationLayer hitTest:touchLocation]) {
             _rsTouch = touch;
+            shouldSendPacket = true;
         }
     }
-    LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
-                          leftStickX, leftStickY, rightStickX, rightStickY);
+    if (shouldSendPacket) {
+        LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
+                              leftStickX, leftStickY, rightStickX, rightStickY);
+    }
+    return shouldSendPacket;
 }
 
-- (void)handleTouchUpEvent:(UIEvent*)event {
-
+- (BOOL)handleTouchUpEvent:(UIEvent*)event {
+    BOOL shouldSendPacket = false;
     for (UITouch* touch in [event allTouches]) {
-        CGPoint touchLocation = [touch locationInView:_view];
-
-        if ([_aButton.presentationLayer hitTest:touchLocation]) {
+        if (touch == _aTouch) {
             UPDATE_BUTTON(A_FLAG, 0);
-        } else if ([_bButton.presentationLayer hitTest:touchLocation]) {
+            _aTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _bTouch) {
             UPDATE_BUTTON(B_FLAG, 0);
-        } else if ([_xButton.presentationLayer hitTest:touchLocation]) {
+            _bTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _xTouch) {
             UPDATE_BUTTON(X_FLAG, 0);
-        } else if ([_yButton.presentationLayer hitTest:touchLocation]) {
+            _xTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _yTouch) {
             UPDATE_BUTTON(Y_FLAG, 0);
-        } else if ([_upButton.presentationLayer hitTest:touchLocation]) {
+            _yTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _upTouch) {
             UPDATE_BUTTON(UP_FLAG, 0);
-        } else if ([_downButton.presentationLayer hitTest:touchLocation]) {
+            _upTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _downTouch) {
             UPDATE_BUTTON(DOWN_FLAG, 0);
-        } else if ([_leftButton.presentationLayer hitTest:touchLocation]) {
+            _downTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _leftTouch) {
             UPDATE_BUTTON(LEFT_FLAG, 0);
-        } else if ([_rightButton.presentationLayer hitTest:touchLocation]) {
+            _leftTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _rightTouch) {
             UPDATE_BUTTON(RIGHT_FLAG, 0);
-        } else if ([_startButton.presentationLayer hitTest:touchLocation]) {
+            _rightTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _startTouch) {
             UPDATE_BUTTON(PLAY_FLAG, 0);
-        } else if ([_selectButton.presentationLayer hitTest:touchLocation]) {
+            _startTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _selectTouch) {
             UPDATE_BUTTON(BACK_FLAG, 0);
-        } else if ([_l1Button.presentationLayer hitTest:touchLocation]) {
+            _selectTouch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _l1Touch) {
             UPDATE_BUTTON(LB_FLAG, 0);
-        } else if ([_r1Button.presentationLayer hitTest:touchLocation]) {
+            _l1Touch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _r1Touch) {
             UPDATE_BUTTON(RB_FLAG, 0);
-        } else if ([_l2Button.presentationLayer hitTest:touchLocation]) {
+            _r1Touch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _l2Touch) {
             leftTrigger = 0 * 0xFF;
-        } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
+            _l2Touch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _r2Touch) {
             rightTrigger = 0 * 0xFF;
-        }
-        if (touch == _lsTouch) {
+            _r2Touch = nil;
+            shouldSendPacket = true;
+        } else if (touch == _lsTouch) {
             _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
             leftStickX = 0 * 0x7FFE;
             leftStickY = 0 * 0x7FFE;
+            shouldSendPacket = true;
+            _lsTouch = nil;
         } else if (touch == _rsTouch) {
             _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
             rightStickX = 0 * 0x7FFE;
             rightStickY = 0 * 0x7FFE;
+            _rsTouch = nil;
+            shouldSendPacket = true;
         }
     }
-    LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
-                          leftStickX, leftStickY, rightStickX, rightStickY);
+    if (shouldSendPacket) {
+        LiSendControllerEvent(buttonFlags, leftTrigger, rightTrigger,
+                              leftStickX, leftStickY, rightStickX, rightStickY);
+    }
+    return  shouldSendPacket;
 }
-
 
 @end

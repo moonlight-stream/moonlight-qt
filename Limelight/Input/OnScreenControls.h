@@ -17,9 +17,9 @@ typedef NS_ENUM(NSInteger, OnScreenControlsLevel) {
 };
 
 - (id) initWithView:(UIView*)view;
-- (void) handleTouchDownEvent:(UIEvent*)event;
-- (void) handleTouchUpEvent:(UIEvent*) event;
-- (void) handleTouchMovedEvent:(UIEvent*)event;
+- (BOOL) handleTouchDownEvent:(UIEvent*)event;
+- (BOOL) handleTouchUpEvent:(UIEvent*) event;
+- (BOOL) handleTouchMovedEvent:(UIEvent*)event;
 - (void) setLevel:(OnScreenControlsLevel)level;
 
 @end
