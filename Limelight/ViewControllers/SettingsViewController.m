@@ -44,8 +44,26 @@ static NSString* bitrateFormat = @"Bitrate: %d kbps";
 - (void) saveSettings {
     DataManager* dataMan = [[DataManager alloc] init];
     NSInteger framerate = [self.framerateSelector selectedSegmentIndex] == 0 ? 30 : 60;
-    NSInteger height = [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
-    NSInteger width = height == 720 ? 1280 : 1920;
+    NSInteger height;
+    NSInteger width;
+    if ([self.resolutionSelector selectedSegmentIndex] == 2) {
+        // Get screen native resolution
+        height = [UIScreen mainScreen].bounds.size.height * [UIScreen mainScreen].scale;
+        width = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
+        
+        UIAlertView *alertResolution = [[UIAlertView alloc] initWithTitle:@"Native resolution"
+                                                        message:[NSString stringWithFormat:@"You must select the following resolution in the game settings : %lix%li", (long)width, (long)height]
+                                                        delegate:nil
+                                                        cancelButtonTitle:@"OK"
+                                                        otherButtonTitles:nil];
+        [alertResolution show];
+    }
+    else
+    {
+        height = [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
+        width = height == 720 ? 1280 : 1920;
+    }
+    
     [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width];
 }
 
