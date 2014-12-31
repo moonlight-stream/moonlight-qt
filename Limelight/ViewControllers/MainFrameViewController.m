@@ -29,12 +29,11 @@
     
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
-    UIScrollView* appScrollView;
-    
-    int currentPosition;
+	int currentPosition;
 }
 static NSString* deviceName = @"roth";
 static NSMutableSet* hostList;
+static NSArray* appList;
 static StreamConfiguration* streamConfig;
 
 + (StreamConfiguration*) getStreamConfiguration {
@@ -69,19 +68,24 @@ static StreamConfiguration* streamConfig;
         
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
-        NSArray* appList = [HttpManager getAppListFromXML:appListResp];
+        appList = [HttpManager getAppListFromXML:appListResp];
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self updateApps:appList];
+            [self updateApps];
+            _computerNameButton.title = _selectedHost.displayName;
         });
         [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
     });
 }
 
+- (void)showHostSelectionView {
+    appList = [[NSArray alloc] init];
+    _computerNameButton.title = @"";
+    [self.collectionView reloadData];
+    [self.view addSubview:hostScrollView];
+}
+
 - (void) receivedAssetForApp:(App*)app {
-    NSArray* subviews = [appScrollView subviews];
-    for (UIAppView* appView in subviews) {
-        [appView updateAppImage];
-    }
+    [self.collectionView reloadData];
 }
 
 - (void)displayDnsFailedDialog {
@@ -168,12 +172,12 @@ static StreamConfiguration* streamConfig;
 {
     [super viewDidLoad];
     
-    // Change button color
-    _settingsSidebarButton.tintColor = [UIColor colorWithRed:.2 green:.9 blue:0.f alpha:1.f];
+    // Set the side bar button action. When it's tapped, it'll show up the sidebar.
+    [_limelightLogoButton addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
     
-    // Set the side bar button action. When it's tapped, it'll show the sidebar.
-    _settingsSidebarButton.target = self.revealViewController;
-    _settingsSidebarButton.action = @selector(revealToggle:);
+    // Set the host name button action. When it's tapped, it'll show up the host selection view.
+    [_computerNameButton setTarget:self];
+    [_computerNameButton setAction:@selector(showHostSelectionView)];
     
     // Set the gesture
     [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
@@ -201,20 +205,21 @@ static StreamConfiguration* streamConfig;
     hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
     [hostScrollView setShowsHorizontalScrollIndicator:NO];
     
-    appScrollView = [[UIScrollView alloc] init];
-    appScrollView.frame = CGRectMake(0, hostScrollView.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
-    [appScrollView setShowsHorizontalScrollIndicator:NO];
-    
     [self retrieveSavedHosts];
     [self updateHosts:[hostList allObjects]];
     [self.view addSubview:hostScrollView];
-    [self.view addSubview:appScrollView];
 }
 
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
     [self.navigationController setNavigationBarHidden:NO animated:YES];
+    
+    // Hide 1px border line
+    UIImage* fakeImage = [[UIImage alloc] init];
+    [self.navigationController.navigationBar setShadowImage:fakeImage];
+    [self.navigationController.navigationBar setBackgroundImage:fakeImage forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
+    
     _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [_mDNSManager searchForHosts];
 }
@@ -265,29 +270,36 @@ static StreamConfiguration* streamConfig;
     }
 }
 
-- (void) updateApps:(NSArray*)apps {
-    [[appScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    App* fakeApp = [[App alloc] init];
-    fakeApp.appName = @"No App Name";
-    UIAppView* noAppImage = [[UIAppView alloc] initWithApp:fakeApp andCallback:nil];
-    float prevEdge = -1;
-    UIAppView* appView;
-    for (App* app in apps) {
-        appView = [[UIAppView alloc] initWithApp:app andCallback:self];
-        prevEdge = [self getAppViewX:appView noApp:noAppImage prevEdge:prevEdge];
-        appView.center = CGPointMake(prevEdge, appScrollView.frame.size.height / 2);
-        prevEdge = appView.frame.origin.x + appView.frame.size.width;
-        [appScrollView addSubview:appView];
-    }
-    [appScrollView setContentSize:CGSizeMake(prevEdge + noAppImage.frame.size.width, appScrollView.frame.size.height)];
+- (void) updateApps {
+    [hostScrollView removeFromSuperview];
+    [self.collectionView reloadData];
 }
 
-- (float) getAppViewX:(UIAppView*)app noApp:(UIAppView*)noAppImage prevEdge:(float)prevEdge {
-    if (prevEdge == -1) {
-        return appScrollView.frame.origin.x + app.frame.size.width / 2 + noAppImage.frame.size.width / 2;
-    } else {
-        return prevEdge + app.frame.size.width / 2 + noAppImage.frame.size.width / 2;
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    UICollectionViewCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AppCell" forIndexPath:indexPath];
+    
+    App* app = appList[indexPath.row];
+    UIAppView* appView = [[UIAppView alloc] initWithApp:app andCallback:self];
+    [appView updateAppImage];
+
+    if (appView.bounds.size.width > 10.0) {
+        CGFloat scale = cell.bounds.size.width / appView.bounds.size.width;
+        [appView setCenter:CGPointMake(appView.bounds.size.width / 2 * scale, appView.bounds.size.height / 2 * scale)];
+        appView.transform = CGAffineTransformMakeScale(scale, scale);
     }
+
+    [cell.subviews.firstObject removeFromSuperview]; // Remove a view that was previously added
+    [cell addSubview:appView];
+
+    return cell;
+}
+
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+    return 1; // App collection only
+}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    return appList.count;
 }
 
 - (BOOL)validatePcSelected {

@@ -26,6 +26,9 @@ static int LABEL_DY = 20;
     [_appButton setBackgroundImage:[UIImage imageNamed:@"NoAppImage"] forState:UIControlStateNormal];
     [_appButton sizeToFit];
     [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventTouchUpInside];
+    
+    // Remove Shadow and label
+    /*
     _appButton.layer.shadowColor = [[UIColor blackColor] CGColor];
     _appButton.layer.shadowOffset = CGSizeMake(5,8);
     _appButton.layer.shadowOpacity = 0.7;
@@ -36,9 +39,11 @@ static int LABEL_DY = 20;
     _appLabel.center = CGPointMake(_appButton.bounds.origin.x + (_appButton.bounds.size.width / 2), _appButton.bounds.origin.y + _appButton.bounds.size.height + LABEL_DY);
     
     [self updateBounds];
-    [self addSubview:_appButton];
     [self addSubview:_appLabel];
+     */
     
+    [self addSubview:_appButton];
+    [self sizeToFit];
     
     return self;
 }
@@ -56,6 +61,8 @@ static int LABEL_DY = 20;
 
 - (void) updateAppImage {
     if (_app.appImage != nil) {
+        _appButton.frame = CGRectMake(0, 0, _app.appImage.size.width / 2, _app.appImage.size.height / 2);
+        self.frame = CGRectMake(0, 0, _app.appImage.size.width / 2, _app.appImage.size.height / 2);
         [_appButton setBackgroundImage:_app.appImage forState:UIControlStateNormal];
         [self setNeedsDisplay];
     }
