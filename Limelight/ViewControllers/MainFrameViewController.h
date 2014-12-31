@@ -15,8 +15,9 @@
 #import "AppManager.h"
 #import "SWRevealViewController.h"
 
-@interface MainFrameViewController : UIViewController <MDNSCallback, PairCallback, HostCallback, AppCallback, AppAssetCallback, NSURLConnectionDelegate, SWRevealViewControllerDelegate>
-@property (strong, nonatomic) IBOutlet UIBarButtonItem *settingsSidebarButton;
+@interface MainFrameViewController : UICollectionViewController <MDNSCallback, PairCallback, HostCallback, AppCallback, AppAssetCallback, NSURLConnectionDelegate, SWRevealViewControllerDelegate>
+@property (strong, nonatomic) IBOutlet UIButton *limelightLogoButton;
+@property (weak, nonatomic) IBOutlet UIBarButtonItem *computerNameButton;
 
 + (StreamConfiguration*) getStreamConfiguration;
 

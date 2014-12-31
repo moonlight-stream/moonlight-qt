@@ -40,6 +40,7 @@ static int LABEL_DY = 20;
 
     [_hostLabel setText:[_computer displayName]];
     [_hostLabel sizeToFit];
+    _hostLabel.textColor = [UIColor whiteColor];
     [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventTouchUpInside];
     _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
     [self updateBounds];
@@ -66,6 +67,7 @@ static int LABEL_DY = 20;
     
     [_hostLabel setText:@"Add Host"];
     [_hostLabel sizeToFit];
+    _hostLabel.textColor = [UIColor whiteColor];
     _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
     
     UIImageView* addIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"AddComputerIcon"]];
