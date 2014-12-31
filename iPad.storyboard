@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14C81h" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" initialViewController="EVd-wq-ego">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB" version="3.0" toolsVersion="6254" systemVersion="14C81f" targetRuntime="iOS.CocoaTouch.iPad" propertyAccessControl="none" initialViewController="EVd-wq-ego">
     <dependencies>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
     </dependencies>
     <scenes>
-        <!--Limelight-->
+        <!--Main Frame View Controller-->
         <scene sceneID="Me4-Nr-liz">
             <objects>
                 <viewController id="wb7-af-jn8" customClass="MainFrameViewController" sceneMemberID="viewController">
@@ -96,17 +96,17 @@
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" id="ckc-Dm-8ex">
-                                <rect key="frame" x="16" y="273" width="128" height="29"/>
+                                <rect key="frame" x="16" y="273" width="209" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="720p"/>
                                     <segment title="1080p"/>
-                                    <segment title="native"/>
+                                    <segment title="Native"/>
                                 </segments>
                                 <color key="tintColor" red="0.3921568627" green="0.91372549020000005" blue="0.17254901959999999" alpha="1" colorSpace="calibratedRGB"/>
                             </segmentedControl>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="1" id="lGK-vl-pdw">
-                                <rect key="frame" x="16" y="185" width="128" height="29"/>
+                                <rect key="frame" x="16" y="185" width="209" height="29"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <segments>
                                     <segment title="30 Hz"/>
