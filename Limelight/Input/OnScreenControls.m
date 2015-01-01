@@ -339,7 +339,6 @@ static float L2_Y;
 
             float xStickVal = (xLoc - LS_CENTER_X) / (lsMaxX - LS_CENTER_X);
             float yStickVal = (yLoc - LS_CENTER_Y) / (lsMaxY - LS_CENTER_Y);
-            NSLog(@"Left Stick x: %f y: %f", xStickVal, yStickVal);
 
             if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
             if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;
@@ -358,7 +357,6 @@ static float L2_Y;
 
             float xStickVal = (xLoc - RS_CENTER_X) / (rsMaxX - RS_CENTER_X);
             float yStickVal = (yLoc - RS_CENTER_Y) / (rsMaxY - RS_CENTER_Y);
-            NSLog(@"Right Stick x: %f y: %f", xStickVal, yStickVal);
 
             if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
             if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;

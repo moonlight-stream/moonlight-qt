@@ -118,7 +118,7 @@
                                 <rect key="frame" x="16" y="236" width="153" height="21"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <color key="textColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                                 <nil key="highlightedColor"/>
                             </label>
                             <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="2" id="qSU-wh-tqA">
@@ -129,6 +129,7 @@
                                     <segment title="Simple"/>
                                     <segment title="Full"/>
                                 </segments>
+                                <color key="tintColor" red="0.3803921569" green="0.92156862750000001" blue="0.25882352939999997" alpha="1" colorSpace="calibratedRGB"/>
                             </segmentedControl>
                         </subviews>
                         <color key="backgroundColor" cocoaTouchSystemColor="viewFlipsideBackgroundColor"/>

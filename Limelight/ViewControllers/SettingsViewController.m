@@ -65,7 +65,7 @@ static NSString* bitrateFormat = @"Bitrate: %d kbps";
         height = [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
         width = height == 720 ? 1280 : 1920;
     }
-    NSInteger onscreenControls = [self.onscreenControlSelector seletedSegmentIndex];
+    NSInteger onscreenControls = [self.onscreenControlSelector selectedSegmentIndex];
     [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls];
 }
 
