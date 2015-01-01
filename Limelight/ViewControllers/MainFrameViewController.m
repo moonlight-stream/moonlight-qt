@@ -26,10 +26,11 @@
     Computer* _selectedHost;
     NSString* _uniqueId;
     NSData* _cert;
+    NSString* _currentGame;
     
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
-	int currentPosition;
+    int currentPosition;
 }
 static NSString* deviceName = @"roth";
 static NSMutableSet* hostList;
@@ -65,7 +66,6 @@ static StreamConfiguration* streamConfig;
 
 - (void)alreadyPaired {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
         appList = [HttpManager getAppListFromXML:appListResp];
@@ -73,6 +73,7 @@ static StreamConfiguration* streamConfig;
             [self updateApps];
             _computerNameButton.title = _selectedHost.displayName;
         });
+        
         [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
     });
 }
@@ -157,7 +158,53 @@ static StreamConfiguration* streamConfig;
     if (currentPosition != FrontViewPositionLeft) {
         [[self revealViewController] revealToggle:self];
     }
-    [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+    
+    App* currentApp = [self findRunningApp];
+    if (currentApp != nil) {
+        UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"App Already Running" message:[NSString stringWithFormat:@"%@ is currently running", currentApp.appName] preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Resume App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+            NSLog(@"Resuming application: %@", currentApp.appName);
+            [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+        }]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Quit App" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+            NSLog(@"Quitting application: %@", currentApp.appName);
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                [hMan executeRequestSynchronously:[hMan newQuitAppRequest]];
+                // TODO: handle failure to quit app
+                currentApp.isRunning = NO;
+                
+                if (![app.appId isEqualToString:currentApp.appId]) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                    });
+                }
+            });
+        }]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [self presentViewController:alertController animated:YES completion:nil];
+    } else {
+        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+    }
+}
+
+
+- (App*) findRunningApp {
+    for (App* app in appList) {
+        if (app.isRunning) {
+            return app;
+        }
+    }
+    return nil;
+}
+
+- (App*) findAppInAppList:(NSString*)appId {
+    for (App* app in appList) {
+        if ([app.appId isEqualToString:appId]) {
+            return app;
+        }
+    }
+    return nil;
 }
 
 - (void)revealController:(SWRevealViewController *)revealController didMoveToPosition:(FrontViewPosition)position {
@@ -222,6 +269,11 @@ static StreamConfiguration* streamConfig;
     
     _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
     [_mDNSManager searchForHosts];
+    
+    // This will refresh the applist
+    if (_selectedHost != nil) {
+        [self hostClicked:_selectedHost];
+    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -281,16 +333,16 @@ static StreamConfiguration* streamConfig;
     App* app = appList[indexPath.row];
     UIAppView* appView = [[UIAppView alloc] initWithApp:app andCallback:self];
     [appView updateAppImage];
-
+    
     if (appView.bounds.size.width > 10.0) {
         CGFloat scale = cell.bounds.size.width / appView.bounds.size.width;
         [appView setCenter:CGPointMake(appView.bounds.size.width / 2 * scale, appView.bounds.size.height / 2 * scale)];
         appView.transform = CGAffineTransformMakeScale(scale, scale);
     }
-
+    
     [cell.subviews.firstObject removeFromSuperview]; // Remove a view that was previously added
     [cell addSubview:appView];
-
+    
     return cell;
 }
 

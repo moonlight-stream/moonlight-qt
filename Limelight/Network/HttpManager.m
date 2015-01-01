@@ -54,6 +54,7 @@ static const NSString* PORT = @"47984";
             xmlNodePtr appInfoNode = node->xmlChildrenNode;
             NSString* appName;
             NSString* appId;
+            BOOL appIsRunning = NO;
             while (appInfoNode != NULL) {
                 NSLog(@"appInfoNode: %s", appInfoNode->name);
                 if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"AppTitle")) {
@@ -64,12 +65,17 @@ static const NSString* PORT = @"47984";
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
                     appId = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
                     xmlFree(nodeVal);
+                } else if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"IsRunning")) {
+                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
+                    appIsRunning = [[[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding] isEqualToString:@"1"];
+                    xmlFree(nodeVal);
                 }
                 appInfoNode = appInfoNode->next;
             }
             App* app = [[App alloc] init];
             app.appName = appName;
             app.appId = appId;
+            app.isRunning = appIsRunning;
             [appList addObject:app];
         }
         node = node->next;
@@ -251,6 +257,11 @@ static const NSString* PORT = @"47984";
 - (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId {
     NSString* urlString = [NSString stringWithFormat:@"%@/resume?uniqueid=%@&rikey=%@&rikeyid=%d", _baseURL, _uniqueId, riKey, riKeyId];
     // This blocks while the app is resuming
+    return [self createRequestFromString:urlString enableTimeout:FALSE];
+}
+
+- (NSURLRequest*) newQuitAppRequest {
+    NSString* urlString = [NSString stringWithFormat:@"%@/cancel?uniqueid=%@", _baseURL, _uniqueId];
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 

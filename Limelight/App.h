@@ -13,5 +13,6 @@
 @property NSString* appId;
 @property NSString* appName;
 @property UIImage* appImage;
+@property BOOL isRunning;
 
 @end

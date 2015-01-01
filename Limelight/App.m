@@ -10,6 +10,6 @@
 #import "HttpManager.h"
 
 @implementation App
-@synthesize appId, appName, appImage;
+@synthesize appId, appName, appImage, isRunning;
 
 @end
