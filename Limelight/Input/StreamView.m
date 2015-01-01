@@ -21,7 +21,7 @@
     onScreenControls = [[OnScreenControls alloc] initWithView:self];
     DataManager* dataMan = [[DataManager alloc] init];
     OnScreenControlsLevel level = (OnScreenControlsLevel)[[dataMan retrieveSettings].onscreenControls integerValue];
-    NSLog(@"Setting on-screen controls level: %ld", level);
+    NSLog(@"Setting on-screen controls level: %d", (int)level);
     [onScreenControls setLevel:level];
 }
 

@@ -302,19 +302,6 @@ static StreamConfiguration* streamConfig;
     return appList.count;
 }
 
-- (BOOL)validatePcSelected {
-    if (_selectedHost == NULL) {
-        UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"No PC Selected"
-                                                                       message:@"You must select a PC to continue."
-                                                                preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
-        [self presentViewController:alert animated:YES completion:nil];
-        return FALSE;
-    }
-    
-    return TRUE;
-}
-
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
