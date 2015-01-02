@@ -78,7 +78,7 @@ static StreamConfiguration* streamConfig;
 
 - (void)showHostSelectionView {
     appList = [[NSArray alloc] init];
-    _computerNameButton.title = @"";
+    _computerNameButton.title = @"No Host Selected";
     [self.collectionView reloadData];
     [self.view addSubview:hostScrollView];
 }

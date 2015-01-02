@@ -47,7 +47,7 @@
                                 </state>
                             </button>
                         </barButtonItem>
-                        <barButtonItem key="rightBarButtonItem" id="L1H-n4-HB7">
+                        <barButtonItem key="rightBarButtonItem" title="No Host Selected" id="L1H-n4-HB7">
                             <color key="tintColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         </barButtonItem>
                     </navigationItem>
