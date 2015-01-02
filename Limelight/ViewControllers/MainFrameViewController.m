@@ -122,7 +122,9 @@ static StreamConfiguration* streamConfig;
         });
     }]];
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
-        [hostList removeObject:host];
+        @synchronized(hostList) {
+            [hostList removeObject:host];
+        }
         [_discMan removeHostFromDiscovery:host];
         DataManager* dataMan = [[DataManager alloc] init];
         [dataMan removeHost:host];
@@ -145,7 +147,9 @@ static StreamConfiguration* streamConfig;
                     DataManager* dataMan = [[DataManager alloc] init];
                     [dataMan saveHosts];
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [hostList addObject:host];
+                        @synchronized(hostList) {
+                            [hostList addObject:host];
+                        }
                         [self updateHosts];
                     });
                 } else {
@@ -299,7 +303,9 @@ static StreamConfiguration* streamConfig;
     [super viewDidDisappear:animated];
     // when discovery stops, we must create a new instance because you cannot restart an NSOperation when it is finished
     [_discMan stopDiscovery];
-    _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
+    @synchronized(hostList) {
+        _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
+    }
     // In case the host objects were updated in the background
     [[[DataManager alloc] init] saveHosts];
 }
@@ -307,7 +313,9 @@ static StreamConfiguration* streamConfig;
 - (void) retrieveSavedHosts {
     DataManager* dataMan = [[DataManager alloc] init];
     NSArray* hosts = [dataMan retrieveHosts];
-    [hostList addObjectsFromArray:hosts];
+    @synchronized(hostList) {
+        [hostList addObjectsFromArray:hosts];
+    }
 }
 
 - (void) updateAllHosts:(NSArray *)hosts {
@@ -316,8 +324,10 @@ static StreamConfiguration* streamConfig;
         for (Host* host in hosts) {
             NSLog(@"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online);
         }
-        [hostList removeAllObjects];
-        [hostList addObjectsFromArray:hosts];
+        @synchronized(hostList) {
+            [hostList removeAllObjects];
+            [hostList addObjectsFromArray:hosts];
+        }
         [self updateHosts];
     });
 }
@@ -328,13 +338,14 @@ static StreamConfiguration* streamConfig;
     UIComputerView* addComp = [[UIComputerView alloc] initForAddWithCallback:self];
     UIComputerView* compView;
     float prevEdge = -1;
-    for (Host* comp in hostList) {
-        compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
-        compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
-        prevEdge = compView.frame.origin.x + compView.frame.size.width;
-        [hostScrollView addSubview:compView];
+    @synchronized (hostList) {
+        for (Host* comp in hostList) {
+            compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
+            compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
+            prevEdge = compView.frame.origin.x + compView.frame.size.width;
+            [hostScrollView addSubview:compView];
+        }
     }
-    
     prevEdge = [self getCompViewX:addComp addComp:addComp prevEdge:prevEdge];
     addComp.center = CGPointMake(prevEdge, hostScrollView.frame.size.height / 2);
     
