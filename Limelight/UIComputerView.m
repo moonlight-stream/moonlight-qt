@@ -74,6 +74,9 @@ static int LABEL_DY = 20;
     _hostPairState.center = CGPointMake(_hostLabel.center.x, _hostLabel.center.y + LABEL_DY);
     _hostStatus.center = CGPointMake(_hostPairState.center.x, _hostPairState.center.y + LABEL_DY);
     
+    UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(hostLongClicked)];
+    [_hostButton addGestureRecognizer:longPressRecognizer];
+    
     [self updateBounds];
     [self addSubview:_hostButton];
     [self addSubview:_hostLabel];
@@ -116,6 +119,10 @@ static int LABEL_DY = 20;
     [self addSubview:addIcon];
     
     return self;
+}
+
+- (void) hostLongClicked {
+    [_callback hostLongClicked:_host];
 }
 
 - (void) hostClicked {

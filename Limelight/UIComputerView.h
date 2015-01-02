@@ -12,6 +12,7 @@
 @protocol HostCallback <NSObject>
 
 - (void) hostClicked:(Host*)host;
+- (void) hostLongClicked:(Host*)host;
 - (void) addHostClicked;
 
 @end

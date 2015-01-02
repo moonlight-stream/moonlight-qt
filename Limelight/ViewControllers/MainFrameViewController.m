@@ -112,6 +112,25 @@ static StreamConfiguration* streamConfig;
     });
 }
 
+- (void)hostLongClicked:(Host *)host {
+    NSLog(@"Long clicked host: %@", host.name);
+    UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
+    [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+            [hMan executeRequestSynchronously:[hMan newUnpairRequest]];
+        });
+    }]];
+    [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
+        [hostList removeObject:host];
+        [_discMan removeHostFromDiscovery:host];
+    }]];
+    [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [self presentViewController:longClickAlert animated:YES completion:^{
+        [self updateHosts];
+    }];
+}
+
 - (void) addHostClicked {
     NSLog(@"Clicked add host");
     UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];

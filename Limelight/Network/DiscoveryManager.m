@@ -130,6 +130,10 @@
     [_hostQueue addObject:host];
 }
 
+- (void) removeHostFromDiscovery:(Host *)host {
+    [_hostQueue removeObject:host];
+}
+
 - (void)updateHosts:(NSArray *)hosts {
     [_hostQueue addObjectsFromArray:hosts];
 }

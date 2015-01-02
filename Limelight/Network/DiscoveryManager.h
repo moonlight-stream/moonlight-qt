@@ -22,6 +22,7 @@
 - (void) startDiscovery;
 - (void) stopDiscovery;
 - (void) addHostToDiscovery:(Host*)host;
+- (void) removeHostFromDiscovery:(Host*)host;
 - (void) discoverHost:(NSString*)hostAddress withCallback:(void (^)(Host*))callback;
 
 @end
