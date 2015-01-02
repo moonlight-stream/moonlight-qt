@@ -13,6 +13,7 @@
 #include <netdb.h>
 
 @implementation Utils
+NSString *const deviceName = @"roth";
 
 + (NSData*) randomBytes:(NSInteger)length {
     char* bytes = malloc(length);

@@ -7,18 +7,18 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "Computer.h"
+#import "Host.h"
 
 @protocol HostCallback <NSObject>
 
-- (void) hostClicked:(Computer*)computer;
+- (void) hostClicked:(Host*)host;
 - (void) addHostClicked;
 
 @end
 
 @interface UIComputerView : UIView
 
-- (id) initWithComputer:(Computer*)computer andCallback:(id<HostCallback>)callback;
+- (id) initWithComputer:(Host*)host andCallback:(id<HostCallback>)callback;
 - (id) initForAddWithCallback:(id<HostCallback>)callback;
-
+- (NSString*) online;
 @end

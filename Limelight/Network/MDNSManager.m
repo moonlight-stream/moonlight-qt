@@ -7,7 +7,8 @@
 //
 
 #import "MDNSManager.h"
-#import "Computer.h"
+#import "Host.h"
+#import "DataManager.h"
 
 @implementation MDNSManager {
     NSNetServiceBrowser* mDNSBrowser;
@@ -46,9 +47,12 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 
 - (NSArray*) getFoundHosts {
     NSMutableArray* hosts = [[NSMutableArray alloc] init];
+    DataManager* dataMan = [[DataManager alloc] init];
     for (NSNetService* service in services) {
         if (service.hostName != nil) {
-            [hosts addObject:[[Computer alloc] initWithHost:service]];
+            Host* host = [dataMan createHost];
+            host.address = service.hostName;
+            [hosts addObject:host];
         }
     }
     return hosts;

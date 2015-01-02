@@ -6,7 +6,6 @@
 //
 
 #import "MainFrameViewController.h"
-#import "Computer.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Connection.h"
@@ -22,17 +21,15 @@
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
-    MDNSManager* _mDNSManager;
-    Computer* _selectedHost;
+    Host* _selectedHost;
     NSString* _uniqueId;
     NSData* _cert;
     NSString* _currentGame;
-    
+    DiscoveryManager* _discMan;
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
     int currentPosition;
 }
-static NSString* deviceName = @"roth";
 static NSMutableSet* hostList;
 static NSArray* appList;
 static StreamConfiguration* streamConfig;
@@ -66,13 +63,14 @@ static StreamConfiguration* streamConfig;
 
 - (void)alreadyPaired {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
-        appList = [HttpManager getAppListFromXML:appListResp];
         dispatch_async(dispatch_get_main_queue(), ^{
             [self updateApps];
-            _computerNameButton.title = _selectedHost.displayName;
+            NSLog(@"Setting _computerNameButton.title: %@", _selectedHost.name);
+            _computerNameButton.title = _selectedHost.name;
         });
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
+        appList = [HttpManager getAppListFromXML:appListResp];
         
         [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
     });
@@ -97,11 +95,11 @@ static StreamConfiguration* streamConfig;
     [self presentViewController:alert animated:YES completion:nil];
 }
 
-- (void) hostClicked:(Computer *)computer {
-    NSLog(@"Clicked host: %@", computer.displayName);
-    _selectedHost = computer;
+- (void) hostClicked:(Host *)host {
+    NSLog(@"Clicked host: %@", host.name);
+    _selectedHost = host;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:computer.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
         if ([[HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"] isEqualToString:@"1"]) {
             NSLog(@"Already Paired");
@@ -119,17 +117,24 @@ static StreamConfiguration* streamConfig;
     UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-        NSString* host = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
-        Computer* newHost = [[Computer alloc] initWithIp:host];
-        [hostList addObject:newHost];
-        [self updateHosts:[hostList allObjects]];
-        DataManager* dataMan = [[DataManager alloc] init];
-        [dataMan createHost:newHost.displayName hostname:newHost.hostName];
-        [dataMan saveHosts];
-        
-        //TODO: get pair state
-        
-        
+        NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            [_discMan discoverHost:hostAddress withCallback:^(Host* host){
+                if (host != nil) {
+                    DataManager* dataMan = [[DataManager alloc] init];
+                    [dataMan saveHosts];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [hostList addObject:host];
+                        [self updateHosts];
+                    });
+                } else {
+                    UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Host Not Found" message:[NSString stringWithFormat:@"Unable to connect to host: \n%@", hostAddress] preferredStyle:UIAlertControllerStyleAlert];
+                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self presentViewController:hostNotFoundAlert animated:YES completion:nil];
+                    });
+                }
+            }];});
     }]];
     [alertController addTextFieldWithConfigurationHandler:nil];
     [self presentViewController:alertController animated:YES completion:nil];
@@ -138,8 +143,8 @@ static StreamConfiguration* streamConfig;
 - (void) appClicked:(App *)app {
     NSLog(@"Clicked app: %@", app.appName);
     streamConfig = [[StreamConfiguration alloc] init];
-    streamConfig.host = _selectedHost.hostName;
-    streamConfig.hostAddr = [Utils resolveHost:_selectedHost.hostName];
+    streamConfig.host = _selectedHost.address;
+    streamConfig.hostAddr = [Utils resolveHost:_selectedHost.address];
     streamConfig.appID = app.appId;
     if (streamConfig.hostAddr == 0) {
         [self displayDnsFailedDialog];
@@ -169,7 +174,7 @@ static StreamConfiguration* streamConfig;
         [alertController addAction:[UIAlertAction actionWithTitle:@"Quit App" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
             NSLog(@"Quitting application: %@", currentApp.appName);
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.hostName uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
                 [hMan executeRequestSynchronously:[hMan newQuitAppRequest]];
                 // TODO: handle failure to quit app
                 currentApp.isRunning = NO;
@@ -192,15 +197,6 @@ static StreamConfiguration* streamConfig;
 - (App*) findRunningApp {
     for (App* app in appList) {
         if (app.isRunning) {
-            return app;
-        }
-    }
-    return nil;
-}
-
-- (App*) findAppInAppList:(NSString*)appId {
-    for (App* app in appList) {
-        if ([app.appId isEqualToString:appId]) {
             return app;
         }
     }
@@ -253,7 +249,9 @@ static StreamConfiguration* streamConfig;
     [hostScrollView setShowsHorizontalScrollIndicator:NO];
     
     [self retrieveSavedHosts];
-    [self updateHosts:[hostList allObjects]];
+    _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
+    
+    [self updateHosts];
     [self.view addSubview:hostScrollView];
 }
 
@@ -267,8 +265,7 @@ static StreamConfiguration* streamConfig;
     [self.navigationController.navigationBar setShadowImage:fakeImage];
     [self.navigationController.navigationBar setBackgroundImage:fakeImage forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
     
-    _mDNSManager = [[MDNSManager alloc] initWithCallback:self];
-    [_mDNSManager searchForHosts];
+    [_discMan startDiscovery];
     
     // This will refresh the applist
     if (_selectedHost != nil) {
@@ -279,28 +276,38 @@ static StreamConfiguration* streamConfig;
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
-    [_mDNSManager stopSearching];
+    // when discovery stops, we must create a new instance because you cannot restart an NSOperation when it is finished
+    [_discMan stopDiscovery];
+    _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
+    // In case the host objects were updated in the background
+    [[[DataManager alloc] init] saveHosts];
 }
 
 - (void) retrieveSavedHosts {
-    //TODO: Get rid of Computer and only use Host
-    
     DataManager* dataMan = [[DataManager alloc] init];
     NSArray* hosts = [dataMan retrieveHosts];
-    for (Host* host in hosts) {
-        Computer* comp = [[Computer alloc] initWithIp:host.address];
-        comp.displayName = host.name;
-        [hostList addObject:comp];
-    }
+    [hostList addObjectsFromArray:hosts];
 }
 
-- (void)updateHosts:(NSArray *)hosts {
-    [hostList addObjectsFromArray:hosts];
+- (void) updateAllHosts:(NSArray *)hosts {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSLog(@"New host list:");
+        for (Host* host in hosts) {
+            NSLog(@"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online);
+        }
+        [hostList removeAllObjects];
+        [hostList addObjectsFromArray:hosts];
+        [self updateHosts];
+    });
+}
+
+- (void)updateHosts {
+    NSLog(@"Updating hosts...");
     [[hostScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     UIComputerView* addComp = [[UIComputerView alloc] initForAddWithCallback:self];
     UIComputerView* compView;
     float prevEdge = -1;
-    for (Computer* comp in hostList) {
+    for (Host* comp in hostList) {
         compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
         compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
         prevEdge = compView.frame.origin.x + compView.frame.size.width;

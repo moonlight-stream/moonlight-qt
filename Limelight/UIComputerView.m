@@ -9,9 +9,11 @@
 #import "UIComputerView.h"
 
 @implementation UIComputerView {
-    Computer* _computer;
+    Host* _host;
     UIButton* _hostButton;
     UILabel* _hostLabel;
+    UILabel* _hostStatus;
+    UILabel* _hostPairState;
     id<HostCallback> _callback;
     CGSize _labelSize;
 }
@@ -29,25 +31,59 @@ static int LABEL_DY = 20;
     _hostButton.layer.shadowOpacity = 0.7;
     
     _hostLabel = [[UILabel alloc] init];
-    
+    _hostStatus = [[UILabel alloc] init];
+    _hostPairState = [[UILabel alloc] init];
     return self;
 }
 
-- (id) initWithComputer:(Computer*)computer andCallback:(id<HostCallback>)callback {
+- (id) initWithComputer:(Host*)host andCallback:(id<HostCallback>)callback {
     self = [self init];
-    _computer = computer;
+    _host = host;
     _callback = callback;
 
-    [_hostLabel setText:[_computer displayName]];
+    [_hostLabel setText:_host.name];
     [_hostLabel sizeToFit];
     _hostLabel.textColor = [UIColor whiteColor];
+    
+    
+    switch (host.pairState) {
+        case PairStateUnknown:
+            [_hostPairState setText:@"Pair State Unknown"];
+            break;
+        case PairStateUnpaired:
+            [_hostPairState setText:@"Not Paired"];
+            break;
+        case PairStatePaired:
+            [_hostPairState setText:@"Paired"];
+            break;
+    }
+    [_hostPairState sizeToFit];
+    _hostPairState.textColor = [UIColor whiteColor];
+    
+    if (host.online) {
+        _hostStatus.text = @"Online";
+        _hostStatus.textColor = [UIColor greenColor];
+    } else {
+        _hostStatus.text = @"Offline";
+        _hostStatus.textColor = [UIColor grayColor];
+    }
+    [_hostStatus sizeToFit];
+    
     [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventTouchUpInside];
     _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
+    _hostPairState.center = CGPointMake(_hostLabel.center.x, _hostLabel.center.y + LABEL_DY);
+    _hostStatus.center = CGPointMake(_hostPairState.center.x, _hostPairState.center.y + LABEL_DY);
+    
     [self updateBounds];
     [self addSubview:_hostButton];
     [self addSubview:_hostLabel];
-    
+    [self addSubview:_hostStatus];
+    [self addSubview:_hostPairState];
     return self;
+}
+
+- (NSString *)online {
+    return _hostStatus.text;
 }
 
 - (void) updateBounds {
@@ -83,19 +119,11 @@ static int LABEL_DY = 20;
 }
 
 - (void) hostClicked {
-    [_callback hostClicked:_computer];
+    [_callback hostClicked:_host];
 }
 
 - (void) addClicked {
     [_callback addHostClicked];
 }
-
-/*
-// Only override drawRect: if you perform custom drawing.
-// An empty implementation adversely affects performance during animation.
-- (void)drawRect:(CGRect)rect {
-    // Drawing code
-}
-*/
 
 @end

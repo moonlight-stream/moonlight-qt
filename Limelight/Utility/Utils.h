@@ -10,6 +10,14 @@
 
 @interface Utils : NSObject
 
+typedef NS_ENUM(int, PairState) {
+    PairStateUnknown,
+    PairStateUnpaired,
+    PairStatePaired
+};
+
+FOUNDATION_EXPORT NSString *const deviceName;
+
 + (NSData*) randomBytes:(NSInteger)length;
 + (NSString*) bytesToHex:(NSData*)data;
 + (NSData*) hexToBytes:(NSString*) hex;

@@ -19,6 +19,6 @@
 - (Settings*) retrieveSettings;
 - (NSArray*) retrieveHosts;
 - (void) saveHosts;
-- (Host*) createHost:(NSString*)name  hostname:(NSString*)address;
+- (Host*) createHost;
 
 @end

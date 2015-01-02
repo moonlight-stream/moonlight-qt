@@ -7,7 +7,7 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "MDNSManager.h"
+#import "DiscoveryManager.h"
 #import "PairManager.h"
 #import "StreamConfiguration.h"
 #import "UIComputerView.h"
@@ -15,7 +15,7 @@
 #import "AppManager.h"
 #import "SWRevealViewController.h"
 
-@interface MainFrameViewController : UICollectionViewController <MDNSCallback, PairCallback, HostCallback, AppCallback, AppAssetCallback, NSURLConnectionDelegate, SWRevealViewControllerDelegate>
+@interface MainFrameViewController : UICollectionViewController <DiscoveryCallback, PairCallback, HostCallback, AppCallback, AppAssetCallback, NSURLConnectionDelegate, SWRevealViewControllerDelegate>
 @property (strong, nonatomic) IBOutlet UIButton *limelightLogoButton;
 @property (weak, nonatomic) IBOutlet UIBarButtonItem *computerNameButton;
 

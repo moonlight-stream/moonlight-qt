@@ -45,12 +45,9 @@
     }
 }
 
-- (Host*) createHost:(NSString*)name  hostname:(NSString*)address {
+- (Host*) createHost {
     NSEntityDescription* entity = [NSEntityDescription entityForName:@"Host" inManagedObjectContext:[self.appDelegate managedObjectContext]];
     Host* host = [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
-    
-    host.name = name;
-    host.address = address;
     return host;
 }
 

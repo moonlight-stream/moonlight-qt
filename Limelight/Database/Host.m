@@ -11,7 +11,13 @@
 
 @implementation Host
 
-@dynamic address;
 @dynamic name;
+@dynamic address;
+@dynamic localAddress;
+@dynamic externalAddress;
+@dynamic uuid;
+@dynamic mac;
+@dynamic pairState;
+@synthesize online;
 
 @end
