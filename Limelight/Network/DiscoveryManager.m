@@ -142,7 +142,7 @@
             [self discoverHost:host];
         }
         [_callback updateAllHosts:_discoveredHosts];
-        [NSThread sleepForTimeInterval:3.0f];
+        [NSThread sleepForTimeInterval:2.0f];
     }
 }
 
