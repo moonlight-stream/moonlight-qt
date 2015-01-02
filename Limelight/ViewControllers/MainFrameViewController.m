@@ -124,6 +124,8 @@ static StreamConfiguration* streamConfig;
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
         [hostList removeObject:host];
         [_discMan removeHostFromDiscovery:host];
+        DataManager* dataMan = [[DataManager alloc] init];
+        [dataMan removeHost:host];
     }]];
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
     [self presentViewController:longClickAlert animated:YES completion:^{

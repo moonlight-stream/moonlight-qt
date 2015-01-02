@@ -20,5 +20,6 @@
 - (NSArray*) retrieveHosts;
 - (void) saveHosts;
 - (Host*) createHost;
+- (void) removeHost:(Host*)host;
 
 @end

@@ -51,6 +51,10 @@
     return host;
 }
 
+- (void) removeHost:(Host*)host {
+    [[self.appDelegate managedObjectContext] deleteObject:host];
+}
+
 - (void) saveHosts {
     NSError* error;
     if (![[self.appDelegate managedObjectContext] save:&error]) {
