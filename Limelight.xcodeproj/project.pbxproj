@@ -29,6 +29,8 @@
 		FB290E7B19B38036004C83CF /* iPhone.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB290E7A19B38036004C83CF /* iPhone.storyboard */; };
 		FB4678ED1A50C40900377732 /* OnScreenControls.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678EC1A50C40900377732 /* OnScreenControls.m */; };
 		FB4678FA1A55FFAD00377732 /* DiscoveryManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678F91A55FFAD00377732 /* DiscoveryManager.m */; };
+		FB4678FF1A565DAC00377732 /* WakeOnLanManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */; };
+		FB4679011A57048000377732 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB4679001A57048000377732 /* CoreFoundation.framework */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
 		FB89462819F646E200339C8A /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460619F646E200339C8A /* CryptoManager.m */; };
 		FB89462919F646E200339C8A /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FB89460719F646E200339C8A /* mkcert.c */; };
@@ -112,6 +114,9 @@
 		FB4678F21A51BDCB00377732 /* Limelight 0.3.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Limelight 0.3.0.xcdatamodel"; sourceTree = "<group>"; };
 		FB4678F81A55FFAD00377732 /* DiscoveryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscoveryManager.h; sourceTree = "<group>"; };
 		FB4678F91A55FFAD00377732 /* DiscoveryManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiscoveryManager.m; sourceTree = "<group>"; };
+		FB4678FD1A565DAC00377732 /* WakeOnLanManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WakeOnLanManager.h; sourceTree = "<group>"; };
+		FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WakeOnLanManager.m; sourceTree = "<group>"; };
+		FB4679001A57048000377732 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
 		FB7E794319C8B71B00A15F68 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 		FB89460519F646E200339C8A /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
 		FB89460619F646E200339C8A /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
@@ -262,6 +267,7 @@
 				FB290CF819B2C406004C83CF /* CoreData.framework in Frameworks */,
 				FB290CF619B2C406004C83CF /* UIKit.framework in Frameworks */,
 				FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */,
+				FB4679011A57048000377732 /* CoreFoundation.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -309,6 +315,7 @@
 		FB290CF019B2C406004C83CF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FB4679001A57048000377732 /* CoreFoundation.framework */,
 				FBD349571A003F05002D2A60 /* libsqlite3.dylib */,
 				FB89468F19F6AFB800339C8A /* libs */,
 				FB7E794319C8B71B00A15F68 /* libiconv.dylib */,
@@ -415,6 +422,8 @@
 				FBD3494219FC9C04002D2A60 /* AppManager.m */,
 				FB4678F81A55FFAD00377732 /* DiscoveryManager.h */,
 				FB4678F91A55FFAD00377732 /* DiscoveryManager.m */,
+				FB4678FD1A565DAC00377732 /* WakeOnLanManager.h */,
+				FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -759,6 +768,7 @@
 				FB89463419F646E200339C8A /* Utils.m in Sources */,
 				FBDE86E619F82297001C18A8 /* UIAppView.m in Sources */,
 				FB89462F19F646E200339C8A /* Connection.m in Sources */,
+				FB4678FF1A565DAC00377732 /* WakeOnLanManager.m in Sources */,
 				FB89462919F646E200339C8A /* mkcert.c in Sources */,
 				FBDE86E019F7A837001C18A8 /* UIComputerView.m in Sources */,
 				FBDE86E919F82315001C18A8 /* App.m in Sources */,

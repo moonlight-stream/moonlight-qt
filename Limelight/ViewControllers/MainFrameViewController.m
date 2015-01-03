@@ -18,6 +18,7 @@
 #import "SettingsViewController.h"
 #import "DataManager.h"
 #import "Settings.h"
+#import "WakeOnLanManager.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -115,12 +116,30 @@ static StreamConfiguration* streamConfig;
 - (void)hostLongClicked:(Host *)host {
     NSLog(@"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
-    [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-            [hMan executeRequestSynchronously:[hMan newUnpairRequest]];
-        });
-    }]];
+    if (host.online) {
+        [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                [hMan executeRequestSynchronously:[hMan newUnpairRequest]];
+            });
+        }]];
+    } else {
+        [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Wake" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+            UIAlertController* wolAlert = [UIAlertController alertControllerWithTitle:@"Wake On Lan" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+            [wolAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+            if (host.pairState != PairStatePaired) {
+                wolAlert.message = @"Cannot wake host because you are not paired";
+            } else if (host.mac == nil || [host.mac isEqualToString:@"00:00:00:00:00:00"]) {
+                wolAlert.message = @"Host MAC unknown, unable to send WOL Packet";
+            } else {
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                    [WakeOnLanManager wakeHost:host];
+                });
+                wolAlert.message = @"Sent WOL Packet";
+            }
+            [self presentViewController:wolAlert animated:YES completion:nil];
+        }]];
+    }
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
         @synchronized(hostList) {
             [hostList removeObject:host];
