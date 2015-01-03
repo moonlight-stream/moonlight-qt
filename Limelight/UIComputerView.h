@@ -21,5 +21,5 @@
 
 - (id) initWithComputer:(Host*)host andCallback:(id<HostCallback>)callback;
 - (id) initForAddWithCallback:(id<HostCallback>)callback;
-- (NSString*) online;
+
 @end

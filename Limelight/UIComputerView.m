@@ -17,7 +17,8 @@
     id<HostCallback> _callback;
     CGSize _labelSize;
 }
-static int LABEL_DY = 20;
+static const float REFRESH_CYCLE = 2.0f;
+static const int LABEL_DY = 20;
 
 - (id) init {
     self = [super init];
@@ -40,25 +41,46 @@ static int LABEL_DY = 20;
     self = [self init];
     _host = host;
     _callback = callback;
-
-    [_hostLabel setText:_host.name];
-    [_hostLabel sizeToFit];
-    _hostLabel.textColor = [UIColor whiteColor];
     
+    UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(hostLongClicked)];
+    [_hostButton addGestureRecognizer:longPressRecognizer];
+    [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventTouchUpInside];
+    
+    [self updateContentsForHost:host];
+    [self updateBounds];
+    [self addSubview:_hostButton];
+    [self addSubview:_hostLabel];
+    [self addSubview:_hostStatus];
+    [self addSubview:_hostPairState];
+    [self startUpdateLoop];
+    return self;
+}
+
+- (void) updateBounds {
+    float x = _hostButton.frame.origin.x < _hostLabel.frame.origin.x ? _hostButton.frame.origin.x : _hostLabel.frame.origin.x;
+    float y = _hostButton.frame.origin.y < _hostLabel.frame.origin.y ? _hostButton.frame.origin.y : _hostLabel.frame.origin.y;
+    self.bounds = CGRectMake(x , y, _hostButton.frame.size.width > _hostLabel.frame.size.width ? _hostButton.frame.size.width : _hostLabel.frame.size.width, _hostButton.frame.size.height + _hostLabel.frame.size.height + LABEL_DY / 2);
+    self.frame = CGRectMake(x , y, _hostButton.frame.size.width > _hostLabel.frame.size.width ? _hostButton.frame.size.width : _hostLabel.frame.size.width, _hostButton.frame.size.height + _hostLabel.frame.size.height + LABEL_DY / 2);
+}
+
+- (void) updateContentsForHost:(Host*)host {
+    _hostLabel.text = _host.name;
+    _hostLabel.textColor = [UIColor whiteColor];
+    [_hostLabel sizeToFit];
     
     switch (host.pairState) {
         case PairStateUnknown:
-            [_hostPairState setText:@"Pair State Unknown"];
+            _hostPairState.text = @"Pair State Unknown";
             break;
         case PairStateUnpaired:
-            [_hostPairState setText:@"Not Paired"];
+            _hostPairState.text = @"Not Paired";
             break;
         case PairStatePaired:
-            [_hostPairState setText:@"Paired"];
+            _hostPairState.text = @"Paired";
             break;
     }
-    [_hostPairState sizeToFit];
     _hostPairState.textColor = [UIColor whiteColor];
+    [_hostPairState sizeToFit];
     
     if (host.online) {
         _hostStatus.text = @"Online";
@@ -69,31 +91,19 @@ static int LABEL_DY = 20;
     }
     [_hostStatus sizeToFit];
     
-    [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventTouchUpInside];
+    
     _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
     _hostPairState.center = CGPointMake(_hostLabel.center.x, _hostLabel.center.y + LABEL_DY);
     _hostStatus.center = CGPointMake(_hostPairState.center.x, _hostPairState.center.y + LABEL_DY);
-    
-    UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(hostLongClicked)];
-    [_hostButton addGestureRecognizer:longPressRecognizer];
-    
-    [self updateBounds];
-    [self addSubview:_hostButton];
-    [self addSubview:_hostLabel];
-    [self addSubview:_hostStatus];
-    [self addSubview:_hostPairState];
-    return self;
 }
 
-- (NSString *)online {
-    return _hostStatus.text;
+- (void) startUpdateLoop {
+    [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
 }
 
-- (void) updateBounds {
-    float x = _hostButton.frame.origin.x < _hostLabel.frame.origin.x ? _hostButton.frame.origin.x : _hostLabel.frame.origin.x;
-    float y = _hostButton.frame.origin.y < _hostLabel.frame.origin.y ? _hostButton.frame.origin.y : _hostLabel.frame.origin.y;
-    self.bounds = CGRectMake(x , y, _hostButton.frame.size.width > _hostLabel.frame.size.width ? _hostButton.frame.size.width : _hostLabel.frame.size.width, _hostButton.frame.size.height + _hostLabel.frame.size.height + LABEL_DY / 2);
-    self.frame = CGRectMake(x , y, _hostButton.frame.size.width > _hostLabel.frame.size.width ? _hostButton.frame.size.width : _hostLabel.frame.size.width, _hostButton.frame.size.height + _hostLabel.frame.size.height + LABEL_DY / 2);
+- (void) updateLoop {
+    [self updateContentsForHost:_host];
+    [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
 }
 
 - (id) initForAddWithCallback:(id<HostCallback>)callback {
@@ -120,6 +130,8 @@ static int LABEL_DY = 20;
     
     return self;
 }
+
+
 
 - (void) hostLongClicked {
     [_callback hostLongClicked:_host];
