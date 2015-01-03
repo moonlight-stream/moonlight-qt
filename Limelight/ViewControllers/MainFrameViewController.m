@@ -51,6 +51,7 @@ static StreamConfiguration* streamConfig;
         [_pairAlert dismissWithClickedButtonIndex:0 animated:NO];
         _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Failed" message:message delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
         [_pairAlert show];
+        [_discMan startDiscovery];
     });
 }
 
@@ -59,6 +60,7 @@ static StreamConfiguration* streamConfig;
         [_pairAlert dismissWithClickedButtonIndex:0 animated:NO];
         _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Succesful" message:@"Successfully paired to host" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
         [_pairAlert show];
+        [_discMan startDiscovery];
     });
 }
 
@@ -107,6 +109,8 @@ static StreamConfiguration* streamConfig;
             [self alreadyPaired];
         } else {
             NSLog(@"Trying to pair");
+            // Polling the server while pairing causes the server to screw up
+            [_discMan stopDiscoveryBlocking];
             PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
             [_opQueue addOperation:pMan];
         }
@@ -322,9 +326,7 @@ static StreamConfiguration* streamConfig;
     [super viewDidDisappear:animated];
     // when discovery stops, we must create a new instance because you cannot restart an NSOperation when it is finished
     [_discMan stopDiscovery];
-    @synchronized(hostList) {
-        _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
-    }
+
     // In case the host objects were updated in the background
     [[[DataManager alloc] init] saveHosts];
 }

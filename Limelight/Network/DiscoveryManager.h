@@ -21,6 +21,7 @@
 - (id) initWithHosts:(NSArray*)hosts andCallback:(id<DiscoveryCallback>) callback;
 - (void) startDiscovery;
 - (void) stopDiscovery;
+- (void) stopDiscoveryBlocking;
 - (BOOL) addHostToDiscovery:(Host*)host;
 - (void) removeHostFromDiscovery:(Host*)host;
 - (void) discoverHost:(NSString*)hostAddress withCallback:(void (^)(Host*))callback;

@@ -69,8 +69,14 @@
     [_mdnsMan stopSearching];
     [_opQueue cancelAllOperations];
 }
+
+- (void) stopDiscoveryBlocking {
+    NSLog(@"Stopping discovery and waiting for workers to stop");
     shouldDiscover = NO;
     [_mdnsMan stopSearching];
+    [_opQueue cancelAllOperations];
+    [_opQueue waitUntilAllOperationsAreFinished];
+    NSLog(@"All discovery workers stopped");
 }
 
 - (BOOL) addHostToDiscovery:(Host *)host {
