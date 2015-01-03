@@ -52,6 +52,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
         if (service.hostName != nil) {
             Host* host = [dataMan createHost];
             host.address = service.hostName;
+            host.name = host.address;
             [hosts addObject:host];
         }
     }
