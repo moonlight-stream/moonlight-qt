@@ -16,12 +16,12 @@
 
 @end
 
-@interface DiscoveryManager : NSOperation <MDNSCallback>
+@interface DiscoveryManager : NSObject <MDNSCallback>
 
 - (id) initWithHosts:(NSArray*)hosts andCallback:(id<DiscoveryCallback>) callback;
 - (void) startDiscovery;
 - (void) stopDiscovery;
-- (void) addHostToDiscovery:(Host*)host;
+- (BOOL) addHostToDiscovery:(Host*)host;
 - (void) removeHostFromDiscovery:(Host*)host;
 - (void) discoverHost:(NSString*)hostAddress withCallback:(void (^)(Host*))callback;
 

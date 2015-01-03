@@ -31,6 +31,7 @@
 		FB4678FA1A55FFAD00377732 /* DiscoveryManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678F91A55FFAD00377732 /* DiscoveryManager.m */; };
 		FB4678FF1A565DAC00377732 /* WakeOnLanManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */; };
 		FB4679011A57048000377732 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB4679001A57048000377732 /* CoreFoundation.framework */; };
+		FB6549561A57907E001C8F39 /* DiscoveryWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = FB6549551A57907E001C8F39 /* DiscoveryWorker.m */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
 		FB89462819F646E200339C8A /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460619F646E200339C8A /* CryptoManager.m */; };
 		FB89462919F646E200339C8A /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FB89460719F646E200339C8A /* mkcert.c */; };
@@ -117,6 +118,8 @@
 		FB4678FD1A565DAC00377732 /* WakeOnLanManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WakeOnLanManager.h; sourceTree = "<group>"; };
 		FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WakeOnLanManager.m; sourceTree = "<group>"; };
 		FB4679001A57048000377732 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		FB6549541A57907E001C8F39 /* DiscoveryWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscoveryWorker.h; sourceTree = "<group>"; };
+		FB6549551A57907E001C8F39 /* DiscoveryWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiscoveryWorker.m; sourceTree = "<group>"; };
 		FB7E794319C8B71B00A15F68 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 		FB89460519F646E200339C8A /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
 		FB89460619F646E200339C8A /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
@@ -420,10 +423,12 @@
 				FB89461419F646E200339C8A /* PairManager.m */,
 				FBD3494119FC9C04002D2A60 /* AppManager.h */,
 				FBD3494219FC9C04002D2A60 /* AppManager.m */,
-				FB4678F81A55FFAD00377732 /* DiscoveryManager.h */,
-				FB4678F91A55FFAD00377732 /* DiscoveryManager.m */,
 				FB4678FD1A565DAC00377732 /* WakeOnLanManager.h */,
 				FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */,
+				FB4678F81A55FFAD00377732 /* DiscoveryManager.h */,
+				FB4678F91A55FFAD00377732 /* DiscoveryManager.m */,
+				FB6549541A57907E001C8F39 /* DiscoveryWorker.h */,
+				FB6549551A57907E001C8F39 /* DiscoveryWorker.m */,
 			);
 			path = Network;
 			sourceTree = "<group>";
@@ -787,6 +792,7 @@
 				FB4678ED1A50C40900377732 /* OnScreenControls.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
 				FBD3494319FC9C04002D2A60 /* AppManager.m in Sources */,
+				FB6549561A57907E001C8F39 /* DiscoveryWorker.m in Sources */,
 				FB89462A19F646E200339C8A /* ControllerSupport.m in Sources */,
 				FBD349621A0089F6002D2A60 /* DataManager.m in Sources */,
 				FB89463119F646E200339C8A /* StreamManager.m in Sources */,
