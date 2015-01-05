@@ -22,6 +22,30 @@ static NSOperationQueue* mainQueue;
     [[UISegmentedControl appearance] setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIFont fontWithName:@"Roboto-Regular" size:[UIFont systemFontSize]], NSFontAttributeName, nil] forState:UIControlStateNormal];
     [[UIButton appearance].titleLabel setFont:[UIFont fontWithName:@"Roboto-Regular" size:[UIFont systemFontSize]]];
 
+
+    // Generate selected segment background image
+    CGSize borderImageSize = CGSizeMake(1.f, 100.f);
+    
+    UIGraphicsBeginImageContext(borderImageSize);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    
+    CGContextSetStrokeColorWithColor(context, [UIColor whiteColor].CGColor);
+    CGContextFillRect(context, CGRectMake(0.f, borderImageSize.height * 0.8, borderImageSize.width, borderImageSize.height));
+    
+    UIImage *selectedSegmentBG = UIGraphicsGetImageFromCurrentImageContext();
+    UIGraphicsEndImageContext();
+    
+    // Clear default border and background color
+    [[UISegmentedControl appearance] setBackgroundImage:[[UIImage alloc] init] forState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+    [[UISegmentedControl appearance] setDividerImage:[[UIImage alloc] init] forLeftSegmentState:UIControlStateNormal rightSegmentState:UIControlStateNormal barMetrics:UIBarMetricsDefault];
+    
+    // Set selected segment background image
+    [[UISegmentedControl appearance] setBackgroundImage:[selectedSegmentBG imageWithRenderingMode:UIImageRenderingModeAlwaysTemplate] forState:UIControlStateSelected barMetrics:UIBarMetricsDefault];
+    
+    // Change text color on UISegmentedControl
+    [[UISegmentedControl appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor]} forState:UIControlStateNormal];
+    [[UISegmentedControl appearance] setTitleTextAttributes:@{NSForegroundColorAttributeName: [UIColor whiteColor]} forState:UIControlStateSelected];
+    
     return YES;
 }
 
