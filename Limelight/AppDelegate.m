@@ -18,6 +18,10 @@ static NSOperationQueue* mainQueue;
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
+    [[UILabel appearance] setFont:[UIFont fontWithName:@"Roboto-Regular" size:[UIFont systemFontSize]]];
+    [[UISegmentedControl appearance] setTitleTextAttributes:[NSDictionary dictionaryWithObjectsAndKeys:[UIFont fontWithName:@"Roboto-Regular" size:[UIFont systemFontSize]], NSFontAttributeName, nil] forState:UIControlStateNormal];
+    [[UIButton appearance].titleLabel setFont:[UIFont fontWithName:@"Roboto-Regular" size:[UIFont systemFontSize]]];
+
     return YES;
 }
 

@@ -29,6 +29,7 @@ static int LABEL_DY = 20;
     _hostButton.layer.shadowOpacity = 0.7;
     
     _hostLabel = [[UILabel alloc] init];
+    [_hostLabel setFont:[UIFont fontWithName:@"Roboto-Regular" size:[UIFont systemFontSize]]];
     
     return self;
 }

@@ -58,7 +58,7 @@ static int LABEL_DY = 20;
         CGFloat padding = 4.f;
         [_appLabel setFrame: CGRectMake(padding, padding, _appButton.frame.size.width - 2 * padding, _appButton.frame.size.height - 2 * padding)];
         [_appLabel setTextColor:[UIColor whiteColor]];
-        [_appLabel setFont:[UIFont systemFontOfSize:10.f]];
+        [_appLabel setFont:[UIFont fontWithName:@"Roboto-Regular" size:10.f]];
         [_appLabel setBaselineAdjustment:UIBaselineAdjustmentAlignCenters];
         [_appLabel setTextAlignment:NSTextAlignmentCenter];
         [_appLabel setLineBreakMode:NSLineBreakByWordWrapping];
