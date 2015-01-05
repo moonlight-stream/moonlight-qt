@@ -99,18 +99,28 @@
     [_hostQueue removeObject:host];
 }
 
+// Override from MDNSCallback
 - (void)updateHosts:(NSArray *)hosts {
-    for (Host* host in hosts) {
-        if ([self addHostToDiscovery:host]) {
-            [_callback updateAllHosts:_hostQueue];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        DataManager* dataMan = [[DataManager alloc] init];
+        // Discover the hosts before adding to eliminate duplicates
+        for (Host* host in hosts) {
+            // Since this is on a background thread, we do not need to use the opQueue
+            NSOperation* worker = [self createWorkerForHost:host];
+            [worker main];
+            if ([self addHostToDiscovery:host]) {
+                [_callback updateAllHosts:_hostQueue];
+            } else {
+                [dataMan removeHost:host];
+            }
         }
-    }
+    });
 }
 
 - (BOOL) isHostInDiscovery:(Host*)host {
     for (int i = 0; i < _hostQueue.count; i++) {
         Host* discoveredHost = [_hostQueue objectAtIndex:i];
-        if ([discoveredHost.uuid isEqualToString:host.uuid]) {
+        if (discoveredHost.uuid.length > 0 && [discoveredHost.uuid isEqualToString:host.uuid]) {
             return YES;
         }
     }
