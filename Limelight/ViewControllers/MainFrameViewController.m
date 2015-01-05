@@ -72,6 +72,7 @@ static StreamConfiguration* streamConfig;
         dispatch_async(dispatch_get_main_queue(), ^{
             [self updateApps];
             _computerNameButton.title = _selectedHost.displayName;
+            [self.navigationController.navigationBar setNeedsLayout];
         });
         [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
     });
