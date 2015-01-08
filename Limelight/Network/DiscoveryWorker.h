@@ -12,6 +12,7 @@
 @interface DiscoveryWorker : NSOperation
 
 - (id) initWithHost:(Host*)host uniqueId:(NSString*)uniqueId cert:(NSData*)cert;
+- (void) discoverHost;
 - (Host*) getHost;
 
 + (void) updateHost:(Host*)host withServerInfo:(NSData*)serverInfoData;

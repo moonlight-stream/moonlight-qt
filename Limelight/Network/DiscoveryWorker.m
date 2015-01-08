@@ -32,44 +32,48 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
 
 - (void)main {
     while (!self.cancelled) {
-        BOOL receivedResponse = NO;
-        if (!self.cancelled && _host.localAddress != nil) {
-            HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.localAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-            NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-            if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
-                [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
-                _host.address = _host.localAddress;
-                receivedResponse = YES;
-            }
-        }
-        if (!self.cancelled && !receivedResponse && _host.externalAddress != nil) {
-            HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.externalAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-            NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-            if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
-                [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
-                _host.address = _host.externalAddress;
-                receivedResponse = YES;
-            }
-        }
-        
-        if (!self.cancelled && !receivedResponse && _host.address != nil) {
-            HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-            NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-            if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
-                [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
-                receivedResponse = YES;
-            }
-        }
-        _host.online = receivedResponse;
-        if (receivedResponse) {
-            NSLog(@"Received response from: %@\n{\n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", _host.name, _host.address, _host.localAddress, _host.externalAddress, _host.uuid, _host.mac, _host.pairState, _host.online);
-        } else {
-            // If the host is not online, we do not know the pairstate
-            _host.pairState = PairStateUnknown;
-        }
+        [self discoverHost];
         if (!self.cancelled) {
             [NSThread sleepForTimeInterval:POLL_RATE];
         }
+    }
+}
+
+- (void) discoverHost {
+    BOOL receivedResponse = NO;
+    if (!self.cancelled && _host.localAddress != nil) {
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.localAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+        if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
+            [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
+            _host.address = _host.localAddress;
+            receivedResponse = YES;
+        }
+    }
+    if (!self.cancelled && !receivedResponse && _host.externalAddress != nil) {
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.externalAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+        if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
+            [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
+            _host.address = _host.externalAddress;
+            receivedResponse = YES;
+        }
+    }
+    
+    if (!self.cancelled && !receivedResponse && _host.address != nil) {
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+        if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
+            [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
+            receivedResponse = YES;
+        }
+    }
+    _host.online = receivedResponse;
+    if (receivedResponse) {
+        NSLog(@"Received response from: %@\n{\n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", _host.name, _host.address, _host.localAddress, _host.externalAddress, _host.uuid, _host.mac, _host.pairState, _host.online);
+    } else {
+        // If the host is not online, we do not know the pairstate
+        _host.pairState = PairStateUnknown;
     }
 }
 

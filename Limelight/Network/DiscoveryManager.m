@@ -105,12 +105,15 @@
         DataManager* dataMan = [[DataManager alloc] init];
         // Discover the hosts before adding to eliminate duplicates
         for (Host* host in hosts) {
+            NSLog(@"Found host through MDNS: %@:", host.name);
             // Since this is on a background thread, we do not need to use the opQueue
-            NSOperation* worker = [self createWorkerForHost:host];
-            [worker main];
+            DiscoveryWorker* worker = (DiscoveryWorker*)[self createWorkerForHost:host];
+            [worker discoverHost];
             if ([self addHostToDiscovery:host]) {
+                NSLog(@"Adding host to discovery: %@", host.name);
                 [_callback updateAllHosts:_hostQueue];
             } else {
+                NSLog(@"Not adding host to discovery: %@", host.name);
                 [dataMan removeHost:host];
             }
         }
