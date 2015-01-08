@@ -49,14 +49,14 @@ static const NSString* PORT = @"47984";
     NSMutableArray* appList = [[NSMutableArray alloc] init];
     
     while (node != NULL) {
-        NSLog(@"node: %s", node->name);
+        //NSLog(@"node: %s", node->name);
         if (!xmlStrcmp(node->name, (const xmlChar*)"App")) {
             xmlNodePtr appInfoNode = node->xmlChildrenNode;
             NSString* appName;
             NSString* appId;
             BOOL appIsRunning = NO;
             while (appInfoNode != NULL) {
-                NSLog(@"appInfoNode: %s", appInfoNode->name);
+                //NSLog(@"appInfoNode: %s", appInfoNode->name);
                 if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"AppTitle")) {
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
                     appName = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
@@ -149,7 +149,7 @@ static const NSString* PORT = @"47984";
 
 + (bool) verifyStatus:(xmlNodePtr)docRoot {
     xmlChar* statusStr = xmlGetProp(docRoot, (const xmlChar*)"status_code");
-    NSLog(@"status: %s", statusStr);
+    //NSLog(@"status: %s", statusStr);
     int status = [[NSString stringWithUTF8String:(const char*)statusStr] intValue];
     xmlFree(statusStr);
     return status == 200;
