@@ -1,68 +1,80 @@
 {
   "images" : [
     {
+      "idiom" : "iphone",
       "size" : "29x29",
-      "idiom" : "iphone",
-      "filename" : "Limelight Flat Design Rounded 58x58@2x.png",
-      "scale" : "2x"
+      "scale" : "2x",
+      "filename" : "Icon-Small@2x.png"
     },
     {
+      "idiom" : "iphone",
+      "size" : "29x29",
+      "scale" : "3x",
+      "filename" : "Icon-Small@3x.png"
+    },
+    {
+      "idiom" : "iphone",
       "size" : "40x40",
-      "idiom" : "iphone",
-      "filename" : "Limelight Flat Design Rounded 80x80@2x.png",
-      "scale" : "2x"
+      "scale" : "2x",
+      "filename" : "Icon-40@2x.png"
     },
     {
+      "idiom" : "iphone",
+      "size" : "40x40",
+      "scale" : "3x",
+      "filename" : "Icon-40@3x.png"
+    },
+    {
+      "idiom" : "iphone",
       "size" : "60x60",
-      "idiom" : "iphone",
-      "filename" : "Limelight Flat Design Rounded 120x120@2x.png",
-      "scale" : "2x"
+      "scale" : "2x",
+      "filename" : "Icon-60@2x.png"
     },
     {
+      "idiom" : "iphone",
       "size" : "60x60",
-      "idiom" : "iphone",
-      "filename" : "Limelight Flat Design Rounded 180x180@3x.png",
-      "scale" : "3x"
+      "scale" : "3x",
+      "filename" : "Icon-60@3x.png"
     },
     {
+      "idiom" : "ipad",
       "size" : "29x29",
-      "idiom" : "ipad",
-      "filename" : "Limelight Flat Design Rounded 29x29@1x.png",
-      "scale" : "1x"
+      "scale" : "1x",
+      "filename" : "Icon-Small.png"
     },
     {
+      "idiom" : "ipad",
       "size" : "29x29",
-      "idiom" : "ipad",
-      "filename" : "Limelight Flat Design Rounded 58x58@2x-1.png",
-      "scale" : "2x"
+      "scale" : "2x",
+      "filename" : "Icon-Small@2x.png"
     },
     {
+      "idiom" : "ipad",
       "size" : "40x40",
-      "idiom" : "ipad",
-      "filename" : "Limelight Flat Design Rounded 40x40@1x.png",
-      "scale" : "1x"
+      "scale" : "1x",
+      "filename" : "Icon-40.png"
     },
     {
+      "idiom" : "ipad",
       "size" : "40x40",
-      "idiom" : "ipad",
-      "filename" : "Limelight Flat Design Rounded 80x80@2x-1.png",
-      "scale" : "2x"
+      "scale" : "2x",
+      "filename" : "Icon-40@2x.png"
     },
     {
-      "size" : "76x76",
       "idiom" : "ipad",
-      "filename" : "Limelight Flat Design Rounded 76x76@1x.png",
-      "scale" : "1x"
+      "size" : "76x76",
+      "scale" : "1x",
+      "filename" : "Icon-76.png"
     },
     {
-      "size" : "76x76",
       "idiom" : "ipad",
-      "filename" : "Limelight Flat Design Rounded 152x152@2x.png",
-      "scale" : "2x"
+      "size" : "76x76",
+      "scale" : "2x",
+      "filename" : "Icon-76@2x.png"
     }
   ],
   "info" : {
     "version" : 1,
-    "author" : "xcode"
+    "author" : "makeappicon"
   }
 }

@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6250" systemVersion="14A388a" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES">
+<document type="com.apple.InterfaceBuilder3.CocoaTouch.XIB" version="3.0" toolsVersion="6254" systemVersion="14C81f" targetRuntime="iOS.CocoaTouch" propertyAccessControl="none" useAutolayout="YES" launchScreen="YES" useTraitCollections="YES">
     <dependencies>
-        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6244"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="6247"/>
     </dependencies>
     <objects>
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner"/>
@@ -13,26 +13,22 @@
                 <label opaque="NO" clipsSubviews="YES" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="  Copyright (c) 2014 Limelight Stream. All rights reserved." textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" minimumFontSize="9" translatesAutoresizingMaskIntoConstraints="NO" id="8ie-xW-0ye">
                     <rect key="frame" x="22" y="439" width="437" height="21"/>
                     <fontDescription key="fontDescription" type="system" pointSize="17"/>
-                    <color key="textColor" red="0.6705882352941176" green="0.83137254901960789" blue="0.086274509803921567" alpha="1" colorSpace="calibratedRGB"/>
+                    <color key="textColor" red="0.070588235294117646" green="0.45490196078431372" blue="0.074509803921568626" alpha="1" colorSpace="calibratedRGB"/>
                     <nil key="highlightedColor"/>
                     <variation key="widthClass=compact">
                         <fontDescription key="fontDescription" type="system" pointSize="11"/>
                     </variation>
                 </label>
-                <imageView userInteractionEnabled="NO" contentMode="scaleAspectFit" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="store_icon_1024x1024" translatesAutoresizingMaskIntoConstraints="NO" id="tIx-KE-YER">
-                    <rect key="frame" x="127" y="126" width="227" height="227"/>
-                    <constraints>
-                        <constraint firstAttribute="width" constant="227" id="EI7-Sf-3cH"/>
-                        <constraint firstAttribute="height" constant="227" id="b0G-y9-aP0"/>
-                    </constraints>
+                <imageView userInteractionEnabled="NO" contentMode="scaleToFill" horizontalHuggingPriority="251" verticalHuggingPriority="251" image="Limelight Flat Design Banner" translatesAutoresizingMaskIntoConstraints="NO" id="lr8-1h-ydW">
+                    <rect key="frame" x="-8" y="115" width="496" height="251"/>
                 </imageView>
             </subviews>
             <color key="backgroundColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
             <constraints>
-                <constraint firstItem="tIx-KE-YER" firstAttribute="centerX" secondItem="8ie-xW-0ye" secondAttribute="centerX" id="GN9-Xb-RLD"/>
+                <constraint firstAttribute="centerY" secondItem="lr8-1h-ydW" secondAttribute="centerY" id="C8A-9E-cM6"/>
                 <constraint firstAttribute="bottom" secondItem="8ie-xW-0ye" secondAttribute="bottom" constant="20" id="Gnz-uJ-CDw"/>
+                <constraint firstAttribute="centerX" secondItem="lr8-1h-ydW" secondAttribute="centerX" id="WCv-Cd-TyR"/>
                 <constraint firstAttribute="centerX" secondItem="8ie-xW-0ye" secondAttribute="centerX" id="ZEH-qu-HZ9"/>
-                <constraint firstAttribute="centerY" secondItem="tIx-KE-YER" secondAttribute="centerY" constant="0.5" id="trN-ZP-0Hg"/>
             </constraints>
             <nil key="simulatedStatusBarMetrics"/>
             <freeformSimulatedSizeMetrics key="simulatedDestinationMetrics"/>
@@ -40,6 +36,6 @@
         </view>
     </objects>
     <resources>
-        <image name="store_icon_1024x1024" width="1024" height="1024"/>
+        <image name="Limelight Flat Design Banner" width="496" height="251"/>
     </resources>
 </document>
