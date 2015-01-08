@@ -22,11 +22,12 @@ static int LABEL_DY = 20;
     _callback = callback;
     
     _appButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    [_appButton setContentEdgeInsets:UIEdgeInsetsMake(0, 4, 0, 4)];
-    [_appButton setBackgroundImage:[UIImage imageNamed:@"NoAppImage"] forState:UIControlStateNormal];
+    UIImage* noImage = [UIImage imageNamed:@"NoAppImage"];
+    [_appButton setBackgroundImage:noImage forState:UIControlStateNormal];
     [_appButton sizeToFit];
     [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventTouchUpInside];
-    
+
+
     // Remove Shadow and label
     /*
     _appButton.layer.shadowColor = [[UIColor blackColor] CGColor];
@@ -42,8 +43,11 @@ static int LABEL_DY = 20;
     [self addSubview:_appLabel];
      */
     
+    
     [self addSubview:_appButton];
     [self sizeToFit];
+    _appButton.frame = CGRectMake(0, 0, noImage.size.width / 2, noImage.size.height / 2);
+    self.frame = CGRectMake(0, 0, noImage.size.width / 2, noImage.size.height / 2);
     
     return self;
 }
