@@ -202,21 +202,25 @@ static NSData* p12 = nil;
 }
 
 + (void) generateKeyPairUsingSSl {
-    if (![CryptoManager keyPairExists]) {
-        
-        NSLog(@"Generating Certificate... ");
-        CertKeyPair certKeyPair = generateCertKeyPair();
-        
-        NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-        NSString* documentsDirectory = [paths objectAtIndex:0];
-        NSString* certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
-        NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
-        NSString* p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
-        
-        //NSLog(@"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
-        saveCertKeyPair([certFile UTF8String], [p12File UTF8String], [keyPairFile UTF8String], certKeyPair);
-        freeCertKeyPair(certKeyPair);
-    }
+    static dispatch_once_t pred;
+    dispatch_once(&pred, ^{
+        if (![CryptoManager keyPairExists]) {
+            
+            NSLog(@"Generating Certificate... ");
+            CertKeyPair certKeyPair = generateCertKeyPair();
+            
+            NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSString* documentsDirectory = [paths objectAtIndex:0];
+            NSString* certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
+            NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
+            NSString* p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
+            
+            //NSLog(@"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
+            saveCertKeyPair([certFile UTF8String], [p12File UTF8String], [keyPairFile UTF8String], certKeyPair);
+            freeCertKeyPair(certKeyPair);
+            NSLog(@"Certificate created");
+        }
+    });
 }
 
 + (NSString*) getUniqueID {
