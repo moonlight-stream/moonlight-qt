@@ -10,6 +10,7 @@
 #include <Limelight.h>
 #import "OnScreenControls.h"
 #import "DataManager.h"
+#import "ControllerSupport.h"
 
 @implementation StreamView {
     CGPoint touchLocation;
@@ -17,12 +18,19 @@
     OnScreenControls* onScreenControls;
 }
 
-- (void) setupOnScreenControls {
-    onScreenControls = [[OnScreenControls alloc] initWithView:self];
+- (void) setupOnScreenControls:(ControllerSupport*)controllerSupport {
+    onScreenControls = [[OnScreenControls alloc] initWithView:self controllerSup:controllerSupport];
     DataManager* dataMan = [[DataManager alloc] init];
     OnScreenControlsLevel level = (OnScreenControlsLevel)[[dataMan retrieveSettings].onscreenControls integerValue];
-    NSLog(@"Setting on-screen controls level: %d", (int)level);
-    [onScreenControls setLevel:level];
+    
+    if (level == OnScreenControlsLevelAuto) {
+        [controllerSupport initAutoOnScreenControlMode:onScreenControls];
+    }
+    else {
+        NSLog(@"Setting manual on-screen controls level: %d", (int)level);
+        [onScreenControls setLevel:level];
+    }
+    
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {

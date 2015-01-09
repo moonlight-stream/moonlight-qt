@@ -64,7 +64,7 @@
         [self.stageLabel setText:@"Waiting for first frame..."];
         [self.stageLabel sizeToFit];
     });
-    [(StreamView*)self.view setupOnScreenControls];
+    [(StreamView*)self.view setupOnScreenControls: _controllerSupport];
 }
 
 - (void)connectionTerminated:(long)errorCode {

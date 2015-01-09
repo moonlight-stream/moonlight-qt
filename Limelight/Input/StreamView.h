@@ -7,9 +7,10 @@
 //
 
 #import <UIKit/UIKit.h>
+#import "ControllerSupport.h"
 
 @interface StreamView : UIView
 
-- (void) setupOnScreenControls;
+- (void) setupOnScreenControls:(ControllerSupport*)controllerSupport;
 
 @end

@@ -8,15 +8,22 @@
 
 #import <Foundation/Foundation.h>
 
+@class ControllerSupport;
+
 @interface OnScreenControls : NSObject
 
 typedef NS_ENUM(NSInteger, OnScreenControlsLevel) {
     OnScreenControlsLevelOff,
+    OnScreenControlsLevelAuto,
     OnScreenControlsLevelSimple,
-    OnScreenControlsLevelFull
+    OnScreenControlsLevelFull,
+    
+    // Internal levels selected by ControllerSupport
+    OnScreenControlsLevelAutoGCGamepad,
+    OnScreenControlsLevelAutoGCExtendedGamepad,
 };
 
-- (id) initWithView:(UIView*)view;
+- (id) initWithView:(UIView*)view controllerSup:(ControllerSupport*)controllerSupport;
 - (BOOL) handleTouchDownEvent:(NSSet*)touches;
 - (BOOL) handleTouchUpEvent:(NSSet*)touches;
 - (BOOL) handleTouchMovedEvent:(NSSet*)touches;
