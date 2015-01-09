@@ -58,6 +58,7 @@
 }
 
 - (void)edgeSwiped {
+    NSLog(@"User swiped to end stream");
     [_streamMan stopStream];
     [self returnToMainFrame];
 }
@@ -82,12 +83,14 @@
 - (void)connectionTerminated:(long)errorCode {
     NSLog(@"Connection terminated: %ld", errorCode);
     
-    UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection was terminated" preferredStyle:UIAlertControllerStyleAlert];
-    [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self returnToMainFrame];
-    }]];
-    [self presentViewController:conTermAlert animated:YES completion:nil];
-    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection was terminated" preferredStyle:UIAlertControllerStyleAlert];
+        [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+            [self returnToMainFrame];
+        }]];
+        [self presentViewController:conTermAlert animated:YES completion:nil];
+    });
+
     [_streamMan stopStreamInternal];
 }
 
