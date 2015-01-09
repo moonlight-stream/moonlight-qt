@@ -24,30 +24,14 @@ static int LABEL_DY = 20;
     _appButton = [UIButton buttonWithType:UIButtonTypeCustom];
     UIImage* noImage = [UIImage imageNamed:@"NoAppImage"];
     [_appButton setBackgroundImage:noImage forState:UIControlStateNormal];
+	[_appButton setContentEdgeInsets:UIEdgeInsetsMake(0, 4, 0, 4)];
     [_appButton sizeToFit];
     [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventTouchUpInside];
-
-
-    // Remove Shadow and label
-    /*
-    _appButton.layer.shadowColor = [[UIColor blackColor] CGColor];
-    _appButton.layer.shadowOffset = CGSizeMake(5,8);
-    _appButton.layer.shadowOpacity = 0.7;
-    
-    _appLabel = [[UILabel alloc] init];
-    [_appLabel setText:_app.appName];
-    [_appLabel sizeToFit];
-    _appLabel.center = CGPointMake(_appButton.bounds.origin.x + (_appButton.bounds.size.width / 2), _appButton.bounds.origin.y + _appButton.bounds.size.height + LABEL_DY);
-    
-    [self updateBounds];
-    [self addSubview:_appLabel];
-     */
-    
     
     [self addSubview:_appButton];
     [self sizeToFit];
-    _appButton.frame = CGRectMake(0, 0, noImage.size.width / 2, noImage.size.height / 2);
-    self.frame = CGRectMake(0, 0, noImage.size.width / 2, noImage.size.height / 2);
+    _appButton.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
+    self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
     
     return self;
 }
@@ -70,6 +54,22 @@ static int LABEL_DY = 20;
         [_appButton setBackgroundImage:_app.appImage forState:UIControlStateNormal];
         [self setNeedsDisplay];
     }
+
+    // TODO: Improve no-app image detection
+    if (_app.appImage == nil || (_app.appImage.size.width == 130.f && _app.appImage.size.height == 180.f)) { // This size of image might be blank image received from GameStream.
+        _appLabel = [[UILabel alloc] init];
+        CGFloat padding = 4.f;
+        [_appLabel setFrame: CGRectMake(padding, padding, _appButton.frame.size.width - 2 * padding, _appButton.frame.size.height - 2 * padding)];
+        [_appLabel setTextColor:[UIColor whiteColor]];
+        [_appLabel setFont:[UIFont fontWithName:@"Roboto-Regular" size:10.f]];
+        [_appLabel setBaselineAdjustment:UIBaselineAdjustmentAlignCenters];
+        [_appLabel setTextAlignment:NSTextAlignmentCenter];
+        [_appLabel setLineBreakMode:NSLineBreakByWordWrapping];
+        [_appLabel setNumberOfLines:0];
+        [_appLabel setText:_app.appName];
+        [_appButton addSubview:_appLabel];
+    }
+
 }
 
 /*
