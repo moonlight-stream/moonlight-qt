@@ -10,12 +10,12 @@
 #import "Settings.h"
 #import "DataManager.h"
 
-#define BITRATE_INTERVAL 100
+#define BITRATE_INTERVAL 1
 
 @implementation SettingsViewController {
     NSInteger _bitrate;
 }
-static NSString* bitrateFormat = @"Bitrate: %d kbps";
+static NSString* bitrateFormat = @"Bitrate: %d Mbps";
 
 
 - (void)viewDidLoad {
@@ -24,7 +24,8 @@ static NSString* bitrateFormat = @"Bitrate: %d kbps";
     DataManager* dataMan = [[DataManager alloc] init];
     Settings* currentSettings = [dataMan retrieveSettings];
     
-    _bitrate = [currentSettings.bitrate integerValue];
+    // Bitrate is persisted in kbps
+    _bitrate = [currentSettings.bitrate integerValue] / 1000;
     NSInteger framerate = [currentSettings.framerate integerValue] == 30 ? 0 : 1;
     NSInteger resolution = [currentSettings.height integerValue] == 720 ? 0 : 1;
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];

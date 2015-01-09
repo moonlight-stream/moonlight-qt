@@ -19,7 +19,8 @@
 - (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls {
     Settings* settingsToSave = [self retrieveSettings];
     settingsToSave.framerate = [NSNumber numberWithInteger:framerate];
-    settingsToSave.bitrate = [NSNumber numberWithInteger:bitrate];
+    // Bitrate is persisted in kbps
+    settingsToSave.bitrate = [NSNumber numberWithInteger:bitrate * 1000];
     settingsToSave.height = [NSNumber numberWithInteger:height];
     settingsToSave.width = [NSNumber numberWithInteger:width];
     settingsToSave.onscreenControls = [NSNumber numberWithInteger:onscreenControls];
