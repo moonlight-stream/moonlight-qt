@@ -134,7 +134,7 @@ static const int LABEL_DY = 20;
 
 
 - (void) hostLongClicked {
-    [_callback hostLongClicked:_host];
+    [_callback hostLongClicked:_host view:self];
 }
 
 - (void) hostClicked {

@@ -67,14 +67,15 @@ static StreamConfiguration* streamConfig;
 - (void)alreadyPaired {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
-            [self updateApps];
-            NSLog(@"Setting _computerNameButton.title: %@", _selectedHost.name);
             _computerNameButton.title = _selectedHost.name;
         });
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
         appList = [HttpManager getAppListFromXML:appListResp];
         
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self updateApps];
+        });
         [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
     });
 }
@@ -117,7 +118,7 @@ static StreamConfiguration* streamConfig;
     });
 }
 
-- (void)hostLongClicked:(Host *)host {
+- (void)hostLongClicked:(Host *)host view:(UIView *)view {
     NSLog(@"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
     if (host.online) {
@@ -145,14 +146,21 @@ static StreamConfiguration* streamConfig;
         }]];
     }
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
-        @synchronized(hostList) {
-            [hostList removeObject:host];
-        }
         [_discMan removeHostFromDiscovery:host];
         DataManager* dataMan = [[DataManager alloc] init];
         [dataMan removeHost:host];
+        @synchronized(hostList) {
+            [hostList removeObject:host];
+        }
+        [self updateAllHosts:[hostList allObjects]];
+        
     }]];
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    
+    // these two lines are required for iPad support of UIAlertSheet
+    longClickAlert.popoverPresentationController.sourceView = view;
+
+    longClickAlert.popoverPresentationController.sourceRect = CGRectMake(view.bounds.size.width / 2.0, view.bounds.size.height / 2.0, 1.0, 1.0); // center of the view
     [self presentViewController:longClickAlert animated:YES completion:^{
         [self updateHosts];
     }];
