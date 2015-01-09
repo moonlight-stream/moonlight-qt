@@ -313,7 +313,7 @@ static float L2_Y;
     [_rightStick removeFromSuperlayer];
 }
 
-- (BOOL) handleTouchMovedEvent:(UIEvent*)event {
+- (BOOL) handleTouchMovedEvent:touches {
     BOOL shouldSendPacket = false;
     BOOL buttonTouch = false;
     float rsMaxX = RS_CENTER_X + STICK_OUTER_SIZE / 2;
@@ -325,7 +325,7 @@ static float L2_Y;
     float lsMinX = LS_CENTER_X - STICK_OUTER_SIZE / 2;
     float lsMinY = LS_CENTER_Y - STICK_OUTER_SIZE / 2;
 
-    for (UITouch* touch in [event allTouches]) {
+    for (UITouch* touch in touches) {
         CGPoint touchLocation = [touch locationInView:_view];
         float xLoc = touchLocation.x;
         float yLoc = touchLocation.y;
@@ -402,9 +402,9 @@ static float L2_Y;
     return shouldSendPacket || buttonTouch;
 }
 
-- (BOOL)handleTouchDownEvent:(UIEvent*)event {
+- (BOOL)handleTouchDownEvent:touches {
     BOOL shouldSendPacket = false;
-    for (UITouch* touch in [event allTouches]) {
+    for (UITouch* touch in touches) {
         CGPoint touchLocation = [touch locationInView:_view];
 
         if ([_aButton.presentationLayer hitTest:touchLocation]) {
@@ -478,9 +478,9 @@ static float L2_Y;
     return shouldSendPacket;
 }
 
-- (BOOL)handleTouchUpEvent:(UIEvent*)event {
+- (BOOL)handleTouchUpEvent:touches {
     BOOL shouldSendPacket = false;
-    for (UITouch* touch in [event allTouches]) {
+    for (UITouch* touch in touches) {
         if (touch == _aTouch) {
             UPDATE_BUTTON(A_FLAG, 0);
             _aTouch = nil;

@@ -27,7 +27,7 @@
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     NSLog(@"Touch down");
-    if (![onScreenControls handleTouchDownEvent:event]) {
+    if (![onScreenControls handleTouchDownEvent:touches]) {
         UITouch *touch = [[event allTouches] anyObject];
         touchLocation = [touch locationInView:self];
         touchMoved = false;
@@ -35,7 +35,7 @@
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
-    if (![onScreenControls handleTouchMovedEvent:event]) {
+    if (![onScreenControls handleTouchMovedEvent:touches]) {
         if ([[event allTouches] count] == 1) {
             UITouch *touch = [[event allTouches] anyObject];
             CGPoint currentLocation = [touch locationInView:self];
@@ -66,7 +66,7 @@
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     NSLog(@"Touch up");
-    if (![onScreenControls handleTouchUpEvent:event]) {
+    if (![onScreenControls handleTouchUpEvent:touches]) {
         if (!touchMoved) {
             if ([[event allTouches] count]  == 2) {
                 NSLog(@"Sending right mouse button press");
