@@ -22,9 +22,7 @@
 
 - (void)reinitializeDisplayLayer
 {
-    if (displayLayer != nil) {
-        [displayLayer removeFromSuperlayer];
-    }
+    CALayer *oldLayer = displayLayer;
     
     displayLayer = [[AVSampleBufferDisplayLayer alloc] init];
     displayLayer.bounds = _view.bounds;
@@ -32,7 +30,13 @@
     displayLayer.position = CGPointMake(CGRectGetMidX(_view.bounds), CGRectGetMidY(_view.bounds));
     displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
     
-    [_view.layer addSublayer:displayLayer];
+    if (oldLayer != nil) {
+        // Switch out the old display layer with the new one
+        [_view.layer replaceSublayer:oldLayer with:displayLayer];
+    }
+    else {
+        [_view.layer addSublayer:displayLayer];
+    }
     
     // We need some parameter sets before we can properly start decoding frames
     waitingForSps = true;
