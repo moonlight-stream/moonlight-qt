@@ -86,7 +86,7 @@ static NSData* p12 = nil;
     BIO_free(bio);
     
     if (!x509) {
-        fprintf(stderr, "unable to parse certificate in memory\n");
+        NSLog(@"ERROR: unable to parse certificate in memory");
         return NULL;
     }
     
@@ -115,7 +115,7 @@ static NSData* p12 = nil;
     BIO_free(bio);
     
     if (!pkey) {
-        fprintf(stderr, "unable to parse private key in memory\n");
+        NSLog(@"ERROR: unable to parse private key in memory!");
         return NULL;
     }
     
@@ -195,7 +195,7 @@ static NSData* p12 = nil;
     x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
     
     if (!x509) {
-        fprintf(stderr, "unable to parse certificate in memory\n");
+        NSLog(@"ERROR: unable to parse certificate in memory!");
         return NULL;
     }
     return [NSData dataWithBytes:x509->signature->data length:x509->signature->length];
