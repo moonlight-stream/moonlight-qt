@@ -302,7 +302,9 @@ void ClDisplayTransientMessage(char* message)
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;
     _streamConfig.bitrate = config.bitRate;
-    _streamConfig.packetSize = 1024;
+    
+    // FIXME: We should use 1024 when streaming remotely
+    _streamConfig.packetSize = 1292;
     
     memcpy(_streamConfig.remoteInputAesKey, [config.riKey bytes], [config.riKey length]);
     memset(_streamConfig.remoteInputAesIv, 0, 16);
