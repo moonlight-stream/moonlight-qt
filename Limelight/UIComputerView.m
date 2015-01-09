@@ -60,10 +60,34 @@ static const int LABEL_DY = 20;
 }
 
 - (void) updateBounds {
-    float x = _hostButton.frame.origin.x < _hostLabel.frame.origin.x ? _hostButton.frame.origin.x : _hostLabel.frame.origin.x;
-    float y = _hostButton.frame.origin.y < _hostLabel.frame.origin.y ? _hostButton.frame.origin.y : _hostLabel.frame.origin.y;
-    self.bounds = CGRectMake(x , y, _hostButton.frame.size.width > _hostLabel.frame.size.width ? _hostButton.frame.size.width : _hostLabel.frame.size.width, _hostButton.frame.size.height + _hostLabel.frame.size.height + LABEL_DY / 2);
-    self.frame = CGRectMake(x , y, _hostButton.frame.size.width > _hostLabel.frame.size.width ? _hostButton.frame.size.width : _hostLabel.frame.size.width, _hostButton.frame.size.height + _hostLabel.frame.size.height + LABEL_DY / 2);
+    float x = FLT_MAX;
+    float y = FLT_MAX;
+    float width = 0;
+    float height;
+    
+    x = MIN(x, _hostButton.frame.origin.x);
+    x = MIN(x, _hostLabel.frame.origin.x);
+    x = MIN(x, _hostStatus.frame.origin.x);
+    x = MIN(x, _hostPairState.frame.origin.x);
+    
+    y = MIN(y, _hostButton.frame.origin.y);
+    y = MIN(y, _hostLabel.frame.origin.y);
+    y = MIN(y, _hostStatus.frame.origin.y);
+    y = MIN(y, _hostPairState.frame.origin.y);
+
+    width = MAX(width, _hostButton.frame.size.width);
+    width = MAX(width, _hostLabel.frame.size.width);
+    width = MAX(width, _hostStatus.frame.size.width);
+    width = MAX(width, _hostPairState.frame.size.width);
+    
+    height = _hostButton.frame.size.height +
+        _hostLabel.frame.size.height +
+        _hostStatus.frame.size.height +
+        _hostPairState.frame.size.height +
+        LABEL_DY / 2;
+
+    self.bounds = CGRectMake(x, y, width, height);
+    self.frame = CGRectMake(x, y, width, height);
 }
 
 - (void) updateContentsForHost:(Host*)host {
