@@ -23,6 +23,7 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
     CFDataRef dataPayload = CFDataCreate(kCFAllocatorDefault, [wolPayload bytes], [wolPayload length]);
     CFSocketRef wolSocket = CFSocketCreate(kCFAllocatorDefault, PF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, NULL, NULL);
     if (!wolSocket) {
+        CFRelease(dataPayload);
         NSLog(@"Failed to create WOL socket");
         return;
     }
