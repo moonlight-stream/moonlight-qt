@@ -15,6 +15,4 @@
 - (void) discoverHost;
 - (Host*) getHost;
 
-+ (void) updateHost:(Host*)host withServerInfo:(NSData*)serverInfoData;
-
 @end

@@ -45,7 +45,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.localAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
         if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
-            [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
+            [HttpManager populateHostFromXML:serverInfoData host:_host];
             _host.address = _host.localAddress;
             receivedResponse = YES;
         }
@@ -54,7 +54,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.externalAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
         if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
-            [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
+            [HttpManager populateHostFromXML:serverInfoData host:_host];
             _host.address = _host.externalAddress;
             receivedResponse = YES;
         }
@@ -64,7 +64,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
         if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
-            [DiscoveryWorker updateHost:_host withServerInfo:serverInfoData];
+            [HttpManager populateHostFromXML:serverInfoData host:_host];
             receivedResponse = YES;
         }
     }
@@ -74,20 +74,6 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     } else {
         // If the host is not online, we do not know the pairstate
         _host.pairState = PairStateUnknown;
-    }
-}
-
-+ (void) updateHost:(Host*)host withServerInfo:(NSData*)serverInfoData {
-    host.name = [HttpManager getStringFromXML:serverInfoData tag:@"hostname"];
-    host.externalAddress = [HttpManager getStringFromXML:serverInfoData tag:@"ExternalIP"];
-    host.localAddress = [HttpManager getStringFromXML:serverInfoData tag:@"LocalIP"];
-    host.uuid = [HttpManager getStringFromXML:serverInfoData tag:@"uniqueid"];
-    host.mac = [HttpManager getStringFromXML:serverInfoData tag:@"mac"];
-    NSString* pairState = [HttpManager getStringFromXML:serverInfoData tag:@"PairStatus"];
-    if ([pairState isEqualToString:@"1"]) {
-        host.pairState = PairStatePaired;
-    } else {
-        host.pairState = PairStateUnpaired;
     }
 }
 

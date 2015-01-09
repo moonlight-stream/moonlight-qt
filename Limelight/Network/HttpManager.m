@@ -87,6 +87,61 @@ static const NSString* PORT = @"47984";
     return appList;
 }
 
++ (void) populateHostFromXML:(NSData*)xml host:(Host*)host {
+    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
+    
+    if (docPtr == NULL) {
+        NSLog(@"ERROR: An error occured trying to parse xml.");
+        return;
+    }
+
+    xmlNodePtr node;
+    xmlNodePtr rootNode = node = xmlDocGetRootElement(docPtr);
+    
+    // Check root status_code
+    if (![HttpManager verifyStatus: rootNode]) {
+        NSLog(@"ERROR: Request returned with failure status");
+        xmlFreeDoc(docPtr);
+        return;
+    }
+    
+    // Skip the root node
+    node = node->children;
+    
+    while (node != NULL) {
+        //NSLog(@"node: %s", node->name);
+        if (!xmlStrcmp(node->name, (const xmlChar*)"hostname")) {
+            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
+            host.name = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+            xmlFree(nodeVal);
+        } else if (!xmlStrcmp(node->name, (const xmlChar*)"ExternalIP")) {
+            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
+            host.externalAddress = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+            xmlFree(nodeVal);
+        } else if (!xmlStrcmp(node->name, (const xmlChar*)"LocalIP")) {
+            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
+            host.localAddress = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+            xmlFree(nodeVal);
+        } else if (!xmlStrcmp(node->name, (const xmlChar*)"uniqueid")) {
+            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
+            host.uuid = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+            xmlFree(nodeVal);
+        } else if (!xmlStrcmp(node->name, (const xmlChar*)"mac")) {
+            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
+            host.mac = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+            xmlFree(nodeVal);
+        } else if (!xmlStrcmp(node->name, (const xmlChar*)"PairStatus")) {
+            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
+            host.pairState = [[[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding] isEqualToString:@"1"] ? PairStatePaired : PairStateUnpaired;
+            xmlFree(nodeVal);
+        }
+        
+        node = node->next;
+    }
+    
+    xmlFreeDoc(docPtr);
+}
+
 + (NSString*) getStatusStringFromXML:(NSData*)xml {
     xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
     

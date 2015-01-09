@@ -7,10 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Host.h"
 
 @interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
 + (NSArray*) getAppListFromXML:(NSData*)xml;
++ (void) populateHostFromXML:(NSData*)xml host:(Host*)host;
 + (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag;
 + (NSString*) getStatusStringFromXML:(NSData*)xml;
 

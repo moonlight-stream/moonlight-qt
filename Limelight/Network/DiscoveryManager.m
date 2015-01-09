@@ -46,7 +46,7 @@
         DataManager* dataMan = [[DataManager alloc] init];
         host = [dataMan createHost];
         host.address = hostAddress;
-        [DiscoveryWorker updateHost:host withServerInfo:serverInfoData];
+        [HttpManager populateHostFromXML:serverInfoData host:host];
         if (![self addHostToDiscovery:host]) {
             [dataMan removeHost:host];
         }
