@@ -57,14 +57,26 @@
     [self returnToMainFrame];
 }
 
+- (void)edgeSwiped {
+    [_streamMan stopStream];
+    [self returnToMainFrame];
+}
+
 - (void) connectionStarted {
     NSLog(@"Connection started");
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.spinner stopAnimating];
         [self.stageLabel setText:@"Waiting for first frame..."];
         [self.stageLabel sizeToFit];
+        [(StreamView*)self.view setupOnScreenControls];
+        UIScreenEdgePanGestureRecognizer* swipeGesture = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(edgeSwiped)];
+        swipeGesture.edges = UIRectEdgeLeft;
+        if (swipeGesture == nil) {
+            NSLog(@"An error occured trying to create UIScreenEdgePanGestureRecognizer");
+        } else {
+            [self.view addGestureRecognizer:swipeGesture];
+        }
     });
-    [(StreamView*)self.view setupOnScreenControls];
 }
 
 - (void)connectionTerminated:(long)errorCode {
