@@ -7,39 +7,48 @@
 //
 
 #import "AppManager.h"
+#import "CryptoManager.h"
+#import "Utils.h"
 
 @implementation AppManager {
-    App* _app;
-    HttpManager* _hMan;
+    NSOperationQueue* opQueue;
     id<AppAssetCallback> _callback;
+    Host* _host;
+    NSString* _uniqueId;
+    NSData* _cert;
 }
 
-+ (void) retrieveAppAssets:(NSArray*)apps withManager:(HttpManager*)hMan andCallback:(id<AppAssetCallback>)callback {
-    for (App* app in apps) {
-        AppManager* manager = [[AppManager alloc] initWithApp:app httpManager:hMan andCallback:callback];
-        [manager retrieveAsset];
-    }
-    
-}
-
-- (id) initWithApp:(App*)app httpManager:(HttpManager*)hMan andCallback:(id<AppAssetCallback>)callback {
+- (id) initWithHost:(Host*)host andCallback:(id<AppAssetCallback>)callback {
     self = [super init];
-    _app = app;
-    _hMan = hMan;
     _callback = callback;
+    _host = host;
+    opQueue = [[NSOperationQueue alloc] init];
     return self;
 }
 
-- (void) retrieveAsset {
-    NSData* appAsset = [_hMan executeRequestSynchronously:[_hMan newAppAssetRequestWithAppId:_app.appId]];
-    UIImage* appImage = [UIImage imageWithData:appAsset];
-    _app.appImage = appImage;
-    NSLog(@"App Name: %@ id:%@ image: %@", _app.appName, _app.appId, _app.appImage);
-    [self performSelectorOnMainThread:@selector(sendCallBack) withObject:self waitUntilDone:NO];
+- (void) retrieveAssets:(NSArray*)appList {
+    for (App* app in appList) {
+        [opQueue addOperationWithBlock:^{
+            [self retrieveAssetForApp:app];
+        }];
+    }
 }
 
-- (void) sendCallBack {
-    [_callback receivedAssetForApp:_app];
+- (void) stopRetrieving {
+    [opQueue cancelAllOperations];
+}
+
+- (void) retrieveAssetForApp:(App*)app {
+    HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+    NSData* appAsset = [hMan executeRequestSynchronously:[hMan newAppAssetRequestWithAppId:app.appId]];
+    UIImage* appImage = [UIImage imageWithData:appAsset];
+    app.appImage = appImage;
+    NSLog(@"App Name: %@ id:%@ image: %@", app.appName, app.appId, app.appImage);
+    [self performSelectorOnMainThread:@selector(sendCallBackForApp:) withObject:app waitUntilDone:NO];
+}
+
+- (void) sendCallBackForApp:(App*)app {
+    [_callback receivedAssetForApp:app];
 }
 
 @end

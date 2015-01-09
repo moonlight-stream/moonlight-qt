@@ -27,6 +27,7 @@
     NSData* _cert;
     NSString* _currentGame;
     DiscoveryManager* _discMan;
+    AppManager* _appManager;
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
     int currentPosition;
@@ -77,7 +78,11 @@ static StreamConfiguration* streamConfig;
         dispatch_async(dispatch_get_main_queue(), ^{
             [self updateApps];
         });
-        [AppManager retrieveAppAssets:appList withManager:hMan andCallback:self];
+        if (_appManager != nil) {
+            [_appManager stopRetrieving];
+        }
+        _appManager = [[AppManager alloc] initWithHost:_selectedHost andCallback:self];
+        [_appManager retrieveAssets:appList];
     });
 }
 
