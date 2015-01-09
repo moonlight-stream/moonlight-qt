@@ -226,12 +226,16 @@ static StreamConfiguration* streamConfig;
     
     App* currentApp = [self findRunningApp];
     if (currentApp != nil) {
-        UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"App Already Running" message:[NSString stringWithFormat:@"%@ is currently running", currentApp.appName] preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Resume App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        UIAlertController* alertController = [UIAlertController
+        alertControllerWithTitle: app.appName
+        message: [app.appId isEqualToString:currentApp.appId] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.appName]preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction
+            actionWithTitle:[app.appId isEqualToString:currentApp.appId] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             NSLog(@"Resuming application: %@", currentApp.appName);
             [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
         }]];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Quit App" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+        [alertController addAction:[UIAlertAction actionWithTitle:
+              [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
             NSLog(@"Quitting application: %@", currentApp.appName);
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
