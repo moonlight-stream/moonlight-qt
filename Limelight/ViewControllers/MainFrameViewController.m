@@ -68,6 +68,7 @@ static StreamConfiguration* streamConfig;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
             _computerNameButton.title = _selectedHost.name;
+			[self.navigationController.navigationBar setNeedsLayout];
         });
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
