@@ -108,7 +108,7 @@ void ArInit(void)
     status = AudioComponentInstanceNew(AudioComponentFindNext(NULL, &audioDesc), &audioUnit);
     
     if (status) {
-        printf("Unable to instantiate new AudioComponent: %d\n", (int32_t)status);
+        NSLog(@"Unable to instantiate new AudioComponent: %d", (int32_t)status);
     }
     
     AudioStreamBasicDescription audioFormat = {0};
@@ -129,7 +129,7 @@ void ArInit(void)
                                   &audioFormat,
                                   sizeof(audioFormat));
     if (status) {
-        printf("Unable to set audio unit to input: %d\n", (int32_t)status);
+        NSLog(@"Unable to set audio unit to input: %d", (int32_t)status);
     }
     
     AURenderCallbackStruct callbackStruct = {0};
@@ -143,12 +143,12 @@ void ArInit(void)
                                   &callbackStruct,
                                   sizeof(callbackStruct));
     if (status) {
-        printf("Unable to set audio unit callback: %d\n", (int32_t)status);
+        NSLog(@"Unable to set audio unit callback: %d", (int32_t)status);
     }
     
     status = AudioUnitInitialize(audioUnit);
     if (status) {
-        printf("Unable to initialize audioUnit: %d\n", (int32_t)status);
+        NSLog(@"Unable to initialize audioUnit: %d", (int32_t)status);
     }
 }
 
@@ -161,7 +161,7 @@ void ArRelease(void)
     
     OSStatus status = AudioUnitUninitialize(audioUnit);
     if (status) {
-        printf("Unable to uninitialize audioUnit: %d\n", (int32_t)status);
+        NSLog(@"Unable to uninitialize audioUnit: %d", (int32_t)status);
     }
     
     // Audio session is now inactive
@@ -183,7 +183,7 @@ void ArStart(void)
 {
     OSStatus status = AudioOutputUnitStart(audioUnit);
     if (status) {
-        printf("Unable to start audioUnit: %d\n", (int32_t)status);
+        NSLog(@"Unable to start audioUnit: %d", (int32_t)status);
     }
 }
 
@@ -191,7 +191,7 @@ void ArStop(void)
 {
     OSStatus status = AudioOutputUnitStop(audioUnit);
     if (status) {
-        printf("Unable to stop audioUnit: %d\n", (int32_t)status);
+        NSLog(@"Unable to stop audioUnit: %d", (int32_t)status);
     }
 }
 
@@ -211,7 +211,7 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
             
             [audioLock lock];
             if (audioBufferQueueLength > MAX_QUEUE_ENTRIES) {
-                printf("Audio player too slow. Dropping all decoded samples!\n");
+                NSLog(@"Audio player too slow. Dropping all decoded samples!");
                 
                 // Clear all values from the buffer queue
                 struct AUDIO_BUFFER_QUEUE_ENTRY *entry;

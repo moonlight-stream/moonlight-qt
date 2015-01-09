@@ -80,7 +80,7 @@
 }
 
 - (void)connectionTerminated:(long)errorCode {
-    printf("Connection terminated: %ld\n", errorCode);
+    NSLog(@"Connection terminated: %ld", errorCode);
     
     UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection was terminated" preferredStyle:UIAlertControllerStyleAlert];
     [conTermAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
@@ -92,7 +92,7 @@
 }
 
 - (void) stageStarting:(char*)stageName {
-    printf("Starting %s\n", stageName);
+    NSLog(@"Starting %s", stageName);
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString* lowerCase = [NSString stringWithFormat:@"%s in progress...", stageName];
         NSString* titleCase = [[[lowerCase substringToIndex:1] uppercaseString] stringByAppendingString:[lowerCase substringFromIndex:1]];
@@ -127,11 +127,11 @@
 }
 
 - (void) displayMessage:(char*)message {
-    printf("Display message: %s\n", message);
+    NSLog(@"Display message: %s", message);
 }
 
 - (void) displayTransientMessage:(char*)message {
-    printf("Display transient message: %s\n", message);
+    NSLog(@"Display transient message: %s", message);
 }
 
 - (void)didReceiveMemoryWarning
