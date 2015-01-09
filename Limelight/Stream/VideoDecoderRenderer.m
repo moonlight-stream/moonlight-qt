@@ -8,7 +8,11 @@
 
 #import "VideoDecoderRenderer.h"
 
+#include "Limelight.h"
+
 @implementation VideoDecoderRenderer {
+    UIView *_view;
+    
     AVSampleBufferDisplayLayer* displayLayer;
     Boolean waitingForSps, waitingForPps;
     
@@ -16,20 +20,39 @@
     CMVideoFormatDescriptionRef formatDesc;
 }
 
+- (void)reinitializeDisplayLayer
+{
+    if (displayLayer != nil) {
+        [displayLayer removeFromSuperlayer];
+    }
+    
+    displayLayer = [[AVSampleBufferDisplayLayer alloc] init];
+    displayLayer.bounds = _view.bounds;
+    displayLayer.backgroundColor = [UIColor blackColor].CGColor;
+    displayLayer.position = CGPointMake(CGRectGetMidX(_view.bounds), CGRectGetMidY(_view.bounds));
+    displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+    
+    [_view.layer addSublayer:displayLayer];
+    
+    // We need some parameter sets before we can properly start decoding frames
+    waitingForSps = true;
+    spsData = nil;
+    waitingForPps = true;
+    ppsData = nil;
+    
+    if (formatDesc != nil) {
+        CFRelease(formatDesc);
+        formatDesc = nil;
+    }
+}
+
 - (id)initWithView:(UIView*)view
 {
     self = [super init];
     
-    displayLayer = [[AVSampleBufferDisplayLayer alloc] init];
-    displayLayer.bounds = view.bounds;
-    displayLayer.backgroundColor = [UIColor blackColor].CGColor;
-    displayLayer.position = CGPointMake(CGRectGetMidX(view.bounds), CGRectGetMidY(view.bounds));
-    displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
-    [view.layer addSublayer:displayLayer];
+    _view = view;
     
-    // We need some parameter sets before we can properly start decoding frames
-    waitingForSps = true;
-    waitingForPps = true;
+    [self reinitializeDisplayLayer];
     
     return self;
 }
@@ -107,10 +130,21 @@
 }
 
 // This function must free data
-- (void)submitDecodeBuffer:(unsigned char *)data length:(int)length
+- (int)submitDecodeBuffer:(unsigned char *)data length:(int)length
 {
     unsigned char nalType = data[FRAME_START_PREFIX_SIZE] & 0x1F;
     OSStatus status;
+    
+    // Check for previous decoder errors before doing anything
+    if (displayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
+        NSLog(@"Display layer rendering failed: %@", displayLayer.error);
+        
+        // Recreate the display layer
+        [self reinitializeDisplayLayer];
+        
+        // Request an IDR frame to initialize the new decoder
+        return DR_NEED_IDR;
+    }
     
     if (nalType == NAL_TYPE_SPS || nalType == NAL_TYPE_PPS) {
         if (nalType == NAL_TYPE_SPS) {
@@ -148,19 +182,19 @@
         free(data);
         
         // No frame data to submit for these NALUs
-        return;
+        return DR_OK;
     }
     
     if (formatDesc == NULL) {
         // Can't decode if we haven't gotten our parameter sets yet
         free(data);
-        return;
+        return DR_OK;
     }
     
     if (nalType != 0x1 && nalType != 0x5) {
         // Don't submit parameter set data
         free(data);
-        return;
+        return DR_OK;
     }
     
     // Now we're decoding actual frame data here
@@ -170,7 +204,7 @@
     if (status != noErr) {
         NSLog(@"CMBlockBufferCreateEmpty failed: %d", (int)status);
         free(data);
-        return;
+        return DR_NEED_IDR;
     }
     
     int lastOffset = -1;
@@ -205,7 +239,7 @@
     if (status != noErr) {
         NSLog(@"CMSampleBufferCreate failed: %d", (int)status);
         CFRelease(blockBuffer);
-        return;
+        return DR_NEED_IDR;
     }
     
     CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, YES);
@@ -229,6 +263,8 @@
     // Dereference the buffers
     CFRelease(blockBuffer);
     CFRelease(sampleBuffer);
+    
+    return DR_OK;
 }
 
 @end

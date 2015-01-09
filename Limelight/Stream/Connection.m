@@ -48,22 +48,24 @@ void DrSetup(int width, int height, int fps, void* context, int drFlags)
 {
 }
 
-void DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
+int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 {
+    int offset = 0;
     unsigned char* data = (unsigned char*) malloc(decodeUnit->fullLength);
-    if (data != NULL) {
-        int offset = 0;
-        
-        PLENTRY entry = decodeUnit->bufferList;
-        while (entry != NULL) {
-            memcpy(&data[offset], entry->data, entry->length);
-            offset += entry->length;
-            entry = entry->next;
-        }
-        
-        // This function will take our buffer
-        [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
+    if (data == NULL) {
+        // A frame was lost due to OOM condition
+        return DR_NEED_IDR;
     }
+    
+    PLENTRY entry = decodeUnit->bufferList;
+    while (entry != NULL) {
+        memcpy(&data[offset], entry->data, entry->length);
+        offset += entry->length;
+        entry = entry->next;
+    }
+    
+    // This function will take our buffer
+    return [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
 }
 
 void DrStart(void)
