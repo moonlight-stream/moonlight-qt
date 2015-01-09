@@ -11,39 +11,60 @@
 #import "Utils.h"
 
 @implementation AppManager {
-    NSOperationQueue* opQueue;
+    NSOperationQueue* _opQueue;
     id<AppAssetCallback> _callback;
     Host* _host;
     NSString* _uniqueId;
     NSData* _cert;
+    NSMutableDictionary* _imageCache;
 }
 
-- (id) initWithHost:(Host*)host andCallback:(id<AppAssetCallback>)callback {
+- (id) initWithCallback:(id<AppAssetCallback>)callback {
     self = [super init];
     _callback = callback;
-    _host = host;
-    opQueue = [[NSOperationQueue alloc] init];
+    _opQueue = [[NSOperationQueue alloc] init];
+    _imageCache = [[NSMutableDictionary alloc] init];
+    _uniqueId = [CryptoManager getUniqueID];
     return self;
 }
 
-- (void) retrieveAssets:(NSArray*)appList {
+- (void) retrieveAssets:(NSArray*)appList fromHost:(Host*)host {
+    Host* oldHost = _host;
+    _host = host;
+    BOOL useCache = [oldHost.uuid isEqualToString:_host.uuid];
+    NSLog(@"Using cached app images: %d", useCache);
+    if (!useCache) {
+        [_imageCache removeAllObjects];
+    }
     for (App* app in appList) {
-        [opQueue addOperationWithBlock:^{
-            [self retrieveAssetForApp:app];
+        [_opQueue addOperationWithBlock:^{
+            [self retrieveAssetForApp:app useCache:useCache];
         }];
     }
 }
 
 - (void) stopRetrieving {
-    [opQueue cancelAllOperations];
+    [_opQueue cancelAllOperations];
 }
 
-- (void) retrieveAssetForApp:(App*)app {
-    HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-    NSData* appAsset = [hMan executeRequestSynchronously:[hMan newAppAssetRequestWithAppId:app.appId]];
-    UIImage* appImage = [UIImage imageWithData:appAsset];
-    app.appImage = appImage;
-    NSLog(@"App Name: %@ id:%@ image: %@", app.appName, app.appId, app.appImage);
+- (void) retrieveAssetForApp:(App*)app useCache:(BOOL)useCache {
+    UIImage* appImage = nil;
+    if (useCache) {
+        UIImage* cachedImage = [_imageCache objectForKey:app.appId];
+        if (cachedImage != nil) {
+            appImage = cachedImage;
+            app.appImage = appImage;
+        }
+    }
+    if (appImage == nil) {
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        NSData* appAsset = [hMan executeRequestSynchronously:[hMan newAppAssetRequestWithAppId:app.appId]];
+        appImage = [UIImage imageWithData:appAsset];
+        app.appImage = appImage;
+        if (appImage != nil) {
+            [_imageCache setObject:appImage forKey:app.appId];
+        }
+    }
     [self performSelectorOnMainThread:@selector(sendCallBackForApp:) withObject:app waitUntilDone:NO];
 }
 

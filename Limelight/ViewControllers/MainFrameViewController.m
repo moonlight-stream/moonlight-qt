@@ -78,11 +78,9 @@ static StreamConfiguration* streamConfig;
         dispatch_async(dispatch_get_main_queue(), ^{
             [self updateApps];
         });
-        if (_appManager != nil) {
-            [_appManager stopRetrieving];
-        }
-        _appManager = [[AppManager alloc] initWithHost:_selectedHost andCallback:self];
-        [_appManager retrieveAssets:appList];
+        
+        [_appManager stopRetrieving];
+        [_appManager retrieveAssets:appList fromHost:_selectedHost];
     });
 }
 
@@ -298,6 +296,8 @@ static StreamConfiguration* streamConfig;
     [CryptoManager generateKeyPairUsingSSl];
     _uniqueId = [CryptoManager getUniqueID];
     _cert = [CryptoManager readCertFromFile];
+    
+    _appManager = [[AppManager alloc] initWithCallback:self];
     
     // Only initialize the host picker list once
     if (hostList == nil) {
