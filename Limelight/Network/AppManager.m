@@ -50,10 +50,12 @@
 - (void) retrieveAssetForApp:(App*)app useCache:(BOOL)useCache {
     UIImage* appImage = nil;
     if (useCache) {
-        UIImage* cachedImage = [_imageCache objectForKey:app.appId];
-        if (cachedImage != nil) {
-            appImage = cachedImage;
-            app.appImage = appImage;
+        @synchronized(_imageCache) {
+            UIImage* cachedImage = [_imageCache objectForKey:app.appId];
+            if (cachedImage != nil) {
+                appImage = cachedImage;
+                app.appImage = appImage;
+            }
         }
     }
     if (appImage == nil) {
@@ -62,7 +64,9 @@
         appImage = [UIImage imageWithData:appAsset];
         app.appImage = appImage;
         if (appImage != nil) {
-            [_imageCache setObject:appImage forKey:app.appId];
+            @synchronized(_imageCache) {
+                [_imageCache setObject:appImage forKey:app.appId];
+            }
         }
     }
     [self performSelectorOnMainThread:@selector(sendCallBackForApp:) withObject:app waitUntilDone:NO];
