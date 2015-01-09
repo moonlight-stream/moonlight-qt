@@ -40,6 +40,7 @@ static const NSString* PORT = @"47984";
     // Check root status_code
     if (![HttpManager verifyStatus: rootNode]) {
         NSLog(@"ERROR: Request returned with failure status");
+        xmlFreeDoc(docPtr);
         return NULL;
     }
     
@@ -80,8 +81,8 @@ static const NSString* PORT = @"47984";
         }
         node = node->next;
     }
-    xmlFree(rootNode);
-    xmlFree(docPtr);
+
+    xmlFreeDoc(docPtr);
     
     return appList;
 }
@@ -98,8 +99,8 @@ static const NSString* PORT = @"47984";
     xmlNodePtr rootNode = xmlDocGetRootElement(docPtr);
     
     string = [HttpManager getStatusMessage: rootNode];
-    xmlFree(rootNode);
-    xmlFree(docPtr);
+    
+    xmlFreeDoc(docPtr);
     
     return string;
 }
@@ -118,6 +119,7 @@ static const NSString* PORT = @"47984";
     // Check root status_code
     if (![HttpManager verifyStatus: rootNode]) {
         NSLog(@"ERROR: Request returned with failure status");
+        xmlFreeDoc(docPtr);
         return NULL;
     }
     
@@ -134,8 +136,8 @@ static const NSString* PORT = @"47984";
         node = node->next;
     }
     //NSLog(@"xmlValue: %@", value);
-    xmlFree(rootNode);
-    xmlFree(docPtr);
+
+    xmlFreeDoc(docPtr);
     
     return value;
 }
