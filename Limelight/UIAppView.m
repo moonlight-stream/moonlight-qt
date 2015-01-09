@@ -30,8 +30,8 @@ static int LABEL_DY = 20;
     
     [self addSubview:_appButton];
     [self sizeToFit];
-    _appButton.frame = CGRectMake(0, 0, noImage.size.width / 2, noImage.size.height / 2);
-    self.frame = CGRectMake(0, 0, noImage.size.width / 2, noImage.size.height / 2);
+    _appButton.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
+    self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
     
     return self;
 }
