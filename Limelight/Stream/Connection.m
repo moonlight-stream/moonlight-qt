@@ -275,7 +275,7 @@ void ClDisplayTransientMessage(char* message)
     [_callbacks displayTransientMessage: message];
 }
 
--(void) terminate
+-(void) terminateInternal
 {
     // We dispatch this async to get out because this can be invoked
     // on a thread inside common and we don't want to deadlock
@@ -283,6 +283,13 @@ void ClDisplayTransientMessage(char* message)
         // This is safe to call even before LiStartConnection
         LiStopConnection();
     });
+}
+
+-(void) terminate
+{
+    // We're guaranteed to not be on a limelight-common thread
+    // here so it's safe to call stop directly
+    LiStopConnection();
 }
 
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks

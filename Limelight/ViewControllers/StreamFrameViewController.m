@@ -88,7 +88,7 @@
     }]];
     [self presentViewController:conTermAlert animated:YES completion:nil];
     
-    [_streamMan stopStream];
+    [_streamMan stopStreamInternal];
 }
 
 - (void) stageStarting:(char*)stageName {
