@@ -164,6 +164,7 @@ static float L2_Y;
             [self hideSticks];
             break;
         case OnScreenControlsLevelSimple:
+            [self setupSimpleControls];
             [self drawTriggers];
             [self drawStartSelect];
             [self hideButtons];
@@ -178,6 +179,16 @@ static float L2_Y;
             [self drawSticks];
             break;
     }
+}
+
+// For simple controls we move the triggers and buttons to the bottom
+- (void) setupSimpleControls {
+    START_Y = _view.frame.size.height * .9;
+    SELECT_Y = _view.frame.size.height * .9;
+    L1_Y = _view.frame.size.height * .75;
+    L2_Y = _view.frame.size.height * .9;
+    R1_Y = _view.frame.size.height * .75;
+    R2_Y = _view.frame.size.height * .9;
 }
 
 - (void) drawButtons {
