@@ -28,9 +28,9 @@
     int _emulatingButtonFlags;
 }
 
-// UPDATE_BUTTON(flag, pressed)
-#define UPDATE_BUTTON(x, y) (buttonFlags = \
-    (y) ? (buttonFlags | (x)) : (buttonFlags & ~(x)))
+// UPDATE_BUTTON_FLAG(flag, pressed)
+#define UPDATE_BUTTON_FLAG(x, y) \
+    ((y) ? [self setButtonFlag:x] : [self clearButtonFlag:x])
 
 -(void) updateLeftStick:(short)x y:(short)y
 {
@@ -72,34 +72,32 @@
 
 -(void) handleSpecialCombosReleased:(int)releasedButtons
 {
-    if (releasedButtons & PLAY_FLAG) {
-        if ((_emulatingButtonFlags & EMULATING_SELECT) &&
-            (releasedButtons & LB_FLAG)) {
-            _lastButtonFlags &= ~BACK_FLAG;
-            _emulatingButtonFlags &= ~EMULATING_SELECT;
-        }
-        if ((_emulatingButtonFlags & EMULATING_SPECIAL) &&
-            (releasedButtons & RB_FLAG)) {
-            _lastButtonFlags &= ~SPECIAL_FLAG;
-            _emulatingButtonFlags &= ~EMULATING_SPECIAL;
-        }
+    if ((_emulatingButtonFlags & EMULATING_SELECT) &&
+        ((releasedButtons & LB_FLAG) || (releasedButtons & PLAY_FLAG))) {
+        _lastButtonFlags &= ~BACK_FLAG;
+        _emulatingButtonFlags &= ~EMULATING_SELECT;
+    }
+    if ((_emulatingButtonFlags & EMULATING_SPECIAL) &&
+        ((releasedButtons & RB_FLAG) || (releasedButtons & PLAY_FLAG))) {
+        _lastButtonFlags &= ~SPECIAL_FLAG;
+        _emulatingButtonFlags &= ~EMULATING_SPECIAL;
     }
 }
 
--(void) handleSpecialCombosPressed
+-(void) handleSpecialCombosPressed:(int)pressedButtons
 {
     // Special button combos for select and special
     if (_lastButtonFlags & PLAY_FLAG) {
         // If LB and start are down, trigger select
         if (_lastButtonFlags & LB_FLAG) {
             _lastButtonFlags |= BACK_FLAG;
-            _lastButtonFlags &= ~(PLAY_FLAG | LB_FLAG);
+            _lastButtonFlags &= ~(pressedButtons & (PLAY_FLAG | LB_FLAG));
             _emulatingButtonFlags |= EMULATING_SELECT;
         }
         // If RB and start are down, trigger special
         else if (_lastButtonFlags & RB_FLAG) {
             _lastButtonFlags |= SPECIAL_FLAG;
-            _lastButtonFlags &= ~(PLAY_FLAG | RB_FLAG);
+            _lastButtonFlags &= ~(pressedButtons & (PLAY_FLAG | RB_FLAG));
             _emulatingButtonFlags |= EMULATING_SPECIAL;
         }
     }
@@ -109,6 +107,7 @@
 {
     [_controllerValueLock lock];
     int releasedButtons = (_lastButtonFlags ^ flags) & ~flags;
+    int pressedButtons = (_lastButtonFlags ^ flags) & flags;
     
     _lastButtonFlags = flags;
     
@@ -116,7 +115,7 @@
     // because we clear the original button flags there
     [self handleSpecialCombosReleased: releasedButtons];
     
-    [self handleSpecialCombosPressed];
+    [self handleSpecialCombosPressed: pressedButtons];
     
     [_controllerValueLock unlock];
 }
@@ -125,7 +124,7 @@
 {
     [_controllerValueLock lock];
     _lastButtonFlags |= flags;
-    [self handleSpecialCombosPressed];
+    [self handleSpecialCombosPressed: flags];
     [_controllerValueLock unlock];
 }
 
@@ -186,23 +185,22 @@
             
             if (controller.extendedGamepad != NULL) {
                 controller.extendedGamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *element) {
-                    short buttonFlags = 0;
                     short leftStickX, leftStickY;
                     short rightStickX, rightStickY;
                     char leftTrigger, rightTrigger;
                     
-                    UPDATE_BUTTON(A_FLAG, gamepad.buttonA.pressed);
-                    UPDATE_BUTTON(B_FLAG, gamepad.buttonB.pressed);
-                    UPDATE_BUTTON(X_FLAG, gamepad.buttonX.pressed);
-                    UPDATE_BUTTON(Y_FLAG, gamepad.buttonY.pressed);
+                    UPDATE_BUTTON_FLAG(A_FLAG, gamepad.buttonA.pressed);
+                    UPDATE_BUTTON_FLAG(B_FLAG, gamepad.buttonB.pressed);
+                    UPDATE_BUTTON_FLAG(X_FLAG, gamepad.buttonX.pressed);
+                    UPDATE_BUTTON_FLAG(Y_FLAG, gamepad.buttonY.pressed);
                     
-                    UPDATE_BUTTON(UP_FLAG, gamepad.dpad.up.pressed);
-                    UPDATE_BUTTON(DOWN_FLAG, gamepad.dpad.down.pressed);
-                    UPDATE_BUTTON(LEFT_FLAG, gamepad.dpad.left.pressed);
-                    UPDATE_BUTTON(RIGHT_FLAG, gamepad.dpad.right.pressed);
+                    UPDATE_BUTTON_FLAG(UP_FLAG, gamepad.dpad.up.pressed);
+                    UPDATE_BUTTON_FLAG(DOWN_FLAG, gamepad.dpad.down.pressed);
+                    UPDATE_BUTTON_FLAG(LEFT_FLAG, gamepad.dpad.left.pressed);
+                    UPDATE_BUTTON_FLAG(RIGHT_FLAG, gamepad.dpad.right.pressed);
                     
-                    UPDATE_BUTTON(LB_FLAG, gamepad.leftShoulder.pressed);
-                    UPDATE_BUTTON(RB_FLAG, gamepad.rightShoulder.pressed);
+                    UPDATE_BUTTON_FLAG(LB_FLAG, gamepad.leftShoulder.pressed);
+                    UPDATE_BUTTON_FLAG(RB_FLAG, gamepad.rightShoulder.pressed);
                     
                     leftStickX = gamepad.leftThumbstick.xAxis.value * 0x7FFE;
                     leftStickY = gamepad.leftThumbstick.yAxis.value * 0x7FFE;
@@ -213,7 +211,6 @@
                     leftTrigger = gamepad.leftTrigger.value * 0xFF;
                     rightTrigger = gamepad.rightTrigger.value * 0xFF;
                     
-                    [self updateButtonFlags:buttonFlags];
                     [self updateLeftStick:leftStickX y:leftStickY];
                     [self updateRightStick:rightStickX y:rightStickY];
                     [self updateTriggers:leftTrigger right:rightTrigger];
@@ -222,22 +219,20 @@
             }
             else if (controller.gamepad != NULL) {
                 controller.gamepad.valueChangedHandler = ^(GCGamepad *gamepad, GCControllerElement *element) {
-                    short buttonFlags = 0;
                     
-                    UPDATE_BUTTON(A_FLAG, gamepad.buttonA.pressed);
-                    UPDATE_BUTTON(B_FLAG, gamepad.buttonB.pressed);
-                    UPDATE_BUTTON(X_FLAG, gamepad.buttonX.pressed);
-                    UPDATE_BUTTON(Y_FLAG, gamepad.buttonY.pressed);
+                    UPDATE_BUTTON_FLAG(A_FLAG, gamepad.buttonA.pressed);
+                    UPDATE_BUTTON_FLAG(B_FLAG, gamepad.buttonB.pressed);
+                    UPDATE_BUTTON_FLAG(X_FLAG, gamepad.buttonX.pressed);
+                    UPDATE_BUTTON_FLAG(Y_FLAG, gamepad.buttonY.pressed);
                     
-                    UPDATE_BUTTON(UP_FLAG, gamepad.dpad.up.pressed);
-                    UPDATE_BUTTON(DOWN_FLAG, gamepad.dpad.down.pressed);
-                    UPDATE_BUTTON(LEFT_FLAG, gamepad.dpad.left.pressed);
-                    UPDATE_BUTTON(RIGHT_FLAG, gamepad.dpad.right.pressed);
+                    UPDATE_BUTTON_FLAG(UP_FLAG, gamepad.dpad.up.pressed);
+                    UPDATE_BUTTON_FLAG(DOWN_FLAG, gamepad.dpad.down.pressed);
+                    UPDATE_BUTTON_FLAG(LEFT_FLAG, gamepad.dpad.left.pressed);
+                    UPDATE_BUTTON_FLAG(RIGHT_FLAG, gamepad.dpad.right.pressed);
                     
-                    UPDATE_BUTTON(LB_FLAG, gamepad.leftShoulder.pressed);
-                    UPDATE_BUTTON(RB_FLAG, gamepad.rightShoulder.pressed);
+                    UPDATE_BUTTON_FLAG(LB_FLAG, gamepad.leftShoulder.pressed);
+                    UPDATE_BUTTON_FLAG(RB_FLAG, gamepad.rightShoulder.pressed);
                     
-                    [self updateButtonFlags:buttonFlags];
                     [self updateFinished];
                 };
             }
