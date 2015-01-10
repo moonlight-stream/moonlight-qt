@@ -78,7 +78,8 @@
         _emulatingButtonFlags &= ~EMULATING_SELECT;
     }
     if ((_emulatingButtonFlags & EMULATING_SPECIAL) &&
-        ((releasedButtons & RB_FLAG) || (releasedButtons & PLAY_FLAG))) {
+        ((releasedButtons & RB_FLAG) || (releasedButtons & PLAY_FLAG) ||
+         (releasedButtons & BACK_FLAG))) {
         _lastButtonFlags &= ~SPECIAL_FLAG;
         _emulatingButtonFlags &= ~EMULATING_SPECIAL;
     }
@@ -94,10 +95,10 @@
             _lastButtonFlags &= ~(pressedButtons & (PLAY_FLAG | LB_FLAG));
             _emulatingButtonFlags |= EMULATING_SELECT;
         }
-        // If RB and start are down, trigger special
-        else if (_lastButtonFlags & RB_FLAG) {
+        // If (RB or select) and start are down, trigger special
+        else if ((_lastButtonFlags & RB_FLAG) || (_lastButtonFlags & BACK_FLAG)) {
             _lastButtonFlags |= SPECIAL_FLAG;
-            _lastButtonFlags &= ~(pressedButtons & (PLAY_FLAG | RB_FLAG));
+            _lastButtonFlags &= ~(pressedButtons & (PLAY_FLAG | RB_FLAG | BACK_FLAG));
             _emulatingButtonFlags |= EMULATING_SPECIAL;
         }
     }
