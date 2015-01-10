@@ -27,7 +27,14 @@ static NSString* bitrateFormat = @"Bitrate: %d Mbps";
     // Bitrate is persisted in kbps
     _bitrate = [currentSettings.bitrate integerValue] / 1000;
     NSInteger framerate = [currentSettings.framerate integerValue] == 30 ? 0 : 1;
-    NSInteger resolution = [currentSettings.height integerValue] == 720 ? 0 : 1;
+    NSInteger resolution;
+    if ([currentSettings.height integerValue] == 720) {
+        resolution = 0;
+    } else if ([currentSettings.height integerValue] == 1080) {
+        resolution = 1;
+    } else {
+        resolution = 2;
+    }
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
     
     [self.resolutionSelector setSelectedSegmentIndex:resolution];
