@@ -152,6 +152,11 @@ static const NSString* PORT = @"47984";
     
     NSString* string;
     xmlNodePtr rootNode = xmlDocGetRootElement(docPtr);
+    if (rootNode == NULL) {
+        NSLog(@"ERROR: No root XML element.");
+        xmlFreeDoc(docPtr);
+        return NULL;
+    }
     
     string = [HttpManager getStatusMessage: rootNode];
     
@@ -199,17 +204,27 @@ static const NSString* PORT = @"47984";
     
 + (NSString*) getStatusMessage:(xmlNodePtr)docRoot {
     xmlChar* statusMsgXml = xmlGetProp(docRoot, (const xmlChar*)"status_message");
-    NSString* statusMsg = [NSString stringWithUTF8String:(const char*)statusMsgXml];
-    xmlFree(statusMsgXml);
+    NSString* statusMsg;
+    if (statusMsgXml != NULL) {
+        statusMsg = [NSString stringWithUTF8String:(const char*)statusMsgXml];
+        xmlFree(statusMsgXml);
+    }
+    else {
+        statusMsg = @"Server Error";
+    }
+
     return statusMsg;
 }
 
 + (bool) verifyStatus:(xmlNodePtr)docRoot {
     xmlChar* statusStr = xmlGetProp(docRoot, (const xmlChar*)"status_code");
-    //NSLog(@"status: %s", statusStr);
-    int status = [[NSString stringWithUTF8String:(const char*)statusStr] intValue];
-    xmlFree(statusStr);
-    return status == 200;
+    if (statusStr != NULL) {
+        int status = [[NSString stringWithUTF8String:(const char*)statusStr] intValue];
+        xmlFree(statusStr);
+        return status == 200;
+    }
+
+    return false;
 }
 
 + (NSData*) fixXmlVersion:(NSData*) xmlData {
