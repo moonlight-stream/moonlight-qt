@@ -30,7 +30,6 @@
         NSLog(@"Setting manual on-screen controls level: %d", (int)level);
         [onScreenControls setLevel:level];
     }
-    
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {

@@ -384,15 +384,15 @@
 				FB290CFA19B2C406004C83CF /* Supporting Files */,
 				FB290D0219B2C406004C83CF /* AppDelegate.h */,
 				FB290D0319B2C406004C83CF /* AppDelegate.m */,
+				FBDE86DE19F7A837001C18A8 /* UIComputerView.h */,
+				FBDE86DF19F7A837001C18A8 /* UIComputerView.m */,
+				FBDE86E419F82297001C18A8 /* UIAppView.h */,
+				FBDE86E519F82297001C18A8 /* UIAppView.m */,
 				FB290E7819B37D81004C83CF /* iPad.storyboard */,
 				FB290E7A19B38036004C83CF /* iPhone.storyboard */,
 				FB89463719F6473800339C8A /* Launch Screen.xib */,
 				FB290D0819B2C406004C83CF /* Images.xcassets */,
 				FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */,
-				FBDE86DE19F7A837001C18A8 /* UIComputerView.h */,
-				FBDE86DF19F7A837001C18A8 /* UIComputerView.m */,
-				FBDE86E419F82297001C18A8 /* UIAppView.h */,
-				FBDE86E519F82297001C18A8 /* UIAppView.m */,
 			);
 			path = Limelight;
 			sourceTree = "<group>";
