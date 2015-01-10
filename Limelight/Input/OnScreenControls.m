@@ -50,6 +50,9 @@
     UITouch* _l1Touch;
     UITouch* _l2Touch;
     
+    NSDate* l3TouchStart;
+    NSDate* r3TouchStart;
+    
     UIView* _view;
     OnScreenControlsLevel _level;
     
@@ -67,6 +70,7 @@ static const float D_PAD_DIST = 15;
 static float D_PAD_CENTER_X;
 static float D_PAD_CENTER_Y;
 
+static const double STICK_CLICK_RATE = 100;
 static const float STICK_INNER_SIZE = 80;
 static const float STICK_OUTER_SIZE = 120;
 static const float STICK_DEAD_ZONE = .1;
@@ -528,9 +532,27 @@ static float L2_Y;
             _r2Touch = touch;
             updated = true;
         } else if ([_leftStick.presentationLayer hitTest:touchLocation]) {
+            if (l3TouchStart != nil) {
+                // Find elapsed time and convert to milliseconds
+                // Use (-) modifier to conversion since receiver is earlier than now
+                double l3TouchTime = [l3TouchStart timeIntervalSinceNow] * -1000.0;
+                if (l3TouchTime < STICK_CLICK_RATE) {
+                    [_controllerSupport setButtonFlag:LS_CLK_FLAG];
+                    updated = true;
+                }
+            }
             _lsTouch = touch;
             stickTouch = true;
         } else if ([_rightStick.presentationLayer hitTest:touchLocation]) {
+            if (r3TouchStart != nil) {
+                // Find elapsed time and convert to milliseconds
+                // Use (-) modifier to conversion since receiver is earlier than now
+                double r3TouchTime = [r3TouchStart timeIntervalSinceNow] * -1000.0;
+                if (r3TouchTime < STICK_CLICK_RATE) {
+                    [_controllerSupport setButtonFlag:RS_CLK_FLAG];
+                    updated = true;
+                }
+            }
             _rsTouch = touch;
             stickTouch = true;
         }
@@ -603,11 +625,15 @@ static float L2_Y;
         } else if (touch == _lsTouch) {
             _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
             [_controllerSupport updateLeftStick:0 y:0];
-            updated = true;
+            [_controllerSupport clearButtonFlag:LS_CLK_FLAG];
+            l3TouchStart = [NSDate date];
             _lsTouch = nil;
+            updated = true;
         } else if (touch == _rsTouch) {
             _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
             [_controllerSupport updateRightStick:0 y:0];
+            [_controllerSupport clearButtonFlag:RS_CLK_FLAG];
+            r3TouchStart = [NSDate date];
             _rsTouch = nil;
             updated = true;
         }
