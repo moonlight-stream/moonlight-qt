@@ -30,8 +30,10 @@
     CALayer* _selectButton;
     CALayer* _r1Button;
     CALayer* _r2Button;
+    CALayer* _r3Button;
     CALayer* _l1Button;
     CALayer* _l2Button;
+    CALayer* _l3Button;
     
     UITouch* _aTouch;
     UITouch* _bTouch;
@@ -47,11 +49,16 @@
     UITouch* _selectTouch;
     UITouch* _r1Touch;
     UITouch* _r2Touch;
+    UITouch* _r3Touch;
     UITouch* _l1Touch;
     UITouch* _l2Touch;
+    UITouch* _l3Touch;
     
     NSDate* l3TouchStart;
     NSDate* r3TouchStart;
+    
+    BOOL l3Set;
+    BOOL r3Set;
     
     UIView* _view;
     OnScreenControlsLevel _level;
@@ -89,17 +96,22 @@ static const float SELECT_HEIGHT = 30;
 static float SELECT_X;
 static float SELECT_Y;
 
-static const float BUMPER_SIZE = 70;
-static const float TRIGGER_SIZE = 80;
+static const float BUMPER_SIZE = 45;
+static const float TRIGGER_SIZE = 60;
+static const float L3R3_SIZE = 80;
 
 static float R1_X;
 static float R1_Y;
 static float R2_X;
 static float R2_Y;
+static float R3_X;
+static float R3_Y;
 static float L1_X;
 static float L1_Y;
 static float L2_X;
 static float L2_Y;
+static float L3_X;
+static float L3_Y;
 
 - (id) initWithView:(UIView*)view controllerSup:(ControllerSupport*)controllerSupport {
     self = [self init];
@@ -118,6 +130,8 @@ static float L2_Y;
     _r1Button = [CALayer layer];
     _l2Button = [CALayer layer];
     _r2Button = [CALayer layer];
+    _l3Button = [CALayer layer];
+    _r3Button = [CALayer layer];
     _startButton = [CALayer layer];
     _selectButton = [CALayer layer];
     _leftStickBackground = [CALayer layer];
@@ -141,6 +155,7 @@ static float L2_Y;
             [self hideTriggers];
             [self hideStartSelect];
             [self hideSticks];
+            [self hideL3R3];
             break;
         case OnScreenControlsLevelAutoGCGamepad:
             // GCGamepad is missing triggers, both analog sticks,
@@ -152,7 +167,7 @@ static float L2_Y;
             [self drawTriggers];
             [self drawStartSelect];
             [self drawSticks];
-            // TODO: Draw L3 and R3 buttons
+            [self drawL3R3];
             break;
         case OnScreenControlsLevelAutoGCExtendedGamepad:
             // GCExtendedGamepad is missing R3, L3, and select
@@ -163,7 +178,7 @@ static float L2_Y;
             [self hideTriggers];
             [self drawStartSelect];
             [self hideSticks];
-            // TODO: Draw L3 and R3 buttons
+            [self drawL3R3];
             break;
         case OnScreenControlsLevelSimple:
             [self setupSimpleControls];
@@ -173,6 +188,7 @@ static float L2_Y;
             [self hideButtons];
             [self hideBumpers];
             [self hideSticks];
+            [self hideL3R3];
             break;
         case OnScreenControlsLevelFull:
             [self setupComplexControls];
@@ -182,6 +198,7 @@ static float L2_Y;
             [self drawBumpers];
             [self drawTriggers];
             [self drawSticks];
+            [self hideL3R3]; // Full controls don't need these they have the sticks
             break;
         default:
             NSLog(@"Unknown on-screen controls level: %d", (int)_level);
@@ -196,8 +213,6 @@ static float L2_Y;
     
     START_Y = _view.frame.size.height * .9;
     SELECT_Y = _view.frame.size.height * .9;
-    
-    // TODO: Position L3 and R3 at the bottom of the screen
 }
 
 // For GCGamepad controls we move triggers, start, and select
@@ -248,6 +263,10 @@ static float L2_Y;
     R1_Y = _view.frame.size.height * .25;
     R2_X = _view.frame.size.width * .85;
     R2_Y = _view.frame.size.height * .1;
+    L3_X = _view.frame.size.width * .25;
+    L3_Y = _view.frame.size.height * .85;
+    R3_X = _view.frame.size.width * .75;
+    R3_Y = _view.frame.size.height * .85;
 }
 
 - (void) drawButtons {
@@ -334,7 +353,6 @@ static float L2_Y;
     _leftStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
     [_view.layer addSublayer:_leftStickBackground];
     
-    _leftStick = [CALayer layer];
     _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
     _leftStick.contents = (id) [UIImage imageNamed:@"StickInner"].CGImage;
     [_view.layer addSublayer:_leftStick];
@@ -344,10 +362,23 @@ static float L2_Y;
     _rightStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
     [_view.layer addSublayer:_rightStickBackground];
     
-    _rightStick = [CALayer layer];
     _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
     _rightStick.contents = (id) [UIImage imageNamed:@"StickInner"].CGImage;
     [_view.layer addSublayer:_rightStick];
+}
+
+- (void) drawL3R3 {
+    _l3Button.frame = CGRectMake(L3_X - L3R3_SIZE / 2, L3_Y - L3R3_SIZE / 2, L3R3_SIZE, L3R3_SIZE);
+    _l3Button.contents = (id) [UIImage imageNamed:@"L3"].CGImage;
+    _l3Button.cornerRadius = L3R3_SIZE / 2;
+    _l3Button.borderColor = [UIColor colorWithRed:15.f/255 green:160.f/255 blue:40.f/255 alpha:1.f].CGColor;
+    [_view.layer addSublayer:_l3Button];
+    
+    _r3Button.frame = CGRectMake(R3_X - L3R3_SIZE / 2, R3_Y - L3R3_SIZE / 2, L3R3_SIZE, L3R3_SIZE);
+    _r3Button.contents = (id) [UIImage imageNamed:@"R3"].CGImage;
+    _r3Button.cornerRadius = L3R3_SIZE / 2;
+    _r3Button.borderColor = [UIColor colorWithRed:15.f/255 green:160.f/255 blue:40.f/255 alpha:1.f].CGColor;
+    [_view.layer addSublayer:_r3Button];
 }
 
 - (void) hideButtons {
@@ -381,6 +412,11 @@ static float L2_Y;
     [_rightStickBackground removeFromSuperlayer];
     [_leftStick removeFromSuperlayer];
     [_rightStick removeFromSuperlayer];
+}
+
+- (void) hideL3R3 {
+    [_l3Button removeFromSuperlayer];
+    [_r3Button removeFromSuperlayer];
 }
 
 - (BOOL) handleTouchMovedEvent:touches {
@@ -461,6 +497,10 @@ static float L2_Y;
             buttonTouch = true;
         } else if (touch == _r2Touch) {
             buttonTouch = true;
+        } else if (touch == _l3Touch) {
+            buttonTouch = true;
+        } else if (touch == _r3Touch) {
+            buttonTouch = true;
         }
     }
     if (updated) {
@@ -530,6 +570,28 @@ static float L2_Y;
         } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
             [_controllerSupport updateRightTrigger:0xFF];
             _r2Touch = touch;
+            updated = true;
+        } else if ([_l3Button.presentationLayer hitTest:touchLocation]) {
+            if (l3Set) {
+                [_controllerSupport clearButtonFlag:LS_CLK_FLAG];
+                _l3Button.borderWidth = 0.0f;
+            } else {
+                [_controllerSupport setButtonFlag:LS_CLK_FLAG];
+                _l3Button.borderWidth = 2.0f;
+            }
+            l3Set = !l3Set;
+            _l3Touch = touch;
+            updated = true;
+        } else if ([_r3Button.presentationLayer hitTest:touchLocation]) {
+            if (r3Set) {
+                [_controllerSupport clearButtonFlag:RS_CLK_FLAG];
+                _r3Button.borderWidth = 0.0f;
+            } else {
+                [_controllerSupport setButtonFlag:RS_CLK_FLAG];
+                _r3Button.borderWidth = 2.0f;
+            }
+            r3Set = !r3Set;
+            _r3Touch = touch;
             updated = true;
         } else if ([_leftStick.presentationLayer hitTest:touchLocation]) {
             if (l3TouchStart != nil) {
