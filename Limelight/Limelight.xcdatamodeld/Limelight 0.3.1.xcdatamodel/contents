@@ -13,7 +13,7 @@
         <attribute name="bitrate" attributeType="Integer 32" defaultValueString="10000" syncable="YES"/>
         <attribute name="framerate" attributeType="Integer 32" defaultValueString="60" syncable="YES"/>
         <attribute name="height" attributeType="Integer 32" defaultValueString="720" syncable="YES"/>
-        <attribute name="onscreenControls" attributeType="Integer 32" defaultValueString="2" syncable="YES"/>
+        <attribute name="onscreenControls" attributeType="Integer 32" defaultValueString="1" syncable="YES"/>
         <attribute name="width" attributeType="Integer 32" defaultValueString="1280" syncable="YES"/>
     </entity>
     <elements>
