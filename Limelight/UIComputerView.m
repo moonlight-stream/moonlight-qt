@@ -40,6 +40,38 @@ static const int LABEL_DY = 20;
     return self;
 }
 
+- (id) initForAddWithCallback:(id<HostCallback>)callback {
+    self = [self init];
+    _callback = callback;
+    
+    [_hostButton setBackgroundImage:[UIImage imageNamed:@"Computer"] forState:UIControlStateNormal];
+    [_hostButton setContentEdgeInsets:UIEdgeInsetsMake(0, 4, 0, 4)];
+    [_hostButton addTarget:self action:@selector(addClicked) forControlEvents:UIControlEventTouchUpInside];
+    [_hostButton sizeToFit];
+    
+    [_hostLabel setText:@"Add Host"];
+    [_hostLabel sizeToFit];
+    _hostLabel.textColor = [UIColor whiteColor];
+    _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
+    
+    UIImageView* addIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"AddComputerIcon"]];
+    [addIcon sizeToFit];
+    addIcon.center = CGPointMake(_hostButton.frame.origin.x + _hostButton.frame.size.width, _hostButton.frame.origin.y);
+    
+    // This is required to ensure this button is the same size as the others
+    _hostPairState.text = @"None";
+    _hostStatus.text = @"None";
+    [_hostPairState sizeToFit];
+    [_hostStatus sizeToFit];
+    
+    [self updateBounds];
+    [self addSubview:_hostButton];
+    [self addSubview:_hostLabel];
+    [self addSubview:addIcon];
+    
+    return self;
+}
+
 - (id) initWithComputer:(Host*)host andCallback:(id<HostCallback>)callback {
     self = [self init];
     _host = host;
@@ -56,6 +88,7 @@ static const int LABEL_DY = 20;
     [self addSubview:_hostStatus];
     [self addSubview:_hostPairState];
     [self startUpdateLoop];
+
     return self;
 }
 
@@ -85,7 +118,7 @@ static const int LABEL_DY = 20;
         _hostStatus.frame.size.height +
         _hostPairState.frame.size.height +
         LABEL_DY / 2;
-
+    
     self.bounds = CGRectMake(x, y, width, height);
     self.frame = CGRectMake(x, y, width, height);
 }
@@ -118,10 +151,10 @@ static const int LABEL_DY = 20;
     }
     [_hostStatus sizeToFit];
     
-    
-    _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
-    _hostPairState.center = CGPointMake(_hostLabel.center.x, _hostLabel.center.y + LABEL_DY);
-    _hostStatus.center = CGPointMake(_hostPairState.center.x, _hostPairState.center.y + LABEL_DY);
+    float x = _hostButton.frame.origin.x + _hostButton.frame.size.width / 2;
+    _hostLabel.center = CGPointMake(x, _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
+    _hostPairState.center = CGPointMake(x, _hostLabel.center.y + LABEL_DY);
+    _hostStatus.center = CGPointMake(x, _hostPairState.center.y + LABEL_DY);
 }
 
 - (void) startUpdateLoop {
@@ -132,33 +165,6 @@ static const int LABEL_DY = 20;
     [self updateContentsForHost:_host];
     [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
 }
-
-- (id) initForAddWithCallback:(id<HostCallback>)callback {
-    self = [self init];
-    _callback = callback;
-    
-    [_hostButton setBackgroundImage:[UIImage imageNamed:@"Computer"] forState:UIControlStateNormal];
-    [_hostButton sizeToFit];
-    [_hostButton addTarget:self action:@selector(addClicked) forControlEvents:UIControlEventTouchUpInside];
-    
-    [_hostLabel setText:@"Add Host"];
-    [_hostLabel sizeToFit];
-    _hostLabel.textColor = [UIColor whiteColor];
-    _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
-    
-    UIImageView* addIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"AddComputerIcon"]];
-    [addIcon sizeToFit];
-    addIcon.center = CGPointMake(_hostButton.frame.origin.x + _hostButton.frame.size.width, _hostButton.frame.origin.y);
-    
-    [self updateBounds];
-    [self addSubview:_hostButton];
-    [self addSubview:_hostLabel];
-    [self addSubview:addIcon];
-    
-    return self;
-}
-
-
 
 - (void) hostLongClicked {
     [_callback hostLongClicked:_host view:self];
