@@ -61,12 +61,9 @@ static NSString* bitrateFormat = @"Bitrate: %d Mbps";
         height = [UIScreen mainScreen].bounds.size.height * [UIScreen mainScreen].scale;
         width = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
         
-        UIAlertView *alertResolution = [[UIAlertView alloc] initWithTitle:@"Native resolution"
-                                                        message:[NSString stringWithFormat:@"You must select the following resolution in the game settings : %lix%li", (long)width, (long)height]
-                                                        delegate:nil
-                                                        cancelButtonTitle:@"OK"
-                                                        otherButtonTitles:nil];
-        [alertResolution show];
+        UIAlertController *alertResolution = [UIAlertController alertControllerWithTitle:@"Native resolution" message:[NSString stringWithFormat:@"You must select the following resolution in the game settings: %lix%li", (long)width, (long)height] preferredStyle:UIAlertControllerStyleAlert];
+        [alertResolution addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleCancel handler:nil]];
+        [self presentViewController:alertResolution animated:YES completion:nil];
     }
     else
     {
