@@ -16,6 +16,17 @@
     CGPoint touchLocation;
     BOOL touchMoved;
     OnScreenControls* onScreenControls;
+    
+    float xDeltaFactor;
+    float yDeltaFactor;
+    float screenFactor;
+}
+
+- (void) setMouseDeltaFactors:(float)x y:(float)y {
+    xDeltaFactor = x;
+    yDeltaFactor = y;
+    
+    screenFactor = [[UIScreen mainScreen] scale];
 }
 
 - (void) setupOnScreenControls:(ControllerSupport*)controllerSupport {
@@ -50,8 +61,13 @@
             if (touchLocation.x != currentLocation.x ||
                 touchLocation.y != currentLocation.y)
             {
-                LiSendMouseMoveEvent(currentLocation.x - touchLocation.x,
-                                     currentLocation.y - touchLocation.y );
+                int deltaX = currentLocation.x - touchLocation.x;
+                int deltaY = currentLocation.y - touchLocation.y;
+                
+                deltaX *= xDeltaFactor * screenFactor;
+                deltaY *= yDeltaFactor * screenFactor;
+                
+                LiSendMouseMoveEvent(deltaX, deltaY);
 
                 touchMoved = true;
                 touchLocation = currentLocation;

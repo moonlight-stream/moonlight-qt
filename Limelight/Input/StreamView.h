@@ -12,5 +12,6 @@
 @interface StreamView : UIView
 
 - (void) setupOnScreenControls:(ControllerSupport*)controllerSupport;
+- (void) setMouseDeltaFactors:(float)x y:(float)y;
 
 @end

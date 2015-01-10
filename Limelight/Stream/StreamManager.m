@@ -11,6 +11,7 @@
 #import "HttpManager.h"
 #import "Utils.h"
 #import "OnScreenControls.h"
+#import "StreamView.h"
 
 @implementation StreamManager {
     StreamConfiguration* _config;
@@ -72,6 +73,13 @@
             return;
         }
     }
+    
+    // Set mouse delta factors from the screen resolution and stream size
+    CGFloat screenScale = [[UIScreen mainScreen] scale];
+    CGRect screenBounds = [[UIScreen mainScreen] bounds];
+    CGSize screenSize = CGSizeMake(screenBounds.size.width * screenScale, screenBounds.size.height * screenScale);
+    [((StreamView*)_renderView) setMouseDeltaFactors:_config.width / screenSize.width
+                                                   y:_config.height / screenSize.height];
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
     _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks];
