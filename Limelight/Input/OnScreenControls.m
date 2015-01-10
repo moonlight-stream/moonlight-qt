@@ -627,6 +627,7 @@ static float L3_Y;
 
 - (BOOL)handleTouchUpEvent:touches {
     BOOL updated = false;
+    BOOL touched = false;
     for (UITouch* touch in touches) {
         if (touch == _aTouch) {
             [_controllerSupport clearButtonFlag:A_FLAG];
@@ -699,11 +700,19 @@ static float L3_Y;
             _rsTouch = nil;
             updated = true;
         }
+        else if (touch == _l3Touch) {
+            _l3Touch = nil;
+            touched = true;
+        }
+        else if (touch == _r3Touch) {
+            _r3Touch = nil;
+            touched = true;
+        }
     }
     if (updated) {
         [_controllerSupport updateFinished];
     }
-    return updated;
+    return updated || touched;
 }
 
 @end
