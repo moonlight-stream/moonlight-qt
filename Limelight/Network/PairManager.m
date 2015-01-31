@@ -54,8 +54,8 @@
     if (![self verifyResponseStatus:pairResp]) {
         return;
     }
-    NSInteger* pairedStatus;
-    if (![pairResp parseIntTag:@"paired" value:pairedStatus] || !pairedStatus) {
+    NSInteger pairedStatus;
+    if (![pairResp parseIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
         [_httpManager executeRequest:[_httpManager newUnpairRequest]];
         [_callback pairFailed:@"Pairing was declined by the target."];
         return;
@@ -73,7 +73,7 @@
     if (![self verifyResponseStatus:challengeResp]) {
         return;
     }
-    if (![challengeResp parseIntTag:@"paired" value:pairedStatus] || !pairedStatus) {
+    if (![challengeResp parseIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
         [_httpManager executeRequest:[_httpManager newUnpairRequest]];
         [_callback pairFailed:@"Pairing stage #2 failed"];
         return;
@@ -93,7 +93,7 @@
     if (![self verifyResponseStatus:secretResp]) {
         return;
     }
-    if (![secretResp parseIntTag:@"paired" value:pairedStatus] || !pairedStatus) {
+    if (![secretResp parseIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
         [_httpManager executeRequest:[_httpManager newUnpairRequest]];
         [_callback pairFailed:@"Pairing stage #3 failed"];
         return;
@@ -121,7 +121,7 @@
     if (![self verifyResponseStatus:clientSecretResp]) {
         return;
     }
-    if ([clientSecretResp parseIntTag:@"paired" value:pairedStatus] || !pairedStatus) {
+    if (![clientSecretResp parseIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
         [_httpManager executeRequest:[_httpManager newUnpairRequest]];
         [_callback pairFailed:@"Pairing stage #4 failed"];
         return;
@@ -131,7 +131,7 @@
     if (![self verifyResponseStatus:clientPairChallengeResp]) {
         return;
     }
-    if (![clientPairChallengeResp parseIntTag:@"paired" value:pairedStatus] || !pairedStatus) {
+    if (![clientPairChallengeResp parseIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
         [_httpManager executeRequest:[_httpManager newUnpairRequest]];
         [_callback pairFailed:@"Pairing stage #5 failed"];
         return;
