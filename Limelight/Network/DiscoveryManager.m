@@ -39,14 +39,14 @@
 
 - (void) discoverHost:(NSString *)hostAddress withCallback:(void (^)(Host *))callback {
     HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-    NSData* serverInfoData = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+    HttpResponse* serverInfoResponse = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
     
     Host* host = nil;
-    if ([[HttpManager getStatusStringFromXML:serverInfoData] isEqualToString:@"OK"]) {
+    if ([serverInfoResponse isStatusOk]) {
         DataManager* dataMan = [[DataManager alloc] init];
         host = [dataMan createHost];
         host.address = hostAddress;
-        [HttpManager populateHostFromXML:serverInfoData host:host];
+        [serverInfoResponse populateHost:host];
         if (![self addHostToDiscovery:host]) {
             [dataMan removeHost:host];
         }

@@ -69,18 +69,25 @@ static StreamConfiguration* streamConfig;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
             _computerNameButton.title = _selectedHost.name;
-			[self.navigationController.navigationBar setNeedsLayout];
+            [self.navigationController.navigationBar setNeedsLayout];
         });
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
-        appList = [HttpManager getAppListFromXML:appListResp];
-        
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self updateApps];
-        });
-        
-        [_appManager stopRetrieving];
-        [_appManager retrieveAssets:appList fromHost:_selectedHost];
+        HttpResponse* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
+        if (appListResp == nil || ![appListResp isStatusOk]) {
+            NSLog(@"Failed to get applist: %@", appListResp.statusMessage);
+        } else {
+            appList = [appListResp getAppList];
+            if (appList == nil) {
+                NSLog(@"Failed to parse applist");
+            } else {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self updateApps];
+                });
+                
+                [_appManager stopRetrieving];
+                [_appManager retrieveAssets:appList fromHost:_selectedHost];
+            }
+        }
     });
 }
 
@@ -108,16 +115,20 @@ static StreamConfiguration* streamConfig;
     _selectedHost = host;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-        if ([[HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"] isEqualToString:@"1"]) {
-            NSLog(@"Already Paired");
-            [self alreadyPaired];
+        HttpResponse* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+        if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
+            NSLog(@"Failed to get server info: %@", serverInfoResp.statusMessage);
         } else {
-            NSLog(@"Trying to pair");
-            // Polling the server while pairing causes the server to screw up
-            [_discMan stopDiscoveryBlocking];
-            PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
-            [_opQueue addOperation:pMan];
+            if ([[serverInfoResp parseStringTag:@"PairStatus"] isEqualToString:@"1"]) {
+                NSLog(@"Already Paired");
+                [self alreadyPaired];
+            } else {
+                NSLog(@"Trying to pair");
+                // Polling the server while pairing causes the server to screw up
+                [_discMan stopDiscoveryBlocking];
+                PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
+                [_opQueue addOperation:pMan];
+            }
         }
     });
 }
@@ -163,7 +174,7 @@ static StreamConfiguration* streamConfig;
     
     // these two lines are required for iPad support of UIAlertSheet
     longClickAlert.popoverPresentationController.sourceView = view;
-
+    
     longClickAlert.popoverPresentationController.sourceRect = CGRectMake(view.bounds.size.width / 2.0, view.bounds.size.height / 2.0, 1.0, 1.0); // center of the view
     [self presentViewController:longClickAlert animated:YES completion:^{
         [self updateHosts];
@@ -227,29 +238,29 @@ static StreamConfiguration* streamConfig;
     App* currentApp = [self findRunningApp];
     if (currentApp != nil) {
         UIAlertController* alertController = [UIAlertController
-        alertControllerWithTitle: app.appName
-        message: [app.appId isEqualToString:currentApp.appId] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.appName]preferredStyle:UIAlertControllerStyleAlert];
+                                              alertControllerWithTitle: app.appName
+                                              message: [app.appId isEqualToString:currentApp.appId] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.appName]preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction
-            actionWithTitle:[app.appId isEqualToString:currentApp.appId] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-            NSLog(@"Resuming application: %@", currentApp.appName);
-            [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
-        }]];
+                                    actionWithTitle:[app.appId isEqualToString:currentApp.appId] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                                        NSLog(@"Resuming application: %@", currentApp.appName);
+                                        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                    }]];
         [alertController addAction:[UIAlertAction actionWithTitle:
-              [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-            NSLog(@"Quitting application: %@", currentApp.appName);
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                [hMan executeRequestSynchronously:[hMan newQuitAppRequest]];
-                // TODO: handle failure to quit app
-                currentApp.isRunning = NO;
-                
-                if (![app.appId isEqualToString:currentApp.appId]) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
-                    });
-                }
-            });
-        }]];
+                                    [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+                                        NSLog(@"Quitting application: %@", currentApp.appName);
+                                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                                            [hMan executeRequestSynchronously:[hMan newQuitAppRequest]];
+                                            // TODO: handle failure to quit app
+                                            currentApp.isRunning = NO;
+                                            
+                                            if (![app.appId isEqualToString:currentApp.appId]) {
+                                                dispatch_async(dispatch_get_main_queue(), ^{
+                                                    [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                                });
+                                            }
+                                        });
+                                    }]];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
         [self presentViewController:alertController animated:YES completion:nil];
     } else {
@@ -344,7 +355,7 @@ static StreamConfiguration* streamConfig;
     [super viewDidDisappear:animated];
     // when discovery stops, we must create a new instance because you cannot restart an NSOperation when it is finished
     [_discMan stopDiscovery];
-
+    
     // In case the host objects were updated in the background
     [[[DataManager alloc] init] saveHosts];
 }

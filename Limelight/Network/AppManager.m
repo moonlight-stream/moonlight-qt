@@ -9,6 +9,7 @@
 #import "AppManager.h"
 #import "CryptoManager.h"
 #import "Utils.h"
+#import "HttpResponse.h"
 
 @implementation AppManager {
     NSOperationQueue* _opQueue;
@@ -60,8 +61,9 @@
     }
     if (appImage == nil) {
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        NSData* appAsset = [hMan executeRequestSynchronously:[hMan newAppAssetRequestWithAppId:app.appId]];
-        appImage = [UIImage imageWithData:appAsset];
+        HttpResponse* appAssetResp = [hMan executeRequestSynchronously:[hMan newAppAssetRequestWithAppId:app.appId]];
+        
+        appImage = [UIImage imageWithData:appAssetResp.responseData];
         app.appImage = appImage;
         if (appImage != nil) {
             @synchronized(_imageCache) {

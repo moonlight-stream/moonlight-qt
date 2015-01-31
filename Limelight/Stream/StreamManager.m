@@ -41,11 +41,11 @@
                                                deviceName:@"roth"
                                                      cert:cert];
     
-    NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-    NSString* currentGame = [HttpManager getStringFromXML:serverInfoResp tag:@"currentgame"];
-    NSString* pairStatus = [HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"];
-    NSString* currentClient = [HttpManager getStringFromXML:serverInfoResp tag:@"CurrentClient"];
-    if (currentGame == NULL || pairStatus == NULL) {
+    HttpResponse* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+    NSString* currentGame = [serverInfoResp parseStringTag:@"currentgame"];
+    NSString* pairStatus = [serverInfoResp parseStringTag:@"PairStatus"];
+    NSString* currentClient = [serverInfoResp parseStringTag:@"CurrentClient"];
+    if (![serverInfoResp isStatusOk] || currentGame == NULL || pairStatus == NULL) {
         [_callbacks launchFailed:@"Failed to connect to PC"];
         return;
     }
@@ -102,19 +102,21 @@
 }
 
 - (BOOL) launchApp:(HttpManager*)hMan {
-    NSData* launchResp = [hMan executeRequestSynchronously:
+    HttpResponse* launchResp = [hMan executeRequestSynchronously:
                           [hMan newLaunchRequest:_config.appID
                                            width:_config.width
                                           height:_config.height
                                      refreshRate:_config.frameRate
                                            rikey:[Utils bytesToHex:_config.riKey]
                                          rikeyid:_config.riKeyId]];
-    NSString *gameSession = [HttpManager getStringFromXML:launchResp tag:@"gamesession"];
-    if (launchResp == NULL) {
+    NSString *gameSession = [launchResp parseStringTag:@"gamesession"];
+    if (launchResp == NULL || ![launchResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to launch app"];
+        NSLog(@"Failed Launch Response: %@", launchResp.statusMessage);
         return FALSE;
     } else if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
-        [_callbacks launchFailed:[HttpManager getStatusStringFromXML:launchResp]];
+        [_callbacks launchFailed:launchResp.statusMessage];
+        NSLog(@"Failed to parse game session. Code: %ld Response: %@", (long)launchResp.statusCode, launchResp.statusMessage);
         return FALSE;
     }
     
@@ -122,15 +124,17 @@
 }
 
 - (BOOL) resumeApp:(HttpManager*)hMan {
-    NSData* resumeResp = [hMan executeRequestSynchronously:
+    HttpResponse* resumeResp = [hMan executeRequestSynchronously:
                           [hMan newResumeRequestWithRiKey:[Utils bytesToHex:_config.riKey]
                                                   riKeyId:_config.riKeyId]];
-    NSString *resume = [HttpManager getStringFromXML:resumeResp tag:@"resume"];
-    if (resumeResp == NULL) {
+    NSString* resume = [resumeResp parseStringTag:@"resume"];
+    if (resumeResp == NULL || ![resumeResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to resume app"];
+        NSLog(@"Failed Resume Response: %@", resumeResp.statusMessage);
         return FALSE;
     } else if (resume == NULL || [resume isEqualToString:@"0"]) {
-        [_callbacks launchFailed:[HttpManager getStatusStringFromXML:resumeResp]];
+        [_callbacks launchFailed:resumeResp.statusMessage];
+        NSLog(@"Failed to parse resume response. Code: %ld Response: %@", (long)resumeResp.statusCode, resumeResp.statusMessage);
         return FALSE;
     }
     
