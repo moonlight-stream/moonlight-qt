@@ -12,7 +12,7 @@
 #import "StreamConfiguration.h"
 #import "UIComputerView.h"
 #import "UIAppView.h"
-#import "AppManager.h"
+#import "AppAssetManager.h"
 #import "SWRevealViewController.h"
 
 @interface MainFrameViewController : UICollectionViewController <DiscoveryCallback, PairCallback, HostCallback, AppCallback, AppAssetCallback, NSURLConnectionDelegate, SWRevealViewControllerDelegate>

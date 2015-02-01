@@ -27,7 +27,7 @@
     NSData* _cert;
     NSString* _currentGame;
     DiscoveryManager* _discMan;
-    AppManager* _appManager;
+    AppAssetManager* _appManager;
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
     int currentPosition;
@@ -311,8 +311,8 @@ static StreamConfiguration* streamConfig;
     [CryptoManager generateKeyPairUsingSSl];
     _uniqueId = [CryptoManager getUniqueID];
     _cert = [CryptoManager readCertFromFile];
-    
-    _appManager = [[AppManager alloc] initWithCallback:self];
+
+    _appManager = [[AppAssetManager alloc] initWithCallback:self];
     
     // Only initialize the host picker list once
     if (hostList == nil) {

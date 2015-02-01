@@ -17,7 +17,7 @@
 
 @end
 
-@interface AppManager : NSObject
+@interface AppAssetManager : NSObject
 
 - (id) initWithCallback:(id<AppAssetCallback>)callback;
 - (void) retrieveAssets:(NSArray*)appList fromHost:(Host*)host;
