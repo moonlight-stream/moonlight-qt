@@ -12,6 +12,9 @@
 #import "Utils.h"
 #import "OnScreenControls.h"
 #import "StreamView.h"
+#import "ServerInfoResponse.h"
+#import "HttpResponse.h"
+#import "HttpRequest.h"
 
 @implementation StreamManager {
     StreamConfiguration* _config;
@@ -41,10 +44,11 @@
                                                deviceName:@"roth"
                                                      cert:cert];
     
-    HttpResponse* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-    NSString* currentGame = [serverInfoResp parseStringTag:@"currentgame"];
-    NSString* pairStatus = [serverInfoResp parseStringTag:@"PairStatus"];
-    NSString* currentClient = [serverInfoResp parseStringTag:@"CurrentClient"];
+    ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
+    NSString* currentGame = [serverInfoResp getStringTag:@"currentgame"];
+    NSString* pairStatus = [serverInfoResp getStringTag:@"PairStatus"];
+    NSString* currentClient = [serverInfoResp getStringTag:@"CurrentClient"];
     if (![serverInfoResp isStatusOk] || currentGame == NULL || pairStatus == NULL) {
         [_callbacks launchFailed:@"Failed to connect to PC"];
         return;
@@ -102,14 +106,15 @@
 }
 
 - (BOOL) launchApp:(HttpManager*)hMan {
-    HttpResponse* launchResp = [hMan executeRequestSynchronously:
+    HttpResponse* launchResp = [[HttpResponse alloc] init];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:launchResp withUrlRequest:
                           [hMan newLaunchRequest:_config.appID
                                            width:_config.width
                                           height:_config.height
                                      refreshRate:_config.frameRate
                                            rikey:[Utils bytesToHex:_config.riKey]
-                                         rikeyid:_config.riKeyId]];
-    NSString *gameSession = [launchResp parseStringTag:@"gamesession"];
+                                         rikeyid:_config.riKeyId]]];
+    NSString *gameSession = [launchResp getStringTag:@"gamesession"];
     if (launchResp == NULL || ![launchResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to launch app"];
         NSLog(@"Failed Launch Response: %@", launchResp.statusMessage);
@@ -124,10 +129,11 @@
 }
 
 - (BOOL) resumeApp:(HttpManager*)hMan {
-    HttpResponse* resumeResp = [hMan executeRequestSynchronously:
+    HttpResponse* resumeResp = [[HttpResponse alloc] init];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:resumeResp withUrlRequest:
                           [hMan newResumeRequestWithRiKey:[Utils bytesToHex:_config.riKey]
-                                                  riKeyId:_config.riKeyId]];
-    NSString* resume = [resumeResp parseStringTag:@"resume"];
+                                                  riKeyId:_config.riKeyId]]];
+    NSString* resume = [resumeResp getStringTag:@"resume"];
     if (resumeResp == NULL || ![resumeResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to resume app"];
         NSLog(@"Failed Resume Response: %@", resumeResp.statusMessage);

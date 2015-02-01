@@ -9,7 +9,8 @@
 #import "AppAssetRetriever.h"
 #import "HttpManager.h"
 #import "CryptoManager.h"
-#import "HttpResponse.h"
+#import "AppAssetResponse.h"
+#import "HttpRequest.h"
 
 @implementation AppAssetRetriever
 static const double RETRY_DELAY = 1; // seconds
@@ -29,9 +30,10 @@ static const double RETRY_DELAY = 1; // seconds
         }
         if (appImage == nil) {
             HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:[CryptoManager getUniqueID] deviceName:deviceName cert:[CryptoManager readCertFromFile]];
-            HttpResponse* appAssetResp = [hMan executeRequestSynchronously:[hMan newAppAssetRequestWithAppId:self.app.appId]];
+            AppAssetResponse* appAssetResp = [[AppAssetResponse alloc] init];
+            [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appAssetResp withUrlRequest:[hMan newAppAssetRequestWithAppId:self.app.appId]]];
             
-            appImage = [UIImage imageWithData:appAssetResp.responseData];
+            appImage = [UIImage imageWithData:appAssetResp.data];
             self.app.appImage = appImage;
             if (appImage != nil) {
                 @synchronized(self.cache) {

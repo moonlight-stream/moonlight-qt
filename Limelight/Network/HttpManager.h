@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "Host.h"
 #import "HttpResponse.h"
+#import "HttpRequest.h"
 
 @interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
 
@@ -25,8 +26,8 @@
 - (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId;
 - (NSURLRequest*) newQuitAppRequest;
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
-- (HttpResponse*) executeRequestSynchronously:(NSURLRequest*)request;
-- (void) executeRequest:(NSURLRequest*)request;
+- (void) executeRequestSynchronously:(HttpRequest*)request;
+- (void) executeRequest:(HttpRequest*)request;
 
 @end
 

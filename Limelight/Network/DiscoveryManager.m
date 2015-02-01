@@ -12,6 +12,7 @@
 #import "Utils.h"
 #import "DataManager.h"
 #import "DiscoveryWorker.h"
+#import "ServerInfoResponse.h"
 
 @implementation DiscoveryManager {
     NSMutableArray* _hostQueue;
@@ -39,7 +40,8 @@
 
 - (void) discoverHost:(NSString *)hostAddress withCallback:(void (^)(Host *))callback {
     HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-    HttpResponse* serverInfoResponse = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+    ServerInfoResponse* serverInfoResponse = [[ServerInfoResponse alloc] init];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResponse withUrlRequest:[hMan newServerInfoRequest]]];
     
     Host* host = nil;
     if ([serverInfoResponse isStatusOk]) {

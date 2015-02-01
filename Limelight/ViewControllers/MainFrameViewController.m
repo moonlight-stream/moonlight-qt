@@ -19,6 +19,8 @@
 #import "DataManager.h"
 #import "Settings.h"
 #import "WakeOnLanManager.h"
+#import "AppListResponse.h"
+#import "ServerInfoResponse.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -72,7 +74,9 @@ static StreamConfiguration* streamConfig;
             [self.navigationController.navigationBar setNeedsLayout];
         });
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        HttpResponse* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
+        
+        AppListResponse* appListResp = [[AppListResponse alloc] init];
+        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
         if (appListResp == nil || ![appListResp isStatusOk]) {
             NSLog(@"Failed to get applist: %@", appListResp.statusMessage);
         } else {
@@ -115,11 +119,13 @@ static StreamConfiguration* streamConfig;
     _selectedHost = host;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        HttpResponse* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
+        ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             NSLog(@"Failed to get server info: %@", serverInfoResp.statusMessage);
         } else {
-            if ([[serverInfoResp parseStringTag:@"PairStatus"] isEqualToString:@"1"]) {
+            NSLog(@"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
+            if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
                 NSLog(@"Already Paired");
                 [self alreadyPaired];
             } else {
@@ -140,7 +146,7 @@ static StreamConfiguration* streamConfig;
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                [hMan executeRequestSynchronously:[hMan newUnpairRequest]];
+                [hMan executeRequest:[HttpRequest requestWithUrlRequest:[hMan newUnpairRequest]]];
             });
         }]];
     } else {
@@ -250,7 +256,7 @@ static StreamConfiguration* streamConfig;
                                         NSLog(@"Quitting application: %@", currentApp.appName);
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                                             HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                                            [hMan executeRequestSynchronously:[hMan newQuitAppRequest]];
+                                            [hMan executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[hMan newQuitAppRequest]]];
                                             // TODO: handle failure to quit app
                                             currentApp.isRunning = NO;
                                             

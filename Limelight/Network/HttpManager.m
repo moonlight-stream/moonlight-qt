@@ -7,6 +7,7 @@
 //
 
 #import "HttpManager.h"
+#import "HttpRequest.h"
 #import "CryptoManager.h"
 #import "App.h"
 
@@ -46,18 +47,20 @@ static const NSString* PORT = @"47984";
     return self;
 }
 
-- (HttpResponse*) executeRequestSynchronously:(NSURLRequest*)request {
+- (void) executeRequestSynchronously:(HttpRequest*)request {
     NSLog(@"Making Request: %@", request);
     [_respData setLength:0];
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [NSURLConnection connectionWithRequest:request delegate:self];
+        [NSURLConnection connectionWithRequest:request.request delegate:self];
     });
     dispatch_semaphore_wait(_requestLock, DISPATCH_TIME_FOREVER);
-    return [HttpResponse responseWithData:_requestResp];
+    if (request.response) {
+        [request.response populateWithData:_requestResp];
+    }
 }
 
-- (void) executeRequest:(NSURLRequest*)request {
-    [NSURLConnection connectionWithRequest:request delegate:self];
+- (void) executeRequest:(HttpRequest*)request {
+    [NSURLConnection connectionWithRequest:request.request delegate:self];
 }
 
 - (NSURLRequest*) createRequestFromString:(NSString*) urlString enableTimeout:(BOOL)normalTimeout {
