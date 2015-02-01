@@ -25,30 +25,17 @@ static NSString* TAG_PAIR_STATUS = @"PairStatus";
 }
 
 - (void) populateHost:(Host*)host {
-    NSString* hostname = [self getStringTag:TAG_HOSTNAME];
-    NSString* externalIp = [self getStringTag:TAG_EXTERNAL_IP];
-    NSString* localIp = [self getStringTag:TAG_LOCAL_IP];
-    NSString* uniqueId = [self getStringTag:TAG_UNIQUE_ID];
-    NSString* macAddress = [self getStringTag:TAG_MAC_ADDRESS];
-    NSString* pairStatus = [self getStringTag:TAG_PAIR_STATUS];
+    host.name = [self getStringTag:TAG_HOSTNAME];
+    host.externalAddress = [self getStringTag:TAG_EXTERNAL_IP];
+    host.localAddress = [self getStringTag:TAG_LOCAL_IP];
+    host.uuid = [self getStringTag:TAG_UNIQUE_ID];
+    host.mac = [self getStringTag:TAG_MAC_ADDRESS];
     
-    if (hostname) {
-        host.name = hostname;
-    }
-    if (externalIp) {
-        host.externalAddress = externalIp;
-    }
-    if (localIp) {
-        host.localAddress = localIp;
-    }
-    if (uniqueId) {
-        host.uuid = uniqueId;
-    }
-    if (macAddress) {
-        host.mac = macAddress;
-    }
-    if (pairStatus) {
-        host.pairState = [pairStatus isEqualToString:@"1"] ? PairStatePaired : PairStateUnpaired;
+    NSInteger pairStatus;
+    if ([self getIntTag:TAG_PAIR_STATUS value:&pairStatus]) {
+        host.pairState = pairStatus ? PairStatePaired : PairStateUnpaired;
+    } else {
+        host.pairState = PairStateUnknown;
     }
 }
 

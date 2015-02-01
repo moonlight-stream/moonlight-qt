@@ -48,6 +48,7 @@
         DataManager* dataMan = [[DataManager alloc] init];
         host = [dataMan createHost];
         host.address = hostAddress;
+        host.online = YES;
         [serverInfoResponse populateHost:host];
         if (![self addHostToDiscovery:host]) {
             [dataMan removeHost:host];
