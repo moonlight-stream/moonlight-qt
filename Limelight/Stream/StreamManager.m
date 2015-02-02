@@ -49,7 +49,8 @@
     NSString* currentGame = [serverInfoResp getStringTag:@"currentgame"];
     NSString* pairStatus = [serverInfoResp getStringTag:@"PairStatus"];
     NSString* currentClient = [serverInfoResp getStringTag:@"CurrentClient"];
-    if (![serverInfoResp isStatusOk] || currentGame == NULL || pairStatus == NULL) {
+    NSString* appversion = [serverInfoResp getStringTag:@"appversion"];
+    if (![serverInfoResp isStatusOk] || currentGame == NULL || pairStatus == NULL || appversion == NULL) {
         [_callbacks launchFailed:@"Failed to connect to PC"];
         return;
     }
@@ -85,8 +86,11 @@
     [((StreamView*)_renderView) setMouseDeltaFactors:_config.width / screenSize.width
                                                    y:_config.height / screenSize.height];
     
+    int majorVersion = [[appversion substringToIndex:1] intValue];
+    NSLog(@"Server is generation %d", majorVersion);
+    
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
-    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks];
+    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks serverMajorVersion:majorVersion];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:_connection];
 }
