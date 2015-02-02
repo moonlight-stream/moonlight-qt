@@ -9,7 +9,6 @@
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Connection.h"
-#import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
 #import "Utils.h"
 #import "UIComputerView.h"
@@ -21,6 +20,7 @@
 #import "WakeOnLanManager.h"
 #import "AppListResponse.h"
 #import "ServerInfoResponse.h"
+#import "StreamFrameViewController.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -30,17 +30,13 @@
     NSString* _currentGame;
     DiscoveryManager* _discMan;
     AppAssetManager* _appManager;
+    StreamConfiguration* _streamConfig;
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
     int currentPosition;
 }
 static NSMutableSet* hostList;
 static NSArray* appList;
-static StreamConfiguration* streamConfig;
-
-+ (StreamConfiguration*) getStreamConfiguration {
-    return streamConfig;
-}
 
 - (void)showPIN:(NSString *)PIN {
     dispatch_sync(dispatch_get_main_queue(), ^{
@@ -219,11 +215,11 @@ static StreamConfiguration* streamConfig;
 
 - (void) appClicked:(App *)app {
     NSLog(@"Clicked app: %@", app.appName);
-    streamConfig = [[StreamConfiguration alloc] init];
-    streamConfig.host = _selectedHost.address;
-    streamConfig.hostAddr = [Utils resolveHost:_selectedHost.address];
-    streamConfig.appID = app.appId;
-    if (streamConfig.hostAddr == 0) {
+    _streamConfig = [[StreamConfiguration alloc] init];
+    _streamConfig.host = _selectedHost.address;
+    _streamConfig.hostAddr = [Utils resolveHost:_selectedHost.address];
+    _streamConfig.appID = app.appId;
+    if (_streamConfig.hostAddr == 0) {
         [self displayDnsFailedDialog];
         return;
     }
@@ -231,10 +227,10 @@ static StreamConfiguration* streamConfig;
     DataManager* dataMan = [[DataManager alloc] init];
     Settings* streamSettings = [dataMan retrieveSettings];
     
-    streamConfig.frameRate = [streamSettings.framerate intValue];
-    streamConfig.bitRate = [streamSettings.bitrate intValue];
-    streamConfig.height = [streamSettings.height intValue];
-    streamConfig.width = [streamSettings.width intValue];
+    _streamConfig.frameRate = [streamSettings.framerate intValue];
+    _streamConfig.bitRate = [streamSettings.bitrate intValue];
+    _streamConfig.height = [streamSettings.height intValue];
+    _streamConfig.width = [streamSettings.width intValue];
     
     
     if (currentPosition != FrontViewPositionLeft) {
@@ -292,14 +288,21 @@ static StreamConfiguration* streamConfig;
     currentPosition = position;
 }
 
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.destinationViewController isKindOfClass:[StreamFrameViewController class]]) {
+        StreamFrameViewController* streamFrame = segue.destinationViewController;
+        streamFrame.streamConfig = _streamConfig;
+    }
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    // Set the side bar button action. When it's tapped, it'll show up the sidebar.
+    // Set the side bar button action. When it's tapped, it'll show the sidebar.
     [_limelightLogoButton addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
     
-    // Set the host name button action. When it's tapped, it'll show up the host selection view.
+    // Set the host name button action. When it's tapped, it'll show the host selection view.
     [_computerNameButton setTarget:self];
     [_computerNameButton setAction:@selector(showHostSelectionView)];
     
@@ -313,12 +316,12 @@ static StreamConfiguration* streamConfig;
     currentPosition = FrontViewPositionLeft;
     
     // Set up crypto
-    _opQueue = [[NSOperationQueue alloc] init];
     [CryptoManager generateKeyPairUsingSSl];
     _uniqueId = [CryptoManager getUniqueID];
     _cert = [CryptoManager readCertFromFile];
 
     _appManager = [[AppAssetManager alloc] initWithCallback:self];
+    _opQueue = [[NSOperationQueue alloc] init];
     
     // Only initialize the host picker list once
     if (hostList == nil) {
@@ -467,4 +470,5 @@ static StreamConfiguration* streamConfig;
 - (BOOL)shouldAutorotate {
     return YES;
 }
+
 @end

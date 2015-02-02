@@ -36,7 +36,7 @@
     
     _controllerSupport = [[ControllerSupport alloc] init];
     
-    _streamMan = [[StreamManager alloc] initWithConfig:[MainFrameViewController getStreamConfiguration]
+    _streamMan = [[StreamManager alloc] initWithConfig:self.streamConfig
                                             renderView:self.view
                                    connectionCallbacks:self];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
