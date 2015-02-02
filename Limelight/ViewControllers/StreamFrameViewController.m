@@ -49,6 +49,7 @@
 }
 
 - (void) returnToMainFrame {
+    [_controllerSupport cleanup];
     [self.navigationController popToRootViewControllerAnimated:YES];
 }
 

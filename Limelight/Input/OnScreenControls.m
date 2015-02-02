@@ -8,6 +8,7 @@
 
 #import "OnScreenControls.h"
 #import "ControllerSupport.h"
+#import "Controller.h"
 #include "Limelight.h"
 
 #define UPDATE_BUTTON(x, y) (buttonFlags = \
@@ -64,6 +65,7 @@
     OnScreenControlsLevel _level;
     
     ControllerSupport *_controllerSupport;
+    Controller *_controller;
 }
 
 static const float BUTTON_SIZE = 50;
@@ -117,6 +119,8 @@ static float L3_Y;
     self = [self init];
     _view = view;
     _controllerSupport = controllerSupport;
+    _controller = [[Controller alloc] init];
+    _controller.playerIndex = 0;
     
     _aButton = [CALayer layer];
     _bButton = [CALayer layer];
@@ -449,7 +453,7 @@ static float L3_Y;
             if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
             if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;
 
-            [_controllerSupport updateLeftStick:0x7FFE * xStickVal y:0x7FFE * -yStickVal];
+            [_controllerSupport updateLeftStick:_controller x:0x7FFE * xStickVal y:0x7FFE * -yStickVal];
 
             updated = true;
         } else if (touch == _rsTouch) {
@@ -466,7 +470,7 @@ static float L3_Y;
             if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
             if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;
 
-            [_controllerSupport updateRightStick:0x7FFE * xStickVal y:0x7FFE * -yStickVal];
+            [_controllerSupport updateRightStick:_controller x:0x7FFE * xStickVal y:0x7FFE * -yStickVal];
 
             updated = true;
         } else if (touch == _aTouch) {
@@ -504,7 +508,7 @@ static float L3_Y;
         }
     }
     if (updated) {
-        [_controllerSupport updateFinished];
+        [_controllerSupport updateFinished:_controller];
     }
     return updated || buttonTouch;
 }
@@ -516,67 +520,67 @@ static float L3_Y;
         CGPoint touchLocation = [touch locationInView:_view];
 
         if ([_aButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:A_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:A_FLAG];
             _aTouch = touch;
             updated = true;
         } else if ([_bButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:B_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:B_FLAG];
             _bTouch = touch;
             updated = true;
         } else if ([_xButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:X_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:X_FLAG];
             _xTouch = touch;
             updated = true;
         } else if ([_yButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:Y_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:Y_FLAG];
             _yTouch = touch;
             updated = true;
         } else if ([_upButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:UP_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:UP_FLAG];
             _upTouch = touch;
             updated = true;
         } else if ([_downButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:DOWN_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:DOWN_FLAG];
             _downTouch = touch;
             updated = true;
         } else if ([_leftButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:LEFT_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:LEFT_FLAG];
             _leftTouch = touch;
             updated = true;
         } else if ([_rightButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:RIGHT_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:RIGHT_FLAG];
             _rightTouch = touch;
             updated = true;
         } else if ([_startButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:PLAY_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:PLAY_FLAG];
             _startTouch = touch;
             updated = true;
         } else if ([_selectButton.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:BACK_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:BACK_FLAG];
             _selectTouch = touch;
             updated = true;
         } else if ([_l1Button.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:LB_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:LB_FLAG];
             _l1Touch = touch;
             updated = true;
         } else if ([_r1Button.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport setButtonFlag:RB_FLAG];
+            [_controllerSupport setButtonFlag:_controller flags:RB_FLAG];
             _r1Touch = touch;
             updated = true;
         } else if ([_l2Button.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport updateLeftTrigger:0xFF];
+            [_controllerSupport updateLeftTrigger:_controller left:0xFF];
             _l2Touch = touch;
             updated = true;
         } else if ([_r2Button.presentationLayer hitTest:touchLocation]) {
-            [_controllerSupport updateRightTrigger:0xFF];
+            [_controllerSupport updateRightTrigger:_controller right:0xFF];
             _r2Touch = touch;
             updated = true;
         } else if ([_l3Button.presentationLayer hitTest:touchLocation]) {
             if (l3Set) {
-                [_controllerSupport clearButtonFlag:LS_CLK_FLAG];
+                [_controllerSupport clearButtonFlag:_controller flags:LS_CLK_FLAG];
                 _l3Button.borderWidth = 0.0f;
             } else {
-                [_controllerSupport setButtonFlag:LS_CLK_FLAG];
+                [_controllerSupport setButtonFlag:_controller flags:LS_CLK_FLAG];
                 _l3Button.borderWidth = 2.0f;
             }
             l3Set = !l3Set;
@@ -584,10 +588,10 @@ static float L3_Y;
             updated = true;
         } else if ([_r3Button.presentationLayer hitTest:touchLocation]) {
             if (r3Set) {
-                [_controllerSupport clearButtonFlag:RS_CLK_FLAG];
+                [_controllerSupport clearButtonFlag:_controller flags:RS_CLK_FLAG];
                 _r3Button.borderWidth = 0.0f;
             } else {
-                [_controllerSupport setButtonFlag:RS_CLK_FLAG];
+                [_controllerSupport setButtonFlag:_controller flags:RS_CLK_FLAG];
                 _r3Button.borderWidth = 2.0f;
             }
             r3Set = !r3Set;
@@ -599,7 +603,7 @@ static float L3_Y;
                 // Use (-) modifier to conversion since receiver is earlier than now
                 double l3TouchTime = [l3TouchStart timeIntervalSinceNow] * -1000.0;
                 if (l3TouchTime < STICK_CLICK_RATE) {
-                    [_controllerSupport setButtonFlag:LS_CLK_FLAG];
+                    [_controllerSupport setButtonFlag:_controller flags:LS_CLK_FLAG];
                     updated = true;
                 }
             }
@@ -611,7 +615,7 @@ static float L3_Y;
                 // Use (-) modifier to conversion since receiver is earlier than now
                 double r3TouchTime = [r3TouchStart timeIntervalSinceNow] * -1000.0;
                 if (r3TouchTime < STICK_CLICK_RATE) {
-                    [_controllerSupport setButtonFlag:RS_CLK_FLAG];
+                    [_controllerSupport setButtonFlag:_controller flags:RS_CLK_FLAG];
                     updated = true;
                 }
             }
@@ -620,7 +624,7 @@ static float L3_Y;
         }
     }
     if (updated) {
-        [_controllerSupport updateFinished];
+        [_controllerSupport updateFinished:_controller];
     }
     return updated || stickTouch;
 }
@@ -630,72 +634,72 @@ static float L3_Y;
     BOOL touched = false;
     for (UITouch* touch in touches) {
         if (touch == _aTouch) {
-            [_controllerSupport clearButtonFlag:A_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:A_FLAG];
             _aTouch = nil;
             updated = true;
         } else if (touch == _bTouch) {
-            [_controllerSupport clearButtonFlag:B_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:B_FLAG];
             _bTouch = nil;
             updated = true;
         } else if (touch == _xTouch) {
-            [_controllerSupport clearButtonFlag:X_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:X_FLAG];
             _xTouch = nil;
             updated = true;
         } else if (touch == _yTouch) {
-            [_controllerSupport clearButtonFlag:Y_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:Y_FLAG];
             _yTouch = nil;
             updated = true;
         } else if (touch == _upTouch) {
-            [_controllerSupport clearButtonFlag:UP_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:UP_FLAG];
             _upTouch = nil;
             updated = true;
         } else if (touch == _downTouch) {
-            [_controllerSupport clearButtonFlag:DOWN_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:DOWN_FLAG];
             _downTouch = nil;
             updated = true;
         } else if (touch == _leftTouch) {
-            [_controllerSupport clearButtonFlag:LEFT_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:LEFT_FLAG];
             _leftTouch = nil;
             updated = true;
         } else if (touch == _rightTouch) {
-            [_controllerSupport clearButtonFlag:RIGHT_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:RIGHT_FLAG];
             _rightTouch = nil;
             updated = true;
         } else if (touch == _startTouch) {
-            [_controllerSupport clearButtonFlag:PLAY_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:PLAY_FLAG];
             _startTouch = nil;
             updated = true;
         } else if (touch == _selectTouch) {
-            [_controllerSupport clearButtonFlag:BACK_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:BACK_FLAG];
             _selectTouch = nil;
             updated = true;
         } else if (touch == _l1Touch) {
-            [_controllerSupport clearButtonFlag:LB_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:LB_FLAG];
             _l1Touch = nil;
             updated = true;
         } else if (touch == _r1Touch) {
-            [_controllerSupport clearButtonFlag:RB_FLAG];
+            [_controllerSupport clearButtonFlag:_controller flags:RB_FLAG];
             _r1Touch = nil;
             updated = true;
         } else if (touch == _l2Touch) {
-            [_controllerSupport updateLeftTrigger:0];
+            [_controllerSupport updateLeftTrigger:_controller left:0];
             _l2Touch = nil;
             updated = true;
         } else if (touch == _r2Touch) {
-            [_controllerSupport updateRightTrigger:0];
+            [_controllerSupport updateRightTrigger:_controller right:0];
             _r2Touch = nil;
             updated = true;
         } else if (touch == _lsTouch) {
             _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
-            [_controllerSupport updateLeftStick:0 y:0];
-            [_controllerSupport clearButtonFlag:LS_CLK_FLAG];
+            [_controllerSupport updateLeftStick:_controller x:0 y:0];
+            [_controllerSupport clearButtonFlag:_controller flags:LS_CLK_FLAG];
             l3TouchStart = [NSDate date];
             _lsTouch = nil;
             updated = true;
         } else if (touch == _rsTouch) {
             _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
-            [_controllerSupport updateRightStick:0 y:0];
-            [_controllerSupport clearButtonFlag:RS_CLK_FLAG];
+            [_controllerSupport updateRightStick:_controller x:0 y:0];
+            [_controllerSupport clearButtonFlag:_controller flags:RS_CLK_FLAG];
             r3TouchStart = [NSDate date];
             _rsTouch = nil;
             updated = true;
@@ -710,7 +714,7 @@ static float L3_Y;
         }
     }
     if (updated) {
-        [_controllerSupport updateFinished];
+        [_controllerSupport updateFinished:_controller];
     }
     return updated || touched;
 }

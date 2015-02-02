@@ -64,6 +64,7 @@
 		FB9AFD3A1A7E05CE00872C98 /* ServerInfoResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD391A7E05CE00872C98 /* ServerInfoResponse.m */; };
 		FB9AFD3D1A7E111600872C98 /* AppAssetResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD3C1A7E111600872C98 /* AppAssetResponse.m */; };
 		FB9AFD401A7E127D00872C98 /* AppListResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD3F1A7E127D00872C98 /* AppListResponse.m */; };
+		FB9AFD431A7F0C6900872C98 /* Controller.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD421A7F0C6900872C98 /* Controller.m */; };
 		FBD3494319FC9C04002D2A60 /* AppAssetManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3494219FC9C04002D2A60 /* AppAssetManager.m */; };
 		FBD3495019FF2174002D2A60 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3494F19FF2174002D2A60 /* SettingsViewController.m */; };
 		FBD3495319FF36FB002D2A60 /* SWRevealViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3495219FF36FB002D2A60 /* SWRevealViewController.m */; };
@@ -265,6 +266,8 @@
 		FB9AFD3C1A7E111600872C98 /* AppAssetResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppAssetResponse.m; sourceTree = "<group>"; };
 		FB9AFD3E1A7E127D00872C98 /* AppListResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppListResponse.h; sourceTree = "<group>"; };
 		FB9AFD3F1A7E127D00872C98 /* AppListResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppListResponse.m; sourceTree = "<group>"; };
+		FB9AFD411A7F0C6900872C98 /* Controller.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Controller.h; sourceTree = "<group>"; };
+		FB9AFD421A7F0C6900872C98 /* Controller.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Controller.m; sourceTree = "<group>"; };
 		FBD3494119FC9C04002D2A60 /* AppAssetManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppAssetManager.h; sourceTree = "<group>"; };
 		FBD3494219FC9C04002D2A60 /* AppAssetManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppAssetManager.m; sourceTree = "<group>"; };
 		FBD3494E19FF2174002D2A60 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
@@ -460,6 +463,8 @@
 			children = (
 				FB89460A19F646E200339C8A /* ControllerSupport.h */,
 				FB89460B19F646E200339C8A /* ControllerSupport.m */,
+				FB9AFD411A7F0C6900872C98 /* Controller.h */,
+				FB9AFD421A7F0C6900872C98 /* Controller.m */,
 				FB89460C19F646E200339C8A /* StreamView.h */,
 				FB89460D19F646E200339C8A /* StreamView.m */,
 				FB4678EB1A50C40900377732 /* OnScreenControls.h */,
@@ -894,6 +899,7 @@
 				FB9AFD371A7E02DB00872C98 /* HttpRequest.m in Sources */,
 				FB4678ED1A50C40900377732 /* OnScreenControls.m in Sources */,
 				FB290D0019B2C406004C83CF /* main.m in Sources */,
+				FB9AFD431A7F0C6900872C98 /* Controller.m in Sources */,
 				FBD3494319FC9C04002D2A60 /* AppAssetManager.m in Sources */,
 				FB6549561A57907E001C8F39 /* DiscoveryWorker.m in Sources */,
 				FB89462A19F646E200339C8A /* ControllerSupport.m in Sources */,

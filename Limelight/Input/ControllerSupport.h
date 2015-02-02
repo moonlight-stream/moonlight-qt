@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Controller.h"
 
 @class OnScreenControls;
 
@@ -16,18 +17,18 @@
 -(void) initAutoOnScreenControlMode:(OnScreenControls*)osc;
 -(void) cleanup;
 
--(void) updateLeftStick:(short)x y:(short)y;
--(void) updateRightStick:(short)x y:(short)y;
+-(void) updateLeftStick:(Controller*)controller x:(short)x y:(short)y;
+-(void) updateRightStick:(Controller*)controller x:(short)x y:(short)y;
 
--(void) updateLeftTrigger:(char)left;
--(void) updateRightTrigger:(char)right;
--(void) updateTriggers:(char)left right:(char)right;
+-(void) updateLeftTrigger:(Controller*)controller left:(char)left;
+-(void) updateRightTrigger:(Controller*)controller right:(char)right;
+-(void) updateTriggers:(Controller*)controller left:(char)left right:(char)right;
 
--(void) updateButtonFlags:(int)flags;
--(void) setButtonFlag:(int)flags;
--(void) clearButtonFlag:(int)flags;
+-(void) updateButtonFlags:(Controller*)controller flags:(int)flags;
+-(void) setButtonFlag:(Controller*)controller flags:(int)flags;
+-(void) clearButtonFlag:(Controller*)controller flags:(int)flags;
 
--(void) updateFinished;
+-(void) updateFinished:(Controller*)controller;
 
 @property (nonatomic, strong) id connectObserver;
 @property (nonatomic, strong) id disconnectObserver;
