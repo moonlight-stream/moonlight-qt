@@ -41,7 +41,8 @@
         retriever.app = app;
         retriever.host = _host;
         retriever.callback = _callback;
-        retriever.cache = useCache ? _imageCache : nil;
+        retriever.cache = _imageCache;
+        retriever.useCache = useCache;
         [_opQueue addOperation:retriever];
     }
 }

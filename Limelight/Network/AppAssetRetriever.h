@@ -17,5 +17,6 @@
 @property (nonatomic) App* app;
 @property (nonatomic) NSMutableDictionary* cache;
 @property (nonatomic) id<AppAssetCallback> callback;
+@property (nonatomic) BOOL useCache;
 
 @end

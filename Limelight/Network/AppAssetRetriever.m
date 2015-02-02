@@ -19,7 +19,7 @@ static const double RETRY_DELAY = 1; // seconds
 - (void) main {
     UIImage* appImage = nil;
     while (![self isCancelled] && appImage == nil) {
-        if (self.cache) {
+        if (self.useCache) {
             @synchronized(self.cache) {
                 UIImage* cachedImage = [self.cache objectForKey:self.app.appId];
                 if (cachedImage != nil) {
