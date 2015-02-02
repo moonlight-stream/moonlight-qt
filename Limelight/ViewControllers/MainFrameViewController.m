@@ -9,7 +9,6 @@
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Connection.h"
-#import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
 #import "Utils.h"
 #import "UIComputerView.h"
@@ -19,6 +18,9 @@
 #import "DataManager.h"
 #import "Settings.h"
 #import "WakeOnLanManager.h"
+#import "AppListResponse.h"
+#import "ServerInfoResponse.h"
+#import "StreamFrameViewController.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -27,18 +29,14 @@
     NSData* _cert;
     NSString* _currentGame;
     DiscoveryManager* _discMan;
-    AppManager* _appManager;
+    AppAssetManager* _appManager;
+    StreamConfiguration* _streamConfig;
     UIAlertView* _pairAlert;
     UIScrollView* hostScrollView;
     int currentPosition;
 }
 static NSMutableSet* hostList;
 static NSArray* appList;
-static StreamConfiguration* streamConfig;
-
-+ (StreamConfiguration*) getStreamConfiguration {
-    return streamConfig;
-}
 
 - (void)showPIN:(NSString *)PIN {
     dispatch_sync(dispatch_get_main_queue(), ^{
@@ -69,18 +67,27 @@ static StreamConfiguration* streamConfig;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         dispatch_async(dispatch_get_main_queue(), ^{
             _computerNameButton.title = _selectedHost.name;
-			[self.navigationController.navigationBar setNeedsLayout];
+            [self.navigationController.navigationBar setNeedsLayout];
         });
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        NSData* appListResp = [hMan executeRequestSynchronously:[hMan newAppListRequest]];
-        appList = [HttpManager getAppListFromXML:appListResp];
         
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self updateApps];
-        });
-        
-        [_appManager stopRetrieving];
-        [_appManager retrieveAssets:appList fromHost:_selectedHost];
+        AppListResponse* appListResp = [[AppListResponse alloc] init];
+        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
+        if (appListResp == nil || ![appListResp isStatusOk]) {
+            NSLog(@"Failed to get applist: %@", appListResp.statusMessage);
+        } else {
+            appList = [appListResp getAppList];
+            if (appList == nil) {
+                NSLog(@"Failed to parse applist");
+            } else {
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self updateApps];
+                });
+                
+                [_appManager stopRetrieving];
+                [_appManager retrieveAssets:appList fromHost:_selectedHost];
+            }
+        }
     });
 }
 
@@ -108,16 +115,22 @@ static StreamConfiguration* streamConfig;
     _selectedHost = host;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-        if ([[HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"] isEqualToString:@"1"]) {
-            NSLog(@"Already Paired");
-            [self alreadyPaired];
+        ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
+        if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
+            NSLog(@"Failed to get server info: %@", serverInfoResp.statusMessage);
         } else {
-            NSLog(@"Trying to pair");
-            // Polling the server while pairing causes the server to screw up
-            [_discMan stopDiscoveryBlocking];
-            PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
-            [_opQueue addOperation:pMan];
+            NSLog(@"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
+            if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
+                NSLog(@"Already Paired");
+                [self alreadyPaired];
+            } else {
+                NSLog(@"Trying to pair");
+                // Polling the server while pairing causes the server to screw up
+                [_discMan stopDiscoveryBlocking];
+                PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
+                [_opQueue addOperation:pMan];
+            }
         }
     });
 }
@@ -129,7 +142,7 @@ static StreamConfiguration* streamConfig;
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                [hMan executeRequestSynchronously:[hMan newUnpairRequest]];
+                [hMan executeRequest:[HttpRequest requestWithUrlRequest:[hMan newUnpairRequest]]];
             });
         }]];
     } else {
@@ -163,7 +176,7 @@ static StreamConfiguration* streamConfig;
     
     // these two lines are required for iPad support of UIAlertSheet
     longClickAlert.popoverPresentationController.sourceView = view;
-
+    
     longClickAlert.popoverPresentationController.sourceRect = CGRectMake(view.bounds.size.width / 2.0, view.bounds.size.height / 2.0, 1.0, 1.0); // center of the view
     [self presentViewController:longClickAlert animated:YES completion:^{
         [self updateHosts];
@@ -202,11 +215,11 @@ static StreamConfiguration* streamConfig;
 
 - (void) appClicked:(App *)app {
     NSLog(@"Clicked app: %@", app.appName);
-    streamConfig = [[StreamConfiguration alloc] init];
-    streamConfig.host = _selectedHost.address;
-    streamConfig.hostAddr = [Utils resolveHost:_selectedHost.address];
-    streamConfig.appID = app.appId;
-    if (streamConfig.hostAddr == 0) {
+    _streamConfig = [[StreamConfiguration alloc] init];
+    _streamConfig.host = _selectedHost.address;
+    _streamConfig.hostAddr = [Utils resolveHost:_selectedHost.address];
+    _streamConfig.appID = app.appId;
+    if (_streamConfig.hostAddr == 0) {
         [self displayDnsFailedDialog];
         return;
     }
@@ -214,10 +227,10 @@ static StreamConfiguration* streamConfig;
     DataManager* dataMan = [[DataManager alloc] init];
     Settings* streamSettings = [dataMan retrieveSettings];
     
-    streamConfig.frameRate = [streamSettings.framerate intValue];
-    streamConfig.bitRate = [streamSettings.bitrate intValue];
-    streamConfig.height = [streamSettings.height intValue];
-    streamConfig.width = [streamSettings.width intValue];
+    _streamConfig.frameRate = [streamSettings.framerate intValue];
+    _streamConfig.bitRate = [streamSettings.bitrate intValue];
+    _streamConfig.height = [streamSettings.height intValue];
+    _streamConfig.width = [streamSettings.width intValue];
     
     
     if (currentPosition != FrontViewPositionLeft) {
@@ -227,29 +240,29 @@ static StreamConfiguration* streamConfig;
     App* currentApp = [self findRunningApp];
     if (currentApp != nil) {
         UIAlertController* alertController = [UIAlertController
-        alertControllerWithTitle: app.appName
-        message: [app.appId isEqualToString:currentApp.appId] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.appName]preferredStyle:UIAlertControllerStyleAlert];
+                                              alertControllerWithTitle: app.appName
+                                              message: [app.appId isEqualToString:currentApp.appId] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.appName]preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction
-            actionWithTitle:[app.appId isEqualToString:currentApp.appId] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-            NSLog(@"Resuming application: %@", currentApp.appName);
-            [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
-        }]];
+                                    actionWithTitle:[app.appId isEqualToString:currentApp.appId] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                                        NSLog(@"Resuming application: %@", currentApp.appName);
+                                        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                    }]];
         [alertController addAction:[UIAlertAction actionWithTitle:
-              [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-            NSLog(@"Quitting application: %@", currentApp.appName);
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                [hMan executeRequestSynchronously:[hMan newQuitAppRequest]];
-                // TODO: handle failure to quit app
-                currentApp.isRunning = NO;
-                
-                if (![app.appId isEqualToString:currentApp.appId]) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
-                    });
-                }
-            });
-        }]];
+                                    [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+                                        NSLog(@"Quitting application: %@", currentApp.appName);
+                                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                                            [hMan executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[hMan newQuitAppRequest]]];
+                                            // TODO: handle failure to quit app
+                                            currentApp.isRunning = NO;
+                                            
+                                            if (![app.appId isEqualToString:currentApp.appId]) {
+                                                dispatch_async(dispatch_get_main_queue(), ^{
+                                                    [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                                });
+                                            }
+                                        });
+                                    }]];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
         [self presentViewController:alertController animated:YES completion:nil];
     } else {
@@ -275,14 +288,21 @@ static StreamConfiguration* streamConfig;
     currentPosition = position;
 }
 
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.destinationViewController isKindOfClass:[StreamFrameViewController class]]) {
+        StreamFrameViewController* streamFrame = segue.destinationViewController;
+        streamFrame.streamConfig = _streamConfig;
+    }
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
     
-    // Set the side bar button action. When it's tapped, it'll show up the sidebar.
+    // Set the side bar button action. When it's tapped, it'll show the sidebar.
     [_limelightLogoButton addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
     
-    // Set the host name button action. When it's tapped, it'll show up the host selection view.
+    // Set the host name button action. When it's tapped, it'll show the host selection view.
     [_computerNameButton setTarget:self];
     [_computerNameButton setAction:@selector(showHostSelectionView)];
     
@@ -296,12 +316,12 @@ static StreamConfiguration* streamConfig;
     currentPosition = FrontViewPositionLeft;
     
     // Set up crypto
-    _opQueue = [[NSOperationQueue alloc] init];
     [CryptoManager generateKeyPairUsingSSl];
     _uniqueId = [CryptoManager getUniqueID];
     _cert = [CryptoManager readCertFromFile];
-    
-    _appManager = [[AppManager alloc] initWithCallback:self];
+
+    _appManager = [[AppAssetManager alloc] initWithCallback:self];
+    _opQueue = [[NSOperationQueue alloc] init];
     
     // Only initialize the host picker list once
     if (hostList == nil) {
@@ -344,7 +364,7 @@ static StreamConfiguration* streamConfig;
     [super viewDidDisappear:animated];
     // when discovery stops, we must create a new instance because you cannot restart an NSOperation when it is finished
     [_discMan stopDiscovery];
-
+    
     // In case the host objects were updated in the background
     [[[DataManager alloc] init] saveHosts];
 }
@@ -450,4 +470,5 @@ static StreamConfiguration* streamConfig;
 - (BOOL)shouldAutorotate {
     return YES;
 }
+
 @end

@@ -12,6 +12,9 @@
 #import "Utils.h"
 #import "OnScreenControls.h"
 #import "StreamView.h"
+#import "ServerInfoResponse.h"
+#import "HttpResponse.h"
+#import "HttpRequest.h"
 
 @implementation StreamManager {
     StreamConfiguration* _config;
@@ -41,11 +44,12 @@
                                                deviceName:@"roth"
                                                      cert:cert];
     
-    NSData* serverInfoResp = [hMan executeRequestSynchronously:[hMan newServerInfoRequest]];
-    NSString* currentGame = [HttpManager getStringFromXML:serverInfoResp tag:@"currentgame"];
-    NSString* pairStatus = [HttpManager getStringFromXML:serverInfoResp tag:@"PairStatus"];
-    NSString* currentClient = [HttpManager getStringFromXML:serverInfoResp tag:@"CurrentClient"];
-    if (currentGame == NULL || pairStatus == NULL) {
+    ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
+    NSString* currentGame = [serverInfoResp getStringTag:@"currentgame"];
+    NSString* pairStatus = [serverInfoResp getStringTag:@"PairStatus"];
+    NSString* currentClient = [serverInfoResp getStringTag:@"CurrentClient"];
+    if (![serverInfoResp isStatusOk] || currentGame == NULL || pairStatus == NULL) {
         [_callbacks launchFailed:@"Failed to connect to PC"];
         return;
     }
@@ -102,19 +106,22 @@
 }
 
 - (BOOL) launchApp:(HttpManager*)hMan {
-    NSData* launchResp = [hMan executeRequestSynchronously:
+    HttpResponse* launchResp = [[HttpResponse alloc] init];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:launchResp withUrlRequest:
                           [hMan newLaunchRequest:_config.appID
                                            width:_config.width
                                           height:_config.height
                                      refreshRate:_config.frameRate
                                            rikey:[Utils bytesToHex:_config.riKey]
-                                         rikeyid:_config.riKeyId]];
-    NSString *gameSession = [HttpManager getStringFromXML:launchResp tag:@"gamesession"];
-    if (launchResp == NULL) {
+                                         rikeyid:_config.riKeyId]]];
+    NSString *gameSession = [launchResp getStringTag:@"gamesession"];
+    if (launchResp == NULL || ![launchResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to launch app"];
+        NSLog(@"Failed Launch Response: %@", launchResp.statusMessage);
         return FALSE;
     } else if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
-        [_callbacks launchFailed:[HttpManager getStatusStringFromXML:launchResp]];
+        [_callbacks launchFailed:launchResp.statusMessage];
+        NSLog(@"Failed to parse game session. Code: %ld Response: %@", (long)launchResp.statusCode, launchResp.statusMessage);
         return FALSE;
     }
     
@@ -122,15 +129,18 @@
 }
 
 - (BOOL) resumeApp:(HttpManager*)hMan {
-    NSData* resumeResp = [hMan executeRequestSynchronously:
+    HttpResponse* resumeResp = [[HttpResponse alloc] init];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:resumeResp withUrlRequest:
                           [hMan newResumeRequestWithRiKey:[Utils bytesToHex:_config.riKey]
-                                                  riKeyId:_config.riKeyId]];
-    NSString *resume = [HttpManager getStringFromXML:resumeResp tag:@"resume"];
-    if (resumeResp == NULL) {
+                                                  riKeyId:_config.riKeyId]]];
+    NSString* resume = [resumeResp getStringTag:@"resume"];
+    if (resumeResp == NULL || ![resumeResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to resume app"];
+        NSLog(@"Failed Resume Response: %@", resumeResp.statusMessage);
         return FALSE;
     } else if (resume == NULL || [resume isEqualToString:@"0"]) {
-        [_callbacks launchFailed:[HttpManager getStatusStringFromXML:resumeResp]];
+        [_callbacks launchFailed:resumeResp.statusMessage];
+        NSLog(@"Failed to parse resume response. Code: %ld Response: %@", (long)resumeResp.statusCode, resumeResp.statusMessage);
         return FALSE;
     }
     

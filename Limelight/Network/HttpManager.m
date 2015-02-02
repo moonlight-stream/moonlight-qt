@@ -7,6 +7,7 @@
 //
 
 #import "HttpManager.h"
+#import "HttpRequest.h"
 #import "CryptoManager.h"
 #import "App.h"
 
@@ -25,207 +26,6 @@
 }
 
 static const NSString* PORT = @"47984";
-
-+ (NSArray*) getAppListFromXML:(NSData*)xml {
-    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
-    
-    if (docPtr == NULL) {
-        NSLog(@"ERROR: An error occured trying to parse xml.");
-        return NULL;
-    }
-
-    xmlNodePtr node;
-    xmlNodePtr rootNode = node = xmlDocGetRootElement(docPtr);
-    
-    // Check root status_code
-    if (![HttpManager verifyStatus: rootNode]) {
-        NSLog(@"ERROR: Request returned with failure status");
-        xmlFreeDoc(docPtr);
-        return NULL;
-    }
-    
-    // Skip the root node
-    node = node->children;
-    
-    NSMutableArray* appList = [[NSMutableArray alloc] init];
-    
-    while (node != NULL) {
-        //NSLog(@"node: %s", node->name);
-        if (!xmlStrcmp(node->name, (const xmlChar*)"App")) {
-            xmlNodePtr appInfoNode = node->xmlChildrenNode;
-            NSString* appName;
-            NSString* appId;
-            BOOL appIsRunning = NO;
-            while (appInfoNode != NULL) {
-                //NSLog(@"appInfoNode: %s", appInfoNode->name);
-                if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"AppTitle")) {
-                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
-                    appName = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-                    xmlFree(nodeVal);
-                } else if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"ID")) {
-                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
-                    appId = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-                    xmlFree(nodeVal);
-                } else if (!xmlStrcmp(appInfoNode->name, (const xmlChar*)"IsRunning")) {
-                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
-                    appIsRunning = [[[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding] isEqualToString:@"1"];
-                    xmlFree(nodeVal);
-                }
-                appInfoNode = appInfoNode->next;
-            }
-            App* app = [[App alloc] init];
-            app.appName = appName;
-            app.appId = appId;
-            app.isRunning = appIsRunning;
-            [appList addObject:app];
-        }
-        node = node->next;
-    }
-
-    xmlFreeDoc(docPtr);
-    
-    return appList;
-}
-
-+ (void) populateHostFromXML:(NSData*)xml host:(Host*)host {
-    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
-    
-    if (docPtr == NULL) {
-        NSLog(@"ERROR: An error occured trying to parse xml.");
-        return;
-    }
-
-    xmlNodePtr node;
-    xmlNodePtr rootNode = node = xmlDocGetRootElement(docPtr);
-    
-    // Check root status_code
-    if (![HttpManager verifyStatus: rootNode]) {
-        NSLog(@"ERROR: Request returned with failure status");
-        xmlFreeDoc(docPtr);
-        return;
-    }
-    
-    // Skip the root node
-    node = node->children;
-    
-    while (node != NULL) {
-        //NSLog(@"node: %s", node->name);
-        if (!xmlStrcmp(node->name, (const xmlChar*)"hostname")) {
-            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
-            host.name = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-            xmlFree(nodeVal);
-        } else if (!xmlStrcmp(node->name, (const xmlChar*)"ExternalIP")) {
-            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
-            host.externalAddress = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-            xmlFree(nodeVal);
-        } else if (!xmlStrcmp(node->name, (const xmlChar*)"LocalIP")) {
-            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
-            host.localAddress = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-            xmlFree(nodeVal);
-        } else if (!xmlStrcmp(node->name, (const xmlChar*)"uniqueid")) {
-            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
-            host.uuid = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-            xmlFree(nodeVal);
-        } else if (!xmlStrcmp(node->name, (const xmlChar*)"mac")) {
-            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
-            host.mac = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-            xmlFree(nodeVal);
-        } else if (!xmlStrcmp(node->name, (const xmlChar*)"PairStatus")) {
-            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
-            host.pairState = [[[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding] isEqualToString:@"1"] ? PairStatePaired : PairStateUnpaired;
-            xmlFree(nodeVal);
-        }
-        
-        node = node->next;
-    }
-    
-    xmlFreeDoc(docPtr);
-}
-
-+ (NSString*) getStatusStringFromXML:(NSData*)xml {
-    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
-    
-    if (docPtr == NULL) {
-        NSLog(@"ERROR: An error occured trying to parse xml.");
-        return NULL;
-    }
-    
-    NSString* string;
-    xmlNodePtr rootNode = xmlDocGetRootElement(docPtr);
-    if (rootNode == NULL) {
-        NSLog(@"ERROR: No root XML element.");
-        xmlFreeDoc(docPtr);
-        return NULL;
-    }
-    
-    string = [HttpManager getStatusMessage: rootNode];
-    
-    xmlFreeDoc(docPtr);
-    
-    return string;
-}
-
-+ (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag {
-    xmlDocPtr docPtr = xmlParseMemory([xml bytes], (int)[xml length]);
-    
-    if (docPtr == NULL) {
-        NSLog(@"ERROR: An error occured trying to parse xml.");
-        return NULL;
-    }
-    NSString* value;
-    xmlNodePtr node;
-    xmlNodePtr rootNode = node = xmlDocGetRootElement(docPtr);
-    
-    // Check root status_code
-    if (![HttpManager verifyStatus: rootNode]) {
-        NSLog(@"ERROR: Request returned with failure status");
-        xmlFreeDoc(docPtr);
-        return NULL;
-    }
-    
-    // Skip the root node
-    node = node->children;
-    
-    while (node != NULL) {
-        //NSLog(@"node: %s", node->name);
-        if (!xmlStrcmp(node->name, (const xmlChar*)[tag UTF8String])) {
-            xmlChar* nodeVal = xmlNodeListGetString(docPtr, node->xmlChildrenNode, 1);
-            value = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-            xmlFree(nodeVal);
-        }
-        node = node->next;
-    }
-    //NSLog(@"xmlValue: %@", value);
-
-    xmlFreeDoc(docPtr);
-    
-    return value;
-}
-    
-+ (NSString*) getStatusMessage:(xmlNodePtr)docRoot {
-    xmlChar* statusMsgXml = xmlGetProp(docRoot, (const xmlChar*)"status_message");
-    NSString* statusMsg;
-    if (statusMsgXml != NULL) {
-        statusMsg = [NSString stringWithUTF8String:(const char*)statusMsgXml];
-        xmlFree(statusMsgXml);
-    }
-    else {
-        statusMsg = @"Server Error";
-    }
-
-    return statusMsg;
-}
-
-+ (bool) verifyStatus:(xmlNodePtr)docRoot {
-    xmlChar* statusStr = xmlGetProp(docRoot, (const xmlChar*)"status_code");
-    if (statusStr != NULL) {
-        int status = [[NSString stringWithUTF8String:(const char*)statusStr] intValue];
-        xmlFree(statusStr);
-        return status == 200;
-    }
-
-    return false;
-}
 
 + (NSData*) fixXmlVersion:(NSData*) xmlData {
     NSString* dataString = [[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding];
@@ -247,18 +47,20 @@ static const NSString* PORT = @"47984";
     return self;
 }
 
-- (NSData*) executeRequestSynchronously:(NSURLRequest*)request {
+- (void) executeRequestSynchronously:(HttpRequest*)request {
     NSLog(@"Making Request: %@", request);
     [_respData setLength:0];
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [NSURLConnection connectionWithRequest:request delegate:self];
+        [NSURLConnection connectionWithRequest:request.request delegate:self];
     });
     dispatch_semaphore_wait(_requestLock, DISPATCH_TIME_FOREVER);
-    return _requestResp;
+    if (request.response) {
+        [request.response populateWithData:_requestResp];
+    }
 }
 
-- (void) executeRequest:(NSURLRequest*)request {
-    [NSURLConnection connectionWithRequest:request delegate:self];
+- (void) executeRequest:(HttpRequest*)request {
+    [NSURLConnection connectionWithRequest:request.request delegate:self];
 }
 
 - (NSURLRequest*) createRequestFromString:(NSString*) urlString enableTimeout:(BOOL)normalTimeout {

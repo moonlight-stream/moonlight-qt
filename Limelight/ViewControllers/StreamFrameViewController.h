@@ -7,11 +7,13 @@
 //
 
 #import "Connection.h"
+#import "StreamConfiguration.h"
 
 #import <UIKit/UIKit.h>
 
 @interface StreamFrameViewController : UIViewController <ConnectionCallbacks>
 @property (strong, nonatomic) IBOutlet UILabel *stageLabel;
 @property (strong, nonatomic) IBOutlet UIActivityIndicatorView *spinner;
+@property (nonatomic) StreamConfiguration* streamConfig;
 
 @end

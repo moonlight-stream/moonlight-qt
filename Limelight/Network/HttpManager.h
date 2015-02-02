@@ -8,13 +8,10 @@
 
 #import <Foundation/Foundation.h>
 #import "Host.h"
+#import "HttpResponse.h"
+#import "HttpRequest.h"
 
 @interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
-
-+ (NSArray*) getAppListFromXML:(NSData*)xml;
-+ (void) populateHostFromXML:(NSData*)xml host:(Host*)host;
-+ (NSString*) getStringFromXML:(NSData*)xml tag:(NSString*)tag;
-+ (NSString*) getStatusStringFromXML:(NSData*)xml;
 
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert;
 - (NSURLRequest*) newPairRequest:(NSData*)salt;
@@ -29,7 +26,9 @@
 - (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId;
 - (NSURLRequest*) newQuitAppRequest;
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
-- (NSData*) executeRequestSynchronously:(NSURLRequest*)request;
+- (void) executeRequestSynchronously:(HttpRequest*)request;
+- (void) executeRequest:(HttpRequest*)request;
+
 @end
 
 
