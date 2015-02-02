@@ -20,6 +20,7 @@
     CONNECTION_LISTENER_CALLBACKS _clCallbacks;
     DECODER_RENDERER_CALLBACKS _drCallbacks;
     AUDIO_RENDERER_CALLBACKS _arCallbacks;
+    int _serverMajorVersion;
 }
 
 static OpusDecoder *opusDecoder;
@@ -294,12 +295,13 @@ void ClDisplayTransientMessage(char* message)
     LiStopConnection();
 }
 
--(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks serverMajorVersion:(int)serverMajorVersion
 {
     self = [super init];
     _host = config.hostAddr;
     renderer = myRenderer;
     _callbacks = callbacks;
+    _serverMajorVersion = serverMajorVersion;
     _streamConfig.width = config.width;
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;
@@ -431,7 +433,7 @@ static OSStatus playbackCallback(void *inRefCon,
                       &_drCallbacks,
                       &_arCallbacks,
                       &dummyPlCallbacks,
-                      NULL, 0);
+                      NULL, 0, _serverMajorVersion);
 }
 
 
