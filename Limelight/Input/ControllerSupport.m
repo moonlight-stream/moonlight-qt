@@ -140,7 +140,7 @@
 {
     [_controllerStreamLock lock];
     @synchronized(controller) {
-        LiSendControllerEvent(controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
+        LiSendMultiControllerEvent(controller.playerIndex, controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
     }
     [_controllerStreamLock unlock];
 }
