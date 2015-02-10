@@ -93,6 +93,7 @@ static NSArray* appList;
 
 - (void)showHostSelectionView {
     appList = [[NSArray alloc] init];
+    [_appManager stopRetrieving];
     _computerNameButton.title = @"No Host Selected";
     [self.collectionView reloadData];
     [self.view addSubview:hostScrollView];
