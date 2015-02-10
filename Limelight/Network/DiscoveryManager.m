@@ -38,7 +38,7 @@
     return self;
 }
 
-- (void) discoverHost:(NSString *)hostAddress withCallback:(void (^)(Host *))callback {
+- (void) discoverHost:(NSString *)hostAddress withCallback:(void (^)(Host *, NSString*))callback {
     HttpManager* hMan = [[HttpManager alloc] initWithHost:hostAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
     ServerInfoResponse* serverInfoResponse = [[ServerInfoResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResponse withUrlRequest:[hMan newServerInfoRequest]]];
@@ -52,9 +52,14 @@
         [serverInfoResponse populateHost:host];
         if (![self addHostToDiscovery:host]) {
             [dataMan removeHost:host];
+            callback(nil, @"Host already added");
+        } else {
+            callback(host, nil);
         }
+    } else {
+        callback(nil, @"Could not connect to host");
     }
-    callback(host);
+    
 }
 
 - (void) startDiscovery {

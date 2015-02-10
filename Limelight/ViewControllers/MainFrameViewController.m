@@ -190,7 +190,7 @@ static NSArray* appList;
     [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
         NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [_discMan discoverHost:hostAddress withCallback:^(Host* host){
+            [_discMan discoverHost:hostAddress withCallback:^(Host* host, NSString* error){
                 if (host != nil) {
                     DataManager* dataMan = [[DataManager alloc] init];
                     [dataMan saveHosts];
@@ -201,7 +201,7 @@ static NSArray* appList;
                         [self updateHosts];
                     });
                 } else {
-                    UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Host Not Found" message:[NSString stringWithFormat:@"Unable to connect to host: \n%@", hostAddress] preferredStyle:UIAlertControllerStyleAlert];
+                    UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
                     [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self presentViewController:hostNotFoundAlert animated:YES completion:nil];

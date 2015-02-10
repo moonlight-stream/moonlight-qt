@@ -8,9 +8,17 @@
 
 #import "HttpResponse.h"
 
+#define TAG_HOSTNAME @"hostname"
+#define TAG_EXTERNAL_IP @"ExternalIP"
+#define TAG_LOCAL_IP @"LocalIP"
+#define TAG_UNIQUE_ID @"uniqueid"
+#define TAG_MAC_ADDRESS @"mac"
+#define TAG_PAIR_STATUS @"PairStatus"
+
 @interface ServerInfoResponse : HttpResponse <Response>
 
 - (void) populateWithData:(NSData *)data;
 - (void) populateHost:(Host*)host;
 
 @end
+

@@ -12,13 +12,6 @@
 @implementation ServerInfoResponse
 @synthesize data, statusCode, statusMessage;
 
-static NSString* TAG_HOSTNAME = @"hostname";
-static NSString* TAG_EXTERNAL_IP = @"ExternalIP";
-static NSString* TAG_LOCAL_IP = @"LocalIP";
-static NSString* TAG_UNIQUE_ID = @"uniqueid";
-static NSString* TAG_MAC_ADDRESS = @"mac";
-static NSString* TAG_PAIR_STATUS = @"PairStatus";
-
 - (void) populateWithData:(NSData *)xml {
     self.data = xml;
     [super parseData];

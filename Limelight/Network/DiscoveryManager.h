@@ -24,6 +24,6 @@
 - (void) stopDiscoveryBlocking;
 - (BOOL) addHostToDiscovery:(Host*)host;
 - (void) removeHostFromDiscovery:(Host*)host;
-- (void) discoverHost:(NSString*)hostAddress withCallback:(void (^)(Host*))callback;
+- (void) discoverHost:(NSString*)hostAddress withCallback:(void (^)(Host*, NSString*))callback;
 
 @end
