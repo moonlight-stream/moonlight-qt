@@ -13,12 +13,14 @@
 #import "HttpRequest.h"
 
 @implementation AppAssetRetriever
-static const double RETRY_DELAY = 1; // seconds
+static const double RETRY_DELAY = 2; // seconds
+static const int MAX_ATTEMPTS = 5;
 
 
 - (void) main {
     UIImage* appImage = nil;
-    while (![self isCancelled] && appImage == nil) {
+    int attempts = 0;
+    while (![self isCancelled] && appImage == nil && attempts++ < MAX_ATTEMPTS) {
         if (self.useCache) {
             @synchronized(self.cache) {
                 UIImage* cachedImage = [self.cache objectForKey:self.app.appId];
