@@ -70,16 +70,26 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
             while (appInfoNode != NULL) {
                 if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_TITLE)) {
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
-                    appName = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-                    xmlFree(nodeVal);
+                    if (nodeVal != NULL) {
+                        appName = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+                        xmlFree(nodeVal);
+                    } else {
+                        appName = @"";
+                    }
                 } else if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_ID)) {
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
-                    appId = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
-                    xmlFree(nodeVal);
+                    if (nodeVal != NULL) {
+                        appId = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+                        xmlFree(nodeVal);
+                    }
                 } else if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_IS_RUNNING)) {
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
-                    appIsRunning = [[[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding] isEqualToString:@"1"];
-                    xmlFree(nodeVal);
+                    if (nodeVal != NULL) {
+                        appIsRunning = [[[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding] isEqualToString:@"1"];
+                        xmlFree(nodeVal);
+                    } else {
+                        appIsRunning = NO;
+                    }
                 }
                 appInfoNode = appInfoNode->next;
             }
@@ -87,7 +97,9 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
             app.appName = appName;
             app.appId = appId;
             app.isRunning = appIsRunning;
-            [_appList addObject:app];
+            if (app.appId != nil) {
+                [_appList addObject:app];
+            }
         }
         node = node->next;
     }
