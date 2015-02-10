@@ -10,6 +10,6 @@
 
 @implementation Controller
 @synthesize playerIndex;
-@synthesize lastButtonFlags, lastLeftTrigger, lastRightTrigger;
+@synthesize lastButtonFlags, emulatingButtonFlags, lastLeftTrigger, lastRightTrigger;
 @synthesize lastLeftStickX, lastLeftStickY, lastRightStickX, lastRightStickY;
 @end

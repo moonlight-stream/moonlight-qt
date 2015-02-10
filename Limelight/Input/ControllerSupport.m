@@ -23,10 +23,9 @@
     
 #define EMULATING_SELECT     0x1
 #define EMULATING_SPECIAL    0x2
-    int _emulatingButtonFlags;
 }
 
-// UPDATE_BUTTON_FLAG(flag, pressed)
+// UPDATE_BUTTON_FLAG(controller, flag, pressed)
 #define UPDATE_BUTTON_FLAG(controller, x, y) \
 ((y) ? [self setButtonFlag:controller flags:x] : [self clearButtonFlag:controller flags:x])
 
@@ -70,16 +69,16 @@
 
 -(void) handleSpecialCombosReleased:(Controller*)controller releasedButtons:(int)releasedButtons
 {
-    if ((_emulatingButtonFlags & EMULATING_SELECT) &&
+    if ((controller.emulatingButtonFlags & EMULATING_SELECT) &&
         ((releasedButtons & LB_FLAG) || (releasedButtons & PLAY_FLAG))) {
         controller.lastButtonFlags &= ~BACK_FLAG;
-        _emulatingButtonFlags &= ~EMULATING_SELECT;
+        controller.emulatingButtonFlags &= ~EMULATING_SELECT;
     }
-    if ((_emulatingButtonFlags & EMULATING_SPECIAL) &&
+    if ((controller.emulatingButtonFlags & EMULATING_SPECIAL) &&
         ((releasedButtons & RB_FLAG) || (releasedButtons & PLAY_FLAG) ||
          (releasedButtons & BACK_FLAG))) {
             controller.lastButtonFlags &= ~SPECIAL_FLAG;
-            _emulatingButtonFlags &= ~EMULATING_SPECIAL;
+            controller.emulatingButtonFlags &= ~EMULATING_SPECIAL;
         }
 }
 
@@ -91,13 +90,13 @@
         if (controller.lastButtonFlags & LB_FLAG) {
             controller.lastButtonFlags |= BACK_FLAG;
             controller.lastButtonFlags &= ~(pressedButtons & (PLAY_FLAG | LB_FLAG));
-            _emulatingButtonFlags |= EMULATING_SELECT;
+            controller.emulatingButtonFlags |= EMULATING_SELECT;
         }
         // If (RB or select) and start are down, trigger special
         else if ((controller.lastButtonFlags & RB_FLAG) || (controller.lastButtonFlags & BACK_FLAG)) {
             controller.lastButtonFlags |= SPECIAL_FLAG;
             controller.lastButtonFlags &= ~(pressedButtons & (PLAY_FLAG | RB_FLAG | BACK_FLAG));
-            _emulatingButtonFlags |= EMULATING_SPECIAL;
+            controller.emulatingButtonFlags |= EMULATING_SPECIAL;
         }
     }
     
@@ -145,100 +144,92 @@
     [_controllerStreamLock unlock];
 }
 
--(void) unregisterControllerCallbacks
+-(void) unregisterControllerCallbacks:(GCController*) controller
 {
-    for (int i = 0; i < [[GCController controllers] count]; i++) {
-        GCController *controller = [GCController controllers][i];
+    if (controller != NULL) {
+        controller.controllerPausedHandler = NULL;
         
-        if (controller != NULL) {
-            controller.controllerPausedHandler = NULL;
-            
-            if (controller.extendedGamepad != NULL) {
-                controller.extendedGamepad.valueChangedHandler = NULL;
-            }
-            else if (controller.gamepad != NULL) {
-                controller.gamepad.valueChangedHandler = NULL;
-            }
+        if (controller.extendedGamepad != NULL) {
+            controller.extendedGamepad.valueChangedHandler = NULL;
+        }
+        else if (controller.gamepad != NULL) {
+            controller.gamepad.valueChangedHandler = NULL;
         }
     }
-    [_controllers removeAllObjects];
 }
 
--(void) registerControllerCallbacks
+-(void) registerControllerCallbacks:(GCController*) controller
 {
-    for (int i = 0; i < [[GCController controllers] count]; i++) {
-        GCController *controller = [GCController controllers][i];
+    if (controller != NULL) {
+        controller.controllerPausedHandler = ^(GCController *controller) {
+            Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
+            [self setButtonFlag:limeController flags:PLAY_FLAG];
+            [self updateFinished:limeController];
+            
+            // Pause for 100 ms
+            usleep(100 * 1000);
+            
+            [self clearButtonFlag:limeController flags:PLAY_FLAG];
+            [self updateFinished:limeController];
+        };
         
-        if (controller != NULL) {
-            controller.controllerPausedHandler = ^(GCController *controller) {
-                Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
-                [self setButtonFlag:limeController flags:PLAY_FLAG];
-                [self updateFinished:limeController];
+        if (controller.extendedGamepad != NULL) {
+            controller.extendedGamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *element) {
+                Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
+                short leftStickX, leftStickY;
+                short rightStickX, rightStickY;
+                char leftTrigger, rightTrigger;
                 
-                // Pause for 100 ms
-                usleep(100 * 1000);
+                UPDATE_BUTTON_FLAG(limeController, A_FLAG, gamepad.buttonA.pressed);
+                UPDATE_BUTTON_FLAG(limeController, B_FLAG, gamepad.buttonB.pressed);
+                UPDATE_BUTTON_FLAG(limeController, X_FLAG, gamepad.buttonX.pressed);
+                UPDATE_BUTTON_FLAG(limeController, Y_FLAG, gamepad.buttonY.pressed);
                 
-                [self clearButtonFlag:limeController flags:PLAY_FLAG];
+                UPDATE_BUTTON_FLAG(limeController, UP_FLAG, gamepad.dpad.up.pressed);
+                UPDATE_BUTTON_FLAG(limeController, DOWN_FLAG, gamepad.dpad.down.pressed);
+                UPDATE_BUTTON_FLAG(limeController, LEFT_FLAG, gamepad.dpad.left.pressed);
+                UPDATE_BUTTON_FLAG(limeController, RIGHT_FLAG, gamepad.dpad.right.pressed);
+                
+                UPDATE_BUTTON_FLAG(limeController, LB_FLAG, gamepad.leftShoulder.pressed);
+                UPDATE_BUTTON_FLAG(limeController, RB_FLAG, gamepad.rightShoulder.pressed);
+                
+                leftStickX = gamepad.leftThumbstick.xAxis.value * 0x7FFE;
+                leftStickY = gamepad.leftThumbstick.yAxis.value * 0x7FFE;
+                
+                rightStickX = gamepad.rightThumbstick.xAxis.value * 0x7FFE;
+                rightStickY = gamepad.rightThumbstick.yAxis.value * 0x7FFE;
+                
+                leftTrigger = gamepad.leftTrigger.value * 0xFF;
+                rightTrigger = gamepad.rightTrigger.value * 0xFF;
+                
+                [self updateLeftStick:limeController x:leftStickX y:leftStickY];
+                [self updateRightStick:limeController x:rightStickX y:rightStickY];
+                [self updateTriggers:limeController left:leftTrigger right:rightTrigger];
                 [self updateFinished:limeController];
             };
-            
-            if (controller.extendedGamepad != NULL) {
-                controller.extendedGamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *element) {
-                    Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
-                    short leftStickX, leftStickY;
-                    short rightStickX, rightStickY;
-                    char leftTrigger, rightTrigger;
-                    
-                    UPDATE_BUTTON_FLAG(limeController, A_FLAG, gamepad.buttonA.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, B_FLAG, gamepad.buttonB.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, X_FLAG, gamepad.buttonX.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, Y_FLAG, gamepad.buttonY.pressed);
-                    
-                    UPDATE_BUTTON_FLAG(limeController, UP_FLAG, gamepad.dpad.up.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, DOWN_FLAG, gamepad.dpad.down.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, LEFT_FLAG, gamepad.dpad.left.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, RIGHT_FLAG, gamepad.dpad.right.pressed);
-                    
-                    UPDATE_BUTTON_FLAG(limeController, LB_FLAG, gamepad.leftShoulder.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, RB_FLAG, gamepad.rightShoulder.pressed);
-                    
-                    leftStickX = gamepad.leftThumbstick.xAxis.value * 0x7FFE;
-                    leftStickY = gamepad.leftThumbstick.yAxis.value * 0x7FFE;
-                    
-                    rightStickX = gamepad.rightThumbstick.xAxis.value * 0x7FFE;
-                    rightStickY = gamepad.rightThumbstick.yAxis.value * 0x7FFE;
-                    
-                    leftTrigger = gamepad.leftTrigger.value * 0xFF;
-                    rightTrigger = gamepad.rightTrigger.value * 0xFF;
-                    
-                    [self updateLeftStick:limeController x:leftStickX y:leftStickY];
-                    [self updateRightStick:limeController x:rightStickX y:rightStickY];
-                    [self updateTriggers:limeController left:leftTrigger right:rightTrigger];
-                    [self updateFinished:limeController];
-                };
-            }
-            else if (controller.gamepad != NULL) {
-                controller.gamepad.valueChangedHandler = ^(GCGamepad *gamepad, GCControllerElement *element) {
-                    Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
-                    UPDATE_BUTTON_FLAG(limeController, A_FLAG, gamepad.buttonA.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, B_FLAG, gamepad.buttonB.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, X_FLAG, gamepad.buttonX.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, Y_FLAG, gamepad.buttonY.pressed);
-                    
-                    UPDATE_BUTTON_FLAG(limeController, UP_FLAG, gamepad.dpad.up.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, DOWN_FLAG, gamepad.dpad.down.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, LEFT_FLAG, gamepad.dpad.left.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, RIGHT_FLAG, gamepad.dpad.right.pressed);
-                    
-                    UPDATE_BUTTON_FLAG(limeController, LB_FLAG, gamepad.leftShoulder.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, RB_FLAG, gamepad.rightShoulder.pressed);
-                    
-                    [self updateFinished:limeController];
-                };
-            }
         }
+        else if (controller.gamepad != NULL) {
+            controller.gamepad.valueChangedHandler = ^(GCGamepad *gamepad, GCControllerElement *element) {
+                Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
+                UPDATE_BUTTON_FLAG(limeController, A_FLAG, gamepad.buttonA.pressed);
+                UPDATE_BUTTON_FLAG(limeController, B_FLAG, gamepad.buttonB.pressed);
+                UPDATE_BUTTON_FLAG(limeController, X_FLAG, gamepad.buttonX.pressed);
+                UPDATE_BUTTON_FLAG(limeController, Y_FLAG, gamepad.buttonY.pressed);
+                
+                UPDATE_BUTTON_FLAG(limeController, UP_FLAG, gamepad.dpad.up.pressed);
+                UPDATE_BUTTON_FLAG(limeController, DOWN_FLAG, gamepad.dpad.down.pressed);
+                UPDATE_BUTTON_FLAG(limeController, LEFT_FLAG, gamepad.dpad.left.pressed);
+                UPDATE_BUTTON_FLAG(limeController, RIGHT_FLAG, gamepad.dpad.right.pressed);
+                
+                UPDATE_BUTTON_FLAG(limeController, LB_FLAG, gamepad.leftShoulder.pressed);
+                UPDATE_BUTTON_FLAG(limeController, RB_FLAG, gamepad.rightShoulder.pressed);
+                
+                [self updateFinished:limeController];
+            };
+        }
+    } else {
+        NSLog(@"ERROR: Tried to register controller callbacks on NULL controller");
     }
-    
 }
 
 -(void) updateAutoOnScreenControlMode
@@ -300,19 +291,21 @@
     _controllers = [[NSMutableDictionary alloc] init];
     _controllerNumbers = 0;
     
-    NSLog(@"Number of controllers connected: %ld", [[GCController controllers] count]);
+    NSLog(@"Number of controllers connected: %ld", (long)[[GCController controllers] count]);
     for (GCController* controller in [GCController controllers]) {
         [self assignController:controller];
+        [self registerControllerCallbacks:controller];
+        [self updateAutoOnScreenControlMode];
     }
     
     self.connectObserver = [[NSNotificationCenter defaultCenter] addObserverForName:GCControllerDidConnectNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
         NSLog(@"Controller connected!");
         
-        GCController* controller = (GCController*) note.object;
+        GCController* controller = note.object;
         [self assignController:controller];
         
         // Register callbacks on the new controller
-        [self registerControllerCallbacks];
+        [self registerControllerCallbacks:controller];
         
         // Re-evaluate the on-screen control mode
         [self updateAutoOnScreenControlMode];
@@ -321,6 +314,7 @@
         NSLog(@"Controller disconnected!");
         
         GCController* controller = note.object;
+        [self unregisterControllerCallbacks:controller];
         [_controllers removeObjectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
         _controllerNumbers &= ~(1 << controller.playerIndex);
         NSLog(@"Unassigning controller index: %ld", (long)controller.playerIndex);
@@ -329,9 +323,6 @@
         [self updateAutoOnScreenControlMode];
     }];
     
-    // Register for controller callbacks on any existing controllers
-    [self registerControllerCallbacks];
-    
     return self;
 }
 
@@ -339,8 +330,11 @@
 {
     [[NSNotificationCenter defaultCenter] removeObserver:self.connectObserver];
     [[NSNotificationCenter defaultCenter] removeObserver:self.disconnectObserver];
-    
-    [self unregisterControllerCallbacks];
+    [_controllers removeAllObjects];
+    _controllerNumbers = 0;
+    for (GCController* controller in [GCController controllers]) {
+        [self unregisterControllerCallbacks:controller];
+    }
 }
 
 @end
