@@ -42,13 +42,13 @@
     _elements = [[NSMutableDictionary alloc] init];
     xmlDocPtr docPtr = xmlParseMemory([self.data bytes], (int)[self.data length]);
     if (docPtr == NULL) {
-        NSLog(@"ERROR: An error occured trying to parse xml.");
+        Log(LOG_W, @"An error occured trying to parse xml.");
         return;
     }
     
     xmlNodePtr node = xmlDocGetRootElement(docPtr);
     if (node == NULL) {
-        NSLog(@"ERROR: No root XML element.");
+        Log(LOG_W, @"No root XML element.");
         xmlFreeDoc(docPtr);
         return;
     }

@@ -48,7 +48,7 @@ static const NSString* PORT = @"47984";
 }
 
 - (void) executeRequestSynchronously:(HttpRequest*)request {
-    NSLog(@"Making Request: %@", request);
+    Log(LOG_D, @"Making Request: %@", request);
     [_respData setLength:0];
     dispatch_sync(dispatch_get_main_queue(), ^{
         [NSURLConnection connectionWithRequest:request.request delegate:self];
@@ -154,11 +154,11 @@ static const NSString* PORT = @"47984";
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    NSLog(@"Received response: %@", response);
+    Log(LOG_D, @"Received response: %@", response);
 }
 
 - (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    NSLog(@"\n\nReceived data: %@\n\n", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+    Log(LOG_D, @"\n\nReceived data: %@\n\n", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
     [_respData appendData:data];
 }
 
@@ -202,11 +202,11 @@ static const NSString* PORT = @"47984";
     OSStatus securityError = SecPKCS12Import(p12Data, options, &items);
 
     if (securityError == errSecSuccess) {
-        //NSLog(@"Success opening p12 certificate. Items: %ld", CFArrayGetCount(items));
+        //Log(LOG_D, @"Success opening p12 certificate. Items: %ld", CFArrayGetCount(items));
         CFDictionaryRef identityDict = CFArrayGetValueAtIndex(items, 0);
         identityApp = (SecIdentityRef)CFDictionaryGetValue(identityDict, kSecImportItemIdentity);
     } else {
-        NSLog(@"Error opening Certificate.");
+        Log(LOG_E, @"Error opening Certificate.");
     }
     
     CFRelease(options);
@@ -216,7 +216,7 @@ static const NSString* PORT = @"47984";
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    NSLog(@"connection error: %@", error);
+    Log(LOG_W, @"connection error: %@", error);
     dispatch_semaphore_signal(_requestLock);
 }
 

@@ -32,7 +32,7 @@
     Host* oldHost = _host;
     _host = host;
     BOOL useCache = [oldHost.uuid isEqualToString:_host.uuid];
-    NSLog(@"Using cached app images: %d", useCache);
+    Log(LOG_I, @"Using cached app images: %d", useCache);
     if (!useCache) {
         [_imageCache removeAllObjects];
     }

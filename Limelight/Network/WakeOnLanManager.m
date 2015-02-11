@@ -24,10 +24,10 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
     CFSocketRef wolSocket = CFSocketCreate(kCFAllocatorDefault, PF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, NULL, NULL);
     if (!wolSocket) {
         CFRelease(dataPayload);
-        NSLog(@"Failed to create WOL socket");
+        Log(LOG_E, @"Failed to create WOL socket");
         return;
     }
-    NSLog(@"WOL socket created");
+    Log(LOG_I, @"WOL socket created");
     
     struct sockaddr_in addr;
     memset(&addr, 0, sizeof(addr));
@@ -48,7 +48,7 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
         // try all ports
         for (int j = 0; j < numPorts; j++) {
             addr.sin_port = htons(ports[j]);
-            NSLog(@"Sending WOL packet");
+            Log(LOG_I, @"Sending WOL packet");
             CFSocketSendData(wolSocket, dataAddress, dataPayload, 0);
         }
         CFRelease(dataAddress);
@@ -76,7 +76,7 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
 
 + (NSData*) macStringToBytes:(NSString*)mac {
     NSString* macString = [mac stringByReplacingOccurrencesOfString:@":" withString:@""];
-    NSLog(@"MAC: %@", macString);
+    Log(LOG_D, @"MAC: %@", macString);
     return [Utils hexToBytes:macString];
 }
 

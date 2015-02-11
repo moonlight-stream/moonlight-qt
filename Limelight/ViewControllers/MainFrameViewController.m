@@ -74,11 +74,11 @@ static NSArray* appList;
         AppListResponse* appListResp = [[AppListResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
         if (appListResp == nil || ![appListResp isStatusOk]) {
-            NSLog(@"Failed to get applist: %@", appListResp.statusMessage);
+            Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
         } else {
             appList = [appListResp getAppList];
             if (appList == nil) {
-                NSLog(@"Failed to parse applist");
+                Log(LOG_W, @"Failed to parse applist");
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self updateApps];
@@ -112,21 +112,21 @@ static NSArray* appList;
 }
 
 - (void) hostClicked:(Host *)host {
-    NSLog(@"Clicked host: %@", host.name);
+    Log(LOG_D, @"Clicked host: %@", host.name);
     _selectedHost = host;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
-            NSLog(@"Failed to get server info: %@", serverInfoResp.statusMessage);
+            Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
         } else {
-            NSLog(@"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
+            Log(LOG_D, @"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
             if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
-                NSLog(@"Already Paired");
+                Log(LOG_I, @"Already Paired");
                 [self alreadyPaired];
             } else {
-                NSLog(@"Trying to pair");
+                Log(LOG_I, @"Trying to pair");
                 // Polling the server while pairing causes the server to screw up
                 [_discMan stopDiscoveryBlocking];
                 PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
@@ -137,7 +137,7 @@ static NSArray* appList;
 }
 
 - (void)hostLongClicked:(Host *)host view:(UIView *)view {
-    NSLog(@"Long clicked host: %@", host.name);
+    Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
     if (host.online) {
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
@@ -185,7 +185,7 @@ static NSArray* appList;
 }
 
 - (void) addHostClicked {
-    NSLog(@"Clicked add host");
+    Log(LOG_D, @"Clicked add host");
     UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
@@ -215,7 +215,7 @@ static NSArray* appList;
 }
 
 - (void) appClicked:(App *)app {
-    NSLog(@"Clicked app: %@", app.appName);
+    Log(LOG_D, @"Clicked app: %@", app.appName);
     _streamConfig = [[StreamConfiguration alloc] init];
     _streamConfig.host = _selectedHost.address;
     _streamConfig.hostAddr = [Utils resolveHost:_selectedHost.address];
@@ -245,12 +245,12 @@ static NSArray* appList;
                                               message: [app.appId isEqualToString:currentApp.appId] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.appName]preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction
                                     actionWithTitle:[app.appId isEqualToString:currentApp.appId] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-                                        NSLog(@"Resuming application: %@", currentApp.appName);
+                                        Log(LOG_I, @"Resuming application: %@", currentApp.appName);
                                         [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                     }]];
         [alertController addAction:[UIAlertAction actionWithTitle:
                                     [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-                                        NSLog(@"Quitting application: %@", currentApp.appName);
+                                        Log(LOG_I, @"Quitting application: %@", currentApp.appName);
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                                             HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
                                             [hMan executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[hMan newQuitAppRequest]]];
@@ -380,9 +380,9 @@ static NSArray* appList;
 
 - (void) updateAllHosts:(NSArray *)hosts {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSLog(@"New host list:");
+        Log(LOG_D, @"New host list:");
         for (Host* host in hosts) {
-            NSLog(@"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online);
+            Log(LOG_D, @"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online);
         }
         @synchronized(hostList) {
             [hostList removeAllObjects];
@@ -393,7 +393,7 @@ static NSArray* appList;
 }
 
 - (void)updateHosts {
-    NSLog(@"Updating hosts...");
+    Log(LOG_I, @"Updating hosts...");
     [[hostScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
     UIComputerView* addComp = [[UIComputerView alloc] initForAddWithCallback:self];
     UIComputerView* compView;

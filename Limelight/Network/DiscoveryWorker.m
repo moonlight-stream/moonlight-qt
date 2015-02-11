@@ -57,7 +57,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     }
     _host.online = receivedResponse;
     if (receivedResponse) {
-        NSLog(@"Received response from: %@\n{\n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", _host.name, _host.address, _host.localAddress, _host.externalAddress, _host.uuid, _host.mac, _host.pairState, _host.online);
+        Log(LOG_D, @"Received response from: %@\n{\n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", _host.name, _host.address, _host.localAddress, _host.externalAddress, _host.uuid, _host.mac, _host.pairState, _host.online);
     }
 }
 
@@ -79,7 +79,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
             [response populateHost:_host];
             return YES;
         } else {
-            NSLog(@"Received response from incorrect host: %@ expected: %@", [response getStringTag:TAG_UNIQUE_ID], _host.uuid);
+            Log(LOG_I, @"Received response from incorrect host: %@ expected: %@", [response getStringTag:TAG_UNIQUE_ID], _host.uuid);
         }
     }
     return NO;

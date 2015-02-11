@@ -228,7 +228,7 @@
             };
         }
     } else {
-        NSLog(@"ERROR: Tried to register controller callbacks on NULL controller");
+        Log(LOG_W, @"Tried to register controller callbacks on NULL controller");
     }
 }
 
@@ -277,7 +277,7 @@
             limeController.playerIndex = i;
             [_controllers setObject:limeController forKey:[NSNumber numberWithInteger:controller.playerIndex]];
             
-            NSLog(@"Assigning controller index: %d", i);
+            Log(LOG_I, @"Assigning controller index: %d", i);
             break;
         }
     }
@@ -291,7 +291,7 @@
     _controllers = [[NSMutableDictionary alloc] init];
     _controllerNumbers = 0;
     
-    NSLog(@"Number of controllers connected: %ld", (long)[[GCController controllers] count]);
+    Log(LOG_I, @"Number of controllers connected: %ld", (long)[[GCController controllers] count]);
     for (GCController* controller in [GCController controllers]) {
         [self assignController:controller];
         [self registerControllerCallbacks:controller];
@@ -299,7 +299,7 @@
     }
     
     self.connectObserver = [[NSNotificationCenter defaultCenter] addObserverForName:GCControllerDidConnectNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-        NSLog(@"Controller connected!");
+        Log(LOG_I, @"Controller connected!");
         
         GCController* controller = note.object;
         [self assignController:controller];
@@ -311,13 +311,13 @@
         [self updateAutoOnScreenControlMode];
     }];
     self.disconnectObserver = [[NSNotificationCenter defaultCenter] addObserverForName:GCControllerDidDisconnectNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
-        NSLog(@"Controller disconnected!");
+        Log(LOG_I, @"Controller disconnected!");
         
         GCController* controller = note.object;
         [self unregisterControllerCallbacks:controller];
         [_controllers removeObjectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
         _controllerNumbers &= ~(1 << controller.playerIndex);
-        NSLog(@"Unassigning controller index: %ld", (long)controller.playerIndex);
+        Log(LOG_I, @"Unassigning controller index: %ld", (long)controller.playerIndex);
         
         // Re-evaluate the on-screen control mode
         [self updateAutoOnScreenControlMode];

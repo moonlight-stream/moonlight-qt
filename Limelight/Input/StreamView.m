@@ -38,13 +38,13 @@
         [controllerSupport initAutoOnScreenControlMode:onScreenControls];
     }
     else {
-        NSLog(@"Setting manual on-screen controls level: %d", (int)level);
+        Log(LOG_I, @"Setting manual on-screen controls level: %d", (int)level);
         [onScreenControls setLevel:level];
     }
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
-    NSLog(@"Touch down");
+    Log(LOG_D, @"Touch down");
     if (![onScreenControls handleTouchDownEvent:touches]) {
         UITouch *touch = [[event allTouches] anyObject];
         touchLocation = [touch locationInView:self];
@@ -88,11 +88,11 @@
 }
 
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
-    NSLog(@"Touch up");
+    Log(LOG_D, @"Touch up");
     if (![onScreenControls handleTouchUpEvent:touches]) {
         if (!touchMoved) {
             if ([[event allTouches] count]  == 2) {
-                NSLog(@"Sending right mouse button press");
+                Log(LOG_D, @"Sending right mouse button press");
 
                 LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
 
@@ -103,7 +103,7 @@
 
 
             } else {
-                NSLog(@"Sending left mouse button press");
+                Log(LOG_D, @"Sending left mouse button press");
 
                 LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
 

@@ -87,7 +87,7 @@
                                                    y:_config.height / screenSize.height];
     
     int majorVersion = [[appversion substringToIndex:1] intValue];
-    NSLog(@"Server is generation %d", majorVersion);
+    Log(LOG_I, @"Server is generation %d", majorVersion);
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
     _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks serverMajorVersion:majorVersion];
@@ -121,11 +121,11 @@
     NSString *gameSession = [launchResp getStringTag:@"gamesession"];
     if (launchResp == NULL || ![launchResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to launch app"];
-        NSLog(@"Failed Launch Response: %@", launchResp.statusMessage);
+        Log(LOG_E, @"Failed Launch Response: %@", launchResp.statusMessage);
         return FALSE;
     } else if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
         [_callbacks launchFailed:launchResp.statusMessage];
-        NSLog(@"Failed to parse game session. Code: %ld Response: %@", (long)launchResp.statusCode, launchResp.statusMessage);
+        Log(LOG_E, @"Failed to parse game session. Code: %ld Response: %@", (long)launchResp.statusCode, launchResp.statusMessage);
         return FALSE;
     }
     
@@ -140,11 +140,11 @@
     NSString* resume = [resumeResp getStringTag:@"resume"];
     if (resumeResp == NULL || ![resumeResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to resume app"];
-        NSLog(@"Failed Resume Response: %@", resumeResp.statusMessage);
+        Log(LOG_E, @"Failed Resume Response: %@", resumeResp.statusMessage);
         return FALSE;
     } else if (resume == NULL || [resume isEqualToString:@"0"]) {
         [_callbacks launchFailed:resumeResp.statusMessage];
-        NSLog(@"Failed to parse resume response. Code: %ld Response: %@", (long)resumeResp.statusCode, resumeResp.statusMessage);
+        Log(LOG_E, @"Failed to parse resume response. Code: %ld Response: %@", (long)resumeResp.statusCode, resumeResp.statusMessage);
         return FALSE;
     }
     

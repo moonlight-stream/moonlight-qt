@@ -27,7 +27,7 @@
 
     NSError* error;
     if (![[self.appDelegate managedObjectContext] save:&error]) {
-        NSLog(@"ERROR: Unable to save settings to database");
+        Log(LOG_E, @"Unable to save settings to database: %@", error);
     }
     [self.appDelegate saveContext];
 }
@@ -59,7 +59,7 @@
 - (void) saveHosts {
     NSError* error;
     if (![[self.appDelegate managedObjectContext] save:&error]) {
-        NSLog(@"ERROR: Unable to save hosts to database");
+        Log(LOG_E, @"Unable to save hosts to database: %@", error);
     }
     [self.appDelegate saveContext];
 }

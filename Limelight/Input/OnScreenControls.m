@@ -205,7 +205,7 @@ static float L3_Y;
             [self hideL3R3]; // Full controls don't need these they have the sticks
             break;
         default:
-            NSLog(@"Unknown on-screen controls level: %d", (int)_level);
+            Log(LOG_W, @"Unknown on-screen controls level: %d", (int)_level);
             break;
     }
 }

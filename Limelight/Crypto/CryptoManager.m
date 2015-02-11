@@ -86,7 +86,7 @@ static NSData* p12 = nil;
     BIO_free(bio);
     
     if (!x509) {
-        NSLog(@"ERROR: unable to parse certificate in memory");
+        Log(LOG_E, @"Unable to parse certificate in memory");
         return NULL;
     }
     
@@ -115,7 +115,7 @@ static NSData* p12 = nil;
     BIO_free(bio);
     
     if (!pkey) {
-        NSLog(@"ERROR: unable to parse private key in memory!");
+        Log(LOG_E, @"Unable to parse private key in memory!");
         return NULL;
     }
     
@@ -195,7 +195,7 @@ static NSData* p12 = nil;
     x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
     
     if (!x509) {
-        NSLog(@"ERROR: unable to parse certificate in memory!");
+        Log(LOG_E, @"Unable to parse certificate in memory!");
         return NULL;
     }
     return [NSData dataWithBytes:x509->signature->data length:x509->signature->length];
@@ -206,7 +206,7 @@ static NSData* p12 = nil;
     dispatch_once(&pred, ^{
         if (![CryptoManager keyPairExists]) {
             
-            NSLog(@"Generating Certificate... ");
+            Log(LOG_I, @"Generating Certificate... ");
             CertKeyPair certKeyPair = generateCertKeyPair();
             
             NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -215,10 +215,10 @@ static NSData* p12 = nil;
             NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
             NSString* p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
             
-            //NSLog(@"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
+            //Log(LOG_D, @"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
             saveCertKeyPair([certFile UTF8String], [p12File UTF8String], [keyPairFile UTF8String], certKeyPair);
             freeCertKeyPair(certKeyPair);
-            NSLog(@"Certificate created");
+            Log(LOG_I, @"Certificate created");
         }
     });
 }
@@ -233,7 +233,7 @@ static NSData* p12 = nil;
     NSMutableString* uniqueId = [NSMutableString stringWithString:[idString substringFromIndex:19]];
     [uniqueId deleteCharactersInRange:NSMakeRange(4, 1)];
     
-    //NSLog(@"Unique ID: %@", uniqueId);
+    //Log(LOG_D, @"Unique ID: %@", uniqueId);
     return [NSString stringWithString:uniqueId];
 }
 

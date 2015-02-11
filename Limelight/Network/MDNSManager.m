@@ -34,13 +34,13 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void) searchForHosts {
-    NSLog(@"Starting mDNS discovery");
+    Log(LOG_I, @"Starting mDNS discovery");
     scanActive = TRUE;
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
 }
 
 - (void) stopSearching {
-    NSLog(@"Stopping mDNS discovery");
+    Log(LOG_I, @"Stopping mDNS discovery");
     scanActive = FALSE;
     [mDNSBrowser stop];
 }
@@ -60,12 +60,12 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceDidResolveAddress:(NSNetService *)service {
-    NSLog(@"Resolved address: %@ -> %@", service, service.hostName);
+    Log(LOG_I, @"Resolved address: %@ -> %@", service, service.hostName);
     [self.callback updateHosts:[self getFoundHosts]];
 }
 
 - (void)netService:(NSNetService *)sender didNotResolve:(NSDictionary *)errorDict {
-    NSLog(@"Did not resolve address for: %@\n%@", sender, [errorDict description]);
+    Log(LOG_W, @"Did not resolve address for: %@\n%@", sender, [errorDict description]);
     
     // Schedule a retry in 2 seconds
     [NSTimer scheduledTimerWithTimeInterval:2.0
@@ -76,7 +76,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didFindService:(NSNetService *)aNetService moreComing:(BOOL)moreComing {
-    NSLog(@"Found service: %@", aNetService);
+    Log(LOG_I, @"Found service: %@", aNetService);
     [aNetService setDelegate:self];
     [aNetService resolveWithTimeout:5];
     
@@ -85,13 +85,12 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didRemoveService:(NSNetService *)aNetService moreComing:(BOOL)moreComing {
-    NSLog(@"Removing service: %@", aNetService);
+    Log(LOG_I, @"Removing service: %@", aNetService);
     [services removeObject:aNetService];
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didNotSearch:(NSDictionary *)errorDict {
-    NSLog(@"Did not perform search");
-    NSLog(@"%@", [errorDict description]);
+    Log(LOG_W, @"Did not perform search: \n%@", [errorDict description]);
     
     // Schedule a retry in 2 seconds
     [NSTimer scheduledTimerWithTimeInterval:2.0
@@ -107,7 +106,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
         return;
     }
     
-    NSLog(@"Retrying mDNS search");
+    Log(LOG_I, @"Retrying mDNS search");
     [mDNSBrowser stop];
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
 }
@@ -118,7 +117,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
         return;
     }
     
-    NSLog(@"Retrying mDNS resolution");
+    Log(LOG_I, @"Retrying mDNS resolution");
     for (NSNetService* service in services) {
         if (service.hostName == nil) {
             [service setDelegate:self];

@@ -59,13 +59,13 @@
 }
 
 - (void)edgeSwiped {
-    NSLog(@"User swiped to end stream");
+    Log(LOG_D, @"User swiped to end stream");
     [_streamMan stopStream];
     [self returnToMainFrame];
 }
 
 - (void) connectionStarted {
-    NSLog(@"Connection started");
+    Log(LOG_I, @"Connection started");
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.spinner stopAnimating];
         [self.stageLabel setText:@"Waiting for first frame..."];
@@ -74,7 +74,7 @@
         UIScreenEdgePanGestureRecognizer* swipeGesture = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(edgeSwiped)];
         swipeGesture.edges = UIRectEdgeLeft;
         if (swipeGesture == nil) {
-            NSLog(@"An error occured trying to create UIScreenEdgePanGestureRecognizer");
+            Log(LOG_E, @"An error occured trying to create UIScreenEdgePanGestureRecognizer");
         } else {
             [self.view addGestureRecognizer:swipeGesture];
         }
@@ -82,7 +82,7 @@
 }
 
 - (void)connectionTerminated:(long)errorCode {
-    NSLog(@"Connection terminated: %ld", errorCode);
+    Log(LOG_I, @"Connection terminated: %ld", errorCode);
     
     dispatch_async(dispatch_get_main_queue(), ^{
         UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection was terminated" preferredStyle:UIAlertControllerStyleAlert];
@@ -96,7 +96,7 @@
 }
 
 - (void) stageStarting:(char*)stageName {
-    NSLog(@"Starting %s", stageName);
+    Log(LOG_I, @"Starting %s", stageName);
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString* lowerCase = [NSString stringWithFormat:@"%s in progress...", stageName];
         NSString* titleCase = [[[lowerCase substringToIndex:1] uppercaseString] stringByAppendingString:[lowerCase substringFromIndex:1]];
@@ -131,11 +131,11 @@
 }
 
 - (void) displayMessage:(char*)message {
-    NSLog(@"Display message: %s", message);
+    Log(LOG_I, @"Display message: %s", message);
 }
 
 - (void) displayTransientMessage:(char*)message {
-    NSLog(@"Display transient message: %s", message);
+    Log(LOG_I, @"Display transient message: %s", message);
 }
 
 - (void)didReceiveMemoryWarning

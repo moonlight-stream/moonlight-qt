@@ -56,18 +56,18 @@ NSString *const deviceName = @"roth";
     if (inet_addr([host UTF8String]) != INADDR_NONE) {
         // Already an IP address
         int addr = inet_addr([host UTF8String]);
-        NSLog(@"host address: %d", addr);
+        Log(LOG_I, @"host address: %d", addr);
         return addr;
     } else {
         hostent = gethostbyname([host UTF8String]);
         if (hostent != NULL) {
             char* ipstr = inet_ntoa(*(struct in_addr*)hostent->h_addr_list[0]);
-            NSLog(@"Resolved %@ -> %s", host, ipstr);
+            Log(LOG_I, @"Resolved %@ -> %s", host, ipstr);
             int addr = inet_addr(ipstr);
-            NSLog(@"host address: %d", addr);
+            Log(LOG_I, @"host address: %d", addr);
             return addr;
         } else {
-            NSLog(@"Failed to resolve host: %d", h_errno);
+            Log(LOG_W, @"Failed to resolve host: %d", h_errno);
             return 0;
         }
     }

@@ -29,13 +29,13 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
 - (void) parseData {
     xmlDocPtr docPtr = xmlParseMemory([self.data bytes], (int)[self.data length]);
     if (docPtr == NULL) {
-        NSLog(@"ERROR: An error occured trying to parse xml.");
+        Log(LOG_W, @"An error occured trying to parse xml.");
         return;
     }
     
     xmlNodePtr node = xmlDocGetRootElement(docPtr);
     if (node == NULL) {
-        NSLog(@"ERROR: No root XML element.");
+        Log(LOG_W, @"No root XML element.");
         xmlFreeDoc(docPtr);
         return;
     }
@@ -61,7 +61,7 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
     node = node->children;
     
     while (node != NULL) {
-        //NSLog(@"node: %s", node->name);
+        //Log(LOG_D, @"node: %s", node->name);
         if (!xmlStrcmp(node->name, (xmlChar*)TAG_APP)) {
             xmlNodePtr appInfoNode = node->xmlChildrenNode;
             NSString* appName;

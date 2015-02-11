@@ -63,7 +63,7 @@
 }
 
 - (void) startDiscovery {
-    NSLog(@"Starting discovery");
+    Log(LOG_I, @"Starting discovery");
     shouldDiscover = YES;
     [_mdnsMan searchForHosts];
     for (Host* host in _hostQueue) {
@@ -72,19 +72,19 @@
 }
 
 - (void) stopDiscovery {
-    NSLog(@"Stopping discovery");
+    Log(LOG_I, @"Stopping discovery");
     shouldDiscover = NO;
     [_mdnsMan stopSearching];
     [_opQueue cancelAllOperations];
 }
 
 - (void) stopDiscoveryBlocking {
-    NSLog(@"Stopping discovery and waiting for workers to stop");
+    Log(LOG_I, @"Stopping discovery and waiting for workers to stop");
     shouldDiscover = NO;
     [_mdnsMan stopSearching];
     [_opQueue cancelAllOperations];
     [_opQueue waitUntilAllOperationsAreFinished];
-    NSLog(@"All discovery workers stopped");
+    Log(LOG_I, @"All discovery workers stopped");
 }
 
 - (BOOL) addHostToDiscovery:(Host *)host {
@@ -113,15 +113,15 @@
         DataManager* dataMan = [[DataManager alloc] init];
         // Discover the hosts before adding to eliminate duplicates
         for (Host* host in hosts) {
-            NSLog(@"Found host through MDNS: %@:", host.name);
+            Log(LOG_I, @"Found host through MDNS: %@:", host.name);
             // Since this is on a background thread, we do not need to use the opQueue
             DiscoveryWorker* worker = (DiscoveryWorker*)[self createWorkerForHost:host];
             [worker discoverHost];
             if ([self addHostToDiscovery:host]) {
-                NSLog(@"Adding host to discovery: %@", host.name);
+                Log(LOG_I, @"Adding host to discovery: %@", host.name);
                 [_callback updateAllHosts:_hostQueue];
             } else {
-                NSLog(@"Not adding host to discovery: %@", host.name);
+                Log(LOG_I, @"Not adding host to discovery: %@", host.name);
                 [dataMan removeHost:host];
             }
         }

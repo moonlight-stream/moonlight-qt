@@ -50,7 +50,7 @@
 - (void) initiatePair {
     NSString* PIN = [self generatePIN];
     NSData* salt = [self saltPIN:PIN];
-    NSLog(@"PIN: %@, saltedPIN: %@", PIN, salt);
+    Log(LOG_I, @"PIN: %@, saltedPIN: %@", PIN, salt);
     [_callback showPIN:PIN];
     
     HttpResponse* pairResp = [[HttpResponse alloc] init];

@@ -86,7 +86,7 @@
                                                 kCFAllocatorDefault,
                                                 NULL, 0, nalLength + 1, 0);
         if (status != noErr) {
-            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
+            Log(LOG_E, @"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
         
@@ -96,7 +96,7 @@
         status = CMBlockBufferReplaceDataBytes(lengthBytes, existingBuffer,
                                                oldOffset, NAL_LENGTH_PREFIX_SIZE);
         if (status != noErr) {
-            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
+            Log(LOG_E, @"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
     } else {
@@ -106,7 +106,7 @@
                                                 kCFAllocatorDefault, NULL, 0,
                                                 NAL_LENGTH_PREFIX_SIZE, 0);
         if (status != noErr) {
-            NSLog(@"CMBlockBufferAppendMemoryBlock failed: %d", (int)status);
+            Log(LOG_E, @"CMBlockBufferAppendMemoryBlock failed: %d", (int)status);
             return;
         }
         
@@ -117,7 +117,7 @@
         status = CMBlockBufferReplaceDataBytes(lengthBytes, existingBuffer,
                                                oldOffset, NAL_LENGTH_PREFIX_SIZE);
         if (status != noErr) {
-            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
+            Log(LOG_E, @"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
         
@@ -127,7 +127,7 @@
                                                 kCFAllocatorNull, // Don't deallocate data on free
                                                 NULL, 0, dataLength, 0);
         if (status != noErr) {
-            NSLog(@"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
+            Log(LOG_E, @"CMBlockBufferReplaceDataBytes failed: %d", (int)status);
             return;
         }
     }
@@ -141,7 +141,7 @@
     
     // Check for previous decoder errors before doing anything
     if (displayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
-        NSLog(@"Display layer rendering failed: %@", displayLayer.error);
+        Log(LOG_E, @"Display layer rendering failed: %@", displayLayer.error);
         
         // Recreate the display layer
         [self reinitializeDisplayLayer];
@@ -152,14 +152,14 @@
     
     if (nalType == NAL_TYPE_SPS || nalType == NAL_TYPE_PPS) {
         if (nalType == NAL_TYPE_SPS) {
-            NSLog(@"Got SPS");
+            Log(LOG_I, @"Got SPS");
             spsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForSps = false;
             
             // We got a new SPS so wait for a new PPS to match it
             waitingForPps = true;
         } else if (nalType == NAL_TYPE_PPS) {
-            NSLog(@"Got PPS");
+            Log(LOG_I, @"Got PPS");
             ppsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForPps = false;
         }
@@ -169,7 +169,7 @@
             const uint8_t* const parameterSetPointers[] = { [spsData bytes], [ppsData bytes] };
             const size_t parameterSetSizes[] = { [spsData length], [ppsData length] };
             
-            NSLog(@"Constructing new format description");
+            Log(LOG_I, @"Constructing new format description");
             status = CMVideoFormatDescriptionCreateFromH264ParameterSets(kCFAllocatorDefault,
                                                                          2, /* count of parameter sets */
                                                                          parameterSetPointers,
@@ -177,7 +177,7 @@
                                                                          NAL_LENGTH_PREFIX_SIZE,
                                                                          &formatDesc);
             if (status != noErr) {
-                NSLog(@"Failed to create format description: %d", (int)status);
+                Log(LOG_E, @"Failed to create format description: %d", (int)status);
                 formatDesc = NULL;
             }
         }
@@ -206,7 +206,7 @@
     
     status = CMBlockBufferCreateEmpty(NULL, 0, 0, &blockBuffer);
     if (status != noErr) {
-        NSLog(@"CMBlockBufferCreateEmpty failed: %d", (int)status);
+        Log(LOG_E, @"CMBlockBufferCreateEmpty failed: %d", (int)status);
         free(data);
         return DR_NEED_IDR;
     }
@@ -241,7 +241,7 @@
                                   NULL, 0, NULL,
                                   &sampleBuffer);
     if (status != noErr) {
-        NSLog(@"CMSampleBufferCreate failed: %d", (int)status);
+        Log(LOG_E, @"CMSampleBufferCreate failed: %d", (int)status);
         CFRelease(blockBuffer);
         return DR_NEED_IDR;
     }
