@@ -216,7 +216,7 @@ static const NSString* PORT = @"47984";
 }
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    Log(LOG_W, @"connection error: %@", error);
+    Log(LOG_D, @"connection error: %@", error);
     dispatch_semaphore_signal(_requestLock);
 }
 
