@@ -8,7 +8,23 @@
 
 #import "Logger.h"
 
+void LogTagv(LogLevel level, NSString* tag, NSString* fmt, va_list args);
+
 void Log(LogLevel level, NSString* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    LogTagv(level, NULL, fmt, args);
+    va_end(args);
+}
+
+void LogTag(LogLevel level, NSString* tag, NSString* fmt, ...) {
+    va_list args;
+    va_start(args, fmt);
+    LogTagv(level, tag, fmt, args);
+    va_end(args);
+}
+
+void LogTagv(LogLevel level, NSString* tag, NSString* fmt, va_list args) {
     NSString* levelPrefix = @"";
     
     switch(level) {
@@ -27,9 +43,11 @@ void Log(LogLevel level, NSString* fmt, ...) {
         default:
             break;
     }
-    NSString* prefixedString = [NSString stringWithFormat:@"%@ %@", levelPrefix, fmt];
-    va_list args;
-    va_start(args, fmt);
+    NSString* prefixedString;
+    if (tag) {
+        prefixedString = [NSString stringWithFormat:@"%@ (%@) %@", levelPrefix, tag, fmt];
+    } else {
+        prefixedString = [NSString stringWithFormat:@"%@ %@", levelPrefix, fmt];
+    }
     NSLogv(prefixedString, args);
-    va_end(args);
 }
