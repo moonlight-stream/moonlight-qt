@@ -242,6 +242,9 @@
                         <color key="backgroundColor" white="0.0" alpha="0.5" colorSpace="calibratedWhite"/>
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    <connections>
+                        <outlet property="loadingSpinner" destination="N0D-dj-EuF" id="xEQ-nx-SOt"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="lJG-tq-Jrs" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>

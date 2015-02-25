@@ -16,6 +16,8 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    // center the loading spinner
+    self.loadingSpinner.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
 }
 
 - (void)didReceiveMemoryWarning {

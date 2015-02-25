@@ -245,7 +245,7 @@
                     </view>
                     <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
                     <connections>
-                        <outlet property="loadingSpinner" destination="jJs-wm-fmH" id="Qq1-JJ-55a"/>
+                        <outlet property="loadingSpinner" destination="oNu-Gu-QeM" id="5IK-qn-mIZ"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="GaV-PK-JSI" userLabel="First Responder" sceneMemberID="firstResponder"/>

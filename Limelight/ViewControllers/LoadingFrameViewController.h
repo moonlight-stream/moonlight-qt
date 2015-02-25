@@ -9,6 +9,6 @@
 #import <UIKit/UIKit.h>
 
 @interface LoadingFrameViewController : UIViewController
-@property (weak, nonatomic) IBOutlet NSLayoutConstraint *loadingSpinner;
 
+@property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingSpinner;
 @end

@@ -52,6 +52,7 @@ static NSArray* appList;
         _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Failed" message:message delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
         [_pairAlert show];
         [_discMan startDiscovery];
+        [self hideLoadingFrame];
     });
 }
 
@@ -61,6 +62,7 @@ static NSArray* appList;
         _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Succesful" message:@"Successfully paired to host" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
         [_pairAlert show];
         [_discMan startDiscovery];
+        [self hideLoadingFrame];
     });
 }
 
@@ -83,6 +85,7 @@ static NSArray* appList;
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self updateApps];
+                    [self hideLoadingFrame];
                 });
                 
                 [_appManager stopRetrieving];
@@ -114,6 +117,7 @@ static NSArray* appList;
 
 - (void) hostClicked:(Host *)host {
     Log(LOG_D, @"Clicked host: %@", host.name);
+    [self showLoadingFrame];
     _selectedHost = host;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
@@ -187,6 +191,7 @@ static NSArray* appList;
 
 - (void) addHostClicked {
     Log(LOG_D, @"Clicked add host");
+    [self showLoadingFrame];
     UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
     [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
     [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
@@ -212,6 +217,7 @@ static NSArray* appList;
             }];});
     }]];
     [alertController addTextFieldWithConfigurationHandler:nil];
+    [self hideLoadingFrame];
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
