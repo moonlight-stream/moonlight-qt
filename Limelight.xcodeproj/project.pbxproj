@@ -38,6 +38,7 @@
 		FB4678FA1A55FFAD00377732 /* DiscoveryManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678F91A55FFAD00377732 /* DiscoveryManager.m */; };
 		FB4678FF1A565DAC00377732 /* WakeOnLanManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */; };
 		FB4679011A57048000377732 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB4679001A57048000377732 /* CoreFoundation.framework */; };
+		FB4A23B81A9D3637004D2EF2 /* LoadingFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4A23B71A9D3637004D2EF2 /* LoadingFrameViewController.m */; };
 		FB6549561A57907E001C8F39 /* DiscoveryWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = FB6549551A57907E001C8F39 /* DiscoveryWorker.m */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
 		FB89462819F646E200339C8A /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460619F646E200339C8A /* CryptoManager.m */; };
@@ -140,6 +141,8 @@
 		FB4678FD1A565DAC00377732 /* WakeOnLanManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WakeOnLanManager.h; sourceTree = "<group>"; };
 		FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WakeOnLanManager.m; sourceTree = "<group>"; };
 		FB4679001A57048000377732 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		FB4A23B61A9D3637004D2EF2 /* LoadingFrameViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = LoadingFrameViewController.h; sourceTree = "<group>"; };
+		FB4A23B71A9D3637004D2EF2 /* LoadingFrameViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = LoadingFrameViewController.m; sourceTree = "<group>"; };
 		FB6549541A57907E001C8F39 /* DiscoveryWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscoveryWorker.h; sourceTree = "<group>"; };
 		FB6549551A57907E001C8F39 /* DiscoveryWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiscoveryWorker.m; sourceTree = "<group>"; };
 		FB6549621A60B4A9001C8F39 /* Limelight 0.3.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Limelight 0.3.1.xcdatamodel"; sourceTree = "<group>"; };
@@ -529,6 +532,8 @@
 				FB89462719F646E200339C8A /* StreamFrameViewController.m */,
 				FBD3494E19FF2174002D2A60 /* SettingsViewController.h */,
 				FBD3494F19FF2174002D2A60 /* SettingsViewController.m */,
+				FB4A23B61A9D3637004D2EF2 /* LoadingFrameViewController.h */,
+				FB4A23B71A9D3637004D2EF2 /* LoadingFrameViewController.m */,
 			);
 			path = ViewControllers;
 			sourceTree = "<group>";
@@ -911,6 +916,7 @@
 				FB89462A19F646E200339C8A /* ControllerSupport.m in Sources */,
 				FB9AFD3D1A7E111600872C98 /* AppAssetResponse.m in Sources */,
 				FBD349621A0089F6002D2A60 /* DataManager.m in Sources */,
+				FB4A23B81A9D3637004D2EF2 /* LoadingFrameViewController.m in Sources */,
 				FB9AFD3A1A7E05CE00872C98 /* ServerInfoResponse.m in Sources */,
 				FB89463119F646E200339C8A /* StreamManager.m in Sources */,
 			);

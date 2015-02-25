@@ -226,6 +226,27 @@
             </objects>
             <point key="canvasLocation" x="1946" y="514"/>
         </scene>
+        <!--Loading Frame View Controller-->
+        <scene sceneID="lcG-48-utf">
+            <objects>
+                <viewController storyboardIdentifier="loadingFrame" modalTransitionStyle="crossDissolve" modalPresentationStyle="overCurrentContext" id="ZNo-L5-uxh" customClass="LoadingFrameViewController" sceneMemberID="viewController">
+                    <view key="view" contentMode="scaleToFill" id="le1-tU-NEp">
+                        <rect key="frame" x="0.0" y="0.0" width="1024" height="768"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="whiteLarge" id="N0D-dj-EuF">
+                                <rect key="frame" x="494" y="365" width="37" height="37"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </activityIndicatorView>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="0.5" colorSpace="calibratedWhite"/>
+                    </view>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="lJG-tq-Jrs" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="1946" y="1425"/>
+        </scene>
     </scenes>
     <resources>
         <image name="Logo" width="36" height="36"/>

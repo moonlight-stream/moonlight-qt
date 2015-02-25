@@ -21,6 +21,7 @@
 #import "AppListResponse.h"
 #import "ServerInfoResponse.h"
 #import "StreamFrameViewController.h"
+#import "LoadingFrameViewController.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -271,7 +272,6 @@ static NSArray* appList;
     }
 }
 
-
 - (App*) findRunningApp {
     for (App* app in appList) {
         if (app.isRunning) {
@@ -294,6 +294,15 @@ static NSArray* appList;
         StreamFrameViewController* streamFrame = segue.destinationViewController;
         streamFrame.streamConfig = _streamConfig;
     }
+}
+
+- (void) showLoadingFrame {
+    LoadingFrameViewController* loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
+    [self.navigationController presentViewController:loadingFrame animated:YES completion:nil];
+}
+
+- (void) hideLoadingFrame {
+    [self dismissViewControllerAnimated:YES completion:nil];
 }
 
 - (void)viewDidLoad

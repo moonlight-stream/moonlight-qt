@@ -229,6 +229,29 @@
             </objects>
             <point key="canvasLocation" x="2092" y="796"/>
         </scene>
+        <!--Loading Frame View Controller-->
+        <scene sceneID="kPF-XD-S77">
+            <objects>
+                <viewController storyboardIdentifier="loadingFrame" modalTransitionStyle="crossDissolve" modalPresentationStyle="overCurrentContext" id="9W0-2D-0Kp" customClass="LoadingFrameViewController" sceneMemberID="viewController">
+                    <view key="view" opaque="NO" clearsContextBeforeDrawing="NO" contentMode="center" id="nSw-dc-mi4">
+                        <rect key="frame" x="0.0" y="0.0" width="568" height="320"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" animating="YES" style="whiteLarge" translatesAutoresizingMaskIntoConstraints="NO" id="oNu-Gu-QeM">
+                                <rect key="frame" x="266" y="141" width="37" height="37"/>
+                            </activityIndicatorView>
+                        </subviews>
+                        <color key="backgroundColor" white="0.0" alpha="0.5" colorSpace="calibratedWhite"/>
+                    </view>
+                    <simulatedOrientationMetrics key="simulatedOrientationMetrics" orientation="landscapeRight"/>
+                    <connections>
+                        <outlet property="loadingSpinner" destination="jJs-wm-fmH" id="Qq1-JJ-55a"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="GaV-PK-JSI" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="2104" y="1266"/>
+        </scene>
     </scenes>
     <resources>
         <image name="Logo" width="36" height="36"/>
