@@ -9,6 +9,7 @@
 #import <Foundation/Foundation.h>
 #import "MDNSManager.h"
 #import "Host.h"
+#import "CleanupCrew.h"
 
 @protocol DiscoveryCallback <NSObject>
 
@@ -16,7 +17,7 @@
 
 @end
 
-@interface DiscoveryManager : NSObject <MDNSCallback>
+@interface DiscoveryManager : NSObject <MDNSCallback, CleanupCallback>
 
 - (id) initWithHosts:(NSArray*)hosts andCallback:(id<DiscoveryCallback>) callback;
 - (void) startDiscovery;
