@@ -136,6 +136,7 @@
                 [dataMan removeHost:host];
             }
         }
+        [dataMan saveHosts];
     });
 }
 
