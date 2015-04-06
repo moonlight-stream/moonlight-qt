@@ -73,5 +73,12 @@ NSString *const deviceName = @"roth";
     }
 }
 
+@end
+
+@implementation NSString (NSStringWithTrim)
+
+- (NSString *)trim {
+    return [self stringByTrimmingCharactersInSet:[NSCharacterSet whitespaceAndNewlineCharacterSet]];
+}
 
 @end

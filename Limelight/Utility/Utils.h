@@ -24,3 +24,9 @@ FOUNDATION_EXPORT NSString *const deviceName;
 + (int) resolveHost:(NSString*)host;
 
 @end
+
+@interface NSString (NSStringWithTrim)
+
+- (NSString*) trim;
+
+@end
