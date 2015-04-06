@@ -40,7 +40,7 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [self.resolutionSelector setSelectedSegmentIndex:resolution];
     [self.framerateSelector setSelectedSegmentIndex:framerate];
     [self.onscreenControlSelector setSelectedSegmentIndex:onscreenControls];
-    [self.bitrateSlider setValue:(_bitrate / 1000) animated:YES];
+    [self.bitrateSlider setValue:(_bitrate / BITRATE_INTERVAL) animated:YES];
     [self.bitrateSlider addTarget:self action:@selector(bitrateSliderMoved) forControlEvents:UIControlEventValueChanged];
     [self updateBitrateText];
 }
