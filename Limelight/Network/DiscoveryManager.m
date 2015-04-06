@@ -88,7 +88,7 @@
 }
 
 - (BOOL) addHostToDiscovery:(Host *)host {
-    if (![self isHostInDiscovery:host]) {
+    if (host.uuid.length > 0 && ![self isHostInDiscovery:host]) {
         [_hostQueue addObject:host];
         if (shouldDiscover) {
             [_opQueue addOperation:[self createWorkerForHost:host]];
