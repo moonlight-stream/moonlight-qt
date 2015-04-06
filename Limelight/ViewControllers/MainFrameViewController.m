@@ -85,13 +85,13 @@ static NSArray* appList;
             } else {
                 dispatch_async(dispatch_get_main_queue(), ^{
                     [self updateApps];
-                    [self hideLoadingFrame];
                 });
                 
                 [_appManager stopRetrieving];
                 [_appManager retrieveAssets:appList fromHost:_selectedHost];
             }
         }
+        [self hideLoadingFrame];
     });
 }
 
@@ -125,6 +125,7 @@ static NSArray* appList;
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
+            [self hideLoadingFrame];
         } else {
             Log(LOG_D, @"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
             if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
