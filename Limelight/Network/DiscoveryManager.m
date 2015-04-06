@@ -15,7 +15,7 @@
 #import "ServerInfoResponse.h"
 
 @implementation DiscoveryManager {
-    NSMutableArray* _hostList;
+    NSMutableArray* _hostQueue;
     NSMutableArray* _discoveredHosts;
     id<DiscoveryCallback> _callback;
     MDNSManager* _mdnsMan;
@@ -27,7 +27,7 @@
 
 - (id)initWithHosts:(NSArray *)hosts andCallback:(id<DiscoveryCallback>)callback {
     self = [super init];
-    _hostList = [NSMutableArray arrayWithArray:hosts];
+    _hostQueue = [NSMutableArray arrayWithArray:hosts];
     _callback = callback;
     _opQueue = [[NSOperationQueue alloc] init];
     _mdnsMan = [[MDNSManager alloc] initWithCallback:self];
@@ -66,11 +66,9 @@
     Log(LOG_I, @"Starting discovery");
     shouldDiscover = YES;
     [_mdnsMan searchForHosts];
-    for (Host* host in _hostList) {
+    for (Host* host in _hostQueue) {
         [_opQueue addOperation:[self createWorkerForHost:host]];
     }
-    CleanupCrew* cleanup = [[CleanupCrew alloc] initWithHostList:_hostList andCallback:self];
-    [_opQueue addOperation:cleanup];
 }
 
 - (void) stopDiscovery {
@@ -90,8 +88,8 @@
 }
 
 - (BOOL) addHostToDiscovery:(Host *)host {
-    if (host.uuid.length > 0 && ![self isHostInDiscovery:host]) {
-        [_hostList addObject:host];
+    if (![self isHostInDiscovery:host]) {
+        [_hostQueue addObject:host];
         if (shouldDiscover) {
             [_opQueue addOperation:[self createWorkerForHost:host]];
         }
@@ -106,16 +104,7 @@
             [worker cancel];
         }
     }
-    [_hostList removeObject:host];
-}
-
-// Override from CleanupCallback
-- (void) cleanedUpHosts:(NSSet*)dirtyHosts {
-    for (Host* host in dirtyHosts) {
-        Log(LOG_I, @"Cleaning up duplicate host: %@", host.name);
-        [self removeHostFromDiscovery:host];
-    }
-    [_callback updateAllHosts:_hostList];
+    [_hostQueue removeObject:host];
 }
 
 // Override from MDNSCallback
@@ -130,7 +119,7 @@
             [worker discoverHost];
             if ([self addHostToDiscovery:host]) {
                 Log(LOG_I, @"Adding host to discovery: %@", host.name);
-                [_callback updateAllHosts:_hostList];
+                [_callback updateAllHosts:_hostQueue];
             } else {
                 Log(LOG_I, @"Not adding host to discovery: %@", host.name);
                 [dataMan removeHost:host];
@@ -141,8 +130,8 @@
 }
 
 - (BOOL) isHostInDiscovery:(Host*)host {
-    for (int i = 0; i < _hostList.count; i++) {
-        Host* discoveredHost = [_hostList objectAtIndex:i];
+    for (int i = 0; i < _hostQueue.count; i++) {
+        Host* discoveredHost = [_hostQueue objectAtIndex:i];
         if (discoveredHost.uuid.length > 0 && [discoveredHost.uuid isEqualToString:host.uuid]) {
             return YES;
         }
