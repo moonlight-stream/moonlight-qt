@@ -189,10 +189,10 @@ static float L3_Y;
             
             [self drawTriggers];
             [self drawStartSelect];
+            [self drawL3R3];
             [self hideButtons];
             [self hideBumpers];
             [self hideSticks];
-            [self hideL3R3];
             break;
         case OnScreenControlsLevelFull:
             [self setupComplexControls];
