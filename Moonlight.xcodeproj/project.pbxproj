@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98A03B4A19F3514B00861ACA /* liblimelight-common.a */; };
 		9E5D600B1A5A5A3900689918 /* Apache License.txt in Resources */ = {isa = PBXBuildFile; fileRef = 9E5D5FF81A5A5A3900689918 /* Apache License.txt */; };
 		9E5D600C1A5A5A3900689918 /* Roboto-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9E5D5FF91A5A5A3900689918 /* Roboto-Black.ttf */; };
 		9E5D600E1A5A5A3900689918 /* Roboto-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9E5D5FFB1A5A5A3900689918 /* Roboto-Bold.ttf */; };
@@ -40,6 +39,7 @@
 		FB4679011A57048000377732 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB4679001A57048000377732 /* CoreFoundation.framework */; };
 		FB4A23B81A9D3637004D2EF2 /* LoadingFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4A23B71A9D3637004D2EF2 /* LoadingFrameViewController.m */; };
 		FB6549561A57907E001C8F39 /* DiscoveryWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = FB6549551A57907E001C8F39 /* DiscoveryWorker.m */; };
+		FB6DDEF41AE739100096499A /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB6DDEF31AE739100096499A /* libmoonlight-common.a */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
 		FB89462819F646E200339C8A /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460619F646E200339C8A /* CryptoManager.m */; };
 		FB89462919F646E200339C8A /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FB89460719F646E200339C8A /* mkcert.c */; };
@@ -79,19 +79,12 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		98A03B4919F3514B00861ACA /* PBXContainerItemProxy */ = {
+		FB1E430F1AE8B0F200AFF679 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */;
+			containerPortal = 98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = FB290E2E19B37A4E004C83CF;
-			remoteInfo = "limelight-common";
-		};
-		98A03B4B19F3517100861ACA /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = FB290E2D19B37A4E004C83CF;
-			remoteInfo = "limelight-common";
+			remoteInfo = "moonlight-common";
 		};
 		FB290D1419B2C406004C83CF /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -103,7 +96,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "limelight-common.xcodeproj"; path = "limelight-common-c/limelight-common.xcodeproj"; sourceTree = "<group>"; };
+		98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "moonlight-common.xcodeproj"; path = "limelight-common-c/moonlight-common.xcodeproj"; sourceTree = "<group>"; };
 		9E5D5FF81A5A5A3900689918 /* Apache License.txt */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = "Apache License.txt"; sourceTree = "<group>"; };
 		9E5D5FF91A5A5A3900689918 /* Roboto-Black.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Black.ttf"; sourceTree = "<group>"; };
 		9E5D5FFB1A5A5A3900689918 /* Roboto-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Bold.ttf"; sourceTree = "<group>"; };
@@ -111,7 +104,7 @@
 		9E5D60001A5A5A3900689918 /* Roboto-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Medium.ttf"; sourceTree = "<group>"; };
 		9E5D60021A5A5A3900689918 /* Roboto-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Regular.ttf"; sourceTree = "<group>"; };
 		9E5D60031A5A5A3900689918 /* Roboto-Thin.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Roboto-Thin.ttf"; sourceTree = "<group>"; };
-		FB290CEE19B2C406004C83CF /* Limelight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Limelight.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB290CEE19B2C406004C83CF /* Moonlight.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Moonlight.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB290CF119B2C406004C83CF /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		FB290CF319B2C406004C83CF /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
 		FB290CF519B2C406004C83CF /* UIKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = UIKit.framework; path = System/Library/Frameworks/UIKit.framework; sourceTree = SDKROOT; };
@@ -146,6 +139,7 @@
 		FB6549541A57907E001C8F39 /* DiscoveryWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscoveryWorker.h; sourceTree = "<group>"; };
 		FB6549551A57907E001C8F39 /* DiscoveryWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiscoveryWorker.m; sourceTree = "<group>"; };
 		FB6549621A60B4A9001C8F39 /* Limelight 0.3.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Limelight 0.3.1.xcdatamodel"; sourceTree = "<group>"; };
+		FB6DDEF31AE739100096499A /* libmoonlight-common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libmoonlight-common.a"; path = "limelight-common-c/build/Debug-iphoneos/libmoonlight-common.a"; sourceTree = "<group>"; };
 		FB7E794319C8B71B00A15F68 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 		FB89460519F646E200339C8A /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
 		FB89460619F646E200339C8A /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
@@ -300,7 +294,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				98A03B4D19F352EB00861ACA /* liblimelight-common.a in Frameworks */,
+				FB6DDEF41AE739100096499A /* libmoonlight-common.a in Frameworks */,
 				FB8946ED19F6AFE800339C8A /* libopus.a in Frameworks */,
 				FB8946EB19F6AFE100339C8A /* libcrypto.a in Frameworks */,
 				FB8946EC19F6AFE400339C8A /* libssl.a in Frameworks */,
@@ -329,14 +323,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		98A03B4619F3514B00861ACA /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				98A03B4A19F3514B00861ACA /* liblimelight-common.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		9E5D5FF61A5A5A3900689918 /* Font */ = {
 			isa = PBXGroup;
 			children = (
@@ -359,10 +345,18 @@
 			path = Roboto;
 			sourceTree = "<group>";
 		};
+		FB1E430C1AE8B0F200AFF679 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				FB1E43101AE8B0F200AFF679 /* libmoonlight-common.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		FB290CE519B2C406004C83CF = {
 			isa = PBXGroup;
 			children = (
-				98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */,
+				98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */,
 				FB290CF919B2C406004C83CF /* Limelight */,
 				FB290D1619B2C406004C83CF /* LimelightTests */,
 				FB290CF019B2C406004C83CF /* Frameworks */,
@@ -373,7 +367,7 @@
 		FB290CEF19B2C406004C83CF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				FB290CEE19B2C406004C83CF /* Limelight.app */,
+				FB290CEE19B2C406004C83CF /* Moonlight.app */,
 				FB290D0E19B2C406004C83CF /* LimelightTests.xctest */,
 			);
 			name = Products;
@@ -382,6 +376,7 @@
 		FB290CF019B2C406004C83CF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FB6DDEF31AE739100096499A /* libmoonlight-common.a */,
 				FB4679001A57048000377732 /* CoreFoundation.framework */,
 				FBD349571A003F05002D2A60 /* libsqlite3.dylib */,
 				FB89468F19F6AFB800339C8A /* libs */,
@@ -758,9 +753,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		FB290CED19B2C406004C83CF /* Limelight */ = {
+		FB290CED19B2C406004C83CF /* Moonlight */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = FB290D2019B2C406004C83CF /* Build configuration list for PBXNativeTarget "Limelight" */;
+			buildConfigurationList = FB290D2019B2C406004C83CF /* Build configuration list for PBXNativeTarget "Moonlight" */;
 			buildPhases = (
 				FB290CEA19B2C406004C83CF /* Sources */,
 				FB290CEB19B2C406004C83CF /* Frameworks */,
@@ -769,11 +764,10 @@
 			buildRules = (
 			);
 			dependencies = (
-				98A03B4C19F3517100861ACA /* PBXTargetDependency */,
 			);
-			name = Limelight;
+			name = Moonlight;
 			productName = Limelight;
-			productReference = FB290CEE19B2C406004C83CF /* Limelight.app */;
+			productReference = FB290CEE19B2C406004C83CF /* Moonlight.app */;
 			productType = "com.apple.product-type.application";
 		};
 		FB290D0D19B2C406004C83CF /* LimelightTests */ = {
@@ -811,7 +805,7 @@
 					};
 				};
 			};
-			buildConfigurationList = FB290CE919B2C406004C83CF /* Build configuration list for PBXProject "Limelight" */;
+			buildConfigurationList = FB290CE919B2C406004C83CF /* Build configuration list for PBXProject "Moonlight" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -823,24 +817,24 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 98A03B4619F3514B00861ACA /* Products */;
-					ProjectRef = 98A03B4519F3514B00861ACA /* limelight-common.xcodeproj */;
+					ProductGroup = FB1E430C1AE8B0F200AFF679 /* Products */;
+					ProjectRef = 98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */;
 				},
 			);
 			projectRoot = "";
 			targets = (
-				FB290CED19B2C406004C83CF /* Limelight */,
+				FB290CED19B2C406004C83CF /* Moonlight */,
 				FB290D0D19B2C406004C83CF /* LimelightTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		98A03B4A19F3514B00861ACA /* liblimelight-common.a */ = {
+		FB1E43101AE8B0F200AFF679 /* libmoonlight-common.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = "liblimelight-common.a";
-			remoteRef = 98A03B4919F3514B00861ACA /* PBXContainerItemProxy */;
+			path = "libmoonlight-common.a";
+			remoteRef = FB1E430F1AE8B0F200AFF679 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -933,14 +927,9 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		98A03B4C19F3517100861ACA /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = "limelight-common";
-			targetProxy = 98A03B4B19F3517100861ACA /* PBXContainerItemProxy */;
-		};
 		FB290D1519B2C406004C83CF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = FB290CED19B2C406004C83CF /* Limelight */;
+			target = FB290CED19B2C406004C83CF /* Moonlight */;
 			targetProxy = FB290D1419B2C406004C83CF /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -1060,6 +1049,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
+					"$(PROJECT_DIR)/limelight-common-c/build/Debug-iphoneos",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1088,6 +1078,7 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
+					"$(PROJECT_DIR)/limelight-common-c/build/Debug-iphoneos",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1139,7 +1130,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		FB290CE919B2C406004C83CF /* Build configuration list for PBXProject "Limelight" */ = {
+		FB290CE919B2C406004C83CF /* Build configuration list for PBXProject "Moonlight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB290D1E19B2C406004C83CF /* Debug */,
@@ -1148,7 +1139,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		FB290D2019B2C406004C83CF /* Build configuration list for PBXNativeTarget "Limelight" */ = {
+		FB290D2019B2C406004C83CF /* Build configuration list for PBXNativeTarget "Moonlight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				FB290D2119B2C406004C83CF /* Debug */,

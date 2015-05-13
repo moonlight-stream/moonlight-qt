@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>6524503E-ED62-4E8E-8A67-B6DFB5A532FD</string>
+	<key>IDESourceControlProjectName</key>
+	<string>project</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>A4B0849259F9566B0CBA84A6D3D4A0F895C03123</key>
+		<string>github.com:limelight-stream/limelight-ios.git</string>
+		<key>EB99D631D5149240E91F8D168F0F298D7A5BAA89</key>
+		<string>github.com:limelight-stream/limelight-common-c.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>Moonlight.xcodeproj/project.xcworkspace</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>A4B0849259F9566B0CBA84A6D3D4A0F895C03123</key>
+		<string>../..</string>
+		<key>EB99D631D5149240E91F8D168F0F298D7A5BAA89</key>
+		<string>../..limelight-common-c/</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>github.com:limelight-stream/limelight-ios.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>A4B0849259F9566B0CBA84A6D3D4A0F895C03123</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>EB99D631D5149240E91F8D168F0F298D7A5BAA89</string>
+			<key>IDESourceControlWCCName</key>
+			<string>limelight-common-c</string>
+		</dict>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>A4B0849259F9566B0CBA84A6D3D4A0F895C03123</string>
+			<key>IDESourceControlWCCName</key>
+			<string>limelight-ios</string>
+		</dict>
+	</array>
+</dict>
+</plist>

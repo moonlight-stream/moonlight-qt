@@ -1,9 +1,9 @@
 //
 //  StreamManager.m
-//  Limelight
+//  Moonlight
 //
 //  Created by Diego Waxemberg on 10/20/14.
-//  Copyright (c) 2014 Limelight Stream. All rights reserved.
+//  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
 #import "StreamManager.h"
@@ -96,14 +96,14 @@
 }
 
 // This should NEVER be called from within a thread
-// owned by limelight-common
+// owned by moonlight-common
 - (void) stopStream
 {
     [_connection terminate];
 }
 
 // This should only be called from within a thread
-// owned by limelight-common
+// owned by moonlight-common
 - (void) stopStreamInternal
 {
     [_connection terminateInternal];

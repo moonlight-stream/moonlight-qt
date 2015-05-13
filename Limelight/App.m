@@ -1,9 +1,9 @@
 //
 //  App.m
-//  Limelight
+//  Moonlight
 //
 //  Created by Diego Waxemberg on 10/22/14.
-//  Copyright (c) 2014 Limelight Stream. All rights reserved.
+//  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
 #import "App.h"

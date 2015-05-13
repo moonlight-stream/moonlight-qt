@@ -1,9 +1,9 @@
 //
-//  LimelightTests.m
-//  LimelightTests
+//  MoonlightTests.m
+//  MoonlightTests
 //
 //  Created by Diego Waxemberg on 8/30/14.
-//  Copyright (c) 2014 Limelight Stream. All rights reserved.
+//  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
 #import <XCTest/XCTest.h>

@@ -1,9 +1,9 @@
 //
 //  AppDelegate.m
-//  Limelight-iOS
+//  Moonlight
 //
 //  Created by Diego Waxemberg on 1/17/14.
-//  Copyright (c) 2014 Diego Waxemberg. All rights reserved.
+//  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
 #import "AppDelegate.h"

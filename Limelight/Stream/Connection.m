@@ -1,9 +1,9 @@
 //
 //  Connection.m
-//  Limelight-iOS
+//  Moonlight
 //
 //  Created by Diego Waxemberg on 1/19/14.
-//  Copyright (c) 2014 Diego Waxemberg. All rights reserved.
+//  Copyright (c) 2015 Moonlight Stream. All rights reserved.
 //
 
 #import "Connection.h"
@@ -290,7 +290,7 @@ void ClDisplayTransientMessage(char* message)
 
 -(void) terminate
 {
-    // We're guaranteed to not be on a limelight-common thread
+    // We're guaranteed to not be on a moonlight-common thread
     // here so it's safe to call stop directly
     LiStopConnection();
 }

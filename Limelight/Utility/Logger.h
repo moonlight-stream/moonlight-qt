@@ -1,9 +1,9 @@
 //
 //  Logger.h
-//  Limelight
+//  Moonlight
 //
 //  Created by Diego Waxemberg on 2/10/15.
-//  Copyright (c) 2015 Limelight Stream. All rights reserved.
+//  Copyright (c) 2015 Moonlight Stream. All rights reserved.
 //
 
 #ifndef Limelight_Logger_h

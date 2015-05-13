@@ -1,9 +1,9 @@
 //
 //  OnScreenControls.h
-//  Limelight
+//  Moonlight
 //
 //  Created by Diego Waxemberg on 12/28/14.
-//  Copyright (c) 2014 Limelight Stream. All rights reserved.
+//  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
 #import <Foundation/Foundation.h>
