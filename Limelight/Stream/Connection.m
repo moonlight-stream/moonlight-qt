@@ -45,10 +45,6 @@ static int audioBufferQueueLength;
 static AudioComponentInstance audioUnit;
 static VideoDecoderRenderer* renderer;
 
-void DrSetup(int width, int height, int fps, void* context, int drFlags)
-{
-}
-
 int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 {
     int offset = 0;
@@ -67,18 +63,6 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
     
     // This function will take our buffer
     return [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
-}
-
-void DrStart(void)
-{
-}
-
-void DrStop(void)
-{
-}
-
-void DrRelease(void)
-{
 }
 
 void ArInit(void)
@@ -315,10 +299,10 @@ void ClDisplayTransientMessage(char* message)
     int riKeyId = htonl(config.riKeyId);
     memcpy(_streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
     
-    _drCallbacks.setup = DrSetup;
-    _drCallbacks.start = DrStart;
-    _drCallbacks.stop = DrStop;
-    _drCallbacks.release = DrRelease;
+    _drCallbacks.setup = NULL;
+    _drCallbacks.start = NULL;
+    _drCallbacks.stop = NULL;
+    _drCallbacks.release = NULL;
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
     
     _arCallbacks.init = ArInit;
@@ -421,21 +405,13 @@ static OSStatus playbackCallback(void *inRefCon,
 
 -(void) main
 {
-    PLATFORM_CALLBACKS dummyPlCallbacks;
-    
-    // Only used on Windows
-    dummyPlCallbacks.threadStart = NULL;
-    dummyPlCallbacks.debugPrint = NULL;
-    
     LiStartConnection(_host,
                       &_streamConfig,
                       &_clCallbacks,
                       &_drCallbacks,
                       &_arCallbacks,
-                      &dummyPlCallbacks,
+                      NULL,
                       NULL, 0, _serverMajorVersion);
 }
-
-
 
 @end
