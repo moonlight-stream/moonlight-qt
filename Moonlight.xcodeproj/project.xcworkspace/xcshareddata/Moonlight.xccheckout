@@ -22,7 +22,7 @@
 		<key>A4B0849259F9566B0CBA84A6D3D4A0F895C03123</key>
 		<string>../..</string>
 		<key>EB99D631D5149240E91F8D168F0F298D7A5BAA89</key>
-		<string>../..limelight-common-c/</string>
+		<string>../../limelight-common-c</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>github.com:limelight-stream/limelight-ios.git</string>

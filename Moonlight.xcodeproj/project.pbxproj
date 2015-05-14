@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		987140041B04542F00AB57D5 /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB1E43101AE8B0F200AFF679 /* libmoonlight-common.a */; };
 		9E5D600B1A5A5A3900689918 /* Apache License.txt in Resources */ = {isa = PBXBuildFile; fileRef = 9E5D5FF81A5A5A3900689918 /* Apache License.txt */; };
 		9E5D600C1A5A5A3900689918 /* Roboto-Black.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9E5D5FF91A5A5A3900689918 /* Roboto-Black.ttf */; };
 		9E5D600E1A5A5A3900689918 /* Roboto-Bold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 9E5D5FFB1A5A5A3900689918 /* Roboto-Bold.ttf */; };
@@ -39,7 +40,6 @@
 		FB4679011A57048000377732 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB4679001A57048000377732 /* CoreFoundation.framework */; };
 		FB4A23B81A9D3637004D2EF2 /* LoadingFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4A23B71A9D3637004D2EF2 /* LoadingFrameViewController.m */; };
 		FB6549561A57907E001C8F39 /* DiscoveryWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = FB6549551A57907E001C8F39 /* DiscoveryWorker.m */; };
-		FB6DDEF41AE739100096499A /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB6DDEF31AE739100096499A /* libmoonlight-common.a */; };
 		FB7E794419C8B71B00A15F68 /* libiconv.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = FB7E794319C8B71B00A15F68 /* libiconv.dylib */; };
 		FB89462819F646E200339C8A /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460619F646E200339C8A /* CryptoManager.m */; };
 		FB89462919F646E200339C8A /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = FB89460719F646E200339C8A /* mkcert.c */; };
@@ -79,6 +79,13 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		987140011B04541A00AB57D5 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = FB290E2D19B37A4E004C83CF;
+			remoteInfo = "moonlight-common";
+		};
 		FB1E430F1AE8B0F200AFF679 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */;
@@ -294,7 +301,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				FB6DDEF41AE739100096499A /* libmoonlight-common.a in Frameworks */,
+				987140041B04542F00AB57D5 /* libmoonlight-common.a in Frameworks */,
 				FB8946ED19F6AFE800339C8A /* libopus.a in Frameworks */,
 				FB8946EB19F6AFE100339C8A /* libcrypto.a in Frameworks */,
 				FB8946EC19F6AFE400339C8A /* libssl.a in Frameworks */,
@@ -764,6 +771,7 @@
 			buildRules = (
 			);
 			dependencies = (
+				987140021B04541A00AB57D5 /* PBXTargetDependency */,
 			);
 			name = Moonlight;
 			productName = Limelight;
@@ -927,6 +935,11 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
+		987140021B04541A00AB57D5 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "moonlight-common";
+			targetProxy = 987140011B04541A00AB57D5 /* PBXContainerItemProxy */;
+		};
 		FB290D1519B2C406004C83CF /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = FB290CED19B2C406004C83CF /* Moonlight */;
@@ -1049,7 +1062,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
-					"$(PROJECT_DIR)/limelight-common-c/build/Debug-iphoneos",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1078,7 +1090,6 @@
 					"$(inherited)",
 					"$(PROJECT_DIR)/libs/opus/lib",
 					"$(PROJECT_DIR)/libs/openssl/lib",
-					"$(PROJECT_DIR)/limelight-common-c/build/Debug-iphoneos",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE = "";
@@ -1090,7 +1101,7 @@
 		FB290D2419B2C406004C83CF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Limelight.app/Limelight";
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Moonlight.app/Moonlight";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
@@ -1112,7 +1123,7 @@
 		FB290D2519B2C406004C83CF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Limelight.app/Limelight";
+				BUNDLE_LOADER = "$(BUILT_PRODUCTS_DIR)/Moonlight.app/Moonlight";
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(SDKROOT)/Developer/Library/Frameworks",
 					"$(inherited)",
