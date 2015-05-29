@@ -23,6 +23,8 @@
     NSMutableData* _respData;
     NSData* _requestResp;
     dispatch_semaphore_t _requestLock;
+    
+    BOOL _errorOccurred;
 }
 
 static const NSString* PORT = @"47984";
@@ -54,9 +56,11 @@ static const NSString* PORT = @"47984";
         [NSURLConnection connectionWithRequest:request.request delegate:self];
     });
     dispatch_semaphore_wait(_requestLock, DISPATCH_TIME_FOREVER);
-    if (request.response) {
+    
+    if (!_errorOccurred && request.response) {
         [request.response populateWithData:_requestResp];
     }
+    _errorOccurred = false;
 }
 
 - (void) executeRequest:(HttpRequest*)request {
@@ -217,6 +221,7 @@ static const NSString* PORT = @"47984";
 
 - (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
     Log(LOG_D, @"connection error: %@", error);
+    _errorOccurred = true;
     dispatch_semaphore_signal(_requestLock);
 }
 
