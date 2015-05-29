@@ -19,11 +19,14 @@
     NSMutableDictionary* _imageCache;
 }
 
+static const int MAX_REQUEST_COUNT = 4;
+
 - (id) initWithCallback:(id<AppAssetCallback>)callback {
     self = [super init];
     _callback = callback;
-    _opQueue = [[NSOperationQueue alloc] init];
     _imageCache = [[NSMutableDictionary alloc] init];
+    _opQueue = [[NSOperationQueue alloc] init];
+    [_opQueue setMaxConcurrentOperationCount:MAX_REQUEST_COUNT];
 
     return self;
 }
