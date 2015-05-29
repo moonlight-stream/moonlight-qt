@@ -241,6 +241,7 @@ static NSArray* appList;
     _streamConfig.height = [streamSettings.height intValue];
     _streamConfig.width = [streamSettings.width intValue];
     
+    [_appManager stopRetrieving];
     
     if (currentPosition != FrontViewPositionLeft) {
         [[self revealViewController] revealToggle:self];
