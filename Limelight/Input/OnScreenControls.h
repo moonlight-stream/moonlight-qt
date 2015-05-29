@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "StreamView.h"
 
 @class ControllerSupport;
 
@@ -23,7 +24,7 @@ typedef NS_ENUM(NSInteger, OnScreenControlsLevel) {
     OnScreenControlsLevelAutoGCExtendedGamepad,
 };
 
-- (id) initWithView:(UIView*)view controllerSup:(ControllerSupport*)controllerSupport;
+- (id) initWithView:(UIView*)view controllerSup:(ControllerSupport*)controllerSupport swipeDelegate:(id<EdgeDetectionDelegate>)edgeDelegate;
 - (BOOL) handleTouchDownEvent:(NSSet*)touches;
 - (BOOL) handleTouchUpEvent:(NSSet*)touches;
 - (BOOL) handleTouchMovedEvent:(NSSet*)touches;

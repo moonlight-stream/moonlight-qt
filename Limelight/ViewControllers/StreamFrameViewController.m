@@ -11,7 +11,6 @@
 #import "VideoDecoderRenderer.h"
 #import "StreamManager.h"
 #import "ControllerSupport.h"
-#import "StreamView.h"
 
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -70,14 +69,7 @@
         [self.spinner stopAnimating];
         [self.stageLabel setText:@"Waiting for first frame..."];
         [self.stageLabel sizeToFit];
-        [(StreamView*)self.view setupOnScreenControls: _controllerSupport];
-        UIScreenEdgePanGestureRecognizer* swipeGesture = [[UIScreenEdgePanGestureRecognizer alloc] initWithTarget:self action:@selector(edgeSwiped)];
-        swipeGesture.edges = UIRectEdgeLeft;
-        if (swipeGesture == nil) {
-            Log(LOG_E, @"An error occured trying to create UIScreenEdgePanGestureRecognizer");
-        } else {
-            [self.view addGestureRecognizer:swipeGesture];
-        }
+        [(StreamView*)self.view setupOnScreenControls: _controllerSupport swipeDelegate:self];
     });
 }
 

@@ -35,6 +35,7 @@
     CALayer* _l1Button;
     CALayer* _l2Button;
     CALayer* _l3Button;
+    CALayer* _edge;
     
     UITouch* _aTouch;
     UITouch* _bTouch;
@@ -54,6 +55,7 @@
     UITouch* _l1Touch;
     UITouch* _l2Touch;
     UITouch* _l3Touch;
+    UITouch* _edgeTouch;
     
     NSDate* l3TouchStart;
     NSDate* r3TouchStart;
@@ -66,7 +68,10 @@
     
     ControllerSupport *_controllerSupport;
     Controller *_controller;
+    id<EdgeDetectionDelegate> _edgeDelegate;
 }
+
+static const float EDGE_WIDTH = .1;
 
 static const float BUTTON_SIZE = 50;
 static const float BUTTON_DIST = 20;
@@ -115,12 +120,13 @@ static float L2_Y;
 static float L3_X;
 static float L3_Y;
 
-- (id) initWithView:(UIView*)view controllerSup:(ControllerSupport*)controllerSupport {
+- (id) initWithView:(UIView*)view controllerSup:(ControllerSupport*)controllerSupport swipeDelegate:(id<EdgeDetectionDelegate>)swipeDelegate {
     self = [self init];
     _view = view;
     _controllerSupport = controllerSupport;
     _controller = [[Controller alloc] init];
     _controller.playerIndex = 0;
+    _edgeDelegate = swipeDelegate;
     
     _aButton = [CALayer layer];
     _bButton = [CALayer layer];
@@ -142,7 +148,10 @@ static float L3_Y;
     _rightStickBackground = [CALayer layer];
     _leftStick = [CALayer layer];
     _rightStick = [CALayer layer];
+    _edge = [CALayer layer];
 
+    [self setupEdgeDetection];
+    
     return self;
 }
 
@@ -208,6 +217,11 @@ static float L3_Y;
             Log(LOG_W, @"Unknown on-screen controls level: %d", (int)_level);
             break;
     }
+}
+
+- (void) setupEdgeDetection {
+    _edge.frame = CGRectMake(0, 0, _view.frame.size.width * EDGE_WIDTH, _view.frame.size.height);
+    [_view.layer addSublayer:_edge];
 }
 
 // For GCExtendedGamepad controls we move start, select, L3, and R3 to the button
@@ -518,7 +532,7 @@ static float L3_Y;
     BOOL stickTouch = false;
     for (UITouch* touch in touches) {
         CGPoint touchLocation = [touch locationInView:_view];
-
+        
         if ([_aButton.presentationLayer hitTest:touchLocation]) {
             [_controllerSupport setButtonFlag:_controller flags:A_FLAG];
             _aTouch = touch;
@@ -621,6 +635,8 @@ static float L3_Y;
             }
             _rsTouch = touch;
             stickTouch = true;
+        } else if ([_edge.presentationLayer hitTest:touchLocation]) {
+            _edgeTouch = touch;
         }
     }
     if (updated) {
@@ -711,6 +727,11 @@ static float L3_Y;
         else if (touch == _r3Touch) {
             _r3Touch = nil;
             touched = true;
+        } else if (touch == _edgeTouch) {
+            _edgeTouch = nil;
+            if (![_edge.presentationLayer hitTest:[touch locationInView:_view]]) {
+                [_edgeDelegate edgeSwiped];
+            }
         }
     }
     if (updated) {

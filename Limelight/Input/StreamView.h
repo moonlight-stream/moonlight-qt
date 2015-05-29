@@ -9,9 +9,15 @@
 #import <UIKit/UIKit.h>
 #import "ControllerSupport.h"
 
+@protocol EdgeDetectionDelegate <NSObject>
+
+- (void) edgeSwiped;
+
+@end
+
 @interface StreamView : UIView
 
-- (void) setupOnScreenControls:(ControllerSupport*)controllerSupport;
+- (void) setupOnScreenControls:(ControllerSupport*)controllerSupport swipeDelegate:(id<EdgeDetectionDelegate>)swipeDelegate;
 - (void) setMouseDeltaFactors:(float)x y:(float)y;
 
 @end
