@@ -3,17 +3,17 @@
     {
       "idiom" : "universal",
       "scale" : "1x",
-      "filename" : "stick_inner-1.png"
+      "filename" : "stick_inner_48x49@1x.png"
     },
     {
       "idiom" : "universal",
       "scale" : "2x",
-      "filename" : "stick_inner.png"
+      "filename" : "stick_inner_96x97@2x.png"
     },
     {
       "idiom" : "universal",
       "scale" : "3x",
-      "filename" : "stick_inner-2.png"
+      "filename" : "stick_inner_144x146@3x.png"
     }
   ],
   "info" : {

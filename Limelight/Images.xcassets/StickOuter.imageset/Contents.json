@@ -3,17 +3,17 @@
     {
       "idiom" : "universal",
       "scale" : "1x",
-      "filename" : "stick_outer-1.png"
+      "filename" : "stick_outer_80x80@1x.png"
     },
     {
       "idiom" : "universal",
       "scale" : "2x",
-      "filename" : "stick_outer.png"
+      "filename" : "stick_outer_160x160@2x.png"
     },
     {
       "idiom" : "universal",
       "scale" : "3x",
-      "filename" : "stick_outer-2.png"
+      "filename" : "stick_outer_240x240@3x.png"
     }
   ],
   "info" : {
