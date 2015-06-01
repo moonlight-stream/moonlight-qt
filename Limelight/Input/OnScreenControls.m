@@ -73,39 +73,29 @@
 
 static const float EDGE_WIDTH = .1;
 
-static const float BUTTON_SIZE = 50;
+//static const float BUTTON_SIZE = 50;
 static const float BUTTON_DIST = 20;
 static float BUTTON_CENTER_X;
 static float BUTTON_CENTER_Y;
 
-static const float D_PAD_SHORT = 50;
-static const float D_PAD_LONG = 65;
 static const float D_PAD_DIST = 15;
 static float D_PAD_CENTER_X;
 static float D_PAD_CENTER_Y;
 
 static const double STICK_CLICK_RATE = 100;
-static const float STICK_INNER_SIZE = 80;
-static const float STICK_OUTER_SIZE = 120;
 static const float STICK_DEAD_ZONE = .1;
+static float STICK_INNER_SIZE;
+static float STICK_OUTER_SIZE;
 static float LS_CENTER_X;
 static float LS_CENTER_Y;
 static float RS_CENTER_X;
 static float RS_CENTER_Y;
 
-static const float START_WIDTH = 50;
-static const float START_HEIGHT = 30;
 static float START_X;
 static float START_Y;
 
-static const float SELECT_WIDTH = 50;
-static const float SELECT_HEIGHT = 30;
 static float SELECT_X;
 static float SELECT_Y;
-
-static const float BUMPER_SIZE = 45;
-static const float TRIGGER_SIZE = 60;
-static const float L3R3_SIZE = 80;
 
 static float R1_X;
 static float R1_Y;
@@ -250,10 +240,12 @@ static float L3_Y;
     START_Y = _view.frame.size.height * .9;
     SELECT_Y = _view.frame.size.height * .9;
 
-    L1_Y = _view.frame.size.height * .75;
+    L1_Y = _view.frame.size.height * .7;
     L2_Y = _view.frame.size.height * .9;
-    R1_Y = _view.frame.size.height * .75;
+    L2_X = _view.frame.size.width * .1;
+    R1_Y = _view.frame.size.height * .7;
     R2_Y = _view.frame.size.height * .9;
+    R2_X = _view.frame.size.width * .9;
 }
 
 - (void) setupComplexControls
@@ -268,133 +260,156 @@ static float L3_Y;
     RS_CENTER_X = _view.frame.size.width * .65;
     RS_CENTER_Y = _view.frame.size.height * .75;
     
-    START_X = _view.frame.size.width * .55;
+    START_X = _view.frame.size.width * .6;
     START_Y = _view.frame.size.height * .1;
-    SELECT_X = _view.frame.size.width * .45;
+    SELECT_X = _view.frame.size.width * .4;
     SELECT_Y = _view.frame.size.height * .1;
     
     L1_X = _view.frame.size.width * .15;
-    L1_Y = _view.frame.size.height * .25;
+    L1_Y = _view.frame.size.height * .27;
     L2_X = _view.frame.size.width * .15;
     L2_Y = _view.frame.size.height * .1;
     R1_X = _view.frame.size.width * .85;
-    R1_Y = _view.frame.size.height * .25;
+    R1_Y = _view.frame.size.height * .27;
     R2_X = _view.frame.size.width * .85;
     R2_Y = _view.frame.size.height * .1;
     L3_X = _view.frame.size.width * .25;
-    L3_Y = _view.frame.size.height * .85;
+    L3_Y = _view.frame.size.height * .75;
     R3_X = _view.frame.size.width * .75;
-    R3_Y = _view.frame.size.height * .85;
+    R3_Y = _view.frame.size.height * .75;
 }
 
 - (void) drawButtons {
     // create A button
-    _aButton.contents = (id) [UIImage imageNamed:@"AButton"].CGImage;
-    _aButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_SIZE / 2, BUTTON_CENTER_Y + BUTTON_DIST, BUTTON_SIZE, BUTTON_SIZE);
+    UIImage* aButtonImage = [UIImage imageNamed:@"AButton"];
+    _aButton.contents = (id) aButtonImage.CGImage;
+    _aButton.frame = CGRectMake(BUTTON_CENTER_X - aButtonImage.size.width / 2, BUTTON_CENTER_Y + BUTTON_DIST, aButtonImage.size.width, aButtonImage.size.height);
     [_view.layer addSublayer:_aButton];
 
     // create B button
-    _bButton.frame = CGRectMake(BUTTON_CENTER_X + BUTTON_DIST, BUTTON_CENTER_Y - BUTTON_SIZE / 2, BUTTON_SIZE, BUTTON_SIZE);
-    _bButton.contents = (id) [UIImage imageNamed:@"BButton"].CGImage;
+    UIImage* bButtonImage = [UIImage imageNamed:@"BButton"];
+    _bButton.frame = CGRectMake(BUTTON_CENTER_X + BUTTON_DIST, BUTTON_CENTER_Y - bButtonImage.size.height / 2, bButtonImage.size.width, bButtonImage.size.height);
+    _bButton.contents = (id) bButtonImage.CGImage;
     [_view.layer addSublayer:_bButton];
 
     // create X Button
-    _xButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_DIST - BUTTON_SIZE, BUTTON_CENTER_Y - BUTTON_SIZE / 2, BUTTON_SIZE, BUTTON_SIZE);
-    _xButton.contents = (id) [UIImage imageNamed:@"XButton"].CGImage;
+    UIImage* xButtonImage = [UIImage imageNamed:@"XButton"];
+    _xButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_DIST - xButtonImage.size.width, BUTTON_CENTER_Y - xButtonImage.size.height/ 2, xButtonImage.size.width, xButtonImage.size.height);
+    _xButton.contents = (id) xButtonImage.CGImage;
     [_view.layer addSublayer:_xButton];
 
     // create Y Button
-    _yButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_SIZE / 2, BUTTON_CENTER_Y - BUTTON_DIST - BUTTON_SIZE, BUTTON_SIZE, BUTTON_SIZE);
-    _yButton.contents = (id) [UIImage imageNamed:@"YButton"].CGImage;
+    UIImage* yButtonImage = [UIImage imageNamed:@"YButton"];
+    _yButton.frame = CGRectMake(BUTTON_CENTER_X - yButtonImage.size.width / 2, BUTTON_CENTER_Y - BUTTON_DIST - yButtonImage.size.height, yButtonImage.size.width, yButtonImage.size.height);
+    _yButton.contents = (id) yButtonImage.CGImage;
     [_view.layer addSublayer:_yButton];
 
     // create Down button
-    _downButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_SHORT / 2, D_PAD_CENTER_Y + D_PAD_DIST, D_PAD_SHORT, D_PAD_LONG);
-    _downButton.contents = (id) [UIImage imageNamed:@"DownButton"].CGImage;
+    UIImage* downButtonImage = [UIImage imageNamed:@"DownButton"];
+    _downButton.frame = CGRectMake(D_PAD_CENTER_X - downButtonImage.size.width / 2, D_PAD_CENTER_Y + D_PAD_DIST, downButtonImage.size.width, downButtonImage.size.height);
+    _downButton.contents = (id) downButtonImage.CGImage;
     [_view.layer addSublayer:_downButton];
 
     // create Right button
-    _rightButton.frame = CGRectMake(D_PAD_CENTER_X + D_PAD_DIST, D_PAD_CENTER_Y - D_PAD_SHORT / 2, D_PAD_LONG, D_PAD_SHORT);
-    _rightButton.contents = (id) [UIImage imageNamed:@"RightButton"].CGImage;
+    UIImage* rightButtonImage = [UIImage imageNamed:@"RightButton"];
+    _rightButton.frame = CGRectMake(D_PAD_CENTER_X + D_PAD_DIST, D_PAD_CENTER_Y - rightButtonImage.size.height / 2, rightButtonImage.size.width, rightButtonImage.size.height);
+    _rightButton.contents = (id) rightButtonImage.CGImage;
     [_view.layer addSublayer:_rightButton];
 
     // create Up button
-    _upButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_SHORT / 2, D_PAD_CENTER_Y - D_PAD_DIST - D_PAD_LONG, D_PAD_SHORT, D_PAD_LONG);
-    _upButton.contents = (id) [UIImage imageNamed:@"UpButton"].CGImage;
+    UIImage* upButtonImage = [UIImage imageNamed:@"UpButton"];
+    _upButton.frame = CGRectMake(D_PAD_CENTER_X - upButtonImage.size.width / 2, D_PAD_CENTER_Y - D_PAD_DIST - upButtonImage.size.height, upButtonImage.size.width, upButtonImage.size.height);
+    _upButton.contents = (id) upButtonImage.CGImage;
     [_view.layer addSublayer:_upButton];
 
     // create Left button
-    _leftButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_DIST - D_PAD_LONG, D_PAD_CENTER_Y - D_PAD_SHORT / 2, D_PAD_LONG, D_PAD_SHORT);
-    _leftButton.contents = (id) [UIImage imageNamed:@"LeftButton"].CGImage;
+    UIImage* leftButtonImage = [UIImage imageNamed:@"LeftButton"];
+    _leftButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_DIST - leftButtonImage.size.width, D_PAD_CENTER_Y - leftButtonImage.size.height / 2, leftButtonImage.size.width, leftButtonImage.size.height);
+    _leftButton.contents = (id) leftButtonImage.CGImage;
     [_view.layer addSublayer:_leftButton];
 }
 
 - (void) drawStartSelect {
     // create Start button
-    _startButton.frame = CGRectMake(START_X - START_WIDTH / 2, START_Y - START_HEIGHT / 2, START_WIDTH, START_HEIGHT);
-    _startButton.contents = (id) [UIImage imageNamed:@"StartButton"].CGImage;
+    UIImage* startButtonImage = [UIImage imageNamed:@"StartButton"];
+    _startButton.frame = CGRectMake(START_X - startButtonImage.size.width / 2, START_Y - startButtonImage.size.height / 2, startButtonImage.size.width, startButtonImage.size.height);
+    _startButton.contents = (id) startButtonImage.CGImage;
     [_view.layer addSublayer:_startButton];
 
     // create Select button
-    _selectButton.frame = CGRectMake(SELECT_X - SELECT_WIDTH / 2, SELECT_Y - SELECT_HEIGHT / 2, SELECT_WIDTH, SELECT_HEIGHT);
-    _selectButton.contents = (id) [UIImage imageNamed:@"SelectButton"].CGImage;
+    UIImage* selectButtonImage = [UIImage imageNamed:@"SelectButton"];
+    _selectButton.frame = CGRectMake(SELECT_X - selectButtonImage.size.width / 2, SELECT_Y - selectButtonImage.size.height / 2, selectButtonImage.size.width, selectButtonImage.size.height);
+    _selectButton.contents = (id) selectButtonImage.CGImage;
     [_view.layer addSublayer:_selectButton];
 }
 
 - (void) drawBumpers {
     // create L1 button
-    _l1Button.frame = CGRectMake(L1_X - BUMPER_SIZE / 2, L1_Y - BUMPER_SIZE / 2, BUMPER_SIZE, BUMPER_SIZE);
-    _l1Button.contents = (id) [UIImage imageNamed:@"L1"].CGImage;
+    UIImage* l1ButtonImage = [UIImage imageNamed:@"L1"];
+    _l1Button.frame = CGRectMake(L1_X - l1ButtonImage.size.width / 2, L1_Y - l1ButtonImage.size.height / 2, l1ButtonImage.size.width, l1ButtonImage.size.height);
+    _l1Button.contents = (id) l1ButtonImage.CGImage;
     [_view.layer addSublayer:_l1Button];
     
     // create R1 button
-    _r1Button.frame = CGRectMake(R1_X - BUMPER_SIZE / 2, R1_Y - BUMPER_SIZE / 2, BUMPER_SIZE, BUMPER_SIZE);
-    _r1Button.contents = (id) [UIImage imageNamed:@"R1"].CGImage;
+    UIImage* r1ButtonImage = [UIImage imageNamed:@"R1"];
+    _r1Button.frame = CGRectMake(R1_X - r1ButtonImage.size.width / 2, R1_Y - r1ButtonImage.size.height / 2, r1ButtonImage.size.width, r1ButtonImage.size.height);
+    _r1Button.contents = (id) r1ButtonImage.CGImage;
     [_view.layer addSublayer:_r1Button];
 }
 
 - (void) drawTriggers {
     // create L2 button
-    _l2Button.frame = CGRectMake(L2_X - TRIGGER_SIZE / 2, L2_Y - TRIGGER_SIZE / 2, TRIGGER_SIZE, TRIGGER_SIZE);
-    _l2Button.contents = (id) [UIImage imageNamed:@"L2"].CGImage;
+    UIImage* l2ButtonImage = [UIImage imageNamed:@"L2"];
+    _l2Button.frame = CGRectMake(L2_X - l2ButtonImage.size.width / 2, L2_Y - l2ButtonImage.size.height / 2, l2ButtonImage.size.width, l2ButtonImage.size.height);
+    _l2Button.contents = (id) l2ButtonImage.CGImage;
     [_view.layer addSublayer:_l2Button];
     
     // create R2 button
-    _r2Button.frame = CGRectMake(R2_X - TRIGGER_SIZE / 2, R2_Y - TRIGGER_SIZE / 2, TRIGGER_SIZE, TRIGGER_SIZE);
-    _r2Button.contents = (id) [UIImage imageNamed:@"R2"].CGImage;
+    UIImage* r2ButtonImage = [UIImage imageNamed:@"R2"];
+    _r2Button.frame = CGRectMake(R2_X - r2ButtonImage.size.width / 2, R2_Y - r2ButtonImage.size.height / 2, r2ButtonImage.size.width, r2ButtonImage.size.height);
+    _r2Button.contents = (id) r2ButtonImage.CGImage;
     [_view.layer addSublayer:_r2Button];
 }
 
 - (void) drawSticks {
     // create left analog stick
-    _leftStickBackground.frame = CGRectMake(LS_CENTER_X - STICK_OUTER_SIZE / 2, LS_CENTER_Y - STICK_OUTER_SIZE / 2, STICK_OUTER_SIZE, STICK_OUTER_SIZE);
-    _leftStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
+    UIImage* leftStickBgImage = [UIImage imageNamed:@"StickOuter"];
+    _leftStickBackground.frame = CGRectMake(LS_CENTER_X - leftStickBgImage.size.width / 2, LS_CENTER_Y - leftStickBgImage.size.height / 2, leftStickBgImage.size.width, leftStickBgImage.size.height);
+    _leftStickBackground.contents = (id) leftStickBgImage.CGImage;
     [_view.layer addSublayer:_leftStickBackground];
     
-    _leftStick.frame = CGRectMake(LS_CENTER_X - STICK_INNER_SIZE / 2, LS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
-    _leftStick.contents = (id) [UIImage imageNamed:@"StickInner"].CGImage;
+    UIImage* leftStickImage = [UIImage imageNamed:@"StickInner"];
+    _leftStick.frame = CGRectMake(LS_CENTER_X - leftStickImage.size.width / 2, LS_CENTER_Y - leftStickImage.size.height / 2, leftStickImage.size.width, leftStickImage.size.height);
+    _leftStick.contents = (id) leftStickImage.CGImage;
     [_view.layer addSublayer:_leftStick];
 
     // create right analog stick
-    _rightStickBackground.frame = CGRectMake(RS_CENTER_X - STICK_OUTER_SIZE / 2, RS_CENTER_Y - STICK_OUTER_SIZE / 2, STICK_OUTER_SIZE, STICK_OUTER_SIZE);
-    _rightStickBackground.contents = (id) [UIImage imageNamed:@"StickOuter"].CGImage;
+    UIImage* rightStickBgImage = [UIImage imageNamed:@"StickOuter"];
+    _rightStickBackground.frame = CGRectMake(RS_CENTER_X - rightStickBgImage.size.width / 2, RS_CENTER_Y - rightStickBgImage.size.height / 2, rightStickBgImage.size.width, rightStickBgImage.size.height);
+    _rightStickBackground.contents = (id) rightStickBgImage.CGImage;
     [_view.layer addSublayer:_rightStickBackground];
     
-    _rightStick.frame = CGRectMake(RS_CENTER_X - STICK_INNER_SIZE / 2, RS_CENTER_Y - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
-    _rightStick.contents = (id) [UIImage imageNamed:@"StickInner"].CGImage;
+    UIImage* rightStickImage = [UIImage imageNamed:@"StickInner"];
+    _rightStick.frame = CGRectMake(RS_CENTER_X - rightStickImage.size.width / 2, RS_CENTER_Y - rightStickImage.size.height / 2, rightStickImage.size.width, rightStickImage.size.height);
+    _rightStick.contents = (id) rightStickImage.CGImage;
     [_view.layer addSublayer:_rightStick];
+    
+    STICK_INNER_SIZE = rightStickImage.size.width;
+    STICK_OUTER_SIZE = rightStickBgImage.size.width;
 }
 
 - (void) drawL3R3 {
-    _l3Button.frame = CGRectMake(L3_X - L3R3_SIZE / 2, L3_Y - L3R3_SIZE / 2, L3R3_SIZE, L3R3_SIZE);
-    _l3Button.contents = (id) [UIImage imageNamed:@"L3"].CGImage;
-    _l3Button.cornerRadius = L3R3_SIZE / 2;
+    UIImage* l3ButtonImage = [UIImage imageNamed:@"L3"];
+    _l3Button.frame = CGRectMake(L3_X - l3ButtonImage.size.width / 2, L3_Y - l3ButtonImage.size.height / 2, l3ButtonImage.size.width, l3ButtonImage.size.height);
+    _l3Button.contents = (id) l3ButtonImage.CGImage;
+    _l3Button.cornerRadius = l3ButtonImage.size.width / 2;
     _l3Button.borderColor = [UIColor colorWithRed:15.f/255 green:160.f/255 blue:40.f/255 alpha:1.f].CGColor;
     [_view.layer addSublayer:_l3Button];
     
-    _r3Button.frame = CGRectMake(R3_X - L3R3_SIZE / 2, R3_Y - L3R3_SIZE / 2, L3R3_SIZE, L3R3_SIZE);
-    _r3Button.contents = (id) [UIImage imageNamed:@"R3"].CGImage;
-    _r3Button.cornerRadius = L3R3_SIZE / 2;
+    UIImage* r3ButtonImage = [UIImage imageNamed:@"R3"];
+    _r3Button.frame = CGRectMake(R3_X - r3ButtonImage.size.width / 2, R3_Y - r3ButtonImage.size.height / 2, r3ButtonImage.size.width, r3ButtonImage.size.height);
+    _r3Button.contents = (id) r3ButtonImage.CGImage;
+    _r3Button.cornerRadius = r3ButtonImage.size.width / 2;
     _r3Button.borderColor = [UIColor colorWithRed:15.f/255 green:160.f/255 blue:40.f/255 alpha:1.f].CGColor;
     [_view.layer addSublayer:_r3Button];
 }
