@@ -31,43 +31,44 @@ do
       exit 1
     fi
     echo "Compiling source for $ARCH in directory $OPUS_DIR"
-
+    echo "cd $OPUS_DIR"
     cd $OPUS_DIR
 
     DIST_DIR=$DIST_DIR_BASE-$ARCH
+    echo "mkdir -p $DIST_DIR"
     mkdir -p $DIST_DIR
     CFLAGS_ARCH=$ARCH
     case $ARCH in
         armv7)
             EXTRA_FLAGS="--with-pic --enable-fixed-point"
-            EXTRA_CFLAGS="-mcpu=cortex-a8 -mfpu=neon"
+            EXTRA_CFLAGS="-mcpu=cortex-a8 -mfpu=neon -miphoneos-version-min=7.1"
             PLATFORM="${PLATFORMBASE}/iPhoneOS.platform"
-            IOSSDK=iPhoneOS${IOSSDK_VER}
+            IOSSDK=iPhoneOS
             ;;
         armv7s)
             EXTRA_FLAGS="--with-pic --enable-fixed-point"
-            EXTRA_CFLAGS="-mcpu=cortex-a9 -mfpu=neon -miphoneos-version-min=6.0"
+            EXTRA_CFLAGS="-mcpu=cortex-a9 -mfpu=neon -miphoneos-version-min=7.1"
             PLATFORM="${PLATFORMBASE}/iPhoneOS.platform"
-            IOSSDK=iPhoneOS${IOSSDK_VER}
+            IOSSDK=iPhoneOS
             ;;
         aarch64)
             CFLAGS_ARCH="arm64"
             EXTRA_FLAGS="--with-pic --enable-fixed-point"
             EXTRA_CFLAGS="-miphoneos-version-min=7.1"
             PLATFORM="${PLATFORMBASE}/iPhoneOS.platform"
-            IOSSDK=iPhoneOS${IOSSDK_VER}
+            IOSSDK=iPhoneOS
           ;;
         x86_64)
             EXTRA_FLAGS="--with-pic"
             EXTRA_CFLAGS="-miphoneos-version-min=7.1"
             PLATFORM="${PLATFORMBASE}/iPhoneSimulator.platform"
-            IOSSDK=iPhoneSimulator${IOSSDK_VER}
+            IOSSDK=iPhoneSimulator
           ;;
         i386)
             EXTRA_FLAGS="--with-pic"
             EXTRA_CFLAGS="-miphoneos-version-min=7.1"
             PLATFORM="${PLATFORMBASE}/iPhoneSimulator.platform"
-            IOSSDK=iPhoneSimulator${IOSSDK_VER}
+            IOSSDK=iPhoneSimulator
             ;;
         *)
             echo "Unsupported architecture ${ARCH}"
@@ -76,7 +77,7 @@ do
     esac
 
     echo "Configuring opus for $ARCH..."
-	
+    echo "./autogen.sh"	
 	./autogen.sh
 	
 	CFLAGS="-g -O2 -pipe -arch ${CFLAGS_ARCH} \
@@ -86,7 +87,10 @@ do
     LDFLAGS="-arch ${CFLAGS_ARCH} \
 		-isysroot ${PLATFORM}/Developer/SDKs/${IOSSDK}.sdk \
 		-L${PLATFORM}/Developer/SDKs/${IOSSDK}.sdk/usr/lib"
-	
+
+    echo "CFLAGS=$CFLAGS"
+    echo "LDFLAGS=$LDFLAGS"
+
 	export CFLAGS
 	export LDFLAGS
 	
@@ -100,7 +104,15 @@ do
     export NM="/usr/bin/nm"
     export RANLIB="/usr/bin/ranlib"
     export STRIP="/usr/bin/strip"
-	
+    echo "./configure \
+    	--prefix=$DIST_DIR \
+		--host=${ARCH}-apple-darwin \
+		--with-sysroot=${PLATFORM}/Developer/SDKs/${IOSSDK}.sdk \
+		--enable-static=yes \
+		--enable-shared=no \
+	    --disable-doc \
+		${EXTRA_FLAGS}"
+
     ./configure \
     	--prefix=$DIST_DIR \
 		--host=${ARCH}-apple-darwin \
@@ -111,10 +123,14 @@ do
 		${EXTRA_FLAGS}
 
     echo "Installing opus for $ARCH..."
+    echo "make clean"
     make clean
+    echo "make -j$NJOB V=1"
     make -j$NJOB V=1
+    echo "make install"
     make install
 
+    echo "cd $SCRIPT_DIR"
     cd $SCRIPT_DIR
 
     if [ -d $DIST_DIR/bin ]

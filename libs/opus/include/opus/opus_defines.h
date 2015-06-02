@@ -714,6 +714,10 @@ OPUS_EXPORT const char *opus_strerror(int error);
 
 /** Gets the libopus version string.
   *
+  * Applications may look for the substring "-fixed" in the version string to
+  * determine whether they have a fixed-point or floating-point build at
+  * runtime.
+  *
   * @returns Version string
   */
 OPUS_EXPORT const char *opus_get_version_string(void);
