@@ -15,7 +15,7 @@
 #include "opus.h"
 
 @implementation Connection {
-    IP_ADDRESS _host;
+    char* _host;
     STREAM_CONFIGURATION _streamConfig;
     CONNECTION_LISTENER_CALLBACKS _clCallbacks;
     DECODER_RENDERER_CALLBACKS _drCallbacks;
@@ -137,16 +137,26 @@ void ArInit(void)
     if (status) {
         Log(LOG_E, @"Unable to initialize audioUnit: %d", (int32_t)status);
     }
+    
+    status = AudioOutputUnitStart(audioUnit);
+    if (status) {
+        Log(LOG_E, @"Unable to start audioUnit: %d", (int32_t)status);
+    }
 }
 
-void ArRelease(void)
+void ArCleanup(void)
 {
     if (opusDecoder != NULL) {
         opus_decoder_destroy(opusDecoder);
         opusDecoder = NULL;
     }
     
-    OSStatus status = AudioUnitUninitialize(audioUnit);
+    OSStatus status = AudioOutputUnitStop(audioUnit);
+    if (status) {
+        Log(LOG_E, @"Unable to stop audioUnit: %d", (int32_t)status);
+    }
+    
+    status = AudioUnitUninitialize(audioUnit);
     if (status) {
         Log(LOG_E, @"Unable to uninitialize audioUnit: %d", (int32_t)status);
     }
@@ -163,22 +173,6 @@ void ArRelease(void)
         audioBufferQueue = entry->next;
         audioBufferQueueLength--;
         free(entry);
-    }
-}
-
-void ArStart(void)
-{
-    OSStatus status = AudioOutputUnitStart(audioUnit);
-    if (status) {
-        Log(LOG_E, @"Unable to start audioUnit: %d", (int32_t)status);
-    }
-}
-
-void ArStop(void)
-{
-    OSStatus status = AudioOutputUnitStop(audioUnit);
-    if (status) {
-        Log(LOG_E, @"Unable to stop audioUnit: %d", (int32_t)status);
     }
 }
 
@@ -282,7 +276,7 @@ void ClDisplayTransientMessage(char* message)
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks serverMajorVersion:(int)serverMajorVersion
 {
     self = [super init];
-    _host = config.hostAddr;
+    _host = [config.host cStringUsingEncoding:NSUTF8StringEncoding];
     renderer = myRenderer;
     _callbacks = callbacks;
     _serverMajorVersion = serverMajorVersion;
@@ -299,16 +293,11 @@ void ClDisplayTransientMessage(char* message)
     int riKeyId = htonl(config.riKeyId);
     memcpy(_streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
     
-    _drCallbacks.setup = NULL;
-    _drCallbacks.start = NULL;
-    _drCallbacks.stop = NULL;
-    _drCallbacks.release = NULL;
+    memset(&_drCallbacks, 0, sizeof(_drCallbacks));
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
     
     _arCallbacks.init = ArInit;
-    _arCallbacks.start = ArStart;
-    _arCallbacks.stop = ArStop;
-    _arCallbacks.release = ArRelease;
+    _arCallbacks.cleanup = ArCleanup;
     _arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
     
     _clCallbacks.stageStarting = ClStageStarting;

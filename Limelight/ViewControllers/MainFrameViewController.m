@@ -226,12 +226,7 @@ static NSArray* appList;
     Log(LOG_D, @"Clicked app: %@", app.appName);
     _streamConfig = [[StreamConfiguration alloc] init];
     _streamConfig.host = _selectedHost.address;
-    _streamConfig.hostAddr = [Utils resolveHost:_selectedHost.address];
     _streamConfig.appID = app.appId;
-    if (_streamConfig.hostAddr == 0) {
-        [self displayDnsFailedDialog];
-        return;
-    }
     
     DataManager* dataMan = [[DataManager alloc] init];
     Settings* streamSettings = [dataMan retrieveSettings];

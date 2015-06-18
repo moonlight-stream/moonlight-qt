@@ -12,7 +12,6 @@
 
 @property NSString* host;
 @property NSString* appID;
-@property int hostAddr;
 @property int width;
 @property int height;
 @property int frameRate;
