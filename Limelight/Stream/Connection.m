@@ -15,7 +15,7 @@
 #include "opus.h"
 
 @implementation Connection {
-    char* _host;
+    const char* _host;
     STREAM_CONFIGURATION _streamConfig;
     CONNECTION_LISTENER_CALLBACKS _clCallbacks;
     DECODER_RENDERER_CALLBACKS _drCallbacks;
