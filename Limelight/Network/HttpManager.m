@@ -42,8 +42,7 @@ static const NSString* PORT = @"47984";
     _uniqueId = uniqueId;
     _deviceName = deviceName;
     _cert = cert;
-    _baseURL = [[NSString stringWithFormat:@"https://%@:%@", host, PORT]
-                stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    _baseURL = [NSString stringWithFormat:@"https://%@:%@", host, PORT];
     _requestLock = dispatch_semaphore_create(0);
     _respData = [[NSMutableData alloc] init];
     return self;
@@ -68,8 +67,7 @@ static const NSString* PORT = @"47984";
 }
 
 - (NSURLRequest*) createRequestFromString:(NSString*) urlString enableTimeout:(BOOL)normalTimeout {
-    NSString* escapedUrl = [urlString stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
-    NSURL* url = [[NSURL alloc] initWithString:escapedUrl];
+    NSURL* url = [[NSURL alloc] initWithString:urlString];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     if (normalTimeout) {
         // Timeout the request after 5 seconds
