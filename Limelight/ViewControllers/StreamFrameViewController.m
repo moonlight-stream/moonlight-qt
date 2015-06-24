@@ -102,24 +102,32 @@
 }
 
 - (void) stageFailed:(char*)stageName withError:(long)errorCode {
-    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
-                                                                   message:[NSString stringWithFormat:@"%s failed with error %ld",
-                                                                            stageName, errorCode]
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self returnToMainFrame];
-    }]];
-    [self presentViewController:alert animated:YES completion:nil];
+    Log(LOG_I, @"Stage %s failed: %ld", stageName, errorCode);
+
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
+                                                                       message:[NSString stringWithFormat:@"%s failed with error %ld",
+                                                                                stageName, errorCode]
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+            [self returnToMainFrame];
+        }]];
+        [self presentViewController:alert animated:YES completion:nil];
+    });
 }
 
 - (void) launchFailed:(NSString*)message {
-    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
-                                                                   message:message
-                                                            preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-        [self returnToMainFrame];
-    }]];
-    [self presentViewController:alert animated:YES completion:nil];
+    Log(LOG_I, @"Launch failed: %@", message);
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
+                                                                       message:message
+                                                                preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+            [self returnToMainFrame];
+        }]];
+        [self presentViewController:alert animated:YES completion:nil];
+    });
 }
 
 - (void) displayMessage:(char*)message {
