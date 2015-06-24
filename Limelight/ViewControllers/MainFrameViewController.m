@@ -32,7 +32,7 @@
     DiscoveryManager* _discMan;
     AppAssetManager* _appManager;
     StreamConfiguration* _streamConfig;
-    UIAlertView* _pairAlert;
+    UIAlertController* _pairAlert;
     UIScrollView* hostScrollView;
     int currentPosition;
 }
@@ -41,16 +41,23 @@ static NSArray* appList;
 
 - (void)showPIN:(NSString *)PIN {
     dispatch_sync(dispatch_get_main_queue(), ^{
-        _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing" message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
-        [_pairAlert show];
+        _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
+                                                         message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
+                                                  preferredStyle:UIAlertControllerStyleAlert];
+        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+        [self presentViewController:_pairAlert animated:YES completion:nil];
     });
 }
 
 - (void)pairFailed:(NSString *)message {
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [_pairAlert dismissWithClickedButtonIndex:0 animated:NO];
-        _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Failed" message:message delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
-        [_pairAlert show];
+        [_pairAlert dismissViewControllerAnimated:YES completion:nil];
+        _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
+                                                         message:message
+                                                  preferredStyle:UIAlertControllerStyleAlert];
+        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+        [self presentViewController:_pairAlert animated:YES completion:nil];
+        
         [_discMan startDiscovery];
         [self hideLoadingFrame];
     });
@@ -58,9 +65,13 @@ static NSArray* appList;
 
 - (void)pairSuccessful {
     dispatch_sync(dispatch_get_main_queue(), ^{
-        [_pairAlert dismissWithClickedButtonIndex:0 animated:NO];
-        _pairAlert = [[UIAlertView alloc] initWithTitle:@"Pairing Succesful" message:@"Successfully paired to host" delegate:self cancelButtonTitle:@"Ok" otherButtonTitles:nil, nil];
-        [_pairAlert show];
+        [_pairAlert dismissViewControllerAnimated:YES completion:nil];
+        _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing Succesful"
+                                                         message:@"Successfully paired to host"
+                                                  preferredStyle:UIAlertControllerStyleAlert];
+        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+        [self presentViewController:_pairAlert animated:YES completion:nil];
+        
         [_discMan startDiscovery];
         [self hideLoadingFrame];
     });
