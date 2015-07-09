@@ -399,7 +399,6 @@ static OSStatus playbackCallback(void *inRefCon,
                       &_clCallbacks,
                       &_drCallbacks,
                       &_arCallbacks,
-                      NULL,
                       NULL, 0, _serverMajorVersion);
 }
 
