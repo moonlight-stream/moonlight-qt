@@ -15,6 +15,7 @@
 #include <string.h>
 
 @implementation HttpManager {
+    NSURLSession* _urlSession;
     NSString* _baseHTTPURL;
     NSString* _baseHTTPSURL;
     NSString* _host;
@@ -48,15 +49,36 @@ static const NSString* HTTPS_PORT = @"47984";
     _baseHTTPSURL = [NSString stringWithFormat:@"https://%@:%@", host, HTTPS_PORT];
     _requestLock = dispatch_semaphore_create(0);
     _respData = [[NSMutableData alloc] init];
+    NSURLSessionConfiguration* config = [NSURLSessionConfiguration ephemeralSessionConfiguration];
+    _urlSession = [NSURLSession sessionWithConfiguration:config delegate:self delegateQueue:nil];
     return self;
 }
 
 - (void) executeRequestSynchronously:(HttpRequest*)request {
     Log(LOG_D, @"Making Request: %@", request);
     [_respData setLength:0];
-    dispatch_sync(dispatch_get_main_queue(), ^{
-        [NSURLConnection connectionWithRequest:request.request delegate:self];
-    });
+    [[_urlSession dataTaskWithRequest:request.request completionHandler:^(NSData * __nullable data, NSURLResponse * __nullable response, NSError * __nullable error) {
+        
+        if (error != NULL) {
+            Log(LOG_D, @"Connection error: %@", error);
+            _errorOccurred = true;
+        }
+        else {
+            Log(LOG_D, @"Received response: %@", response);
+
+            if (data != NULL) {
+                Log(LOG_D, @"\n\nReceived data: %@\n\n", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
+                [_respData appendData:data];
+                if ([[NSString alloc] initWithData:_respData encoding:NSUTF8StringEncoding] != nil) {
+                    _requestResp = [HttpManager fixXmlVersion:_respData];
+                } else {
+                    _requestResp = _respData;
+                }
+            }
+        }
+        
+        dispatch_semaphore_signal(_requestLock);
+    }] resume];
     dispatch_semaphore_wait(_requestLock, DISPATCH_TIME_FOREVER);
     
     if (!_errorOccurred && request.response) {
@@ -154,33 +176,6 @@ static const NSString* HTTPS_PORT = @"47984";
     return hex;
 }
 
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
-    Log(LOG_D, @"Received response: %@", response);
-}
-
-- (void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
-    Log(LOG_D, @"\n\nReceived data: %@\n\n", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-    [_respData appendData:data];
-}
-
-- (void)connectionDidFinishLoading:(NSURLConnection *)connection {
-    if ([[NSString alloc] initWithData:_respData encoding:NSUTF8StringEncoding] != nil) {
-        _requestResp = [HttpManager fixXmlVersion:_respData];
-    } else {
-        _requestResp = _respData;
-    }
-    dispatch_semaphore_signal(_requestLock);
-}
-
-- (void)connection:(NSURLConnection *)connection willSendRequestForAuthenticationChallenge:(NSURLAuthenticationChallenge *)challenge {
-    SecIdentityRef identity = [self getClientCertificate];
-    NSArray *certArray = [self getCertificate:identity];
-    
-    NSURLCredential *newCredential = [NSURLCredential credentialWithIdentity:identity certificates:certArray persistence:NSURLCredentialPersistencePermanent];
-    
-    [challenge.sender useCredential:newCredential forAuthenticationChallenge:challenge];
-}
-
 // Returns an array containing the certificate
 - (NSArray*)getCertificate:(SecIdentityRef) identity {
     SecCertificateRef certificate = nil;
@@ -216,10 +211,25 @@ static const NSString* HTTPS_PORT = @"47984";
     return identityApp;
 }
 
-- (void)connection:(NSURLConnection *)connection didFailWithError:(NSError *)error {
-    Log(LOG_D, @"connection error: %@", error);
-    _errorOccurred = true;
-    dispatch_semaphore_signal(_requestLock);
+- (void)URLSession:(NSURLSession *)session didReceiveChallenge:(NSURLAuthenticationChallenge *)challenge completionHandler:(nonnull void (^)(NSURLSessionAuthChallengeDisposition, NSURLCredential * __nullable))completionHandler {
+    // Allow untrusted server certificates
+    if([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
+    {
+        completionHandler(NSURLSessionAuthChallengeUseCredential,
+                          [NSURLCredential credentialForTrust: challenge.protectionSpace.serverTrust]);
+    }
+    // Respond to client certificate challenge with our certificate
+    else if ([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodClientCertificate])
+    {
+        SecIdentityRef identity = [self getClientCertificate];
+        NSArray* certArray = [self getCertificate:identity];
+        NSURLCredential* newCredential = [NSURLCredential credentialWithIdentity:identity certificates:certArray persistence:NSURLCredentialPersistencePermanent];
+        completionHandler(NSURLSessionAuthChallengeUseCredential, newCredential);
+    }
+    else
+    {
+        completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
+    }
 }
 
 @end

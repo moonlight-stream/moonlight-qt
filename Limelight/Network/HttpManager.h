@@ -11,7 +11,7 @@
 #import "HttpResponse.h"
 #import "HttpRequest.h"
 
-@interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+@interface HttpManager : NSObject <NSURLSessionDelegate>
 
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert;
 - (NSURLRequest*) newPairRequest:(NSData*)salt;
