@@ -27,7 +27,6 @@
 - (NSURLRequest*) newQuitAppRequest;
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
 - (void) executeRequestSynchronously:(HttpRequest*)request;
-- (void) executeRequest:(HttpRequest*)request;
 
 @end
 

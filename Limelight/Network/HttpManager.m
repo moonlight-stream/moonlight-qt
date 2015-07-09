@@ -62,10 +62,6 @@ static const NSString* PORT = @"47984";
     _errorOccurred = false;
 }
 
-- (void) executeRequest:(HttpRequest*)request {
-    [NSURLConnection connectionWithRequest:request.request delegate:self];
-}
-
 - (NSURLRequest*) createRequestFromString:(NSString*) urlString enableTimeout:(BOOL)normalTimeout {
     NSURL* url = [[NSURL alloc] initWithString:urlString];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
