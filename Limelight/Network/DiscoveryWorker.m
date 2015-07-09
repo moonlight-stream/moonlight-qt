@@ -68,7 +68,8 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
                                                      cert:_cert];
     ServerInfoResponse* response = [[ServerInfoResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:response
-                                                       withUrlRequest:[hMan newServerInfoRequest]]];
+                                                       withUrlRequest:[hMan newServerInfoRequest]
+                                       fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
     return response;
 }
 

@@ -22,6 +22,7 @@
 - (NSURLRequest*) newPairChallenge;
 - (NSURLRequest*) newAppListRequest;
 - (NSURLRequest*) newServerInfoRequest;
+- (NSURLRequest*) newHttpServerInfoRequest;
 - (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid;
 - (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId;
 - (NSURLRequest*) newQuitAppRequest;

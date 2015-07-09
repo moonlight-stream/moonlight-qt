@@ -45,7 +45,8 @@
                                                      cert:cert];
     
     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
-    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
+                                       fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
     NSString* currentGame = [serverInfoResp getStringTag:@"currentgame"];
     NSString* pairStatus = [serverInfoResp getStringTag:@"PairStatus"];
     NSString* currentClient = [serverInfoResp getStringTag:@"CurrentClient"];

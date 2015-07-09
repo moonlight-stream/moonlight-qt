@@ -83,6 +83,15 @@ static const NSString* HTTPS_PORT = @"47984";
     
     if (!_errorOccurred && request.response) {
         [request.response populateWithData:_requestResp];
+        
+        // If the fallback error code was detected, issue the fallback request
+        if (request.response.statusCode == request.fallbackError && request.fallbackRequest != NULL) {
+            Log(LOG_D, @"Request failed with fallback error code: %d", request.fallbackError);
+            request.request = request.fallbackRequest;
+            request.fallbackError = 0;
+            request.fallbackRequest = NULL;
+            [self executeRequestSynchronously:request];
+        }
     }
     _errorOccurred = false;
 }
@@ -142,6 +151,11 @@ static const NSString* HTTPS_PORT = @"47984";
 
 - (NSURLRequest *)newServerInfoRequest {
     NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo?uniqueid=%@", _baseHTTPSURL, _uniqueId];
+    return [self createRequestFromString:urlString enableTimeout:TRUE];
+}
+
+- (NSURLRequest *)newHttpServerInfoRequest {
+    NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo", _baseHTTPURL];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
