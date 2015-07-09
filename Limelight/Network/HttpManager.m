@@ -15,7 +15,8 @@
 #include <string.h>
 
 @implementation HttpManager {
-    NSString* _baseURL;
+    NSString* _baseHTTPURL;
+    NSString* _baseHTTPSURL;
     NSString* _host;
     NSString* _uniqueId;
     NSString* _deviceName;
@@ -27,7 +28,8 @@
     BOOL _errorOccurred;
 }
 
-static const NSString* PORT = @"47984";
+static const NSString* HTTP_PORT = @"47989";
+static const NSString* HTTPS_PORT = @"47984";
 
 + (NSData*) fixXmlVersion:(NSData*) xmlData {
     NSString* dataString = [[NSString alloc] initWithData:xmlData encoding:NSUTF8StringEncoding];
@@ -42,7 +44,8 @@ static const NSString* PORT = @"47984";
     _uniqueId = uniqueId;
     _deviceName = deviceName;
     _cert = cert;
-    _baseURL = [NSString stringWithFormat:@"https://%@:%@", host, PORT];
+    _baseHTTPURL = [NSString stringWithFormat:@"http://%@:%@", host, HTTP_PORT];
+    _baseHTTPSURL = [NSString stringWithFormat:@"https://%@:%@", host, HTTPS_PORT];
     _requestLock = dispatch_semaphore_create(0);
     _respData = [[NSMutableData alloc] init];
     return self;
@@ -78,67 +81,67 @@ static const NSString* PORT = @"47984";
 
 - (NSURLRequest*) newPairRequest:(NSData*)salt {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=getservercert&salt=%@&clientcert=%@",
-                           _baseURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:_cert]];
+                           _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:_cert]];
     // This call blocks while waiting for the user to input the PIN on the PC
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 
 - (NSURLRequest*) newUnpairRequest {
-    NSString* urlString = [NSString stringWithFormat:@"%@/unpair?uniqueid=%@", _baseURL, _uniqueId];
+    NSString* urlString = [NSString stringWithFormat:@"%@/unpair?uniqueid=%@", _baseHTTPSURL, _uniqueId];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
 - (NSURLRequest*) newChallengeRequest:(NSData*)challenge {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientchallenge=%@",
-                           _baseURL, _uniqueId, _deviceName, [self bytesToHex:challenge]];
+                           _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:challenge]];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
 - (NSURLRequest*) newChallengeRespRequest:(NSData*)challengeResp {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&serverchallengeresp=%@",
-                           _baseURL, _uniqueId, _deviceName, [self bytesToHex:challengeResp]];
+                           _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:challengeResp]];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
 - (NSURLRequest*) newClientSecretRespRequest:(NSString*)clientPairSecret {
-    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientpairingsecret=%@", _baseURL, _uniqueId, _deviceName, clientPairSecret];
+    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientpairingsecret=%@", _baseHTTPSURL, _uniqueId, _deviceName, clientPairSecret];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
 - (NSURLRequest*) newPairChallenge {
-    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=pairchallenge", _baseURL, _uniqueId, _deviceName];
+    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=pairchallenge", _baseHTTPSURL, _uniqueId, _deviceName];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
 - (NSURLRequest *)newAppListRequest {
-    NSString* urlString = [NSString stringWithFormat:@"%@/applist?uniqueid=%@", _baseURL, _uniqueId];
+    NSString* urlString = [NSString stringWithFormat:@"%@/applist?uniqueid=%@", _baseHTTPSURL, _uniqueId];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
 - (NSURLRequest *)newServerInfoRequest {
-    NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo?uniqueid=%@", _baseURL, _uniqueId];
+    NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo?uniqueid=%@", _baseHTTPSURL, _uniqueId];
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
 - (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid {
-    NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=1&rikey=%@&rikeyid=%d", _baseURL, _uniqueId, appId, width, height, refreshRate, rikey, rikeyid];
+    NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=1&rikey=%@&rikeyid=%d", _baseHTTPSURL, _uniqueId, appId, width, height, refreshRate, rikey, rikeyid];
     // This blocks while the app is launching
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 
 - (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId {
-    NSString* urlString = [NSString stringWithFormat:@"%@/resume?uniqueid=%@&rikey=%@&rikeyid=%d", _baseURL, _uniqueId, riKey, riKeyId];
+    NSString* urlString = [NSString stringWithFormat:@"%@/resume?uniqueid=%@&rikey=%@&rikeyid=%d", _baseHTTPSURL, _uniqueId, riKey, riKeyId];
     // This blocks while the app is resuming
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 
 - (NSURLRequest*) newQuitAppRequest {
-    NSString* urlString = [NSString stringWithFormat:@"%@/cancel?uniqueid=%@", _baseURL, _uniqueId];
+    NSString* urlString = [NSString stringWithFormat:@"%@/cancel?uniqueid=%@", _baseHTTPSURL, _uniqueId];
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString *)appId {
-    NSString* urlString = [NSString stringWithFormat:@"%@/appasset?uniqueid=%@&appid=%@&AssetType=2&AssetIdx=0", _baseURL, _uniqueId, appId];
+    NSString* urlString = [NSString stringWithFormat:@"%@/appasset?uniqueid=%@&appid=%@&AssetType=2&AssetIdx=0", _baseHTTPSURL, _uniqueId, appId];
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 
