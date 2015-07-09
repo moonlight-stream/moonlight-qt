@@ -11,7 +11,7 @@
 #import "HttpResponse.h"
 #import "HttpRequest.h"
 
-@interface HttpManager : NSObject <NSURLConnectionDelegate, NSURLConnectionDataDelegate>
+@interface HttpManager : NSObject <NSURLSessionDelegate>
 
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert;
 - (NSURLRequest*) newPairRequest:(NSData*)salt;
@@ -22,12 +22,12 @@
 - (NSURLRequest*) newPairChallenge;
 - (NSURLRequest*) newAppListRequest;
 - (NSURLRequest*) newServerInfoRequest;
+- (NSURLRequest*) newHttpServerInfoRequest;
 - (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid;
 - (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId;
 - (NSURLRequest*) newQuitAppRequest;
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString*)appId;
 - (void) executeRequestSynchronously:(HttpRequest*)request;
-- (void) executeRequest:(HttpRequest*)request;
 
 @end
 

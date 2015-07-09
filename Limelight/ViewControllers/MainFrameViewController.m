@@ -133,7 +133,8 @@ static NSArray* appList;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
-        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]]];
+        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
+                                           fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
             [self hideLoadingFrame];
@@ -160,7 +161,7 @@ static NSArray* appList;
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                 HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                [hMan executeRequest:[HttpRequest requestWithUrlRequest:[hMan newUnpairRequest]]];
+                [hMan executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[hMan newUnpairRequest]]];
             });
         }]];
     } else {

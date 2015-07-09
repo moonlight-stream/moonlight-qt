@@ -25,4 +25,13 @@
     return request;
 }
 
++ (HttpRequest*) requestForResponse:(id<Response>)response withUrlRequest:(NSURLRequest*)req fallbackError:(int)error fallbackRequest:(NSURLRequest*) fallbackReq {
+    HttpRequest* request = [[HttpRequest alloc] init];
+    request.request = req;
+    request.response = response;
+    request.fallbackError = error;
+    request.fallbackRequest = fallbackReq;
+    return request;
+}
+
 @end

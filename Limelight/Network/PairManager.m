@@ -31,7 +31,8 @@
 
 - (void) main {
     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
-    [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[_httpManager newServerInfoRequest]]];
+    [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[_httpManager newServerInfoRequest]
+                                               fallbackError:401 fallbackRequest:[_httpManager newHttpServerInfoRequest]]];
     if (serverInfoResp == nil) {
         [_callback pairFailed:@"Unable to connect to PC"];
         return;
@@ -60,7 +61,7 @@
     }
     NSInteger pairedStatus;
     if (![pairResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing was declined by the target."];
         return;
     }
@@ -79,7 +80,7 @@
         return;
     }
     if (![challengeResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #2 failed"];
         return;
     }
@@ -100,7 +101,7 @@
         return;
     }
     if (![secretResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #3 failed"];
         return;
     }
@@ -110,14 +111,14 @@
     NSData* serverSignature = [serverSecretResp subdataWithRange:NSMakeRange(16, 256)];
     
     if (![cryptoMan verifySignature:serverSecret withSignature:serverSignature andCert:[Utils hexToBytes:plainCert]]) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Server certificate invalid"];
         return;
     }
     
     NSData* serverChallengeRespHash = [cryptoMan SHA1HashData:[self concatData:[self concatData:randomChallenge with:[CryptoManager getSignatureFromCert:[Utils hexToBytes:plainCert]]] with:serverSecret]];
     if (![serverChallengeRespHash isEqual:serverResponse]) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Incorrect PIN"];
         return;
     }
@@ -129,7 +130,7 @@
         return;
     }
     if (![clientSecretResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #4 failed"];
         return;
     }
@@ -140,7 +141,7 @@
         return;
     }
     if (![clientPairChallengeResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #5 failed"];
         return;
     }
@@ -149,11 +150,11 @@
 
 - (BOOL) verifyResponseStatus:(HttpResponse*)resp {
     if (resp == nil) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Network error occured."];
         return false;
     } else if (![resp isStatusOk]) {
-        [_httpManager executeRequest:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
+        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:resp.statusMessage];
         return false;
     } else {
