@@ -54,6 +54,7 @@
 
 - (void) removeHost:(Host*)host {
     [[self.appDelegate managedObjectContext] deleteObject:host];
+    [self saveHosts];
 }
 
 - (void) saveHosts {
