@@ -44,7 +44,6 @@ static NSArray* appList;
         _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
                                                          message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
                                                   preferredStyle:UIAlertControllerStyleAlert];
-        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
         [self presentViewController:_pairAlert animated:YES completion:nil];
     });
 }
