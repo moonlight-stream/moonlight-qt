@@ -87,6 +87,8 @@ static NSArray* appList;
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
                 [self presentViewController:applistAlert animated:YES completion:nil];
             });
+            _selectedHost.online = NO;
+            [self showHostSelectionView];
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
                 _computerNameButton.title = _selectedHost.name;
@@ -150,6 +152,8 @@ static NSArray* appList;
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
                 [self presentViewController:applistAlert animated:YES completion:nil];
             });
+            host.online = NO;
+            [self showHostSelectionView];
         } else {
             Log(LOG_D, @"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
             if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
