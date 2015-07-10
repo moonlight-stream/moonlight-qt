@@ -66,14 +66,8 @@ static NSArray* appList;
 - (void)pairSuccessful {
     dispatch_sync(dispatch_get_main_queue(), ^{
         [_pairAlert dismissViewControllerAnimated:YES completion:nil];
-        _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing Successful"
-                                                         message:@"Successfully paired to host"
-                                                  preferredStyle:UIAlertControllerStyleAlert];
-        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
-        [self presentViewController:_pairAlert animated:YES completion:nil];
-        
         [_discMan startDiscovery];
-        [self hideLoadingFrame];
+        [self alreadyPaired];
     });
 }
 
