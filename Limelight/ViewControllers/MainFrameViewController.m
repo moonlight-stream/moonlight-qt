@@ -444,8 +444,15 @@ static NSArray* appList;
         
         // Initialize the non-persistent host state
         for (Host* host in hostList) {
-            host.online = NO;
-            host.activeAddress = host.address;
+            if (host.activeAddress == nil) {
+                host.activeAddress = host.localAddress;
+            }
+            if (host.activeAddress == nil) {
+                host.activeAddress = host.externalAddress;
+            }
+            if (host.activeAddress == nil) {
+                host.activeAddress = host.address;
+            }
         }
     }
 }
