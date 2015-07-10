@@ -171,7 +171,7 @@ static const int LABEL_DY = 20;
 }
 
 - (void) hostClicked {
-    [_callback hostClicked:_host];
+    [_callback hostClicked:_host view:self];
 }
 
 - (void) addClicked {

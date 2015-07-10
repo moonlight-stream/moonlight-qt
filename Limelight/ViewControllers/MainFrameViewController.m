@@ -73,30 +73,32 @@ static NSArray* appList;
 
 - (void)alreadyPaired {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            _computerNameButton.title = _selectedHost.name;
-            [self.navigationController.navigationBar setNeedsLayout];
-        });
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
         AppListResponse* appListResp = [[AppListResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
-        if (appListResp == nil || ![appListResp isStatusOk]) {
+        if (appListResp == nil || ![appListResp isStatusOk] || (appList = [appListResp getAppList]) == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
+            [self hideLoadingFrame];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching App List Failed"
+                                                                                      message:@"The connection to the PC was interrupted."
+                                                                               preferredStyle:UIAlertControllerStyleAlert];
+                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                [self presentViewController:applistAlert animated:YES completion:nil];
+            });
         } else {
-            appList = [appListResp getAppList];
-            if (appList == nil) {
-                Log(LOG_W, @"Failed to parse applist");
-            } else {
-                dispatch_async(dispatch_get_main_queue(), ^{
-                    [self updateApps];
-                });
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _computerNameButton.title = _selectedHost.name;
+                [self.navigationController.navigationBar setNeedsLayout];
                 
-                [_appManager stopRetrieving];
-                [_appManager retrieveAssets:appList fromHost:_selectedHost];
-            }
+                [self updateApps];
+            });
+            
+            [_appManager stopRetrieving];
+            [_appManager retrieveAssets:appList fromHost:_selectedHost];
+            [self hideLoadingFrame];
         }
-        [self hideLoadingFrame];
     });
 }
 
@@ -120,7 +122,16 @@ static NSArray* appList;
     [self presentViewController:alert animated:YES completion:nil];
 }
 
-- (void) hostClicked:(Host *)host {
+- (void) hostClicked:(Host *)host view:(UIView *)view {
+    // Treat clicks on offline hosts to be long clicks
+    // This shows the context menu with wake, delete, etc. rather
+    // than just hanging for a while and failing as we would in this
+    // code path.
+    if (!host.online && view != nil) {
+        [self hostLongClicked:host view:view];
+        return;
+    }
+    
     Log(LOG_D, @"Clicked host: %@", host.name);
     [self showLoadingFrame];
     _selectedHost = host;
@@ -132,6 +143,13 @@ static NSArray* appList;
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
             [self hideLoadingFrame];
+            dispatch_async(dispatch_get_main_queue(), ^{
+                UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching Server Info Failed"
+                                                                                      message:@"The connection to the PC was interrupted."
+                                                                               preferredStyle:UIAlertControllerStyleAlert];
+                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                [self presentViewController:applistAlert animated:YES completion:nil];
+            });
         } else {
             Log(LOG_D, @"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
             if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
@@ -401,7 +419,7 @@ static NSArray* appList;
     
     // This will refresh the applist
     if (_selectedHost != nil) {
-        [self hostClicked:_selectedHost];
+        [self hostClicked:_selectedHost view:nil];
     }
 }
 
