@@ -79,7 +79,7 @@
     if (![self verifyResponseStatus:challengeResp]) {
         return;
     }
-    if (![challengeResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
+    if (![challengeResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #2 failed"];
         return;
@@ -100,7 +100,7 @@
     if (![self verifyResponseStatus:secretResp]) {
         return;
     }
-    if (![secretResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
+    if (![secretResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #3 failed"];
         return;
@@ -129,7 +129,7 @@
     if (![self verifyResponseStatus:clientSecretResp]) {
         return;
     }
-    if (![clientSecretResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
+    if (![clientSecretResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #4 failed"];
         return;
@@ -140,7 +140,7 @@
     if (![self verifyResponseStatus:clientPairChallengeResp]) {
         return;
     }
-    if (![clientPairChallengeResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
+    if (![clientPairChallengeResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #5 failed"];
         return;
