@@ -40,7 +40,7 @@ static NSMutableSet* hostList;
 static NSArray* appList;
 
 - (void)showPIN:(NSString *)PIN {
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
                                                          message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
                                                   preferredStyle:UIAlertControllerStyleAlert];
@@ -50,7 +50,7 @@ static NSArray* appList;
 }
 
 - (void)pairFailed:(NSString *)message {
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         [_pairAlert dismissViewControllerAnimated:YES completion:nil];
         _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
                                                          message:message
@@ -64,7 +64,7 @@ static NSArray* appList;
 }
 
 - (void)pairSuccessful {
-    dispatch_sync(dispatch_get_main_queue(), ^{
+    dispatch_async(dispatch_get_main_queue(), ^{
         [_pairAlert dismissViewControllerAnimated:YES completion:nil];
         [_discMan startDiscovery];
         [self alreadyPaired];
