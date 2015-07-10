@@ -47,7 +47,7 @@
     if ([serverInfoResponse isStatusOk]) {
         DataManager* dataMan = [[DataManager alloc] init];
         host = [dataMan createHost];
-        host.address = hostAddress;
+        host.activeAddress = host.address = hostAddress;
         host.online = YES;
         [serverInfoResponse populateHost:host];
         if (![self addHostToDiscovery:host]) {

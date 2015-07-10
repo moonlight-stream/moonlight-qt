@@ -73,7 +73,7 @@ static NSArray* appList;
 
 - (void)alreadyPaired {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
         AppListResponse* appListResp = [[AppListResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
@@ -138,7 +138,7 @@ static NSArray* appList;
     [self showLoadingFrame];
     _selectedHost = host;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
@@ -176,7 +176,7 @@ static NSArray* appList;
     if (host.online) {
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                HttpManager* hMan = [[HttpManager alloc] initWithHost:host.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
                 [hMan executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[hMan newUnpairRequest]]];
             });
         }]];
@@ -253,7 +253,7 @@ static NSArray* appList;
 - (void) appClicked:(App *)app {
     Log(LOG_D, @"Clicked app: %@", app.appName);
     _streamConfig = [[StreamConfiguration alloc] init];
-    _streamConfig.host = _selectedHost.address;
+    _streamConfig.host = _selectedHost.activeAddress;
     _streamConfig.appID = app.appId;
     
     DataManager* dataMan = [[DataManager alloc] init];
@@ -284,7 +284,7 @@ static NSArray* appList;
                                     [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
                                         Log(LOG_I, @"Quitting application: %@", currentApp.appName);
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
                                             HttpResponse* quitResponse = [[HttpResponse alloc] init];
                                             HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
                                             [hMan executeRequestSynchronously:quitRequest];
@@ -442,6 +442,12 @@ static NSArray* appList;
     NSArray* hosts = [dataMan retrieveHosts];
     @synchronized(hostList) {
         [hostList addObjectsFromArray:hosts];
+        
+        // Initialize the non-persistent host state
+        for (Host* host in hostList) {
+            host.online = NO;
+            host.activeAddress = host.address;
+        }
     }
 }
 
@@ -449,7 +455,7 @@ static NSArray* appList;
     dispatch_async(dispatch_get_main_queue(), ^{
         Log(LOG_D, @"New host list:");
         for (Host* host in hosts) {
-            Log(LOG_D, @"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online);
+            Log(LOG_D, @"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n\t activeAddress:%@ \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online, host.activeAddress);
         }
         @synchronized(hostList) {
             [hostList removeAllObjects];

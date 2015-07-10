@@ -31,7 +31,7 @@ static const int MAX_ATTEMPTS = 5;
             }
         }
         if (appImage == nil) {
-            HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.address uniqueId:[CryptoManager getUniqueID] deviceName:deviceName cert:[CryptoManager readCertFromFile]];
+            HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.activeAddress uniqueId:[CryptoManager getUniqueID] deviceName:deviceName cert:[CryptoManager readCertFromFile]];
             AppAssetResponse* appAssetResp = [[AppAssetResponse alloc] init];
             [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appAssetResp withUrlRequest:[hMan newAppAssetRequestWithAppId:self.app.appId]]];
             

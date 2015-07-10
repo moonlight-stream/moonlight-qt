@@ -46,18 +46,27 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     if (!self.cancelled && _host.localAddress != nil) {
         ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:_host.localAddress];
         receivedResponse = [self checkResponse:serverInfoResp];
+        if (receivedResponse) {
+            _host.activeAddress = _host.localAddress;
+        }
     }
     if (!self.cancelled && !receivedResponse && _host.externalAddress != nil) {
         ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:_host.externalAddress];
         receivedResponse = [self checkResponse:serverInfoResp];
+        if (receivedResponse) {
+            _host.activeAddress = _host.externalAddress;
+        }
     }
     if (!self.cancelled && !receivedResponse && _host.address != nil) {
         ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:_host.address];
         receivedResponse = [self checkResponse:serverInfoResp];
+        if (receivedResponse) {
+            _host.activeAddress = _host.address;
+        }
     }
     _host.online = receivedResponse;
     if (receivedResponse) {
-        Log(LOG_D, @"Received response from: %@\n{\n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n}", _host.name, _host.address, _host.localAddress, _host.externalAddress, _host.uuid, _host.mac, _host.pairState, _host.online);
+        Log(LOG_D, @"Received response from: %@\n{\n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n\t activeAddress:%@ \n}", _host.name, _host.address, _host.localAddress, _host.externalAddress, _host.uuid, _host.mac, _host.pairState, _host.online, _host.activeAddress);
     }
 }
 

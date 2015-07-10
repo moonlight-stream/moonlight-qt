@@ -19,5 +19,6 @@
 @dynamic mac;
 @dynamic pairState;
 @synthesize online;
+@synthesize activeAddress;
 
 @end

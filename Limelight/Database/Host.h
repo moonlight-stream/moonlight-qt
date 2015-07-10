@@ -20,5 +20,6 @@
 @property (nonatomic, retain) NSString * mac;
 @property (nonatomic) BOOL online;
 @property (nonatomic) PairState pairState;
+@property (nonatomic) NSString * activeAddress;
 
 @end
