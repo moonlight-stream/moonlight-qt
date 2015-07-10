@@ -269,15 +269,42 @@ static NSArray* appList;
                                         Log(LOG_I, @"Quitting application: %@", currentApp.appName);
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                                             HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.address uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                                            [hMan executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[hMan newQuitAppRequest]]];
-                                            // TODO: handle failure to quit app
-                                            currentApp.isRunning = NO;
+                                            HttpResponse* quitResponse = [[HttpResponse alloc] init];
+                                            HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
+                                            [hMan executeRequestSynchronously:quitRequest];
                                             
-                                            if (![app.appId isEqualToString:currentApp.appId]) {
+                                            UIAlertController* alert;
+                                            
+                                            // If it fails, display an error and stop the current operation
+                                            if (quitResponse.statusCode != 200) {
+                                               alert = [UIAlertController alertControllerWithTitle:@"Quitting App Failed"
+                                                                                      message:@"Failed to quit app. If this app was started by "
+                                                        "another device, you'll need to quit from that device."
+                                                                               preferredStyle:UIAlertControllerStyleAlert];
+                                            }
+                                            // If it succeeds and we're to start streaming, segue to the stream and return
+                                            else if (![app.appId isEqualToString:currentApp.appId]) {
+                                                currentApp.isRunning = NO;
+                                                
                                                 dispatch_async(dispatch_get_main_queue(), ^{
                                                     [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                                 });
+                                                
+                                                return;
                                             }
+                                            // Otherwise, display a dialog to notify the user that the app was quit
+                                            else {
+                                                currentApp.isRunning = NO;
+                                                
+                                                alert = [UIAlertController alertControllerWithTitle:@"Quitting App"
+                                                                                            message:@"The app was quit successfully."
+                                                                                     preferredStyle:UIAlertControllerStyleAlert];
+                                            }
+                                            
+                                            [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                                            dispatch_async(dispatch_get_main_queue(), ^{
+                                                [self presentViewController:alert animated:YES completion:nil];
+                                            });
                                         });
                                     }]];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
