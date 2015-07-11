@@ -214,22 +214,9 @@ static NSMutableSet* hostList;
 }
 
 - (void)hostLongClicked:(Host *)host view:(UIView *)view {
-    // Long clicking a host is currently only applicable to paired
-    // computers, so ignore it for unpaired hosts.
-    if (host.pairState != PairStatePaired) {
-        return;
-    }
-    
     Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
-    if (host.online) {
-        [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Unpair" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-                [hMan executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[hMan newUnpairRequest]]];
-            });
-        }]];
-    } else {
+    if (!host.online) {
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Wake" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             UIAlertController* wolAlert = [UIAlertController alertControllerWithTitle:@"Wake On Lan" message:@"" preferredStyle:UIAlertControllerStyleAlert];
             [wolAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
