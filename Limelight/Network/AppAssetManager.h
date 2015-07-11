@@ -20,7 +20,7 @@
 @interface AppAssetManager : NSObject
 
 - (id) initWithCallback:(id<AppAssetCallback>)callback;
-- (void) retrieveAssets:(NSArray*)appList fromHost:(Host*)host;
+- (void) retrieveAssetsFromHost:(Host*)host;
 - (void) stopRetrieving;
 
 @end

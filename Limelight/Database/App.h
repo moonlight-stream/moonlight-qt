@@ -17,6 +17,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 @property BOOL isRunning;
 
+- (NSComparisonResult)compareName:(App *)other;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -28,8 +28,8 @@ static const int MAX_REQUEST_COUNT = 4;
     return self;
 }
 
-- (void) retrieveAssets:(NSArray*)appList fromHost:(Host*)host {
-    for (App* app in appList) {
+- (void) retrieveAssetsFromHost:(Host*)host {
+    for (App* app in host.appList) {
         if (app.image == nil) {
             AppAssetRetriever* retriever = [[AppAssetRetriever alloc] init];
             retriever.app = app;

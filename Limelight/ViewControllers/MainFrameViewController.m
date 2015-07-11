@@ -35,9 +35,9 @@
     UIAlertController* _pairAlert;
     UIScrollView* hostScrollView;
     int currentPosition;
+    NSArray* _sortedAppList;
 }
 static NSMutableSet* hostList;
-static NSArray* appList;
 
 - (void)showPIN:(NSString *)PIN {
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -74,7 +74,6 @@ static NSArray* appList;
     BOOL usingCachedAppList = false;
     if ([_selectedHost.appList count] > 0) {
         usingCachedAppList = true;
-        appList = [_selectedHost.appList allObjects];
         dispatch_async(dispatch_get_main_queue(), ^{
             _computerNameButton.title = _selectedHost.name;
             [self.navigationController.navigationBar setNeedsLayout];
@@ -112,46 +111,45 @@ static NSArray* appList;
             });
             
             [_appManager stopRetrieving];
-            [_appManager retrieveAssets:appList fromHost:_selectedHost];
+            [_appManager retrieveAssetsFromHost:_selectedHost];
             [self hideLoadingFrame];
         }
     });
 }
 
 - (void) mergeAppLists:(NSArray*) newList {
-    NSMutableArray* mergedList = [[NSMutableArray alloc] init];
     for (App* app in newList) {
-        BOOL appAlreadyInList = NO;
-        for (App* savedApp in appList) {
+        BOOL appAlreadyInList = NO; 
+        for (App* savedApp in _selectedHost.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
                 appAlreadyInList = YES;
-                [mergedList addObject:savedApp];
+                break;
             }
         }
         if (!appAlreadyInList) {
-            [mergedList addObject:app];
-            [_selectedHost addAppListObject:app];
             app.host = _selectedHost;
+            [_selectedHost addAppListObject:app];
         }
     }
     
-    for (App* app in appList) {
+    for (App* app in _selectedHost.appList) {
         BOOL appWasRemoved = YES;
-        for (App* mergedApp in mergedList) {
+        for (App* mergedApp in newList) {
             if ([mergedApp.id isEqualToString:app.id]) {
                 appWasRemoved = NO;
+                break;
             }
         }
         if (appWasRemoved) {
             [_selectedHost removeAppListObject:app];
         }
     }
-    appList = mergedList;
 }
 
 - (void)showHostSelectionView {
-    appList = [[NSArray alloc] init];
     [_appManager stopRetrieving];
+    [[[DataManager alloc] init] saveHosts];
+    _selectedHost = nil;
     _computerNameButton.title = @"No Host Selected";
     [self.collectionView reloadData];
     [self.view addSubview:hostScrollView];
@@ -384,7 +382,7 @@ static NSArray* appList;
 }
 
 - (App*) findRunningApp {
-    for (App* app in appList) {
+    for (App* app in _selectedHost.appList) {
         if (app.isRunning) {
             return app;
         }
@@ -555,6 +553,9 @@ static NSArray* appList;
 }
 
 - (void) updateApps {
+    _sortedAppList = [_selectedHost.appList allObjects];
+    _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
+    
     [hostScrollView removeFromSuperview];
     [self.collectionView reloadData];
 }
@@ -562,7 +563,7 @@ static NSArray* appList;
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     UICollectionViewCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AppCell" forIndexPath:indexPath];
     
-    App* app = appList[indexPath.row];
+    App* app = _sortedAppList[indexPath.row];
     UIAppView* appView = [[UIAppView alloc] initWithApp:app andCallback:self];
     [appView updateAppImage];
     
@@ -583,7 +584,12 @@ static NSArray* appList;
 }
 
 - (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    return appList.count;
+    if (_selectedHost != nil) {
+        return _selectedHost.appList.count;
+    }
+    else {
+        return 0;
+    }
 }
 
 - (void)didReceiveMemoryWarning
