@@ -2,7 +2,7 @@
 <model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="8118.17" systemVersion="15A204h" minimumToolsVersion="Automatic">
     <entity name="App" representedClassName="App" syncable="YES">
         <attribute name="id" attributeType="String" syncable="YES"/>
-        <attribute name="image" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
+        <attribute name="image" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
         <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="host" maxCount="1" deletionRule="Nullify" destinationEntity="Host" inverseName="appList" inverseEntity="Host" syncable="YES"/>
     </entity>
@@ -24,7 +24,7 @@
         <attribute name="width" attributeType="Integer 32" defaultValueString="1280" syncable="YES"/>
     </entity>
     <elements>
-        <element name="App" positionX="0" positionY="54" width="128" height="103"/>
+        <element name="App" positionX="0" positionY="54" width="128" height="105"/>
         <element name="Host" positionX="0" positionY="0" width="128" height="163"/>
         <element name="Settings" positionX="0" positionY="0" width="128" height="120"/>
     </elements>

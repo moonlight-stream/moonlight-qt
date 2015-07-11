@@ -72,10 +72,10 @@ static NSArray* appList;
 
 - (void)alreadyPaired {
     BOOL usingCachedAppList = false;
-    if (_selectedHost.appList != nil) {
+    if ([_selectedHost.appList count] > 0) {
         usingCachedAppList = true;
+        appList = [_selectedHost.appList allObjects];
         dispatch_async(dispatch_get_main_queue(), ^{
-            appList = [_selectedHost.appList allObjects];
             _computerNameButton.title = _selectedHost.name;
             [self.navigationController.navigationBar setNeedsLayout];
             [self updateApps];
@@ -87,6 +87,7 @@ static NSArray* appList;
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
         AppListResponse* appListResp = [[AppListResponse alloc] init];
+        appListResp.host = _selectedHost;
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
         if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
@@ -101,10 +102,6 @@ static NSArray* appList;
                 [self showHostSelectionView];
             });
         } else {
-            if (!usingCachedAppList) {
-                appList = [[NSArray alloc] init];
-                [_selectedHost addAppList:[NSSet setWithArray:appList]];
-            }
             [self mergeAppLists:[appListResp getAppList]];
 
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -122,17 +119,31 @@ static NSArray* appList;
 }
 
 - (void) mergeAppLists:(NSArray*) newList {
-    NSMutableArray* mergedList = [NSMutableArray arrayWithArray:appList];
+    NSMutableArray* mergedList = [[NSMutableArray alloc] init];
     for (App* app in newList) {
         BOOL appAlreadyInList = NO;
-        for (App* savedApp in mergedList) {
-            if (app.id == savedApp.id) {
+        for (App* savedApp in appList) {
+            if ([app.id isEqualToString:savedApp.id]) {
                 appAlreadyInList = YES;
+                [mergedList addObject:savedApp];
             }
         }
         if (!appAlreadyInList) {
             [mergedList addObject:app];
             [_selectedHost addAppListObject:app];
+            app.host = _selectedHost;
+        }
+    }
+    
+    for (App* app in appList) {
+        BOOL appWasRemoved = YES;
+        for (App* mergedApp in mergedList) {
+            if ([mergedApp.id isEqualToString:app.id]) {
+                appWasRemoved = NO;
+            }
+        }
+        if (appWasRemoved) {
+            [_selectedHost removeAppListObject:app];
         }
     }
     appList = mergedList;

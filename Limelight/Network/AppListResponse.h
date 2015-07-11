@@ -10,6 +10,8 @@
 
 @interface AppListResponse : NSObject <Response>
 
+@property Host* host;
+
 - (void)populateWithData:(NSData *)data;
 - (NSArray*) getAppList;
 - (BOOL) isStatusOk;
