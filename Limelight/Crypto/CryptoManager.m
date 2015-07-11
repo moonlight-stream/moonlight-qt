@@ -76,8 +76,14 @@ static NSData* p12 = nil;
     return (((int)[data length] + 15) / 16) * 16;
 }
 
++ (NSData*) nullTerminateString:(NSData*)data {
+    NSMutableData* mutData = [NSMutableData dataWithData:data];
+    [mutData appendBytes:"" length:1];
+    return mutData;
+}
+
 - (bool) verifySignature:(NSData *)data withSignature:(NSData*)signature andCert:(NSData*)cert {
-    const char* buffer = [cert bytes];
+    const char* buffer = [[CryptoManager nullTerminateString:cert] bytes];
     X509* x509;
     BIO* bio = BIO_new(BIO_s_mem());
     BIO_puts(bio, buffer);
@@ -105,7 +111,7 @@ static NSData* p12 = nil;
 }
 
 - (NSData *)signData:(NSData *)data withKey:(NSData *)key {
-    const char* buffer = [key bytes];
+    const char* buffer = [[CryptoManager nullTerminateString:key] bytes];
     BIO* bio = BIO_new(BIO_s_mem());
     BIO_puts(bio, buffer);
     
@@ -188,7 +194,7 @@ static NSData* p12 = nil;
 }
 
 + (NSData *)getSignatureFromCert:(NSData *)cert {
-    const char* buffer = [cert bytes];
+    const char* buffer = [[CryptoManager nullTerminateString:cert] bytes];
     X509* x509;
     BIO* bio = BIO_new(BIO_s_mem());
     BIO_puts(bio, buffer);

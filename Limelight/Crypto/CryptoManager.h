@@ -16,6 +16,7 @@
 + (NSData*) readKeyFromFile;
 + (NSData*) readP12FromFile;
 + (NSData*) getSignatureFromCert:(NSData*)cert;
++ (NSData*) nullTerminateString:(NSData*)data;
 
 - (NSData*) createAESKeyFromSalt:(NSData*)saltedPIN;
 - (NSData*) SHA1HashData:(NSData*)data;
