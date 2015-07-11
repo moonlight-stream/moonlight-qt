@@ -216,6 +216,12 @@ static NSArray* appList;
 }
 
 - (void)hostLongClicked:(Host *)host view:(UIView *)view {
+    // Long clicking a host is currently only applicable to paired
+    // computers, so ignore it for unpaired hosts.
+    if (host.pairState != PairStatePaired) {
+        return;
+    }
+    
     Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
     if (host.online) {
