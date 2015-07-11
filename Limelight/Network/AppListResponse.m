@@ -66,8 +66,8 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
         //Log(LOG_D, @"node: %s", node->name);
         if (!xmlStrcmp(node->name, (xmlChar*)TAG_APP)) {
             xmlNodePtr appInfoNode = node->xmlChildrenNode;
-            NSString* appName;
-            NSString* appId;
+            NSString* appName = @"";
+            NSString* appId = nil;
             BOOL appIsRunning = NO;
             while (appInfoNode != NULL) {
                 if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_TITLE)) {
@@ -95,12 +95,12 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
                 }
                 appInfoNode = appInfoNode->next;
             }
-            App* app = [dataMan createApp];
-            app.name = appName;
-            app.id = appId;
-            app.host = host;
-            app.isRunning = appIsRunning;
-            if (app.id != nil) {
+            if (appId != nil) {
+                App* app = [dataMan createApp];
+                app.name = appName;
+                app.id = appId;
+                app.host = host;
+                app.isRunning = appIsRunning;
                 [_appList addObject:app];
             }
         }
