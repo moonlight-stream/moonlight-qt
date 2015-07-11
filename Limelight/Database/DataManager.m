@@ -48,8 +48,7 @@
 
 - (Host*) createHost {
     NSEntityDescription* entity = [NSEntityDescription entityForName:@"Host" inManagedObjectContext:[self.appDelegate managedObjectContext]];
-    Host* host = [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
-    return host;
+    return [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
 }
 
 - (void) removeHost:(Host*)host {
@@ -67,6 +66,11 @@
 
 - (NSArray*) retrieveHosts {
     return [self fetchRecords:@"Host"];
+}
+
+- (App*) createApp {
+    NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:[self.appDelegate managedObjectContext]];
+    return [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
 }
 
 - (NSArray*) fetchRecords:(NSString*)entityName {

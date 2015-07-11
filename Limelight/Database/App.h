@@ -1,5 +1,5 @@
 //
-//  Host.h
+//  App.h
 //  Moonlight
 //
 //  Created by Diego Waxemberg on 7/10/15.
@@ -8,18 +8,17 @@
 
 #import <Foundation/Foundation.h>
 #import <CoreData/CoreData.h>
-#import "Utils.h"
+
+@class Host;
 
 NS_ASSUME_NONNULL_BEGIN
 
-@interface Host : NSManagedObject
+@interface App : NSManagedObject
 
-@property (nonatomic) BOOL online;
-@property (nonatomic) PairState pairState;
-@property (nonatomic) NSString * activeAddress;
+@property BOOL isRunning;
 
 @end
 
 NS_ASSUME_NONNULL_END
 
-#import "Host+CoreDataProperties.h"
+#import "App+CoreDataProperties.h"

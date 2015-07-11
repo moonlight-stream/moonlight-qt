@@ -1,17 +1,16 @@
 //
-//  Host.m
+//  App.m
 //  Moonlight
 //
 //  Created by Diego Waxemberg on 7/10/15.
 //  Copyright © 2015 Limelight Stream. All rights reserved.
 //
 
+#import "App.h"
 #import "Host.h"
 
-@implementation Host
+@implementation App
 
-@dynamic pairState;
-@synthesize online;
-@synthesize activeAddress;
+@synthesize isRunning;
 
 @end

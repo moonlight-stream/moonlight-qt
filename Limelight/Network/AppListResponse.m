@@ -8,6 +8,7 @@
 
 #import "AppListResponse.h"
 #import "App.h"
+#import "DataManager.h"
 #import <libxml2/libxml/xmlreader.h>
 
 @implementation AppListResponse {
@@ -59,6 +60,7 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
     self.statusMessage = statusMsg;
     
     node = node->children;
+    DataManager* dataMan = [[DataManager alloc] init];
     
     while (node != NULL) {
         //Log(LOG_D, @"node: %s", node->name);
@@ -93,11 +95,11 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
                 }
                 appInfoNode = appInfoNode->next;
             }
-            App* app = [[App alloc] init];
-            app.appName = appName;
-            app.appId = appId;
+            App* app = [dataMan createApp];
+            app.name = appName;
+            app.id = appId;
             app.isRunning = appIsRunning;
-            if (app.appId != nil) {
+            if (app.id != nil) {
                 [_appList addObject:app];
             }
         }

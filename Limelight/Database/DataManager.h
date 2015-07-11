@@ -10,6 +10,7 @@
 #import "Settings.h"
 #import "AppDelegate.h"
 #import "Host.h"
+#import "App.h"
 
 @interface DataManager : NSObject
 
@@ -21,5 +22,6 @@
 - (void) saveHosts;
 - (Host*) createHost;
 - (void) removeHost:(Host*)host;
+- (App*) createApp;
 
 @end

@@ -71,12 +71,24 @@ static NSArray* appList;
 }
 
 - (void)alreadyPaired {
+    BOOL usingCachedAppList = false;
+    if (_selectedHost.appList != nil) {
+        usingCachedAppList = true;
+        dispatch_async(dispatch_get_main_queue(), ^{
+            appList = [_selectedHost.appList allObjects];
+            _computerNameButton.title = _selectedHost.name;
+            [self.navigationController.navigationBar setNeedsLayout];
+            [self updateApps];
+            [self hideLoadingFrame];
+        });
+    }
+    Log(LOG_I, @"Using cached app list: %d", usingCachedAppList);
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
         AppListResponse* appListResp = [[AppListResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
-        if (appListResp == nil || ![appListResp isStatusOk] || (appList = [appListResp getAppList]) == nil) {
+        if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
             [self hideLoadingFrame];
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -89,6 +101,12 @@ static NSArray* appList;
                 [self showHostSelectionView];
             });
         } else {
+            if (!usingCachedAppList) {
+                appList = [[NSArray alloc] init];
+                [_selectedHost addAppList:[NSSet setWithArray:appList]];
+            }
+            [self mergeAppLists:[appListResp getAppList]];
+
             dispatch_async(dispatch_get_main_queue(), ^{
                 _computerNameButton.title = _selectedHost.name;
                 [self.navigationController.navigationBar setNeedsLayout];
@@ -101,6 +119,23 @@ static NSArray* appList;
             [self hideLoadingFrame];
         }
     });
+}
+
+- (void) mergeAppLists:(NSArray*) newList {
+    NSMutableArray* mergedList = [NSMutableArray arrayWithArray:appList];
+    for (App* app in newList) {
+        BOOL appAlreadyInList = NO;
+        for (App* savedApp in mergedList) {
+            if (app.id == savedApp.id) {
+                appAlreadyInList = YES;
+            }
+        }
+        if (!appAlreadyInList) {
+            [mergedList addObject:app];
+            [_selectedHost addAppListObject:app];
+        }
+    }
+    appList = mergedList;
 }
 
 - (void)showHostSelectionView {
@@ -250,10 +285,10 @@ static NSArray* appList;
 }
 
 - (void) appClicked:(App *)app {
-    Log(LOG_D, @"Clicked app: %@", app.appName);
+    Log(LOG_D, @"Clicked app: %@", app.name);
     _streamConfig = [[StreamConfiguration alloc] init];
     _streamConfig.host = _selectedHost.activeAddress;
-    _streamConfig.appID = app.appId;
+    _streamConfig.appID = app.id;
     
     DataManager* dataMan = [[DataManager alloc] init];
     Settings* streamSettings = [dataMan retrieveSettings];
@@ -272,16 +307,16 @@ static NSArray* appList;
     App* currentApp = [self findRunningApp];
     if (currentApp != nil) {
         UIAlertController* alertController = [UIAlertController
-                                              alertControllerWithTitle: app.appName
-                                              message: [app.appId isEqualToString:currentApp.appId] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.appName]preferredStyle:UIAlertControllerStyleAlert];
+                                              alertControllerWithTitle: app.name
+                                              message: [app.id isEqualToString:currentApp.id] ? @"" : [NSString stringWithFormat:@"%@ is currently running", currentApp.name]preferredStyle:UIAlertControllerStyleAlert];
         [alertController addAction:[UIAlertAction
-                                    actionWithTitle:[app.appId isEqualToString:currentApp.appId] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-                                        Log(LOG_I, @"Resuming application: %@", currentApp.appName);
+                                    actionWithTitle:[app.id isEqualToString:currentApp.id] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                                        Log(LOG_I, @"Resuming application: %@", currentApp.name);
                                         [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                     }]];
         [alertController addAction:[UIAlertAction actionWithTitle:
-                                    [app.appId isEqualToString:currentApp.appId] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
-                                        Log(LOG_I, @"Quitting application: %@", currentApp.appName);
+                                    [app.id isEqualToString:currentApp.id] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
+                                        Log(LOG_I, @"Quitting application: %@", currentApp.name);
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                                             HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
                                             HttpResponse* quitResponse = [[HttpResponse alloc] init];
@@ -298,7 +333,7 @@ static NSArray* appList;
                                                                                preferredStyle:UIAlertControllerStyleAlert];
                                             }
                                             // If it succeeds and we're to start streaming, segue to the stream and return
-                                            else if (![app.appId isEqualToString:currentApp.appId]) {
+                                            else if (![app.id isEqualToString:currentApp.id]) {
                                                 currentApp.isRunning = NO;
                                                 
                                                 dispatch_async(dispatch_get_main_queue(), ^{

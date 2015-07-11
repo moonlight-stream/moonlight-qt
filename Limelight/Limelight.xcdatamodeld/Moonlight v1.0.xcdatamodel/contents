@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="8118.17" systemVersion="15A204h" minimumToolsVersion="Automatic">
+    <entity name="App" representedClassName="App" syncable="YES">
+        <attribute name="id" attributeType="String" syncable="YES"/>
+        <attribute name="image" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
+        <attribute name="name" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="host" maxCount="1" deletionRule="Nullify" destinationEntity="Host" inverseName="appList" inverseEntity="Host" syncable="YES"/>
+    </entity>
+    <entity name="Host" representedClassName="Host" syncable="YES">
+        <attribute name="address" attributeType="String" syncable="YES"/>
+        <attribute name="externalAddress" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="localAddress" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="mac" optional="YES" attributeType="String" syncable="YES"/>
+        <attribute name="name" attributeType="String" syncable="YES"/>
+        <attribute name="pairState" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="uuid" optional="YES" attributeType="String" syncable="YES"/>
+        <relationship name="appList" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="App" inverseName="host" inverseEntity="App" syncable="YES"/>
+    </entity>
+    <entity name="Settings" representedClassName="Settings" syncable="YES">
+        <attribute name="bitrate" attributeType="Integer 32" defaultValueString="10000" syncable="YES"/>
+        <attribute name="framerate" attributeType="Integer 32" defaultValueString="60" syncable="YES"/>
+        <attribute name="height" attributeType="Integer 32" defaultValueString="720" syncable="YES"/>
+        <attribute name="onscreenControls" attributeType="Integer 32" defaultValueString="1" syncable="YES"/>
+        <attribute name="width" attributeType="Integer 32" defaultValueString="1280" syncable="YES"/>
+    </entity>
+    <elements>
+        <element name="App" positionX="0" positionY="54" width="128" height="103"/>
+        <element name="Host" positionX="0" positionY="0" width="128" height="163"/>
+        <element name="Settings" positionX="0" positionY="0" width="128" height="120"/>
+    </elements>
+</model>

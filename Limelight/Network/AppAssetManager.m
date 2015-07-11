@@ -15,8 +15,6 @@
 @implementation AppAssetManager {
     NSOperationQueue* _opQueue;
     id<AppAssetCallback> _callback;
-    Host* _host;
-    NSMutableDictionary* _imageCache;
 }
 
 static const int MAX_REQUEST_COUNT = 4;
@@ -24,29 +22,22 @@ static const int MAX_REQUEST_COUNT = 4;
 - (id) initWithCallback:(id<AppAssetCallback>)callback {
     self = [super init];
     _callback = callback;
-    _imageCache = [[NSMutableDictionary alloc] init];
     _opQueue = [[NSOperationQueue alloc] init];
     [_opQueue setMaxConcurrentOperationCount:MAX_REQUEST_COUNT];
-
+    
     return self;
 }
 
 - (void) retrieveAssets:(NSArray*)appList fromHost:(Host*)host {
-    Host* oldHost = _host;
-    _host = host;
-    BOOL useCache = [oldHost.uuid isEqualToString:_host.uuid];
-    Log(LOG_I, @"Using cached app images: %d", useCache);
-    if (!useCache) {
-        [_imageCache removeAllObjects];
-    }
     for (App* app in appList) {
-        AppAssetRetriever* retriever = [[AppAssetRetriever alloc] init];
-        retriever.app = app;
-        retriever.host = _host;
-        retriever.callback = _callback;
-        retriever.cache = _imageCache;
-        retriever.useCache = useCache;
-        [_opQueue addOperation:retriever];
+        if (app.image == nil) {
+            AppAssetRetriever* retriever = [[AppAssetRetriever alloc] init];
+            retriever.app = app;
+            retriever.host = host;
+            retriever.callback = _callback;
+            
+            [_opQueue addOperation:retriever];
+        }
     }
 }
 
