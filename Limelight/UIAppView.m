@@ -12,9 +12,9 @@
     App* _app;
     UIButton* _appButton;
     UILabel* _appLabel;
+    UIImageView* _appOverlay;
     id<AppCallback> _callback;
 }
-static int LABEL_DY = 20;
 
 - (id) initWithApp:(App*)app andCallback:(id<AppCallback>)callback {
     self = [super init];
@@ -28,19 +28,23 @@ static int LABEL_DY = 20;
     [_appButton sizeToFit];
     [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventTouchUpInside];
     
+    _appOverlay = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Play"]];
+    _appOverlay.layer.shadowColor = [UIColor blackColor].CGColor;
+    _appOverlay.layer.shadowOffset = CGSizeMake(0, 0);
+    _appOverlay.layer.shadowOpacity = 1;
+    _appOverlay.layer.shadowRadius = 2.0;
+    [_appOverlay setHidden: YES];
+    
     [self addSubview:_appButton];
+    [self addSubview:_appOverlay];
     [self sizeToFit];
+    
     _appButton.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
+    _appOverlay.frame = CGRectMake(0, 0, noImage.size.width / 2.f, noImage.size.height / 4.f);
     self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
+    [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
     
     return self;
-}
-
-- (void) updateBounds {
-    float x = _appButton.frame.origin.x < _appLabel.frame.origin.x ? _appButton.frame.origin.x : _appLabel.frame.origin.x;
-    float y = _appButton.frame.origin.y < _appLabel.frame.origin.y ? _appButton.frame.origin.y : _appLabel.frame.origin.y;
-    self.bounds = CGRectMake(x , y, _appButton.frame.size.width > _appLabel.frame.size.width ? _appButton.frame.size.width : _appLabel.frame.size.width, _appButton.frame.size.height + _appLabel.frame.size.height + LABEL_DY / 2);
-    self.frame = CGRectMake(x , y, _appButton.frame.size.width > _appLabel.frame.size.width ? _appButton.frame.size.width : _appLabel.frame.size.width, _appButton.frame.size.height + _appLabel.frame.size.height + LABEL_DY / 2);
 }
 
 - (void) appClicked {
@@ -48,9 +52,14 @@ static int LABEL_DY = 20;
 }
 
 - (void) updateAppImage {
-    if (_app.appImage != nil) {
+    [_appOverlay setHidden:!_app.isRunning];
+    
+    if (_app.appImage != nil && !(_app.appImage.size.width == 130.f && _app.appImage.size.height == 180.f)) {
         _appButton.frame = CGRectMake(0, 0, _app.appImage.size.width / 2, _app.appImage.size.height / 2);
         self.frame = CGRectMake(0, 0, _app.appImage.size.width / 2, _app.appImage.size.height / 2);
+        _appOverlay.frame = CGRectMake(0, 0, self.frame.size.width / 2.f, self.frame.size.height / 4.f);
+        _appOverlay.layer.shadowRadius = 4.0;
+        [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
         [_appButton setBackgroundImage:_app.appImage forState:UIControlStateNormal];
         [self setNeedsDisplay];
     }

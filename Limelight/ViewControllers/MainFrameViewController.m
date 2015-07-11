@@ -302,6 +302,7 @@ static NSArray* appList;
                                                 currentApp.isRunning = NO;
                                                 
                                                 dispatch_async(dispatch_get_main_queue(), ^{
+                                                    [self updateApps];
                                                     [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                                 });
                                                 
@@ -318,6 +319,7 @@ static NSArray* appList;
                                             
                                             [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
                                             dispatch_async(dispatch_get_main_queue(), ^{
+                                                [self updateApps];
                                                 [self presentViewController:alert animated:YES completion:nil];
                                             });
                                         });
