@@ -53,10 +53,10 @@
 
 - (void) removeHost:(Host*)host {
     [[self.appDelegate managedObjectContext] deleteObject:host];
-    [self saveHosts];
+    [self saveData];
 }
 
-- (void) saveHosts {
+- (void) saveData {
     NSError* error;
     if (![[self.appDelegate managedObjectContext] save:&error]) {
         Log(LOG_E, @"Unable to save hosts to database: %@", error);
@@ -71,6 +71,10 @@
 - (App*) createApp {
     NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:[self.appDelegate managedObjectContext]];
     return [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
+}
+
+- (void) removeApp:(App*)app {
+    [[self.appDelegate managedObjectContext] deleteObject:app];
 }
 
 - (NSArray*) fetchRecords:(NSString*)entityName {

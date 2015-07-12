@@ -14,7 +14,7 @@
 @implementation AppListResponse {
     NSMutableArray* _appList;
 }
-@synthesize data, statusCode, statusMessage, host;
+@synthesize data, statusCode, statusMessage;
 
 static const char* TAG_APP = "App";
 static const char* TAG_APP_TITLE = "AppTitle";
@@ -99,7 +99,6 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
                 App* app = [dataMan createApp];
                 app.name = appName;
                 app.id = appId;
-                app.host = host;
                 app.isRunning = appIsRunning;
                 [_appList addObject:app];
             }

@@ -86,7 +86,6 @@ static NSMutableSet* hostList;
         HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
         AppListResponse* appListResp = [[AppListResponse alloc] init];
-        appListResp.host = _selectedHost;
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
         if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
@@ -118,6 +117,7 @@ static NSMutableSet* hostList;
 }
 
 - (void) mergeAppLists:(NSArray*) newList {
+    DataManager* database = [[DataManager alloc] init];
     for (App* app in newList) {
         BOOL appAlreadyInList = NO; 
         for (App* savedApp in _selectedHost.appList) {
@@ -129,6 +129,8 @@ static NSMutableSet* hostList;
         if (!appAlreadyInList) {
             app.host = _selectedHost;
             [_selectedHost addAppListObject:app];
+        } else {
+            [database removeApp:app];
         }
     }
     
@@ -142,13 +144,15 @@ static NSMutableSet* hostList;
         }
         if (appWasRemoved) {
             [_selectedHost removeAppListObject:app];
+            [database removeApp:app];
         }
     }
+    [database saveData];
 }
 
 - (void)showHostSelectionView {
     [_appManager stopRetrieving];
-    [[[DataManager alloc] init] saveHosts];
+    [[[DataManager alloc] init] saveData];
     _selectedHost = nil;
     _computerNameButton.title = @"No Host Selected";
     [self.collectionView reloadData];
@@ -265,7 +269,7 @@ static NSMutableSet* hostList;
             [_discMan discoverHost:hostAddress withCallback:^(Host* host, NSString* error){
                 if (host != nil) {
                     DataManager* dataMan = [[DataManager alloc] init];
-                    [dataMan saveHosts];
+                    [dataMan saveData];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         @synchronized(hostList) {
                             [hostList addObject:host];
@@ -472,7 +476,7 @@ static NSMutableSet* hostList;
     [_discMan stopDiscovery];
     
     // In case the host objects were updated in the background
-    [[[DataManager alloc] init] saveHosts];
+    [[[DataManager alloc] init] saveData];
 }
 
 - (void) retrieveSavedHosts {

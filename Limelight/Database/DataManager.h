@@ -19,9 +19,10 @@
 - (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls;
 - (Settings*) retrieveSettings;
 - (NSArray*) retrieveHosts;
-- (void) saveHosts;
+- (void) saveData;
 - (Host*) createHost;
 - (void) removeHost:(Host*)host;
 - (App*) createApp;
+- (void) removeApp:(App*)app;
 
 @end
