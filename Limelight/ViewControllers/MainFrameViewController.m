@@ -105,6 +105,11 @@ static NSMutableSet* hostList;
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self hideLoadingFrame];
+                
+                if (host != _selectedHost) {
+                    return;
+                }
+                
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching App List Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
@@ -228,6 +233,11 @@ static NSMutableSet* hostList;
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self hideLoadingFrame];
+                
+                if (host != _selectedHost) {
+                    return;
+                }
+                
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching Server Info Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
