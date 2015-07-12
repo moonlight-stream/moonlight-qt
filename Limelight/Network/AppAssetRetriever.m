@@ -28,7 +28,9 @@ static const int MAX_ATTEMPTS = 5;
         appImage = [UIImage imageWithData:appAssetResp.data];
         self.app.image = UIImagePNGRepresentation(appImage);
         
-        [NSThread sleepForTimeInterval:RETRY_DELAY];
+        if (![self isCancelled] && appImage == nil) {
+            [NSThread sleepForTimeInterval:RETRY_DELAY];
+        }
     }
     [self performSelectorOnMainThread:@selector(sendCallbackForApp:) withObject:self.app waitUntilDone:NO];
 }
