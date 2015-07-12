@@ -182,8 +182,19 @@ static NSMutableSet* hostList;
     }
     
     Log(LOG_D, @"Clicked host: %@", host.name);
-    [self showLoadingFrame];
     _selectedHost = host;
+    
+    // If we are online, paired, and have a cached app list, skip straight
+    // to the app grid without a loading frame. This is the fast path that users
+    // should hit most.
+    if (host.online && host.pairState == PairStatePaired && host.appList.count > 0) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self alreadyPaired];
+        });
+        return;
+    }
+    
+    [self showLoadingFrame];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
