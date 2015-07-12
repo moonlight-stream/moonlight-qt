@@ -22,7 +22,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nullable, nonatomic, retain) NSString *name;
 @property (nullable, nonatomic, retain) NSNumber *pairState;
 @property (nullable, nonatomic, retain) NSString *uuid;
-@property (nullable, nonatomic, retain) NSSet<NSManagedObject *> *appList;
+@property (nullable, nonatomic, retain) NSSet *appList;
 
 @end
 
@@ -30,8 +30,8 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (void)addAppListObject:(NSManagedObject *)value;
 - (void)removeAppListObject:(NSManagedObject *)value;
-- (void)addAppList:(NSSet<NSManagedObject *> *)values;
-- (void)removeAppList:(NSSet<NSManagedObject *> *)values;
+- (void)addAppList:(NSSet *)values;
+- (void)removeAppList:(NSSet *)values;
 
 @end
 
