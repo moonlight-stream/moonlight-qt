@@ -95,7 +95,12 @@ static NSMutableSet* hostList;
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
         AppListResponse* appListResp = [[AppListResponse alloc] init];
+        
+        // Exempt this host from discovery while handling the applist query
+        [_discMan removeHostFromDiscovery:host];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
+        [_discMan addHostToDiscovery:host];
+
         if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -212,8 +217,13 @@ static NSMutableSet* hostList;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+        
+        // Exempt this host from discovery while handling the serverinfo request
+        [_discMan removeHostFromDiscovery:host];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
+        [_discMan addHostToDiscovery:host];
+        
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
@@ -352,7 +362,11 @@ static NSMutableSet* hostList;
                                             HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
                                             HttpResponse* quitResponse = [[HttpResponse alloc] init];
                                             HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
+                                            
+                                            // Exempt this host from discovery while handling the quit operation
+                                            [_discMan removeHostFromDiscovery:app.host];
                                             [hMan executeRequestSynchronously:quitRequest];
+                                            [_discMan addHostToDiscovery:app.host];
                                             
                                             UIAlertController* alert;
                                             
