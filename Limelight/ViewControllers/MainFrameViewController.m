@@ -28,7 +28,6 @@
     Host* _selectedHost;
     NSString* _uniqueId;
     NSData* _cert;
-    NSString* _currentGame;
     DiscoveryManager* _discMan;
     AppAssetManager* _appManager;
     StreamConfiguration* _streamConfig;
@@ -72,69 +71,82 @@ static NSMutableSet* hostList;
 
 - (void)alreadyPaired {
     BOOL usingCachedAppList = false;
-    if ([_selectedHost.appList count] > 0) {
+    
+    // Capture the host here because it can change once we
+    // leave the main thread
+    Host* host = _selectedHost;
+    
+    if ([host.appList count] > 0) {
         usingCachedAppList = true;
         dispatch_async(dispatch_get_main_queue(), ^{
-            _computerNameButton.title = _selectedHost.name;
+            if (host != _selectedHost) {
+                return;
+            }
+            
+            _computerNameButton.title = host.name;
             [self.navigationController.navigationBar setNeedsLayout];
-            [self updateApps];
+            
+            [self updateAppsForHost:host];
             [self hideLoadingFrame];
         });
     }
     Log(LOG_I, @"Using cached app list: %d", usingCachedAppList);
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
         AppListResponse* appListResp = [[AppListResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
         if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
-            [self hideLoadingFrame];
             dispatch_async(dispatch_get_main_queue(), ^{
+                [self hideLoadingFrame];
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching App List Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
                 [self presentViewController:applistAlert animated:YES completion:nil];
-                _selectedHost.online = NO;
+                host.online = NO;
                 [self showHostSelectionView];
             });
         } else {
-            [self mergeAppLists:[appListResp getAppList]];
-
             dispatch_async(dispatch_get_main_queue(), ^{
-                _computerNameButton.title = _selectedHost.name;
+                [self mergeAppLists:[appListResp getAppList] forHost:host];
+
+                if (host != _selectedHost) {
+                    return;
+                }
+                
+                _computerNameButton.title = host.name;
                 [self.navigationController.navigationBar setNeedsLayout];
                 
-                [self updateApps];
+                [self updateAppsForHost:host];
+                [_appManager stopRetrieving];
+                [_appManager retrieveAssetsFromHost:host];
+                [self hideLoadingFrame];
             });
-            
-            [_appManager stopRetrieving];
-            [_appManager retrieveAssetsFromHost:_selectedHost];
-            [self hideLoadingFrame];
         }
     });
 }
 
-- (void) mergeAppLists:(NSArray*) newList {
+- (void) mergeAppLists:(NSArray*) newList forHost:(Host*)host {
     DataManager* database = [[DataManager alloc] init];
     for (App* app in newList) {
         BOOL appAlreadyInList = NO; 
-        for (App* savedApp in _selectedHost.appList) {
+        for (App* savedApp in host.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
                 appAlreadyInList = YES;
                 break;
             }
         }
         if (!appAlreadyInList) {
-            app.host = _selectedHost;
-            [_selectedHost addAppListObject:app];
+            app.host = host;
+            [host addAppListObject:app];
         } else {
             [database removeApp:app];
         }
     }
     
-    for (App* app in _selectedHost.appList) {
+    for (App* app in host.appList) {
         BOOL appWasRemoved = YES;
         for (App* mergedApp in newList) {
             if ([mergedApp.id isEqualToString:app.id]) {
@@ -143,7 +155,7 @@ static NSMutableSet* hostList;
             }
         }
         if (appWasRemoved) {
-            [_selectedHost removeAppListObject:app];
+            [host removeAppListObject:app];
             [database removeApp:app];
         }
     }
@@ -160,7 +172,9 @@ static NSMutableSet* hostList;
 }
 
 - (void) receivedAssetForApp:(App*)app {
-    [self.collectionView reloadData];
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
 }
 
 - (void)displayDnsFailedDialog {
@@ -183,14 +197,13 @@ static NSMutableSet* hostList;
     
     Log(LOG_D, @"Clicked host: %@", host.name);
     _selectedHost = host;
+    [self disableNavigation];
     
     // If we are online, paired, and have a cached app list, skip straight
     // to the app grid without a loading frame. This is the fast path that users
     // should hit most.
     if (host.online && host.pairState == PairStatePaired && host.appList.count > 0) {
-        dispatch_async(dispatch_get_main_queue(), ^{
-            [self alreadyPaired];
-        });
+        [self alreadyPaired];
         return;
     }
     
@@ -202,8 +215,8 @@ static NSMutableSet* hostList;
                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
-            [self hideLoadingFrame];
             dispatch_async(dispatch_get_main_queue(), ^{
+                [self hideLoadingFrame];
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching Server Info Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
@@ -304,7 +317,7 @@ static NSMutableSet* hostList;
 - (void) appClicked:(App *)app {
     Log(LOG_D, @"Clicked app: %@", app.name);
     _streamConfig = [[StreamConfiguration alloc] init];
-    _streamConfig.host = _selectedHost.activeAddress;
+    _streamConfig.host = app.host.activeAddress;
     _streamConfig.appID = app.id;
     
     DataManager* dataMan = [[DataManager alloc] init];
@@ -321,7 +334,7 @@ static NSMutableSet* hostList;
         [[self revealViewController] revealToggle:self];
     }
     
-    App* currentApp = [self findRunningApp];
+    App* currentApp = [self findRunningApp:app.host];
     if (currentApp != nil) {
         UIAlertController* alertController = [UIAlertController
                                               alertControllerWithTitle: app.name
@@ -335,7 +348,7 @@ static NSMutableSet* hostList;
                                     [app.id isEqualToString:currentApp.id] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
                                         Log(LOG_I, @"Quitting application: %@", currentApp.name);
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:_selectedHost.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
                                             HttpResponse* quitResponse = [[HttpResponse alloc] init];
                                             HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
                                             [hMan executeRequestSynchronously:quitRequest];
@@ -354,7 +367,7 @@ static NSMutableSet* hostList;
                                                 currentApp.isRunning = NO;
                                                 
                                                 dispatch_async(dispatch_get_main_queue(), ^{
-                                                    [self updateApps];
+                                                    [self updateAppsForHost:app.host];
                                                     [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                                 });
                                                 
@@ -371,7 +384,7 @@ static NSMutableSet* hostList;
                                             
                                             [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
                                             dispatch_async(dispatch_get_main_queue(), ^{
-                                                [self updateApps];
+                                                [self updateAppsForHost:app.host];
                                                 [self presentViewController:alert animated:YES completion:nil];
                                             });
                                         });
@@ -383,8 +396,8 @@ static NSMutableSet* hostList;
     }
 }
 
-- (App*) findRunningApp {
-    for (App* app in _selectedHost.appList) {
+- (App*) findRunningApp:(Host*)host {
+    for (App* app in host.appList) {
         if (app.isRunning) {
             return app;
         }
@@ -414,6 +427,7 @@ static NSMutableSet* hostList;
 
 - (void) hideLoadingFrame {
     [self dismissViewControllerAnimated:YES completion:nil];
+    [self enableNavigation];
 }
 
 - (void)viewDidLoad
@@ -554,8 +568,13 @@ static NSMutableSet* hostList;
     }
 }
 
-- (void) updateApps {
-    _sortedAppList = [_selectedHost.appList allObjects];
+- (void) updateAppsForHost:(Host*)host {
+    if (host != _selectedHost) {
+        Log(LOG_W, @"Mismatched host during app update");
+        return;
+    }
+    
+    _sortedAppList = [host.appList allObjects];
     _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
     
     [hostScrollView removeFromSuperview];
@@ -611,6 +630,14 @@ static NSMutableSet* hostList;
 
 - (BOOL)shouldAutorotate {
     return YES;
+}
+
+- (void) disableNavigation {
+    self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = NO;
+}
+
+- (void) enableNavigation {
+    self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = YES;
 }
 
 @end
