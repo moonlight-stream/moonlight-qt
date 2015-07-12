@@ -134,6 +134,7 @@ static NSMutableSet* hostList;
         BOOL appAlreadyInList = NO; 
         for (App* savedApp in host.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
+                savedApp.isRunning = app.isRunning;
                 appAlreadyInList = YES;
                 break;
             }
