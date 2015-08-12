@@ -296,6 +296,7 @@ void ClDisplayTransientMessage(char* message)
     memset(&_drCallbacks, 0, sizeof(_drCallbacks));
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
     
+    memset(&_arCallbacks, 0, sizeof(_arCallbacks));
     _arCallbacks.init = ArInit;
     _arCallbacks.cleanup = ArCleanup;
     _arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
