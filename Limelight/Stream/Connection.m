@@ -280,6 +280,8 @@ void ClDisplayTransientMessage(char* message)
     renderer = myRenderer;
     _callbacks = callbacks;
     _serverMajorVersion = serverMajorVersion;
+    
+    LiInitializeStreamConfiguration(&_streamConfig);
     _streamConfig.width = config.width;
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;
@@ -293,14 +295,15 @@ void ClDisplayTransientMessage(char* message)
     int riKeyId = htonl(config.riKeyId);
     memcpy(_streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
     
-    memset(&_drCallbacks, 0, sizeof(_drCallbacks));
+    LiInitializeVideoCallbacks(&_drCallbacks);
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
     
-    memset(&_arCallbacks, 0, sizeof(_arCallbacks));
+    LiInitializeAudioCallbacks(&_arCallbacks);
     _arCallbacks.init = ArInit;
     _arCallbacks.cleanup = ArCleanup;
     _arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
     
+    LiInitializeConnectionCallbacks(&_clCallbacks);
     _clCallbacks.stageStarting = ClStageStarting;
     _clCallbacks.stageComplete = ClStageComplete;
     _clCallbacks.stageFailed = ClStageFailed;
