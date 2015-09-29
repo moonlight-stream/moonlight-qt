@@ -27,14 +27,29 @@
 
 - (id)initWithHosts:(NSArray *)hosts andCallback:(id<DiscoveryCallback>)callback {
     self = [super init];
-    _hostQueue = [NSMutableArray arrayWithArray:hosts];
+    
+    // Using addHostToDiscovery ensures no duplicates
+    // will make it into the list from the database
     _callback = callback;
+    shouldDiscover = NO;
+    _hostQueue = [NSMutableArray array];
+    DataManager* dataMan = [[DataManager alloc] init];
+    for (Host* host in hosts)
+    {
+        if (![self addHostToDiscovery:host])
+        {
+            // Remove the duplicate host from the database
+            [dataMan removeHost:host];
+        }
+    }
+    [dataMan saveData];
+    [_callback updateAllHosts:_hostQueue];
+    
     _opQueue = [[NSOperationQueue alloc] init];
     _mdnsMan = [[MDNSManager alloc] initWithCallback:self];
     [CryptoManager generateKeyPairUsingSSl];
     _uniqueId = [CryptoManager getUniqueID];
     _cert = [CryptoManager readCertFromFile];
-    shouldDiscover = NO;
     return self;
 }
 
