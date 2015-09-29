@@ -609,6 +609,7 @@ static NSMutableSet* hostList;
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     UICollectionViewCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AppCell" forIndexPath:indexPath];
     
+    
     App* app = _sortedAppList[indexPath.row];
     UIAppView* appView = [[UIAppView alloc] initWithApp:app andCallback:self];
     [appView updateAppImage];
@@ -621,6 +622,17 @@ static NSMutableSet* hostList;
     
     [cell.subviews.firstObject removeFromSuperview]; // Remove a view that was previously added
     [cell addSubview:appView];
+
+    
+    UIBezierPath *shadowPath = [UIBezierPath bezierPathWithRect:cell.bounds];
+    cell.layer.masksToBounds = NO;
+    cell.layer.shadowColor = [UIColor blackColor].CGColor;
+    cell.layer.shadowOffset = CGSizeMake(1.0f, 5.0f);
+    cell.layer.shadowOpacity = 0.5f;
+    cell.layer.shadowPath = shadowPath.CGPath;
+    
+    cell.layer.borderColor = [[UIColor colorWithRed:0 green:0 blue:0 alpha:0.3f] CGColor];
+    cell.layer.borderWidth = 1;
     
     return cell;
 }
