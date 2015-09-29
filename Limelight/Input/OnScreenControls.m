@@ -63,6 +63,8 @@
     BOOL l3Set;
     BOOL r3Set;
     
+    BOOL _iPad;
+    CGRect _controlArea;
     UIView* _view;
     OnScreenControlsLevel _level;
     
@@ -71,7 +73,7 @@
     id<EdgeDetectionDelegate> _edgeDelegate;
 }
 
-static const float EDGE_WIDTH = .1;
+static const float EDGE_WIDTH = .05;
 
 //static const float BUTTON_SIZE = 50;
 static const float BUTTON_DIST = 20;
@@ -117,6 +119,20 @@ static float L3_Y;
     _controller = [[Controller alloc] init];
     _controller.playerIndex = 0;
     _edgeDelegate = swipeDelegate;
+    
+    _iPad = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
+    _controlArea = CGRectMake(0, 0, _view.frame.size.width, _view.frame.size.height);
+    if (_iPad)
+    {
+        // Cut down the control area on an iPad so the controls are more reachable
+        _controlArea.size.height = _view.frame.size.height / 2.0;
+        _controlArea.origin.y = _view.frame.size.height - _controlArea.size.height;
+    }
+    else
+    {
+        _controlArea.origin.x = _controlArea.size.width * EDGE_WIDTH;
+        _controlArea.size.width -= _controlArea.origin.x * 2;
+    }
     
     _aButton = [CALayer layer];
     _bButton = [CALayer layer];
@@ -219,8 +235,8 @@ static float L3_Y;
     // Start with the default complex layout
     [self setupComplexControls];
     
-    START_Y = _view.frame.size.height * .9;
-    SELECT_Y = _view.frame.size.height * .9;
+    START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
 }
 
 // For GCGamepad controls we move triggers, start, and select
@@ -237,46 +253,57 @@ static float L3_Y;
     // Start with the default complex layout
     [self setupComplexControls];
     
-    START_Y = _view.frame.size.height * .9;
-    SELECT_Y = _view.frame.size.height * .9;
+    START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
 
-    L1_Y = _view.frame.size.height * .7;
-    L2_Y = _view.frame.size.height * .9;
-    L2_X = _view.frame.size.width * .1;
-    R1_Y = _view.frame.size.height * .7;
-    R2_Y = _view.frame.size.height * .9;
-    R2_X = _view.frame.size.width * .9;
+    L1_Y = _controlArea.size.height * .7 + _controlArea.origin.y;
+    L2_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    L2_X = _controlArea.size.width * .1 + _controlArea.origin.x;
+    R1_Y = _controlArea.size.height * .7 + _controlArea.origin.y;
+    R2_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    R2_X = _controlArea.size.width * .9 + _controlArea.origin.x;
 }
 
 - (void) setupComplexControls
 {
-    D_PAD_CENTER_X = _view.frame.size.width * .15;
-    D_PAD_CENTER_Y = _view.frame.size.height * .55;
-    BUTTON_CENTER_X = _view.frame.size.width * .85;
-    BUTTON_CENTER_Y = _view.frame.size.height * .55;
+    D_PAD_CENTER_X = _controlArea.size.width * .1 + _controlArea.origin.x;
+    D_PAD_CENTER_Y = _controlArea.size.height * .55 + _controlArea.origin.y;
+    BUTTON_CENTER_X = _controlArea.size.width * .9 + _controlArea.origin.x;
+    BUTTON_CENTER_Y = _controlArea.size.height * .55 + _controlArea.origin.y;
     
-    LS_CENTER_X = _view.frame.size.width * .35;
-    LS_CENTER_Y = _view.frame.size.height * .75;
-    RS_CENTER_X = _view.frame.size.width * .65;
-    RS_CENTER_Y = _view.frame.size.height * .75;
+    if (_iPad)
+    {
+        // The analog sticks are kept closer to the sides on iPad
+        LS_CENTER_X = _controlArea.size.width * .22 + _controlArea.origin.x;
+        LS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+        RS_CENTER_X = _controlArea.size.width * .77 + _controlArea.origin.x;
+        RS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+    }
+    else
+    {
+        LS_CENTER_X = _controlArea.size.width * .35 + _controlArea.origin.x;
+        LS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+        RS_CENTER_X = _controlArea.size.width * .65 + _controlArea.origin.x;
+        RS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+    }
     
-    START_X = _view.frame.size.width * .6;
-    START_Y = _view.frame.size.height * .1;
-    SELECT_X = _view.frame.size.width * .4;
-    SELECT_Y = _view.frame.size.height * .1;
+    START_X = _controlArea.size.width * .1 + _controlArea.origin.x;
+    START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    SELECT_X = _controlArea.size.width * .9 + _controlArea.origin.x;
+    SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
     
-    L1_X = _view.frame.size.width * .15;
-    L1_Y = _view.frame.size.height * .27;
-    L2_X = _view.frame.size.width * .15;
-    L2_Y = _view.frame.size.height * .1;
-    R1_X = _view.frame.size.width * .85;
-    R1_Y = _view.frame.size.height * .27;
-    R2_X = _view.frame.size.width * .85;
-    R2_Y = _view.frame.size.height * .1;
-    L3_X = _view.frame.size.width * .25;
-    L3_Y = _view.frame.size.height * .75;
-    R3_X = _view.frame.size.width * .75;
-    R3_Y = _view.frame.size.height * .75;
+    L1_X = _controlArea.size.width * .1 + _controlArea.origin.x;
+    L1_Y = _controlArea.size.height * .27 + _controlArea.origin.y;
+    L2_X = _controlArea.size.width * .1 + _controlArea.origin.x;
+    L2_Y = _controlArea.size.height * .1 + _controlArea.origin.y;
+    R1_X = _controlArea.size.width * .9 + _controlArea.origin.x;
+    R1_Y = _controlArea.size.height * .27 + _controlArea.origin.y;
+    R2_X = _controlArea.size.width * .9 + _controlArea.origin.x;
+    R2_Y = _controlArea.size.height * .1 + _controlArea.origin.y;
+    L3_X = _controlArea.size.width * .25 + _controlArea.origin.x;
+    L3_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+    R3_X = _controlArea.size.width * .75 + _controlArea.origin.x;
+    R3_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
 }
 
 - (void) drawButtons {
