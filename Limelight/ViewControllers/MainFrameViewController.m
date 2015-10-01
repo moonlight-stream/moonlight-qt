@@ -146,6 +146,7 @@ static NSMutableSet* hostList;
         BOOL appAlreadyInList = NO; 
         for (App* savedApp in host.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
+                savedApp.name = app.name;
                 savedApp.isRunning = app.isRunning;
                 appAlreadyInList = YES;
                 break;
@@ -157,18 +158,29 @@ static NSMutableSet* hostList;
         }
     }
     
-    for (App* app in host.appList) {
-        BOOL appWasRemoved = YES;
-        for (App* mergedApp in newList) {
-            if ([mergedApp.id isEqualToString:app.id]) {
-                appWasRemoved = NO;
+    BOOL appWasRemoved;
+    do {
+        appWasRemoved = NO;
+        
+        for (App* app in host.appList) {
+            appWasRemoved = YES;
+            for (App* mergedApp in newList) {
+                if ([mergedApp.id isEqualToString:app.id]) {
+                    appWasRemoved = NO;
+                    break;
+                }
+            }
+            if (appWasRemoved) {
+                // Removing the app mutates the list we're iterating (which isn't legal).
+                // We need to jump out of this loop and restart enumeration.
+                [database removeAppFromHost:app];
                 break;
             }
         }
-        if (appWasRemoved) {
-            [database removeAppFromHost:app];
-        }
-    }
+        
+        // Keep looping until the list is no longer being mutated
+    } while (appWasRemoved);
+
     [database saveData];
 }
 
