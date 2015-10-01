@@ -11,6 +11,7 @@
 #import "AppDelegate.h"
 #import "Host.h"
 #import "App.h"
+#import "TemporaryApp.h"
 
 @interface DataManager : NSObject
 
@@ -22,7 +23,7 @@
 - (void) saveData;
 - (Host*) createHost;
 - (void) removeHost:(Host*)host;
-- (App*) createApp;
-- (void) removeApp:(App*)app;
+- (App*) addAppFromTemporaryApp:(TemporaryApp*)tempApp;
+- (void) removeAppFromHost:(App*)app;
 
 @end

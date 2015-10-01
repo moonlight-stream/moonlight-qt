@@ -23,6 +23,7 @@
 #import "StreamFrameViewController.h"
 #import "LoadingFrameViewController.h"
 #import "ComputerScrollView.h"
+#import "TemporaryApp.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -141,7 +142,7 @@ static NSMutableSet* hostList;
 
 - (void) mergeAppLists:(NSArray*) newList forHost:(Host*)host {
     DataManager* database = [[DataManager alloc] init];
-    for (App* app in newList) {
+    for (TemporaryApp* app in newList) {
         BOOL appAlreadyInList = NO; 
         for (App* savedApp in host.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
@@ -152,9 +153,7 @@ static NSMutableSet* hostList;
         }
         if (!appAlreadyInList) {
             app.host = host;
-            [host addAppListObject:app];
-        } else {
-            [database removeApp:app];
+            [database addAppFromTemporaryApp:app];
         }
     }
     
@@ -167,8 +166,7 @@ static NSMutableSet* hostList;
             }
         }
         if (appWasRemoved) {
-            [host removeAppListObject:app];
-            [database removeApp:app];
+            [database removeAppFromHost:app];
         }
     }
     [database saveData];

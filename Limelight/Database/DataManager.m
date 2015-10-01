@@ -7,8 +7,17 @@
 //
 
 #import "DataManager.h"
+#import "TemporaryApp.h"
 
 @implementation DataManager
+
++ (NSObject *)databaseLock {
+    static NSObject *lock = nil;
+    if (lock == nil) {
+        lock = [[NSObject alloc] init];
+    }
+    return lock;
+}
 
 - (id) init {
     self = [super init];
@@ -57,38 +66,65 @@
 }
 
 - (void) saveData {
-    NSError* error;
-    if (![[self.appDelegate managedObjectContext] save:&error]) {
-        Log(LOG_E, @"Unable to save hosts to database: %@", error);
+    @synchronized([DataManager databaseLock]) {
+        NSError* error;
+        if (![[self.appDelegate managedObjectContext] save:&error]) {
+            Log(LOG_E, @"Unable to save hosts to database: %@", error);
+        }
+        [self.appDelegate saveContext];
     }
-    [self.appDelegate saveContext];
 }
 
 - (NSArray*) retrieveHosts {
     return [self fetchRecords:@"Host"];
 }
 
-- (App*) createApp {
-    NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:[self.appDelegate managedObjectContext]];
-    return [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
+- (App*) addAppFromTemporaryApp:(TemporaryApp*)tempApp {
+    
+    App* managedApp;
+    
+    @synchronized([DataManager databaseLock]) {
+        NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:[self.appDelegate managedObjectContext]];
+        managedApp = [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
+        
+        assert(tempApp.host != nil);
+        
+        managedApp.id = tempApp.id;
+        managedApp.image = tempApp.image;
+        managedApp.name = tempApp.name;
+        managedApp.isRunning = tempApp.isRunning;
+        managedApp.host = tempApp.host;
+        
+        [managedApp.host addAppListObject:managedApp];
+    }
+    
+    return managedApp;
 }
 
-- (void) removeApp:(App*)app {
-    [[self.appDelegate managedObjectContext] deleteObject:app];
+- (void) removeAppFromHost:(App*)app {
+    @synchronized([DataManager databaseLock]) {
+        assert(app.host != nil);
+        
+        [app.host removeAppListObject:app];
+        [[self.appDelegate managedObjectContext] deleteObject:app];
+    }
 }
 
 - (NSArray*) fetchRecords:(NSString*)entityName {
-    NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] init];
-    NSEntityDescription* entity = [NSEntityDescription entityForName:entityName inManagedObjectContext:[self.appDelegate managedObjectContext]];
-    [fetchRequest setEntity:entity];
-    [fetchRequest setAffectedStores:[NSArray arrayWithObjects:[[self.appDelegate persistentStoreCoordinator] persistentStoreForURL:[self.appDelegate getStoreURL]], nil]];
+    NSArray* fetchedRecords;
     
-    NSError* error;
-    NSArray* fetchedRecords = [[self.appDelegate managedObjectContext] executeFetchRequest:fetchRequest error:&error];
-    //TODO: handle errors
+    @synchronized([DataManager databaseLock]) {
+        NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] init];
+        NSEntityDescription* entity = [NSEntityDescription entityForName:entityName inManagedObjectContext:[self.appDelegate managedObjectContext]];
+        [fetchRequest setEntity:entity];
+        [fetchRequest setAffectedStores:[NSArray arrayWithObjects:[[self.appDelegate persistentStoreCoordinator] persistentStoreForURL:[self.appDelegate getStoreURL]], nil]];
+        
+        NSError* error;
+        fetchedRecords = [[self.appDelegate managedObjectContext] executeFetchRequest:fetchRequest error:&error];
+        //TODO: handle errors
+    }
     
     return fetchedRecords;
-    
 }
 
 @end
