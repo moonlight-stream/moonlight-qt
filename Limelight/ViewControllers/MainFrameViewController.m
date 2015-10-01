@@ -22,6 +22,7 @@
 #import "ServerInfoResponse.h"
 #import "StreamFrameViewController.h"
 #import "LoadingFrameViewController.h"
+#import "ComputerScrollView.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -490,9 +491,12 @@ static NSMutableSet* hostList;
     
     [self setAutomaticallyAdjustsScrollViewInsets:NO];
     
-    hostScrollView = [[UIScrollView alloc] init];
+    hostScrollView = [[ComputerScrollView alloc] init];
     hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
     [hostScrollView setShowsHorizontalScrollIndicator:NO];
+    hostScrollView.delaysContentTouches = NO;
+    
+    self.collectionView.delaysContentTouches = NO;
     
     [self retrieveSavedHosts];
     _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
