@@ -33,7 +33,7 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     } else if ([currentSettings.height integerValue] == 1080) {
         resolution = 1;
     } else {
-        resolution = 2;
+        resolution = 0;
     }
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
     
@@ -58,27 +58,8 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
 - (void) saveSettings {
     DataManager* dataMan = [[DataManager alloc] init];
     NSInteger framerate = [self.framerateSelector selectedSegmentIndex] == 0 ? 30 : 60;
-    NSInteger height;
-    NSInteger width;
-    if ([self.resolutionSelector selectedSegmentIndex] == 2) {
-        // Get screen native resolution
-        height = [UIScreen mainScreen].bounds.size.height * [UIScreen mainScreen].scale;
-        width = [UIScreen mainScreen].bounds.size.width * [UIScreen mainScreen].scale;
-        
-        // Check if this setting differs from the previous value
-        Settings* oldSettings = [dataMan retrieveSettings];
-        if ([oldSettings.width intValue] != width || [oldSettings.height intValue] != height)
-        {
-            UIAlertController *alertResolution = [UIAlertController alertControllerWithTitle:@"Native resolution" message:[NSString stringWithFormat:@"For best results, select the following resolution in the game settings: %lix%li", (long)width, (long)height] preferredStyle:UIAlertControllerStyleAlert];
-            [alertResolution addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleCancel handler:nil]];
-            [self presentViewController:alertResolution animated:YES completion:nil];
-        }
-    }
-    else
-    {
-        height = [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
-        width = height == 720 ? 1280 : 1920;
-    }
+    NSInteger height = [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
+    NSInteger width = height == 720 ? 1280 : 1920;
     NSInteger onscreenControls = [self.onscreenControlSelector selectedSegmentIndex];
     [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls];
 }
