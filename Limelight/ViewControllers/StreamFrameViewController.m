@@ -114,6 +114,8 @@
         }]];
         [self presentViewController:alert animated:YES completion:nil];
     });
+    
+    [_streamMan stopStreamInternal];
 }
 
 - (void) launchFailed:(NSString*)message {
