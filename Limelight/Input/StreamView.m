@@ -67,15 +67,16 @@
                 deltaX *= xDeltaFactor * screenFactor;
                 deltaY *= yDeltaFactor * screenFactor;
                 
-                LiSendMouseMoveEvent(deltaX, deltaY);
-
-                touchMoved = true;
-                touchLocation = currentLocation;
+                if (deltaX != 0 || deltaY != 0) {
+                    LiSendMouseMoveEvent(deltaX, deltaY);
+                    touchMoved = true;
+                    touchLocation = currentLocation;
+                }
             }
         } else if ([[event allTouches] count] == 2) {
             CGPoint firstLocation = [[[[event allTouches] allObjects] objectAtIndex:0] locationInView:self];
             CGPoint secondLocation = [[[[event allTouches] allObjects] objectAtIndex:1] locationInView:self];
-
+            
             CGPoint avgLocation = CGPointMake((firstLocation.x + secondLocation.x) / 2, (firstLocation.y + secondLocation.y) / 2);
             if (touchLocation.y != avgLocation.y) {
                 LiSendScrollEvent(avgLocation.y - touchLocation.y);
@@ -93,23 +94,23 @@
         if (!touchMoved) {
             if ([[event allTouches] count]  == 2) {
                 Log(LOG_D, @"Sending right mouse button press");
-
+                
                 LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
-
+                
                 // Wait 100 ms to simulate a real button press
                 usleep(100 * 1000);
-
+                
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
-
-
+                
+                
             } else {
                 Log(LOG_D, @"Sending left mouse button press");
-
+                
                 LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
-
+                
                 // Wait 100 ms to simulate a real button press
                 usleep(100 * 1000);
-
+                
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
             }
         }

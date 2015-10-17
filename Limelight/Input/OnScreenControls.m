@@ -71,6 +71,7 @@
     ControllerSupport *_controllerSupport;
     Controller *_controller;
     id<EdgeDetectionDelegate> _edgeDelegate;
+    NSMutableArray* _deadTouches;
 }
 
 static const float EDGE_WIDTH = .05;
@@ -80,9 +81,11 @@ static const float BUTTON_DIST = 20;
 static float BUTTON_CENTER_X;
 static float BUTTON_CENTER_Y;
 
-static const float D_PAD_DIST = 15;
+static const float D_PAD_DIST = 10;
 static float D_PAD_CENTER_X;
 static float D_PAD_CENTER_Y;
+
+static const float DEAD_ZONE_PADDING = 15;
 
 static const double STICK_CLICK_RATE = 100;
 static const float STICK_DEAD_ZONE = .1;
@@ -119,6 +122,7 @@ static float L3_Y;
     _controller = [[Controller alloc] init];
     _controller.playerIndex = 0;
     _edgeDelegate = swipeDelegate;
+    _deadTouches = [[NSMutableArray alloc] init];
     
     _iPad = (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
     _controlArea = CGRectMake(0, 0, _view.frame.size.width, _view.frame.size.height);
@@ -155,7 +159,7 @@ static float L3_Y;
     _leftStick = [CALayer layer];
     _rightStick = [CALayer layer];
     _edge = [CALayer layer];
-
+    
     [self setupEdgeDetection];
     
     return self;
@@ -183,10 +187,10 @@ static float L3_Y;
             
             [self hideButtons];
             [self hideBumpers];
+            [self hideL3R3];
             [self drawTriggers];
             [self drawStartSelect];
             [self drawSticks];
-            [self drawL3R3];
             break;
         case OnScreenControlsLevelAutoGCExtendedGamepad:
             // GCExtendedGamepad is missing R3, L3, and select
@@ -245,7 +249,42 @@ static float L3_Y;
     // Start with the default complex layout
     [self setupComplexControls];
     
-    // TODO
+    START_X = _controlArea.size.width * .6 + _controlArea.origin.x;
+    START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    
+    SELECT_X = _controlArea.size.width * .4 + _controlArea.origin.x;
+    SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    
+    L2_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    L2_X = _controlArea.size.width * .1 + _controlArea.origin.x;
+    
+    R2_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    R2_X = _controlArea.size.width * .9 + _controlArea.origin.x;
+    
+    if (_iPad) {
+        START_X = _controlArea.size.width * .75 + _controlArea.origin.x;
+        START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+        
+        SELECT_X = _controlArea.size.width * .25 + _controlArea.origin.x;
+        SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+        
+        // The analog sticks are kept closer to the sides on iPad
+        LS_CENTER_X = _controlArea.size.width * .18 + _controlArea.origin.x;
+        LS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+        RS_CENTER_X = _controlArea.size.width * .82 + _controlArea.origin.x;
+        RS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+    } else {
+        START_X = _controlArea.size.width * .6 + _controlArea.origin.x;
+        START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+        
+        SELECT_X = _controlArea.size.width * .4 + _controlArea.origin.x;
+        SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+        
+        LS_CENTER_X = _controlArea.size.width * .25 + _controlArea.origin.x;
+        LS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+        RS_CENTER_X = _controlArea.size.width * .75 + _controlArea.origin.x;
+        RS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
+    }
 }
 
 // For simple controls we move the triggers and buttons to the bottom
@@ -253,13 +292,15 @@ static float L3_Y;
     // Start with the default complex layout
     [self setupComplexControls];
     
+    START_X = _controlArea.size.width * .6 + _controlArea.origin.x;
     START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
+    
+    SELECT_X = _controlArea.size.width * .4 + _controlArea.origin.x;
     SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
-
-    L1_Y = _controlArea.size.height * .7 + _controlArea.origin.y;
+    
     L2_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
     L2_X = _controlArea.size.width * .1 + _controlArea.origin.x;
-    R1_Y = _controlArea.size.height * .7 + _controlArea.origin.y;
+
     R2_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
     R2_X = _controlArea.size.width * .9 + _controlArea.origin.x;
 }
@@ -267,9 +308,9 @@ static float L3_Y;
 - (void) setupComplexControls
 {
     D_PAD_CENTER_X = _controlArea.size.width * .1 + _controlArea.origin.x;
-    D_PAD_CENTER_Y = _controlArea.size.height * .55 + _controlArea.origin.y;
+    D_PAD_CENTER_Y = _controlArea.size.height * .60 + _controlArea.origin.y;
     BUTTON_CENTER_X = _controlArea.size.width * .9 + _controlArea.origin.x;
-    BUTTON_CENTER_Y = _controlArea.size.height * .55 + _controlArea.origin.y;
+    BUTTON_CENTER_Y = _controlArea.size.height * .60 + _controlArea.origin.y;
     
     if (_iPad)
     {
@@ -287,9 +328,9 @@ static float L3_Y;
         RS_CENTER_Y = _controlArea.size.height * .75 + _controlArea.origin.y;
     }
     
-    START_X = _controlArea.size.width * .1 + _controlArea.origin.x;
+    START_X = _controlArea.size.width * .9 + _controlArea.origin.x;
     START_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
-    SELECT_X = _controlArea.size.width * .9 + _controlArea.origin.x;
+    SELECT_X = _controlArea.size.width * .1 + _controlArea.origin.x;
     SELECT_Y = _controlArea.size.height * .9 + _controlArea.origin.y;
     
     L1_X = _controlArea.size.width * .1 + _controlArea.origin.x;
@@ -312,43 +353,43 @@ static float L3_Y;
     _aButton.contents = (id) aButtonImage.CGImage;
     _aButton.frame = CGRectMake(BUTTON_CENTER_X - aButtonImage.size.width / 2, BUTTON_CENTER_Y + BUTTON_DIST, aButtonImage.size.width, aButtonImage.size.height);
     [_view.layer addSublayer:_aButton];
-
+    
     // create B button
     UIImage* bButtonImage = [UIImage imageNamed:@"BButton"];
     _bButton.frame = CGRectMake(BUTTON_CENTER_X + BUTTON_DIST, BUTTON_CENTER_Y - bButtonImage.size.height / 2, bButtonImage.size.width, bButtonImage.size.height);
     _bButton.contents = (id) bButtonImage.CGImage;
     [_view.layer addSublayer:_bButton];
-
+    
     // create X Button
     UIImage* xButtonImage = [UIImage imageNamed:@"XButton"];
     _xButton.frame = CGRectMake(BUTTON_CENTER_X - BUTTON_DIST - xButtonImage.size.width, BUTTON_CENTER_Y - xButtonImage.size.height/ 2, xButtonImage.size.width, xButtonImage.size.height);
     _xButton.contents = (id) xButtonImage.CGImage;
     [_view.layer addSublayer:_xButton];
-
+    
     // create Y Button
     UIImage* yButtonImage = [UIImage imageNamed:@"YButton"];
     _yButton.frame = CGRectMake(BUTTON_CENTER_X - yButtonImage.size.width / 2, BUTTON_CENTER_Y - BUTTON_DIST - yButtonImage.size.height, yButtonImage.size.width, yButtonImage.size.height);
     _yButton.contents = (id) yButtonImage.CGImage;
     [_view.layer addSublayer:_yButton];
-
+    
     // create Down button
     UIImage* downButtonImage = [UIImage imageNamed:@"DownButton"];
     _downButton.frame = CGRectMake(D_PAD_CENTER_X - downButtonImage.size.width / 2, D_PAD_CENTER_Y + D_PAD_DIST, downButtonImage.size.width, downButtonImage.size.height);
     _downButton.contents = (id) downButtonImage.CGImage;
     [_view.layer addSublayer:_downButton];
-
+    
     // create Right button
     UIImage* rightButtonImage = [UIImage imageNamed:@"RightButton"];
     _rightButton.frame = CGRectMake(D_PAD_CENTER_X + D_PAD_DIST, D_PAD_CENTER_Y - rightButtonImage.size.height / 2, rightButtonImage.size.width, rightButtonImage.size.height);
     _rightButton.contents = (id) rightButtonImage.CGImage;
     [_view.layer addSublayer:_rightButton];
-
+    
     // create Up button
     UIImage* upButtonImage = [UIImage imageNamed:@"UpButton"];
     _upButton.frame = CGRectMake(D_PAD_CENTER_X - upButtonImage.size.width / 2, D_PAD_CENTER_Y - D_PAD_DIST - upButtonImage.size.height, upButtonImage.size.width, upButtonImage.size.height);
     _upButton.contents = (id) upButtonImage.CGImage;
     [_view.layer addSublayer:_upButton];
-
+    
     // create Left button
     UIImage* leftButtonImage = [UIImage imageNamed:@"LeftButton"];
     _leftButton.frame = CGRectMake(D_PAD_CENTER_X - D_PAD_DIST - leftButtonImage.size.width, D_PAD_CENTER_Y - leftButtonImage.size.height / 2, leftButtonImage.size.width, leftButtonImage.size.height);
@@ -362,7 +403,7 @@ static float L3_Y;
     _startButton.frame = CGRectMake(START_X - startButtonImage.size.width / 2, START_Y - startButtonImage.size.height / 2, startButtonImage.size.width, startButtonImage.size.height);
     _startButton.contents = (id) startButtonImage.CGImage;
     [_view.layer addSublayer:_startButton];
-
+    
     // create Select button
     UIImage* selectButtonImage = [UIImage imageNamed:@"SelectButton"];
     _selectButton.frame = CGRectMake(SELECT_X - selectButtonImage.size.width / 2, SELECT_Y - selectButtonImage.size.height / 2, selectButtonImage.size.width, selectButtonImage.size.height);
@@ -409,7 +450,7 @@ static float L3_Y;
     _leftStick.frame = CGRectMake(LS_CENTER_X - leftStickImage.size.width / 2, LS_CENTER_Y - leftStickImage.size.height / 2, leftStickImage.size.width, leftStickImage.size.height);
     _leftStick.contents = (id) leftStickImage.CGImage;
     [_view.layer addSublayer:_leftStick];
-
+    
     // create right analog stick
     UIImage* rightStickBgImage = [UIImage imageNamed:@"StickOuter"];
     _rightStickBackground.frame = CGRectMake(RS_CENTER_X - rightStickBgImage.size.width / 2, RS_CENTER_Y - rightStickBgImage.size.height / 2, rightStickBgImage.size.width, rightStickBgImage.size.height);
@@ -490,7 +531,7 @@ static float L3_Y;
     float lsMaxY = LS_CENTER_Y + STICK_OUTER_SIZE / 2;
     float lsMinX = LS_CENTER_X - STICK_OUTER_SIZE / 2;
     float lsMinY = LS_CENTER_Y - STICK_OUTER_SIZE / 2;
-
+    
     for (UITouch* touch in touches) {
         CGPoint touchLocation = [touch locationInView:_view];
         float xLoc = touchLocation.x;
@@ -500,34 +541,34 @@ static float L3_Y;
             if (xLoc < lsMinX) xLoc = lsMinX;
             if (yLoc > lsMaxY) yLoc = lsMaxY;
             if (yLoc < lsMinY) yLoc = lsMinY;
-
+            
             _leftStick.frame = CGRectMake(xLoc - STICK_INNER_SIZE / 2, yLoc - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
-
+            
             float xStickVal = (xLoc - LS_CENTER_X) / (lsMaxX - LS_CENTER_X);
             float yStickVal = (yLoc - LS_CENTER_Y) / (lsMaxY - LS_CENTER_Y);
-
+            
             if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
             if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;
-
+            
             [_controllerSupport updateLeftStick:_controller x:0x7FFE * xStickVal y:0x7FFE * -yStickVal];
-
+            
             updated = true;
         } else if (touch == _rsTouch) {
             if (xLoc > rsMaxX) xLoc = rsMaxX;
             if (xLoc < rsMinX) xLoc = rsMinX;
             if (yLoc > rsMaxY) yLoc = rsMaxY;
             if (yLoc < rsMinY) yLoc = rsMinY;
-
+            
             _rightStick.frame = CGRectMake(xLoc - STICK_INNER_SIZE / 2, yLoc - STICK_INNER_SIZE / 2, STICK_INNER_SIZE, STICK_INNER_SIZE);
-
+            
             float xStickVal = (xLoc - RS_CENTER_X) / (rsMaxX - RS_CENTER_X);
             float yStickVal = (yLoc - RS_CENTER_Y) / (rsMaxY - RS_CENTER_Y);
-
+            
             if (fabsf(xStickVal) < STICK_DEAD_ZONE) xStickVal = 0;
             if (fabsf(yStickVal) < STICK_DEAD_ZONE) yStickVal = 0;
-
+            
             [_controllerSupport updateRightStick:_controller x:0x7FFE * xStickVal y:0x7FFE * -yStickVal];
-
+            
             updated = true;
         } else if (touch == _aTouch) {
             buttonTouch = true;
@@ -562,11 +603,14 @@ static float L3_Y;
         } else if (touch == _r3Touch) {
             buttonTouch = true;
         }
+        if ([_deadTouches containsObject:touch]) {
+            updated = true;
+        }
     }
     if (updated) {
         [_controllerSupport updateFinished:_controller];
     }
-    return updated || buttonTouch;
+        return updated || buttonTouch;
 }
 
 - (BOOL)handleTouchDownEvent:touches {
@@ -680,6 +724,10 @@ static float L3_Y;
         } else if ([_edge.presentationLayer hitTest:touchLocation]) {
             _edgeTouch = touch;
         }
+        if (!updated && !stickTouch && [self isInDeadZone:touch]) {
+            [_deadTouches addObject:touch];
+            updated = true;
+        }
     }
     if (updated) {
         [_controllerSupport updateFinished:_controller];
@@ -771,15 +819,123 @@ static float L3_Y;
             touched = true;
         } else if (touch == _edgeTouch) {
             _edgeTouch = nil;
-            if (![_edge.presentationLayer hitTest:[touch locationInView:_view]]) {
+            if ([touch locationInView:_view].x >= _view.frame.size.width / 4) {
                 [_edgeDelegate edgeSwiped];
             }
+        }
+        if ([_deadTouches containsObject:touch]) {
+            [_deadTouches removeObject:touch];
+            updated = true;
         }
     }
     if (updated) {
         [_controllerSupport updateFinished:_controller];
     }
+    
     return updated || touched;
+}
+
+- (BOOL) isInDeadZone:(UITouch*) touch {
+    switch (_level) {
+        case OnScreenControlsLevelFull:
+            return [self isDpadDeadZone:touch]
+            || [self isAbxyDeadZone:touch]
+            || [self isTriggerDeadZone:touch]
+            || [self isBumperDeadZone:touch]
+            || [self isStartSelectDeadZone:touch];
+        case OnScreenControlsLevelSimple:
+            return [self isTriggerDeadZone:touch]
+            || [self isStartSelectDeadZone:touch]
+            || [self isL3R3DeadZone:touch];
+        case OnScreenControlsLevelAutoGCExtendedGamepad:
+            return [self isL3R3DeadZone:touch]
+            || [self isStartSelectDeadZone:touch];
+        case OnScreenControlsLevelAutoGCGamepad:
+            return [self isTriggerDeadZone:touch]
+            || [self isStartSelectDeadZone:touch];
+        default:
+            return false;
+    }
+}
+
+- (BOOL) isDpadDeadZone:(UITouch*) touch {
+    return [self isDeadZone:touch
+                     startX:_view.frame.origin.x
+                     startY:_upButton.frame.origin.y
+                       endX:_rightButton.frame.origin.x + _rightButton.frame.size.width
+                       endY:_view.frame.origin.y + _view.frame.size.height];
+}
+
+- (BOOL) isAbxyDeadZone:(UITouch*) touch {
+    return [self isDeadZone:touch
+                     startX:_xButton.frame.origin.x
+                     startY:_yButton.frame.origin.y
+                       endX:_view.frame.origin.x + _view.frame.size.width
+                       endY:_view.frame.origin.y + _view.frame.size.height];
+}
+
+- (BOOL) isBumperDeadZone:(UITouch*) touch {
+    return [self isDeadZone:touch
+                     startX:_view.frame.origin.x
+                     startY:_l2Button.frame.origin.y + _l2Button.frame.size.height
+                       endX:_l1Button.frame.origin.x + _l1Button.frame.size.width
+                       endY:_upButton.frame.origin.y]
+    || [self isDeadZone:touch
+                 startX:_r2Button.frame.origin.x
+                 startY:_r2Button.frame.origin.y + _r2Button.frame.size.height
+                   endX:_view.frame.origin.x + _view.frame.size.width
+                   endY:_yButton.frame.origin.y];
+}
+
+- (BOOL) isTriggerDeadZone:(UITouch*) touch {
+    return [self isDeadZone:touch
+                     startX:_view.frame.origin.x
+                     startY:_l2Button.frame.origin.y
+                       endX:_l2Button.frame.origin.x + _l2Button.frame.size.width
+                       endY:_view.frame.origin.y + _view.frame.size.height]
+    || [self isDeadZone:touch
+                 startX:_r2Button.frame.origin.x
+                 startY:_r2Button.frame.origin.y
+                   endX:_view.frame.origin.x + _view.frame.size.width
+                   endY:_view.frame.origin.y + _view.frame.size.height];
+}
+
+- (BOOL) isL3R3DeadZone:(UITouch*) touch {
+    return [self isDeadZone:touch
+                     startX:_view.frame.origin.x
+                     startY:_l3Button.frame.origin.y
+                       endX:_view.frame.origin.x
+                       endY:_view.frame.origin.y + _view.frame.size.height]
+    || [self isDeadZone:touch
+                 startX:_r3Button.frame.origin.x
+                 startY:_r3Button.frame.origin.y
+                   endX:_view.frame.origin.x + _view.frame.size.width
+                   endY:_view.frame.origin.y + _view.frame.size.height];
+}
+
+- (BOOL) isStartSelectDeadZone:(UITouch*) touch {
+    return [self isDeadZone:touch
+                     startX:_startButton.frame.origin.x
+                     startY:_startButton.frame.origin.y
+                       endX:_view.frame.origin.x + _view.frame.size.width
+                       endY:_view.frame.origin.y + _view.frame.size.height]
+    || [self isDeadZone:touch
+                 startX:_view.frame.origin.x
+                 startY:_selectButton.frame.origin.y
+                   endX:_selectButton.frame.origin.x + _selectButton.frame.size.width
+                   endY:_view.frame.origin.y + _view.frame.size.height];
+}
+
+- (BOOL) isDeadZone:(UITouch*) touch startX:(float)deadZoneStartX startY:(float)deadZoneStartY endX:(float)deadZoneEndX endY:(float)deadZoneEndY {
+    deadZoneStartX -= DEAD_ZONE_PADDING;
+    deadZoneStartY -= DEAD_ZONE_PADDING;
+    deadZoneEndX += DEAD_ZONE_PADDING;
+    deadZoneEndY += DEAD_ZONE_PADDING;
+    
+    CGPoint touchLocation = [touch locationInView:_view];
+    return (touchLocation.x > deadZoneStartX && touchLocation.x < deadZoneEndX
+            && touchLocation.y > deadZoneStartY && touchLocation.y < deadZoneEndY);
+    
 }
 
 @end
