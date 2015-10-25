@@ -65,11 +65,16 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
     return [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
 }
 
-void ArInit(void)
+void ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig)
 {
     int err;
     
-    opusDecoder = opus_decoder_create(48000, 2, &err);
+    // We only support stereo for now
+    assert(audioConfiguration == AUDIO_CONFIGURATION_STEREO);
+    
+    opusDecoder = opus_decoder_create(opusConfig->sampleRate,
+                                      opusConfig->channelCount,
+                                      &err);
     
     audioLock = [[NSLock alloc] init];
     
@@ -77,9 +82,9 @@ void ArInit(void)
     NSError *audioSessionError = nil;
     AVAudioSession* audioSession = [AVAudioSession sharedInstance];
     
-    [audioSession setPreferredSampleRate:48000.0 error:&audioSessionError];
+    [audioSession setPreferredSampleRate:opusConfig->sampleRate error:&audioSessionError];
     [audioSession setCategory: AVAudioSessionCategoryPlayback error: &audioSessionError];
-    [audioSession setPreferredOutputNumberOfChannels:2 error:&audioSessionError];
+    [audioSession setPreferredOutputNumberOfChannels:opusConfig->channelCount error:&audioSessionError];
     [audioSession setPreferredIOBufferDuration:0.005 error:&audioSessionError];
     [audioSession setActive: YES error: &audioSessionError];
     
@@ -99,11 +104,11 @@ void ArInit(void)
     }
     
     AudioStreamBasicDescription audioFormat = {0};
-    audioFormat.mSampleRate = 48000;
+    audioFormat.mSampleRate = opusConfig->sampleRate;
     audioFormat.mBitsPerChannel = 16;
     audioFormat.mFormatID = kAudioFormatLinearPCM;
     audioFormat.mFormatFlags = kAudioFormatFlagIsSignedInteger | kLinearPCMFormatFlagIsPacked;
-    audioFormat.mChannelsPerFrame = 2;
+    audioFormat.mChannelsPerFrame = opusConfig->channelCount;
     audioFormat.mBytesPerFrame = audioFormat.mChannelsPerFrame * (audioFormat.mBitsPerChannel / 8);
     audioFormat.mBytesPerPacket = audioFormat.mBytesPerFrame;
     audioFormat.mFramesPerPacket = audioFormat.mBytesPerPacket / audioFormat.mBytesPerFrame;
