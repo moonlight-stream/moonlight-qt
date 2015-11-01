@@ -13,6 +13,7 @@
 #import "DataManager.h"
 #import "DiscoveryWorker.h"
 #import "ServerInfoResponse.h"
+#import "IdManager.h"
 
 @implementation DiscoveryManager {
     NSMutableArray* _hostQueue;
@@ -48,7 +49,7 @@
     _opQueue = [[NSOperationQueue alloc] init];
     _mdnsMan = [[MDNSManager alloc] initWithCallback:self];
     [CryptoManager generateKeyPairUsingSSl];
-    _uniqueId = [CryptoManager getUniqueID];
+    _uniqueId = [IdManager getUniqueId];
     _cert = [CryptoManager readCertFromFile];
     return self;
 }

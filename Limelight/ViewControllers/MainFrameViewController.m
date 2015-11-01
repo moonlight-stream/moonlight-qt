@@ -24,6 +24,7 @@
 #import "LoadingFrameViewController.h"
 #import "ComputerScrollView.h"
 #import "TemporaryApp.h"
+#import "IdManager.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -488,7 +489,7 @@ static NSMutableSet* hostList;
     
     // Set up crypto
     [CryptoManager generateKeyPairUsingSSl];
-    _uniqueId = [CryptoManager getUniqueID];
+    _uniqueId = [IdManager getUniqueId];
     _cert = [CryptoManager readCertFromFile];
 
     _appManager = [[AppAssetManager alloc] initWithCallback:self];

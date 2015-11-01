@@ -11,7 +11,6 @@
 @interface CryptoManager : NSObject
 
 + (void) generateKeyPairUsingSSl;
-+ (NSString*) getUniqueID;
 + (NSData*) readCertFromFile;
 + (NSData*) readKeyFromFile;
 + (NSData*) readP12FromFile;

@@ -16,5 +16,6 @@
 @dynamic height;
 @dynamic width;
 @dynamic onscreenControls;
+@dynamic uniqueId;
 
 @end

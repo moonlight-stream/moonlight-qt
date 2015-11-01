@@ -8,7 +8,6 @@
 
 #import "CryptoManager.h"
 #import "mkcert.h"
-#import <AdSupport/ASIdentifierManager.h>
 
 #include <openssl/aes.h>
 #include <openssl/sha.h>
@@ -227,20 +226,6 @@ static NSData* p12 = nil;
             Log(LOG_I, @"Certificate created");
         }
     });
-}
-
-+ (NSString*) getUniqueID {
-    // generate a UUID
-    NSUUID* uuid = [ASIdentifierManager sharedManager].advertisingIdentifier;
-    NSString* idString = [NSString stringWithString:[uuid UUIDString]];
-    
-    // we need a 16byte hex-string so we take the last 17 characters
-    // and remove the '-' to get a 16 character string
-    NSMutableString* uniqueId = [NSMutableString stringWithString:[idString substringFromIndex:19]];
-    [uniqueId deleteCharactersInRange:NSMakeRange(4, 1)];
-    
-    //Log(LOG_D, @"Unique ID: %@", uniqueId);
-    return [NSString stringWithString:uniqueId];
 }
 
 @end

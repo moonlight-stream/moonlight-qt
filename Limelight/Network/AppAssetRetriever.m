@@ -11,6 +11,7 @@
 #import "CryptoManager.h"
 #import "AppAssetResponse.h"
 #import "HttpRequest.h"
+#import "IdManager.h"
 
 @implementation AppAssetRetriever
 static const double RETRY_DELAY = 2; // seconds
@@ -21,7 +22,7 @@ static const int MAX_ATTEMPTS = 5;
     int attempts = 0;
     while (![self isCancelled] && appImage == nil && attempts++ < MAX_ATTEMPTS) {
         
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.activeAddress uniqueId:[CryptoManager getUniqueID] deviceName:deviceName cert:[CryptoManager readCertFromFile]];
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:_host.activeAddress uniqueId:[IdManager getUniqueId] deviceName:deviceName cert:[CryptoManager readCertFromFile]];
         AppAssetResponse* appAssetResp = [[AppAssetResponse alloc] init];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appAssetResp withUrlRequest:[hMan newAppAssetRequestWithAppId:self.app.id]]];
         

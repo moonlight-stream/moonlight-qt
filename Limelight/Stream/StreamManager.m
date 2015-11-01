@@ -15,6 +15,7 @@
 #import "ServerInfoResponse.h"
 #import "HttpResponse.h"
 #import "HttpRequest.h"
+#import "IdManager.h"
 
 @implementation StreamManager {
     StreamConfiguration* _config;
@@ -36,7 +37,7 @@
 
 - (void)main {
     [CryptoManager generateKeyPairUsingSSl];
-    NSString* uniqueId = [CryptoManager getUniqueID];
+    NSString* uniqueId = [IdManager getUniqueId];
     NSData* cert = [CryptoManager readCertFromFile];
     
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_config.host
