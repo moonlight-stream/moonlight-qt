@@ -85,7 +85,6 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years) {
     
     if (*pkeyp == NULL) {
         if ((pk=EVP_PKEY_new()) == NULL) {
-            abort();
             return(0);
         }
     } else {
@@ -102,7 +101,6 @@ int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years) {
     
     rsa = RSA_generate_key(bits, RSA_F4, NULL, NULL);
     if (!EVP_PKEY_assign_RSA(pk, rsa)) {
-        abort();
         goto err;
     }
     
