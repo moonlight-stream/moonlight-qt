@@ -44,6 +44,10 @@
     self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
     [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
     
+    // Rasterizing the cell layer increases rendering performance by quite a bit
+    self.layer.shouldRasterize = YES;
+    self.layer.rasterizationScale = [UIScreen mainScreen].scale;
+    
     return self;
 }
 
