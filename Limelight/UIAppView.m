@@ -13,36 +13,35 @@
     UIButton* _appButton;
     UILabel* _appLabel;
     UIImageView* _appOverlay;
+    NSCache* _artCache;
     id<AppCallback> _callback;
 }
 
-- (id) initWithApp:(App*)app andCallback:(id<AppCallback>)callback {
+static UIImage* noImage;
+
+- (id) initWithApp:(App*)app cache:(NSCache*)cache andCallback:(id<AppCallback>)callback {
     self = [super init];
     _app = app;
     _callback = callback;
+    _artCache = cache;
+    
+    // Cache the NoAppImage ourselves to avoid
+    // having to load it each time
+    if (noImage == nil) {
+        noImage = [UIImage imageNamed:@"NoAppImage"];
+    }
     
     _appButton = [UIButton buttonWithType:UIButtonTypeCustom];
-    UIImage* noImage = [UIImage imageNamed:@"NoAppImage"];
     [_appButton setBackgroundImage:noImage forState:UIControlStateNormal];
     [_appButton setContentEdgeInsets:UIEdgeInsetsMake(0, 4, 0, 4)];
     [_appButton sizeToFit];
     [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventTouchUpInside];
     
-    _appOverlay = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Play"]];
-    _appOverlay.layer.shadowColor = [UIColor blackColor].CGColor;
-    _appOverlay.layer.shadowOffset = CGSizeMake(0, 0);
-    _appOverlay.layer.shadowOpacity = 1;
-    _appOverlay.layer.shadowRadius = 2.0;
-    [_appOverlay setHidden: YES];
-    
     [self addSubview:_appButton];
-    [self addSubview:_appOverlay];
     [self sizeToFit];
     
     _appButton.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
-    _appOverlay.frame = CGRectMake(0, 0, noImage.size.width / 2.f, noImage.size.height / 4.f);
     self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
-    [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
     
     // Rasterizing the cell layer increases rendering performance by quite a bit
     self.layer.shouldRasterize = YES;
@@ -56,13 +55,37 @@
 }
 
 - (void) updateAppImage {
-    [_appOverlay setHidden:!_app.isRunning];
+    if (_appOverlay != nil) {
+        [_appOverlay removeFromSuperview];
+        _appOverlay = nil;
+    }
+    
+    if (_app.isRunning) {
+        // Only create the app overlay if needed
+        _appOverlay = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Play"]];
+        _appOverlay.layer.shadowColor = [UIColor blackColor].CGColor;
+        _appOverlay.layer.shadowOffset = CGSizeMake(0, 0);
+        _appOverlay.layer.shadowOpacity = 1;
+        _appOverlay.layer.shadowRadius = 2.0;
+        
+        [self addSubview:_appOverlay];
+        
+        _appOverlay.frame = CGRectMake(0, 0, noImage.size.width / 2.f, noImage.size.height / 4.f);
+        [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
+    }
     
     // TODO: Improve no-app image detection
     BOOL noAppImage = false;
     
     if (_app.image != nil) {
-        UIImage* appImage = [UIImage imageWithData:_app.image];
+        // Load the decoded image from the cache
+        UIImage* appImage = [_artCache objectForKey:_app];
+        if (appImage == nil) {
+            // Not cached; we have to decode this now
+            appImage = [UIImage imageWithData:_app.image];
+            [_artCache setObject:appImage forKey:_app];
+        }
+        
         // This size of image might be blank image received from GameStream.
         if (!(appImage.size.width == 130.f && appImage.size.height == 180.f)) {
             _appButton.frame = CGRectMake(0, 0, appImage.size.width / 2, appImage.size.height / 2);

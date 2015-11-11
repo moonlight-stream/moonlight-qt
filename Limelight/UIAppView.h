@@ -17,7 +17,7 @@
 
 @interface UIAppView : UIView
 
-- (id) initWithApp:(App*)app andCallback:(id<AppCallback>)callback;
+- (id) initWithApp:(App*)app cache:(NSCache*)cache andCallback:(id<AppCallback>)callback;
 - (void) updateAppImage;
 
 @end

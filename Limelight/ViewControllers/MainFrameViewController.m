@@ -5,6 +5,8 @@
 //  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
+@import ImageIO;
+
 #import "MainFrameViewController.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
@@ -38,6 +40,7 @@
     UIScrollView* hostScrollView;
     int currentPosition;
     NSArray* _sortedAppList;
+    NSCache* _boxArtCache;
 }
 static NSMutableSet* hostList;
 
@@ -195,6 +198,10 @@ static NSMutableSet* hostList;
 }
 
 - (void) receivedAssetForApp:(App*)app {
+    // Update the box art cache now so we don't have to do it
+    // on the main thread
+    [self updateBoxArtCacheForApp:app];
+    
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
     });
@@ -500,6 +507,8 @@ static NSMutableSet* hostList;
         hostList = [[NSMutableSet alloc] init];
     }
     
+    _boxArtCache = [[NSCache alloc] init];
+    
     [self setAutomaticallyAdjustsScrollViewInsets:NO];
     
     hostScrollView = [[ComputerScrollView alloc] init];
@@ -524,8 +533,26 @@ static NSMutableSet* hostList;
     [self retrieveSavedHosts];
     _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
     
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(handleReturnToForeground)
+                                                 name: UIApplicationWillEnterForegroundNotification
+                                               object: nil];
+    
     [self updateHosts];
     [self.view addSubview:hostScrollView];
+}
+
+-(void)dealloc
+{
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+-(void)handleReturnToForeground
+{
+    // This will refresh the applist
+    if (_selectedHost != nil) {
+        [self hostClicked:_selectedHost view:nil];
+    }
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -540,10 +567,7 @@ static NSMutableSet* hostList;
     
     [_discMan startDiscovery];
     
-    // This will refresh the applist
-    if (_selectedHost != nil) {
-        [self hostClicked:_selectedHost view:nil];
-    }
+    [self handleReturnToForeground];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
@@ -551,6 +575,9 @@ static NSMutableSet* hostList;
     [super viewDidDisappear:animated];
     // when discovery stops, we must create a new instance because you cannot restart an NSOperation when it is finished
     [_discMan stopDiscovery];
+    
+    // Purge the box art cache
+    [_boxArtCache removeAllObjects];
     
     // In case the host objects were updated in the background
     [[[DataManager alloc] init] saveData];
@@ -605,6 +632,7 @@ static NSMutableSet* hostList;
             [hostScrollView addSubview:compView];
         }
     }
+    
     prevEdge = [self getCompViewX:addComp addComp:addComp prevEdge:prevEdge];
     addComp.center = CGPointMake(prevEdge, hostScrollView.frame.size.height / 2);
     
@@ -620,6 +648,30 @@ static NSMutableSet* hostList;
     }
 }
 
+// This function forces immediate decoding of the UIImage, rather
+// than the default lazy decoding that results in janky scrolling.
++ (UIImage*) loadBoxArtForCaching:(App*)app {
+    
+    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)app.image, NULL);
+    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, (__bridge CFDictionaryRef)@{(id)kCGImageSourceShouldCacheImmediately: (id)kCFBooleanTrue});
+    
+    UIImage *boxArt = [UIImage imageWithCGImage:cgImage];
+    
+    CGImageRelease(cgImage);
+    CFRelease(source);
+    
+    return boxArt;
+}
+
+- (void) updateBoxArtCacheForApp:(App*)app {
+    if (app.image == nil) {
+        [_boxArtCache removeObjectForKey:app];
+    }
+    else if ([_boxArtCache objectForKey:app] == nil) {
+        [_boxArtCache setObject:[MainFrameViewController loadBoxArtForCaching:app] forKey:app];
+    }
+}
+
 - (void) updateAppsForHost:(Host*)host {
     if (host != _selectedHost) {
         Log(LOG_W, @"Mismatched host during app update");
@@ -629,6 +681,15 @@ static NSMutableSet* hostList;
     _sortedAppList = [host.appList allObjects];
     _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
     
+    // Start populating the box art cache asynchronously
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        Log(LOG_I, @"Starting per-computer box art caching job");
+        for (App* app in host.appList) {
+            [self updateBoxArtCacheForApp:app];
+        }
+        Log(LOG_I, @"Per-computer box art caching job completed");
+    });
+    
     [hostScrollView removeFromSuperview];
     [self.collectionView reloadData];
 }
@@ -636,9 +697,8 @@ static NSMutableSet* hostList;
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     UICollectionViewCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AppCell" forIndexPath:indexPath];
     
-    
     App* app = _sortedAppList[indexPath.row];
-    UIAppView* appView = [[UIAppView alloc] initWithApp:app andCallback:self];
+    UIAppView* appView = [[UIAppView alloc] initWithApp:app cache:_boxArtCache andCallback:self];
     [appView updateAppImage];
     
     if (appView.bounds.size.width > 10.0) {
