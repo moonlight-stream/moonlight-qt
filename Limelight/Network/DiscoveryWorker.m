@@ -87,19 +87,31 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     
     Log(LOG_D, @"%@ has %d unique addresses", _host.name, [addresses count]);
     
-    for (NSString *address in addresses) {
-        if (self.cancelled) {
-            // Get out without updating the status because
-            // it might not have finished checking the various
-            // addresses
-            return;
+    // Give the PC 3 tries to respond before declaring it offline
+    for (int i = 0; i < 3; i++) {
+        for (NSString *address in addresses) {
+            if (self.cancelled) {
+                // Get out without updating the status because
+                // it might not have finished checking the various
+                // addresses
+                return;
+            }
+            
+            ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:address];
+            receivedResponse = [self checkResponse:serverInfoResp];
+            if (receivedResponse) {
+                _host.activeAddress = address;
+                break;
+            }
         }
         
-        ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:address];
-        receivedResponse = [self checkResponse:serverInfoResp];
         if (receivedResponse) {
-            _host.activeAddress = address;
+            Log(LOG_I, @"Received serverinfo response on try %d", i);
             break;
+        }
+        else {
+            // Wait for one second then retry
+            [NSThread sleepForTimeInterval:1];
         }
     }
 
