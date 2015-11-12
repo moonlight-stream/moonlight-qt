@@ -100,11 +100,26 @@ static NSMutableSet* hostList;
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
         
-        AppListResponse* appListResp = [[AppListResponse alloc] init];
-        
         // Exempt this host from discovery while handling the applist query
         [_discMan removeHostFromDiscovery:host];
-        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
+        
+        // Try up to 5 times to get the app list
+        AppListResponse* appListResp;
+        for (int i = 0; i < 5; i++) {
+            appListResp = [[AppListResponse alloc] init];
+            [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
+            if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
+                Log(LOG_W, @"Failed to get applist on try %d: %@", i, appListResp.statusMessage);
+                
+                // Wait for one second then retry
+                [NSThread sleepForTimeInterval:1];
+            }
+            else {
+                Log(LOG_I, @"App list successfully retreived - took %d tries", i);
+                break;
+            }
+        }
+        
         [_discMan addHostToDiscovery:host];
 
         if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
