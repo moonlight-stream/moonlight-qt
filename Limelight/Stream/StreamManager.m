@@ -48,11 +48,11 @@
     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
                                        fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
-    NSString* currentGame = [serverInfoResp getStringTag:@"currentgame"];
     NSString* pairStatus = [serverInfoResp getStringTag:@"PairStatus"];
     NSString* currentClient = [serverInfoResp getStringTag:@"CurrentClient"];
     NSString* appversion = [serverInfoResp getStringTag:@"appversion"];
-    if (![serverInfoResp isStatusOk] || currentGame == NULL || pairStatus == NULL || appversion == NULL) {
+    NSString* serverState = [serverInfoResp getStringTag:@"state"];
+    if (![serverInfoResp isStatusOk] || pairStatus == NULL || appversion == NULL || serverState == NULL) {
         [_callbacks launchFailed:@"Failed to connect to PC"];
         return;
     }
@@ -64,7 +64,7 @@
     }
     
     // resumeApp and launchApp handle calling launchFailed
-    if (![currentGame isEqualToString:@"0"]) {
+    if ([serverState hasSuffix:@"_SERVER_BUSY"]) {
         if (![currentClient isEqualToString:@"1"]) {
             // The server is streaming to someone else
             [_callbacks launchFailed:@"There is another stream in progress"];

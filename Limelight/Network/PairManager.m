@@ -38,7 +38,7 @@
         return;
     }
     if ([serverInfoResp isStatusOk]) {
-        if (![[serverInfoResp getStringTag:@"currentgame"] isEqual:@"0"]) {
+        if (![[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_AVAILABLE"]) {
             [_callback pairFailed:@"You must stop streaming before attempting to pair."];
         } else if (![[serverInfoResp getStringTag:@"PairStatus"] isEqual:@"1"]) {
             [self initiatePair];
