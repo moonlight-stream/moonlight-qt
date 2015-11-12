@@ -38,10 +38,36 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
     
     [self.resolutionSelector setSelectedSegmentIndex:resolution];
+    [self.resolutionSelector addTarget:self action:@selector(newResolutionFpsChosen) forControlEvents:UIControlEventValueChanged];
     [self.framerateSelector setSelectedSegmentIndex:framerate];
+    [self.framerateSelector addTarget:self action:@selector(newResolutionFpsChosen) forControlEvents:UIControlEventValueChanged];
     [self.onscreenControlSelector setSelectedSegmentIndex:onscreenControls];
     [self.bitrateSlider setValue:(_bitrate / BITRATE_INTERVAL) animated:YES];
     [self.bitrateSlider addTarget:self action:@selector(bitrateSliderMoved) forControlEvents:UIControlEventValueChanged];
+    [self updateBitrateText];
+}
+
+- (void) newResolutionFpsChosen {
+    NSInteger frameRate = [self getChosenFrameRate];
+    NSInteger resHeight = [self getChosenStreamHeight];
+    NSInteger defaultBitrate;
+    
+    // 1080p60 is 20 Mbps
+    if (frameRate == 60 && resHeight == 1080) {
+        defaultBitrate = 20000;
+    }
+    // 720p60 and 1080p30 are 10 Mbps
+    else if (frameRate == 60 || resHeight == 1080) {
+        defaultBitrate = 10000;
+    }
+    // 720p30 is 5 Mbps
+    else {
+        defaultBitrate = 5000;
+    }
+    
+    _bitrate = defaultBitrate;
+    [self.bitrateSlider setValue:defaultBitrate / BITRATE_INTERVAL animated:YES];
+    
     [self updateBitrateText];
 }
 
@@ -55,11 +81,23 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [self.bitrateLabel setText:[NSString stringWithFormat:bitrateFormat, _bitrate / 1000.]];
 }
 
+- (NSInteger) getChosenFrameRate {
+    return [self.framerateSelector selectedSegmentIndex] == 0 ? 30 : 60;
+}
+
+- (NSInteger) getChosenStreamHeight {
+    return [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
+}
+
+- (NSInteger) getChosenStreamWidth {
+    return [self getChosenStreamHeight] == 720 ? 1280 : 1920;
+}
+
 - (void) saveSettings {
     DataManager* dataMan = [[DataManager alloc] init];
-    NSInteger framerate = [self.framerateSelector selectedSegmentIndex] == 0 ? 30 : 60;
-    NSInteger height = [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
-    NSInteger width = height == 720 ? 1280 : 1920;
+    NSInteger framerate = [self getChosenFrameRate];
+    NSInteger height = [self getChosenStreamHeight];
+    NSInteger width = [self getChosenStreamWidth];
     NSInteger onscreenControls = [self.onscreenControlSelector selectedSegmentIndex];
     [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls];
 }
