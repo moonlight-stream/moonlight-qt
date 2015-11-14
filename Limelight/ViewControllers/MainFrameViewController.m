@@ -696,14 +696,14 @@ static NSMutableSet* hostList;
     _sortedAppList = [host.appList allObjects];
     _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
     
-    // Dispatch independent jobs to fetch each app art asset. This way we enumerate on the main thread
-    // which is safe for accessing the app list, and this also provides us the ability to use the sorted
-    // list to fetch items the user is more likely to view first.
-    for (App* app in _sortedAppList) {
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    // Start populating the box art cache asynchronously
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        Log(LOG_I, @"Starting per-computer box art caching job");
+        for (App* app in host.appList) {
             [self updateBoxArtCacheForApp:app];
-        });
-    }
+        }
+        Log(LOG_I, @"Per-computer box art caching job completed");
+    });
     
     [hostScrollView removeFromSuperview];
     [self.collectionView reloadData];
