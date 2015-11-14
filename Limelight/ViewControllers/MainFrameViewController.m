@@ -640,7 +640,9 @@ static NSMutableSet* hostList;
     UIComputerView* compView;
     float prevEdge = -1;
     @synchronized (hostList) {
-        for (Host* comp in hostList) {
+        // Sort the host list in alphabetical order
+        NSArray* sortedHostList = [[hostList allObjects] sortedArrayUsingSelector:@selector(compareName:)];
+        for (Host* comp in sortedHostList) {
             compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
             compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
             prevEdge = compView.frame.origin.x + compView.frame.size.width;
@@ -696,13 +698,31 @@ static NSMutableSet* hostList;
     _sortedAppList = [host.appList allObjects];
     _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
     
-    // Start populating the box art cache asynchronously
+    // Split the sorted array in half to allow 2 jobs to process app assets at once
+    NSArray *firstHalf;
+    NSArray *secondHalf;
+    NSRange range;
+    
+    range.location = 0;
+    range.length = [_sortedAppList count] / 2;
+    
+    firstHalf = [_sortedAppList subarrayWithRange:range];
+    
+    range.location = range.length;
+    range.length = [_sortedAppList count] - range.length;
+    
+    secondHalf = [_sortedAppList subarrayWithRange:range];
+    
+    // Start 2 jobs
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        Log(LOG_I, @"Starting per-computer box art caching job");
-        for (App* app in host.appList) {
+        for (App* app in firstHalf) {
             [self updateBoxArtCacheForApp:app];
         }
-        Log(LOG_I, @"Per-computer box art caching job completed");
+    });
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        for (App* app in secondHalf) {
+            [self updateBoxArtCacheForApp:app];
+        }
     });
     
     [hostScrollView removeFromSuperview];

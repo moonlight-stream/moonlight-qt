@@ -18,6 +18,8 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic) PairState pairState;
 @property (nonatomic) NSString * activeAddress;
 
+- (NSComparisonResult)compareName:(Host *)other;
+
 @end
 
 NS_ASSUME_NONNULL_END

@@ -14,4 +14,8 @@
 @synthesize online;
 @synthesize activeAddress;
 
+- (NSComparisonResult)compareName:(Host *)other {
+    return [self.name caseInsensitiveCompare:other.name];
+}
+
 @end
