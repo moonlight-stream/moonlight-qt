@@ -640,7 +640,9 @@ static NSMutableSet* hostList;
     UIComputerView* compView;
     float prevEdge = -1;
     @synchronized (hostList) {
-        for (Host* comp in hostList) {
+        // Sort the host list in alphabetical order
+        NSArray* sortedHostList = [[hostList allObjects] sortedArrayUsingSelector:@selector(compareName:)];
+        for (Host* comp in sortedHostList) {
             compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
             compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
             prevEdge = compView.frame.origin.x + compView.frame.size.width;
