@@ -13,14 +13,14 @@
 #import "HttpRequest.h"
 
 @implementation DiscoveryWorker {
-    Host* _host;
+    TemporaryHost* _host;
     NSString* _uniqueId;
     NSData* _cert;
 }
 
 static const float POLL_RATE = 2.0f; // Poll every 2 seconds
 
-- (id) initWithHost:(Host*)host uniqueId:(NSString*)uniqueId cert:(NSData*)cert {
+- (id) initWithHost:(TemporaryHost*)host uniqueId:(NSString*)uniqueId cert:(NSData*)cert {
     self = [super init];
     _host = host;
     _uniqueId = uniqueId;
@@ -28,7 +28,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     return self;
 }
 
-- (Host*) getHost {
+- (TemporaryHost*) getHost {
     return _host;
 }
 

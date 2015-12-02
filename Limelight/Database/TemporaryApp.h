@@ -7,7 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Host.h"
+#import "TemporaryHost.h"
 
 @interface TemporaryApp : NSObject
 
@@ -15,6 +15,6 @@
 @property (nullable, nonatomic, retain) NSData *image;
 @property (nullable, nonatomic, retain) NSString *name;
 @property (nonatomic) BOOL isRunning;
-@property (nullable, nonatomic, retain) Host *host;
+@property (nullable, nonatomic, retain) TemporaryHost *host;
 
 @end

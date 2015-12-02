@@ -15,7 +15,6 @@
 #import "Utils.h"
 #import "UIComputerView.h"
 #import "UIAppView.h"
-#import "App.h"
 #import "SettingsViewController.h"
 #import "DataManager.h"
 #import "Settings.h"
@@ -30,7 +29,7 @@
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
-    Host* _selectedHost;
+    TemporaryHost* _selectedHost;
     NSString* _uniqueId;
     NSData* _cert;
     DiscoveryManager* _discMan;
@@ -80,7 +79,7 @@ static NSMutableSet* hostList;
     
     // Capture the host here because it can change once we
     // leave the main thread
-    Host* host = _selectedHost;
+    TemporaryHost* host = _selectedHost;
     
     if ([host.appList count] > 0) {
         usingCachedAppList = true;
@@ -159,11 +158,11 @@ static NSMutableSet* hostList;
     });
 }
 
-- (void) mergeAppLists:(NSArray*) newList forHost:(Host*)host {
+- (void) mergeAppLists:(NSArray*) newList forHost:(TemporaryHost*)host {
     DataManager* database = [[DataManager alloc] init];
     for (TemporaryApp* app in newList) {
         BOOL appAlreadyInList = NO; 
-        for (App* savedApp in host.appList) {
+        for (TemporaryApp* savedApp in host.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
                 savedApp.name = app.name;
                 savedApp.isRunning = app.isRunning;
@@ -181,9 +180,9 @@ static NSMutableSet* hostList;
     do {
         appWasRemoved = NO;
         
-        for (App* app in host.appList) {
+        for (TemporaryApp* app in host.appList) {
             appWasRemoved = YES;
-            for (App* mergedApp in newList) {
+            for (TemporaryApp* mergedApp in newList) {
                 if ([mergedApp.id isEqualToString:app.id]) {
                     appWasRemoved = NO;
                     break;
@@ -212,7 +211,7 @@ static NSMutableSet* hostList;
     [self.view addSubview:hostScrollView];
 }
 
-- (void) receivedAssetForApp:(App*)app {
+- (void) receivedAssetForApp:(TemporaryApp*)app {
     // Update the box art cache now so we don't have to do it
     // on the main thread
     [self updateBoxArtCacheForApp:app];
@@ -230,7 +229,7 @@ static NSMutableSet* hostList;
     [self presentViewController:alert animated:YES completion:nil];
 }
 
-- (void) hostClicked:(Host *)host view:(UIView *)view {
+- (void) hostClicked:(TemporaryHost *)host view:(UIView *)view {
     // Treat clicks on offline hosts to be long clicks
     // This shows the context menu with wake, delete, etc. rather
     // than just hanging for a while and failing as we would in this
@@ -296,7 +295,7 @@ static NSMutableSet* hostList;
     });
 }
 
-- (void)hostLongClicked:(Host *)host view:(UIView *)view {
+- (void)hostLongClicked:(TemporaryHost *)host view:(UIView *)view {
     Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
     if (!host.online) {
@@ -322,8 +321,8 @@ static NSMutableSet* hostList;
         [dataMan removeHost:host];
         @synchronized(hostList) {
             [hostList removeObject:host];
+            [self updateAllHosts:[hostList allObjects]];
         }
-        [self updateAllHosts:[hostList allObjects]];
         
     }]];
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
@@ -345,7 +344,7 @@ static NSMutableSet* hostList;
     [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
         NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [_discMan discoverHost:hostAddress withCallback:^(Host* host, NSString* error){
+            [_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
                 if (host != nil) {
                     DataManager* dataMan = [[DataManager alloc] init];
                     [dataMan saveData];
@@ -369,7 +368,7 @@ static NSMutableSet* hostList;
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
-- (void) appClicked:(App *)app {
+- (void) appClicked:(TemporaryApp *)app {
     Log(LOG_D, @"Clicked app: %@", app.name);
     _streamConfig = [[StreamConfiguration alloc] init];
     _streamConfig.host = app.host.activeAddress;
@@ -389,7 +388,7 @@ static NSMutableSet* hostList;
         [[self revealViewController] revealToggle:self];
     }
     
-    App* currentApp = [self findRunningApp:app.host];
+    TemporaryApp* currentApp = [self findRunningApp:app.host];
     if (currentApp != nil) {
         UIAlertController* alertController = [UIAlertController
                                               alertControllerWithTitle: app.name
@@ -455,8 +454,8 @@ static NSMutableSet* hostList;
     }
 }
 
-- (App*) findRunningApp:(Host*)host {
-    for (App* app in host.appList) {
+- (TemporaryApp*) findRunningApp:(TemporaryHost*)host {
+    for (TemporaryApp* app in host.appList) {
         if (app.isRunning) {
             return app;
         }
@@ -605,7 +604,7 @@ static NSMutableSet* hostList;
         [hostList addObjectsFromArray:hosts];
         
         // Initialize the non-persistent host state
-        for (Host* host in hostList) {
+        for (TemporaryHost* host in hostList) {
             if (host.activeAddress == nil) {
                 host.activeAddress = host.localAddress;
             }
@@ -622,7 +621,7 @@ static NSMutableSet* hostList;
 - (void) updateAllHosts:(NSArray *)hosts {
     dispatch_async(dispatch_get_main_queue(), ^{
         Log(LOG_D, @"New host list:");
-        for (Host* host in hosts) {
+        for (TemporaryHost* host in hosts) {
             Log(LOG_D, @"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n\t activeAddress:%@ \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online, host.activeAddress);
         }
         @synchronized(hostList) {
@@ -642,7 +641,7 @@ static NSMutableSet* hostList;
     @synchronized (hostList) {
         // Sort the host list in alphabetical order
         NSArray* sortedHostList = [[hostList allObjects] sortedArrayUsingSelector:@selector(compareName:)];
-        for (Host* comp in sortedHostList) {
+        for (TemporaryHost* comp in sortedHostList) {
             compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
             compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
             prevEdge = compView.frame.origin.x + compView.frame.size.width;
@@ -667,7 +666,7 @@ static NSMutableSet* hostList;
 
 // This function forces immediate decoding of the UIImage, rather
 // than the default lazy decoding that results in janky scrolling.
-+ (UIImage*) loadBoxArtForCaching:(App*)app {
++ (UIImage*) loadBoxArtForCaching:(TemporaryApp*)app {
     
     CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)app.image, NULL);
     CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, (__bridge CFDictionaryRef)@{(id)kCGImageSourceShouldCacheImmediately: (id)kCFBooleanTrue});
@@ -680,7 +679,7 @@ static NSMutableSet* hostList;
     return boxArt;
 }
 
-- (void) updateBoxArtCacheForApp:(App*)app {
+- (void) updateBoxArtCacheForApp:(TemporaryApp*)app {
     if (app.image == nil) {
         [_boxArtCache removeObjectForKey:app];
     }
@@ -689,7 +688,7 @@ static NSMutableSet* hostList;
     }
 }
 
-- (void) updateAppsForHost:(Host*)host {
+- (void) updateAppsForHost:(TemporaryHost*)host {
     if (host != _selectedHost) {
         Log(LOG_W, @"Mismatched host during app update");
         return;
@@ -715,12 +714,12 @@ static NSMutableSet* hostList;
     
     // Start 2 jobs
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (App* app in firstHalf) {
+        for (TemporaryApp* app in firstHalf) {
             [self updateBoxArtCacheForApp:app];
         }
     });
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (App* app in secondHalf) {
+        for (TemporaryApp* app in secondHalf) {
             [self updateBoxArtCacheForApp:app];
         }
     });
@@ -732,7 +731,7 @@ static NSMutableSet* hostList;
 - (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
     UICollectionViewCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AppCell" forIndexPath:indexPath];
     
-    App* app = _sortedAppList[indexPath.row];
+    TemporaryApp* app = _sortedAppList[indexPath.row];
     UIAppView* appView = [[UIAppView alloc] initWithApp:app cache:_boxArtCache andCallback:self];
     [appView updateAppImage];
     

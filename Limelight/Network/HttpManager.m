@@ -9,7 +9,7 @@
 #import "HttpManager.h"
 #import "HttpRequest.h"
 #import "CryptoManager.h"
-#import "App.h"
+#import "TemporaryApp.h"
 
 #include <libxml2/libxml/xmlreader.h>
 #include <string.h>

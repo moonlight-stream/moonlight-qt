@@ -7,17 +7,17 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "App.h"
+#import "TemporaryApp.h"
 
 @protocol AppCallback <NSObject>
 
-- (void) appClicked:(App*) app;
+- (void) appClicked:(TemporaryApp*) app;
 
 @end
 
 @interface UIAppView : UIView
 
-- (id) initWithApp:(App*)app cache:(NSCache*)cache andCallback:(id<AppCallback>)callback;
+- (id) initWithApp:(TemporaryApp*)app cache:(NSCache*)cache andCallback:(id<AppCallback>)callback;
 - (void) updateAppImage;
 
 @end

@@ -9,7 +9,7 @@
 #import "UIComputerView.h"
 
 @implementation UIComputerView {
-    Host* _host;
+    TemporaryHost* _host;
     UIButton* _hostButton;
     UILabel* _hostLabel;
     UILabel* _hostStatus;
@@ -72,7 +72,7 @@ static const int LABEL_DY = 20;
     return self;
 }
 
-- (id) initWithComputer:(Host*)host andCallback:(id<HostCallback>)callback {
+- (id) initWithComputer:(TemporaryHost*)host andCallback:(id<HostCallback>)callback {
     self = [self init];
     _host = host;
     _callback = callback;
@@ -123,7 +123,7 @@ static const int LABEL_DY = 20;
     self.frame = CGRectMake(x, y, width, height);
 }
 
-- (void) updateContentsForHost:(Host*)host {
+- (void) updateContentsForHost:(TemporaryHost*)host {
     _hostLabel.text = _host.name;
     _hostLabel.textColor = [UIColor whiteColor];
     [_hostLabel sizeToFit];

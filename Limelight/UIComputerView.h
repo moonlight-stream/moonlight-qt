@@ -7,19 +7,19 @@
 //
 
 #import <UIKit/UIKit.h>
-#import "Host.h"
+#import "TemporaryHost.h"
 
 @protocol HostCallback <NSObject>
 
-- (void) hostClicked:(Host*)host view:(UIView*)view;
-- (void) hostLongClicked:(Host*)host view:(UIView*)view;
+- (void) hostClicked:(TemporaryHost*)host view:(UIView*)view;
+- (void) hostLongClicked:(TemporaryHost*)host view:(UIView*)view;
 - (void) addHostClicked;
 
 @end
 
 @interface UIComputerView : UIView
 
-- (id) initWithComputer:(Host*)host andCallback:(id<HostCallback>)callback;
+- (id) initWithComputer:(TemporaryHost*)host andCallback:(id<HostCallback>)callback;
 - (id) initForAddWithCallback:(id<HostCallback>)callback;
 
 @end

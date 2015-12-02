@@ -7,7 +7,6 @@
 //
 
 #import "App.h"
-#import "Host.h"
 
 @implementation App
 

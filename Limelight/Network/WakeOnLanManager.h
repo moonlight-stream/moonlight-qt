@@ -7,10 +7,10 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Host.h"
+#import "TemporaryHost.h"
 
 @interface WakeOnLanManager : NSObject
 
-+ (void) wakeHost:(Host*)host;
++ (void) wakeHost:(TemporaryHost*)host;
 
 @end

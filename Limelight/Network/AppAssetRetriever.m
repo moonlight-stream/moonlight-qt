@@ -36,7 +36,7 @@ static const int MAX_ATTEMPTS = 5;
     [self performSelectorOnMainThread:@selector(sendCallbackForApp:) withObject:self.app waitUntilDone:NO];
 }
 
-- (void) sendCallbackForApp:(App*)app {
+- (void) sendCallbackForApp:(TemporaryApp*)app {
     [self.callback receivedAssetForApp:app];
 }
 

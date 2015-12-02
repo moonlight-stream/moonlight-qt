@@ -7,14 +7,14 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Host.h"
-#import "App.h"
+#import "TemporaryHost.h"
+#import "TemporaryApp.h"
 #import "AppAssetManager.h"
 
 @interface AppAssetRetriever : NSOperation
 
-@property (nonatomic) Host* host;
-@property (nonatomic) App* app;
+@property (nonatomic) TemporaryHost* host;
+@property (nonatomic) TemporaryApp* app;
 @property (nonatomic) id<AppAssetCallback> callback;
 
 @end

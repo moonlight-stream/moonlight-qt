@@ -17,7 +17,7 @@
     [super parseData];
 }
 
-- (void) populateHost:(Host*)host {
+- (void) populateHost:(TemporaryHost*)host {
     host.name = [[self getStringTag:TAG_HOSTNAME] trim];
     host.externalAddress = [[self getStringTag:TAG_EXTERNAL_IP] trim];
     host.localAddress = [[self getStringTag:TAG_LOCAL_IP] trim];

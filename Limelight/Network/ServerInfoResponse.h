@@ -7,6 +7,7 @@
 //
 
 #import "HttpResponse.h"
+#import "TemporaryHost.h"
 
 #define TAG_HOSTNAME @"hostname"
 #define TAG_EXTERNAL_IP @"ExternalIP"
@@ -18,7 +19,7 @@
 @interface ServerInfoResponse : HttpResponse <Response>
 
 - (void) populateWithData:(NSData *)data;
-- (void) populateHost:(Host*)host;
+- (void) populateHost:(TemporaryHost*)host;
 
 @end
 

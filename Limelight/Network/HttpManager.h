@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Host.h"
 #import "HttpResponse.h"
 #import "HttpRequest.h"
 

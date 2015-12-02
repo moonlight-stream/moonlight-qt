@@ -8,7 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "MDNSManager.h"
-#import "Host.h"
+#import "TemporaryHost.h"
 
 @protocol DiscoveryCallback <NSObject>
 
@@ -22,8 +22,8 @@
 - (void) startDiscovery;
 - (void) stopDiscovery;
 - (void) stopDiscoveryBlocking;
-- (BOOL) addHostToDiscovery:(Host*)host;
-- (void) removeHostFromDiscovery:(Host*)host;
-- (void) discoverHost:(NSString*)hostAddress withCallback:(void (^)(Host*, NSString*))callback;
+- (BOOL) addHostToDiscovery:(TemporaryHost*)host;
+- (void) removeHostFromDiscovery:(TemporaryHost*)host;
+- (void) discoverHost:(NSString*)hostAddress withCallback:(void (^)(TemporaryHost*, NSString*))callback;
 
 @end

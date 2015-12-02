@@ -18,7 +18,7 @@
 static const int numPorts = 5;
 static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
 
-+ (void) wakeHost:(Host*)host {
++ (void) wakeHost:(TemporaryHost*)host {
     NSData* wolPayload = [WakeOnLanManager createPayload:host];
     CFDataRef dataPayload = CFDataCreate(kCFAllocatorDefault, [wolPayload bytes], [wolPayload length]);
     CFSocketRef wolSocket = CFSocketCreate(kCFAllocatorDefault, PF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, NULL, NULL);
@@ -56,7 +56,7 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
     CFRelease(dataPayload);
 }
 
-+ (NSData*) createPayload:(Host*)host {
++ (NSData*) createPayload:(TemporaryHost*)host {
     NSMutableData* payload = [[NSMutableData alloc] initWithCapacity:102];
     
     // 6 bytes of FF

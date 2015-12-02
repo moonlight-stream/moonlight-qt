@@ -7,7 +7,7 @@
 //
 
 #import "MDNSManager.h"
-#import "Host.h"
+#import "TemporaryHost.h"
 #import "DataManager.h"
 
 @implementation MDNSManager {
@@ -50,7 +50,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     DataManager* dataMan = [[DataManager alloc] init];
     for (NSNetService* service in services) {
         if (service.hostName != nil) {
-            Host* host = [dataMan createHost];
+            TemporaryHost* host = [dataMan createHost];
             host.activeAddress = host.address = service.hostName;
             host.name = host.address;
             [hosts addObject:host];

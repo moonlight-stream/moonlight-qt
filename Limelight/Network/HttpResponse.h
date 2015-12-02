@@ -7,7 +7,6 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Host.h"
 
 static NSString* TAG_STATUS_CODE = @"status_code";
 static NSString* TAG_STATUS_MESSAGE = @"status_message";

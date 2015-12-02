@@ -7,20 +7,20 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "App.h"
+#import "TemporaryApp.h"
 #import "HttpManager.h"
-#import "Host.h"
+#import "TemporaryHost.h"
 
 @protocol AppAssetCallback <NSObject>
 
-- (void) receivedAssetForApp:(App*)app;
+- (void) receivedAssetForApp:(TemporaryApp*)app;
 
 @end
 
 @interface AppAssetManager : NSObject
 
 - (id) initWithCallback:(id<AppAssetCallback>)callback;
-- (void) retrieveAssetsFromHost:(Host*)host;
+- (void) retrieveAssetsFromHost:(TemporaryHost*)host;
 - (void) stopRetrieving;
 
 @end

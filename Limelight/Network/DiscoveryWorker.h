@@ -7,12 +7,12 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Host.h"
+#import "TemporaryHost.h"
 
 @interface DiscoveryWorker : NSOperation
 
-- (id) initWithHost:(Host*)host uniqueId:(NSString*)uniqueId cert:(NSData*)cert;
+- (id) initWithHost:(TemporaryHost*)host uniqueId:(NSString*)uniqueId cert:(NSData*)cert;
 - (void) discoverHost;
-- (Host*) getHost;
+- (TemporaryHost*) getHost;
 
 @end

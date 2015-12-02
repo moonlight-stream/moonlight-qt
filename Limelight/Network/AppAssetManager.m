@@ -28,8 +28,8 @@ static const int MAX_REQUEST_COUNT = 4;
     return self;
 }
 
-- (void) retrieveAssetsFromHost:(Host*)host {
-    for (App* app in host.appList) {
+- (void) retrieveAssetsFromHost:(TemporaryHost*)host {
+    for (TemporaryApp* app in host.appList) {
         if (app.image == nil) {
             AppAssetRetriever* retriever = [[AppAssetRetriever alloc] init];
             retriever.app = app;
@@ -45,7 +45,7 @@ static const int MAX_REQUEST_COUNT = 4;
     [_opQueue cancelAllOperations];
 }
 
-- (void) sendCallBackForApp:(App*)app {
+- (void) sendCallBackForApp:(TemporaryApp*)app {
     [_callback receivedAssetForApp:app];
 }
 
