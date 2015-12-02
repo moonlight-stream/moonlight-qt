@@ -7,23 +7,22 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Settings.h"
 #import "AppDelegate.h"
-#import "Host.h"
-#import "App.h"
+#import "TemporaryHost.h"
 #import "TemporaryApp.h"
+#import "TemporarySettings.h"
 
 @interface DataManager : NSObject
 
-@property (strong, nonatomic) AppDelegate* appDelegate;
-
 - (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls;
-- (Settings*) retrieveSettings;
-- (NSArray*) retrieveHosts;
-- (void) saveData;
-- (Host*) createHost;
-- (void) removeHost:(Host*)host;
-- (App*) addAppFromTemporaryApp:(TemporaryApp*)tempApp;
-- (void) removeAppFromHost:(App*)app;
+
+- (NSArray*) getHosts;
+- (void) updateHost:(TemporaryHost*)host;
+- (void) removeHost:(TemporaryHost*)host;
+
+- (TemporarySettings*) getSettings;
+
+- (void) updateUniqueId:(NSString*)uniqueId;
+- (NSString*) getUniqueId;
 
 @end

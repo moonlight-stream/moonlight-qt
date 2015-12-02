@@ -17,7 +17,7 @@
 #import "UIAppView.h"
 #import "SettingsViewController.h"
 #import "DataManager.h"
-#import "Settings.h"
+#import "TemporarySettings.h"
 #import "WakeOnLanManager.h"
 #import "AppListResponse.h"
 #import "ServerInfoResponse.h"
@@ -162,15 +162,12 @@ static NSMutableSet* hostList;
     DataManager* database = [[DataManager alloc] init];
     
     host.appList = newList;
-    
 
     [database updateHost:host];
-    [database saveData];
 }
 
 - (void)showHostSelectionView {
     [_appManager stopRetrieving];
-    [[[DataManager alloc] init] saveData];
     _selectedHost = nil;
     _computerNameButton.title = @"No Host Selected";
     [self.collectionView reloadData];
@@ -339,7 +336,7 @@ static NSMutableSet* hostList;
     _streamConfig.appID = app.id;
     
     DataManager* dataMan = [[DataManager alloc] init];
-    Settings* streamSettings = [dataMan retrieveSettings];
+    TemporarySettings* streamSettings = [dataMan getSettings];
     
     _streamConfig.frameRate = [streamSettings.framerate intValue];
     _streamConfig.bitRate = [streamSettings.bitrate intValue];
@@ -556,14 +553,11 @@ static NSMutableSet* hostList;
     
     // Purge the box art cache
     [_boxArtCache removeAllObjects];
-    
-    // In case the host objects were updated in the background
-    [[[DataManager alloc] init] saveData];
 }
 
 - (void) retrieveSavedHosts {
     DataManager* dataMan = [[DataManager alloc] init];
-    NSArray* hosts = [dataMan retrieveHosts];
+    NSArray* hosts = [dataMan getHosts];
     @synchronized(hostList) {
         [hostList addObjectsFromArray:hosts];
         

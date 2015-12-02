@@ -8,45 +8,87 @@
 
 #import "DataManager.h"
 #import "TemporaryApp.h"
+#import "TemporarySettings.h"
+#import "Settings.h"
 
-@implementation DataManager
-
-+ (NSObject *)databaseLock {
-    static NSObject *lock = nil;
-    if (lock == nil) {
-        lock = [[NSObject alloc] init];
-    }
-    return lock;
+@implementation DataManager {
+    NSManagedObjectContext *_managedObjectContext;
+    AppDelegate *_appDelegate;
 }
 
 - (id) init {
     self = [super init];
-    self.appDelegate = [[UIApplication sharedApplication] delegate];
+    
+    _appDelegate = [[UIApplication sharedApplication] delegate];
+    _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    [_managedObjectContext setPersistentStoreCoordinator:_appDelegate.persistentStoreCoordinator];
+    
     return self;
 }
 
-- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls {
-    Settings* settingsToSave = [self retrieveSettings];
-    settingsToSave.framerate = [NSNumber numberWithInteger:framerate];
-    // Bitrate is persisted in kbps
-    settingsToSave.bitrate = [NSNumber numberWithInteger:bitrate];
-    settingsToSave.height = [NSNumber numberWithInteger:height];
-    settingsToSave.width = [NSNumber numberWithInteger:width];
-    settingsToSave.onscreenControls = [NSNumber numberWithInteger:onscreenControls];
+- (void) updateUniqueId:(NSString*)uniqueId {
+    [_managedObjectContext performBlockAndWait:^{
+        [self retrieveSettings].uniqueId = uniqueId;
+        [self saveData];
+    }];
+}
 
-    NSError* error;
-    if (![[self.appDelegate managedObjectContext] save:&error]) {
-        Log(LOG_E, @"Unable to save settings to database: %@", error);
-    }
-    [self.appDelegate saveContext];
+- (NSString*) getUniqueId {
+    __block NSString *uid;
+    
+    [_managedObjectContext performBlockAndWait:^{
+        uid = [self retrieveSettings].uniqueId;
+    }];
+
+    return uid;
+}
+
+- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls {
+    
+    [_managedObjectContext performBlockAndWait:^{
+        Settings* settingsToSave = [self retrieveSettings];
+        settingsToSave.framerate = [NSNumber numberWithInteger:framerate];
+        // Bitrate is persisted in kbps
+        settingsToSave.bitrate = [NSNumber numberWithInteger:bitrate];
+        settingsToSave.height = [NSNumber numberWithInteger:height];
+        settingsToSave.width = [NSNumber numberWithInteger:width];
+        settingsToSave.onscreenControls = [NSNumber numberWithInteger:onscreenControls];
+        
+        [self saveData];
+    }];
+}
+
+- (void) updateHost:(TemporaryHost *)host {
+    [_managedObjectContext performBlockAndWait:^{
+        // Add a new persistent managed object if one doesn't exist
+        if (host.parent == nil) {
+            NSEntityDescription* entity = [NSEntityDescription entityForName:@"Host" inManagedObjectContext:_managedObjectContext];
+            host.parent = [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:_managedObjectContext];
+        }
+        
+        // Push changes from the temp host to the persistent one
+        [host propagateChangesToParent];
+        
+        [self saveData];
+    }];
+}
+
+- (TemporarySettings*) getSettings {
+    __block TemporarySettings *tempSettings;
+    
+    [_managedObjectContext performBlockAndWait:^{
+        tempSettings = [[TemporarySettings alloc] initFromSettings:[self retrieveSettings]];
+    }];
+    
+    return tempSettings;
 }
 
 - (Settings*) retrieveSettings {
     NSArray* fetchedRecords = [self fetchRecords:@"Settings"];
     if (fetchedRecords.count == 0) {
         // create a new settings object with the default values
-        NSEntityDescription* entity = [NSEntityDescription entityForName:@"Settings" inManagedObjectContext:[self.appDelegate managedObjectContext]];
-        Settings* settings = [[Settings alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
+        NSEntityDescription* entity = [NSEntityDescription entityForName:@"Settings" inManagedObjectContext:_managedObjectContext];
+        Settings* settings = [[Settings alloc] initWithEntity:entity insertIntoManagedObjectContext:_managedObjectContext];
         
         return settings;
     } else {
@@ -55,74 +97,51 @@
     }
 }
 
-- (Host*) createHost {
-    NSEntityDescription* entity = [NSEntityDescription entityForName:@"Host" inManagedObjectContext:[self.appDelegate managedObjectContext]];
-    return [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
-}
-
-- (void) removeHost:(Host*)host {
-    [[self.appDelegate managedObjectContext] deleteObject:host];
-    [self saveData];
+- (void) removeHost:(TemporaryHost*)host {
+    if (host.parent == nil) {
+        // Not inserted into the DB
+        return;
+    }
+    
+    [_managedObjectContext performBlockAndWait:^{
+        [_managedObjectContext deleteObject:host.parent];
+        [self saveData];
+    }];
 }
 
 - (void) saveData {
-    @synchronized([DataManager databaseLock]) {
-        NSError* error;
-        if (![[self.appDelegate managedObjectContext] save:&error]) {
-            Log(LOG_E, @"Unable to save hosts to database: %@", error);
+    NSError* error;
+    if (![_managedObjectContext save:&error]) {
+        Log(LOG_E, @"Unable to save hosts to database: %@", error);
+    }
+
+    [_appDelegate saveContext];
+}
+
+- (NSArray*) getHosts {
+    __block NSMutableArray *tempHosts = [[NSMutableArray alloc] init];
+    
+    [_managedObjectContext performBlockAndWait:^{
+        NSArray *hosts = [self fetchRecords:@"Host"];
+        
+        for (Host* host in hosts) {
+            [tempHosts addObject:[[TemporaryHost alloc] initFromHost:host]];
         }
-        [self.appDelegate saveContext];
-    }
-}
-
-- (NSArray*) retrieveHosts {
-    return [self fetchRecords:@"Host"];
-}
-
-- (App*) addAppFromTemporaryApp:(TemporaryApp*)tempApp {
+    }];
     
-    App* managedApp;
-    
-    @synchronized([DataManager databaseLock]) {
-        NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:[self.appDelegate managedObjectContext]];
-        managedApp = [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:[self.appDelegate managedObjectContext]];
-        
-        assert(tempApp.host != nil);
-        
-        managedApp.id = tempApp.id;
-        managedApp.image = tempApp.image;
-        managedApp.name = tempApp.name;
-        managedApp.isRunning = tempApp.isRunning;
-        managedApp.host = tempApp.host;
-        
-        [managedApp.host addAppListObject:managedApp];
-    }
-    
-    return managedApp;
-}
-
-- (void) removeAppFromHost:(App*)app {
-    @synchronized([DataManager databaseLock]) {
-        assert(app.host != nil);
-        
-        [app.host removeAppListObject:app];
-        [[self.appDelegate managedObjectContext] deleteObject:app];
-    }
+    return tempHosts;
 }
 
 - (NSArray*) fetchRecords:(NSString*)entityName {
     NSArray* fetchedRecords;
     
-    @synchronized([DataManager databaseLock]) {
-        NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] init];
-        NSEntityDescription* entity = [NSEntityDescription entityForName:entityName inManagedObjectContext:[self.appDelegate managedObjectContext]];
-        [fetchRequest setEntity:entity];
-        [fetchRequest setAffectedStores:[NSArray arrayWithObjects:[[self.appDelegate persistentStoreCoordinator] persistentStoreForURL:[self.appDelegate getStoreURL]], nil]];
-        
-        NSError* error;
-        fetchedRecords = [[self.appDelegate managedObjectContext] executeFetchRequest:fetchRequest error:&error];
-        //TODO: handle errors
-    }
+    NSFetchRequest* fetchRequest = [[NSFetchRequest alloc] init];
+    NSEntityDescription* entity = [NSEntityDescription entityForName:entityName inManagedObjectContext:_managedObjectContext];
+    [fetchRequest setEntity:entity];
+    
+    NSError* error;
+    fetchedRecords = [_managedObjectContext executeFetchRequest:fetchRequest error:&error];
+    //TODO: handle errors
     
     return fetchedRecords;
 }

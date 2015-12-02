@@ -7,7 +7,7 @@
 //
 
 #import "SettingsViewController.h"
-#import "Settings.h"
+#import "TemporarySettings.h"
 #import "DataManager.h"
 
 #define BITRATE_INTERVAL 500 // in kbps
@@ -22,7 +22,7 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [super viewDidLoad];
     
     DataManager* dataMan = [[DataManager alloc] init];
-    Settings* currentSettings = [dataMan retrieveSettings];
+    TemporarySettings* currentSettings = [dataMan getSettings];
     
     // Bitrate is persisted in kbps
     _bitrate = [currentSettings.bitrate integerValue];

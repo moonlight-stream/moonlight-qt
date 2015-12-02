@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "Utils.h"
+#import "Host.h"
 
 @interface TemporaryHost : NSObject
 
@@ -15,17 +16,23 @@
 @property (nonatomic) PairState pairState;
 @property (nonatomic, nullable) NSString * activeAddress;
 
-@property (nullable, nonatomic, retain) NSString *address;
-@property (nullable, nonatomic, retain) NSString *externalAddress;
-@property (nullable, nonatomic, retain) NSString *localAddress;
-@property (nullable, nonatomic, retain) NSString *mac;
-@property (nullable, nonatomic, retain) NSString *name;
-@property (nullable, nonatomic, retain) NSString *uuid;
-@property (nullable, nonatomic, retain) NSSet *appList;
+@property (nullable, nonatomic) Host* parent;
 
 NS_ASSUME_NONNULL_BEGIN
 
+@property (nonatomic, retain) NSString *address;
+@property (nonatomic, retain) NSString *externalAddress;
+@property (nonatomic, retain) NSString *localAddress;
+@property (nonatomic, retain) NSString *mac;
+@property (nonatomic, retain) NSString *name;
+@property (nonatomic, retain) NSString *uuid;
+@property (nonatomic, retain) NSSet *appList;
+
+- (id) initFromHost:(Host*)host;
+
 - (NSComparisonResult)compareName:(TemporaryHost *)other;
+
+- (void) propagateChangesToParent;
 
 NS_ASSUME_NONNULL_END
 

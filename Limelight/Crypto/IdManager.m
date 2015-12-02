@@ -13,15 +13,14 @@
 
 + (NSString*) getUniqueId {
     DataManager* dataMan = [[DataManager alloc] init];
-    Settings* prefs = [dataMan retrieveSettings];
-    
-    NSString* uniqueId = prefs.uniqueId;
+
+    NSString* uniqueId = [dataMan getUniqueId];
     if (uniqueId == nil) {
         uniqueId = [IdManager generateUniqueId];
-        prefs.uniqueId = uniqueId;
-        [dataMan saveData];
+        [dataMan updateUniqueId:uniqueId];
         Log(LOG_I, @"No UUID found. Generated new UUID: %@", uniqueId);
     }
+    
     return uniqueId;
 }
 

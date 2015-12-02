@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "TemporaryHost.h"
+#import "App.h"
 
 @interface TemporaryApp : NSObject
 
@@ -17,9 +18,15 @@
 @property (nonatomic) BOOL isRunning;
 @property (nullable, nonatomic, retain) TemporaryHost *host;
 
+@property (nullable, nonatomic) App* parent;
+
 NS_ASSUME_NONNULL_BEGIN
 
+- (id) initFromApp:(App*)app withTempHost:(TemporaryHost*)tempHost;
+
 - (NSComparisonResult)compareName:(TemporaryApp *)other;
+
+- (void) propagateChangesToParent;
 
 NS_ASSUME_NONNULL_END
 
