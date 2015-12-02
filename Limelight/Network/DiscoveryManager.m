@@ -33,16 +33,10 @@
     _callback = callback;
     shouldDiscover = NO;
     _hostQueue = [NSMutableArray array];
-    DataManager* dataMan = [[DataManager alloc] init];
     for (TemporaryHost* host in hosts)
     {
-        if (![self addHostToDiscovery:host])
-        {
-            // Remove the duplicate host from the database
-            [dataMan removeHost:host];
-        }
+        [self addHostToDiscovery:host];
     }
-    [dataMan saveData];
     [_callback updateAllHosts:_hostQueue];
     
     _opQueue = [[NSOperationQueue alloc] init];
@@ -60,13 +54,11 @@
     
     TemporaryHost* host = nil;
     if ([serverInfoResponse isStatusOk]) {
-        DataManager* dataMan = [[DataManager alloc] init];
-        host = [dataMan createHost];
+        host = [[TemporaryHost alloc] init];
         host.activeAddress = host.address = hostAddress;
         host.online = YES;
         [serverInfoResponse populateHost:host];
         if (![self addHostToDiscovery:host]) {
-            [dataMan removeHost:host];
             callback(nil, @"Host already added");
         } else {
             callback(host, nil);
@@ -125,7 +117,6 @@
 // Override from MDNSCallback
 - (void)updateHosts:(NSArray *)hosts {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        DataManager* dataMan = [[DataManager alloc] init];
         // Discover the hosts before adding to eliminate duplicates
         for (TemporaryHost* host in hosts) {
             Log(LOG_I, @"Found host through MDNS: %@:", host.name);
@@ -137,10 +128,8 @@
                 [_callback updateAllHosts:_hostQueue];
             } else {
                 Log(LOG_I, @"Not adding host to discovery: %@", host.name);
-                [dataMan removeHost:host];
             }
         }
-        [dataMan saveData];
     });
 }
 

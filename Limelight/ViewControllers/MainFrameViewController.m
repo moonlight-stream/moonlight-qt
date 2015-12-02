@@ -140,7 +140,7 @@ static NSMutableSet* hostList;
             });
         } else {
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self mergeAppLists:[appListResp getAppList] forHost:host];
+                [self updateApplist:[appListResp getAppList] forHost:host];
 
                 if (host != _selectedHost) {
                     return;
@@ -158,47 +158,13 @@ static NSMutableSet* hostList;
     });
 }
 
-- (void) mergeAppLists:(NSArray*) newList forHost:(TemporaryHost*)host {
+- (void) updateApplist:(NSSet*) newList forHost:(TemporaryHost*)host {
     DataManager* database = [[DataManager alloc] init];
-    for (TemporaryApp* app in newList) {
-        BOOL appAlreadyInList = NO; 
-        for (TemporaryApp* savedApp in host.appList) {
-            if ([app.id isEqualToString:savedApp.id]) {
-                savedApp.name = app.name;
-                savedApp.isRunning = app.isRunning;
-                appAlreadyInList = YES;
-                break;
-            }
-        }
-        if (!appAlreadyInList) {
-            app.host = host;
-            [database addAppFromTemporaryApp:app];
-        }
-    }
     
-    BOOL appWasRemoved;
-    do {
-        appWasRemoved = NO;
-        
-        for (TemporaryApp* app in host.appList) {
-            appWasRemoved = YES;
-            for (TemporaryApp* mergedApp in newList) {
-                if ([mergedApp.id isEqualToString:app.id]) {
-                    appWasRemoved = NO;
-                    break;
-                }
-            }
-            if (appWasRemoved) {
-                // Removing the app mutates the list we're iterating (which isn't legal).
-                // We need to jump out of this loop and restart enumeration.
-                [database removeAppFromHost:app];
-                break;
-            }
-        }
-        
-        // Keep looping until the list is no longer being mutated
-    } while (appWasRemoved);
+    host.appList = newList;
+    
 
+    [database updateHost:host];
     [database saveData];
 }
 
@@ -346,8 +312,6 @@ static NSMutableSet* hostList;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
             [_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
                 if (host != nil) {
-                    DataManager* dataMan = [[DataManager alloc] init];
-                    [dataMan saveData];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         @synchronized(hostList) {
                             [hostList addObject:host];

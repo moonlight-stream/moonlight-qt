@@ -12,7 +12,7 @@
 #import <libxml2/libxml/xmlreader.h>
 
 @implementation AppListResponse {
-    NSMutableArray* _appList;
+    NSMutableSet* _appList;
 }
 @synthesize data, statusCode, statusMessage;
 
@@ -23,7 +23,7 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
 
 - (void)populateWithData:(NSData *)xml {
     self.data = xml;
-    _appList = [[NSMutableArray alloc] init];
+    _appList = [[NSMutableSet alloc] init];
     [self parseData];
 }
 
@@ -108,7 +108,7 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
     xmlFreeDoc(docPtr);
 }
 
-- (NSArray*) getAppList {
+- (NSSet*) getAppList {
     return _appList;
 }
 

@@ -11,7 +11,7 @@
 @interface AppListResponse : NSObject <Response>
 
 - (void)populateWithData:(NSData *)data;
-- (NSArray*) getAppList;
+- (NSSet*) getAppList;
 - (BOOL) isStatusOk;
 
 @end
