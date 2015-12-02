@@ -17,4 +17,10 @@
 @property (nonatomic) BOOL isRunning;
 @property (nullable, nonatomic, retain) TemporaryHost *host;
 
+NS_ASSUME_NONNULL_BEGIN
+
+- (NSComparisonResult)compareName:(TemporaryApp *)other;
+
+NS_ASSUME_NONNULL_END
+
 @end

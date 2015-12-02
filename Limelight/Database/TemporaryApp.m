@@ -10,4 +10,8 @@
 
 @implementation TemporaryApp
 
+- (NSComparisonResult)compareName:(TemporaryApp *)other {
+    return [self.name caseInsensitiveCompare:other.name];
+}
+
 @end

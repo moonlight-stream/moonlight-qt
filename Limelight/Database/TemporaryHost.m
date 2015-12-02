@@ -10,4 +10,8 @@
 
 @implementation TemporaryHost
 
+- (NSComparisonResult)compareName:(TemporaryHost *)other {
+    return [self.name caseInsensitiveCompare:other.name];
+}
+
 @end

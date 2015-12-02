@@ -10,10 +10,4 @@
 
 @implementation App
 
-@synthesize isRunning;
-
-- (NSComparisonResult)compareName:(App *)other {
-    return [self.name caseInsensitiveCompare:other.name];
-}
-
 @end

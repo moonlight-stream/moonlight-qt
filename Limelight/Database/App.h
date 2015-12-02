@@ -11,16 +11,8 @@
 
 @class Host;
 
-NS_ASSUME_NONNULL_BEGIN
-
 @interface App : NSManagedObject
 
-@property BOOL isRunning;
-
-- (NSComparisonResult)compareName:(App *)other;
-
 @end
-
-NS_ASSUME_NONNULL_END
 
 #import "App+CoreDataProperties.h"

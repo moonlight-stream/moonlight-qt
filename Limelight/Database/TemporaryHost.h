@@ -23,4 +23,10 @@
 @property (nullable, nonatomic, retain) NSString *uuid;
 @property (nullable, nonatomic, retain) NSSet *appList;
 
+NS_ASSUME_NONNULL_BEGIN
+
+- (NSComparisonResult)compareName:(TemporaryHost *)other;
+
+NS_ASSUME_NONNULL_END
+
 @end
