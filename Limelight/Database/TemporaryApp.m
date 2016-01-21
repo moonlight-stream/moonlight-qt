@@ -33,4 +33,20 @@
     return [self.name caseInsensitiveCompare:other.name];
 }
 
+- (NSUInteger)hash {
+    return [self.id intValue];
+}
+
+- (BOOL)isEqual:(id)object {
+    if (self == object) {
+        return YES;
+    }
+    
+    if (![object isKindOfClass:[App class]]) {
+        return NO;
+    }
+    
+    return [self.id isEqualToString:((App*)object).id];
+}
+
 @end

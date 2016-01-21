@@ -67,4 +67,20 @@
     return [self.name caseInsensitiveCompare:other.name];
 }
 
+- (NSUInteger)hash {
+    return [self.uuid hash];
+}
+
+- (BOOL)isEqual:(id)object {
+    if (self == object) {
+        return YES;
+    }
+    
+    if (![object isKindOfClass:[Host class]]) {
+        return NO;
+    }
+    
+    return [self.uuid isEqualToString:((Host*)object).uuid];
+}
+
 @end
