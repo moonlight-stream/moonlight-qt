@@ -10,8 +10,6 @@
 #import "Utils.h"
 #import "Host.h"
 
-@class DataManager;
-
 @interface TemporaryHost : NSObject
 
 @property (nonatomic) BOOL online;
@@ -26,13 +24,13 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, retain) NSString *mac;
 @property (nonatomic, retain) NSString *name;
 @property (nonatomic, retain) NSString *uuid;
-@property (nonatomic, retain) NSSet *appList;
+@property (nonatomic, retain) NSMutableSet *appList;
 
 - (id) initFromHost:(Host*)host;
 
 - (NSComparisonResult)compareName:(TemporaryHost *)other;
 
-- (void) propagateChangesToParent:(Host*)host withDm:(DataManager*)dm;
+- (void) propagateChangesToParent:(Host*)host;
 
 NS_ASSUME_NONNULL_END
 

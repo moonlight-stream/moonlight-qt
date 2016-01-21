@@ -68,7 +68,49 @@
         }
         
         // Push changes from the temp host to the persistent one
-        [host propagateChangesToParent:parent withDm:self];
+        [host propagateChangesToParent:parent];
+        
+        [self saveData];
+    }];
+}
+
+- (void) updateAppsForExistingHost:(TemporaryHost *)host {
+    [_managedObjectContext performBlockAndWait:^{
+        Host* parent = [self getHostForTemporaryHost:host];
+        if (parent == nil) {
+            // The host must exist to be updated
+            return;
+        }
+        
+        NSMutableSet *applist = [[NSMutableSet alloc] init];
+        for (TemporaryApp* app in host.appList) {
+            // Add a new persistent managed object if one doesn't exist
+            App* parentApp = [self getAppForTemporaryApp:app];
+            if (parentApp == nil) {
+                NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:_managedObjectContext];
+                parentApp = [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:_managedObjectContext];
+            }
+            
+            [app propagateChangesToParent:parentApp withHost:parent];
+            
+            [applist addObject:parentApp];
+        }
+        
+        parent.appList = applist;
+        
+        [self saveData];
+    }];
+}
+
+- (void) updateIconForExistingApp:(TemporaryApp*)app {
+    [_managedObjectContext performBlockAndWait:^{
+        App* parentApp = [self getAppForTemporaryApp:app];
+        if (parentApp == nil) {
+            // The app must exist to be updated
+            return;
+        }
+        
+        parentApp.image = app.image;
         
         [self saveData];
     }];

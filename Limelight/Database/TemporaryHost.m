@@ -37,7 +37,7 @@
     return self;
 }
 
-- (void) propagateChangesToParent:(Host*)parentHost withDm:(DataManager*)dm {
+- (void) propagateChangesToParent:(Host*)parentHost {
     parentHost.address = self.address;
     parentHost.externalAddress = self.externalAddress;
     parentHost.localAddress = self.localAddress;
@@ -45,22 +45,6 @@
     parentHost.name = self.name;
     parentHost.uuid = self.uuid;
     parentHost.pairState = [NSNumber numberWithInt:self.pairState];
-    
-    NSMutableSet *applist = [[NSMutableSet alloc] init];
-    for (TemporaryApp* app in self.appList) {
-        // Add a new persistent managed object if one doesn't exist
-        App* parentApp = [dm getAppForTemporaryApp:app];
-        if (parentApp == nil) {
-            NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:parentHost.managedObjectContext];
-            parentApp = [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:parentHost.managedObjectContext];
-        }
-        
-        [app propagateChangesToParent:parentApp withHost:parentHost];
-        
-        [applist addObject:parentApp];
-    }
-    
-    parentHost.appList = applist;
 }
 
 - (NSComparisonResult)compareName:(TemporaryHost *)other {

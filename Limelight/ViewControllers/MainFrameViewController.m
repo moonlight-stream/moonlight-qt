@@ -161,9 +161,48 @@ static NSMutableSet* hostList;
 - (void) updateApplist:(NSSet*) newList forHost:(TemporaryHost*)host {
     DataManager* database = [[DataManager alloc] init];
     
-    host.appList = newList;
+    for (TemporaryApp* app in newList) {
+        BOOL appAlreadyInList = NO;
+        for (TemporaryApp* savedApp in host.appList) {
+            if ([app.id isEqualToString:savedApp.id]) {
+                savedApp.name = app.name;
+                savedApp.isRunning = app.isRunning;
+                appAlreadyInList = YES;
+                break;
+            }
+        }
+        if (!appAlreadyInList) {
+            app.host = host;
+            [host.appList addObject:app];
+        }
+    }
+    
+    BOOL appWasRemoved;
+    do {
+        appWasRemoved = NO;
+        
+        for (TemporaryApp* app in host.appList) {
+            appWasRemoved = YES;
+            for (TemporaryApp* mergedApp in newList) {
+                if ([mergedApp.id isEqualToString:app.id]) {
+                    appWasRemoved = NO;
+                    break;
+                }
+            }
+            if (appWasRemoved) {
+                // Removing the app mutates the list we're iterating (which isn't legal).
+                // We need to jump out of this loop and restart enumeration.
+                
+                [host.appList removeObject:app];
+                
+                break;
+            }
+        }
+        
+        // Keep looping until the list is no longer being mutated
+    } while (appWasRemoved);
 
-    [database updateHost:host];
+    [database updateAppsForExistingHost:host];
 }
 
 - (void)showHostSelectionView {
@@ -178,6 +217,9 @@ static NSMutableSet* hostList;
     // Update the box art cache now so we don't have to do it
     // on the main thread
     [self updateBoxArtCacheForApp:app];
+    
+    DataManager* dataManager = [[DataManager alloc] init];
+    [dataManager updateIconForExistingApp: app];
     
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];

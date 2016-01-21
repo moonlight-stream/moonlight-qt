@@ -24,7 +24,6 @@
 
 - (void) propagateChangesToParent:(App*)parent withHost:(Host*)host {
     parent.id = self.id;
-    parent.image = self.image;
     parent.name = self.name;
     parent.host = host;
 }
