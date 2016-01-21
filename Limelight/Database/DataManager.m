@@ -20,7 +20,7 @@
     self = [super init];
     
     _appDelegate = [[UIApplication sharedApplication] delegate];
-    _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSPrivateQueueConcurrencyType];
+    _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
     [_managedObjectContext setPersistentStoreCoordinator:_appDelegate.persistentStoreCoordinator];
     
     return self;
