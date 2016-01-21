@@ -11,6 +11,7 @@
 #import "HttpManager.h"
 #import "ServerInfoResponse.h"
 #import "HttpRequest.h"
+#import "DataManager.h"
 
 @implementation DiscoveryWorker {
     TemporaryHost* _host;
@@ -100,7 +101,12 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
             ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:address];
             receivedResponse = [self checkResponse:serverInfoResp];
             if (receivedResponse) {
+                [serverInfoResp populateHost:_host];
                 _host.activeAddress = address;
+                
+                // Update the database using the response
+                DataManager *dataManager = [[DataManager alloc] init];
+                [dataManager updateHost:_host];
                 break;
             }
         }
@@ -137,7 +143,6 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     if ([response isStatusOk]) {
         // If the response is from a different host then do not update this host
         if ((_host.uuid == nil || [[response getStringTag:TAG_UNIQUE_ID] isEqualToString:_host.uuid])) {
-            [response populateHost:_host];
             return YES;
         } else {
             Log(LOG_I, @"Received response from incorrect host: %@ expected: %@", [response getStringTag:TAG_UNIQUE_ID], _host.uuid);
