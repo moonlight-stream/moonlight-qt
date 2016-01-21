@@ -21,6 +21,7 @@
 - (void) updateAppsForExistingHost:(TemporaryHost *)host;
 - (void) updateIconForExistingApp:(TemporaryApp*)app;
 - (void) removeHost:(TemporaryHost*)host;
+- (void) removeApp:(TemporaryApp*)app;
 
 - (TemporarySettings*) getSettings;
 

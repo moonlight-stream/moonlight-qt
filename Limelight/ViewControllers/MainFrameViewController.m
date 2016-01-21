@@ -195,6 +195,11 @@ static NSMutableSet* hostList;
                 
                 [host.appList removeObject:app];
                 
+                // It's important to remove the app record from the database
+                // since we'll have a constraint violation now that appList
+                // doesn't have this app in it.
+                [database removeApp:app];
+                
                 break;
             }
         }

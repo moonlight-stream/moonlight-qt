@@ -140,6 +140,16 @@
     }
 }
 
+- (void) removeApp:(TemporaryApp*)app {
+    [_managedObjectContext performBlockAndWait:^{
+        App* managedApp = [self getAppForTemporaryApp:app];
+        if (managedApp != nil) {
+            [_managedObjectContext deleteObject:managedApp];
+            [self saveData];
+        }
+    }];
+}
+
 - (void) removeHost:(TemporaryHost*)host {
     [_managedObjectContext performBlockAndWait:^{
         Host* managedHost = [self getHostForTemporaryHost:host];
