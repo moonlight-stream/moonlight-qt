@@ -14,8 +14,6 @@
 - (id) initFromApp:(App*)app withTempHost:(TemporaryHost*)tempHost {
     self = [self init];
     
-    self.parent = app;
-    
     self.id = app.id;
     self.image = app.image;
     self.name = app.name;
@@ -24,11 +22,11 @@
     return self;
 }
 
-- (void) propagateChangesToParent {
-    self.parent.id = self.id;
-    self.parent.image = self.image;
-    self.parent.name = self.name;
-    self.parent.host = self.host.parent;
+- (void) propagateChangesToParent:(App*)parent withHost:(Host*)host {
+    parent.id = self.id;
+    parent.image = self.image;
+    parent.name = self.name;
+    parent.host = host;
 }
 
 - (NSComparisonResult)compareName:(TemporaryApp *)other {

@@ -10,13 +10,13 @@
 #import "Utils.h"
 #import "Host.h"
 
+@class DataManager;
+
 @interface TemporaryHost : NSObject
 
 @property (nonatomic) BOOL online;
 @property (nonatomic) PairState pairState;
 @property (nonatomic, nullable) NSString * activeAddress;
-
-@property (nullable, nonatomic) Host* parent;
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -32,7 +32,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 - (NSComparisonResult)compareName:(TemporaryHost *)other;
 
-- (void) propagateChangesToParent;
+- (void) propagateChangesToParent:(Host*)host withDm:(DataManager*)dm;
 
 NS_ASSUME_NONNULL_END
 

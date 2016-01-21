@@ -25,4 +25,7 @@
 - (void) updateUniqueId:(NSString*)uniqueId;
 - (NSString*) getUniqueId;
 
+// Don't call this outside of database code
+- (App*) getAppForTemporaryApp:(TemporaryApp*)tempApp;
+
 @end

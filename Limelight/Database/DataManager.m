@@ -61,13 +61,14 @@
 - (void) updateHost:(TemporaryHost *)host {
     [_managedObjectContext performBlockAndWait:^{
         // Add a new persistent managed object if one doesn't exist
-        if (host.parent == nil) {
+        Host* parent = [self getHostForTemporaryHost:host];
+        if (parent == nil) {
             NSEntityDescription* entity = [NSEntityDescription entityForName:@"Host" inManagedObjectContext:_managedObjectContext];
-            host.parent = [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:_managedObjectContext];
+            parent = [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:_managedObjectContext];
         }
         
         // Push changes from the temp host to the persistent one
-        [host propagateChangesToParent];
+        [host propagateChangesToParent:parent withDm:self];
         
         [self saveData];
     }];
@@ -98,14 +99,12 @@
 }
 
 - (void) removeHost:(TemporaryHost*)host {
-    if (host.parent == nil) {
-        // Not inserted into the DB
-        return;
-    }
-    
     [_managedObjectContext performBlockAndWait:^{
-        [_managedObjectContext deleteObject:host.parent];
-        [self saveData];
+        Host* managedHost = [self getHostForTemporaryHost:host];
+        if (managedHost != nil) {
+            [_managedObjectContext deleteObject:managedHost];
+            [self saveData];
+        }
     }];
 }
 
@@ -130,6 +129,33 @@
     }];
     
     return tempHosts;
+}
+
+// Only call from within performBlockAndWait!!!
+- (Host*) getHostForTemporaryHost:(TemporaryHost*)tempHost {
+    NSArray *hosts = [self fetchRecords:@"Host"];
+    
+    for (Host* host in hosts) {
+        if ([tempHost.uuid isEqualToString:host.uuid]) {
+            return host;
+        }
+    }
+    
+    return nil;
+}
+
+// Only call from within performBlockAndWait!!!
+- (App*) getAppForTemporaryApp:(TemporaryApp*)tempApp {
+    NSArray *apps = [self fetchRecords:@"App"];
+    
+    for (App* app in apps) {
+        if ([app.id isEqualToString:tempApp.id] &&
+            [app.host.uuid isEqualToString:app.host.uuid]) {
+            return app;
+        }
+    }
+    
+    return nil;
 }
 
 - (NSArray*) fetchRecords:(NSString*)entityName {

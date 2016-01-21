@@ -6,6 +6,7 @@
 //  Copyright © 2015 Moonlight Stream. All rights reserved.
 //
 
+#import "DataManager.h"
 #import "TemporaryHost.h"
 #import "Host.h"
 #import "TemporaryApp.h"
@@ -15,8 +16,6 @@
 
 - (id) initFromHost:(Host*)host {
     self = [self init];
-    
-    self.parent = host;
     
     self.address = host.address;
     self.externalAddress = host.externalAddress;
@@ -37,28 +36,29 @@
     return self;
 }
 
-- (void) propagateChangesToParent {
-    self.parent.address = self.address;
-    self.parent.externalAddress = self.externalAddress;
-    self.parent.localAddress = self.localAddress;
-    self.parent.mac = self.mac;
-    self.parent.name = self.name;
-    self.parent.uuid = self.uuid;
+- (void) propagateChangesToParent:(Host*)parentHost withDm:(DataManager*)dm {
+    parentHost.address = self.address;
+    parentHost.externalAddress = self.externalAddress;
+    parentHost.localAddress = self.localAddress;
+    parentHost.mac = self.mac;
+    parentHost.name = self.name;
+    parentHost.uuid = self.uuid;
     
     NSMutableSet *applist = [[NSMutableSet alloc] init];
     for (TemporaryApp* app in self.appList) {
         // Add a new persistent managed object if one doesn't exist
-        if (app.parent == nil) {
-            NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:self.parent.managedObjectContext];
-            app.parent = [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:self.parent.managedObjectContext];
+        App* parentApp = [dm getAppForTemporaryApp:app];
+        if (parentApp == nil) {
+            NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:parentHost.managedObjectContext];
+            parentApp = [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:parentHost.managedObjectContext];
         }
         
-        [app propagateChangesToParent];
+        [app propagateChangesToParent:parentApp withHost:parentHost];
         
-        [applist addObject:app.parent];
+        [applist addObject:parentApp];
     }
     
-    self.parent.appList = applist;
+    parentHost.appList = applist;
 }
 
 - (NSComparisonResult)compareName:(TemporaryHost *)other {
