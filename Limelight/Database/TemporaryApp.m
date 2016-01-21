@@ -33,7 +33,7 @@
 }
 
 - (NSUInteger)hash {
-    return [self.id intValue];
+    return [self.host.uuid hash] * 31 + [self.id intValue];
 }
 
 - (BOOL)isEqual:(id)object {
@@ -45,7 +45,8 @@
         return NO;
     }
     
-    return [self.id isEqualToString:((App*)object).id];
+    return [self.host.uuid isEqualToString:((App*)object).host.uuid] &&
+    [self.id isEqualToString:((App*)object).id];
 }
 
 @end
