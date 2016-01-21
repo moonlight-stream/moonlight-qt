@@ -23,6 +23,7 @@
     self.mac = host.mac;
     self.name = host.name;
     self.uuid = host.uuid;
+    self.pairState = [host.pairState intValue];
     
     NSMutableSet *appList = [[NSMutableSet alloc] init];
 
@@ -43,6 +44,7 @@
     parentHost.mac = self.mac;
     parentHost.name = self.name;
     parentHost.uuid = self.uuid;
+    parentHost.pairState = [NSNumber numberWithInt:self.pairState];
     
     NSMutableSet *applist = [[NSMutableSet alloc] init];
     for (TemporaryApp* app in self.appList) {
