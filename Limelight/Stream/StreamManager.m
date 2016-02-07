@@ -49,7 +49,6 @@
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
                                        fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
     NSString* pairStatus = [serverInfoResp getStringTag:@"PairStatus"];
-    NSString* currentClient = [serverInfoResp getStringTag:@"CurrentClient"];
     NSString* appversion = [serverInfoResp getStringTag:@"appversion"];
     NSString* serverState = [serverInfoResp getStringTag:@"state"];
     if (![serverInfoResp isStatusOk] || pairStatus == NULL || appversion == NULL || serverState == NULL) {
@@ -65,11 +64,6 @@
     
     // resumeApp and launchApp handle calling launchFailed
     if ([serverState hasSuffix:@"_SERVER_BUSY"]) {
-        if (![currentClient isEqualToString:@"1"]) {
-            // The server is streaming to someone else
-            [_callbacks launchFailed:@"There is another stream in progress"];
-            return;
-        }
         // App already running, resume it
         if (![self resumeApp:hMan]) {
             return;
