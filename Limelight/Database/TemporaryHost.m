@@ -14,7 +14,8 @@
 
 @implementation TemporaryHost
 
-- (id) init {    
+- (id) init {
+    self = [super init];
     self.appList = [[NSMutableSet alloc] init];
     
     return self;
