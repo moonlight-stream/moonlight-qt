@@ -61,7 +61,7 @@
 - (void) updateHost:(TemporaryHost *)host {
     [_managedObjectContext performBlockAndWait:^{
         // Add a new persistent managed object if one doesn't exist
-        Host* parent = [self getHostForTemporaryHost:host];
+        Host* parent = [self getHostForTemporaryHost:host withHostRecords:[self fetchRecords:@"Host"]];
         if (parent == nil) {
             NSEntityDescription* entity = [NSEntityDescription entityForName:@"Host" inManagedObjectContext:_managedObjectContext];
             parent = [[Host alloc] initWithEntity:entity insertIntoManagedObjectContext:_managedObjectContext];
@@ -76,16 +76,17 @@
 
 - (void) updateAppsForExistingHost:(TemporaryHost *)host {
     [_managedObjectContext performBlockAndWait:^{
-        Host* parent = [self getHostForTemporaryHost:host];
+        Host* parent = [self getHostForTemporaryHost:host withHostRecords:[self fetchRecords:@"Host"]];
         if (parent == nil) {
             // The host must exist to be updated
             return;
         }
         
         NSMutableSet *applist = [[NSMutableSet alloc] init];
+        NSArray *appRecords = [self fetchRecords:@"App"];
         for (TemporaryApp* app in host.appList) {
             // Add a new persistent managed object if one doesn't exist
-            App* parentApp = [self getAppForTemporaryApp:app];
+            App* parentApp = [self getAppForTemporaryApp:app withAppRecords:appRecords];
             if (parentApp == nil) {
                 NSEntityDescription* entity = [NSEntityDescription entityForName:@"App" inManagedObjectContext:_managedObjectContext];
                 parentApp = [[App alloc] initWithEntity:entity insertIntoManagedObjectContext:_managedObjectContext];
@@ -104,7 +105,7 @@
 
 - (void) updateIconForExistingApp:(TemporaryApp*)app {
     [_managedObjectContext performBlockAndWait:^{
-        App* parentApp = [self getAppForTemporaryApp:app];
+        App* parentApp = [self getAppForTemporaryApp:app withAppRecords:[self fetchRecords:@"App"]];
         if (parentApp == nil) {
             // The app must exist to be updated
             return;
@@ -142,7 +143,7 @@
 
 - (void) removeApp:(TemporaryApp*)app {
     [_managedObjectContext performBlockAndWait:^{
-        App* managedApp = [self getAppForTemporaryApp:app];
+        App* managedApp = [self getAppForTemporaryApp:app withAppRecords:[self fetchRecords:@"App"]];
         if (managedApp != nil) {
             [_managedObjectContext deleteObject:managedApp];
             [self saveData];
@@ -152,7 +153,7 @@
 
 - (void) removeHost:(TemporaryHost*)host {
     [_managedObjectContext performBlockAndWait:^{
-        Host* managedHost = [self getHostForTemporaryHost:host];
+        Host* managedHost = [self getHostForTemporaryHost:host withHostRecords:[self fetchRecords:@"Host"]];
         if (managedHost != nil) {
             [_managedObjectContext deleteObject:managedHost];
             [self saveData];
@@ -184,9 +185,7 @@
 }
 
 // Only call from within performBlockAndWait!!!
-- (Host*) getHostForTemporaryHost:(TemporaryHost*)tempHost {
-    NSArray *hosts = [self fetchRecords:@"Host"];
-    
+- (Host*) getHostForTemporaryHost:(TemporaryHost*)tempHost withHostRecords:(NSArray*)hosts {
     for (Host* host in hosts) {
         if ([tempHost.uuid isEqualToString:host.uuid]) {
             return host;
@@ -197,9 +196,7 @@
 }
 
 // Only call from within performBlockAndWait!!!
-- (App*) getAppForTemporaryApp:(TemporaryApp*)tempApp {
-    NSArray *apps = [self fetchRecords:@"App"];
-    
+- (App*) getAppForTemporaryApp:(TemporaryApp*)tempApp withAppRecords:(NSArray*)apps {
     for (App* app in apps) {
         if ([app.id isEqualToString:tempApp.id] &&
             [app.host.uuid isEqualToString:app.host.uuid]) {
