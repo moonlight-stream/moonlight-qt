@@ -8,7 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		9832D1361BBCD5C50036EF48 /* TemporaryApp.m in Sources */ = {isa = PBXBuildFile; fileRef = 9832D1351BBCD5C50036EF48 /* TemporaryApp.m */; };
-		987140041B04542F00AB57D5 /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB1E43101AE8B0F200AFF679 /* libmoonlight-common.a */; };
+		98CFB82F1CAD481B0048EF74 /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98AB2E841CAD46840089BB98 /* libmoonlight-common.a */; };
 		98D5856D1C0EA79600F6CC00 /* TemporaryHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 98D5856C1C0EA79600F6CC00 /* TemporaryHost.m */; };
 		98D585701C0ED0E800F6CC00 /* TemporarySettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 98D5856F1C0ED0E800F6CC00 /* TemporarySettings.m */; };
 		9E5D600B1A5A5A3900689918 /* Apache License.txt in Resources */ = {isa = PBXBuildFile; fileRef = 9E5D5FF81A5A5A3900689918 /* Apache License.txt */; };
@@ -80,18 +80,18 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		987140011B04541A00AB57D5 /* PBXContainerItemProxy */ = {
+		98AB2E831CAD46840089BB98 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = FB290E2D19B37A4E004C83CF;
-			remoteInfo = "moonlight-common";
-		};
-		FB1E430F1AE8B0F200AFF679 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */;
+			containerPortal = 98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = FB290E2E19B37A4E004C83CF;
+			remoteInfo = "moonlight-common";
+		};
+		98AB2E851CAD468B0089BB98 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = FB290E2D19B37A4E004C83CF;
 			remoteInfo = "moonlight-common";
 		};
 /* End PBXContainerItemProxy section */
@@ -99,7 +99,7 @@
 /* Begin PBXFileReference section */
 		9832D1341BBCD5C50036EF48 /* TemporaryApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TemporaryApp.h; path = Database/TemporaryApp.h; sourceTree = "<group>"; };
 		9832D1351BBCD5C50036EF48 /* TemporaryApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TemporaryApp.m; path = Database/TemporaryApp.m; sourceTree = "<group>"; };
-		98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "moonlight-common.xcodeproj"; path = "limelight-common-c/moonlight-common.xcodeproj"; sourceTree = "<group>"; };
+		98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "moonlight-common.xcodeproj"; path = "moonlight-common/moonlight-common.xcodeproj"; sourceTree = "<group>"; };
 		98D5856B1C0EA79600F6CC00 /* TemporaryHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TemporaryHost.h; path = Database/TemporaryHost.h; sourceTree = "<group>"; };
 		98D5856C1C0EA79600F6CC00 /* TemporaryHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TemporaryHost.m; path = Database/TemporaryHost.m; sourceTree = "<group>"; };
 		98D5856E1C0ED0E800F6CC00 /* TemporarySettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TemporarySettings.h; path = Database/TemporarySettings.h; sourceTree = "<group>"; };
@@ -307,7 +307,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				987140041B04542F00AB57D5 /* libmoonlight-common.a in Frameworks */,
+				98CFB82F1CAD481B0048EF74 /* libmoonlight-common.a in Frameworks */,
 				FB8946ED19F6AFE800339C8A /* libopus.a in Frameworks */,
 				FB8946EB19F6AFE100339C8A /* libcrypto.a in Frameworks */,
 				FB8946EC19F6AFE400339C8A /* libssl.a in Frameworks */,
@@ -326,6 +326,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		98AB2E801CAD46830089BB98 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				98AB2E841CAD46840089BB98 /* libmoonlight-common.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		9E5D5FF61A5A5A3900689918 /* Font */ = {
 			isa = PBXGroup;
 			children = (
@@ -348,18 +356,10 @@
 			path = Roboto;
 			sourceTree = "<group>";
 		};
-		FB1E430C1AE8B0F200AFF679 /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				FB1E43101AE8B0F200AFF679 /* libmoonlight-common.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		FB290CE519B2C406004C83CF = {
 			isa = PBXGroup;
 			children = (
-				98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */,
+				98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */,
 				FB290CF919B2C406004C83CF /* Limelight */,
 				FB290CF019B2C406004C83CF /* Frameworks */,
 				FB290CEF19B2C406004C83CF /* Products */,
@@ -761,7 +761,7 @@
 			buildRules = (
 			);
 			dependencies = (
-				987140021B04541A00AB57D5 /* PBXTargetDependency */,
+				98AB2E861CAD468B0089BB98 /* PBXTargetDependency */,
 			);
 			name = Moonlight;
 			productName = Limelight;
@@ -794,8 +794,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = FB1E430C1AE8B0F200AFF679 /* Products */;
-					ProjectRef = 98A03B4519F3514B00861ACA /* moonlight-common.xcodeproj */;
+					ProductGroup = 98AB2E801CAD46830089BB98 /* Products */;
+					ProjectRef = 98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */;
 				},
 			);
 			projectRoot = "";
@@ -806,11 +806,11 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		FB1E43101AE8B0F200AFF679 /* libmoonlight-common.a */ = {
+		98AB2E841CAD46840089BB98 /* libmoonlight-common.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
 			path = "libmoonlight-common.a";
-			remoteRef = FB1E430F1AE8B0F200AFF679 /* PBXContainerItemProxy */;
+			remoteRef = 98AB2E831CAD46840089BB98 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -893,10 +893,10 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		987140021B04541A00AB57D5 /* PBXTargetDependency */ = {
+		98AB2E861CAD468B0089BB98 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			name = "moonlight-common";
-			targetProxy = 987140011B04541A00AB57D5 /* PBXContainerItemProxy */;
+			targetProxy = 98AB2E851CAD468B0089BB98 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1000,7 +1000,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/limelight-common-c/limelight-common",
+					"$(PROJECT_DIR)/moonlight-common/moonlight-common-c/src",
 					"$(SDKROOT)/usr/include/libxml2/**",
 					"$(PROJECT_DIR)/libs/**",
 				);
@@ -1030,7 +1030,7 @@
 				HEADER_SEARCH_PATHS = (
 					"$(inherited)",
 					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
-					"$(PROJECT_DIR)/limelight-common-c/limelight-common",
+					"$(PROJECT_DIR)/moonlight-common/moonlight-common-c/src",
 					"$(SDKROOT)/usr/include/libxml2/**",
 					"$(PROJECT_DIR)/libs/**",
 				);
