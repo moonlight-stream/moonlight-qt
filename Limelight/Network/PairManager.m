@@ -41,14 +41,21 @@
         if (![[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_AVAILABLE"]) {
             [_callback pairFailed:@"You must stop streaming before attempting to pair."];
         } else if (![[serverInfoResp getStringTag:@"PairStatus"] isEqual:@"1"]) {
-            [self initiatePair];
+            NSString* appversion = [serverInfoResp getStringTag:@"appversion"];
+            if (appversion == nil) {
+                [_callback pairFailed:@"Missing XML element"];
+                return;
+            }            
+            [self initiatePair: [[appversion substringToIndex:1] intValue]];
         } else {
             [_callback alreadyPaired];
         }
     }
 }
 
-- (void) initiatePair {
+- (void) initiatePair:(int)serverMajorVersion {
+    Log(LOG_I, @"Pairing with generation %d server", serverMajorVersion);
+    
     NSString* PIN = [self generatePIN];
     NSData* salt = [self saltPIN:PIN];
     Log(LOG_I, @"PIN: %@, saltedPIN: %@", PIN, salt);
@@ -69,7 +76,18 @@
     NSString* plainCert = [pairResp getStringTag:@"plaincert"];
     
     CryptoManager* cryptoMan = [[CryptoManager alloc] init];
-    NSData* aesKey = [cryptoMan createAESKeyFromSalt:salt];
+    NSData* aesKey;
+    
+    // Gen 7 servers use SHA256 to get the key
+    int hashLength;
+    if (serverMajorVersion >= 7) {
+        aesKey = [cryptoMan createAESKeyFromSaltSHA256:salt];
+        hashLength = 32;
+    }
+    else {
+        aesKey = [cryptoMan createAESKeyFromSaltSHA1:salt];
+        hashLength = 20;
+    }
     
     NSData* randomChallenge = [Utils randomBytes:16];
     NSData* encryptedChallenge = [cryptoMan aesEncrypt:randomChallenge withKey:aesKey];
@@ -88,11 +106,18 @@
     NSData* encServerChallengeResp = [Utils hexToBytes:[challengeResp getStringTag:@"challengeresponse"]];
     NSData* decServerChallengeResp = [cryptoMan aesDecrypt:encServerChallengeResp withKey:aesKey];
     
-    NSData* serverResponse = [decServerChallengeResp subdataWithRange:NSMakeRange(0, 20)];
-    NSData* serverChallenge = [decServerChallengeResp subdataWithRange:NSMakeRange(20, 16)];
+    NSData* serverResponse = [decServerChallengeResp subdataWithRange:NSMakeRange(0, hashLength)];
+    NSData* serverChallenge = [decServerChallengeResp subdataWithRange:NSMakeRange(hashLength, 16)];
     
     NSData* clientSecret = [Utils randomBytes:16];
-    NSData* challengeRespHash = [cryptoMan SHA1HashData:[self concatData:[self concatData:serverChallenge with:[CryptoManager getSignatureFromCert:_cert]] with:clientSecret]];
+    NSData* challengeRespHashInput = [self concatData:[self concatData:serverChallenge with:[CryptoManager getSignatureFromCert:_cert]] with:clientSecret];
+    NSData* challengeRespHash;
+    if (serverMajorVersion >= 7) {
+        challengeRespHash = [cryptoMan SHA256HashData: challengeRespHashInput];
+    }
+    else {
+        challengeRespHash = [cryptoMan SHA1HashData: challengeRespHashInput];
+    }
     NSData* challengeRespEncrypted = [cryptoMan aesEncrypt:challengeRespHash withKey:aesKey];
     
     HttpResponse* secretResp = [[HttpResponse alloc] init];
@@ -116,7 +141,14 @@
         return;
     }
     
-    NSData* serverChallengeRespHash = [cryptoMan SHA1HashData:[self concatData:[self concatData:randomChallenge with:[CryptoManager getSignatureFromCert:[Utils hexToBytes:plainCert]]] with:serverSecret]];
+    NSData* serverChallengeRespHashInput = [self concatData:[self concatData:randomChallenge with:[CryptoManager getSignatureFromCert:[Utils hexToBytes:plainCert]]] with:serverSecret];
+    NSData* serverChallengeRespHash;
+    if (serverMajorVersion >= 7) {
+        serverChallengeRespHash = [cryptoMan SHA256HashData: serverChallengeRespHashInput];
+    }
+    else {
+        serverChallengeRespHash = [cryptoMan SHA1HashData: serverChallengeRespHashInput];
+    }
     if (![serverChallengeRespHash isEqual:serverResponse]) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Incorrect PIN"];

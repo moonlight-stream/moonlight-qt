@@ -16,19 +16,31 @@
 #include <openssl/evp.h>
 
 @implementation CryptoManager
-static const int SHA1_DIGEST_LENGTH = 20;
+static const int SHA1_HASH_LENGTH = 20;
+static const int SHA256_HASH_LENGTH = 32;
 static NSData* key = nil;
 static NSData* cert = nil;
 static NSData* p12 = nil;
 
-- (NSData*) createAESKeyFromSalt:(NSData*)saltedPIN {
+- (NSData*) createAESKeyFromSaltSHA1:(NSData*)saltedPIN {
     return [[self SHA1HashData:saltedPIN] subdataWithRange:NSMakeRange(0, 16)];
 }
 
+- (NSData*) createAESKeyFromSaltSHA256:(NSData*)saltedPIN {
+    return [[self SHA256HashData:saltedPIN] subdataWithRange:NSMakeRange(0, 16)];
+}
+
 - (NSData*) SHA1HashData:(NSData*)data {
-    unsigned char sha1[SHA1_DIGEST_LENGTH];
+    unsigned char sha1[SHA1_HASH_LENGTH];
     SHA1([data bytes], [data length], sha1);
-    NSData* bytes = [NSData dataWithBytes:sha1 length:20];
+    NSData* bytes = [NSData dataWithBytes:sha1 length:sizeof(sha1)];
+    return bytes;
+}
+
+- (NSData*) SHA256HashData:(NSData*)data {
+    unsigned char sha256[SHA256_HASH_LENGTH];
+    SHA256([data bytes], [data length], sha256);
+    NSData* bytes = [NSData dataWithBytes:sha256 length:sizeof(sha256)];
     return bytes;
 }
 

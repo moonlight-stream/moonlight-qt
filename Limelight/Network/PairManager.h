@@ -22,6 +22,6 @@
 - (id) initWithManager:(HttpManager*)httpManager andCert:(NSData*)cert callback:(id<PairCallback>)callback;
 - (NSString*) generatePIN;
 - (NSData*) saltPIN:(NSString*)PIN;
-- (void) initiatePair;
+- (void) initiatePair:(int)serverMajorVersion;
 
 @end
