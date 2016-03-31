@@ -105,15 +105,6 @@
 		98AB2E241CAD423B0089BB98 /* LinkedBlockingQueue.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = LinkedBlockingQueue.c; sourceTree = "<group>"; };
 		98AB2E251CAD423B0089BB98 /* LinkedBlockingQueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = LinkedBlockingQueue.h; sourceTree = "<group>"; };
 		98AB2E261CAD423B0089BB98 /* Misc.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Misc.c; sourceTree = "<group>"; };
-		98AB2E281CAD423B0089BB98 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		98AB2E291CAD423B0089BB98 /* oaes_base64.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = oaes_base64.c; sourceTree = "<group>"; };
-		98AB2E2A1CAD423B0089BB98 /* oaes_base64.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oaes_base64.h; sourceTree = "<group>"; };
-		98AB2E2B1CAD423B0089BB98 /* oaes_common.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oaes_common.h; sourceTree = "<group>"; };
-		98AB2E2C1CAD423B0089BB98 /* oaes_config.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oaes_config.h; sourceTree = "<group>"; };
-		98AB2E2D1CAD423B0089BB98 /* oaes_lib.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = oaes_lib.c; sourceTree = "<group>"; };
-		98AB2E2E1CAD423B0089BB98 /* oaes_lib.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = oaes_lib.h; sourceTree = "<group>"; };
-		98AB2E2F1CAD423B0089BB98 /* README */ = {isa = PBXFileReference; lastKnownFileType = text; path = README; sourceTree = "<group>"; };
-		98AB2E301CAD423B0089BB98 /* VERSION */ = {isa = PBXFileReference; lastKnownFileType = text; path = VERSION; sourceTree = "<group>"; };
 		98AB2E311CAD423B0089BB98 /* Platform.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = Platform.c; sourceTree = "<group>"; };
 		98AB2E321CAD423B0089BB98 /* Platform.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Platform.h; sourceTree = "<group>"; };
 		98AB2E331CAD423B0089BB98 /* PlatformSockets.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = PlatformSockets.c; sourceTree = "<group>"; };
@@ -235,7 +226,6 @@
 				98AB2E241CAD423B0089BB98 /* LinkedBlockingQueue.c */,
 				98AB2E251CAD423B0089BB98 /* LinkedBlockingQueue.h */,
 				98AB2E261CAD423B0089BB98 /* Misc.c */,
-				98AB2E271CAD423B0089BB98 /* OpenAES */,
 				98AB2E311CAD423B0089BB98 /* Platform.c */,
 				98AB2E321CAD423B0089BB98 /* Platform.h */,
 				98AB2E331CAD423B0089BB98 /* PlatformSockets.c */,
@@ -253,22 +243,6 @@
 			);
 			name = src;
 			path = "moonlight-common-c/src";
-			sourceTree = "<group>";
-		};
-		98AB2E271CAD423B0089BB98 /* OpenAES */ = {
-			isa = PBXGroup;
-			children = (
-				98AB2E281CAD423B0089BB98 /* LICENSE */,
-				98AB2E291CAD423B0089BB98 /* oaes_base64.c */,
-				98AB2E2A1CAD423B0089BB98 /* oaes_base64.h */,
-				98AB2E2B1CAD423B0089BB98 /* oaes_common.h */,
-				98AB2E2C1CAD423B0089BB98 /* oaes_config.h */,
-				98AB2E2D1CAD423B0089BB98 /* oaes_lib.c */,
-				98AB2E2E1CAD423B0089BB98 /* oaes_lib.h */,
-				98AB2E2F1CAD423B0089BB98 /* README */,
-				98AB2E301CAD423B0089BB98 /* VERSION */,
-			);
-			path = OpenAES;
 			sourceTree = "<group>";
 		};
 		FB290E2519B37A4E004C83CF = {
@@ -482,7 +456,10 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = "moonlight-common-c/enet/include";
+				HEADER_SEARCH_PATHS = (
+					"moonlight-common-c/enet/include",
+					"../libs/**",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
@@ -496,7 +473,10 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Distribution";
 				EXECUTABLE_PREFIX = lib;
-				HEADER_SEARCH_PATHS = "moonlight-common-c/enet/include";
+				HEADER_SEARCH_PATHS = (
+					"moonlight-common-c/enet/include",
+					"../libs/**",
+				);
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
