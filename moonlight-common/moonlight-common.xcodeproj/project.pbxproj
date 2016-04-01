@@ -32,26 +32,6 @@
 		98AB2E561CAD427A0089BB98 /* protocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E151CAD422B0089BB98 /* protocol.c */; };
 		98AB2E571CAD427A0089BB98 /* unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E171CAD422B0089BB98 /* unix.c */; };
 		98AB2E581CAD427A0089BB98 /* win32.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E181CAD422B0089BB98 /* win32.c */; };
-		98AB2E591CAD42930089BB98 /* callbacks.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E031CAD422B0089BB98 /* callbacks.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E5A1CAD42930089BB98 /* enet.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E041CAD422B0089BB98 /* enet.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E5B1CAD42930089BB98 /* list.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E051CAD422B0089BB98 /* list.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E5C1CAD42930089BB98 /* protocol.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E061CAD422B0089BB98 /* protocol.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E5D1CAD42930089BB98 /* time.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E071CAD422B0089BB98 /* time.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E5E1CAD42930089BB98 /* types.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E081CAD422B0089BB98 /* types.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E5F1CAD42930089BB98 /* unix.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E091CAD422B0089BB98 /* unix.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E601CAD42930089BB98 /* utility.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E0A1CAD422B0089BB98 /* utility.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E611CAD42930089BB98 /* win32.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E0B1CAD422B0089BB98 /* win32.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E621CAD42AC0089BB98 /* ByteBuffer.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E1C1CAD423B0089BB98 /* ByteBuffer.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E631CAD42AC0089BB98 /* Input.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E201CAD423B0089BB98 /* Input.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E641CAD42AC0089BB98 /* Limelight-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E221CAD423B0089BB98 /* Limelight-internal.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E651CAD42AC0089BB98 /* LinkedBlockingQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E251CAD423B0089BB98 /* LinkedBlockingQueue.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E661CAD42AC0089BB98 /* Platform.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E321CAD423B0089BB98 /* Platform.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E671CAD42AC0089BB98 /* PlatformSockets.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E341CAD423B0089BB98 /* PlatformSockets.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E681CAD42AC0089BB98 /* PlatformThreads.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E351CAD423B0089BB98 /* PlatformThreads.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E691CAD42AC0089BB98 /* RtpReorderQueue.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E371CAD423B0089BB98 /* RtpReorderQueue.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E6A1CAD42AC0089BB98 /* Rtsp.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E381CAD423B0089BB98 /* Rtsp.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E6B1CAD42AC0089BB98 /* Video.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E3C1CAD423B0089BB98 /* Video.h */; settings = {ATTRIBUTES = (Private, ); }; };
-		98AB2E6C1CAD42BE0089BB98 /* Limelight.h in Headers */ = {isa = PBXBuildFile; fileRef = 98AB2E231CAD423B0089BB98 /* Limelight.h */; settings = {ATTRIBUTES = (Public, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -264,36 +244,6 @@
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		FB290E2C19B37A4E004C83CF /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-				98AB2E6C1CAD42BE0089BB98 /* Limelight.h in Headers */,
-				98AB2E591CAD42930089BB98 /* callbacks.h in Headers */,
-				98AB2E5A1CAD42930089BB98 /* enet.h in Headers */,
-				98AB2E5B1CAD42930089BB98 /* list.h in Headers */,
-				98AB2E5C1CAD42930089BB98 /* protocol.h in Headers */,
-				98AB2E5D1CAD42930089BB98 /* time.h in Headers */,
-				98AB2E5E1CAD42930089BB98 /* types.h in Headers */,
-				98AB2E5F1CAD42930089BB98 /* unix.h in Headers */,
-				98AB2E601CAD42930089BB98 /* utility.h in Headers */,
-				98AB2E611CAD42930089BB98 /* win32.h in Headers */,
-				98AB2E621CAD42AC0089BB98 /* ByteBuffer.h in Headers */,
-				98AB2E631CAD42AC0089BB98 /* Input.h in Headers */,
-				98AB2E641CAD42AC0089BB98 /* Limelight-internal.h in Headers */,
-				98AB2E651CAD42AC0089BB98 /* LinkedBlockingQueue.h in Headers */,
-				98AB2E661CAD42AC0089BB98 /* Platform.h in Headers */,
-				98AB2E671CAD42AC0089BB98 /* PlatformSockets.h in Headers */,
-				98AB2E681CAD42AC0089BB98 /* PlatformThreads.h in Headers */,
-				98AB2E691CAD42AC0089BB98 /* RtpReorderQueue.h in Headers */,
-				98AB2E6A1CAD42AC0089BB98 /* Rtsp.h in Headers */,
-				98AB2E6B1CAD42AC0089BB98 /* Video.h in Headers */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
 		FB290E2D19B37A4E004C83CF /* moonlight-common */ = {
 			isa = PBXNativeTarget;
@@ -301,7 +251,6 @@
 			buildPhases = (
 				FB290E2A19B37A4E004C83CF /* Sources */,
 				FB290E2B19B37A4E004C83CF /* Frameworks */,
-				FB290E2C19B37A4E004C83CF /* Headers */,
 			);
 			buildRules = (
 			);
