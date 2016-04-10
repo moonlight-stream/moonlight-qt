@@ -52,11 +52,13 @@
         UITouch *touch = [[event allTouches] anyObject];
         touchLocation = [touch locationInView:self];
         touchMoved = false;
-        dragTimer = [NSTimer scheduledTimerWithTimeInterval:2.0
+        if ([[event allTouches] count] == 1 && !isDragging) {
+            dragTimer = [NSTimer scheduledTimerWithTimeInterval:2.0
                                                      target:self
                                                    selector:@selector(onDragStart:)
                                                    userInfo:nil
                                                     repeats:NO];
+        }
     }
 }
 
