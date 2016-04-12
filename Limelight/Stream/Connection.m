@@ -23,6 +23,7 @@
     int _serverMajorVersion;
 }
 
+static NSLock* initLock;
 static OpusDecoder *opusDecoder;
 static id<ConnectionCallbacks> _callbacks;
 
@@ -261,26 +262,28 @@ void ClDisplayTransientMessage(char* message)
     [_callbacks displayTransientMessage: message];
 }
 
--(void) terminateInternal
-{
-    // We dispatch this async to get out because this can be invoked
-    // on a thread inside common and we don't want to deadlock
-    dispatch_async(dispatch_get_main_queue(), ^{
-        // This is safe to call even before LiStartConnection
-        LiStopConnection();
-    });
-}
-
 -(void) terminate
 {
-    // We're guaranteed to not be on a moonlight-common thread
-    // here so it's safe to call stop directly
-    LiStopConnection();
+    // We dispatch this async to get out because this can be invoked
+    // on a thread inside common and we don't want to deadlock. It also avoids
+    // blocking on the caller's thread waiting to acquire initLock.
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        [initLock lock];
+        LiStopConnection();
+        [initLock unlock];
+    });
 }
 
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks serverMajorVersion:(int)serverMajorVersion
 {
     self = [super init];
+    
+    // Use a lock to ensure that only one thread is initializing
+    // or deinitializing a connection at a time.
+    if (initLock == nil) {
+        initLock = [[NSLock alloc] init];
+    }
+    
     _host = [config.host cStringUsingEncoding:NSUTF8StringEncoding];
     renderer = myRenderer;
     _callbacks = callbacks;
@@ -403,12 +406,14 @@ static OSStatus playbackCallback(void *inRefCon,
 
 -(void) main
 {
+    [initLock lock];
     LiStartConnection(_host,
                       &_streamConfig,
                       &_clCallbacks,
                       &_drCallbacks,
                       &_arCallbacks,
                       NULL, 0, _serverMajorVersion);
+    [initLock unlock];
 }
 
 @end

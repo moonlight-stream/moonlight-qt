@@ -91,18 +91,9 @@
     [opQueue addOperation:_connection];
 }
 
-// This should NEVER be called from within a thread
-// owned by moonlight-common
 - (void) stopStream
 {
     [_connection terminate];
-}
-
-// This should only be called from within a thread
-// owned by moonlight-common
-- (void) stopStreamInternal
-{
-    [_connection terminateInternal];
 }
 
 - (BOOL) launchApp:(HttpManager*)hMan {

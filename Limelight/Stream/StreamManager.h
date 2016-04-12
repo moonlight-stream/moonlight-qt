@@ -14,6 +14,5 @@
 
 - (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionCallbacks:(id<ConnectionCallbacks>)callback;
 - (void) stopStream;
-- (void) stopStreamInternal;
 
 @end

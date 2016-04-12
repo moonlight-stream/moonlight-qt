@@ -84,7 +84,7 @@
         [self presentViewController:conTermAlert animated:YES completion:nil];
     });
 
-    [_streamMan stopStreamInternal];
+    [_streamMan stopStream];
 }
 
 - (void) stageStarting:(char*)stageName {
@@ -115,7 +115,7 @@
         [self presentViewController:alert animated:YES completion:nil];
     });
     
-    [_streamMan stopStreamInternal];
+    [_streamMan stopStream];
 }
 
 - (void) launchFailed:(NSString*)message {
