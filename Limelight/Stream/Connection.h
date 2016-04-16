@@ -27,7 +27,6 @@
 
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks serverMajorVersion:(int)serverMajorVersion;
 -(void) terminate;
--(void) terminateInternal;
 -(void) main;
 
 @end
