@@ -17,6 +17,9 @@
     BOOL touchMoved;
     OnScreenControls* onScreenControls;
     
+    BOOL isDragging;
+    NSTimer* dragTimer;
+    
     float xDeltaFactor;
     float yDeltaFactor;
     float screenFactor;
@@ -49,11 +52,27 @@
         UITouch *touch = [[event allTouches] anyObject];
         touchLocation = [touch locationInView:self];
         touchMoved = false;
+        if ([[event allTouches] count] == 1 && !isDragging) {
+            dragTimer = [NSTimer scheduledTimerWithTimeInterval:1.0
+                                                     target:self
+                                                   selector:@selector(onDragStart:)
+                                                   userInfo:nil
+                                                    repeats:NO];
+        }
+    }
+}
+
+- (void)onDragStart:(NSTimer*)timer {
+    if (!touchMoved && !isDragging){
+        isDragging = true;
+        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
     }
 }
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     if (![onScreenControls handleTouchMovedEvent:touches]) {
+        [dragTimer invalidate];
+        dragTimer = nil;
         if ([[event allTouches] count] == 1) {
             UITouch *touch = [[event allTouches] anyObject];
             CGPoint currentLocation = [touch locationInView:self];
@@ -91,6 +110,8 @@
 - (void)touchesEnded:(NSSet *)touches withEvent:(UIEvent *)event {
     Log(LOG_D, @"Touch up");
     if (![onScreenControls handleTouchUpEvent:touches]) {
+        [dragTimer invalidate];
+        dragTimer = nil;
         if (!touchMoved) {
             if ([[event allTouches] count]  == 2) {
                 Log(LOG_D, @"Sending right mouse button press");
@@ -104,13 +125,15 @@
                 
                 
             } else {
-                Log(LOG_D, @"Sending left mouse button press");
-                
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
-                
-                // Wait 100 ms to simulate a real button press
-                usleep(100 * 1000);
-                
+                if (!isDragging){
+                    Log(LOG_D, @"Sending left mouse button press");
+                    
+                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+                    
+                    // Wait 100 ms to simulate a real button press
+                    usleep(100 * 1000);
+                }
+                isDragging = false;
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
             }
         }
