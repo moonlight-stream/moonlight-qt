@@ -53,7 +53,7 @@
         touchLocation = [touch locationInView:self];
         touchMoved = false;
         if ([[event allTouches] count] == 1 && !isDragging) {
-            dragTimer = [NSTimer scheduledTimerWithTimeInterval:2.0
+            dragTimer = [NSTimer scheduledTimerWithTimeInterval:1.0
                                                      target:self
                                                    selector:@selector(onDragStart:)
                                                    userInfo:nil
