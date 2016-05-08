@@ -53,7 +53,7 @@
         touchLocation = [touch locationInView:self];
         touchMoved = false;
         if ([[event allTouches] count] == 1 && !isDragging) {
-            dragTimer = [NSTimer scheduledTimerWithTimeInterval:1.0
+            dragTimer = [NSTimer scheduledTimerWithTimeInterval:0.650
                                                      target:self
                                                    selector:@selector(onDragStart:)
                                                    userInfo:nil
@@ -122,8 +122,6 @@
                 usleep(100 * 1000);
                 
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
-                
-                
             } else {
                 if (!isDragging){
                     Log(LOG_D, @"Sending left mouse button press");
@@ -136,6 +134,10 @@
                 isDragging = false;
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
             }
+        }
+        else if (isDragging) {
+            isDragging = false;
+            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
         }
     }
 }
