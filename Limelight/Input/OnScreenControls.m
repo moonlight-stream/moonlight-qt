@@ -44,10 +44,7 @@
     UITouch* _bTouch;
     UITouch* _xTouch;
     UITouch* _yTouch;
-    UITouch* _upTouch;
-    UITouch* _downTouch;
-    UITouch* _leftTouch;
-    UITouch* _rightTouch;
+    UITouch* _dpadTouch;
     UITouch* _lsTouch;
     UITouch* _rsTouch;
     UITouch* _startTouch;
@@ -573,6 +570,26 @@ static float L3_Y;
             [_controllerSupport updateRightStick:_controller x:0x7FFE * xStickVal y:0x7FFE * -yStickVal];
             
             updated = true;
+        } else if (touch == _dpadTouch) {
+            [_controllerSupport clearButtonFlag:_controller
+                                          flags:UP_FLAG | DOWN_FLAG | LEFT_FLAG | RIGHT_FLAG];
+            
+            // Allow the user to slide their finger to another d-pad button
+            if ([_upButton.presentationLayer hitTest:touchLocation]) {
+                [_controllerSupport setButtonFlag:_controller flags:UP_FLAG];
+                updated = true;
+            } else if ([_downButton.presentationLayer hitTest:touchLocation]) {
+                [_controllerSupport setButtonFlag:_controller flags:DOWN_FLAG];
+                updated = true;
+            } else if ([_leftButton.presentationLayer hitTest:touchLocation]) {
+                [_controllerSupport setButtonFlag:_controller flags:LEFT_FLAG];
+                updated = true;
+            } else if ([_rightButton.presentationLayer hitTest:touchLocation]) {
+                [_controllerSupport setButtonFlag:_controller flags:RIGHT_FLAG];
+                updated = true;
+            }
+            
+            buttonTouch = true;
         } else if (touch == _aTouch) {
             buttonTouch = true;
         } else if (touch == _bTouch) {
@@ -580,14 +597,6 @@ static float L3_Y;
         } else if (touch == _xTouch) {
             buttonTouch = true;
         } else if (touch == _yTouch) {
-            buttonTouch = true;
-        } else if (touch == _upTouch) {
-            buttonTouch = true;
-        } else if (touch == _downTouch) {
-            buttonTouch = true;
-        } else if (touch == _leftTouch) {
-            buttonTouch = true;
-        } else if (touch == _rightTouch) {
             buttonTouch = true;
         } else if (touch == _startTouch) {
             buttonTouch = true;
@@ -640,19 +649,19 @@ static float L3_Y;
             updated = true;
         } else if ([_upButton.presentationLayer hitTest:touchLocation]) {
             [_controllerSupport setButtonFlag:_controller flags:UP_FLAG];
-            _upTouch = touch;
+            _dpadTouch = touch;
             updated = true;
         } else if ([_downButton.presentationLayer hitTest:touchLocation]) {
             [_controllerSupport setButtonFlag:_controller flags:DOWN_FLAG];
-            _downTouch = touch;
+            _dpadTouch = touch;
             updated = true;
         } else if ([_leftButton.presentationLayer hitTest:touchLocation]) {
             [_controllerSupport setButtonFlag:_controller flags:LEFT_FLAG];
-            _leftTouch = touch;
+            _dpadTouch = touch;
             updated = true;
         } else if ([_rightButton.presentationLayer hitTest:touchLocation]) {
             [_controllerSupport setButtonFlag:_controller flags:RIGHT_FLAG];
-            _rightTouch = touch;
+            _dpadTouch = touch;
             updated = true;
         } else if ([_startButton.presentationLayer hitTest:touchLocation]) {
             [_controllerSupport setButtonFlag:_controller flags:PLAY_FLAG];
@@ -758,21 +767,10 @@ static float L3_Y;
             [_controllerSupport clearButtonFlag:_controller flags:Y_FLAG];
             _yTouch = nil;
             updated = true;
-        } else if (touch == _upTouch) {
-            [_controllerSupport clearButtonFlag:_controller flags:UP_FLAG];
-            _upTouch = nil;
-            updated = true;
-        } else if (touch == _downTouch) {
-            [_controllerSupport clearButtonFlag:_controller flags:DOWN_FLAG];
-            _downTouch = nil;
-            updated = true;
-        } else if (touch == _leftTouch) {
-            [_controllerSupport clearButtonFlag:_controller flags:LEFT_FLAG];
-            _leftTouch = nil;
-            updated = true;
-        } else if (touch == _rightTouch) {
-            [_controllerSupport clearButtonFlag:_controller flags:RIGHT_FLAG];
-            _rightTouch = nil;
+        } else if (touch == _dpadTouch) {
+            [_controllerSupport clearButtonFlag:_controller
+                                          flags:UP_FLAG | DOWN_FLAG | LEFT_FLAG | RIGHT_FLAG];
+            _dpadTouch = nil;
             updated = true;
         } else if (touch == _startTouch) {
             [_controllerSupport clearButtonFlag:_controller flags:PLAY_FLAG];
