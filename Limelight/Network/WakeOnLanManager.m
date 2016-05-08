@@ -12,48 +12,83 @@
 #import <sys/socket.h>
 #import <netinet/in.h>
 #import <arpa/inet.h>
+#import <netdb.h>
 
 @implementation WakeOnLanManager
 
 static const int numPorts = 5;
 static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
 
++ (void) populateAddress:(struct sockaddr_storage*)addr withPort:(unsigned short)port {
+    if (addr->ss_family == AF_INET) {
+        struct sockaddr_in *sin = (struct sockaddr_in*)addr;
+        sin->sin_port = htons(port);
+    }
+    else if (addr->ss_family == AF_INET6) {
+        struct sockaddr_in6 *sin6 = (struct sockaddr_in6*)addr;
+        sin6->sin6_port = htons(port);
+    }
+}
+
 + (void) wakeHost:(TemporaryHost*)host {
     NSData* wolPayload = [WakeOnLanManager createPayload:host];
-    CFDataRef dataPayload = CFDataCreate(kCFAllocatorDefault, [wolPayload bytes], [wolPayload length]);
-    CFSocketRef wolSocket = CFSocketCreate(kCFAllocatorDefault, PF_INET, SOCK_DGRAM, IPPROTO_UDP, 0, NULL, NULL);
-    if (!wolSocket) {
-        CFRelease(dataPayload);
-        Log(LOG_E, @"Failed to create WOL socket");
-        return;
-    }
-    Log(LOG_I, @"WOL socket created");
     
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_len = sizeof(addr);
-    
-    
-    for (int i = 0; i < 2; i++) {
-        // try all ip addresses
-        if (i == 0) {
-            inet_aton([host.localAddress UTF8String], &addr.sin_addr);
-        } else {
-            inet_aton([host.externalAddress UTF8String], &addr.sin_addr);
-        }
-
-        CFDataRef dataAddress = CFDataCreate(kCFAllocatorDefault, (unsigned char*)&addr, sizeof(addr));
+    for (int i = 0; i < 3; i++) {
+        const char* address;
+        struct addrinfo hints, *res, *curr;
         
-        // try all ports
-        for (int j = 0; j < numPorts; j++) {
-            addr.sin_port = htons(ports[j]);
-            Log(LOG_I, @"Sending WOL packet");
-            CFSocketSendData(wolSocket, dataAddress, dataPayload, 0);
+        // try all ip addresses
+        if (i == 0 && host.localAddress != nil) {
+            address = [host.localAddress UTF8String];
+        } else if (i == 1 && host.externalAddress != nil) {
+            address = [host.externalAddress UTF8String];
+        } else if (i == 2 && host.address != nil) {
+            address = [host.address UTF8String];
+        } else {
+            // Requested address wasn't present
+            continue;
         }
-        CFRelease(dataAddress);
+        
+        memset(&hints, 0, sizeof(hints));
+        hints.ai_family = AF_UNSPEC;
+        hints.ai_flags = AI_ADDRCONFIG;
+        if (getaddrinfo(address, NULL, &hints, &res) != 0 || res == NULL) {
+            // Failed to resolve address
+            Log(LOG_E, @"Failed to resolve WOL address");
+            continue;
+        }
+        
+        // Try all addresses that this DNS name resolves to. We have
+        // to create a new socket each time because the addresses
+        // may be different address families.
+        for (curr = res; curr != NULL; curr = curr->ai_next) {
+            int wolSocket;
+            
+            wolSocket = socket(curr->ai_family, SOCK_DGRAM, IPPROTO_UDP);
+            if (wolSocket < 0) {
+                Log(LOG_E, @"Failed to create WOL socket");
+                continue;
+            }
+            
+            struct sockaddr_storage addr;
+            memset(&addr, 0, sizeof(addr));
+            memcpy(&addr, curr->ai_addr, curr->ai_addrlen);
+            
+            for (int j = 0; j < numPorts; j++) {
+                [WakeOnLanManager populateAddress:&addr withPort:ports[j]];
+                long err = sendto(wolSocket,
+                                 [wolPayload bytes],
+                                 [wolPayload length],
+                                 0,
+                                 (struct sockaddr*)&addr,
+                                 curr->ai_addrlen);
+                Log(LOG_I, @"Sending WOL packet returned: %ld", err);
+            }
+            
+            close(wolSocket);
+        }
+        freeaddrinfo(res);
     }
-    CFRelease(dataPayload);
 }
 
 + (NSData*) createPayload:(TemporaryHost*)host {
