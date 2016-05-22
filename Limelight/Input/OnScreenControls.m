@@ -119,8 +119,7 @@ static float L3_Y;
     self = [self init];
     _view = view;
     _controllerSupport = controllerSupport;
-    _controller = [[Controller alloc] init];
-    _controller.playerIndex = 0;
+    _controller = [controllerSupport getOscController];
     _edgeDelegate = swipeDelegate;
     _deadTouches = [[NSMutableArray alloc] init];
     

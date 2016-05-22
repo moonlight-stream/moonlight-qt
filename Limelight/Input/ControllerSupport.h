@@ -32,6 +32,7 @@
 -(void) clearButtonFlag:(Controller*)controller flags:(int)flags;
 
 -(void) updateFinished:(Controller*)controller;
+-(Controller*) getOscController;
 
 @property (nonatomic, strong) id connectObserver;
 @property (nonatomic, strong) id disconnectObserver;

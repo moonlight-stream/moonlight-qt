@@ -22,6 +22,10 @@
     
     OnScreenControls *_osc;
     
+    // This controller object is shared between on-screen controls
+    // and player 0
+    Controller *_player0osc;
+    
     char _controllerNumbers;
     
 #define EMULATING_SELECT     0x1
@@ -275,15 +279,27 @@
     for (int i = 0; i < 4; i++) {
         if (!(_controllerNumbers & (1 << i))) {
             _controllerNumbers |= (1 << i);
-            Controller* limeController = [[Controller alloc] init];
             controller.playerIndex = i;
-            limeController.playerIndex = i;
+            
+            Controller* limeController;
+            if (i == 0) {
+                // Player 0 shares a controller object with the on-screen controls
+                limeController = _player0osc;
+            } else {
+                limeController = [[Controller alloc] init];
+                limeController.playerIndex = i;
+            }
+
             [_controllers setObject:limeController forKey:[NSNumber numberWithInteger:controller.playerIndex]];
             
             Log(LOG_I, @"Assigning controller index: %d", i);
             break;
         }
     }
+}
+
+-(Controller*) getOscController {
+    return _player0osc;
 }
 
 -(id) init
@@ -293,6 +309,8 @@
     _controllerStreamLock = [[NSLock alloc] init];
     _controllers = [[NSMutableDictionary alloc] init];
     _controllerNumbers = 0;
+    _player0osc = [[Controller alloc] init];
+    _player0osc.playerIndex = 0;
     
     Log(LOG_I, @"Number of controllers connected: %ld", (long)[[GCController controllers] count]);
     for (GCController* controller in [GCController controllers]) {
