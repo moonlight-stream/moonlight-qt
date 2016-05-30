@@ -11,4 +11,4 @@ There are also versions for [Android](https://github.com/moonlight-stream/moonli
 We currently cannot port Moonlight to Apple TV due to a limitation in the tvOS SDK that prevents Moonlight from using the APIs that would be necessary for it to work. Thank you for your interest - you can track this issue [here](https://github.com/moonlight-stream/moonlight-ios/issues/184). 
 
 ##### Questions?
-Check out our [wiki](https://github.com/moonlight-stream/moonlight-android/wiki).
+Check out our [wiki](https://github.com/moonlight-stream/moonlight-docs/wiki).
