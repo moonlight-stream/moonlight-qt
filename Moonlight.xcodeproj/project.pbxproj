@@ -838,10 +838,12 @@
 				TargetAttributes = {
 					D46A739F1CBC7CB60039F1EE = {
 						CreatedOnToolsVersion = 7.3;
+						LastSwiftMigration = 0800;
 						TestTargetID = FB290CED19B2C406004C83CF;
 					};
 					FB290CED19B2C406004C83CF = {
 						DevelopmentTeam = DM46QST4M7;
+						LastSwiftMigration = 0800;
 					};
 				};
 			};
@@ -1014,6 +1016,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MoonlightUnitTests/MoonlightUnitTests-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 2.3;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Moonlight.app/Moonlight";
 			};
 			name = Debug;
@@ -1037,6 +1040,7 @@
 				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.MoonlightUnitTests";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "MoonlightUnitTests/MoonlightUnitTests-Bridging-Header.h";
+				SWIFT_VERSION = 2.3;
 				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Moonlight.app/Moonlight";
 			};
 			name = Release;
@@ -1147,6 +1151,7 @@
 				SKIP_INSTALL = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Limelight/Input/Moonlight-Bridging-Header.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 2.3;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -1180,6 +1185,7 @@
 				PROVISIONING_PROFILE = "";
 				SKIP_INSTALL = NO;
 				SWIFT_OBJC_BRIDGING_HEADER = "Limelight/Input/Moonlight-Bridging-Header.h";
+				SWIFT_VERSION = 2.3;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
