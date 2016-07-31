@@ -87,7 +87,8 @@ static UIImage* noImage;
         }
         
         // This size of image might be blank image received from GameStream.
-        if (!(appImage.size.width == 130.f && appImage.size.height == 180.f)) {
+        if (!(appImage.size.width == 130.f && appImage.size.height == 180.f) && // GFE 2.0
+            !(appImage.size.width == 628.f && appImage.size.height == 888.f)) { // GFE 3.0
             _appButton.frame = CGRectMake(0, 0, appImage.size.width / 2, appImage.size.height / 2);
             self.frame = CGRectMake(0, 0, appImage.size.width / 2, appImage.size.height / 2);
             _appOverlay.frame = CGRectMake(0, 0, self.frame.size.width / 2.f, self.frame.size.height / 4.f);
