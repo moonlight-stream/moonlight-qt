@@ -87,7 +87,7 @@
     [_streamMan stopStream];
 }
 
-- (void) stageStarting:(char*)stageName {
+- (void) stageStarting:(const char*)stageName {
     Log(LOG_I, @"Starting %s", stageName);
     dispatch_async(dispatch_get_main_queue(), ^{
         NSString* lowerCase = [NSString stringWithFormat:@"%s in progress...", stageName];
@@ -98,10 +98,10 @@
     });
 }
 
-- (void) stageComplete:(char*)stageName {
+- (void) stageComplete:(const char*)stageName {
 }
 
-- (void) stageFailed:(char*)stageName withError:(long)errorCode {
+- (void) stageFailed:(const char*)stageName withError:(long)errorCode {
     Log(LOG_I, @"Stage %s failed: %ld", stageName, errorCode);
 
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -132,11 +132,11 @@
     });
 }
 
-- (void) displayMessage:(char*)message {
+- (void) displayMessage:(const char*)message {
     Log(LOG_I, @"Display message: %s", message);
 }
 
-- (void) displayTransientMessage:(char*)message {
+- (void) displayTransientMessage:(const char*)message {
     Log(LOG_I, @"Display transient message: %s", message);
 }
 

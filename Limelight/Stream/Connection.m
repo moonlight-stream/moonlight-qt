@@ -229,17 +229,17 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
 
 void ClStageStarting(int stage)
 {
-    [_callbacks stageStarting:(char*)LiGetStageName(stage)];
+    [_callbacks stageStarting:LiGetStageName(stage)];
 }
 
 void ClStageComplete(int stage)
 {
-    [_callbacks stageComplete:(char*)LiGetStageName(stage)];
+    [_callbacks stageComplete:LiGetStageName(stage)];
 }
 
 void ClStageFailed(int stage, long errorCode)
 {
-    [_callbacks stageFailed:(char*)LiGetStageName(stage) withError:errorCode];
+    [_callbacks stageFailed:LiGetStageName(stage) withError:errorCode];
 }
 
 void ClConnectionStarted(void)
@@ -252,12 +252,12 @@ void ClConnectionTerminated(long errorCode)
     [_callbacks connectionTerminated: errorCode];
 }
 
-void ClDisplayMessage(char* message)
+void ClDisplayMessage(const char* message)
 {
     [_callbacks displayMessage: message];
 }
 
-void ClDisplayTransientMessage(char* message)
+void ClDisplayTransientMessage(const char* message)
 {
     [_callbacks displayTransientMessage: message];
 }
