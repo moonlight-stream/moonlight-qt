@@ -417,6 +417,17 @@ static NSMutableSet* hostList;
                                             // Exempt this host from discovery while handling the quit operation
                                             [_discMan removeHostFromDiscovery:app.host];
                                             [hMan executeRequestSynchronously:quitRequest];
+                                            if (quitResponse.statusCode == 200) {
+                                                ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+                                                [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
+                                                                                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
+                                                if (![serverInfoResp isStatusOk] || ![[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_AVAILABLE"]) {
+                                                    // On newer GFE versions, the quit request succeeds even though the app doesn't
+                                                    // really quit if another client tries to kill your app. We'll patch the response
+                                                    // to look like the old error in that case, so the UI behaves.
+                                                    quitResponse.statusCode = 599;
+                                                }
+                                            }
                                             [_discMan addHostToDiscovery:app.host];
                                             
                                             UIAlertController* alert;
