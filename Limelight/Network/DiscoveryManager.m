@@ -95,14 +95,23 @@
 }
 
 - (BOOL) addHostToDiscovery:(TemporaryHost *)host {
-    if (host.uuid.length > 0 && ![self isHostInDiscovery:host]) {
+    if (host.uuid.length == 0) {
+        return NO;
+    }
+    
+    TemporaryHost *existingHost = [self getHostInDiscovery:host.uuid];
+    if (existingHost != nil) {
+        // Update address of existing host
+        existingHost.address = existingHost.activeAddress = host.address;
+        return NO;
+    }
+    else {
         [_hostQueue addObject:host];
         if (shouldDiscover) {
             [_opQueue addOperation:[self createWorkerForHost:host]];
         }
         return YES;
     }
-    return NO;
 }
 
 - (void) removeHostFromDiscovery:(TemporaryHost *)host {
@@ -133,14 +142,14 @@
     });
 }
 
-- (BOOL) isHostInDiscovery:(TemporaryHost*)host {
+- (TemporaryHost*) getHostInDiscovery:(NSString*)uuidString {
     for (int i = 0; i < _hostQueue.count; i++) {
         TemporaryHost* discoveredHost = [_hostQueue objectAtIndex:i];
-        if (discoveredHost.uuid.length > 0 && [discoveredHost.uuid isEqualToString:host.uuid]) {
-            return YES;
+        if (discoveredHost.uuid.length > 0 && [discoveredHost.uuid isEqualToString:uuidString]) {
+            return discoveredHost;
         }
     }
-    return NO;
+    return nil;
 }
 
 - (NSOperation*) createWorkerForHost:(TemporaryHost*)host {
