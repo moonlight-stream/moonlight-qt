@@ -64,7 +64,7 @@
             callback(host, nil);
         }
     } else {
-        callback(nil, @"Could not connect to host");
+        callback(nil, @"Could not connect to host. Ensure GameStream is enabled in GeForce Experience on your PC.");
     }
     
 }
