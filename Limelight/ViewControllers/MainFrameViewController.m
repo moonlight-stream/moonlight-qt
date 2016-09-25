@@ -539,14 +539,13 @@ static NSMutableSet* hostList;
     hostScrollView.delaysContentTouches = NO;
     
     UIButton* pullArrow = [[UIButton alloc] init];
+    [pullArrow addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
     [pullArrow setImage:[UIImage imageNamed:@"PullArrow"] forState:UIControlStateNormal];
     [pullArrow sizeToFit];
     pullArrow.frame = CGRectMake(0,
-                                 self.collectionView.frame.size.height / 2 - pullArrow.frame.size.height / 2 - self.navigationController.navigationBar.frame.size.height,
+                                 self.collectionView.frame.size.height / 6 - pullArrow.frame.size.height / 2 - self.navigationController.navigationBar.frame.size.height,
                                  pullArrow.frame.size.width,
                                  pullArrow.frame.size.height);
-    [self.view addSubview:pullArrow];
-    
     
     self.collectionView.delaysContentTouches = NO;
     self.collectionView.allowsMultipleSelection = NO;
@@ -562,6 +561,7 @@ static NSMutableSet* hostList;
     
     [self updateHosts];
     [self.view addSubview:hostScrollView];
+    [self.view addSubview:pullArrow];
 }
 
 -(void)dealloc
