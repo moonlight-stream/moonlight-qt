@@ -15,12 +15,11 @@
 #include "opus.h"
 
 @implementation Connection {
-    const char* _host;
+    SERVER_INFORMATION _serverInfo;
     STREAM_CONFIGURATION _streamConfig;
     CONNECTION_LISTENER_CALLBACKS _clCallbacks;
     DECODER_RENDERER_CALLBACKS _drCallbacks;
     AUDIO_RENDERER_CALLBACKS _arCallbacks;
-    int _serverMajorVersion;
 }
 
 static NSLock* initLock;
@@ -274,7 +273,7 @@ void ClDisplayTransientMessage(const char* message)
     });
 }
 
--(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks serverMajorVersion:(int)serverMajorVersion
+-(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks
 {
     self = [super init];
     
@@ -284,10 +283,15 @@ void ClDisplayTransientMessage(const char* message)
         initLock = [[NSLock alloc] init];
     }
     
-    _host = [config.host cStringUsingEncoding:NSUTF8StringEncoding];
+    LiInitializeServerInformation(&_serverInfo);
+    _serverInfo.address = [config.host cStringUsingEncoding:NSUTF8StringEncoding];
+    _serverInfo.serverInfoAppVersion = [config.appVersion cStringUsingEncoding:NSUTF8StringEncoding];
+    if (config.gfeVersion != nil) {
+        _serverInfo.serverInfoGfeVersion = [config.gfeVersion cStringUsingEncoding:NSUTF8StringEncoding];
+    }
+    
     renderer = myRenderer;
     _callbacks = callbacks;
-    _serverMajorVersion = serverMajorVersion;
     
     LiInitializeStreamConfiguration(&_streamConfig);
     _streamConfig.width = config.width;
@@ -407,12 +411,12 @@ static OSStatus playbackCallback(void *inRefCon,
 -(void) main
 {
     [initLock lock];
-    LiStartConnection(_host,
+    LiStartConnection(&_serverInfo,
                       &_streamConfig,
                       &_clCallbacks,
                       &_drCallbacks,
                       &_arCallbacks,
-                      NULL, 0, _serverMajorVersion);
+                      NULL, 0);
     [initLock unlock];
 }
 

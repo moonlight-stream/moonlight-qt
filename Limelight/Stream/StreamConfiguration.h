@@ -11,6 +11,8 @@
 @interface StreamConfiguration : NSObject
 
 @property NSString* host;
+@property NSString* appVersion;
+@property NSString* gfeVersion;
 @property NSString* appID;
 @property int width;
 @property int height;

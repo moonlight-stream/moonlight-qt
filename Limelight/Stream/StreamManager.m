@@ -50,6 +50,7 @@
                                        fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
     NSString* pairStatus = [serverInfoResp getStringTag:@"PairStatus"];
     NSString* appversion = [serverInfoResp getStringTag:@"appversion"];
+    NSString* gfeVersion = [serverInfoResp getStringTag:@"GfeVersion"];
     NSString* serverState = [serverInfoResp getStringTag:@"state"];
     if (![serverInfoResp isStatusOk] || pairStatus == NULL || appversion == NULL || serverState == NULL) {
         [_callbacks launchFailed:@"Failed to connect to PC"];
@@ -82,11 +83,12 @@
     [((StreamView*)_renderView) setMouseDeltaFactors:_config.width / screenSize.width
                                                    y:_config.height / screenSize.height];
     
-    int majorVersion = [[appversion substringToIndex:1] intValue];
-    Log(LOG_I, @"Server is generation %d", majorVersion);
+    // Populate the config's version fields from serverinfo
+    _config.appVersion = appversion;
+    _config.gfeVersion = gfeVersion;
     
     VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
-    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks serverMajorVersion:majorVersion];
+    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks];
     NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
     [opQueue addOperation:_connection];
 }
