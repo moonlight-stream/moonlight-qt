@@ -23,6 +23,15 @@
     host.localAddress = [[self getStringTag:TAG_LOCAL_IP] trim];
     host.uuid = [[self getStringTag:TAG_UNIQUE_ID] trim];
     host.mac = [[self getStringTag:TAG_MAC_ADDRESS] trim];
+    host.currentGame = [[self getStringTag:TAG_CURRENT_GAME] trim];
+    
+    NSString *state = [[self getStringTag:TAG_STATE] trim];
+    if ([state hasSuffix:@"_SERVER_AVAILABLE"]) {
+        // GFE 2.8 started keeping currentgame set to the last game played. As a result, it no longer
+        // has the semantics that its name would indicate. To contain the effects of this change as much
+        // as possible, we'll force the current game to zero if the server isn't in a streaming session.
+        host.currentGame = @"0";
+    }
     
     NSInteger pairStatus;
     if ([self getIntTag:TAG_PAIR_STATUS value:&pairStatus]) {

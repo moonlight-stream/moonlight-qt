@@ -166,7 +166,6 @@ static NSMutableSet* hostList;
         for (TemporaryApp* savedApp in host.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
                 savedApp.name = app.name;
-                savedApp.isRunning = app.isRunning;
                 appAlreadyInList = YES;
                 break;
             }
@@ -441,7 +440,7 @@ static NSMutableSet* hostList;
                                             }
                                             // If it succeeds and we're to start streaming, segue to the stream and return
                                             else if (![app.id isEqualToString:currentApp.id]) {
-                                                currentApp.isRunning = NO;
+                                                app.host.currentGame = @"0";
                                                 
                                                 dispatch_async(dispatch_get_main_queue(), ^{
                                                     [self updateAppsForHost:app.host];
@@ -452,7 +451,7 @@ static NSMutableSet* hostList;
                                             }
                                             // Otherwise, display a dialog to notify the user that the app was quit
                                             else {
-                                                currentApp.isRunning = NO;
+                                                app.host.currentGame = @"0";
                                                 
                                                 alert = [UIAlertController alertControllerWithTitle:@"Quitting App"
                                                                                             message:@"The app was quit successfully."
@@ -475,7 +474,7 @@ static NSMutableSet* hostList;
 
 - (TemporaryApp*) findRunningApp:(TemporaryHost*)host {
     for (TemporaryApp* app in host.appList) {
-        if (app.isRunning) {
+        if ([app.id isEqualToString:host.currentGame]) {
             return app;
         }
     }

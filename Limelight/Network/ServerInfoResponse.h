@@ -15,6 +15,8 @@
 #define TAG_UNIQUE_ID @"uniqueid"
 #define TAG_MAC_ADDRESS @"mac"
 #define TAG_PAIR_STATUS @"PairStatus"
+#define TAG_STATE @"state"
+#define TAG_CURRENT_GAME @"currentgame"
 
 @interface ServerInfoResponse : HttpResponse <Response>
 

@@ -19,7 +19,6 @@
 static const char* TAG_APP = "App";
 static const char* TAG_APP_TITLE = "AppTitle";
 static const char* TAG_APP_ID = "ID";
-static const char* TAG_APP_IS_RUNNING = "IsRunning";
 
 - (void)populateWithData:(NSData *)xml {
     self.data = xml;
@@ -67,7 +66,6 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
             xmlNodePtr appInfoNode = node->xmlChildrenNode;
             NSString* appName = @"";
             NSString* appId = nil;
-            BOOL appIsRunning = NO;
             while (appInfoNode != NULL) {
                 if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_TITLE)) {
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
@@ -83,14 +81,6 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
                         appId = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
                         xmlFree(nodeVal);
                     }
-                } else if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_IS_RUNNING)) {
-                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
-                    if (nodeVal != NULL) {
-                        appIsRunning = [[[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding] isEqualToString:@"1"];
-                        xmlFree(nodeVal);
-                    } else {
-                        appIsRunning = NO;
-                    }
                 }
                 appInfoNode = appInfoNode->next;
             }
@@ -98,7 +88,6 @@ static const char* TAG_APP_IS_RUNNING = "IsRunning";
                 TemporaryApp* app = [[TemporaryApp alloc] init];
                 app.name = appName;
                 app.id = appId;
-                app.isRunning = appIsRunning;
                 [_appList addObject:app];
             }
         }

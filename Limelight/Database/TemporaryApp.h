@@ -15,7 +15,6 @@
 @property (nullable, nonatomic, retain) NSString *id;
 @property (nullable, nonatomic, retain) NSData *image;
 @property (nullable, nonatomic, retain) NSString *name;
-@property (nonatomic) BOOL isRunning;
 @property (nullable, nonatomic, retain) TemporaryHost *host;
 
 NS_ASSUME_NONNULL_BEGIN

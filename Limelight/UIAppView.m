@@ -60,7 +60,7 @@ static UIImage* noImage;
         _appOverlay = nil;
     }
     
-    if (_app.isRunning) {
+    if ([_app.id isEqualToString:_app.host.currentGame]) {
         // Only create the app overlay if needed
         _appOverlay = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Play"]];
         _appOverlay.layer.shadowColor = [UIColor blackColor].CGColor;
