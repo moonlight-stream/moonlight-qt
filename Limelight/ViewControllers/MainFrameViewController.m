@@ -48,21 +48,26 @@ static NSMutableSet* hostList;
         _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
                                                          message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
                                                   preferredStyle:UIAlertControllerStyleAlert];
+        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
+            [_discMan startDiscovery];
+            [self hideLoadingFrame];
+        }]];
         [self presentViewController:_pairAlert animated:YES completion:nil];
     });
 }
 
 - (void)pairFailed:(NSString *)message {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [_pairAlert dismissViewControllerAnimated:YES completion:nil];
-        _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
-                                                         message:message
-                                                  preferredStyle:UIAlertControllerStyleAlert];
-        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
-        [self presentViewController:_pairAlert animated:YES completion:nil];
-        
-        [_discMan startDiscovery];
-        [self hideLoadingFrame];
+        [_pairAlert dismissViewControllerAnimated:YES completion:^{
+            _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
+                                                             message:message
+                                                      preferredStyle:UIAlertControllerStyleAlert];
+            [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+            [self presentViewController:_pairAlert animated:YES completion:nil];
+            
+            [_discMan startDiscovery];
+            [self hideLoadingFrame];
+        }];
     });
 }
 
@@ -581,8 +586,8 @@ static NSMutableSet* hostList;
 
 -(void)handleReturnToForeground
 {
-    // This will refresh the applist
-    if (_selectedHost != nil) {
+    // This will refresh the applist when a paired host is selected
+    if (_selectedHost != nil && _selectedHost.pairState == PairStatePaired) {
         [self hostClicked:_selectedHost view:nil];
     }
 }

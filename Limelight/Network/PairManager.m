@@ -68,12 +68,15 @@
     }
     NSInteger pairedStatus;
     if (![pairResp getIntTag:@"paired" value:&pairedStatus] || !pairedStatus) {
-        [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing was declined by the target."];
         return;
     }
     
     NSString* plainCert = [pairResp getStringTag:@"plaincert"];
+    if ([plainCert length] == 0) {
+        [_callback pairFailed:@"Another pairing attempt is already in progress."];
+        return;
+    }
     
     CryptoManager* cryptoMan = [[CryptoManager alloc] init];
     NSData* aesKey;
