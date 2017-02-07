@@ -146,7 +146,8 @@
 {
     [_controllerStreamLock lock];
     @synchronized(controller) {
-        LiSendMultiControllerEvent(controller.playerIndex, _controllerNumbers, controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
+        // Player 1 is always present for OSC
+        LiSendMultiControllerEvent(controller.playerIndex, _controllerNumbers | 1, controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
     }
     [_controllerStreamLock unlock];
 }
