@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		9857AEEA1EBE85A20084F99E /* RtpFecQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 9857AEE91EBE85A20084F99E /* RtpFecQueue.c */; };
+		9857AEF01EBE85E10084F99E /* rs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9857AEEE1EBE85E10084F99E /* rs.c */; };
 		98AB2E401CAD425A0089BB98 /* AudioStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1A1CAD423B0089BB98 /* AudioStream.c */; };
 		98AB2E411CAD425A0089BB98 /* ByteBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1B1CAD423B0089BB98 /* ByteBuffer.c */; };
 		98AB2E421CAD425A0089BB98 /* Connection.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1D1CAD423B0089BB98 /* Connection.c */; };
@@ -35,6 +37,10 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		9857AEE91EBE85A20084F99E /* RtpFecQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RtpFecQueue.c; sourceTree = "<group>"; };
+		9857AEEB1EBE85AB0084F99E /* RtpFecQueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = RtpFecQueue.h; sourceTree = "<group>"; };
+		9857AEEE1EBE85E10084F99E /* rs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = rs.c; path = "moonlight-common-c/reedsolomon/rs.c"; sourceTree = "<group>"; };
+		9857AEEF1EBE85E10084F99E /* rs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rs.h; path = "moonlight-common-c/reedsolomon/rs.h"; sourceTree = "<group>"; };
 		98AB2DF01CAD422B0089BB98 /* callbacks.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = callbacks.c; sourceTree = "<group>"; };
 		98AB2DF11CAD422B0089BB98 /* ChangeLog */ = {isa = PBXFileReference; lastKnownFileType = text; path = ChangeLog; sourceTree = "<group>"; };
 		98AB2DF21CAD422B0089BB98 /* CMakeLists.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = "<group>"; };
@@ -113,6 +119,15 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		9857AEED1EBE85D50084F99E /* reedsolomon */ = {
+			isa = PBXGroup;
+			children = (
+				9857AEEE1EBE85E10084F99E /* rs.c */,
+				9857AEEF1EBE85E10084F99E /* rs.h */,
+			);
+			name = reedsolomon;
+			sourceTree = "<group>";
+		};
 		98AB2DEF1CAD422B0089BB98 /* enet */ = {
 			isa = PBXGroup;
 			children = (
@@ -193,6 +208,8 @@
 		98AB2E191CAD423B0089BB98 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				9857AEEB1EBE85AB0084F99E /* RtpFecQueue.h */,
+				9857AEE91EBE85A20084F99E /* RtpFecQueue.c */,
 				98AB2E1A1CAD423B0089BB98 /* AudioStream.c */,
 				98AB2E1B1CAD423B0089BB98 /* ByteBuffer.c */,
 				98AB2E1C1CAD423B0089BB98 /* ByteBuffer.h */,
@@ -228,6 +245,7 @@
 		FB290E2519B37A4E004C83CF = {
 			isa = PBXGroup;
 			children = (
+				9857AEED1EBE85D50084F99E /* reedsolomon */,
 				98AB2E191CAD423B0089BB98 /* src */,
 				98AB2DEF1CAD422B0089BB98 /* enet */,
 				FB290E2F19B37A4E004C83CF /* Products */,
@@ -307,6 +325,7 @@
 				98AB2E4C1CAD425A0089BB98 /* RtspParser.c in Sources */,
 				98AB2E4D1CAD425A0089BB98 /* SdpGenerator.c in Sources */,
 				98AB2E4E1CAD425A0089BB98 /* VideoDepacketizer.c in Sources */,
+				9857AEEA1EBE85A20084F99E /* RtpFecQueue.c in Sources */,
 				98AB2E4F1CAD425A0089BB98 /* VideoStream.c in Sources */,
 				98AB2E501CAD427A0089BB98 /* callbacks.c in Sources */,
 				98AB2E511CAD427A0089BB98 /* compress.c in Sources */,
@@ -315,6 +334,7 @@
 				98AB2E541CAD427A0089BB98 /* packet.c in Sources */,
 				98AB2E551CAD427A0089BB98 /* peer.c in Sources */,
 				98AB2E561CAD427A0089BB98 /* protocol.c in Sources */,
+				9857AEF01EBE85E10084F99E /* rs.c in Sources */,
 				98AB2E571CAD427A0089BB98 /* unix.c in Sources */,
 				98AB2E581CAD427A0089BB98 /* win32.c in Sources */,
 			);
