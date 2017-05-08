@@ -272,8 +272,10 @@ static NSMutableSet* hostList;
     
     // If we are online, paired, and have a cached app list, skip straight
     // to the app grid without a loading frame. This is the fast path that users
-    // should hit most.
-    if (host.online && host.pairState == PairStatePaired && host.appList.count > 0) {
+    // should hit most. Check for a valid view because we don't want to hit the fast
+    // path after coming back from streaming, since we need to fetch serverinfo too
+    // so that our active game data is correct.
+    if (host.online && host.pairState == PairStatePaired && host.appList.count > 0 && view != nil) {
         [self alreadyPaired];
         return;
     }
