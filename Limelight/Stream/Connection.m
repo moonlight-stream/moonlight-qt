@@ -309,6 +309,7 @@ void ClDisplayTransientMessage(const char* message)
     
     LiInitializeVideoCallbacks(&_drCallbacks);
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
+    _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION;
     
     LiInitializeAudioCallbacks(&_arCallbacks);
     _arCallbacks.init = ArInit;
