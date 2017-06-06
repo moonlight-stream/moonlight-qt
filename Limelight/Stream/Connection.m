@@ -65,7 +65,7 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
     return [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
 }
 
-void ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig)
+int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig)
 {
     int err;
     
@@ -101,6 +101,7 @@ void ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig)
     
     if (status) {
         Log(LOG_E, @"Unable to instantiate new AudioComponent: %d", (int32_t)status);
+        return status;
     }
     
     AudioStreamBasicDescription audioFormat = {0};
@@ -122,6 +123,7 @@ void ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig)
                                   sizeof(audioFormat));
     if (status) {
         Log(LOG_E, @"Unable to set audio unit to input: %d", (int32_t)status);
+        return status;
     }
     
     AURenderCallbackStruct callbackStruct = {0};
@@ -136,17 +138,22 @@ void ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig)
                                   sizeof(callbackStruct));
     if (status) {
         Log(LOG_E, @"Unable to set audio unit callback: %d", (int32_t)status);
+        return status;
     }
     
     status = AudioUnitInitialize(audioUnit);
     if (status) {
         Log(LOG_E, @"Unable to initialize audioUnit: %d", (int32_t)status);
+        return status;
     }
     
     status = AudioOutputUnitStart(audioUnit);
     if (status) {
         Log(LOG_E, @"Unable to start audioUnit: %d", (int32_t)status);
+        return status;
     }
+    
+    return status;
 }
 
 void ArCleanup(void)
@@ -309,7 +316,7 @@ void ClDisplayTransientMessage(const char* message)
     
     LiInitializeVideoCallbacks(&_drCallbacks);
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
-    _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION;
+    _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
     
     LiInitializeAudioCallbacks(&_arCallbacks);
     _arCallbacks.init = ArInit;
