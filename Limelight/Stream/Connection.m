@@ -65,7 +65,7 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
     return [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
 }
 
-int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig)
+int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void* context, int flags)
 {
     int err;
     
@@ -268,6 +268,14 @@ void ClDisplayTransientMessage(const char* message)
     [_callbacks displayTransientMessage: message];
 }
 
+void ClLogMessage(const char* format, ...)
+{
+    va_list va;
+    va_start(va, format);
+    vfprintf(stderr, format, va);
+    va_end(va);
+}
+
 -(void) terminate
 {
     // We dispatch this async to get out because this can be invoked
@@ -331,6 +339,7 @@ void ClDisplayTransientMessage(const char* message)
     _clCallbacks.connectionTerminated = ClConnectionTerminated;
     _clCallbacks.displayMessage = ClDisplayMessage;
     _clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
+    _clCallbacks.logMessage = ClLogMessage;
     
     return self;
 }
@@ -424,6 +433,7 @@ static OSStatus playbackCallback(void *inRefCon,
                       &_clCallbacks,
                       &_drCallbacks,
                       &_arCallbacks,
+                      NULL, 0,
                       NULL, 0);
     [initLock unlock];
 }
