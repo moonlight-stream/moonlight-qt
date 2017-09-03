@@ -102,10 +102,29 @@
     TemporaryHost *existingHost = [self getHostInDiscovery:host.uuid];
     if (existingHost != nil) {
         // Update address of existing host
-        existingHost.address = existingHost.activeAddress = host.address;
+        if (host.address != nil) {
+            existingHost.address = host.address;
+        }
+        if (host.localAddress != nil) {
+            existingHost.localAddress = host.localAddress;
+        }
+        if (host.externalAddress != nil) {
+            existingHost.externalAddress = host.externalAddress;
+        }
+        existingHost.activeAddress = host.activeAddress;
         return NO;
     }
     else {
+        // If we were added without an explicit address,
+        // populate it from our other available addresses
+        if (host.address == nil) {
+            if (host.externalAddress != nil) {
+                host.address = host.externalAddress;
+            }
+            else {
+                host.address = host.localAddress;
+            }
+        }
         [_hostQueue addObject:host];
         if (shouldDiscover) {
             [_opQueue addOperation:[self createWorkerForHost:host]];

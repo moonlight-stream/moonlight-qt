@@ -49,8 +49,8 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     for (NSNetService* service in services) {
         if (service.hostName != nil) {
             TemporaryHost* host = [[TemporaryHost alloc] init];
-            host.activeAddress = host.address = service.hostName;
-            host.name = host.address;
+            host.activeAddress = host.localAddress = service.hostName;
+            host.name = service.hostName;
             [hosts addObject:host];
         }
     }
