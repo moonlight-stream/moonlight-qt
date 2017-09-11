@@ -28,8 +28,8 @@
                     </view>
                     <navigationItem key="navigationItem" id="rW0-BH-s7l">
                         <barButtonItem key="leftBarButtonItem" enabled="NO" id="d9R-Zo-Uml">
-                            <button key="customView" opaque="NO" contentMode="center" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" id="9JC-B5-BAE">
-                                <rect key="frame" x="-23" y="-15" width="46" height="30"/>
+                            <button key="customView" opaque="NO" contentMode="center" contentHorizontalAlignment="center" contentVerticalAlignment="center" adjustsImageWhenDisabled="NO" lineBreakMode="middleTruncation" id="9JC-B5-BAE">
+                                <rect key="frame" x="20" y="-1" width="109" height="46"/>
                                 <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
                                 <animations/>
                                 <fontDescription key="fontDescription" type="system" pointSize="16"/>
