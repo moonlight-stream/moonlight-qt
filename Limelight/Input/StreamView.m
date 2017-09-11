@@ -13,7 +13,7 @@
 #import "ControllerSupport.h"
 
 @implementation StreamView {
-    CGPoint touchLocation;
+    CGPoint touchLocation, originalLocation;
     BOOL touchMoved;
     OnScreenControls* onScreenControls;
     
@@ -46,11 +46,16 @@
     }
 }
 
+- (Boolean)isConfirmedMove:(CGPoint)currentPoint from:(CGPoint)originalPoint {
+    // Movements of greater than 20 pixels are considered confirmed
+    return hypotf(originalPoint.x - currentPoint.x, originalPoint.y - currentPoint.y) >= 20;
+}
+
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     Log(LOG_D, @"Touch down");
     if (![onScreenControls handleTouchDownEvent:touches]) {
         UITouch *touch = [[event allTouches] anyObject];
-        touchLocation = [touch locationInView:self];
+        originalLocation = touchLocation = [touch locationInView:self];
         touchMoved = false;
         if ([[event allTouches] count] == 1 && !isDragging) {
             dragTimer = [NSTimer scheduledTimerWithTimeInterval:0.650
@@ -88,8 +93,13 @@
                 
                 if (deltaX != 0 || deltaY != 0) {
                     LiSendMouseMoveEvent(deltaX, deltaY);
-                    touchMoved = true;
                     touchLocation = currentLocation;
+                    
+                    // If we've moved far enough to confirm this wasn't just human/machine error,
+                    // mark it as such.
+                    if ([self isConfirmedMove:touchLocation from:originalLocation]) {
+                        touchMoved = true;
+                    }
                 }
             }
         } else if ([[event allTouches] count] == 2) {
@@ -100,7 +110,13 @@
             if (touchLocation.y != avgLocation.y) {
                 LiSendScrollEvent(avgLocation.y - touchLocation.y);
             }
-            touchMoved = true;
+
+            // If we've moved far enough to confirm this wasn't just human/machine error,
+            // mark it as such.
+            if ([self isConfirmedMove:firstLocation from:originalLocation]) {
+                touchMoved = true;
+            }
+            
             touchLocation = avgLocation;
         }
     }
