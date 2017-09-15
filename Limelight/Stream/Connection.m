@@ -10,6 +10,7 @@
 
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
+#import <VideoToolbox/VideoToolbox.h>
 
 #include "Limelight.h"
 #include "opus.h"
@@ -44,6 +45,12 @@ static struct AUDIO_BUFFER_QUEUE_ENTRY *audioBufferQueue;
 static int audioBufferQueueLength;
 static AudioComponentInstance audioUnit;
 static VideoDecoderRenderer* renderer;
+
+int DrDecoderSetup(int videoFormat, int width, int height, int redrawRate, void* context, int drFlags)
+{
+    [renderer setupWithVideoFormat:videoFormat];
+    return 0;
+}
 
 int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 {
@@ -314,6 +321,12 @@ void ClLogMessage(const char* format, ...)
     _streamConfig.fps = config.frameRate;
     _streamConfig.bitrate = config.bitRate;
     
+    // On iOS 11, we can use HEVC if the server supports encoding it
+    // and this device has hardware decode for it (A9 and later)
+    if (@available(iOS 11.0, *)) {
+        _streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
+    }
+    
     // FIXME: We should use 1024 when streaming remotely
     _streamConfig.packetSize = 1292;
     
@@ -323,8 +336,9 @@ void ClLogMessage(const char* format, ...)
     memcpy(_streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
     
     LiInitializeVideoCallbacks(&_drCallbacks);
+    _drCallbacks.setup = DrDecoderSetup;
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
-    _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
+    _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC | CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
     
     LiInitializeAudioCallbacks(&_arCallbacks);
     _arCallbacks.init = ArInit;
