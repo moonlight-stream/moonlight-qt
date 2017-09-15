@@ -10,6 +10,7 @@
 
 #import <AudioUnit/AudioUnit.h>
 #import <AVFoundation/AVFoundation.h>
+#import <VideoToolbox/VideoToolbox.h>
 
 #include "Limelight.h"
 #include "opus.h"
@@ -321,8 +322,9 @@ void ClLogMessage(const char* format, ...)
     _streamConfig.bitrate = config.bitRate;
     
     // On iOS 11, we can use HEVC if the server supports encoding it
+    // and this device has hardware decode for it (A9 and later)
     if (@available(iOS 11.0, *)) {
-        _streamConfig.supportsHevc = 1;
+        _streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
     }
     
     // FIXME: We should use 1024 when streaming remotely
