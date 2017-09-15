@@ -19,7 +19,17 @@
 - (id) init {
     self = [super init];
     
-    _appDelegate = [[UIApplication sharedApplication] delegate];
+    // HACK: Avoid calling [UIApplication delegate] off the UI thread to keep
+    // Main Thread Checker happy.
+    if ([NSThread isMainThread]) {
+        _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+    }
+    else {
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+        });
+    }
+    
     _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
     [_managedObjectContext setPersistentStoreCoordinator:_appDelegate.persistentStoreCoordinator];
     
