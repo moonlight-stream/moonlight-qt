@@ -21,6 +21,13 @@
     StreamManager *_streamMan;
 }
 
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    [[self revealViewController] setPrimaryViewController:self];
+}
+
 - (void)viewDidLoad
 {
     [super viewDidLoad];
@@ -144,6 +151,11 @@
 {
     [super didReceiveMemoryWarning];
     // Dispose of any resources that can be recreated.
+}
+
+// Require a confirmation when streaming to activate a system gesture
+- (UIRectEdge)preferredScreenEdgesDeferringSystemGestures {
+    return UIRectEdgeAll;
 }
 
 - (BOOL)shouldAutorotate {

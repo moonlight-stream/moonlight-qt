@@ -610,6 +610,9 @@ static NSMutableSet* hostList;
 - (void)viewDidAppear:(BOOL)animated
 {
     [super viewDidAppear:animated];
+    
+    [[self revealViewController] setPrimaryViewController:self];
+    
     [self.navigationController setNavigationBarHidden:NO animated:YES];
     
     // Hide 1px border line

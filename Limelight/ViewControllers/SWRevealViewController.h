@@ -180,6 +180,8 @@ typedef NS_ENUM(NSInteger, SWRevealToggleAnimationType)
 
 @interface SWRevealViewController : UIViewController
 
+- (void)setPrimaryViewController:(UIViewController*)viewController;
+
 /* Basic API */
 
 // Object instance init and rear view setting
