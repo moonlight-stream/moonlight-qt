@@ -38,7 +38,7 @@
         return;
     }
     if ([serverInfoResp isStatusOk]) {
-        if (![[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_AVAILABLE"]) {
+        if ([[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"]) {
             [_callback pairFailed:@"You must stop streaming before attempting to pair."];
         } else if (![[serverInfoResp getStringTag:@"PairStatus"] isEqual:@"1"]) {
             NSString* appversion = [serverInfoResp getStringTag:@"appversion"];
