@@ -327,6 +327,11 @@ void ClLogMessage(const char* format, ...)
         _streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
     }
     
+    // Use some of the HEVC encoding efficiency improvements to
+    // reduce bandwidth usage while still gaining some image
+    // quality improvement.
+    _streamConfig.hevcBitratePercentageMultiplier = 75;
+    
     // FIXME: We should use 1024 when streaming remotely
     _streamConfig.packetSize = 1292;
     
