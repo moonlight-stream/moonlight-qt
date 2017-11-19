@@ -55,6 +55,7 @@ int DrDecoderSetup(int videoFormat, int width, int height, int redrawRate, void*
 int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 {
     int offset = 0;
+    int ret;
     unsigned char* data = (unsigned char*) malloc(decodeUnit->fullLength);
     if (data == NULL) {
         // A frame was lost due to OOM condition
@@ -63,13 +64,24 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
     
     PLENTRY entry = decodeUnit->bufferList;
     while (entry != NULL) {
-        memcpy(&data[offset], entry->data, entry->length);
-        offset += entry->length;
+        // Submit parameter set NALUs directly since no copy is required by the decoder
+        if (entry->bufferType != BUFFER_TYPE_PICDATA) {
+            ret = [renderer submitDecodeBuffer:(unsigned char*)entry->data length:entry->length bufferType:entry->bufferType];
+            if (ret != DR_OK) {
+                free(data);
+                return ret;
+            }
+        }
+        else {
+            memcpy(&data[offset], entry->data, entry->length);
+            offset += entry->length;
+        }
+        
         entry = entry->next;
     }
     
-    // This function will take our buffer
-    return [renderer submitDecodeBuffer:data length:decodeUnit->fullLength];
+    // This function will take our picture data buffer
+    return [renderer submitDecodeBuffer:data length:offset bufferType:BUFFER_TYPE_PICDATA];
 }
 
 int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void* context, int flags)

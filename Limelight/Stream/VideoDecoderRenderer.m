@@ -72,15 +72,6 @@
 #define FRAME_START_PREFIX_SIZE 4
 #define NALU_START_PREFIX_SIZE 3
 #define NAL_LENGTH_PREFIX_SIZE 4
-#define AVC_NAL_TYPE_SPS 0x67
-#define AVC_NAL_TYPE_PPS 0x68
-#define HEVC_NAL_TYPE_VPS 0x40
-#define HEVC_NAL_TYPE_SPS 0x42
-#define HEVC_NAL_TYPE_PPS 0x44
-
-#define IS_NAL_SPS(x) ((videoFormat == VIDEO_FORMAT_H264) ? ((x) == AVC_NAL_TYPE_SPS) : ((x) == HEVC_NAL_TYPE_SPS))
-#define IS_NAL_PPS(x) ((videoFormat == VIDEO_FORMAT_H264) ? ((x) == AVC_NAL_TYPE_PPS) : ((x) == HEVC_NAL_TYPE_PPS))
-#define IS_NAL_VPS(x) ((videoFormat == VIDEO_FORMAT_H265) && ((x) == HEVC_NAL_TYPE_VPS))
 
 - (Boolean)readyForPictureData
 {
@@ -111,16 +102,6 @@
             default:
                 return false;
         }
-    }
-}
-
-- (Boolean)isNalPictureData:(unsigned char)nalType
-{
-    if (videoFormat == VIDEO_FORMAT_H264) {
-        return !(nalType == AVC_NAL_TYPE_SPS || nalType == AVC_NAL_TYPE_PPS);
-    }
-    else {
-        return !(nalType == HEVC_NAL_TYPE_VPS || nalType == HEVC_NAL_TYPE_SPS || nalType == HEVC_NAL_TYPE_PPS);
     }
 }
 
@@ -190,25 +171,14 @@
     }
 }
 
-// This function must free data
-- (int)submitDecodeBuffer:(unsigned char *)data length:(int)length
+// This function must free data for bufferType == BUFFER_TYPE_PICDATA
+- (int)submitDecodeBuffer:(unsigned char *)data length:(int)length bufferType:(int)bufferType
 {
     unsigned char nalType = data[FRAME_START_PREFIX_SIZE];
     OSStatus status;
     
-    // Check for previous decoder errors before doing anything
-    if (displayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
-        Log(LOG_E, @"Display layer rendering failed: %@", displayLayer.error);
-        
-        // Recreate the display layer
-        [self reinitializeDisplayLayer];
-        
-        // Request an IDR frame to initialize the new decoder
-        return DR_NEED_IDR;
-    }
-    
-    if (![self isNalPictureData:nalType]) {
-        if (IS_NAL_VPS(nalType)) {
+    if (bufferType != BUFFER_TYPE_PICDATA) {
+        if (bufferType == BUFFER_TYPE_VPS) {
             Log(LOG_I, @"Got VPS");
             vpsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForVps = false;
@@ -216,14 +186,14 @@
             // We got a new VPS so wait for a new SPS to match it
             waitingForSps = true;
         }
-        else if (IS_NAL_SPS(nalType)) {
+        else if (bufferType == BUFFER_TYPE_SPS) {
             Log(LOG_I, @"Got SPS");
             spsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForSps = false;
             
             // We got a new SPS so wait for a new PPS to match it
             waitingForPps = true;
-        } else if (IS_NAL_PPS(nalType)) {
+        } else if (bufferType == BUFFER_TYPE_PPS) {
             Log(LOG_I, @"Got PPS");
             ppsData = [NSData dataWithBytes:&data[FRAME_START_PREFIX_SIZE] length:length - FRAME_START_PREFIX_SIZE];
             waitingForPps = false;
@@ -273,8 +243,7 @@
             }
         }
         
-        // Free the data buffer
-        free(data);
+        // Data is NOT to be freed here. It's a direct usage of the caller's buffer.
         
         // No frame data to submit for these NALUs
         return DR_OK;
@@ -283,7 +252,19 @@
     if (formatDesc == NULL) {
         // Can't decode if we haven't gotten our parameter sets yet
         free(data);
-        return DR_OK;
+        return DR_NEED_IDR;
+    }
+    
+    // Check for previous decoder errors before doing anything
+    if (displayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
+        Log(LOG_E, @"Display layer rendering failed: %@", displayLayer.error);
+        
+        // Recreate the display layer
+        [self reinitializeDisplayLayer];
+        
+        // Request an IDR frame to initialize the new decoder
+        free(data);
+        return DR_NEED_IDR;
     }
     
     // Now we're decoding actual frame data here
