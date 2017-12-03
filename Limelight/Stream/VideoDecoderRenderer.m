@@ -75,7 +75,7 @@
 
 - (Boolean)readyForPictureData
 {
-    if (videoFormat == VIDEO_FORMAT_H264) {
+    if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         return !waitingForSps && !waitingForPps;
     }
     else {
@@ -86,7 +86,7 @@
 
 - (Boolean)isNalReferencePicture:(unsigned char)nalType
 {
-    if (videoFormat == VIDEO_FORMAT_H264) {
+    if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         return nalType == 0x65;
     }
     else {
@@ -201,7 +201,7 @@
         
         // See if we've got all the parameter sets we need for our video format
         if ([self readyForPictureData]) {
-            if (videoFormat == VIDEO_FORMAT_H264) {
+            if (videoFormat & VIDEO_FORMAT_MASK_H264) {
                 const uint8_t* const parameterSetPointers[] = { [spsData bytes], [ppsData bytes] };
                 const size_t parameterSetSizes[] = { [spsData length], [ppsData length] };
                 
