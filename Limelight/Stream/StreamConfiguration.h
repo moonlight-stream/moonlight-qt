@@ -20,5 +20,6 @@
 @property int bitRate;
 @property int riKeyId;
 @property NSData* riKey;
+@property int gamepadMask;
 
 @end

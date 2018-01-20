@@ -34,6 +34,8 @@
 -(void) updateFinished:(Controller*)controller;
 -(Controller*) getOscController;
 
++(int) getConnectedGamepadMask;
+
 @property (nonatomic, strong) id connectObserver;
 @property (nonatomic, strong) id disconnectObserver;
 

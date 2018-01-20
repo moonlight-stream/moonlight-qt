@@ -106,7 +106,8 @@
                                           height:_config.height
                                      refreshRate:_config.frameRate
                                            rikey:[Utils bytesToHex:_config.riKey]
-                                         rikeyid:_config.riKeyId]]];
+                                         rikeyid:_config.riKeyId
+                                     gamepadMask:_config.gamepadMask]]];
     NSString *gameSession = [launchResp getStringTag:@"gamesession"];
     if (launchResp == NULL || ![launchResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to launch app"];

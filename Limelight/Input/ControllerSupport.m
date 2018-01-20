@@ -8,6 +8,7 @@
 
 #import "ControllerSupport.h"
 #import "OnScreenControls.h"
+#import "DataManager.h"
 #include "Limelight.h"
 
 // Swift
@@ -21,6 +22,7 @@
     NSMutableDictionary *_controllers;
     
     OnScreenControls *_osc;
+    bool _oscEnabled;
     
     // This controller object is shared between on-screen controls
     // and player 0
@@ -147,7 +149,7 @@
     [_controllerStreamLock lock];
     @synchronized(controller) {
         // Player 1 is always present for OSC
-        LiSendMultiControllerEvent(controller.playerIndex, _controllerNumbers | 1, controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
+        LiSendMultiControllerEvent(controller.playerIndex, _controllerNumbers | (_oscEnabled ? 1 : 0), controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
     }
     [_controllerStreamLock unlock];
 }
@@ -303,6 +305,25 @@
     return _player0osc;
 }
 
++(int) getConnectedGamepadMask {
+    int mask = 0;
+    
+    for (int i = 0; i < [[GCController controllers] count]; i++) {
+        mask |= 1 << i;
+    }
+    
+    DataManager* dataMan = [[DataManager alloc] init];
+    OnScreenControlsLevel level = (OnScreenControlsLevel)[[dataMan getSettings].onscreenControls integerValue];
+    
+    // Even if no gamepads are present, we will always count one
+    // if OSC is enabled.
+    if (level != OnScreenControlsLevelOff) {
+        mask |= 1;
+    }
+    
+    return mask;
+}
+
 -(id) init
 {
     self = [super init];
@@ -312,6 +333,9 @@
     _controllerNumbers = 0;
     _player0osc = [[Controller alloc] init];
     _player0osc.playerIndex = 0;
+    
+    DataManager* dataMan = [[DataManager alloc] init];
+    _oscEnabled = (OnScreenControlsLevel)[[dataMan getSettings].onscreenControls integerValue] != OnScreenControlsLevelOff;
     
     Log(LOG_I, @"Number of controllers connected: %ld", (long)[[GCController controllers] count]);
     for (GCController* controller in [GCController controllers]) {
@@ -337,9 +361,12 @@
         
         GCController* controller = note.object;
         [self unregisterControllerCallbacks:controller];
-        [_controllers removeObjectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
         _controllerNumbers &= ~(1 << controller.playerIndex);
         Log(LOG_I, @"Unassigning controller index: %ld", (long)controller.playerIndex);
+        
+        // Inform the server of the updated active gamepads before removing this controller
+        [self updateFinished:[_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]]];
+        [_controllers removeObjectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
         
         // Re-evaluate the on-screen control mode
         [self updateAutoOnScreenControlMode];

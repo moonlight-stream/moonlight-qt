@@ -408,6 +408,7 @@ static NSMutableSet* hostList;
     _streamConfig.bitRate = [streamSettings.bitrate intValue];
     _streamConfig.height = [streamSettings.height intValue];
     _streamConfig.width = [streamSettings.width intValue];
+    _streamConfig.gamepadMask = [ControllerSupport getConnectedGamepadMask];
     
     [_appManager stopRetrieving];
     

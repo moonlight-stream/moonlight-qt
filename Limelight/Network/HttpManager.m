@@ -167,8 +167,8 @@ static const NSString* HTTPS_PORT = @"47984";
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
-- (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid {
-    NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=1&rikey=%@&rikeyid=%d", _baseHTTPSURL, _uniqueId, appId, width, height, refreshRate, rikey, rikeyid];
+- (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid gamepadMask:(int)gamepadMask {
+    NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=1&rikey=%@&rikeyid=%d&remoteControllersBitmap=%d&gcmap=%d", _baseHTTPSURL, _uniqueId, appId, width, height, refreshRate, rikey, rikeyid, gamepadMask, gamepadMask];
     // This blocks while the app is launching
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
