@@ -33,7 +33,7 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
 + (void) wakeHost:(TemporaryHost*)host {
     NSData* wolPayload = [WakeOnLanManager createPayload:host];
     
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 4; i++) {
         const char* address;
         struct addrinfo hints, *res, *curr;
         
@@ -44,6 +44,8 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
             address = [host.externalAddress UTF8String];
         } else if (i == 2 && host.address != nil) {
             address = [host.address UTF8String];
+        } else if (i == 3) {
+            address = "255.255.255.255";
         } else {
             // Requested address wasn't present
             continue;
@@ -63,12 +65,16 @@ static const int ports[numPorts] = {7, 9, 47998, 47999, 48000};
         // may be different address families.
         for (curr = res; curr != NULL; curr = curr->ai_next) {
             int wolSocket;
+            int val;
             
             wolSocket = socket(curr->ai_family, SOCK_DGRAM, IPPROTO_UDP);
             if (wolSocket < 0) {
                 Log(LOG_E, @"Failed to create WOL socket");
                 continue;
             }
+            
+            val = 1;
+            setsockopt(wolSocket, SOL_SOCKET, SO_BROADCAST, &val, sizeof(val));
             
             struct sockaddr_storage addr;
             memset(&addr, 0, sizeof(addr));
