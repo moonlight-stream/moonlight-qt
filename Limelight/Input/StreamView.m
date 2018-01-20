@@ -47,8 +47,8 @@
 }
 
 - (Boolean)isConfirmedMove:(CGPoint)currentPoint from:(CGPoint)originalPoint {
-    // Movements of greater than 20 pixels are considered confirmed
-    return hypotf(originalPoint.x - currentPoint.x, originalPoint.y - currentPoint.y) >= 20;
+    // Movements of greater than 10 pixels are considered confirmed
+    return hypotf(originalPoint.x - currentPoint.x, originalPoint.y - currentPoint.y) >= 10;
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -76,8 +76,6 @@
 
 - (void)touchesMoved:(NSSet *)touches withEvent:(UIEvent *)event {
     if (![onScreenControls handleTouchMovedEvent:touches]) {
-        [dragTimer invalidate];
-        dragTimer = nil;
         if ([[event allTouches] count] == 1) {
             UITouch *touch = [[event allTouches] anyObject];
             CGPoint currentLocation = [touch locationInView:self];
@@ -128,7 +126,11 @@
     if (![onScreenControls handleTouchUpEvent:touches]) {
         [dragTimer invalidate];
         dragTimer = nil;
-        if (!touchMoved) {
+        if (isDragging) {
+            isDragging = false;
+            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+        }
+        else if (!touchMoved) {
             if ([[event allTouches] count]  == 2) {
                 Log(LOG_D, @"Sending right mouse button press");
                 
@@ -150,10 +152,6 @@
                 isDragging = false;
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
             }
-        }
-        else if (isDragging) {
-            isDragging = false;
-            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
         }
         
         // We we're moving from 2+ touches to 1. Synchronize the current position
