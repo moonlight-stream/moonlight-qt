@@ -140,9 +140,6 @@
 		FB290D0319B2C406004C83CF /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
 		FB290D0619B2C406004C83CF /* Limelight.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Limelight.xcdatamodel; sourceTree = "<group>"; };
 		FB290D0819B2C406004C83CF /* Images.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Images.xcassets; sourceTree = "<group>"; };
-		FB290DB619B2C870004C83CF /* libz.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libz.dylib; path = usr/lib/libz.dylib; sourceTree = SDKROOT; };
-		FB290DB819B2C877004C83CF /* libbz2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libbz2.dylib; path = usr/lib/libbz2.dylib; sourceTree = SDKROOT; };
-		FB290DC319B2E98F004C83CF /* libxml2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libxml2.dylib; path = usr/lib/libxml2.dylib; sourceTree = SDKROOT; };
 		FB290E7819B37D81004C83CF /* iPad.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = iPad.storyboard; sourceTree = SOURCE_ROOT; };
 		FB290E7A19B38036004C83CF /* iPhone.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = iPhone.storyboard; sourceTree = SOURCE_ROOT; };
 		FB4678EB1A50C40900377732 /* OnScreenControls.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OnScreenControls.h; sourceTree = "<group>"; };
@@ -161,8 +158,6 @@
 		FB6549541A57907E001C8F39 /* DiscoveryWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscoveryWorker.h; sourceTree = "<group>"; };
 		FB6549551A57907E001C8F39 /* DiscoveryWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiscoveryWorker.m; sourceTree = "<group>"; };
 		FB6549621A60B4A9001C8F39 /* Limelight 0.3.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Limelight 0.3.1.xcdatamodel"; sourceTree = "<group>"; };
-		FB6DDEF31AE739100096499A /* libmoonlight-common.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = "libmoonlight-common.a"; path = "limelight-common-c/build/Debug-iphoneos/libmoonlight-common.a"; sourceTree = "<group>"; };
-		FB7E794319C8B71B00A15F68 /* libiconv.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.dylib; path = usr/lib/libiconv.dylib; sourceTree = SDKROOT; };
 		FB89460519F646E200339C8A /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
 		FB89460619F646E200339C8A /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
 		FB89460719F646E200339C8A /* mkcert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mkcert.c; sourceTree = "<group>"; };
@@ -295,7 +290,6 @@
 		FBD3494F19FF2174002D2A60 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
 		FBD3495119FF36FB002D2A60 /* SWRevealViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SWRevealViewController.h; sourceTree = "<group>"; };
 		FBD3495219FF36FB002D2A60 /* SWRevealViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SWRevealViewController.m; sourceTree = "<group>"; };
-		FBD349571A003F05002D2A60 /* libsqlite3.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libsqlite3.dylib; path = usr/lib/libsqlite3.dylib; sourceTree = SDKROOT; };
 		FBD3495C1A004412002D2A60 /* Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Settings.h; path = Database/Settings.h; sourceTree = "<group>"; };
 		FBD3495D1A004412002D2A60 /* Settings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Settings.m; path = Database/Settings.m; sourceTree = "<group>"; };
 		FBD349601A0089F6002D2A60 /* DataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = DataManager.h; path = Database/DataManager.h; sourceTree = "<group>"; };
@@ -412,14 +406,8 @@
 			isa = PBXGroup;
 			children = (
 				9890CF6A203B7EE1006C4B06 /* libxml2.tbd */,
-				FB6DDEF31AE739100096499A /* libmoonlight-common.a */,
 				FB4679001A57048000377732 /* CoreFoundation.framework */,
-				FBD349571A003F05002D2A60 /* libsqlite3.dylib */,
 				FB89468F19F6AFB800339C8A /* libs */,
-				FB7E794319C8B71B00A15F68 /* libiconv.dylib */,
-				FB290DC319B2E98F004C83CF /* libxml2.dylib */,
-				FB290DB819B2C877004C83CF /* libbz2.dylib */,
-				FB290DB619B2C870004C83CF /* libz.dylib */,
 				FB290CF119B2C406004C83CF /* Foundation.framework */,
 				FB290CF319B2C406004C83CF /* CoreGraphics.framework */,
 				FB290CF519B2C406004C83CF /* UIKit.framework */,
@@ -559,18 +547,10 @@
 		FB89468F19F6AFB800339C8A /* libs */ = {
 			isa = PBXGroup;
 			children = (
-				FB89469019F6AFB800339C8A /* limelight-common */,
 				FB89469119F6AFB800339C8A /* openssl */,
 				FB8946E219F6AFB800339C8A /* opus */,
 			);
 			path = libs;
-			sourceTree = "<group>";
-		};
-		FB89469019F6AFB800339C8A /* limelight-common */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			path = "limelight-common";
 			sourceTree = "<group>";
 		};
 		FB89469119F6AFB800339C8A /* openssl */ = {
