@@ -18,7 +18,7 @@ typedef struct CertKeyPair {
     PKCS12 *p12;
 } CertKeyPair;
 
-struct CertKeyPair generateCertKeyPair();
+struct CertKeyPair generateCertKeyPair(void);
 void freeCertKeyPair(CertKeyPair);
 void saveCertKeyPair(const char* certFile, const char* p12File, const char* keyPairFile, CertKeyPair certKeyPair);
 #endif

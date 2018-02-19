@@ -19,7 +19,7 @@ static const int NUM_YEARS = 10;
 int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years);
 int add_ext(X509 *cert, int nid, char *value);
 
-struct CertKeyPair generateCertKeyPair() {
+struct CertKeyPair generateCertKeyPair(void) {
     BIO *bio_err;
     X509 *x509 = NULL;
     EVP_PKEY *pkey = NULL;
