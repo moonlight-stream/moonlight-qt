@@ -88,12 +88,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_emulatingButtonFlags_Sets_To_CInt() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.emulatingButtonFlags.dynamicType == CInt.self, "Expected emulatingButtonFlags to be of type CInt. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.emulatingButtonFlags) == CInt.self, "Expected emulatingButtonFlags to be of type CInt. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CInt(1)
     controllerUnderTest.emulatingButtonFlags = expected
-    XCTAssertTrue(controllerUnderTest.emulatingButtonFlags == expected, displayCIntFailure("emulatingButtonFlags", expected: expected, actual: controllerUnderTest.emulatingButtonFlags))
+    XCTAssertTrue(controllerUnderTest.emulatingButtonFlags == expected, displayCIntFailure(name: "emulatingButtonFlags", expected: expected, actual: controllerUnderTest.emulatingButtonFlags))
   }
   
   /**
@@ -101,12 +101,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_lastButtonFlags_Sets_To_CInt() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.lastButtonFlags.dynamicType == CInt.self, "Expected lastButtonFlags to be of type CInt. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.lastButtonFlags) == CInt.self, "Expected lastButtonFlags to be of type CInt. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CInt(1)
     controllerUnderTest.lastButtonFlags = expected
-    XCTAssertTrue(controllerUnderTest.lastButtonFlags == expected, displayCIntFailure("lastButtonFlags", expected: expected, actual: controllerUnderTest.lastButtonFlags))
+    XCTAssertTrue(controllerUnderTest.lastButtonFlags == expected, displayCIntFailure(name: "lastButtonFlags", expected: expected, actual: controllerUnderTest.lastButtonFlags))
   }
   
   /**
@@ -114,12 +114,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_lastLeftStickX_Sets_To_CShort() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.lastLeftStickX.dynamicType == CShort.self, "Expected lastLeftStickX to be of type CShort. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.lastLeftStickX) == CShort.self, "Expected lastLeftStickX to be of type CShort. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CShort(1)
     controllerUnderTest.lastLeftStickX = expected
-    XCTAssertTrue(controllerUnderTest.lastLeftStickX == expected, displayCShortFailure("lastLeftStickX", expected: expected, actual: controllerUnderTest.lastLeftStickX))
+    XCTAssertTrue(controllerUnderTest.lastLeftStickX == expected, displayCShortFailure(name: "lastLeftStickX", expected: expected, actual: controllerUnderTest.lastLeftStickX))
   }
   
   /**
@@ -127,12 +127,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_lastLeftStickY_Sets_To_CShort() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.lastLeftStickY.dynamicType == CShort.self, "Expected lastLeftStickY to be of type CShort. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.lastLeftStickY) == CShort.self, "Expected lastLeftStickY to be of type CShort. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CShort(1)
     controllerUnderTest.lastLeftStickY = expected
-    XCTAssertTrue(controllerUnderTest.lastLeftStickY == expected, displayCShortFailure("lastLeftStickY", expected: expected, actual: controllerUnderTest.lastLeftStickY))
+    XCTAssertTrue(controllerUnderTest.lastLeftStickY == expected, displayCShortFailure(name: "lastLeftStickY", expected: expected, actual: controllerUnderTest.lastLeftStickY))
   }
   
   /**
@@ -140,12 +140,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_lastRightStickX_SetsTo_CShort() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.lastRightStickX.dynamicType == CShort.self, "Expected lastRightStickX to be of type CShort. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.lastRightStickX) == CShort.self, "Expected lastRightStickX to be of type CShort. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CShort(1)
     controllerUnderTest.lastRightStickX = expected
-    XCTAssertTrue(controllerUnderTest.lastRightStickX == expected, displayCShortFailure("lastRightStickX", expected: expected, actual: controllerUnderTest.lastRightStickX))
+    XCTAssertTrue(controllerUnderTest.lastRightStickX == expected, displayCShortFailure(name: "lastRightStickX", expected: expected, actual: controllerUnderTest.lastRightStickX))
   }
   
   /**
@@ -153,12 +153,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_lastRightStickY_Sets_To_CShort() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.lastRightStickY.dynamicType == CShort.self, "Expected lastRightStickY to be of type CShort. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.lastRightStickY) == CShort.self, "Expected lastRightStickY to be of type CShort. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CShort(1)
     controllerUnderTest.lastRightStickY = expected
-    XCTAssertTrue(controllerUnderTest.lastRightStickY == expected, displayCShortFailure("lastRightStickY", expected: expected, actual: controllerUnderTest.lastRightStickY))
+    XCTAssertTrue(controllerUnderTest.lastRightStickY == expected, displayCShortFailure(name: "lastRightStickY", expected: expected, actual: controllerUnderTest.lastRightStickY))
   }
   
   /**
@@ -166,12 +166,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_lastLeftTrigger_Sets_To_CChar() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.lastLeftTrigger.dynamicType == CChar.self, "Expected lastLeftTrigger to be of type CChar. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.lastLeftTrigger) == CChar.self, "Expected lastLeftTrigger to be of type CChar. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CChar(1)
     controllerUnderTest.lastLeftTrigger = expected
-    XCTAssertTrue(controllerUnderTest.lastLeftTrigger == expected, displayCCharFailure("lastLeftTrigger", expected: expected, actual: controllerUnderTest.lastLeftTrigger))
+    XCTAssertTrue(controllerUnderTest.lastLeftTrigger == expected, displayCCharFailure(name: "lastLeftTrigger", expected: expected, actual: controllerUnderTest.lastLeftTrigger))
     
   }
   
@@ -180,12 +180,12 @@ class ControllerUnitTests: XCTestCase {
    */
   func test_Assert_lastRightTrigger_Sets_To_CChar() {
     // Assert type hasn't changed
-    XCTAssertTrue(controllerUnderTest.lastRightTrigger.dynamicType == CChar.self, "Expected lastRightTrigger to be of type CChar. See line \(#line) \n")
+    XCTAssertTrue(type(of: controllerUnderTest.lastRightTrigger) == CChar.self, "Expected lastRightTrigger to be of type CChar. See line \(#line) \n")
     
     // Assert value is assigned properly.
     let expected = CChar(1)
     controllerUnderTest.lastRightTrigger = expected
-    XCTAssertTrue(controllerUnderTest.lastRightTrigger == expected, displayCCharFailure("lastRightTrigger", expected: expected, actual: controllerUnderTest.lastRightTrigger))
+    XCTAssertTrue(controllerUnderTest.lastRightTrigger == expected, displayCCharFailure(name: "lastRightTrigger", expected: expected, actual: controllerUnderTest.lastRightTrigger))
     
   }
   
