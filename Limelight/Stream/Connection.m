@@ -336,7 +336,10 @@ void ClLogMessage(const char* format, ...)
     // On iOS 11, we can use HEVC if the server supports encoding it
     // and this device has hardware decode for it (A9 and later)
     if (@available(iOS 11.0, *)) {
-        _streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
+        // FIXME: Disabled due to incompatibility with iPhone X causing video
+        // to freeze. Additionally, RFI is not supported so packet loss recovery
+        // is worse with HEVC than H.264.
+        //_streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
     }
     
     // Use some of the HEVC encoding efficiency improvements to
