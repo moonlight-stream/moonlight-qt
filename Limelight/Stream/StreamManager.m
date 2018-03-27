@@ -11,10 +11,6 @@
 #import "HttpManager.h"
 #import "Utils.h"
 
-#if TARGET_OS_IPHONE
-#import "OnScreenControls.h"
-#endif
-
 #import "StreamView.h"
 #import "ServerInfoResponse.h"
 #import "HttpResponse.h"
@@ -24,17 +20,12 @@
 @implementation StreamManager {
     StreamConfiguration* _config;
 
-#if TARGET_OS_IPHONE
-    UIView* _renderView;
-#else
-    NSView* _renderView;
-#endif
+    OSView* _renderView;
     id<ConnectionCallbacks> _callbacks;
     Connection* _connection;
 }
 
-#if TARGET_OS_IPHONE
-- (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionCallbacks:(id<ConnectionCallbacks>)callbacks {
+- (id) initWithConfig:(StreamConfiguration*)config renderView:(OSView*)view connectionCallbacks:(id<ConnectionCallbacks>)callbacks {
     self = [super init];
     _config = config;
     _renderView = view;
@@ -43,17 +34,6 @@
     _config.riKeyId = arc4random();
     return self;
 }
-#else
-- (id) initWithConfig:(StreamConfiguration*)config renderView:(NSView*)view connectionCallbacks:(id<ConnectionCallbacks>)callbacks {
-    self = [super init];
-    _config = config;
-    _renderView = view;
-    _callbacks = callbacks;
-    _config.riKey = [Utils randomBytes:16];
-    _config.riKeyId = arc4random();
-    return self;
-}
-#endif
 
 - (void)main {
     [CryptoManager generateKeyPairUsingSSl];

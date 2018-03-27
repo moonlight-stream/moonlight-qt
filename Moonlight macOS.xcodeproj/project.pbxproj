@@ -48,8 +48,6 @@
 		DC5EF54D2052FBDB00C9BF55 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF54C2052FBDB00C9BF55 /* ViewController.m */; };
 		DC5EF5522052FBDB00C9BF55 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DC5EF5512052FBDB00C9BF55 /* Assets.xcassets */; };
 		DC5EF5582052FBDB00C9BF55 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF5572052FBDB00C9BF55 /* main.m */; };
-		DC5EF5632052FBDB00C9BF55 /* Moonlight_macOSTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF5622052FBDB00C9BF55 /* Moonlight_macOSTests.m */; };
-		DC5EF56E2052FBDB00C9BF55 /* Moonlight_macOSUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF56D2052FBDB00C9BF55 /* Moonlight_macOSUITests.m */; };
 		DC5FA8FC205DBEE3008B7054 /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5FA8F6205DBEE3008B7054 /* StreamConfiguration.m */; };
 		DC5FA8FD205DBEE3008B7054 /* StreamManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5FA8F8205DBEE3008B7054 /* StreamManager.m */; };
 		DC5FA8FE205DBEE3008B7054 /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5FA8F9205DBEE3008B7054 /* Connection.m */; };
@@ -125,6 +123,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		98878AE1206A261F00586E90 /* OSPortabilityDefs.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = OSPortabilityDefs.h; path = Limelight/OSPortabilityDefs.h; sourceTree = SOURCE_ROOT; };
 		DC0F7506205C04A90087B187 /* keepAlive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keepAlive.h; sourceTree = "<group>"; };
 		DC0F7507205C04A90087B187 /* keepAlive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = keepAlive.m; sourceTree = "<group>"; };
 		DC153B34205A990800E7559B /* Moonlight macOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Moonlight macOS-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -194,11 +193,7 @@
 		DC5EF5562052FBDB00C9BF55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DC5EF5572052FBDB00C9BF55 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		DC5EF55E2052FBDB00C9BF55 /* Moonlight macOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Moonlight macOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC5EF5622052FBDB00C9BF55 /* Moonlight_macOSTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Moonlight_macOSTests.m; sourceTree = "<group>"; };
-		DC5EF5642052FBDB00C9BF55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DC5EF5692052FBDB00C9BF55 /* Moonlight macOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Moonlight macOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
-		DC5EF56D2052FBDB00C9BF55 /* Moonlight_macOSUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Moonlight_macOSUITests.m; sourceTree = "<group>"; };
-		DC5EF56F2052FBDB00C9BF55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		DC5EF5CE2052FC8B00C9BF55 /* opus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
 		DC5EF5CF2052FC8B00C9BF55 /* opus_multistream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
 		DC5EF5D02052FC8B00C9BF55 /* opus_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
@@ -460,8 +455,6 @@
 			children = (
 				DCECF42A205DBBAB00831862 /* moonlight-common_mac.xcodeproj */,
 				DC5EF5472052FBDB00C9BF55 /* Moonlight macOS */,
-				DC5EF5612052FBDB00C9BF55 /* Moonlight macOSTests */,
-				DC5EF56C2052FBDB00C9BF55 /* Moonlight macOSUITests */,
 				DC5EF5462052FBDB00C9BF55 /* Products */,
 				DC5EF5C92052FC8B00C9BF55 /* Frameworks */,
 			);
@@ -480,6 +473,7 @@
 		DC5EF5472052FBDB00C9BF55 /* Moonlight macOS */ = {
 			isa = PBXGroup;
 			children = (
+				98878AE1206A261F00586E90 /* OSPortabilityDefs.h */,
 				DC9CD51E20601658001A5DCD /* AppDelegate.m */,
 				DCAF0516205F3E6A00AD1DBA /* Limelight.xcdatamodeld */,
 				DCAF04FD205F38B100AD1DBA /* AppDelegate.h */,
@@ -498,24 +492,6 @@
 				DC5EF5572052FBDB00C9BF55 /* main.m */,
 			);
 			path = "Moonlight macOS";
-			sourceTree = "<group>";
-		};
-		DC5EF5612052FBDB00C9BF55 /* Moonlight macOSTests */ = {
-			isa = PBXGroup;
-			children = (
-				DC5EF5622052FBDB00C9BF55 /* Moonlight_macOSTests.m */,
-				DC5EF5642052FBDB00C9BF55 /* Info.plist */,
-			);
-			path = "Moonlight macOSTests";
-			sourceTree = "<group>";
-		};
-		DC5EF56C2052FBDB00C9BF55 /* Moonlight macOSUITests */ = {
-			isa = PBXGroup;
-			children = (
-				DC5EF56D2052FBDB00C9BF55 /* Moonlight_macOSUITests.m */,
-				DC5EF56F2052FBDB00C9BF55 /* Info.plist */,
-			);
-			path = "Moonlight macOSUITests";
 			sourceTree = "<group>";
 		};
 		DC5EF5962052FC4300C9BF55 /* Utility */ = {
@@ -958,7 +934,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DC5EF5632052FBDB00C9BF55 /* Moonlight_macOSTests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -966,7 +941,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				DC5EF56E2052FBDB00C9BF55 /* Moonlight_macOSUITests.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1129,7 +1103,7 @@
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				OTHER_LDFLAGS = "";
-				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Moonlight macOS/Input/Moonlight macOS-Bridging-Header.h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";
@@ -1178,7 +1152,7 @@
 				ONLY_ACTIVE_ARCH = YES;
 				OTHER_LDFLAGS = "";
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
-				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOS";
+				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_OBJC_BRIDGING_HEADER = "Moonlight macOS/Input/Moonlight macOS-Bridging-Header.h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";

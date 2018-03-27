@@ -98,7 +98,6 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
     audioLock = [[NSLock alloc] init];
 
 #if TARGET_OS_IPHONE
-
     // Configure the audio session for our app
     NSError *audioSessionError = nil;
     AVAudioSession* audioSession = [AVAudioSession sharedInstance];
@@ -108,8 +107,8 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
     [audioSession setPreferredOutputNumberOfChannels:opusConfig->channelCount error:&audioSessionError];
     [audioSession setPreferredIOBufferDuration:0.005 error:&audioSessionError];
     [audioSession setActive: YES error: &audioSessionError];
-
 #endif
+    
     OSStatus status;
 
     AudioComponentDescription audioDesc;
@@ -355,7 +354,7 @@ void ClLogMessage(const char* format, ...)
 #else
     if (@available(macOS 10.13, *)) {
         if (VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) || _streamConfig.streamingRemotely != 0)
-        _streamConfig.supportsHevc = true;
+            _streamConfig.supportsHevc = true;
     }
 #endif
     

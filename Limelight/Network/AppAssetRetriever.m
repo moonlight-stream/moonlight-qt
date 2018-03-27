@@ -19,11 +19,7 @@ static const int MAX_ATTEMPTS = 5;
 
 - (void) main {
 
-#if TARGET_OS_IPHONE
-    UIImage* appImage = nil;
-#else
-    NSImage* appImage = nil;
-#endif
+    OSImage* appImage = nil;
     
     int attempts = 0;
     while (![self isCancelled] && appImage == nil && attempts++ < MAX_ATTEMPTS) {

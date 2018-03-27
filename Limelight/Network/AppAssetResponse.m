@@ -16,16 +16,13 @@
     self.statusMessage = @"App asset has no status message";
     self.statusCode = -1;
 }
+- (OSImage*) getImage {
 #if TARGET_OS_IPHONE
-- (UIImage*) getImage {
-    UIImage* appImage = [[UIImage alloc] initWithData:self.data];
+    OSImage* appImage = [[OSImage alloc] initWithData:self.data];
+#else
+    OSImage* appImage = nil;
+#endif
     return appImage;
 }
-#else
-- (NSImage*) getImage {
-    return nil;
-}
-#endif
-
 
 @end

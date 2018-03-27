@@ -18,7 +18,8 @@
 #elif TARGET_OS_MAC
     #import <AppKit/AppKit.h>
 #endif
-    #import <Foundation/Foundation.h>
-    #import <CoreData/CoreData.h>
-    #import "Logger.h"
+#import <Foundation/Foundation.h>
+#import <CoreData/CoreData.h>
+#import "Logger.h"
+#include "OSPortabilityDefs.h"
 #endif

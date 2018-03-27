@@ -26,7 +26,7 @@
 extern "C" {
 #endif
 
-#if _MSC_VER <= 1600
+#if _MSC_VER && _MSC_VER <= 1600
 #define bool int
 #define true 1
 #define false 0
@@ -71,15 +71,15 @@ struct Gamepad_device {
    
    This function must be called from the same thread that will be calling Gamepad_processEvents()
    and Gamepad_detectDevices(). */
-void Gamepad_init();
+void Gamepad_init(void);
 
 /* Tears down all data structures created by the gamepad library and releases any memory that was
    allocated. It is not necessary to call this function at application termination, but it's
    provided in case you want to free memory associated with gamepads at some earlier time. */
-void Gamepad_shutdown();
+void Gamepad_shutdown(void);
 
 /* Returns the number of currently attached gamepad devices. */
-unsigned int Gamepad_numDevices();
+unsigned int Gamepad_numDevices(void);
 
 /* Returns the specified Gamepad_device struct, or NULL if deviceIndex is out of bounds. */
 struct Gamepad_device * Gamepad_deviceAtIndex(unsigned int deviceIndex);
@@ -92,11 +92,11 @@ struct Gamepad_device * Gamepad_deviceAtIndex(unsigned int deviceIndex);
    devices that have not yet been detected with Gamepad_detectDevices(). You can safely ignore
    these events, but be aware that your callbacks might receive a device ID that hasn't been seen
    by your deviceAttachFunc. */
-void Gamepad_detectDevices();
+void Gamepad_detectDevices(void);
 
 /* Reads pending input from all attached devices and calls the appropriate input callbacks, if any
    have been registered. */
-void Gamepad_processEvents();
+void Gamepad_processEvents(void);
 
 /* Registers a function to be called whenever a device is attached. The specified function will be
    called only during calls to Gamepad_init() and Gamepad_detectDevices(), in the thread from

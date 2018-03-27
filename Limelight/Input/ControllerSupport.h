@@ -10,8 +10,7 @@
 
 // Swift
 #import "Moonlight-Swift.h"
-#if TARGET_OS_IPHONE
-#else
+#if !TARGET_OS_IPHONE
 #import "Gamepad.h"
 #endif
 @class Controller;

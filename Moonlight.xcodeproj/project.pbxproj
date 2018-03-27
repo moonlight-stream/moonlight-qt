@@ -105,6 +105,7 @@
 /* Begin PBXFileReference section */
 		9832D1341BBCD5C50036EF48 /* TemporaryApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TemporaryApp.h; path = Database/TemporaryApp.h; sourceTree = "<group>"; };
 		9832D1351BBCD5C50036EF48 /* TemporaryApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = TemporaryApp.m; path = Database/TemporaryApp.m; sourceTree = "<group>"; };
+		98878AE0206A226D00586E90 /* OSPortabilityDefs.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = OSPortabilityDefs.h; sourceTree = "<group>"; };
 		9890CF6A203B7EE1006C4B06 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
 		98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "moonlight-common.xcodeproj"; path = "moonlight-common/moonlight-common.xcodeproj"; sourceTree = "<group>"; };
 		98D5856B1C0EA79600F6CC00 /* TemporaryHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = TemporaryHost.h; path = Database/TemporaryHost.h; sourceTree = "<group>"; };
@@ -447,6 +448,7 @@
 				FB1D59961BBCCB6400F482CA /* ComputerScrollView.m */,
 				FB1D59981BBCCD7E00F482CA /* AppCollectionView.h */,
 				FB1D59991BBCCD7E00F482CA /* AppCollectionView.m */,
+				98878AE0206A226D00586E90 /* OSPortabilityDefs.h */,
 			);
 			name = Moonlight;
 			path = Limelight;

@@ -11,11 +11,7 @@
 #include "Limelight.h"
 
 @implementation VideoDecoderRenderer {
-#if TARGET_OS_IPHONE
-    UIView *_view;
-#else
-    NSView *_view;
-#endif
+    OSView *_view;
     
     AVSampleBufferDisplayLayer* displayLayer;
     Boolean waitingForSps, waitingForPps, waitingForVps;
@@ -31,11 +27,7 @@
     
     displayLayer = [[AVSampleBufferDisplayLayer alloc] init];
     displayLayer.bounds = _view.bounds;
-#if TARGET_OS_IPHONE
-    displayLayer.backgroundColor = [UIColor blackColor].CGColor;
-#else
-    displayLayer.backgroundColor = [NSColor blackColor].CGColor;
-#endif
+    displayLayer.backgroundColor = [OSColor blackColor].CGColor;
     
     displayLayer.position = CGPointMake(CGRectGetMidX(_view.bounds), CGRectGetMidY(_view.bounds));
     displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
@@ -61,8 +53,8 @@
         formatDesc = nil;
     }
 }
-#if TARGET_OS_IPHONE
-- (id)initWithView:(UIView*)view
+
+- (id)initWithView:(OSView*)view
 {
     self = [super init];
     
@@ -72,20 +64,6 @@
     
     return self;
 }
-#else
-- (id)initWithView:(NSView*)view
-{
-    self = [super init];
-    
-    _view = view;
-    
-    [self reinitializeDisplayLayer];
-    
-    return self;
-}
-
-#endif
-
 
 - (void)setupWithVideoFormat:(int)videoFormat
 {
@@ -248,20 +226,9 @@
 
 #if TARGET_OS_IPHONE
                 if (@available(iOS 11.0, *)) {
-                    status = CMVideoFormatDescriptionCreateFromHEVCParameterSets(kCFAllocatorDefault,
-                                                                                 3, /* count of parameter sets */
-                                                                                 parameterSetPointers,
-                                                                                 parameterSetSizes,
-                                                                                 NAL_LENGTH_PREFIX_SIZE,
-                                                                                 nil,
-                                                                                 &formatDesc);
-                } else {
-                    // This means Moonlight-common-c decided to give us an HEVC stream
-                    // even though we said we couldn't support it. All we can do is abort().
-                    abort();
-                }
 #else
                 if (@available(macOS 10.13, *)) {
+#endif
                     status = CMVideoFormatDescriptionCreateFromHEVCParameterSets(kCFAllocatorDefault,
                                                                                  3, /* count of parameter sets */
                                                                                  parameterSetPointers,
@@ -274,7 +241,6 @@
                     // even though we said we couldn't support it. All we can do is abort().
                     abort();
                 }
-#endif
                 
                 if (status != noErr) {
                     Log(LOG_E, @"Failed to create HEVC format description: %d", (int)status);
