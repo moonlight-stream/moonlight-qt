@@ -794,7 +794,7 @@
 			isa = PBXProject;
 			attributes = {
 				LastUpgradeCheck = 0920;
-				ORGANIZATIONNAME = Felix;
+				ORGANIZATIONNAME = "Moonlight Game Streaming Project";
 				TargetAttributes = {
 					DC5EF5442052FBDB00C9BF55 = {
 						CreatedOnToolsVersion = 9.2;

@@ -817,7 +817,7 @@
 			attributes = {
 				LastSwiftUpdateCheck = 0730;
 				LastUpgradeCheck = 0920;
-				ORGANIZATIONNAME = "Moonlight Stream";
+				ORGANIZATIONNAME = "Moonlight Game Streaming Project";
 				TargetAttributes = {
 					D46A739F1CBC7CB60039F1EE = {
 						CreatedOnToolsVersion = 7.3;
