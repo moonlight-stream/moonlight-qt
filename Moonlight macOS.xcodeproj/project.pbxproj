@@ -1,0 +1,1313 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 48;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		DC0F7508205C04A90087B187 /* keepAlive.m in Sources */ = {isa = PBXBuildFile; fileRef = DC0F7507205C04A90087B187 /* keepAlive.m */; };
+		DC2634D4205438DC00D44F88 /* keyboardTranslation.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2634D3205438DC00D44F88 /* keyboardTranslation.m */; };
+		DC2F170E205DA33800C3021E /* TemporaryApp.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1702205DA33800C3021E /* TemporaryApp.m */; };
+		DC2F170F205DA33800C3021E /* TemporaryHost.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1703205DA33800C3021E /* TemporaryHost.m */; };
+		DC2F1712205DA33800C3021E /* Host.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1708205DA33800C3021E /* Host.m */; };
+		DC2F1714205DA33800C3021E /* App.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F170D205DA33800C3021E /* App.m */; };
+		DC2F1737205DA35700C3021E /* IdManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1719205DA35700C3021E /* IdManager.m */; };
+		DC2F1738205DA35700C3021E /* mkcert.c in Sources */ = {isa = PBXBuildFile; fileRef = DC2F171A205DA35700C3021E /* mkcert.c */; };
+		DC2F1739205DA35700C3021E /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F171B205DA35700C3021E /* CryptoManager.m */; };
+		DC2F173A205DA35700C3021E /* WakeOnLanManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F171D205DA35700C3021E /* WakeOnLanManager.m */; };
+		DC2F173B205DA35700C3021E /* ServerInfoResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F171E205DA35700C3021E /* ServerInfoResponse.m */; };
+		DC2F173C205DA35700C3021E /* HttpResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F171F205DA35700C3021E /* HttpResponse.m */; };
+		DC2F173D205DA35700C3021E /* DiscoveryWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1721205DA35700C3021E /* DiscoveryWorker.m */; };
+		DC2F173E205DA35700C3021E /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1723205DA35700C3021E /* MDNSManager.m */; };
+		DC2F173F205DA35700C3021E /* AppAssetManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1725205DA35700C3021E /* AppAssetManager.m */; };
+		DC2F1740205DA35700C3021E /* HttpRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1726205DA35700C3021E /* HttpRequest.m */; };
+		DC2F1741205DA35700C3021E /* AppAssetResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1727205DA35700C3021E /* AppAssetResponse.m */; };
+		DC2F1742205DA35700C3021E /* AppListResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1728205DA35700C3021E /* AppListResponse.m */; };
+		DC2F1743205DA35700C3021E /* DiscoveryManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1729205DA35700C3021E /* DiscoveryManager.m */; };
+		DC2F1744205DA35700C3021E /* HttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F172D205DA35700C3021E /* HttpManager.m */; };
+		DC2F1745205DA35700C3021E /* AppAssetRetriever.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1732205DA35700C3021E /* AppAssetRetriever.m */; };
+		DC2F1746205DA35700C3021E /* PairManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1734205DA35700C3021E /* PairManager.m */; };
+		DC2F174E205DA39600C3021E /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F174A205DA39600C3021E /* Utils.m */; };
+		DC2F174F205DA39600C3021E /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F174C205DA39600C3021E /* Logger.m */; };
+		DC38D540205ACC360045FE93 /* Control.m in Sources */ = {isa = PBXBuildFile; fileRef = DC38D53F205ACC360045FE93 /* Control.m */; };
+		DC38D548205AD8D00045FE93 /* libstem_gamepad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC38D544205AD8D00045FE93 /* libstem_gamepad.a */; };
+		DC38D549205AD9860045FE93 /* libstem_gamepad.a in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC38D544205AD8D00045FE93 /* libstem_gamepad.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		DC3911882057D650001F895F /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = DCAF13D72053059C00896C35 /* libxml2.tbd */; };
+		DC39118D2057DD38001F895F /* libxml2.tbd in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DCAF13D72053059C00896C35 /* libxml2.tbd */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		DC39118F2057DD38001F895F /* libcrypto.a in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC5EF6232052FC8B00C9BF55 /* libcrypto.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		DC3911902057DD38001F895F /* libssl.a in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC5EF6242052FC8B00C9BF55 /* libssl.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		DC4522D0205316D8003A7AF4 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC5EF6232052FC8B00C9BF55 /* libcrypto.a */; };
+		DC4522D1205316D8003A7AF4 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC5EF6242052FC8B00C9BF55 /* libssl.a */; };
+		DC4522D720531714003A7AF4 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC4522D220531714003A7AF4 /* CoreData.framework */; };
+		DC4522D820531714003A7AF4 /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC4522D320531714003A7AF4 /* AppKit.framework */; };
+		DC4522D920531714003A7AF4 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC4522D420531714003A7AF4 /* Foundation.framework */; };
+		DC4522DA20531714003A7AF4 /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC4522D520531714003A7AF4 /* CoreFoundation.framework */; };
+		DC4522DB20531714003A7AF4 /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = DC4522D620531714003A7AF4 /* CoreGraphics.framework */; };
+		DC5EF54D2052FBDB00C9BF55 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF54C2052FBDB00C9BF55 /* ViewController.m */; };
+		DC5EF5522052FBDB00C9BF55 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = DC5EF5512052FBDB00C9BF55 /* Assets.xcassets */; };
+		DC5EF5582052FBDB00C9BF55 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF5572052FBDB00C9BF55 /* main.m */; };
+		DC5EF5632052FBDB00C9BF55 /* Moonlight_macOSTests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF5622052FBDB00C9BF55 /* Moonlight_macOSTests.m */; };
+		DC5EF56E2052FBDB00C9BF55 /* Moonlight_macOSUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5EF56D2052FBDB00C9BF55 /* Moonlight_macOSUITests.m */; };
+		DC5FA8FC205DBEE3008B7054 /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5FA8F6205DBEE3008B7054 /* StreamConfiguration.m */; };
+		DC5FA8FD205DBEE3008B7054 /* StreamManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5FA8F8205DBEE3008B7054 /* StreamManager.m */; };
+		DC5FA8FE205DBEE3008B7054 /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5FA8F9205DBEE3008B7054 /* Connection.m */; };
+		DC5FA8FF205DBEE3008B7054 /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = DC5FA8FB205DBEE3008B7054 /* VideoDecoderRenderer.m */; };
+		DC5FA900205DC0AF008B7054 /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DCECF42F205DBBAC00831862 /* libmoonlight-common.a */; };
+		DC62AC29205D9D3800FE4681 /* libopus_mac.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC62AC28205D9D3800FE4681 /* libopus_mac.a */; };
+		DC6A60862064299700A0673D /* ConnectionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6A60852064299700A0673D /* ConnectionHelper.m */; };
+		DC7029D5205B28340016D44B /* LICENSE.txt in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC7029D4205B28340016D44B /* LICENSE.txt */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		DC9CD51F20601658001A5DCD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9CD51E20601658001A5DCD /* AppDelegate.m */; };
+		DCAF051C205F3E6A00AD1DBA /* Limelight.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = DCAF0516205F3E6A00AD1DBA /* Limelight.xcdatamodeld */; };
+		DCAF0522205FCADB00AD1DBA /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAF051F205FCADA00AD1DBA /* Controller.swift */; };
+		DCAF0523205FCADB00AD1DBA /* ControllerSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAF0521205FCADA00AD1DBA /* ControllerSupport.m */; };
+		DCAF13E620530BE100896C35 /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAF13E120530BE100896C35 /* StreamView.m */; };
+		DCC01DF12055BD0D00D1D8CE /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC01DEF2055BD0D00D1D8CE /* SettingsViewController.m */; };
+		DCC05DA5205D9DB90011DBBD /* libopus_mac.a in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC62AC28205D9D3800FE4681 /* libopus_mac.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		DCC23C25205DAC5C00BF3C25 /* DataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC23C20205DAC5B00BF3C25 /* DataManager.m */; };
+		DCC23C26205DAC5C00BF3C25 /* Settings.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC23C21205DAC5B00BF3C25 /* Settings.m */; };
+		DCC23C27205DAC5C00BF3C25 /* TemporarySettings.m in Sources */ = {isa = PBXBuildFile; fileRef = DCC23C23205DAC5C00BF3C25 /* TemporarySettings.m */; };
+		DCC23C29205DAEB600BF3C25 /* Mac.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = DCC23C28205DAEB600BF3C25 /* Mac.storyboard */; };
+		DCD464E22053417800CC8950 /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = DCD464E12053417800CC8950 /* StreamFrameViewController.m */; };
+		DCECF432205DBBD200831862 /* libmoonlight-common.a in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DCECF42F205DBBAC00831862 /* libmoonlight-common.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		DC5EF55F2052FBDB00C9BF55 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC5EF53D2052FBDB00C9BF55 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC5EF5442052FBDB00C9BF55;
+			remoteInfo = "Moonlight macOS";
+		};
+		DC5EF56A2052FBDB00C9BF55 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DC5EF53D2052FBDB00C9BF55 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = DC5EF5442052FBDB00C9BF55;
+			remoteInfo = "Moonlight macOS";
+		};
+		DCECF42E205DBBAC00831862 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCECF42A205DBBAB00831862 /* moonlight-common_mac.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FB290E2E19B37A4E004C83CF;
+			remoteInfo = "moonlight-common";
+		};
+		DCECF430205DBBCA00831862 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = DCECF42A205DBBAB00831862 /* moonlight-common_mac.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = FB290E2D19B37A4E004C83CF;
+			remoteInfo = "moonlight-common";
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		DC39118B2057DCDC001F895F /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				DCECF432205DBBD200831862 /* libmoonlight-common.a in Embed Frameworks */,
+				DCC05DA5205D9DB90011DBBD /* libopus_mac.a in Embed Frameworks */,
+				DC7029D5205B28340016D44B /* LICENSE.txt in Embed Frameworks */,
+				DC38D549205AD9860045FE93 /* libstem_gamepad.a in Embed Frameworks */,
+				DC39118D2057DD38001F895F /* libxml2.tbd in Embed Frameworks */,
+				DC39118F2057DD38001F895F /* libcrypto.a in Embed Frameworks */,
+				DC3911902057DD38001F895F /* libssl.a in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		DC0F7506205C04A90087B187 /* keepAlive.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = keepAlive.h; sourceTree = "<group>"; };
+		DC0F7507205C04A90087B187 /* keepAlive.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = keepAlive.m; sourceTree = "<group>"; };
+		DC153B34205A990800E7559B /* Moonlight macOS-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "Moonlight macOS-Bridging-Header.h"; sourceTree = "<group>"; };
+		DC2634D3205438DC00D44F88 /* keyboardTranslation.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = keyboardTranslation.m; sourceTree = "<group>"; };
+		DC2634D5205438FD00D44F88 /* keyboardTranslation.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = keyboardTranslation.h; sourceTree = "<group>"; };
+		DC2F16FE205DA33800C3021E /* App+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "App+CoreDataProperties.h"; sourceTree = "<group>"; };
+		DC2F1700205DA33800C3021E /* Host.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Host.h; sourceTree = "<group>"; };
+		DC2F1702205DA33800C3021E /* TemporaryApp.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TemporaryApp.m; sourceTree = "<group>"; };
+		DC2F1703205DA33800C3021E /* TemporaryHost.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TemporaryHost.m; sourceTree = "<group>"; };
+		DC2F1705205DA33800C3021E /* Host+CoreDataProperties.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = "Host+CoreDataProperties.h"; sourceTree = "<group>"; };
+		DC2F1706205DA33800C3021E /* App.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = App.h; sourceTree = "<group>"; };
+		DC2F1708205DA33800C3021E /* Host.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Host.m; sourceTree = "<group>"; };
+		DC2F170B205DA33800C3021E /* TemporaryHost.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TemporaryHost.h; sourceTree = "<group>"; };
+		DC2F170C205DA33800C3021E /* TemporaryApp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TemporaryApp.h; sourceTree = "<group>"; };
+		DC2F170D205DA33800C3021E /* App.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = App.m; sourceTree = "<group>"; };
+		DC2F1716205DA35700C3021E /* mkcert.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = mkcert.h; sourceTree = "<group>"; };
+		DC2F1717205DA35700C3021E /* IdManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IdManager.h; sourceTree = "<group>"; };
+		DC2F1718205DA35700C3021E /* CryptoManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CryptoManager.h; sourceTree = "<group>"; };
+		DC2F1719205DA35700C3021E /* IdManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = IdManager.m; sourceTree = "<group>"; };
+		DC2F171A205DA35700C3021E /* mkcert.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = mkcert.c; sourceTree = "<group>"; };
+		DC2F171B205DA35700C3021E /* CryptoManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CryptoManager.m; sourceTree = "<group>"; };
+		DC2F171D205DA35700C3021E /* WakeOnLanManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WakeOnLanManager.m; sourceTree = "<group>"; };
+		DC2F171E205DA35700C3021E /* ServerInfoResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ServerInfoResponse.m; sourceTree = "<group>"; };
+		DC2F171F205DA35700C3021E /* HttpResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HttpResponse.m; sourceTree = "<group>"; };
+		DC2F1720205DA35700C3021E /* HttpManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpManager.h; sourceTree = "<group>"; };
+		DC2F1721205DA35700C3021E /* DiscoveryWorker.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiscoveryWorker.m; sourceTree = "<group>"; };
+		DC2F1722205DA35700C3021E /* PairManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PairManager.h; sourceTree = "<group>"; };
+		DC2F1723205DA35700C3021E /* MDNSManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = MDNSManager.m; sourceTree = "<group>"; };
+		DC2F1724205DA35700C3021E /* AppAssetRetriever.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppAssetRetriever.h; sourceTree = "<group>"; };
+		DC2F1725205DA35700C3021E /* AppAssetManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppAssetManager.m; sourceTree = "<group>"; };
+		DC2F1726205DA35700C3021E /* HttpRequest.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HttpRequest.m; sourceTree = "<group>"; };
+		DC2F1727205DA35700C3021E /* AppAssetResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppAssetResponse.m; sourceTree = "<group>"; };
+		DC2F1728205DA35700C3021E /* AppListResponse.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppListResponse.m; sourceTree = "<group>"; };
+		DC2F1729205DA35700C3021E /* DiscoveryManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DiscoveryManager.m; sourceTree = "<group>"; };
+		DC2F172A205DA35700C3021E /* ServerInfoResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ServerInfoResponse.h; sourceTree = "<group>"; };
+		DC2F172B205DA35700C3021E /* WakeOnLanManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WakeOnLanManager.h; sourceTree = "<group>"; };
+		DC2F172C205DA35700C3021E /* DiscoveryWorker.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscoveryWorker.h; sourceTree = "<group>"; };
+		DC2F172D205DA35700C3021E /* HttpManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = HttpManager.m; sourceTree = "<group>"; };
+		DC2F172E205DA35700C3021E /* HttpResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpResponse.h; sourceTree = "<group>"; };
+		DC2F172F205DA35700C3021E /* AppAssetResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppAssetResponse.h; sourceTree = "<group>"; };
+		DC2F1730205DA35700C3021E /* HttpRequest.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = HttpRequest.h; sourceTree = "<group>"; };
+		DC2F1731205DA35700C3021E /* AppAssetManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppAssetManager.h; sourceTree = "<group>"; };
+		DC2F1732205DA35700C3021E /* AppAssetRetriever.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = AppAssetRetriever.m; sourceTree = "<group>"; };
+		DC2F1733205DA35700C3021E /* MDNSManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MDNSManager.h; sourceTree = "<group>"; };
+		DC2F1734205DA35700C3021E /* PairManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PairManager.m; sourceTree = "<group>"; };
+		DC2F1735205DA35700C3021E /* DiscoveryManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DiscoveryManager.h; sourceTree = "<group>"; };
+		DC2F1736205DA35700C3021E /* AppListResponse.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppListResponse.h; sourceTree = "<group>"; };
+		DC2F174A205DA39600C3021E /* Utils.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Utils.m; path = Limelight/Utility/Utils.m; sourceTree = SOURCE_ROOT; };
+		DC2F174B205DA39600C3021E /* Logger.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Logger.h; path = Limelight/Utility/Logger.h; sourceTree = SOURCE_ROOT; };
+		DC2F174C205DA39600C3021E /* Logger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Logger.m; path = Limelight/Utility/Logger.m; sourceTree = SOURCE_ROOT; };
+		DC2F174D205DA39600C3021E /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = Limelight/Utility/Utils.h; sourceTree = SOURCE_ROOT; };
+		DC2F1751205DA48D00C3021E /* Limelight-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Limelight-Prefix.pch"; path = "Limelight/Limelight-Prefix.pch"; sourceTree = SOURCE_ROOT; };
+		DC38D53E205ACC360045FE93 /* Control.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Control.h; sourceTree = "<group>"; };
+		DC38D53F205ACC360045FE93 /* Control.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Control.m; sourceTree = "<group>"; };
+		DC38D544205AD8D00045FE93 /* libstem_gamepad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libstem_gamepad.a; sourceTree = "<group>"; };
+		DC38D547205AD8D00045FE93 /* Gamepad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Gamepad.h; sourceTree = "<group>"; };
+		DC390F2B2053E5BE0047EA70 /* Moonlight macOS.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = "Moonlight macOS.entitlements"; sourceTree = "<group>"; };
+		DC4522D220531714003A7AF4 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
+		DC4522D320531714003A7AF4 /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
+		DC4522D420531714003A7AF4 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
+		DC4522D520531714003A7AF4 /* CoreFoundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreFoundation.framework; path = System/Library/Frameworks/CoreFoundation.framework; sourceTree = SDKROOT; };
+		DC4522D620531714003A7AF4 /* CoreGraphics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreGraphics.framework; path = System/Library/Frameworks/CoreGraphics.framework; sourceTree = SDKROOT; };
+		DC5EF5452052FBDB00C9BF55 /* Moonlight macOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Moonlight macOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC5EF54B2052FBDB00C9BF55 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		DC5EF54C2052FBDB00C9BF55 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		DC5EF5512052FBDB00C9BF55 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		DC5EF5562052FBDB00C9BF55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DC5EF5572052FBDB00C9BF55 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		DC5EF55E2052FBDB00C9BF55 /* Moonlight macOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Moonlight macOSTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC5EF5622052FBDB00C9BF55 /* Moonlight_macOSTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Moonlight_macOSTests.m; sourceTree = "<group>"; };
+		DC5EF5642052FBDB00C9BF55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DC5EF5692052FBDB00C9BF55 /* Moonlight macOSUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "Moonlight macOSUITests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
+		DC5EF56D2052FBDB00C9BF55 /* Moonlight_macOSUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Moonlight_macOSUITests.m; sourceTree = "<group>"; };
+		DC5EF56F2052FBDB00C9BF55 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		DC5EF5CE2052FC8B00C9BF55 /* opus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus.h; sourceTree = "<group>"; };
+		DC5EF5CF2052FC8B00C9BF55 /* opus_multistream.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus_multistream.h; sourceTree = "<group>"; };
+		DC5EF5D02052FC8B00C9BF55 /* opus_types.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus_types.h; sourceTree = "<group>"; };
+		DC5EF5D12052FC8B00C9BF55 /* opus_defines.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opus_defines.h; sourceTree = "<group>"; };
+		DC5EF5D72052FC8B00C9BF55 /* pem2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pem2.h; sourceTree = "<group>"; };
+		DC5EF5D82052FC8B00C9BF55 /* pem.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pem.h; sourceTree = "<group>"; };
+		DC5EF5D92052FC8B00C9BF55 /* ssl3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssl3.h; sourceTree = "<group>"; };
+		DC5EF5DA2052FC8B00C9BF55 /* ossl_typ.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ossl_typ.h; sourceTree = "<group>"; };
+		DC5EF5DB2052FC8B00C9BF55 /* dtls1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dtls1.h; sourceTree = "<group>"; };
+		DC5EF5DC2052FC8B00C9BF55 /* err.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = err.h; sourceTree = "<group>"; };
+		DC5EF5DD2052FC8B00C9BF55 /* bn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bn.h; sourceTree = "<group>"; };
+		DC5EF5DE2052FC8B00C9BF55 /* blowfish.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = blowfish.h; sourceTree = "<group>"; };
+		DC5EF5DF2052FC8B00C9BF55 /* cms.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cms.h; sourceTree = "<group>"; };
+		DC5EF5E02052FC8B00C9BF55 /* engine.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = engine.h; sourceTree = "<group>"; };
+		DC5EF5E12052FC8B00C9BF55 /* conf_api.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = conf_api.h; sourceTree = "<group>"; };
+		DC5EF5E22052FC8B00C9BF55 /* x509.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509.h; sourceTree = "<group>"; };
+		DC5EF5E32052FC8B00C9BF55 /* asn1_mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1_mac.h; sourceTree = "<group>"; };
+		DC5EF5E42052FC8B00C9BF55 /* ui.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui.h; sourceTree = "<group>"; };
+		DC5EF5E52052FC8B00C9BF55 /* kssl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = kssl.h; sourceTree = "<group>"; };
+		DC5EF5E62052FC8B00C9BF55 /* sha.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = sha.h; sourceTree = "<group>"; };
+		DC5EF5E72052FC8B00C9BF55 /* symhacks.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = symhacks.h; sourceTree = "<group>"; };
+		DC5EF5E82052FC8B00C9BF55 /* asn1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1.h; sourceTree = "<group>"; };
+		DC5EF5E92052FC8B00C9BF55 /* opensslconf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opensslconf.h; sourceTree = "<group>"; };
+		DC5EF5EA2052FC8B00C9BF55 /* bio.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = bio.h; sourceTree = "<group>"; };
+		DC5EF5EB2052FC8B00C9BF55 /* rc2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rc2.h; sourceTree = "<group>"; };
+		DC5EF5EC2052FC8B00C9BF55 /* dh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dh.h; sourceTree = "<group>"; };
+		DC5EF5ED2052FC8B00C9BF55 /* ui_compat.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ui_compat.h; sourceTree = "<group>"; };
+		DC5EF5EE2052FC8B00C9BF55 /* x509v3.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509v3.h; sourceTree = "<group>"; };
+		DC5EF5EF2052FC8B00C9BF55 /* ssl23.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssl23.h; sourceTree = "<group>"; };
+		DC5EF5F02052FC8B00C9BF55 /* conf.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = conf.h; sourceTree = "<group>"; };
+		DC5EF5F12052FC8B00C9BF55 /* md5.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = md5.h; sourceTree = "<group>"; };
+		DC5EF5F22052FC8B00C9BF55 /* x509_vfy.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = x509_vfy.h; sourceTree = "<group>"; };
+		DC5EF5F32052FC8B00C9BF55 /* txt_db.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = txt_db.h; sourceTree = "<group>"; };
+		DC5EF5F42052FC8B00C9BF55 /* safestack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = safestack.h; sourceTree = "<group>"; };
+		DC5EF5F52052FC8B00C9BF55 /* ecdsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ecdsa.h; sourceTree = "<group>"; };
+		DC5EF5F62052FC8B00C9BF55 /* objects.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = objects.h; sourceTree = "<group>"; };
+		DC5EF5F72052FC8B00C9BF55 /* pkcs12.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs12.h; sourceTree = "<group>"; };
+		DC5EF5F82052FC8B00C9BF55 /* crypto.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = crypto.h; sourceTree = "<group>"; };
+		DC5EF5F92052FC8B00C9BF55 /* opensslv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = opensslv.h; sourceTree = "<group>"; };
+		DC5EF5FA2052FC8B00C9BF55 /* pkcs7.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pkcs7.h; sourceTree = "<group>"; };
+		DC5EF5FB2052FC8B00C9BF55 /* obj_mac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = obj_mac.h; sourceTree = "<group>"; };
+		DC5EF5FC2052FC8B00C9BF55 /* buffer.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = buffer.h; sourceTree = "<group>"; };
+		DC5EF5FD2052FC8B00C9BF55 /* ssl.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssl.h; sourceTree = "<group>"; };
+		DC5EF5FE2052FC8B00C9BF55 /* srp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = srp.h; sourceTree = "<group>"; };
+		DC5EF5FF2052FC8B00C9BF55 /* camellia.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = camellia.h; sourceTree = "<group>"; };
+		DC5EF6002052FC8B00C9BF55 /* evp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = evp.h; sourceTree = "<group>"; };
+		DC5EF6012052FC8B00C9BF55 /* e_os2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = e_os2.h; sourceTree = "<group>"; };
+		DC5EF6022052FC8B00C9BF55 /* md4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = md4.h; sourceTree = "<group>"; };
+		DC5EF6032052FC8B00C9BF55 /* hmac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = hmac.h; sourceTree = "<group>"; };
+		DC5EF6042052FC8B00C9BF55 /* aes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = aes.h; sourceTree = "<group>"; };
+		DC5EF6052052FC8B00C9BF55 /* comp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = comp.h; sourceTree = "<group>"; };
+		DC5EF6062052FC8B00C9BF55 /* cast.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cast.h; sourceTree = "<group>"; };
+		DC5EF6072052FC8B00C9BF55 /* rc4.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rc4.h; sourceTree = "<group>"; };
+		DC5EF6082052FC8B00C9BF55 /* stack.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = stack.h; sourceTree = "<group>"; };
+		DC5EF6092052FC8B00C9BF55 /* des.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = des.h; sourceTree = "<group>"; };
+		DC5EF60A2052FC8B00C9BF55 /* ocsp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ocsp.h; sourceTree = "<group>"; };
+		DC5EF60B2052FC8B00C9BF55 /* ec.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ec.h; sourceTree = "<group>"; };
+		DC5EF60C2052FC8B00C9BF55 /* ecdh.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ecdh.h; sourceTree = "<group>"; };
+		DC5EF60D2052FC8B00C9BF55 /* rand.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rand.h; sourceTree = "<group>"; };
+		DC5EF60E2052FC8B00C9BF55 /* ts.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ts.h; sourceTree = "<group>"; };
+		DC5EF60F2052FC8B00C9BF55 /* pqueue.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = pqueue.h; sourceTree = "<group>"; };
+		DC5EF6102052FC8B00C9BF55 /* dso.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dso.h; sourceTree = "<group>"; };
+		DC5EF6112052FC8B00C9BF55 /* seed.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = seed.h; sourceTree = "<group>"; };
+		DC5EF6122052FC8B00C9BF55 /* modes.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = modes.h; sourceTree = "<group>"; };
+		DC5EF6132052FC8B00C9BF55 /* ssl2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ssl2.h; sourceTree = "<group>"; };
+		DC5EF6142052FC8B00C9BF55 /* rsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = rsa.h; sourceTree = "<group>"; };
+		DC5EF6152052FC8B00C9BF55 /* krb5_asn.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = krb5_asn.h; sourceTree = "<group>"; };
+		DC5EF6162052FC8B00C9BF55 /* des_old.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = des_old.h; sourceTree = "<group>"; };
+		DC5EF6172052FC8B00C9BF55 /* ripemd.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ripemd.h; sourceTree = "<group>"; };
+		DC5EF6182052FC8B00C9BF55 /* whrlpool.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = whrlpool.h; sourceTree = "<group>"; };
+		DC5EF6192052FC8B00C9BF55 /* tls1.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = tls1.h; sourceTree = "<group>"; };
+		DC5EF61A2052FC8B00C9BF55 /* mdc2.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = mdc2.h; sourceTree = "<group>"; };
+		DC5EF61B2052FC8B00C9BF55 /* dsa.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = dsa.h; sourceTree = "<group>"; };
+		DC5EF61C2052FC8B00C9BF55 /* srtp.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = srtp.h; sourceTree = "<group>"; };
+		DC5EF61D2052FC8B00C9BF55 /* asn1t.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = asn1t.h; sourceTree = "<group>"; };
+		DC5EF61E2052FC8B00C9BF55 /* cmac.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = cmac.h; sourceTree = "<group>"; };
+		DC5EF61F2052FC8B00C9BF55 /* ebcdic.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ebcdic.h; sourceTree = "<group>"; };
+		DC5EF6202052FC8B00C9BF55 /* idea.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = idea.h; sourceTree = "<group>"; };
+		DC5EF6212052FC8B00C9BF55 /* lhash.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = lhash.h; sourceTree = "<group>"; };
+		DC5EF6232052FC8B00C9BF55 /* libcrypto.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libcrypto.a; sourceTree = "<group>"; };
+		DC5EF6242052FC8B00C9BF55 /* libssl.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libssl.a; sourceTree = "<group>"; };
+		DC5FA8F4205DBEE3008B7054 /* Connection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Connection.h; sourceTree = "<group>"; };
+		DC5FA8F5205DBEE3008B7054 /* StreamManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamManager.h; sourceTree = "<group>"; };
+		DC5FA8F6205DBEE3008B7054 /* StreamConfiguration.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamConfiguration.m; sourceTree = "<group>"; };
+		DC5FA8F7205DBEE3008B7054 /* VideoDecoderRenderer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VideoDecoderRenderer.h; sourceTree = "<group>"; };
+		DC5FA8F8205DBEE3008B7054 /* StreamManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamManager.m; sourceTree = "<group>"; };
+		DC5FA8F9205DBEE3008B7054 /* Connection.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Connection.m; sourceTree = "<group>"; };
+		DC5FA8FA205DBEE3008B7054 /* StreamConfiguration.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamConfiguration.h; sourceTree = "<group>"; };
+		DC5FA8FB205DBEE3008B7054 /* VideoDecoderRenderer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = VideoDecoderRenderer.m; sourceTree = "<group>"; };
+		DC62AC28205D9D3800FE4681 /* libopus_mac.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libopus_mac.a; sourceTree = "<group>"; };
+		DC6A60842064298700A0673D /* ConnectionHelper.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ConnectionHelper.h; sourceTree = "<group>"; };
+		DC6A60852064299700A0673D /* ConnectionHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConnectionHelper.m; sourceTree = "<group>"; };
+		DC7029D4205B28340016D44B /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
+		DC9CD51E20601658001A5DCD /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = Limelight/AppDelegate.m; sourceTree = SOURCE_ROOT; };
+		DCAF04FD205F38B100AD1DBA /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = Limelight/AppDelegate.h; sourceTree = SOURCE_ROOT; };
+		DCAF0517205F3E6A00AD1DBA /* Limelight.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Limelight.xcdatamodel; sourceTree = "<group>"; };
+		DCAF0518205F3E6A00AD1DBA /* Moonlight v1.0-2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Moonlight v1.0-2.xcdatamodel"; sourceTree = "<group>"; };
+		DCAF0519205F3E6A00AD1DBA /* Limelight 0.3.1.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Limelight 0.3.1.xcdatamodel"; sourceTree = "<group>"; };
+		DCAF051A205F3E6A00AD1DBA /* Moonlight v1.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Moonlight v1.0.xcdatamodel"; sourceTree = "<group>"; };
+		DCAF051B205F3E6A00AD1DBA /* Limelight 0.3.0.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Limelight 0.3.0.xcdatamodel"; sourceTree = "<group>"; };
+		DCAF051F205FCADA00AD1DBA /* Controller.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Controller.swift; path = Limelight/Input/Controller.swift; sourceTree = SOURCE_ROOT; };
+		DCAF0520205FCADA00AD1DBA /* ControllerSupport.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ControllerSupport.h; path = Limelight/Input/ControllerSupport.h; sourceTree = SOURCE_ROOT; };
+		DCAF0521205FCADA00AD1DBA /* ControllerSupport.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = ControllerSupport.m; path = Limelight/Input/ControllerSupport.m; sourceTree = SOURCE_ROOT; };
+		DCAF13D72053059C00896C35 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = usr/lib/libxml2.tbd; sourceTree = SDKROOT; };
+		DCAF13DD20530BE100896C35 /* StreamView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = StreamView.h; sourceTree = "<group>"; };
+		DCAF13E120530BE100896C35 /* StreamView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = StreamView.m; sourceTree = "<group>"; };
+		DCC01DEE2055BD0D00D1D8CE /* SettingsViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
+		DCC01DEF2055BD0D00D1D8CE /* SettingsViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
+		DCC23C1F205DAC5B00BF3C25 /* Settings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Settings.h; sourceTree = "<group>"; };
+		DCC23C20205DAC5B00BF3C25 /* DataManager.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DataManager.m; sourceTree = "<group>"; };
+		DCC23C21205DAC5B00BF3C25 /* Settings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Settings.m; sourceTree = "<group>"; };
+		DCC23C22205DAC5C00BF3C25 /* TemporarySettings.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TemporarySettings.h; sourceTree = "<group>"; };
+		DCC23C23205DAC5C00BF3C25 /* TemporarySettings.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TemporarySettings.m; sourceTree = "<group>"; };
+		DCC23C24205DAC5C00BF3C25 /* DataManager.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DataManager.h; sourceTree = "<group>"; };
+		DCC23C28205DAEB600BF3C25 /* Mac.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; path = Mac.storyboard; sourceTree = SOURCE_ROOT; };
+		DCD464E02053417800CC8950 /* StreamFrameViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = StreamFrameViewController.h; sourceTree = "<group>"; };
+		DCD464E12053417800CC8950 /* StreamFrameViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = StreamFrameViewController.m; sourceTree = "<group>"; };
+		DCECF42A205DBBAB00831862 /* moonlight-common_mac.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "moonlight-common_mac.xcodeproj"; path = "moonlight-common/moonlight-common_mac.xcodeproj"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		DC5EF5422052FBDB00C9BF55 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC5FA900205DC0AF008B7054 /* libmoonlight-common.a in Frameworks */,
+				DC38D548205AD8D00045FE93 /* libstem_gamepad.a in Frameworks */,
+				DC3911882057D650001F895F /* libxml2.tbd in Frameworks */,
+				DC4522D720531714003A7AF4 /* CoreData.framework in Frameworks */,
+				DC4522D820531714003A7AF4 /* AppKit.framework in Frameworks */,
+				DC4522D920531714003A7AF4 /* Foundation.framework in Frameworks */,
+				DC4522DA20531714003A7AF4 /* CoreFoundation.framework in Frameworks */,
+				DC4522DB20531714003A7AF4 /* CoreGraphics.framework in Frameworks */,
+				DC4522D0205316D8003A7AF4 /* libcrypto.a in Frameworks */,
+				DC62AC29205D9D3800FE4681 /* libopus_mac.a in Frameworks */,
+				DC4522D1205316D8003A7AF4 /* libssl.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC5EF55B2052FBDB00C9BF55 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC5EF5662052FBDB00C9BF55 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		DC2F16FD205DA33800C3021E /* Database */ = {
+			isa = PBXGroup;
+			children = (
+				DCC23C24205DAC5C00BF3C25 /* DataManager.h */,
+				DCC23C20205DAC5B00BF3C25 /* DataManager.m */,
+				DCC23C1F205DAC5B00BF3C25 /* Settings.h */,
+				DCC23C21205DAC5B00BF3C25 /* Settings.m */,
+				DCC23C22205DAC5C00BF3C25 /* TemporarySettings.h */,
+				DCC23C23205DAC5C00BF3C25 /* TemporarySettings.m */,
+				DC2F16FE205DA33800C3021E /* App+CoreDataProperties.h */,
+				DC2F1700205DA33800C3021E /* Host.h */,
+				DC2F1702205DA33800C3021E /* TemporaryApp.m */,
+				DC2F1703205DA33800C3021E /* TemporaryHost.m */,
+				DC2F1705205DA33800C3021E /* Host+CoreDataProperties.h */,
+				DC2F1706205DA33800C3021E /* App.h */,
+				DC2F1708205DA33800C3021E /* Host.m */,
+				DC2F170B205DA33800C3021E /* TemporaryHost.h */,
+				DC2F170C205DA33800C3021E /* TemporaryApp.h */,
+				DC2F170D205DA33800C3021E /* App.m */,
+			);
+			name = Database;
+			path = Limelight/Database;
+			sourceTree = SOURCE_ROOT;
+		};
+		DC2F1715205DA35700C3021E /* Crypto */ = {
+			isa = PBXGroup;
+			children = (
+				DC2F1716205DA35700C3021E /* mkcert.h */,
+				DC2F1717205DA35700C3021E /* IdManager.h */,
+				DC2F1718205DA35700C3021E /* CryptoManager.h */,
+				DC2F1719205DA35700C3021E /* IdManager.m */,
+				DC2F171A205DA35700C3021E /* mkcert.c */,
+				DC2F171B205DA35700C3021E /* CryptoManager.m */,
+			);
+			name = Crypto;
+			path = Limelight/Crypto;
+			sourceTree = SOURCE_ROOT;
+		};
+		DC2F171C205DA35700C3021E /* Network */ = {
+			isa = PBXGroup;
+			children = (
+				DC2F171D205DA35700C3021E /* WakeOnLanManager.m */,
+				DC2F171E205DA35700C3021E /* ServerInfoResponse.m */,
+				DC2F171F205DA35700C3021E /* HttpResponse.m */,
+				DC2F1720205DA35700C3021E /* HttpManager.h */,
+				DC2F1721205DA35700C3021E /* DiscoveryWorker.m */,
+				DC2F1722205DA35700C3021E /* PairManager.h */,
+				DC2F1723205DA35700C3021E /* MDNSManager.m */,
+				DC2F1724205DA35700C3021E /* AppAssetRetriever.h */,
+				DC2F1725205DA35700C3021E /* AppAssetManager.m */,
+				DC2F1726205DA35700C3021E /* HttpRequest.m */,
+				DC2F1727205DA35700C3021E /* AppAssetResponse.m */,
+				DC2F1728205DA35700C3021E /* AppListResponse.m */,
+				DC2F1729205DA35700C3021E /* DiscoveryManager.m */,
+				DC2F172A205DA35700C3021E /* ServerInfoResponse.h */,
+				DC2F172B205DA35700C3021E /* WakeOnLanManager.h */,
+				DC2F172C205DA35700C3021E /* DiscoveryWorker.h */,
+				DC2F172D205DA35700C3021E /* HttpManager.m */,
+				DC2F172E205DA35700C3021E /* HttpResponse.h */,
+				DC2F172F205DA35700C3021E /* AppAssetResponse.h */,
+				DC2F1730205DA35700C3021E /* HttpRequest.h */,
+				DC2F1731205DA35700C3021E /* AppAssetManager.h */,
+				DC2F1732205DA35700C3021E /* AppAssetRetriever.m */,
+				DC2F1733205DA35700C3021E /* MDNSManager.h */,
+				DC2F1734205DA35700C3021E /* PairManager.m */,
+				DC2F1735205DA35700C3021E /* DiscoveryManager.h */,
+				DC2F1736205DA35700C3021E /* AppListResponse.h */,
+				DC6A60842064298700A0673D /* ConnectionHelper.h */,
+				DC6A60852064299700A0673D /* ConnectionHelper.m */,
+			);
+			name = Network;
+			path = Limelight/Network;
+			sourceTree = SOURCE_ROOT;
+		};
+		DC38D543205AD8D00045FE93 /* gamepad */ = {
+			isa = PBXGroup;
+			children = (
+				DC7029D4205B28340016D44B /* LICENSE.txt */,
+				DC38D544205AD8D00045FE93 /* libstem_gamepad.a */,
+				DC38D545205AD8D00045FE93 /* include */,
+			);
+			path = gamepad;
+			sourceTree = "<group>";
+		};
+		DC38D545205AD8D00045FE93 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				DC38D546205AD8D00045FE93 /* gamepad */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		DC38D546205AD8D00045FE93 /* gamepad */ = {
+			isa = PBXGroup;
+			children = (
+				DC38D547205AD8D00045FE93 /* Gamepad.h */,
+			);
+			path = gamepad;
+			sourceTree = "<group>";
+		};
+		DC5EF53C2052FBDB00C9BF55 = {
+			isa = PBXGroup;
+			children = (
+				DCECF42A205DBBAB00831862 /* moonlight-common_mac.xcodeproj */,
+				DC5EF5472052FBDB00C9BF55 /* Moonlight macOS */,
+				DC5EF5612052FBDB00C9BF55 /* Moonlight macOSTests */,
+				DC5EF56C2052FBDB00C9BF55 /* Moonlight macOSUITests */,
+				DC5EF5462052FBDB00C9BF55 /* Products */,
+				DC5EF5C92052FC8B00C9BF55 /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		DC5EF5462052FBDB00C9BF55 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5452052FBDB00C9BF55 /* Moonlight macOS.app */,
+				DC5EF55E2052FBDB00C9BF55 /* Moonlight macOSTests.xctest */,
+				DC5EF5692052FBDB00C9BF55 /* Moonlight macOSUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		DC5EF5472052FBDB00C9BF55 /* Moonlight macOS */ = {
+			isa = PBXGroup;
+			children = (
+				DC9CD51E20601658001A5DCD /* AppDelegate.m */,
+				DCAF0516205F3E6A00AD1DBA /* Limelight.xcdatamodeld */,
+				DCAF04FD205F38B100AD1DBA /* AppDelegate.h */,
+				DC5FA8F3205DBEE3008B7054 /* Stream */,
+				DCC23C28205DAEB600BF3C25 /* Mac.storyboard */,
+				DC2F1751205DA48D00C3021E /* Limelight-Prefix.pch */,
+				DC2F1715205DA35700C3021E /* Crypto */,
+				DC2F171C205DA35700C3021E /* Network */,
+				DC2F16FD205DA33800C3021E /* Database */,
+				DC390F2B2053E5BE0047EA70 /* Moonlight macOS.entitlements */,
+				DCD464DD2053413000CC8950 /* ViewController */,
+				DCAF13DB20530BE100896C35 /* Input */,
+				DC5EF5962052FC4300C9BF55 /* Utility */,
+				DC5EF5512052FBDB00C9BF55 /* Assets.xcassets */,
+				DC5EF5562052FBDB00C9BF55 /* Info.plist */,
+				DC5EF5572052FBDB00C9BF55 /* main.m */,
+			);
+			path = "Moonlight macOS";
+			sourceTree = "<group>";
+		};
+		DC5EF5612052FBDB00C9BF55 /* Moonlight macOSTests */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5622052FBDB00C9BF55 /* Moonlight_macOSTests.m */,
+				DC5EF5642052FBDB00C9BF55 /* Info.plist */,
+			);
+			path = "Moonlight macOSTests";
+			sourceTree = "<group>";
+		};
+		DC5EF56C2052FBDB00C9BF55 /* Moonlight macOSUITests */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF56D2052FBDB00C9BF55 /* Moonlight_macOSUITests.m */,
+				DC5EF56F2052FBDB00C9BF55 /* Info.plist */,
+			);
+			path = "Moonlight macOSUITests";
+			sourceTree = "<group>";
+		};
+		DC5EF5962052FC4300C9BF55 /* Utility */ = {
+			isa = PBXGroup;
+			children = (
+				DC2F174B205DA39600C3021E /* Logger.h */,
+				DC2F174C205DA39600C3021E /* Logger.m */,
+				DC2F174D205DA39600C3021E /* Utils.h */,
+				DC2F174A205DA39600C3021E /* Utils.m */,
+				DC0F7506205C04A90087B187 /* keepAlive.h */,
+				DC0F7507205C04A90087B187 /* keepAlive.m */,
+				DC2634D3205438DC00D44F88 /* keyboardTranslation.m */,
+				DC2634D5205438FD00D44F88 /* keyboardTranslation.h */,
+			);
+			path = Utility;
+			sourceTree = "<group>";
+		};
+		DC5EF5C92052FC8B00C9BF55 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				DC4522D320531714003A7AF4 /* AppKit.framework */,
+				DC4522D220531714003A7AF4 /* CoreData.framework */,
+				DC4522D520531714003A7AF4 /* CoreFoundation.framework */,
+				DC4522D620531714003A7AF4 /* CoreGraphics.framework */,
+				DC4522D420531714003A7AF4 /* Foundation.framework */,
+				DCAF13D72053059C00896C35 /* libxml2.tbd */,
+				DC5EF5CA2052FC8B00C9BF55 /* libs */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		DC5EF5CA2052FC8B00C9BF55 /* libs */ = {
+			isa = PBXGroup;
+			children = (
+				DC38D543205AD8D00045FE93 /* gamepad */,
+				DC5EF5CB2052FC8B00C9BF55 /* opus */,
+				DC5EF5D42052FC8B00C9BF55 /* openssl */,
+			);
+			path = libs;
+			sourceTree = "<group>";
+		};
+		DC5EF5CB2052FC8B00C9BF55 /* opus */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5CC2052FC8B00C9BF55 /* include */,
+				DC5EF5D22052FC8B00C9BF55 /* lib */,
+			);
+			path = opus;
+			sourceTree = "<group>";
+		};
+		DC5EF5CC2052FC8B00C9BF55 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5CD2052FC8B00C9BF55 /* opus */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		DC5EF5CD2052FC8B00C9BF55 /* opus */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5CE2052FC8B00C9BF55 /* opus.h */,
+				DC5EF5CF2052FC8B00C9BF55 /* opus_multistream.h */,
+				DC5EF5D02052FC8B00C9BF55 /* opus_types.h */,
+				DC5EF5D12052FC8B00C9BF55 /* opus_defines.h */,
+			);
+			path = opus;
+			sourceTree = "<group>";
+		};
+		DC5EF5D22052FC8B00C9BF55 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				DC62AC28205D9D3800FE4681 /* libopus_mac.a */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		DC5EF5D42052FC8B00C9BF55 /* openssl */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5D52052FC8B00C9BF55 /* include */,
+				DC5EF6222052FC8B00C9BF55 /* lib */,
+			);
+			path = openssl;
+			sourceTree = "<group>";
+		};
+		DC5EF5D52052FC8B00C9BF55 /* include */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5D62052FC8B00C9BF55 /* openssl */,
+			);
+			path = include;
+			sourceTree = "<group>";
+		};
+		DC5EF5D62052FC8B00C9BF55 /* openssl */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF5D72052FC8B00C9BF55 /* pem2.h */,
+				DC5EF5D82052FC8B00C9BF55 /* pem.h */,
+				DC5EF5D92052FC8B00C9BF55 /* ssl3.h */,
+				DC5EF5DA2052FC8B00C9BF55 /* ossl_typ.h */,
+				DC5EF5DB2052FC8B00C9BF55 /* dtls1.h */,
+				DC5EF5DC2052FC8B00C9BF55 /* err.h */,
+				DC5EF5DD2052FC8B00C9BF55 /* bn.h */,
+				DC5EF5DE2052FC8B00C9BF55 /* blowfish.h */,
+				DC5EF5DF2052FC8B00C9BF55 /* cms.h */,
+				DC5EF5E02052FC8B00C9BF55 /* engine.h */,
+				DC5EF5E12052FC8B00C9BF55 /* conf_api.h */,
+				DC5EF5E22052FC8B00C9BF55 /* x509.h */,
+				DC5EF5E32052FC8B00C9BF55 /* asn1_mac.h */,
+				DC5EF5E42052FC8B00C9BF55 /* ui.h */,
+				DC5EF5E52052FC8B00C9BF55 /* kssl.h */,
+				DC5EF5E62052FC8B00C9BF55 /* sha.h */,
+				DC5EF5E72052FC8B00C9BF55 /* symhacks.h */,
+				DC5EF5E82052FC8B00C9BF55 /* asn1.h */,
+				DC5EF5E92052FC8B00C9BF55 /* opensslconf.h */,
+				DC5EF5EA2052FC8B00C9BF55 /* bio.h */,
+				DC5EF5EB2052FC8B00C9BF55 /* rc2.h */,
+				DC5EF5EC2052FC8B00C9BF55 /* dh.h */,
+				DC5EF5ED2052FC8B00C9BF55 /* ui_compat.h */,
+				DC5EF5EE2052FC8B00C9BF55 /* x509v3.h */,
+				DC5EF5EF2052FC8B00C9BF55 /* ssl23.h */,
+				DC5EF5F02052FC8B00C9BF55 /* conf.h */,
+				DC5EF5F12052FC8B00C9BF55 /* md5.h */,
+				DC5EF5F22052FC8B00C9BF55 /* x509_vfy.h */,
+				DC5EF5F32052FC8B00C9BF55 /* txt_db.h */,
+				DC5EF5F42052FC8B00C9BF55 /* safestack.h */,
+				DC5EF5F52052FC8B00C9BF55 /* ecdsa.h */,
+				DC5EF5F62052FC8B00C9BF55 /* objects.h */,
+				DC5EF5F72052FC8B00C9BF55 /* pkcs12.h */,
+				DC5EF5F82052FC8B00C9BF55 /* crypto.h */,
+				DC5EF5F92052FC8B00C9BF55 /* opensslv.h */,
+				DC5EF5FA2052FC8B00C9BF55 /* pkcs7.h */,
+				DC5EF5FB2052FC8B00C9BF55 /* obj_mac.h */,
+				DC5EF5FC2052FC8B00C9BF55 /* buffer.h */,
+				DC5EF5FD2052FC8B00C9BF55 /* ssl.h */,
+				DC5EF5FE2052FC8B00C9BF55 /* srp.h */,
+				DC5EF5FF2052FC8B00C9BF55 /* camellia.h */,
+				DC5EF6002052FC8B00C9BF55 /* evp.h */,
+				DC5EF6012052FC8B00C9BF55 /* e_os2.h */,
+				DC5EF6022052FC8B00C9BF55 /* md4.h */,
+				DC5EF6032052FC8B00C9BF55 /* hmac.h */,
+				DC5EF6042052FC8B00C9BF55 /* aes.h */,
+				DC5EF6052052FC8B00C9BF55 /* comp.h */,
+				DC5EF6062052FC8B00C9BF55 /* cast.h */,
+				DC5EF6072052FC8B00C9BF55 /* rc4.h */,
+				DC5EF6082052FC8B00C9BF55 /* stack.h */,
+				DC5EF6092052FC8B00C9BF55 /* des.h */,
+				DC5EF60A2052FC8B00C9BF55 /* ocsp.h */,
+				DC5EF60B2052FC8B00C9BF55 /* ec.h */,
+				DC5EF60C2052FC8B00C9BF55 /* ecdh.h */,
+				DC5EF60D2052FC8B00C9BF55 /* rand.h */,
+				DC5EF60E2052FC8B00C9BF55 /* ts.h */,
+				DC5EF60F2052FC8B00C9BF55 /* pqueue.h */,
+				DC5EF6102052FC8B00C9BF55 /* dso.h */,
+				DC5EF6112052FC8B00C9BF55 /* seed.h */,
+				DC5EF6122052FC8B00C9BF55 /* modes.h */,
+				DC5EF6132052FC8B00C9BF55 /* ssl2.h */,
+				DC5EF6142052FC8B00C9BF55 /* rsa.h */,
+				DC5EF6152052FC8B00C9BF55 /* krb5_asn.h */,
+				DC5EF6162052FC8B00C9BF55 /* des_old.h */,
+				DC5EF6172052FC8B00C9BF55 /* ripemd.h */,
+				DC5EF6182052FC8B00C9BF55 /* whrlpool.h */,
+				DC5EF6192052FC8B00C9BF55 /* tls1.h */,
+				DC5EF61A2052FC8B00C9BF55 /* mdc2.h */,
+				DC5EF61B2052FC8B00C9BF55 /* dsa.h */,
+				DC5EF61C2052FC8B00C9BF55 /* srtp.h */,
+				DC5EF61D2052FC8B00C9BF55 /* asn1t.h */,
+				DC5EF61E2052FC8B00C9BF55 /* cmac.h */,
+				DC5EF61F2052FC8B00C9BF55 /* ebcdic.h */,
+				DC5EF6202052FC8B00C9BF55 /* idea.h */,
+				DC5EF6212052FC8B00C9BF55 /* lhash.h */,
+			);
+			path = openssl;
+			sourceTree = "<group>";
+		};
+		DC5EF6222052FC8B00C9BF55 /* lib */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF6232052FC8B00C9BF55 /* libcrypto.a */,
+				DC5EF6242052FC8B00C9BF55 /* libssl.a */,
+			);
+			path = lib;
+			sourceTree = "<group>";
+		};
+		DC5FA8F3205DBEE3008B7054 /* Stream */ = {
+			isa = PBXGroup;
+			children = (
+				DC5FA8F4205DBEE3008B7054 /* Connection.h */,
+				DC5FA8F5205DBEE3008B7054 /* StreamManager.h */,
+				DC5FA8F6205DBEE3008B7054 /* StreamConfiguration.m */,
+				DC5FA8F7205DBEE3008B7054 /* VideoDecoderRenderer.h */,
+				DC5FA8F8205DBEE3008B7054 /* StreamManager.m */,
+				DC5FA8F9205DBEE3008B7054 /* Connection.m */,
+				DC5FA8FA205DBEE3008B7054 /* StreamConfiguration.h */,
+				DC5FA8FB205DBEE3008B7054 /* VideoDecoderRenderer.m */,
+			);
+			name = Stream;
+			path = Limelight/Stream;
+			sourceTree = SOURCE_ROOT;
+		};
+		DCAF13DB20530BE100896C35 /* Input */ = {
+			isa = PBXGroup;
+			children = (
+				DCAF051F205FCADA00AD1DBA /* Controller.swift */,
+				DCAF0520205FCADA00AD1DBA /* ControllerSupport.h */,
+				DCAF0521205FCADA00AD1DBA /* ControllerSupport.m */,
+				DCAF13DD20530BE100896C35 /* StreamView.h */,
+				DCAF13E120530BE100896C35 /* StreamView.m */,
+				DC153B34205A990800E7559B /* Moonlight macOS-Bridging-Header.h */,
+				DC38D53E205ACC360045FE93 /* Control.h */,
+				DC38D53F205ACC360045FE93 /* Control.m */,
+			);
+			path = Input;
+			sourceTree = "<group>";
+		};
+		DCD464DD2053413000CC8950 /* ViewController */ = {
+			isa = PBXGroup;
+			children = (
+				DC5EF54B2052FBDB00C9BF55 /* ViewController.h */,
+				DC5EF54C2052FBDB00C9BF55 /* ViewController.m */,
+				DCD464E02053417800CC8950 /* StreamFrameViewController.h */,
+				DCD464E12053417800CC8950 /* StreamFrameViewController.m */,
+				DCC01DEE2055BD0D00D1D8CE /* SettingsViewController.h */,
+				DCC01DEF2055BD0D00D1D8CE /* SettingsViewController.m */,
+			);
+			path = ViewController;
+			sourceTree = "<group>";
+		};
+		DCECF42B205DBBAB00831862 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				DCECF42F205DBBAC00831862 /* libmoonlight-common.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		DC5EF5442052FBDB00C9BF55 /* Moonlight macOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC5EF5722052FBDB00C9BF55 /* Build configuration list for PBXNativeTarget "Moonlight macOS" */;
+			buildPhases = (
+				DC5EF5412052FBDB00C9BF55 /* Sources */,
+				DC5EF5422052FBDB00C9BF55 /* Frameworks */,
+				DC5EF5432052FBDB00C9BF55 /* Resources */,
+				DC39118B2057DCDC001F895F /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DCECF431205DBBCA00831862 /* PBXTargetDependency */,
+			);
+			name = "Moonlight macOS";
+			productName = "Moonlight macOS";
+			productReference = DC5EF5452052FBDB00C9BF55 /* Moonlight macOS.app */;
+			productType = "com.apple.product-type.application";
+		};
+		DC5EF55D2052FBDB00C9BF55 /* Moonlight macOSTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC5EF5752052FBDB00C9BF55 /* Build configuration list for PBXNativeTarget "Moonlight macOSTests" */;
+			buildPhases = (
+				DC5EF55A2052FBDB00C9BF55 /* Sources */,
+				DC5EF55B2052FBDB00C9BF55 /* Frameworks */,
+				DC5EF55C2052FBDB00C9BF55 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DC5EF5602052FBDB00C9BF55 /* PBXTargetDependency */,
+			);
+			name = "Moonlight macOSTests";
+			productName = "Moonlight macOSTests";
+			productReference = DC5EF55E2052FBDB00C9BF55 /* Moonlight macOSTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		DC5EF5682052FBDB00C9BF55 /* Moonlight macOSUITests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = DC5EF5782052FBDB00C9BF55 /* Build configuration list for PBXNativeTarget "Moonlight macOSUITests" */;
+			buildPhases = (
+				DC5EF5652052FBDB00C9BF55 /* Sources */,
+				DC5EF5662052FBDB00C9BF55 /* Frameworks */,
+				DC5EF5672052FBDB00C9BF55 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				DC5EF56B2052FBDB00C9BF55 /* PBXTargetDependency */,
+			);
+			name = "Moonlight macOSUITests";
+			productName = "Moonlight macOSUITests";
+			productReference = DC5EF5692052FBDB00C9BF55 /* Moonlight macOSUITests.xctest */;
+			productType = "com.apple.product-type.bundle.ui-testing";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		DC5EF53D2052FBDB00C9BF55 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0920;
+				ORGANIZATIONNAME = Felix;
+				TargetAttributes = {
+					DC5EF5442052FBDB00C9BF55 = {
+						CreatedOnToolsVersion = 9.2;
+						LastSwiftMigration = 0920;
+						ProvisioningStyle = Automatic;
+						SystemCapabilities = {
+							com.apple.Sandbox = {
+								enabled = 1;
+							};
+						};
+					};
+					DC5EF55D2052FBDB00C9BF55 = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+						TestTargetID = DC5EF5442052FBDB00C9BF55;
+					};
+					DC5EF5682052FBDB00C9BF55 = {
+						CreatedOnToolsVersion = 9.2;
+						ProvisioningStyle = Automatic;
+						TestTargetID = DC5EF5442052FBDB00C9BF55;
+					};
+				};
+			};
+			buildConfigurationList = DC5EF5402052FBDB00C9BF55 /* Build configuration list for PBXProject "Moonlight macOS" */;
+			compatibilityVersion = "Xcode 8.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = DC5EF53C2052FBDB00C9BF55;
+			productRefGroup = DC5EF5462052FBDB00C9BF55 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = DCECF42B205DBBAB00831862 /* Products */;
+					ProjectRef = DCECF42A205DBBAB00831862 /* moonlight-common_mac.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				DC5EF5442052FBDB00C9BF55 /* Moonlight macOS */,
+				DC5EF55D2052FBDB00C9BF55 /* Moonlight macOSTests */,
+				DC5EF5682052FBDB00C9BF55 /* Moonlight macOSUITests */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		DCECF42F205DBBAC00831862 /* libmoonlight-common.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libmoonlight-common.a";
+			remoteRef = DCECF42E205DBBAC00831862 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXResourcesBuildPhase section */
+		DC5EF5432052FBDB00C9BF55 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DCC23C29205DAEB600BF3C25 /* Mac.storyboard in Resources */,
+				DC5EF5522052FBDB00C9BF55 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC5EF55C2052FBDB00C9BF55 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC5EF5672052FBDB00C9BF55 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		DC5EF5412052FBDB00C9BF55 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC2F1737205DA35700C3021E /* IdManager.m in Sources */,
+				DC5EF54D2052FBDB00C9BF55 /* ViewController.m in Sources */,
+				DC2F173F205DA35700C3021E /* AppAssetManager.m in Sources */,
+				DC2F173E205DA35700C3021E /* MDNSManager.m in Sources */,
+				DC2F1745205DA35700C3021E /* AppAssetRetriever.m in Sources */,
+				DCAF0523205FCADB00AD1DBA /* ControllerSupport.m in Sources */,
+				DCAF0522205FCADB00AD1DBA /* Controller.swift in Sources */,
+				DC2F1739205DA35700C3021E /* CryptoManager.m in Sources */,
+				DCC01DF12055BD0D00D1D8CE /* SettingsViewController.m in Sources */,
+				DC2F173C205DA35700C3021E /* HttpResponse.m in Sources */,
+				DC5FA8FF205DBEE3008B7054 /* VideoDecoderRenderer.m in Sources */,
+				DC2F173D205DA35700C3021E /* DiscoveryWorker.m in Sources */,
+				DC5FA8FC205DBEE3008B7054 /* StreamConfiguration.m in Sources */,
+				DC2F1742205DA35700C3021E /* AppListResponse.m in Sources */,
+				DC2F1741205DA35700C3021E /* AppAssetResponse.m in Sources */,
+				DC6A60862064299700A0673D /* ConnectionHelper.m in Sources */,
+				DCC23C26205DAC5C00BF3C25 /* Settings.m in Sources */,
+				DCD464E22053417800CC8950 /* StreamFrameViewController.m in Sources */,
+				DC5EF5582052FBDB00C9BF55 /* main.m in Sources */,
+				DC2F173A205DA35700C3021E /* WakeOnLanManager.m in Sources */,
+				DCAF051C205F3E6A00AD1DBA /* Limelight.xcdatamodeld in Sources */,
+				DC0F7508205C04A90087B187 /* keepAlive.m in Sources */,
+				DC2634D4205438DC00D44F88 /* keyboardTranslation.m in Sources */,
+				DC2F1743205DA35700C3021E /* DiscoveryManager.m in Sources */,
+				DC2F174F205DA39600C3021E /* Logger.m in Sources */,
+				DC2F170F205DA33800C3021E /* TemporaryHost.m in Sources */,
+				DC2F1712205DA33800C3021E /* Host.m in Sources */,
+				DC5FA8FD205DBEE3008B7054 /* StreamManager.m in Sources */,
+				DC2F173B205DA35700C3021E /* ServerInfoResponse.m in Sources */,
+				DC2F1714205DA33800C3021E /* App.m in Sources */,
+				DC38D540205ACC360045FE93 /* Control.m in Sources */,
+				DC2F174E205DA39600C3021E /* Utils.m in Sources */,
+				DC2F170E205DA33800C3021E /* TemporaryApp.m in Sources */,
+				DCAF13E620530BE100896C35 /* StreamView.m in Sources */,
+				DCC23C25205DAC5C00BF3C25 /* DataManager.m in Sources */,
+				DC2F1744205DA35700C3021E /* HttpManager.m in Sources */,
+				DC2F1738205DA35700C3021E /* mkcert.c in Sources */,
+				DC2F1740205DA35700C3021E /* HttpRequest.m in Sources */,
+				DCC23C27205DAC5C00BF3C25 /* TemporarySettings.m in Sources */,
+				DC2F1746205DA35700C3021E /* PairManager.m in Sources */,
+				DC5FA8FE205DBEE3008B7054 /* Connection.m in Sources */,
+				DC9CD51F20601658001A5DCD /* AppDelegate.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC5EF55A2052FBDB00C9BF55 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC5EF5632052FBDB00C9BF55 /* Moonlight_macOSTests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		DC5EF5652052FBDB00C9BF55 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DC5EF56E2052FBDB00C9BF55 /* Moonlight_macOSUITests.m in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		DC5EF5602052FBDB00C9BF55 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC5EF5442052FBDB00C9BF55 /* Moonlight macOS */;
+			targetProxy = DC5EF55F2052FBDB00C9BF55 /* PBXContainerItemProxy */;
+		};
+		DC5EF56B2052FBDB00C9BF55 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = DC5EF5442052FBDB00C9BF55 /* Moonlight macOS */;
+			targetProxy = DC5EF56A2052FBDB00C9BF55 /* PBXContainerItemProxy */;
+		};
+		DCECF431205DBBCA00831862 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "moonlight-common";
+			targetProxy = DCECF430205DBBCA00831862 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		DC5EF5702052FBDB00C9BF55 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx;
+			};
+			name = Debug;
+		};
+		DC5EF5712052FBDB00C9BF55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Mac Developer";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				SDKROOT = macosx;
+			};
+			name = Release;
+		};
+		DC5EF5732052FBDB00C9BF55 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Moonlight macOS/Moonlight macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = DQ6R9YE8BF;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"${SDKROOT}/usr/include/libxml2/**",
+					"$(PROJECT_DIR)/libs/**",
+					"$(PROJECT_DIR)/moonlight-common/moonlight-common-c/src",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "Moonlight macOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libs/openssl/lib",
+					"$(PROJECT_DIR)/libs/opus/lib",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/libs/gamepad",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				OTHER_LDFLAGS = "";
+				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Moonlight macOS/Input/Moonlight macOS-Bridging-Header.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Debug;
+		};
+		DC5EF5742052FBDB00C9BF55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_ENTITLEMENTS = "Moonlight macOS/Moonlight macOS.entitlements";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = DQ6R9YE8BF;
+				ENABLE_NS_ASSERTIONS = YES;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)",
+				);
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"${SDKROOT}/usr/include/libxml2/**",
+					"$(PROJECT_DIR)/libs/**",
+					"$(PROJECT_DIR)/moonlight-common/moonlight-common-c/src",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"$(inherited)",
+				);
+				INFOPLIST_FILE = "Moonlight macOS/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libs/openssl/lib",
+					"$(PROJECT_DIR)/libs/opus/lib",
+					"$(PROJECT_DIR)",
+					"$(PROJECT_DIR)/libs/gamepad",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
+				ONLY_ACTIVE_ARCH = YES;
+				OTHER_LDFLAGS = "";
+				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOS";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_OBJC_BRIDGING_HEADER = "Moonlight macOS/Input/Moonlight macOS-Bridging-Header.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		DC5EF5762052FBDB00C9BF55 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = DQ6R9YE8BF;
+				INFOPLIST_FILE = "Moonlight macOSTests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Moonlight macOS.app/Contents/MacOS/Moonlight macOS";
+			};
+			name = Debug;
+		};
+		DC5EF5772052FBDB00C9BF55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = DQ6R9YE8BF;
+				INFOPLIST_FILE = "Moonlight macOSTests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOSTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Moonlight macOS.app/Contents/MacOS/Moonlight macOS";
+			};
+			name = Release;
+		};
+		DC5EF5792052FBDB00C9BF55 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = DQ6R9YE8BF;
+				INFOPLIST_FILE = "Moonlight macOSUITests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOSUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = "Moonlight macOS";
+			};
+			name = Debug;
+		};
+		DC5EF57A2052FBDB00C9BF55 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COMBINE_HIDPI_IMAGES = YES;
+				DEVELOPMENT_TEAM = DQ6R9YE8BF;
+				INFOPLIST_FILE = "Moonlight macOSUITests/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks";
+				PRODUCT_BUNDLE_IDENTIFIER = "fkx.Moonlight-macOSUITests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				TEST_TARGET_NAME = "Moonlight macOS";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		DC5EF5402052FBDB00C9BF55 /* Build configuration list for PBXProject "Moonlight macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC5EF5702052FBDB00C9BF55 /* Debug */,
+				DC5EF5712052FBDB00C9BF55 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC5EF5722052FBDB00C9BF55 /* Build configuration list for PBXNativeTarget "Moonlight macOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC5EF5732052FBDB00C9BF55 /* Debug */,
+				DC5EF5742052FBDB00C9BF55 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC5EF5752052FBDB00C9BF55 /* Build configuration list for PBXNativeTarget "Moonlight macOSTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC5EF5762052FBDB00C9BF55 /* Debug */,
+				DC5EF5772052FBDB00C9BF55 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		DC5EF5782052FBDB00C9BF55 /* Build configuration list for PBXNativeTarget "Moonlight macOSUITests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				DC5EF5792052FBDB00C9BF55 /* Debug */,
+				DC5EF57A2052FBDB00C9BF55 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		DCAF0516205F3E6A00AD1DBA /* Limelight.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				DCAF0517205F3E6A00AD1DBA /* Limelight.xcdatamodel */,
+				DCAF0518205F3E6A00AD1DBA /* Moonlight v1.0-2.xcdatamodel */,
+				DCAF0519205F3E6A00AD1DBA /* Limelight 0.3.1.xcdatamodel */,
+				DCAF051A205F3E6A00AD1DBA /* Moonlight v1.0.xcdatamodel */,
+				DCAF051B205F3E6A00AD1DBA /* Limelight 0.3.0.xcdatamodel */,
+			);
+			currentVersion = DCAF0518205F3E6A00AD1DBA /* Moonlight v1.0-2.xcdatamodel */;
+			name = Limelight.xcdatamodeld;
+			path = ../Limelight/Limelight.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = DC5EF53D2052FBDB00C9BF55 /* Project object */;
+}

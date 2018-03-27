@@ -57,7 +57,8 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
         resolution = 0;
     }
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
-    
+    NSInteger streamingRemotely = [currentSettings.streamingRemotely integerValue];
+    [self.remoteSelector setSelectedSegmentIndex:streamingRemotely];
     [self.resolutionSelector setSelectedSegmentIndex:resolution];
     [self.resolutionSelector addTarget:self action:@selector(newResolutionFpsChosen) forControlEvents:UIControlEventValueChanged];
     [self.framerateSelector setSelectedSegmentIndex:framerate];
@@ -66,6 +67,11 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [self.bitrateSlider setValue:(_bitrate / BITRATE_INTERVAL) animated:YES];
     [self.bitrateSlider addTarget:self action:@selector(bitrateSliderMoved) forControlEvents:UIControlEventValueChanged];
     [self updateBitrateText];
+    [self.remoteSelector addTarget:self action:@selector(remoteStreamingChanged) forControlEvents:UIControlEventValueChanged];
+}
+
+- (void) remoteStreamingChanged {
+    // This function can be used to reconfigure the settings view to offer more remote streaming options (i.e. reduce the audio frequency to 24kHz, enable/disable the HEVC bitrate multiplier, ...)
 }
 
 - (void) newResolutionFpsChosen {
@@ -102,6 +108,10 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [self.bitrateLabel setText:[NSString stringWithFormat:bitrateFormat, _bitrate / 1000.]];
 }
 
+- (NSInteger) getRemoteOptions {
+    return [self.remoteSelector selectedSegmentIndex];
+}
+
 - (NSInteger) getChosenFrameRate {
     return [self.framerateSelector selectedSegmentIndex] == 0 ? 30 : 60;
 }
@@ -120,7 +130,9 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     NSInteger height = [self getChosenStreamHeight];
     NSInteger width = [self getChosenStreamWidth];
     NSInteger onscreenControls = [self.onscreenControlSelector selectedSegmentIndex];
-    [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls];
+    NSInteger streamingRemotely = [self.remoteSelector selectedSegmentIndex];
+    [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls
+        remote: streamingRemotely];
 }
 
 - (void)didReceiveMemoryWarning {

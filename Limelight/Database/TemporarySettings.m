@@ -21,6 +21,7 @@
     self.width = settings.width;
     self.onscreenControls = settings.onscreenControls;
     self.uniqueId = settings.uniqueId;
+    self.streamingRemotely = settings.streamingRemotely;
     
     return self;
 }

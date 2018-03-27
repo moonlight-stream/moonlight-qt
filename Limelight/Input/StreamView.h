@@ -6,7 +6,8 @@
 //  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
-#import <UIKit/UIKit.h>
+// This is redundant, as it is part of the prefix header
+//#import <UIKit/UIKit.h>
 #import "ControllerSupport.h"
 
 @protocol EdgeDetectionDelegate <NSObject>

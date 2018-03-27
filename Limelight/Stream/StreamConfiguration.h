@@ -19,6 +19,7 @@
 @property int frameRate;
 @property int bitRate;
 @property int riKeyId;
+@property int streamingRemotely;
 @property NSData* riKey;
 @property int gamepadMask;
 

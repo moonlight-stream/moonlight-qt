@@ -12,7 +12,12 @@
 
 @interface StreamManager : NSOperation
 
+#if TARGET_OS_IPHONE
 - (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionCallbacks:(id<ConnectionCallbacks>)callback;
+#else
+- (id) initWithConfig:(StreamConfiguration*)config renderView:(NSView*)view connectionCallbacks:(id<ConnectionCallbacks>)callback;
+#endif
+
 - (void) stopStream;
 
 @end

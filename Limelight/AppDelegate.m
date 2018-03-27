@@ -16,6 +16,7 @@
 
 static NSOperationQueue* mainQueue;
 
+#if TARGET_OS_IPHONE
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
     [[UILabel appearance] setFont:[UIFont fontWithName:@"Roboto-Regular" size:[UIFont systemFontSize]]];
@@ -57,7 +58,7 @@ static NSOperationQueue* mainQueue;
 
 - (void)applicationDidEnterBackground:(UIApplication *)application
 {
-    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later. 
+    // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
     // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
 }
 
@@ -76,6 +77,17 @@ static NSOperationQueue* mainQueue;
     // Saves changes in the application's managed object context before the application terminates.
     [self saveContext];
 }
+#else
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
+    // Insert code here to initialize your application
+}
+
+- (void)applicationWillTerminate:(NSNotification *)aNotification {
+    // Insert code here to tear down your application
+    [self saveContext];
+}
+
+#endif
 
 - (void)saveContext
 {
@@ -155,7 +167,11 @@ static NSOperationQueue* mainQueue;
 }
 
 - (NSURL*) getStoreURL {
+#if TARGET_OS_IPHONE
     return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Limelight_iOS.sqlite"];
+#else
+    return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"moonlight_mac.sqlite"];
+#endif
 }
 
 @end

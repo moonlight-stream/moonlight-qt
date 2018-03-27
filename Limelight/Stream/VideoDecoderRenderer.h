@@ -11,8 +11,11 @@
 @import AVFoundation;
 
 @interface VideoDecoderRenderer : NSObject
-
+#if TARGET_OS_IPHONE
 - (id)initWithView:(UIView*)view;
+#else
+- (id)initWithView:(NSView*)view;
+#endif
 
 - (void)setupWithVideoFormat:(int)videoFormat;
 

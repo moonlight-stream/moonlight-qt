@@ -5,13 +5,19 @@
 //
 
 #import <Availability.h>
+#include <TargetConditionals.h>
 
 #ifndef __IPHONE_3_0
 #warning "This project uses features only available in iOS SDK 3.0 and later."
 #endif
 
 #ifdef __OBJC__
+
+#if TARGET_OS_IPHONE
     #import <UIKit/UIKit.h>
+#elif TARGET_OS_MAC
+    #import <AppKit/AppKit.h>
+#endif
     #import <Foundation/Foundation.h>
     #import <CoreData/CoreData.h>
     #import "Logger.h"

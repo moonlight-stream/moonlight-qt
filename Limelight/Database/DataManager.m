@@ -22,11 +22,20 @@
     // HACK: Avoid calling [UIApplication delegate] off the UI thread to keep
     // Main Thread Checker happy.
     if ([NSThread isMainThread]) {
+#if TARGET_OS_IPHONE
         _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+#else
+        _appDelegate = (AppDelegate *)[[NSApplication sharedApplication] delegate];
+#endif
+        
     }
     else {
         dispatch_sync(dispatch_get_main_queue(), ^{
+#if TARGET_OS_IPHONE
             _appDelegate = (AppDelegate *)[[UIApplication sharedApplication] delegate];
+#else
+            _appDelegate = (AppDelegate *)[[NSApplication sharedApplication] delegate];
+#endif
         });
     }
     
@@ -53,7 +62,8 @@
     return uid;
 }
 
-- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls {
+- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls remote:
+    (NSInteger) streamingRemotely {
     
     [_managedObjectContext performBlockAndWait:^{
         Settings* settingsToSave = [self retrieveSettings];
@@ -63,6 +73,7 @@
         settingsToSave.height = [NSNumber numberWithInteger:height];
         settingsToSave.width = [NSNumber numberWithInteger:width];
         settingsToSave.onscreenControls = [NSNumber numberWithInteger:onscreenControls];
+        settingsToSave.streamingRemotely = [NSNumber numberWithInteger:streamingRemotely];
         
         [self saveData];
     }];

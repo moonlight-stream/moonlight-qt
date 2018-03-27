@@ -61,7 +61,7 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
         // A frame was lost due to OOM condition
         return DR_NEED_IDR;
     }
-    
+
     PLENTRY entry = decodeUnit->bufferList;
     while (entry != NULL) {
         // Submit parameter set NALUs directly since no copy is required by the decoder
@@ -76,10 +76,10 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
             memcpy(&data[offset], entry->data, entry->length);
             offset += entry->length;
         }
-        
+
         entry = entry->next;
     }
-    
+
     // This function will take our picture data buffer
     return [renderer submitDecodeBuffer:data length:offset bufferType:BUFFER_TYPE_PICDATA];
 }
@@ -87,42 +87,47 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void* context, int flags)
 {
     int err;
-    
+
     // We only support stereo for now
     assert(audioConfiguration == AUDIO_CONFIGURATION_STEREO);
-    
+
     opusDecoder = opus_decoder_create(opusConfig->sampleRate,
                                       opusConfig->channelCount,
                                       &err);
-    
+
     audioLock = [[NSLock alloc] init];
-    
+
+#if TARGET_OS_IPHONE
+
     // Configure the audio session for our app
     NSError *audioSessionError = nil;
     AVAudioSession* audioSession = [AVAudioSession sharedInstance];
-    
+
     [audioSession setPreferredSampleRate:opusConfig->sampleRate error:&audioSessionError];
     [audioSession setCategory: AVAudioSessionCategoryPlayback error: &audioSessionError];
     [audioSession setPreferredOutputNumberOfChannels:opusConfig->channelCount error:&audioSessionError];
     [audioSession setPreferredIOBufferDuration:0.005 error:&audioSessionError];
     [audioSession setActive: YES error: &audioSessionError];
-    
+
+#endif
     OSStatus status;
-    
+
     AudioComponentDescription audioDesc;
     audioDesc.componentType = kAudioUnitType_Output;
+#if TARGET_OS_IPHONE
     audioDesc.componentSubType = kAudioUnitSubType_RemoteIO;
+#endif
     audioDesc.componentFlags = 0;
     audioDesc.componentFlagsMask = 0;
     audioDesc.componentManufacturer = kAudioUnitManufacturer_Apple;
-    
+
     status = AudioComponentInstanceNew(AudioComponentFindNext(NULL, &audioDesc), &audioUnit);
-    
+
     if (status) {
         Log(LOG_E, @"Unable to instantiate new AudioComponent: %d", (int32_t)status);
         return status;
     }
-    
+
     AudioStreamBasicDescription audioFormat = {0};
     audioFormat.mSampleRate = opusConfig->sampleRate;
     audioFormat.mBitsPerChannel = 16;
@@ -133,7 +138,7 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
     audioFormat.mBytesPerPacket = audioFormat.mBytesPerFrame;
     audioFormat.mFramesPerPacket = audioFormat.mBytesPerPacket / audioFormat.mBytesPerFrame;
     audioFormat.mReserved = 0;
-    
+
     status = AudioUnitSetProperty(audioUnit,
                                   kAudioUnitProperty_StreamFormat,
                                   kAudioUnitScope_Input,
@@ -144,11 +149,11 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
         Log(LOG_E, @"Unable to set audio unit to input: %d", (int32_t)status);
         return status;
     }
-    
+
     AURenderCallbackStruct callbackStruct = {0};
     callbackStruct.inputProc = playbackCallback;
     callbackStruct.inputProcRefCon = NULL;
-    
+
     status = AudioUnitSetProperty(audioUnit,
                                   kAudioUnitProperty_SetRenderCallback,
                                   kAudioUnitScope_Input,
@@ -159,19 +164,19 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
         Log(LOG_E, @"Unable to set audio unit callback: %d", (int32_t)status);
         return status;
     }
-    
+
     status = AudioUnitInitialize(audioUnit);
     if (status) {
         Log(LOG_E, @"Unable to initialize audioUnit: %d", (int32_t)status);
         return status;
     }
-    
+
     status = AudioOutputUnitStart(audioUnit);
     if (status) {
         Log(LOG_E, @"Unable to start audioUnit: %d", (int32_t)status);
         return status;
     }
-    
+
     return status;
 }
 
@@ -181,21 +186,21 @@ void ArCleanup(void)
         opus_decoder_destroy(opusDecoder);
         opusDecoder = NULL;
     }
-    
+
     OSStatus status = AudioOutputUnitStop(audioUnit);
     if (status) {
         Log(LOG_E, @"Unable to stop audioUnit: %d", (int32_t)status);
     }
-    
+
     status = AudioUnitUninitialize(audioUnit);
     if (status) {
         Log(LOG_E, @"Unable to uninitialize audioUnit: %d", (int32_t)status);
     }
-    
+#if TARGET_OS_IPHONE
     // Audio session is now inactive
     AVAudioSession* audioSession = [AVAudioSession sharedInstance];
     [audioSession setActive: YES error: nil];
-    
+#endif
     // This is safe because we're guaranteed that nobody
     // is touching this list now
     struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
@@ -213,18 +218,18 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
     if (decodedLength > 0) {
         // Return of opus_decode is samples per channel
         decodedLength *= 4;
-        
+
         struct AUDIO_BUFFER_QUEUE_ENTRY *newEntry = malloc(sizeof(*newEntry) + decodedLength);
         if (newEntry != NULL) {
             newEntry->next = NULL;
             newEntry->length = decodedLength;
             newEntry->offset = 0;
             memcpy(newEntry->data, decodedPcmBuffer, decodedLength);
-            
+
             [audioLock lock];
             if (audioBufferQueueLength > MAX_QUEUE_ENTRIES) {
                 Log(LOG_W, @"Audio player too slow. Dropping all decoded samples!");
-                
+
                 // Clear all values from the buffer queue
                 struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
                 while (audioBufferQueue != NULL) {
@@ -234,7 +239,7 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
                     free(entry);
                 }
             }
-            
+
             if (audioBufferQueue == NULL) {
                 audioBufferQueue = newEntry;
             }
@@ -246,7 +251,7 @@ void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
                 lastEntry->next = newEntry;
             }
             audioBufferQueueLength++;
-            
+
             [audioLock unlock];
         }
     }
@@ -310,63 +315,82 @@ void ClLogMessage(const char* format, ...)
 -(id) initWithConfig:(StreamConfiguration*)config renderer:(VideoDecoderRenderer*)myRenderer connectionCallbacks:(id<ConnectionCallbacks>)callbacks
 {
     self = [super init];
-    
+
     // Use a lock to ensure that only one thread is initializing
     // or deinitializing a connection at a time.
     if (initLock == nil) {
         initLock = [[NSLock alloc] init];
     }
-    
+
     LiInitializeServerInformation(&_serverInfo);
     _serverInfo.address = [config.host cStringUsingEncoding:NSUTF8StringEncoding];
     _serverInfo.serverInfoAppVersion = [config.appVersion cStringUsingEncoding:NSUTF8StringEncoding];
     if (config.gfeVersion != nil) {
         _serverInfo.serverInfoGfeVersion = [config.gfeVersion cStringUsingEncoding:NSUTF8StringEncoding];
     }
-    
+
     renderer = myRenderer;
     _callbacks = callbacks;
-    
+
     LiInitializeStreamConfiguration(&_streamConfig);
     _streamConfig.width = config.width;
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;
     _streamConfig.bitrate = config.bitRate;
-    
+
+    // This will activate the remote streaming optimization in moonlight-common if needed
+    _streamConfig.streamingRemotely = config.streamingRemotely;
+
+#if TARGET_OS_IPHONE
     // On iOS 11, we can use HEVC if the server supports encoding it
     // and this device has hardware decode for it (A9 and later)
     if (@available(iOS 11.0, *)) {
         // FIXME: Disabled due to incompatibility with iPhone X causing video
         // to freeze. Additionally, RFI is not supported so packet loss recovery
         // is worse with HEVC than H.264.
+
+        // Streaming with a limited bandwith will result in better quality with HEVC
         //_streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
     }
+#else
+    if (@available(macOS 10.13, *)) {
+        if (VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) || _streamConfig.streamingRemotely != 0)
+        _streamConfig.supportsHevc = true;
+    }
+#endif
     
     // Use some of the HEVC encoding efficiency improvements to
     // reduce bandwidth usage while still gaining some image
     // quality improvement.
-    _streamConfig.hevcBitratePercentageMultiplier = 75;
-    
-    // FIXME: We should use 1024 when streaming remotely
-    _streamConfig.packetSize = 1292;
-    
+    if (config.streamingRemotely) {
+        // In the case of remotely streaming, we want the best possible qualtity for a limited bandwidth, so we set the multiplier to 0
+        _streamConfig.hevcBitratePercentageMultiplier = 0;
+        // When streaming remotely we want to use a packet size of 1024
+        _streamConfig.packetSize = 1024;
+    }
+    else {
+        _streamConfig.hevcBitratePercentageMultiplier = 75;
+        _streamConfig.packetSize = 1292;
+    }
+
     memcpy(_streamConfig.remoteInputAesKey, [config.riKey bytes], [config.riKey length]);
     memset(_streamConfig.remoteInputAesIv, 0, 16);
     int riKeyId = htonl(config.riKeyId);
     memcpy(_streamConfig.remoteInputAesIv, &riKeyId, sizeof(riKeyId));
-    
+
     LiInitializeVideoCallbacks(&_drCallbacks);
     _drCallbacks.setup = DrDecoderSetup;
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
-    
+
     // RFI doesn't work properly with HEVC on iOS 11 with an iPhone SE (at least)
+    // It doesnt work on macOS either, tested with Network Link Conditioner.
     _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
-    
+
     LiInitializeAudioCallbacks(&_arCallbacks);
     _arCallbacks.init = ArInit;
     _arCallbacks.cleanup = ArCleanup;
     _arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
-    
+
     LiInitializeConnectionCallbacks(&_clCallbacks);
     _clCallbacks.stageStarting = ClStageStarting;
     _clCallbacks.stageComplete = ClStageComplete;
@@ -376,7 +400,7 @@ void ClLogMessage(const char* format, ...)
     _clCallbacks.displayMessage = ClDisplayMessage;
     _clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
     _clCallbacks.logMessage = ClLogMessage;
-    
+
     return self;
 }
 
@@ -389,27 +413,27 @@ static OSStatus playbackCallback(void *inRefCon,
     // Notes: ioData contains buffers (may be more than one!)
     // Fill them up as much as you can. Remember to set the size value in each buffer to match how
     // much data is in the buffer.
-    
+
     bool ranOutOfData = false;
     for (int i = 0; i < ioData->mNumberBuffers; i++) {
         ioData->mBuffers[i].mNumberChannels = 2;
-        
+
         if (ranOutOfData) {
             ioData->mBuffers[i].mDataByteSize = 0;
             continue;
         }
-        
+
         if (ioData->mBuffers[i].mDataByteSize != 0) {
             int thisBufferOffset = 0;
-            
+
         FillBufferAgain:
             // Make sure there's data to write
             if (ioData->mBuffers[i].mDataByteSize - thisBufferOffset == 0) {
                 continue;
             }
-            
+
             struct AUDIO_BUFFER_QUEUE_ENTRY *audioEntry = NULL;
-            
+
             [audioLock lock];
             if (audioBufferQueue != NULL) {
                 // Dequeue this entry temporarily
@@ -418,26 +442,26 @@ static OSStatus playbackCallback(void *inRefCon,
                 audioBufferQueueLength--;
             }
             [audioLock unlock];
-            
+
             if (audioEntry == NULL) {
                 // No data left
                 ranOutOfData = true;
                 ioData->mBuffers[i].mDataByteSize = thisBufferOffset;
                 continue;
             }
-            
+
             // Figure out how much data we can write
             int min = MIN(ioData->mBuffers[i].mDataByteSize - thisBufferOffset, audioEntry->length);
-            
+
             // Copy data to the audio buffer
             memcpy(&ioData->mBuffers[i].mData[thisBufferOffset], &audioEntry->data[audioEntry->offset], min);
             thisBufferOffset += min;
-            
+
             if (min < audioEntry->length) {
                 // This entry still has unused data
                 audioEntry->length -= min;
                 audioEntry->offset += min;
-                
+
                 // Requeue the entry
                 [audioLock lock];
                 audioEntry->next = audioBufferQueue;
@@ -448,7 +472,7 @@ static OSStatus playbackCallback(void *inRefCon,
             else {
                 // This entry is fully depleted so free it
                 free(audioEntry);
-                
+
                 // Try to grab another sample to fill this buffer with
                 goto FillBufferAgain;
             }
@@ -456,7 +480,7 @@ static OSStatus playbackCallback(void *inRefCon,
             ioData->mBuffers[i].mDataByteSize = thisBufferOffset;
         }
     }
-    
+
     return noErr;
 }
 

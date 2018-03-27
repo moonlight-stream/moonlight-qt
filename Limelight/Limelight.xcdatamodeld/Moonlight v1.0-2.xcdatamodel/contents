@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<model userDefinedModelVersionIdentifier="" type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="9057" systemVersion="15B42" minimumToolsVersion="Automatic">
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="13772" systemVersion="17D102" minimumToolsVersion="Xcode 7.3" sourceLanguage="Objective-C" userDefinedModelVersionIdentifier="">
     <entity name="App" representedClassName="App" syncable="YES">
         <attribute name="id" attributeType="String" syncable="YES"/>
         <attribute name="image" optional="YES" attributeType="Binary" allowsExternalBinaryDataStorage="YES" syncable="YES"/>
@@ -12,21 +12,22 @@
         <attribute name="localAddress" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="mac" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="name" attributeType="String" syncable="YES"/>
-        <attribute name="pairState" optional="YES" attributeType="Integer 32" defaultValueString="0" syncable="YES"/>
+        <attribute name="pairState" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="uuid" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="appList" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="App" inverseName="host" inverseEntity="App" syncable="YES"/>
     </entity>
     <entity name="Settings" representedClassName="Settings" syncable="YES">
-        <attribute name="bitrate" attributeType="Integer 32" defaultValueString="10000" syncable="YES"/>
-        <attribute name="framerate" attributeType="Integer 32" defaultValueString="60" syncable="YES"/>
-        <attribute name="height" attributeType="Integer 32" defaultValueString="720" syncable="YES"/>
-        <attribute name="onscreenControls" attributeType="Integer 32" defaultValueString="1" syncable="YES"/>
+        <attribute name="bitrate" attributeType="Integer 32" defaultValueString="10000" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="framerate" attributeType="Integer 32" defaultValueString="60" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="height" attributeType="Integer 32" defaultValueString="720" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="onscreenControls" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="streamingRemotely" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="uniqueId" attributeType="String" syncable="YES"/>
-        <attribute name="width" attributeType="Integer 32" defaultValueString="1280" syncable="YES"/>
+        <attribute name="width" attributeType="Integer 32" defaultValueString="1280" usesScalarValueType="NO" syncable="YES"/>
     </entity>
     <elements>
         <element name="App" positionX="0" positionY="54" width="128" height="105"/>
         <element name="Host" positionX="0" positionY="0" width="128" height="163"/>
-        <element name="Settings" positionX="0" positionY="0" width="128" height="135"/>
+        <element name="Settings" positionX="0" positionY="0" width="128" height="150"/>
     </elements>
 </model>

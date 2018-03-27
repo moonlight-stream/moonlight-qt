@@ -26,6 +26,7 @@
 #import "ComputerScrollView.h"
 #import "TemporaryApp.h"
 #import "IdManager.h"
+#import "ConnectionHelper.h"
 
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
@@ -115,27 +116,10 @@ static NSMutableSet* hostList;
     }
     Log(LOG_I, @"Using cached app list: %d", usingCachedAppList);
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        
         // Exempt this host from discovery while handling the applist query
         [_discMan removeHostFromDiscovery:host];
         
-        // Try up to 5 times to get the app list
-        AppListResponse* appListResp;
-        for (int i = 0; i < 5; i++) {
-            appListResp = [[AppListResponse alloc] init];
-            [hMan executeRequestSynchronously:[HttpRequest requestForResponse:appListResp withUrlRequest:[hMan newAppListRequest]]];
-            if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
-                Log(LOG_W, @"Failed to get applist on try %d: %@", i, appListResp.statusMessage);
-                
-                // Wait for one second then retry
-                [NSThread sleepForTimeInterval:1];
-            }
-            else {
-                Log(LOG_I, @"App list successfully retreived - took %d tries", i);
-                break;
-            }
-        }
+        AppListResponse* appListResp = [ConnectionHelper getAppListForHostWithHostIP:host.activeAddress deviceName:deviceName cert:_cert uniqueID:_uniqueId];
         
         [_discMan addHostToDiscovery:host];
 
@@ -409,6 +393,7 @@ static NSMutableSet* hostList;
     _streamConfig.height = [streamSettings.height intValue];
     _streamConfig.width = [streamSettings.width intValue];
     _streamConfig.gamepadMask = [ControllerSupport getConnectedGamepadMask];
+    _streamConfig.streamingRemotely = [streamSettings.streamingRemotely intValue];
     
     [_appManager stopRetrieving];
     

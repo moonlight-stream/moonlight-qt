@@ -1,0 +1,37 @@
+{
+  "DVTSourceControlWorkspaceBlueprintPrimaryRemoteRepositoryKey" : "A4B0849259F9566B0CBA84A6D3D4A0F895C03123",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyRepositoryLocationsKey" : {
+
+  },
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyStatesKey" : {
+    "584110FE5ABD5BCB5065B76A98D3F8000D0644EC" : 0,
+    "A4B0849259F9566B0CBA84A6D3D4A0F895C03123" : 0,
+    "EB99D631D5149240E91F8D168F0F298D7A5BAA89" : 0
+  },
+  "DVTSourceControlWorkspaceBlueprintIdentifierKey" : "40250820-914C-4FB3-9CF1-3DB8A02E7012",
+  "DVTSourceControlWorkspaceBlueprintWorkingCopyPathsKey" : {
+    "584110FE5ABD5BCB5065B76A98D3F8000D0644EC" : "moonlight-ios\/moonlight-common\/moonlight-common-c\/enet\/",
+    "A4B0849259F9566B0CBA84A6D3D4A0F895C03123" : "moonlight-ios\/",
+    "EB99D631D5149240E91F8D168F0F298D7A5BAA89" : "moonlight-ios\/moonlight-common\/moonlight-common-c\/"
+  },
+  "DVTSourceControlWorkspaceBlueprintNameKey" : "moonlight-common",
+  "DVTSourceControlWorkspaceBlueprintVersion" : 204,
+  "DVTSourceControlWorkspaceBlueprintRelativePathToProjectKey" : "moonlight-common\/moonlight-common.xcodeproj",
+  "DVTSourceControlWorkspaceBlueprintRemoteRepositoriesKey" : [
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/cgutman\/enet.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "584110FE5ABD5BCB5065B76A98D3F8000D0644EC"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "github.com:moonlight-stream\/moonlight-ios.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "A4B0849259F9566B0CBA84A6D3D4A0F895C03123"
+    },
+    {
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryURLKey" : "https:\/\/github.com\/moonlight-stream\/moonlight-common-c.git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositorySystemKey" : "com.apple.dt.Xcode.sourcecontrol.Git",
+      "DVTSourceControlWorkspaceBlueprintRemoteRepositoryIdentifierKey" : "EB99D631D5149240E91F8D168F0F298D7A5BAA89"
+    }
+  ]
+}

@@ -10,7 +10,11 @@
 #import "CryptoManager.h"
 #import "HttpManager.h"
 #import "Utils.h"
+
+#if TARGET_OS_IPHONE
 #import "OnScreenControls.h"
+#endif
+
 #import "StreamView.h"
 #import "ServerInfoResponse.h"
 #import "HttpResponse.h"
@@ -19,11 +23,17 @@
 
 @implementation StreamManager {
     StreamConfiguration* _config;
+
+#if TARGET_OS_IPHONE
     UIView* _renderView;
+#else
+    NSView* _renderView;
+#endif
     id<ConnectionCallbacks> _callbacks;
     Connection* _connection;
 }
 
+#if TARGET_OS_IPHONE
 - (id) initWithConfig:(StreamConfiguration*)config renderView:(UIView*)view connectionCallbacks:(id<ConnectionCallbacks>)callbacks {
     self = [super init];
     _config = config;
@@ -33,7 +43,17 @@
     _config.riKeyId = arc4random();
     return self;
 }
-
+#else
+- (id) initWithConfig:(StreamConfiguration*)config renderView:(NSView*)view connectionCallbacks:(id<ConnectionCallbacks>)callbacks {
+    self = [super init];
+    _config = config;
+    _renderView = view;
+    _callbacks = callbacks;
+    _config.riKey = [Utils randomBytes:16];
+    _config.riKeyId = arc4random();
+    return self;
+}
+#endif
 
 - (void)main {
     [CryptoManager generateKeyPairUsingSSl];
@@ -42,7 +62,7 @@
     
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_config.host
                                                  uniqueId:uniqueId
-                                               deviceName:@"roth"
+                                               deviceName:deviceName
                                                      cert:cert];
     
     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
@@ -75,14 +95,15 @@
             return;
         }
     }
-    
+
+#if TARGET_OS_IPHONE
     // Set mouse delta factors from the screen resolution and stream size
     CGFloat screenScale = [[UIScreen mainScreen] scale];
     CGRect screenBounds = [[UIScreen mainScreen] bounds];
     CGSize screenSize = CGSizeMake(screenBounds.size.width * screenScale, screenBounds.size.height * screenScale);
     [((StreamView*)_renderView) setMouseDeltaFactors:_config.width / screenSize.width
                                                    y:_config.height / screenSize.height];
-    
+#endif
     // Populate the config's version fields from serverinfo
     _config.appVersion = appversion;
     _config.gfeVersion = gfeVersion;

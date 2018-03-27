@@ -14,7 +14,8 @@
 
 @interface DataManager : NSObject
 
-- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls;
+- (void) saveSettingsWithBitrate:(NSInteger)bitrate framerate:(NSInteger)framerate height:(NSInteger)height width:(NSInteger)width onscreenControls:(NSInteger)onscreenControls remote:
+    (NSInteger)streamingRemotely;
 
 - (NSArray*) getHosts;
 - (void) updateHost:(TemporaryHost*)host;
