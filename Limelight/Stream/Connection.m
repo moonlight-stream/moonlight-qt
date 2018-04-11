@@ -342,17 +342,16 @@ void ClLogMessage(const char* format, ...)
 
 #if TARGET_OS_IPHONE
     // On iOS 11, we can use HEVC if the server supports encoding it
-    // and this device has hardware decode for it (A9 and later)
-    if (@available(iOS 11.0, *)) {
-        // FIXME: Disabled due to incompatibility with iPhone X causing video
-        // to freeze. Additionally, RFI is not supported so packet loss recovery
-        // is worse with HEVC than H.264.
-
-        // Streaming with a limited bandwith will result in better quality with HEVC
-        //_streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
+    // and this device has hardware decode for it (A9 and later).
+    // Additionally, iPhone X had a bug which would cause video
+    // to freeze after a few minutes with HEVC prior to iOS 11.3.
+    // As a result, we will only use HEVC on iOS 11.3 or later.
+    if (@available(iOS 11.3, *)) {
+        _streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
     }
 #else
     if (@available(macOS 10.13, *)) {
+        // Streaming with limited bandwidth will result in better quality with HEVC
         if (VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) || _streamConfig.streamingRemotely != 0)
             _streamConfig.supportsHevc = true;
     }
