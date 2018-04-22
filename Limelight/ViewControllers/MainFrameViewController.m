@@ -46,15 +46,15 @@ static NSMutableSet* hostList;
 
 - (void)showPIN:(NSString *)PIN {
     dispatch_async(dispatch_get_main_queue(), ^{
-        _pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
+        self->_pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
                                                          message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
                                                   preferredStyle:UIAlertControllerStyleAlert];
-        [_pairAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
-            _pairAlert = nil;
-            [_discMan startDiscovery];
+        [self->_pairAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
+            self->_pairAlert = nil;
+            [self->_discMan startDiscovery];
             [self hideLoadingFrame];
         }]];
-        [self presentViewController:_pairAlert animated:YES completion:nil];
+        [self presentViewController:self->_pairAlert animated:YES completion:nil];
     });
 }
 
@@ -71,11 +71,11 @@ static NSMutableSet* hostList;
 
 - (void)pairFailed:(NSString *)message {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (_pairAlert != nil) {
-            [_pairAlert dismissViewControllerAnimated:YES completion:^{
+        if (self->_pairAlert != nil) {
+            [self->_pairAlert dismissViewControllerAnimated:YES completion:^{
                 [self displayFailureDialog:message];
             }];
-            _pairAlert = nil;
+            self->_pairAlert = nil;
         }
         else {
             [self displayFailureDialog:message];
@@ -85,10 +85,10 @@ static NSMutableSet* hostList;
 
 - (void)pairSuccessful {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [_pairAlert dismissViewControllerAnimated:YES completion:nil];
-        _pairAlert = nil;
+        [self->_pairAlert dismissViewControllerAnimated:YES completion:nil];
+        self->_pairAlert = nil;
 
-        [_discMan startDiscovery];
+        [self->_discMan startDiscovery];
         [self alreadyPaired];
     });
 }
@@ -103,11 +103,11 @@ static NSMutableSet* hostList;
     if ([host.appList count] > 0) {
         usingCachedAppList = true;
         dispatch_async(dispatch_get_main_queue(), ^{
-            if (host != _selectedHost) {
+            if (host != self->_selectedHost) {
                 return;
             }
             
-            _computerNameButton.title = host.name;
+            self->_computerNameButton.title = host.name;
             [self.navigationController.navigationBar setNeedsLayout];
             
             [self updateAppsForHost:host];
@@ -117,18 +117,18 @@ static NSMutableSet* hostList;
     Log(LOG_I, @"Using cached app list: %d", usingCachedAppList);
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         // Exempt this host from discovery while handling the applist query
-        [_discMan removeHostFromDiscovery:host];
+        [self->_discMan removeHostFromDiscovery:host];
         
-        AppListResponse* appListResp = [ConnectionHelper getAppListForHostWithHostIP:host.activeAddress deviceName:deviceName cert:_cert uniqueID:_uniqueId];
+        AppListResponse* appListResp = [ConnectionHelper getAppListForHostWithHostIP:host.activeAddress deviceName:deviceName cert:self->_cert uniqueID:self->_uniqueId];
         
-        [_discMan addHostToDiscovery:host];
+        [self->_discMan addHostToDiscovery:host];
 
         if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self hideLoadingFrame];
                 
-                if (host != _selectedHost) {
+                if (host != self->_selectedHost) {
                     return;
                 }
                 
@@ -144,16 +144,16 @@ static NSMutableSet* hostList;
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self updateApplist:[appListResp getAppList] forHost:host];
 
-                if (host != _selectedHost) {
+                if (host != self->_selectedHost) {
                     return;
                 }
                 
-                _computerNameButton.title = host.name;
+                self->_computerNameButton.title = host.name;
                 [self.navigationController.navigationBar setNeedsLayout];
                 
                 [self updateAppsForHost:host];
-                [_appManager stopRetrieving];
-                [_appManager retrieveAssetsFromHost:host];
+                [self->_appManager stopRetrieving];
+                [self->_appManager retrieveAssetsFromHost:host];
                 [self hideLoadingFrame];
             });
         }
@@ -266,21 +266,21 @@ static NSMutableSet* hostList;
     
     [self showLoadingFrame];
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
         ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
         
         // Exempt this host from discovery while handling the serverinfo request
-        [_discMan removeHostFromDiscovery:host];
+        [self->_discMan removeHostFromDiscovery:host];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
-        [_discMan addHostToDiscovery:host];
+        [self->_discMan addHostToDiscovery:host];
         
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
                 [self hideLoadingFrame];
                 
-                if (host != _selectedHost) {
+                if (host != self->_selectedHost) {
                     return;
                 }
                 
@@ -300,9 +300,9 @@ static NSMutableSet* hostList;
             } else {
                 Log(LOG_I, @"Trying to pair");
                 // Polling the server while pairing causes the server to screw up
-                [_discMan stopDiscoveryBlocking];
-                PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:_cert callback:self];
-                [_opQueue addOperation:pMan];
+                [self->_discMan stopDiscoveryBlocking];
+                PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:self->_cert callback:self];
+                [self->_opQueue addOperation:pMan];
             }
         }
     });
@@ -329,7 +329,7 @@ static NSMutableSet* hostList;
         }]];
     }
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
-        [_discMan removeHostFromDiscovery:host];
+        [self->_discMan removeHostFromDiscovery:host];
         DataManager* dataMan = [[DataManager alloc] init];
         [dataMan removeHost:host];
         @synchronized(hostList) {
@@ -357,7 +357,7 @@ static NSMutableSet* hostList;
     [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
         NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
+            [self->_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
                 if (host != nil) {
                     dispatch_async(dispatch_get_main_queue(), ^{
                         @synchronized(hostList) {
@@ -415,12 +415,12 @@ static NSMutableSet* hostList;
                                     [app.id isEqualToString:currentApp.id] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
                                         Log(LOG_I, @"Quitting application: %@", currentApp.name);
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:_uniqueId deviceName:deviceName cert:_cert];
+                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
                                             HttpResponse* quitResponse = [[HttpResponse alloc] init];
                                             HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
                                             
                                             // Exempt this host from discovery while handling the quit operation
-                                            [_discMan removeHostFromDiscovery:app.host];
+                                            [self->_discMan removeHostFromDiscovery:app.host];
                                             [hMan executeRequestSynchronously:quitRequest];
                                             if (quitResponse.statusCode == 200) {
                                                 ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
@@ -433,7 +433,7 @@ static NSMutableSet* hostList;
                                                     quitResponse.statusCode = 599;
                                                 }
                                             }
-                                            [_discMan addHostToDiscovery:app.host];
+                                            [self->_discMan addHostToDiscovery:app.host];
                                             
                                             UIAlertController* alert;
                                             

@@ -76,7 +76,7 @@
         [self.spinner stopAnimating];
         [self.stageLabel setText:@"Waiting for first frame..."];
         [self.stageLabel sizeToFit];
-        [(StreamView*)self.view setupOnScreenControls: _controllerSupport swipeDelegate:self];
+        [(StreamView*)self.view setupOnScreenControls: self->_controllerSupport swipeDelegate:self];
     });
 }
 
