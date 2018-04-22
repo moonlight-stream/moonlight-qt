@@ -21,6 +21,5 @@
 @property (nonatomic) StreamConfiguration* streamConfig;
 @property (strong) IBOutlet StreamView *streamView;
 @property (weak) IBOutlet NSProgressIndicator *progressIndicator;
-@property (weak) IBOutlet NSTextField *stageLabel;
 
 @end

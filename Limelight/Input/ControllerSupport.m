@@ -177,7 +177,7 @@
 {
     if (controller != NULL) {
         controller.controllerPausedHandler = ^(GCController *controller) {
-            Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
+            Controller* limeController = [self->_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
             [self setButtonFlag:limeController flags:PLAY_FLAG];
             [self updateFinished:limeController];
             
@@ -190,7 +190,7 @@
         
         if (controller.extendedGamepad != NULL) {
             controller.extendedGamepad.valueChangedHandler = ^(GCExtendedGamepad *gamepad, GCControllerElement *element) {
-                Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
+                Controller* limeController = [self->_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
                 short leftStickX, leftStickY;
                 short rightStickX, rightStickY;
                 char leftTrigger, rightTrigger;
@@ -225,7 +225,7 @@
         }
         else if (controller.gamepad != NULL) {
             controller.gamepad.valueChangedHandler = ^(GCGamepad *gamepad, GCControllerElement *element) {
-                Controller* limeController = [_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
+                Controller* limeController = [self->_controllers objectForKey:[NSNumber numberWithInteger:gamepad.controller.playerIndex]];
                 UPDATE_BUTTON_FLAG(limeController, A_FLAG, gamepad.buttonA.pressed);
                 UPDATE_BUTTON_FLAG(limeController, B_FLAG, gamepad.buttonB.pressed);
                 UPDATE_BUTTON_FLAG(limeController, X_FLAG, gamepad.buttonX.pressed);
@@ -408,12 +408,12 @@
         
         GCController* controller = note.object;
         [self unregisterControllerCallbacks:controller];
-        _controllerNumbers &= ~(1 << controller.playerIndex);
+        self->_controllerNumbers &= ~(1 << controller.playerIndex);
         Log(LOG_I, @"Unassigning controller index: %ld", (long)controller.playerIndex);
         
         // Inform the server of the updated active gamepads before removing this controller
-        [self updateFinished:[_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]]];
-        [_controllers removeObjectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
+        [self updateFinished:[self->_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]]];
+        [self->_controllers removeObjectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
 
         // Re-evaluate the on-screen control mode
         [self updateAutoOnScreenControlMode];

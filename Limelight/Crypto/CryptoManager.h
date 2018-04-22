@@ -6,8 +6,6 @@
 //  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-
 @interface CryptoManager : NSObject
 
 + (void) generateKeyPairUsingSSl;

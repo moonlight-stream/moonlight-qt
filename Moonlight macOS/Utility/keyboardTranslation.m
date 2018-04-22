@@ -6,7 +6,6 @@
 //  Copyright © 2018 Felix Kratz. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "keyboardTranslation.h"
 #import <Limelight.h>
 

@@ -7,7 +7,6 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import <AppKit/AppKit.h>
 #import "PairManager.h"
 #import "StreamConfiguration.h"
 

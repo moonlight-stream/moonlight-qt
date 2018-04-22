@@ -6,7 +6,6 @@
 //  Copyright (c) 2015 Moonlight Stream. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "MDNSManager.h"
 #import "TemporaryHost.h"
 

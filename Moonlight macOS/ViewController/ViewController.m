@@ -58,6 +58,14 @@
     
     // Do any additional setup after loading the view.
 }
+
+- (void)viewWillAppear {
+    [super viewWillAppear];
+    if ([[[NSUserDefaults standardUserDefaults] stringForKey:@"AppleInterfaceStyle"]  isEqual: @"Dark"]) {
+        [self.view.window setAppearance:[NSAppearance appearanceNamed:NSAppearanceNameVibrantDark]];
+    }
+}
+
 - (void)viewDidAppear {
     [super viewDidAppear];
     
@@ -84,9 +92,9 @@
 
 -(void) showAlert:(NSString*) message {
     dispatch_async(dispatch_get_main_queue(), ^{
-        _alert = [NSAlert new];
-        _alert.messageText = message;
-        [_alert beginSheetModalForWindow:[self.view window] completionHandler:^(NSInteger result) {
+        self->_alert = [NSAlert new];
+        self->_alert.messageText = message;
+        [self->_alert beginSheetModalForWindow:[self.view window] completionHandler:^(NSInteger result) {
             NSLog(@"Success");
         }];
     });
@@ -138,7 +146,7 @@
     _host = _textFieldHost.stringValue;
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_textFieldHost.stringValue
                                                  uniqueId:_uniqueId
-                                               deviceName:@"roth"
+                                               deviceName:deviceName
                                                      cert:_cert];
     
     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
@@ -152,9 +160,9 @@
         // Polling the server while pairing causes the server to screw up
         NSLog(@"Pairing");
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            HttpManager* hMan = [[HttpManager alloc] initWithHost:_host uniqueId:_uniqueId deviceName:deviceName cert:_cert];
-        PairManager* pMan = [[PairManager alloc] initWithManager:hMan   andCert:_cert callback:self];
-        [_opQueue addOperation:pMan];
+            HttpManager* hMan = [[HttpManager alloc] initWithHost:self->_host uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
+            PairManager* pMan = [[PairManager alloc] initWithManager:hMan   andCert:self->_cert callback:self];
+            [self->_opQueue addOperation:pMan];
     });
     }
 }
@@ -174,12 +182,12 @@
 
 - (void)alreadyPaired {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [_popupButtonSelection setEnabled:true];
-        [_popupButtonSelection setHidden:false];
-        [_buttonConnect setEnabled:false];
-        [_buttonConnect setHidden:true];
-        [_buttonLaunch setEnabled:true];
-        [_textFieldHost setEnabled:false];
+        [self->_popupButtonSelection setEnabled:true];
+        [self->_popupButtonSelection setHidden:false];
+        [self->_buttonConnect setEnabled:false];
+        [self->_buttonConnect setHidden:true];
+        [self->_buttonLaunch setEnabled:true];
+        [self->_textFieldHost setEnabled:false];
     });
     [self searchForHost:_host];
     [self updateAppsForHost];
@@ -202,8 +210,8 @@
 
 - (void)pairSuccessful {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.view.window endSheet:_alert.window];
-        _alert = nil;
+        [self.view.window endSheet:self->_alert.window];
+        self->_alert = nil;
         [self alreadyPaired];
     });
 }

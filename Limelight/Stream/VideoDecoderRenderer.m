@@ -7,11 +7,12 @@
 //
 
 #import "VideoDecoderRenderer.h"
+#import "StreamView.h"
 
 #include "Limelight.h"
 
 @implementation VideoDecoderRenderer {
-    OSView *_view;
+    StreamView* _view;
     
     AVSampleBufferDisplayLayer* displayLayer;
     Boolean waitingForSps, waitingForPps, waitingForVps;
@@ -54,7 +55,7 @@
     }
 }
 
-- (id)initWithView:(OSView*)view
+- (id)initWithView:(StreamView*)view
 {
     self = [super init];
     
@@ -68,6 +69,9 @@
 - (void)setupWithVideoFormat:(int)videoFormat
 {
     self->videoFormat = videoFormat;
+#if !TARGET_OS_IPHONE
+    _view.codec = videoFormat;
+#endif
 }
 
 #define FRAME_START_PREFIX_SIZE 4
@@ -335,7 +339,9 @@
     }
     
     [displayLayer enqueueSampleBuffer:sampleBuffer];
-    
+#if !TARGET_OS_IPHONE
+    _view.frameCount++;
+#endif
     // Dereference the buffers
     CFRelease(blockBuffer);
     CFRelease(sampleBuffer);

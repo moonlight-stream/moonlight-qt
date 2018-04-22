@@ -6,8 +6,6 @@
 //  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-
 // Swift
 #import "Moonlight-Swift.h"
 #if !TARGET_OS_IPHONE

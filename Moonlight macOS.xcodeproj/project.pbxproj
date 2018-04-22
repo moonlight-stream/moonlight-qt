@@ -31,6 +31,7 @@
 		DC2F1746205DA35700C3021E /* PairManager.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F1734205DA35700C3021E /* PairManager.m */; };
 		DC2F174E205DA39600C3021E /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F174A205DA39600C3021E /* Utils.m */; };
 		DC2F174F205DA39600C3021E /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = DC2F174C205DA39600C3021E /* Logger.m */; };
+		DC381F8E206D74F600E0931A /* NetworkTraffic.m in Sources */ = {isa = PBXBuildFile; fileRef = DC381F8D206D74F600E0931A /* NetworkTraffic.m */; };
 		DC38D540205ACC360045FE93 /* Control.m in Sources */ = {isa = PBXBuildFile; fileRef = DC38D53F205ACC360045FE93 /* Control.m */; };
 		DC38D548205AD8D00045FE93 /* libstem_gamepad.a in Frameworks */ = {isa = PBXBuildFile; fileRef = DC38D544205AD8D00045FE93 /* libstem_gamepad.a */; };
 		DC38D549205AD9860045FE93 /* libstem_gamepad.a in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC38D544205AD8D00045FE93 /* libstem_gamepad.a */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
@@ -57,6 +58,7 @@
 		DC6A60862064299700A0673D /* ConnectionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC6A60852064299700A0673D /* ConnectionHelper.m */; };
 		DC7029D5205B28340016D44B /* LICENSE.txt in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = DC7029D4205B28340016D44B /* LICENSE.txt */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		DC9CD51F20601658001A5DCD /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = DC9CD51E20601658001A5DCD /* AppDelegate.m */; };
+		DCA3B3F22070EED0006565D9 /* OverlayView.m in Sources */ = {isa = PBXBuildFile; fileRef = DCA3B3F02070EED0006565D9 /* OverlayView.m */; };
 		DCAF051C205F3E6A00AD1DBA /* Limelight.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = DCAF0516205F3E6A00AD1DBA /* Limelight.xcdatamodeld */; };
 		DCAF0522205FCADB00AD1DBA /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = DCAF051F205FCADA00AD1DBA /* Controller.swift */; };
 		DCAF0523205FCADB00AD1DBA /* ControllerSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = DCAF0521205FCADA00AD1DBA /* ControllerSupport.m */; };
@@ -176,6 +178,8 @@
 		DC2F174C205DA39600C3021E /* Logger.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Logger.m; path = Limelight/Utility/Logger.m; sourceTree = SOURCE_ROOT; };
 		DC2F174D205DA39600C3021E /* Utils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Utils.h; path = Limelight/Utility/Utils.h; sourceTree = SOURCE_ROOT; };
 		DC2F1751205DA48D00C3021E /* Limelight-Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "Limelight-Prefix.pch"; path = "Limelight/Limelight-Prefix.pch"; sourceTree = SOURCE_ROOT; };
+		DC381F8C206D74F600E0931A /* NetworkTraffic.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NetworkTraffic.h; path = "Moonlight macOS/Network/NetworkTraffic.h"; sourceTree = SOURCE_ROOT; };
+		DC381F8D206D74F600E0931A /* NetworkTraffic.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NetworkTraffic.m; path = "Moonlight macOS/Network/NetworkTraffic.m"; sourceTree = SOURCE_ROOT; };
 		DC38D53E205ACC360045FE93 /* Control.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Control.h; sourceTree = "<group>"; };
 		DC38D53F205ACC360045FE93 /* Control.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = Control.m; sourceTree = "<group>"; };
 		DC38D544205AD8D00045FE93 /* libstem_gamepad.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; path = libstem_gamepad.a; sourceTree = "<group>"; };
@@ -288,6 +292,8 @@
 		DC6A60852064299700A0673D /* ConnectionHelper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ConnectionHelper.m; sourceTree = "<group>"; };
 		DC7029D4205B28340016D44B /* LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE.txt; sourceTree = "<group>"; };
 		DC9CD51E20601658001A5DCD /* AppDelegate.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = AppDelegate.m; path = Limelight/AppDelegate.m; sourceTree = SOURCE_ROOT; };
+		DCA3B3F02070EED0006565D9 /* OverlayView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = OverlayView.m; sourceTree = "<group>"; };
+		DCA3B3F12070EED0006565D9 /* OverlayView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = OverlayView.h; sourceTree = "<group>"; };
 		DCAF04FD205F38B100AD1DBA /* AppDelegate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = AppDelegate.h; path = Limelight/AppDelegate.h; sourceTree = SOURCE_ROOT; };
 		DCAF0517205F3E6A00AD1DBA /* Limelight.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Limelight.xcdatamodel; sourceTree = "<group>"; };
 		DCAF0518205F3E6A00AD1DBA /* Moonlight v1.0-2.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = "Moonlight v1.0-2.xcdatamodel"; sourceTree = "<group>"; };
@@ -391,6 +397,8 @@
 		DC2F171C205DA35700C3021E /* Network */ = {
 			isa = PBXGroup;
 			children = (
+				DC381F8C206D74F600E0931A /* NetworkTraffic.h */,
+				DC381F8D206D74F600E0931A /* NetworkTraffic.m */,
 				DC2F171D205DA35700C3021E /* WakeOnLanManager.m */,
 				DC2F171E205DA35700C3021E /* ServerInfoResponse.m */,
 				DC2F171F205DA35700C3021E /* HttpResponse.m */,
@@ -696,6 +704,8 @@
 		DCAF13DB20530BE100896C35 /* Input */ = {
 			isa = PBXGroup;
 			children = (
+				DCA3B3F12070EED0006565D9 /* OverlayView.h */,
+				DCA3B3F02070EED0006565D9 /* OverlayView.m */,
 				DCAF051F205FCADA00AD1DBA /* Controller.swift */,
 				DCAF0520205FCADA00AD1DBA /* ControllerSupport.h */,
 				DCAF0521205FCADA00AD1DBA /* ControllerSupport.m */,
@@ -793,7 +803,7 @@
 		DC5EF53D2052FBDB00C9BF55 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0920;
+				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Moonlight Game Streaming Project";
 				TargetAttributes = {
 					DC5EF5442052FBDB00C9BF55 = {
@@ -901,10 +911,12 @@
 				DC2F1742205DA35700C3021E /* AppListResponse.m in Sources */,
 				DC2F1741205DA35700C3021E /* AppAssetResponse.m in Sources */,
 				DC6A60862064299700A0673D /* ConnectionHelper.m in Sources */,
+				DC381F8E206D74F600E0931A /* NetworkTraffic.m in Sources */,
 				DCC23C26205DAC5C00BF3C25 /* Settings.m in Sources */,
 				DCD464E22053417800CC8950 /* StreamFrameViewController.m in Sources */,
 				DC5EF5582052FBDB00C9BF55 /* main.m in Sources */,
 				DC2F173A205DA35700C3021E /* WakeOnLanManager.m in Sources */,
+				DCA3B3F22070EED0006565D9 /* OverlayView.m in Sources */,
 				DCAF051C205F3E6A00AD1DBA /* Limelight.xcdatamodeld in Sources */,
 				DC0F7508205C04A90087B187 /* keepAlive.m in Sources */,
 				DC2634D4205438DC00D44F88 /* keyboardTranslation.m in Sources */,
@@ -979,6 +991,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -986,6 +999,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -1034,6 +1048,7 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_COMMA = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
 				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
@@ -1041,6 +1056,7 @@
 				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
 				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
 				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
@@ -1065,6 +1081,7 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
 			};
 			name = Release;
 		};
@@ -1076,6 +1093,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Moonlight macOS/Moonlight macOS.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = DQ6R9YE8BF;
@@ -1105,6 +1123,7 @@
 				OTHER_LDFLAGS = "";
 				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_OBJC_BRIDGING_HEADER = "Moonlight macOS/Input/Moonlight macOS-Bridging-Header.h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
@@ -1121,6 +1140,7 @@
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_ENTITLEMENTS = "Moonlight macOS/Moonlight macOS.entitlements";
+				CODE_SIGN_IDENTITY = "Mac Developer";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEVELOPMENT_TEAM = DQ6R9YE8BF;
@@ -1154,6 +1174,8 @@
 				PRECOMPS_INCLUDE_HEADERS_FROM_BUILT_PRODUCTS_DIR = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight-macOS";
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OBJC_BRIDGING_HEADER = "Moonlight macOS/Input/Moonlight macOS-Bridging-Header.h";
 				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";

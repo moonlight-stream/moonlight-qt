@@ -2,8 +2,8 @@
 //  ConnectionHelper.m
 //  Moonlight macOS
 //
-//  Created by Felix on 22.03.18.
-//  Copyright © 2018 Felix. All rights reserved.
+//  Created by Felix Kratz on 22.03.18.
+//  Copyright © 2018 Felix Kratz. All rights reserved.
 //
 
 #import "ConnectionHelper.h"

@@ -6,7 +6,6 @@
 //  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
 #import "VideoDecoderRenderer.h"
 #import "StreamConfiguration.h"
 

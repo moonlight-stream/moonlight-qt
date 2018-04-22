@@ -8,5 +8,10 @@
 
 @interface StreamView : NSView
 
+- (void)drawMessage:(NSString*)message;
+
+@property int codec;
+@property unsigned short frameCount;
+
 
 @end

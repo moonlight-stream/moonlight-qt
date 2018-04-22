@@ -6,10 +6,6 @@
 //  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import <CoreData/CoreData.h>
-
-
 @interface Settings : NSManagedObject
 
 @property (nonatomic, retain) NSNumber * bitrate;

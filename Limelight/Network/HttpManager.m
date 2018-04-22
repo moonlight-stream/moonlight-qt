@@ -69,23 +69,23 @@ static const NSString* HTTPS_PORT = @"47984";
         
         if (error != NULL) {
             Log(LOG_D, @"Connection error: %@", error);
-            _errorOccurred = true;
+            self->_errorOccurred = true;
         }
         else {
             Log(LOG_D, @"Received response: %@", response);
 
             if (data != NULL) {
                 Log(LOG_D, @"\n\nReceived data: %@\n\n", [[NSString alloc] initWithData:data encoding:NSUTF8StringEncoding]);
-                [_respData appendData:data];
-                if ([[NSString alloc] initWithData:_respData encoding:NSUTF8StringEncoding] != nil) {
-                    _requestResp = [HttpManager fixXmlVersion:_respData];
+                [self->_respData appendData:data];
+                if ([[NSString alloc] initWithData:self->_respData encoding:NSUTF8StringEncoding] != nil) {
+                    self->_requestResp = [HttpManager fixXmlVersion:self->_respData];
                 } else {
-                    _requestResp = _respData;
+                    self->_requestResp = self->_respData;
                 }
             }
         }
         
-        dispatch_semaphore_signal(_requestLock);
+        dispatch_semaphore_signal(self->_requestLock);
     }] resume];
     dispatch_semaphore_wait(_requestLock, DISPATCH_TIME_FOREVER);
     

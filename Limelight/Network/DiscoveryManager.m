@@ -153,7 +153,7 @@
             [worker discoverHost];
             if ([self addHostToDiscovery:host]) {
                 Log(LOG_I, @"Adding host to discovery: %@", host.name);
-                [_callback updateAllHosts:_hostQueue];
+                [self->_callback updateAllHosts:self->_hostQueue];
             } else {
                 Log(LOG_I, @"Not adding host to discovery: %@", host.name);
             }

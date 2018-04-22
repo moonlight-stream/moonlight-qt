@@ -6,8 +6,6 @@
 //  Copyright © 2015 Limelight Stream. All rights reserved.
 //
 
-#import <Foundation/Foundation.h>
-#import <CoreData/CoreData.h>
 #import "Utils.h"
 
 @interface Host : NSManagedObject

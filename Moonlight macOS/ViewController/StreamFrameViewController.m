@@ -12,6 +12,7 @@
 #import "Gamepad.h"
 #import "keepAlive.h"
 #import "ControllerSupport.h"
+#import "StreamView.h"
 
 @interface StreamFrameViewController ()
 @end
@@ -48,11 +49,11 @@
     // Can someone test this?
     _controllerSupport = [[ControllerSupport alloc] init];
     
-    // The gamepad currently gets polled at 60Hz, this could very well be set as 1/Framerate in the future.
-    _eventTimer = [NSTimer scheduledTimerWithTimeInterval:1.0/60.0 target:self selector:@selector(eventTimerTick) userInfo:nil repeats:true];
+    // The gamepad currently gets polled at 1/Framerate.
+    _eventTimer = [NSTimer scheduledTimerWithTimeInterval:1.0/_streamConfig.frameRate target:self selector:@selector(eventTimerTick) userInfo:nil repeats:true];
     
-    // We search for new devices every second.
-    _searchTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(searchTimerTick) userInfo:nil repeats:true];
+    // We search for new devices every 2 seconds.
+    _searchTimer = [NSTimer scheduledTimerWithTimeInterval:2 target:self selector:@selector(searchTimerTick) userInfo:nil repeats:true];
 }
 
 - (void)eventTimerTick {
@@ -94,36 +95,38 @@
 
 - (void)connectionStarted {
     dispatch_async(dispatch_get_main_queue(), ^{
-        [_progressIndicator stopAnimation:nil];
-        _progressIndicator.hidden = true;
-        _stageLabel.stringValue = @"Waiting for the first frame";
+        [self->_progressIndicator stopAnimation:nil];
+        self->_progressIndicator.hidden = true;
     });
 }
 
 - (void)connectionTerminated:(long)errorCode {
+    [_streamMan stopStream];
+    [self transitionToSetupView:1];
+}
+
+- (void)transitionToSetupView:(long)errorCode {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSLog(@"error has occured: %ld", errorCode);
         NSStoryboard *storyBoard = [NSStoryboard storyboardWithName:@"Mac" bundle:nil];
         ViewController* view = (ViewController*)[storyBoard instantiateControllerWithIdentifier :@"setupFrameVC"];
-        [view setError:1];
+        [view setError:errorCode];
         self.view.window.contentViewController = view;
     });
 }
 
-- (void)setOrigin: (ViewController*) viewController
-{
+- (void)setOrigin: (ViewController*) viewController {
     _origin = viewController;
 }
 
 - (void)displayMessage:(const char *)message {
-    
+    //[_streamView drawMessage:[NSString stringWithFormat:@"%s", message]];
 }
 
 - (void)displayTransientMessage:(const char *)message {
 }
 
 - (void)launchFailed:(NSString *)message {
-    
+
 }
 
 - (void)stageComplete:(const char *)stageName {
@@ -131,10 +134,11 @@
 }
 
 - (void)stageFailed:(const char *)stageName withError:(long)errorCode {
-    
+    //[_streamView drawMessage:[NSString stringWithFormat:@"Stage: %s failed with code: %li", stageName, errorCode]];
 }
 
 - (void)stageStarting:(const char *)stageName {
+    //[_streamView drawMessage:[NSString stringWithFormat:@"%s", stageName]];
 }
 
 @end
