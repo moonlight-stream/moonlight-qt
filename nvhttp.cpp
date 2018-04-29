@@ -5,6 +5,7 @@
 #include <QEventLoop>
 #include <QTimer>
 #include <QXmlStreamReader>
+#include <QSslKey>
 
 #define REQUEST_TIMEOUT_MS 5000
 
@@ -112,7 +113,7 @@ NvHTTP::getServerInfo()
         if (e.getStatusCode() == 401)
         {
             // Certificate validation error, fallback to HTTP
-            serverInfo = openConnectionToString(m_BaseUrlHttps,
+            serverInfo = openConnectionToString(m_BaseUrlHttp,
                                                 "serverinfo",
                                                 nullptr,
                                                 true);
@@ -198,10 +199,18 @@ NvHTTP::openConnection(QUrl baseUrl,
                  "&uuid=" + QUuid::createUuid().toRfc4122().toHex() +
                  ((arguments != nullptr) ? ("&" + arguments) : ""));
 
-    QNetworkReply* reply = m_Nam.get(QNetworkRequest(url));
+    QNetworkRequest request = QNetworkRequest(url);
+
+    // Add our client certificate
+    QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
+    sslConfig.setLocalCertificate(QSslCertificate(m_Im.getCertificate()));
+    sslConfig.setPrivateKey(QSslKey(m_Im.getPrivateKey(), QSsl::Rsa));
+    request.setSslConfiguration(sslConfig);
+
+    QNetworkReply* reply = m_Nam.get(request);
 
     // Ignore self-signed certificate errors (since GFE uses them)
-    reply->ignoreSslErrors(QList<QSslError>{ QSslError::SelfSignedCertificate });
+    reply->ignoreSslErrors();
 
     // Run the request with a timeout if requested
     QEventLoop loop;
