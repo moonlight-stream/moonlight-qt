@@ -58,6 +58,19 @@ NvHTTP::getComputerInfo()
     return computer;
 }
 
+QVector<int>
+NvHTTP::getServerVersionQuad(QString serverInfo)
+{
+    QString quad = getXmlString(serverInfo, "appversion");
+    QStringList parts = quad.split(".");
+    QVector<int> ret;
+
+    for (int i = 0; i < 4; i++)
+    {
+        ret.append(parts.at(i).toInt());
+    }
+}
+
 int
 NvHTTP::getCurrentGame(QString serverInfo)
 {
@@ -65,10 +78,12 @@ NvHTTP::getCurrentGame(QString serverInfo)
     // has the semantics that its name would indicate. To contain the effects of this change as much
     // as possible, we'll force the current game to zero if the server isn't in a streaming session.
     QString serverState = getXmlString(serverInfo, "state");
-    if (serverState != nullptr && serverState.endsWith("_SERVER_BUSY")) {
+    if (serverState != nullptr && serverState.endsWith("_SERVER_BUSY"))
+    {
         return getXmlString(serverInfo, "currentgame").toInt();
     }
-    else {
+    else
+    {
         return 0;
     }
 }
@@ -201,8 +216,9 @@ NvHTTP::openConnection(QUrl baseUrl,
     if (reply->error() != QNetworkReply::NoError)
     {
         qDebug() << command << " request for failed with error " << reply->error();
+        GfeHttpResponseException* exception = new GfeHttpResponseException(reply->error(), reply->errorString());
         delete reply;
-        throw new GfeHttpResponseException(reply->error(), reply->errorString());
+        throw exception;
     }
 
     return reply;

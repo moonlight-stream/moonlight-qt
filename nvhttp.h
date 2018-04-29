@@ -96,6 +96,9 @@ private:
                            QString arguments,
                            bool enableTimeout);
 
+    QVector<int>
+    getServerVersionQuad(QString serverInfo);
+
     QString m_Address;
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;
