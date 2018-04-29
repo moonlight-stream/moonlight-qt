@@ -24,6 +24,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    QAbstractButton *myButton = nullptr;
 };
 
 #endif // MAINWINDOW_H

@@ -6,6 +6,12 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+
+    myButton = new QPushButton(this);
+    myButton->setIcon(QIcon(":/res/icon128.png"));
+    myButton->setIconSize(QSize(128, 128));
+    myButton->resize(QSize(128, 128));
+    connect(myButton, &QAbstractButton::clicked, this, &MainWindow::on_actionExit_triggered);
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
@@ -28,6 +34,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
 MainWindow::~MainWindow()
 {
     delete ui;
+    delete myButton;
 }
 
 void MainWindow::on_actionExit_triggered()
