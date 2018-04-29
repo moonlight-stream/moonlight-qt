@@ -21,10 +21,13 @@ protected:
 
 private slots:
     void on_actionExit_triggered();
+    void on_newHostBtn_clicked();
 
 private:
     Ui::MainWindow *ui;
     QAbstractButton *myButton = nullptr;
+    QAbstractButton *newHostBtn = nullptr;
+
 };
 
 #endif // MAINWINDOW_H

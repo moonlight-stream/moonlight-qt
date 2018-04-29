@@ -41,3 +41,20 @@ void MainWindow::on_actionExit_triggered()
 {
     exit(EXIT_SUCCESS);
 }
+
+void MainWindow::on_newHostBtn_clicked()
+{
+    bool ok;
+    QString responseHost
+        = QInputDialog::getText(this, tr("Add Host Manually"),
+                               tr("IP Address or Hostname of GeForce PC"),
+                                QLineEdit::Normal,
+                                tr("default string"),
+                                &ok);
+    if (ok && !responseHost.isEmpty()) {
+        // TODO: send pair request to "responseHost"
+    } else {
+        // silently close, user canceled
+    }
+
+}
