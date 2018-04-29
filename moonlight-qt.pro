@@ -28,14 +28,16 @@ SOURCES += \
     mainwindow.cpp \
     nvhttp.cpp \
     nvpairingmanager.cpp \
-    identitymanager.cpp
+    identitymanager.cpp \
+    popupmanager.cpp
 
 HEADERS += \
     mainwindow.h \
     nvhttp.h \
     nvpairingmanager.h \
     identitymanager.h \
-    utils.h
+    utils.h \
+    popupmanager.h
 
 FORMS += \
     mainwindow.ui

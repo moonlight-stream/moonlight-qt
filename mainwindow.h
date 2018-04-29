@@ -22,15 +22,11 @@ protected:
 private slots:
     void on_actionExit_triggered();
     void on_newHostBtn_clicked();
-    void displayPinDialog(QString pin);
-    void closePinDialog();
     void addHostToDisplay(QMap<QString, bool>);
     void on_selectHostComboBox_activated(const QString &);
 
 private:
     Ui::MainWindow *ui;
-    QAbstractButton *myButton = nullptr;
-    QMessageBox *pinMsgBox = nullptr;
 
 };
 
