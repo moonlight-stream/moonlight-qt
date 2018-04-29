@@ -7,6 +7,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
 
+
     myButton = new QPushButton(this);
     myButton->setIcon(QIcon(":/res/icon128.png"));
     myButton->setIconSize(QSize(128, 128));
@@ -75,4 +76,21 @@ void MainWindow::displayPinDialog(QString pin = tr("ERROR")) {
 // to be called when the pairing is complete
 void MainWindow::closePinDialog() {
     pinMsgBox->close();
+}
+
+
+void MainWindow::addHostToDisplay(QMap<QString, bool> hostMdnsMap) {
+
+    QMapIterator<QString, bool> i(hostMdnsMap);
+    while (i.hasNext()) {
+        i.next();
+        ui->hostSelectCombo->addItem(i.key());
+        // we can ignore the mdns for now, it's only useful for displaying unpairing options
+    }
+}
+
+void MainWindow::on_selectHostComboBox_activated(const QString &selectedHostname)
+{
+    // TODO: get all the applications that "selectedHostname" has listed
+    // probably populate another combobox of applications for the time being
 }
