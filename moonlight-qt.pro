@@ -34,11 +34,12 @@ HEADERS += \
     mainwindow.h \
     nvhttp.h \
     nvpairingmanager.h \
-    identitymanager.h
+    identitymanager.h \
+    utils.h
 
 FORMS += \
     mainwindow.ui
 
-OPENSSL_LIBS='-L/usr/lib -lssl -lcrypto'
-
-QMAKE_CXXFLAGS += -openssl-linked
+LIBS += \
+    -lssl \
+    -lcrypto

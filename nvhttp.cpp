@@ -8,8 +8,9 @@
 
 #define REQUEST_TIMEOUT_MS 5000
 
-NvHTTP::NvHTTP(QString address) :
-    m_Address(address)
+NvHTTP::NvHTTP(QString address, IdentityManager im) :
+    m_Address(address),
+    m_Im(im)
 {
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
@@ -69,6 +70,8 @@ NvHTTP::getServerVersionQuad(QString serverInfo)
     {
         ret.append(parts.at(i).toInt());
     }
+
+    return ret;
 }
 
 int
@@ -104,7 +107,7 @@ NvHTTP::getServerInfo()
         // Throws if the request failed
         verifyResponseStatus(serverInfo);
     }
-    catch (GfeHttpResponseException& e)
+    catch (const GfeHttpResponseException& e)
     {
         if (e.getStatusCode() == 401)
         {
@@ -114,6 +117,11 @@ NvHTTP::getServerInfo()
                                                 nullptr,
                                                 true);
             verifyResponseStatus(serverInfo);
+        }
+        else
+        {
+            // Rethrow real errors
+            throw e;
         }
     }
 
@@ -185,10 +193,10 @@ NvHTTP::openConnection(QUrl baseUrl,
 {
     // Build a URL for the request
     QUrl url(baseUrl);
-    url.setPath(command +
-                "?uniqueid=" + "0" +
-                "&uuid=" + QUuid::createUuid().toString() +
-                ((arguments != nullptr) ? (arguments + "&") : ""));
+    url.setPath("/" + command);
+    url.setQuery("uniqueid=" + m_Im.getUniqueId() +
+                 "&uuid=" + QUuid::createUuid().toRfc4122().toHex() +
+                 ((arguments != nullptr) ? ("&" + arguments) : ""));
 
     QNetworkReply* reply = m_Nam.get(QNetworkRequest(url));
 
@@ -215,8 +223,8 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Handle error
     if (reply->error() != QNetworkReply::NoError)
     {
-        qDebug() << command << " request for failed with error " << reply->error();
-        GfeHttpResponseException* exception = new GfeHttpResponseException(reply->error(), reply->errorString());
+        qDebug() << command << " request failed with error " << reply->error();
+        GfeHttpResponseException exception(reply->error(), reply->errorString());
         delete reply;
         throw exception;
     }

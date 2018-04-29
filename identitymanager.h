@@ -1,15 +1,25 @@
 #pragma once
 
+#include <QDir>
 
 class IdentityManager
 {
 public:
     IdentityManager(QDir directory);
 
+    QString
+    getUniqueId();
+
+    QByteArray
+    getCertificate();
+
+    QByteArray
+    getPrivateKey();
+
 private:
     QDir m_RootDirectory;
 
-    QString m_CachedUniqueId;
-    QByteArray m_CachedPemCert;
     QByteArray m_CachedPrivateKey;
+    QByteArray m_CachedPemCert;
+    QString m_CachedUniqueId;
 };

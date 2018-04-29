@@ -1,5 +1,7 @@
 #pragma once
 
+#include "identitymanager.h"
+
 #include <QUrl>
 #include <QtNetwork/QNetworkAccessManager>
 
@@ -15,15 +17,15 @@ public:
 
     const char* what() const throw()
     {
-        return m_StatusMessage.toStdString().c_str();
+        return m_StatusMessage.toLatin1();
     }
 
-    const char* getStatusMessage()
+    const char* getStatusMessage() const
     {
-        return m_StatusMessage.toStdString().c_str();
+        return m_StatusMessage.toLatin1();
     }
 
-    int getStatusCode()
+    int getStatusCode() const
     {
         return m_StatusCode;
     }
@@ -65,14 +67,7 @@ public:
 class NvHTTP
 {
 public:
-    NvHTTP(QString address);
-
-private:
-    QNetworkReply*
-    openConnection(QUrl baseUrl,
-                   QString command,
-                   QString arguments,
-                   bool enableTimeout);
+    NvHTTP(QString address, IdentityManager im);
 
     NvComputer
     getComputerInfo();
@@ -99,8 +94,16 @@ private:
     QVector<int>
     getServerVersionQuad(QString serverInfo);
 
-    QString m_Address;
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;
+private:
+    QNetworkReply*
+    openConnection(QUrl baseUrl,
+                   QString command,
+                   QString arguments,
+                   bool enableTimeout);
+
+    QString m_Address;
     QNetworkAccessManager m_Nam;
+    IdentityManager m_Im;
 };
