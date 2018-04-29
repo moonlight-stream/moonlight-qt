@@ -22,11 +22,13 @@ protected:
 private slots:
     void on_actionExit_triggered();
     void on_newHostBtn_clicked();
+    void displayPinDialog(QString pin);
+    void closePinDialog();
 
 private:
     Ui::MainWindow *ui;
     QAbstractButton *myButton = nullptr;
-    QAbstractButton *newHostBtn = nullptr;
+    QMessageBox *pinMsgBox = nullptr;
 
 };
 
