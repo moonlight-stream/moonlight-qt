@@ -1,15 +1,18 @@
 #include "nvhttp.h"
 
+#include <QDebug>
 #include <QUuid>
 #include <QtNetwork/QNetworkReply>
 #include <QEventLoop>
 #include <QTimer>
 #include <QXmlStreamReader>
+#include <QSslKey>
 
 #define REQUEST_TIMEOUT_MS 5000
 
-NvHTTP::NvHTTP(QString address) :
-    m_Address(address)
+NvHTTP::NvHTTP(QString address, IdentityManager im) :
+    m_Address(address),
+    m_Im(im)
 {
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
@@ -58,6 +61,21 @@ NvHTTP::getComputerInfo()
     return computer;
 }
 
+QVector<int>
+NvHTTP::getServerVersionQuad(QString serverInfo)
+{
+    QString quad = getXmlString(serverInfo, "appversion");
+    QStringList parts = quad.split(".");
+    QVector<int> ret;
+
+    for (int i = 0; i < 4; i++)
+    {
+        ret.append(parts.at(i).toInt());
+    }
+
+    return ret;
+}
+
 int
 NvHTTP::getCurrentGame(QString serverInfo)
 {
@@ -65,10 +83,12 @@ NvHTTP::getCurrentGame(QString serverInfo)
     // has the semantics that its name would indicate. To contain the effects of this change as much
     // as possible, we'll force the current game to zero if the server isn't in a streaming session.
     QString serverState = getXmlString(serverInfo, "state");
-    if (serverState != nullptr && serverState.endsWith("_SERVER_BUSY")) {
+    if (serverState != nullptr && serverState.endsWith("_SERVER_BUSY"))
+    {
         return getXmlString(serverInfo, "currentgame").toInt();
     }
-    else {
+    else
+    {
         return 0;
     }
 }
@@ -89,16 +109,21 @@ NvHTTP::getServerInfo()
         // Throws if the request failed
         verifyResponseStatus(serverInfo);
     }
-    catch (GfeHttpResponseException& e)
+    catch (const GfeHttpResponseException& e)
     {
         if (e.getStatusCode() == 401)
         {
             // Certificate validation error, fallback to HTTP
-            serverInfo = openConnectionToString(m_BaseUrlHttps,
+            serverInfo = openConnectionToString(m_BaseUrlHttp,
                                                 "serverinfo",
                                                 nullptr,
                                                 true);
             verifyResponseStatus(serverInfo);
+        }
+        else
+        {
+            // Rethrow real errors
+            throw e;
         }
     }
 
@@ -130,17 +155,35 @@ NvHTTP::verifyResponseStatus(QString xml)
     }
 }
 
+QByteArray
+NvHTTP::getXmlStringFromHex(QString xml,
+                            QString tagName)
+{
+    QString str = getXmlString(xml, tagName);
+    if (str == nullptr)
+    {
+        return nullptr;
+    }
+
+    return QByteArray::fromHex(str.toLatin1());
+}
+
 QString
 NvHTTP::getXmlString(QString xml,
                      QString tagName)
 {
     QXmlStreamReader xmlReader(xml);
 
-    while (xmlReader.readNextStartElement())
+    while (!xmlReader.atEnd())
     {
+        if (xmlReader.readNext() != QXmlStreamReader::StartElement)
+        {
+            continue;
+        }
+
         if (xmlReader.name() == tagName)
         {
-            return xmlReader.text().toString();
+            return xmlReader.readElementText();
         }
     }
 
@@ -170,15 +213,23 @@ NvHTTP::openConnection(QUrl baseUrl,
 {
     // Build a URL for the request
     QUrl url(baseUrl);
-    url.setPath(command +
-                "?uniqueid=" + "0" +
-                "&uuid=" + QUuid::createUuid().toString() +
-                ((arguments != nullptr) ? (arguments + "&") : ""));
+    url.setPath("/" + command);
+    url.setQuery("uniqueid=" + m_Im.getUniqueId() +
+                 "&uuid=" + QUuid::createUuid().toRfc4122().toHex() +
+                 ((arguments != nullptr) ? ("&" + arguments) : ""));
 
-    QNetworkReply* reply = m_Nam.get(QNetworkRequest(url));
+    QNetworkRequest request = QNetworkRequest(url);
+
+    // Add our client certificate
+    QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
+    sslConfig.setLocalCertificate(QSslCertificate(m_Im.getCertificate()));
+    sslConfig.setPrivateKey(QSslKey(m_Im.getPrivateKey(), QSsl::Rsa));
+    request.setSslConfiguration(sslConfig);
+
+    QNetworkReply* reply = m_Nam.get(request);
 
     // Ignore self-signed certificate errors (since GFE uses them)
-    reply->ignoreSslErrors(QList<QSslError>{ QSslError::SelfSignedCertificate });
+    reply->ignoreSslErrors();
 
     // Run the request with a timeout if requested
     QEventLoop loop;
@@ -200,9 +251,10 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Handle error
     if (reply->error() != QNetworkReply::NoError)
     {
-        qDebug() << command << " request for failed with error " << reply->error();
+        qDebug() << command << " request failed with error " << reply->error();
+        GfeHttpResponseException exception(reply->error(), reply->errorString());
         delete reply;
-        throw new GfeHttpResponseException(reply->error(), reply->errorString());
+        throw exception;
     }
 
     return reply;
