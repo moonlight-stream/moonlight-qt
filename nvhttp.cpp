@@ -1,5 +1,6 @@
 #include "nvhttp.h"
 
+#include <QDebug>
 #include <QUuid>
 #include <QtNetwork/QNetworkReply>
 #include <QEventLoop>
@@ -160,11 +161,16 @@ NvHTTP::getXmlString(QString xml,
 {
     QXmlStreamReader xmlReader(xml);
 
-    while (xmlReader.readNextStartElement())
+    while (!xmlReader.atEnd())
     {
+        if (xmlReader.readNext() != QXmlStreamReader::StartElement)
+        {
+            continue;
+        }
+
         if (xmlReader.name() == tagName)
         {
-            return xmlReader.text().toString();
+            return xmlReader.readElementText();
         }
     }
 

@@ -14,7 +14,8 @@ NvPairingManager::NvPairingManager(QString address, IdentityManager im) :
     m_Http(address, im),
     m_Im(im)
 {
-    BIO *bio = BIO_new_mem_buf(m_Im.getCertificate().toStdString().c_str(), -1);
+    QByteArray cert = m_Im.getCertificate();
+    BIO *bio = BIO_new_mem_buf(cert.data(), -1);
     THROW_BAD_ALLOC_IF_NULL(bio);
 
     m_Cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
@@ -24,7 +25,8 @@ NvPairingManager::NvPairingManager(QString address, IdentityManager im) :
         throw new std::runtime_error("Unable to load certificate");
     }
 
-    bio = BIO_new_mem_buf(m_Im.getPrivateKey().toStdString().c_str(), -1);
+    QByteArray pk = m_Im.getPrivateKey();
+    bio = BIO_new_mem_buf(pk.data(), -1);
     THROW_BAD_ALLOC_IF_NULL(bio);
 
     PEM_read_bio_PrivateKey(bio, &m_PrivateKey, nullptr, nullptr);
@@ -167,6 +169,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                     "devicename=roth&updateState=1&phrase=getservercert&salt=" +
                                                     salt.toHex() + "&clientcert=" + m_Im.getCertificate().toHex(),
                                                     false);
+    m_Http.verifyResponseStatus(getCert);
     if (m_Http.getXmlString(getCert, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #1";
@@ -179,6 +182,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                          "devicename=roth&updateState=1&clientchallenge=" +
                                                          encryptedChallenge.toHex(),
                                                          true);
+    m_Http.verifyResponseStatus(challengeXml);
     if (m_Http.getXmlString(challengeXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #2";
@@ -204,6 +208,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                     "devicename=roth&updateState=1&serverchallengeresp=" +
                                                     encryptedChallengeResponseHash.toHex(),
                                                     true);
+    m_Http.verifyResponseStatus(respXml);
     if (m_Http.getXmlString(respXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #3";
@@ -229,6 +234,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                           "devicename=roth&updateState=1&clientpairingsecret=" +
                                                           clientPairingSecret.toHex(),
                                                           true);
+    m_Http.verifyResponseStatus(secretRespXml);
     if (m_Http.getXmlString(secretRespXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #4";
@@ -239,6 +245,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                              "pair",
                                                              "devicename=roth&updateState=1&phase=pairchallenge",
                                                              true);
+    m_Http.verifyResponseStatus(pairChallengeXml);
     if (m_Http.getXmlString(pairChallengeXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #5";
