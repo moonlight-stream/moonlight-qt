@@ -46,7 +46,7 @@ NvPairingManager::~NvPairingManager()
 QString
 NvPairingManager::generatePinString()
 {
-    return QString::number(QRandomGenerator::global()->bounded(10000));
+    return QString::asprintf("%04d", QRandomGenerator::global()->bounded(10000));
 }
 
 QByteArray
@@ -87,10 +87,35 @@ NvPairingManager::decrypt(QByteArray ciphertext, AES_KEY* key)
     return plaintext;
 }
 
-bool
-NvPairingManager::verifySignature(QByteArray data, QByteArray signature)
+QByteArray
+NvPairingManager::getSignatureFromPemCert(QByteArray certificate)
 {
-    EVP_PKEY* pubKey = X509_get_pubkey(m_Cert);
+    BIO* bio = BIO_new_mem_buf(certificate.data(), -1);
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
+    BIO_free_all(bio);
+
+    const ASN1_BIT_STRING *asnSignature;
+    X509_get0_signature(&asnSignature, NULL, cert);
+
+    QByteArray signature(reinterpret_cast<char*>(asnSignature->data), asnSignature->length);
+
+    X509_free(cert);
+
+    return signature;
+}
+
+bool
+NvPairingManager::verifySignature(QByteArray data, QByteArray signature, QByteArray serverCertificate)
+{
+    BIO* bio = BIO_new_mem_buf(serverCertificate.data(), -1);
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
+    BIO_free_all(bio);
+
+    EVP_PKEY* pubKey = X509_get_pubkey(cert);
     THROW_BAD_ALLOC_IF_NULL(pubKey);
 
     EVP_MD_CTX* mdctx = EVP_MD_CTX_create();
@@ -102,6 +127,7 @@ NvPairingManager::verifySignature(QByteArray data, QByteArray signature)
 
     EVP_PKEY_free(pubKey);
     EVP_MD_CTX_destroy(mdctx);
+    X509_free(cert);
 
     return result > 0;
 }
@@ -176,7 +202,16 @@ NvPairingManager::pair(QString serverInfo, QString pin)
         return PairState::FAILED;
     }
 
-    QByteArray encryptedChallenge = encrypt(generateRandomBytes(16), &encKey);
+    QByteArray serverCert = m_Http.getXmlStringFromHex(getCert, "plaincert");
+    if (serverCert == nullptr)
+    {
+        qDebug() << "Server likely already pairing";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        return PairState::ALREADY_IN_PROGRESS;
+    }
+
+    QByteArray randomChallenge = generateRandomBytes(16);
+    QByteArray encryptedChallenge = encrypt(randomChallenge, &encKey);
     QString challengeXml = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
                                                          "pair",
                                                          "devicename=roth&updateState=1&clientchallenge=" +
@@ -186,20 +221,20 @@ NvPairingManager::pair(QString serverInfo, QString pin)
     if (m_Http.getXmlString(challengeXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #2";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
         return PairState::FAILED;
     }
 
-    QByteArray challengeResponseData = decrypt(
-                QByteArray::fromHex(m_Http.getXmlString(challengeXml, "challengeresponse").toLatin1()),
-                &decKey);
+    QByteArray challengeResponseData = decrypt(m_Http.getXmlStringFromHex(challengeXml, "challengeresponse"), &decKey);
     QByteArray clientSecretData = generateRandomBytes(16);
     QByteArray challengeResponse;
+    QByteArray serverResponse(challengeResponseData.data(), hashLength);
 
     const ASN1_BIT_STRING *asnSignature;
     X509_get0_signature(&asnSignature, NULL, m_Cert);
 
     challengeResponse.append(challengeResponseData.data() + hashLength, 16);
-    challengeResponse.append(reinterpret_cast<char*>(asnSignature->data), 256);
+    challengeResponse.append(reinterpret_cast<char*>(asnSignature->data), asnSignature->length);
     challengeResponse.append(clientSecretData);
 
     QByteArray encryptedChallengeResponseHash = encrypt(QCryptographicHash::hash(challengeResponse, hashAlgo), &encKey);
@@ -212,17 +247,32 @@ NvPairingManager::pair(QString serverInfo, QString pin)
     if (m_Http.getXmlString(respXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #3";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
         return PairState::FAILED;
     }
 
-    QByteArray pairingSecret =
-           QByteArray::fromHex(m_Http.getXmlString(challengeXml, "pairingsecret").toLatin1());
+    QByteArray pairingSecret = m_Http.getXmlStringFromHex(respXml, "pairingsecret");
+    QByteArray serverSecret = QByteArray(pairingSecret.data(), 16);
+    QByteArray serverSignature = QByteArray(&pairingSecret.data()[16], 256);
 
-    if (!verifySignature(QByteArray(pairingSecret.data(), 16),
-                         QByteArray(&pairingSecret.data()[16], 256)))
+    if (!verifySignature(serverSecret,
+                         serverSignature,
+                         serverCert))
     {
         qDebug() << "MITM detected";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
         return PairState::FAILED;
+    }
+
+    QByteArray expectedResponseData;
+    expectedResponseData.append(randomChallenge);
+    expectedResponseData.append(getSignatureFromPemCert(serverCert));
+    expectedResponseData.append(serverSecret);
+    if (QCryptographicHash::hash(expectedResponseData, hashAlgo) != serverResponse)
+    {
+        qDebug() << "Incorrect PIN";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        return PairState::PIN_WRONG;
     }
 
     QByteArray clientPairingSecret;
@@ -238,6 +288,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
     if (m_Http.getXmlString(secretRespXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #4";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
         return PairState::FAILED;
     }
 
@@ -249,6 +300,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
     if (m_Http.getXmlString(pairChallengeXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #5";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
         return PairState::FAILED;
     }
 

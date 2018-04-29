@@ -85,6 +85,10 @@ public:
     getXmlString(QString xml,
                  QString tagName);
 
+    QByteArray
+    getXmlStringFromHex(QString xml,
+                        QString tagName);
+
     QString
     openConnectionToString(QUrl baseUrl,
                            QString command,

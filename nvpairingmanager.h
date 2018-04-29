@@ -42,8 +42,11 @@ private:
     QByteArray
     decrypt(QByteArray ciphertext, AES_KEY* key);
 
+    QByteArray
+    getSignatureFromPemCert(QByteArray certificate);
+
     bool
-    verifySignature(QByteArray data, QByteArray signature);
+    verifySignature(QByteArray data, QByteArray signature, QByteArray serverCertificate);
 
     QByteArray
     signMessage(QByteArray message);

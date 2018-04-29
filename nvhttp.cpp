@@ -155,6 +155,19 @@ NvHTTP::verifyResponseStatus(QString xml)
     }
 }
 
+QByteArray
+NvHTTP::getXmlStringFromHex(QString xml,
+                            QString tagName)
+{
+    QString str = getXmlString(xml, tagName);
+    if (str == nullptr)
+    {
+        return nullptr;
+    }
+
+    return QByteArray::fromHex(str.toLatin1());
+}
+
 QString
 NvHTTP::getXmlString(QString xml,
                      QString tagName)
