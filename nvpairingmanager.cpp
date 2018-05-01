@@ -29,9 +29,9 @@ NvPairingManager::NvPairingManager(QString address, IdentityManager im) :
     bio = BIO_new_mem_buf(pk.data(), -1);
     THROW_BAD_ALLOC_IF_NULL(bio);
 
-    PEM_read_bio_PrivateKey(bio, &m_PrivateKey, nullptr, nullptr);
+    m_PrivateKey = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
     BIO_free_all(bio);
-    if (m_Cert == nullptr)
+    if (m_PrivateKey == nullptr)
     {
         throw new std::runtime_error("Unable to load private key");
     }
