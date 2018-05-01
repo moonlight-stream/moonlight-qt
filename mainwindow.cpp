@@ -1,6 +1,9 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 #include "popupmanager.h"
+#include "identitymanager.h"
+#include "nvpairingmanager.h"
+#include "nvhttp.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -48,7 +51,13 @@ void MainWindow::on_newHostBtn_clicked()
 {
     QString hostname = popupmanager::getHostnameDialog(this);
     if (!hostname.isEmpty()) {
-        //TODO: pairTo(hostname)
+
+        IdentityManager im = IdentityManager(QDir(QDir::current()));
+        NvPairingManager pm(hostname, im);
+
+        QString pin = pm.generatePinString();
+        NvHTTP http(hostname, im);
+        pm.pair(http.getServerInfo(), pin);
     }
 }
 
