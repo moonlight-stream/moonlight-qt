@@ -1,18 +1,17 @@
 #ifndef POPUPMANAGER_H
 #define POPUPMANAGER_H
 
-#include <QWidget>
+#include <QtWidgets>
 
 class popupmanager
 {
 public:
-    popupmanager();
-    static void displayPinDialog(QString pin);
+    static void displayPinDialog(QString pin, QWidget* parent);
     static void closePinDialog();
-    static QString getHostnameDialog();
+    static QString getHostnameDialog(QWidget* parent);
 
 private slots:
-    QMessageBox *pinMsgBox = nullptr;
+    static QMessageBox *pinMsgBox;
 };
 
 #endif // POPUPMANAGER_H

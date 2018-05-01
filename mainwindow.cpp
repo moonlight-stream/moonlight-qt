@@ -46,7 +46,7 @@ void MainWindow::on_actionExit_triggered()
 
 void MainWindow::on_newHostBtn_clicked()
 {
-    QString hostname = popupmanager::getHostnameDialog();
+    QString hostname = popupmanager::getHostnameDialog(this);
     if (!hostname.isEmpty()) {
         //TODO: pairTo(hostname)
     }
