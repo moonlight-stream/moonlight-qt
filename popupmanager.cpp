@@ -1,16 +1,20 @@
 #include "popupmanager.h"
 
+QMessageBox *popupmanager::pinMsgBox = nullptr;
+
+popupmanager::popupmanager(){}
+
 // this opens a non-blocking informative message telling the user to enter the given pin
 // it is open-loop: if the user cancels, nothing happens
 // it is expected that upon pairing completion, the ::closePinDialog function will be called.
 void popupmanager::displayPinDialog(QString pin, QWidget* parent) {
 
-    pinMsgBox = new QMessageBox( parent );
-    pinMsgBox->setAttribute( Qt::WA_DeleteOnClose ); //makes sure the msgbox is deleted automatically when closed
-    pinMsgBox->setStandardButtons( QMessageBox::Ok );
-    pinMsgBox->setText("Please enter the number " + pin + " on the GFE dialog on the computer.");
-    pinMsgBox->setInformativeText("This dialog will be dismissed once complete.");
-    pinMsgBox->open();
+    popupmanager::pinMsgBox = new QMessageBox( parent );
+    popupmanager::pinMsgBox->setAttribute( Qt::WA_DeleteOnClose ); //makes sure the msgbox is deleted automatically when closed
+    popupmanager::pinMsgBox->setStandardButtons( QMessageBox::Ok );
+    popupmanager::pinMsgBox->setText("Please enter the number " + pin + " on the GFE dialog on the computer.");
+    popupmanager::pinMsgBox->setInformativeText("This dialog will be dismissed once complete.");
+    popupmanager::pinMsgBox->open();
 }
 
 // to be called when the pairing is complete
