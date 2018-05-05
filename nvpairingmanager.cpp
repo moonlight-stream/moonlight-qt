@@ -96,7 +96,12 @@ NvPairingManager::getSignatureFromPemCert(QByteArray certificate)
     X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
     BIO_free_all(bio);
 
-    const ASN1_BIT_STRING *asnSignature;
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+   ASN1_BIT_STRING *asnSignature;
+#else
+   const ASN1_BIT_STRING *asnSignature;
+#endif
+
     X509_get0_signature(&asnSignature, NULL, cert);
 
     QByteArray signature(reinterpret_cast<char*>(asnSignature->data), asnSignature->length);
@@ -230,7 +235,12 @@ NvPairingManager::pair(QString serverInfo, QString pin)
     QByteArray challengeResponse;
     QByteArray serverResponse(challengeResponseData.data(), hashLength);
 
+ #if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    ASN1_BIT_STRING *asnSignature;
+ #else
     const ASN1_BIT_STRING *asnSignature;
+ #endif
+
     X509_get0_signature(&asnSignature, NULL, m_Cert);
 
     challengeResponse.append(challengeResponseData.data() + hashLength, 16);
