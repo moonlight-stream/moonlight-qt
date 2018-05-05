@@ -118,8 +118,8 @@ IdentityManager::IdentityManager()
     BIO_free(biocert);
 
     // Ensure we can actually consume the keys we just wrote
-    assert(!QSslCertificate(m_CachedPemCert).isNull());
-    assert(!QSslKey(m_CachedPrivateKey, QSsl::Rsa).isNull());
+    Q_ASSERT(!QSslCertificate(m_CachedPemCert).isNull());
+    Q_ASSERT(!QSslKey(m_CachedPrivateKey, QSsl::Rsa).isNull());
 
     qDebug() << "Wrote new identity credentials to disk";
 }
