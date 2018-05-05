@@ -5,7 +5,7 @@
 class IdentityManager
 {
 public:
-    IdentityManager(QDir directory);
+    IdentityManager();
 
     QString
     getUniqueId();

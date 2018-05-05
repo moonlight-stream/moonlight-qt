@@ -52,7 +52,7 @@ void MainWindow::on_newHostBtn_clicked()
     QString hostname = popupmanager::getHostnameDialog(this);
     if (!hostname.isEmpty()) {
 
-        IdentityManager im = IdentityManager(QDir(QDir::current()));
+        IdentityManager im = IdentityManager();
         NvPairingManager pm(hostname, im);
 
         QString pin = pm.generatePinString();

@@ -6,14 +6,21 @@
 #include <QTextStream>
 #include <QSslCertificate>
 #include <QSslKey>
+#include <QStandardPaths>
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/pkcs12.h>
 
-IdentityManager::IdentityManager(QDir directory)
+IdentityManager::IdentityManager()
 {
-    QFile uniqueIdFile(directory.filePath("uniqueid"));
+    m_RootDirectory = QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
+    if (!m_RootDirectory.exists())
+    {
+        m_RootDirectory.mkpath(".");
+    }
+
+    QFile uniqueIdFile(m_RootDirectory.filePath("uniqueid"));
     if (uniqueIdFile.open(QIODevice::ReadOnly))
     {
         m_CachedUniqueId = QTextStream(&uniqueIdFile).readAll();
