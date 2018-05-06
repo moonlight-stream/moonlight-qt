@@ -10,7 +10,6 @@
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
-#include <openssl/pkcs12.h>
 
 IdentityManager::IdentityManager()
 {
@@ -49,14 +48,8 @@ IdentityManager::IdentityManager()
         m_CachedPemCert = certificateFile.readAll();
         m_CachedPrivateKey = privateKeyFile.readAll();
 
-        // Make sure it really loads
-        if (!QSslKey(m_CachedPrivateKey, QSsl::Rsa).isNull() && !QSslCertificate(m_CachedPemCert).isNull())
-        {
-            qDebug() << "Loaded cached identity key pair from disk";
-            return;
-        }
-
-        qDebug() << "Regenerating corrupted local key pair";
+        qDebug() << "Loaded cached identity key pair from disk";
+        return;
     }
 
     privateKeyFile.close();
@@ -117,11 +110,40 @@ IdentityManager::IdentityManager()
     BIO_free(biokey);
     BIO_free(biocert);
 
-    // Ensure we can actually consume the keys we just wrote
-    Q_ASSERT(!QSslCertificate(m_CachedPemCert).isNull());
-    Q_ASSERT(!QSslKey(m_CachedPrivateKey, QSsl::Rsa).isNull());
-
     qDebug() << "Wrote new identity credentials to disk";
+}
+
+QSslConfiguration
+IdentityManager::getSslConfig()
+{
+    BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.data(), -1);
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
+    BIO_free(bio);
+
+    bio = BIO_new(BIO_s_mem());
+    THROW_BAD_ALLOC_IF_NULL(bio);
+
+    // We must write out our PEM in the old PKCS1 format for SecureTransport
+    // on macOS/iOS to be able to read it.
+    BUF_MEM* mem;
+    BIO_get_mem_ptr(bio, &mem);
+    PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+
+    QSslCertificate cert = QSslCertificate(m_CachedPemCert);
+    QSslKey key = QSslKey(QByteArray::fromRawData(mem->data, mem->length), QSsl::Rsa);
+    Q_ASSERT(!cert.isNull());
+    Q_ASSERT(!key.isNull());
+
+    BIO_free(bio);
+    EVP_PKEY_free(pk);
+
+    QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
+    sslConfig.setLocalCertificate(cert);
+    sslConfig.setPrivateKey(key);
+
+    return sslConfig;
 }
 
 QString

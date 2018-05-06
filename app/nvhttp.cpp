@@ -221,10 +221,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     QNetworkRequest request = QNetworkRequest(url);
 
     // Add our client certificate
-    QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
-    sslConfig.setLocalCertificate(QSslCertificate(m_Im.getCertificate()));
-    sslConfig.setPrivateKey(QSslKey(m_Im.getPrivateKey(), QSsl::Rsa));
-    request.setSslConfiguration(sslConfig);
+    request.setSslConfiguration(m_Im.getSslConfig());
 
     QNetworkReply* reply = m_Nam.get(request);
 

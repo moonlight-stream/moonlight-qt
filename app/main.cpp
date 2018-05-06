@@ -7,6 +7,10 @@ int main(int argc, char *argv[])
     // i.e. it's in the window, and not the top left of the screen
     QCoreApplication::setAttribute(Qt::AA_DontUseNativeMenuBar);
 
+    // This avoids using the default keychain for SSL, which may cause
+    // password prompts on macOS.
+    qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", QByteArray("1"));
+
     QApplication a(argc, argv);
     MainWindow w;
     w.show();

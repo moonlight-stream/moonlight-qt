@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QDir>
+#include <QSslConfiguration>
 
 class IdentityManager
 {
@@ -15,6 +16,9 @@ public:
 
     QByteArray
     getPrivateKey();
+
+    QSslConfiguration
+    getSslConfig();
 
 private:
     QDir m_RootDirectory;
