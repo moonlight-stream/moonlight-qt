@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network
+QT       += core gui network gamepad
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -38,7 +38,8 @@ SOURCES += \
     nvhttp.cpp \
     nvpairingmanager.cpp \
     identitymanager.cpp \
-    popupmanager.cpp
+    popupmanager.cpp \
+    streamwidget.cpp
 
 HEADERS += \
     mainwindow.h \
@@ -46,7 +47,8 @@ HEADERS += \
     nvpairingmanager.h \
     identitymanager.h \
     utils.h \
-    popupmanager.h
+    popupmanager.h \
+    streamwidget.h
 
 FORMS += \
     mainwindow.ui
