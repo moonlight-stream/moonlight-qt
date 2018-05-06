@@ -24,8 +24,8 @@ DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs depr
 
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
-    LIBS += $$PWD/../libs/mac/lib/libssl.dylib
-    LIBS += $$PWD/../libs/mac/lib/libcrypto.dylib
+    LIBS += $$PWD/../libs/mac/lib/libssl.1.1.dylib
+    LIBS += $$PWD/../libs/mac/lib/libcrypto.1.1.dylib
 }
 unix:!macx {
     CONFIG += link_pkgconfig

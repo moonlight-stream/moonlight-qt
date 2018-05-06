@@ -11,8 +11,8 @@ TEMPLATE = lib
 
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
-    LIBS += $$PWD/../libs/mac/lib/libssl.dylib
-    LIBS += $$PWD/../libs/mac/lib/libcrypto.dylib
+    LIBS += $$PWD/../libs/mac/lib/libssl.1.1.dylib
+    LIBS += $$PWD/../libs/mac/lib/libcrypto.1.1.dylib
 }
 unix:!macx {
     CONFIG += link_pkgconfig
