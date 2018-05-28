@@ -8,9 +8,7 @@
 
 #import "DataManager.h"
 #import "TemporaryHost.h"
-#import "Host.h"
 #import "TemporaryApp.h"
-#import "App.h"
 
 @implementation TemporaryHost
 

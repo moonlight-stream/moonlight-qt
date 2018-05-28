@@ -7,7 +7,7 @@
 //
 
 #import "Utils.h"
-#import "Host.h"
+#import "Host+CoreDataClass.h"
 
 @interface TemporaryHost : NSObject
 

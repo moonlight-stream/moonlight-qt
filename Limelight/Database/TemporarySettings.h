@@ -6,7 +6,7 @@
 //  Copyright © 2015 Moonlight Stream. All rights reserved.
 //
 
-#import "Settings.h"
+#import "Settings+CoreDataClass.h"
 
 @interface TemporarySettings : NSObject
 

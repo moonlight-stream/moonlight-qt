@@ -9,7 +9,6 @@
 #import "DataManager.h"
 #import "TemporaryApp.h"
 #import "TemporarySettings.h"
-#import "Settings.h"
 
 @implementation DataManager {
     NSManagedObjectContext *_managedObjectContext;
