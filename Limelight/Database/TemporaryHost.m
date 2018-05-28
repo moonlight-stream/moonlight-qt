@@ -44,10 +44,21 @@
 }
 
 - (void) propagateChangesToParent:(Host*)parentHost {
-    parentHost.address = self.address;
-    parentHost.externalAddress = self.externalAddress;
-    parentHost.localAddress = self.localAddress;
-    parentHost.mac = self.mac;
+    // Avoid overwriting existing data with nil if
+    // we don't have everything populated in the temporary
+    // host.
+    if (self.address != nil) {
+        parentHost.address = self.address;
+    }
+    if (self.externalAddress != nil) {
+        parentHost.externalAddress = self.externalAddress;
+    }
+    if (self.localAddress != nil) {
+        parentHost.localAddress = self.localAddress;
+    }
+    if (self.mac != nil) {
+        parentHost.mac = self.mac;
+    }
     parentHost.name = self.name;
     parentHost.uuid = self.uuid;
     parentHost.pairState = [NSNumber numberWithInt:self.pairState];
