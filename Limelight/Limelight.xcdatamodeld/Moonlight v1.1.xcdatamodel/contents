@@ -21,7 +21,7 @@
         <attribute name="framerate" attributeType="Integer 32" defaultValueString="60" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="height" attributeType="Integer 32" defaultValueString="720" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="onscreenControls" attributeType="Integer 32" defaultValueString="1" usesScalarValueType="NO" syncable="YES"/>
-        <attribute name="streamingRemotely" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="streamingRemotely" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
         <attribute name="uniqueId" attributeType="String" syncable="YES"/>
         <attribute name="width" attributeType="Integer 32" defaultValueString="1280" usesScalarValueType="NO" syncable="YES"/>
     </entity>
