@@ -73,13 +73,16 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     _bitrate = [currentSettings.bitrate integerValue];
     NSInteger framerate = [currentSettings.framerate integerValue] == 30 ? 0 : 1;
     NSInteger resolution;
-    if ([currentSettings.height integerValue] == 720) {
+    if ([currentSettings.height integerValue] == 360) {
         resolution = 0;
-    } else if ([currentSettings.height integerValue] == 1080) {
+    } else if ([currentSettings.height integerValue] == 720) {
         resolution = 1;
+    } else if ([currentSettings.height integerValue] == 1080) {
+        resolution = 2;
     } else {
-        resolution = 0;
+        resolution = 1;
     }
+    
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
     NSInteger streamingRemotely = [currentSettings.streamingRemotely integerValue];
     [self.remoteSelector setSelectedSegmentIndex:streamingRemotely];
@@ -108,12 +111,21 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
         defaultBitrate = 20000;
     }
     // 720p60 and 1080p30 are 10 Mbps
-    else if (frameRate == 60 || resHeight == 1080) {
+    else if ((frameRate == 60 && resHeight == 720) ||
+             (frameRate == 30 && resHeight == 1080)) {
         defaultBitrate = 10000;
     }
     // 720p30 is 5 Mbps
-    else {
+    else if (resHeight == 720) {
         defaultBitrate = 5000;
+    }
+    // 360p60 is 2 Mbps
+    else if (frameRate == 60 && resHeight == 360) {
+        defaultBitrate = 2000;
+    }
+    // 360p30 is 1 Mbps
+    else {
+        defaultBitrate = 1000;
     }
     
     _bitrate = defaultBitrate;
@@ -141,11 +153,13 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
 }
 
 - (NSInteger) getChosenStreamHeight {
-    return [self.resolutionSelector selectedSegmentIndex] == 0 ? 720 : 1080;
+    const int resolutionTable[] = { 360, 720, 1080 };
+    return resolutionTable[[self.resolutionSelector selectedSegmentIndex]];
 }
 
 - (NSInteger) getChosenStreamWidth {
-    return [self getChosenStreamHeight] == 720 ? 1280 : 1920;
+    // Assumes fixed 16:9 aspect ratio
+    return ([self getChosenStreamHeight] * 16) / 9;
 }
 
 - (void) saveSettings {
