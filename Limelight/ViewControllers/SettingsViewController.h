@@ -16,6 +16,7 @@
 @property (strong, nonatomic) IBOutlet UISegmentedControl *resolutionSelector;
 @property (strong, nonatomic) IBOutlet UISegmentedControl *onscreenControlSelector;
 @property (strong, nonatomic) IBOutlet UISegmentedControl *remoteSelector;
+@property (strong, nonatomic) IBOutlet UIScrollView *scrollView;
 
 - (void) saveSettings;
 

@@ -18,9 +18,33 @@
 }
 static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
 
-- (void)viewDidAppear:(BOOL)animated
-{
-    [super viewDidAppear:animated];
+-(void)viewDidLayoutSubviews {
+    // On iPhone layouts, this view is rooted at a ScrollView. To make it
+    // scrollable, we'll update content size here.
+    if (self.scrollView != nil) {
+        CGFloat highestViewY = 0;
+        
+        // Enumerate the scroll view's subviews looking for the
+        // highest view Y value to set our scroll view's content
+        // size.
+        for (UIView* view in self.scrollView.subviews) {
+            // UIScrollViews have 2 default UIImageView children
+            // which represent the horizontal and vertical scrolling
+            // indicators. Ignore these when computing content size.
+            if ([view isKindOfClass:[UIImageView class]]) {
+                continue;
+            }
+            
+            CGFloat currentViewY = view.frame.origin.y + view.frame.size.height;
+            if (currentViewY > highestViewY) {
+                highestViewY = currentViewY;
+            }
+        }
+        
+        // Add a bit of padding so the view doesn't end right at the button of the display
+        self.scrollView.contentSize = CGSizeMake(self.scrollView.contentSize.width,
+                                                 highestViewY + 20);
+    }
     
     // Adjust the subviews for the safe area on the iPhone X.
     if (!_adjustedForSafeArea) {
