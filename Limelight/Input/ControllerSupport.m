@@ -344,11 +344,30 @@
 }
 #endif
 
++(bool) isSupportedGamepad:(GCController*) controller {
+    return controller.extendedGamepad != nil || controller.gamepad != nil;
+}
+
++(int) getGamepadCount {
+    int count = 0;
+    
+    for (GCController* controller in [GCController controllers]) {
+        if ([ControllerSupport isSupportedGamepad:controller]) {
+            count++;
+        }
+    }
+    
+    return count;
+}
+
 +(int) getConnectedGamepadMask {
     int mask = 0;
-    
-    for (int i = 0; i < [[GCController controllers] count]; i++) {
-        mask |= 1 << i;
+
+    int i = 0;
+    for (GCController* controller in [GCController controllers]) {
+        if ([ControllerSupport isSupportedGamepad:controller]) {
+            mask |= 1 << i++;
+        }
     }
     
 #if TARGET_OS_IPHONE
@@ -384,17 +403,25 @@
     Gamepad_detectDevices();
 #endif
     
-    Log(LOG_I, @"Number of controllers connected: %ld", (long)[[GCController controllers] count]);
+    Log(LOG_I, @"Number of supported controllers connected: %d", [ControllerSupport getGamepadCount]);
     for (GCController* controller in [GCController controllers]) {
-        [self assignController:controller];
-        [self registerControllerCallbacks:controller];
-        [self updateAutoOnScreenControlMode];
+        if ([ControllerSupport isSupportedGamepad:controller]) {
+            [self assignController:controller];
+            [self registerControllerCallbacks:controller];
+            [self updateAutoOnScreenControlMode];
+        }
     }
     
     self.connectObserver = [[NSNotificationCenter defaultCenter] addObserverForName:GCControllerDidConnectNotification object:nil queue:[NSOperationQueue mainQueue] usingBlock:^(NSNotification *note) {
         Log(LOG_I, @"Controller connected!");
         
         GCController* controller = note.object;
+        
+        if (![ControllerSupport isSupportedGamepad:controller]) {
+            // Ignore micro gamepads and motion controllers
+            return;
+        }
+        
         [self assignController:controller];
         
         // Register callbacks on the new controller
@@ -407,6 +434,12 @@
         Log(LOG_I, @"Controller disconnected!");
         
         GCController* controller = note.object;
+        
+        if (![ControllerSupport isSupportedGamepad:controller]) {
+            // Ignore micro gamepads and motion controllers
+            return;
+        }
+        
         [self unregisterControllerCallbacks:controller];
         self->_controllerNumbers &= ~(1 << controller.playerIndex);
         Log(LOG_I, @"Unassigning controller index: %ld", (long)controller.playerIndex);
@@ -428,7 +461,9 @@
     [_controllers removeAllObjects];
     _controllerNumbers = 0;
     for (GCController* controller in [GCController controllers]) {
-        [self unregisterControllerCallbacks:controller];
+        if ([ControllerSupport isSupportedGamepad:controller]) {
+            [self unregisterControllerCallbacks:controller];
+        }
     }
 }
 
