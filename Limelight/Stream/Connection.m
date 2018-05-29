@@ -13,7 +13,7 @@
 #import <VideoToolbox/VideoToolbox.h>
 
 #include "Limelight.h"
-#include "opus.h"
+#include "opus_multistream.h"
 
 @implementation Connection {
     SERVER_INFORMATION _serverInfo;
@@ -24,26 +24,25 @@
 }
 
 static NSLock* initLock;
-static OpusDecoder *opusDecoder;
+static OpusMSDecoder* opusDecoder;
 static id<ConnectionCallbacks> _callbacks;
 
-#define PCM_BUFFER_SIZE 1024
 #define OUTPUT_BUS 0
 
-struct AUDIO_BUFFER_QUEUE_ENTRY {
-    struct AUDIO_BUFFER_QUEUE_ENTRY *next;
-    int length;
-    int offset;
-    char data[0];
-};
+#define MAX_CHANNEL_COUNT 2
+#define FRAME_SIZE 240
 
-#define MAX_QUEUE_ENTRIES 10
+#define CIRCULAR_BUFFER_SIZE 32
 
-static short decodedPcmBuffer[512];
-static NSLock *audioLock;
-static struct AUDIO_BUFFER_QUEUE_ENTRY *audioBufferQueue;
-static int audioBufferQueueLength;
-static AudioComponentInstance audioUnit;
+static int audioBufferWriteIndex;
+static int audioBufferReadIndex;
+static int activeChannelCount;
+static short audioCircularBuffer[CIRCULAR_BUFFER_SIZE][FRAME_SIZE * MAX_CHANNEL_COUNT];
+
+#define AUDIO_QUEUE_BUFFERS 4
+
+static AudioQueueRef audioQueue;
+static AudioQueueBufferRef audioBuffers[AUDIO_QUEUE_BUFFERS];
 static VideoDecoderRenderer* renderer;
 
 int DrDecoderSetup(int videoFormat, int width, int height, int redrawRate, void* context, int drFlags)
@@ -87,15 +86,20 @@ int DrSubmitDecodeUnit(PDECODE_UNIT decodeUnit)
 int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void* context, int flags)
 {
     int err;
+    
+    // Clear the circular buffer
+    audioBufferWriteIndex = audioBufferReadIndex = 0;
 
     // We only support stereo for now
     assert(audioConfiguration == AUDIO_CONFIGURATION_STEREO);
 
-    opusDecoder = opus_decoder_create(opusConfig->sampleRate,
-                                      opusConfig->channelCount,
-                                      &err);
-
-    audioLock = [[NSLock alloc] init];
+    activeChannelCount = opusConfig->channelCount;
+    opusDecoder = opus_multistream_decoder_create(opusConfig->sampleRate,
+                                                  opusConfig->channelCount,
+                                                  opusConfig->streams,
+                                                  opusConfig->coupledStreams,
+                                                  opusConfig->mapping,
+                                                  &err);
 
 #if TARGET_OS_IPHONE
     // Configure the audio session for our app
@@ -110,23 +114,7 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
 #endif
     
     OSStatus status;
-
-    AudioComponentDescription audioDesc;
-    audioDesc.componentType = kAudioUnitType_Output;
-#if TARGET_OS_IPHONE
-    audioDesc.componentSubType = kAudioUnitSubType_RemoteIO;
-#endif
-    audioDesc.componentFlags = 0;
-    audioDesc.componentFlagsMask = 0;
-    audioDesc.componentManufacturer = kAudioUnitManufacturer_Apple;
-
-    status = AudioComponentInstanceNew(AudioComponentFindNext(NULL, &audioDesc), &audioUnit);
-
-    if (status) {
-        Log(LOG_E, @"Unable to instantiate new AudioComponent: %d", (int32_t)status);
-        return status;
-    }
-
+    
     AudioStreamBasicDescription audioFormat = {0};
     audioFormat.mSampleRate = opusConfig->sampleRate;
     audioFormat.mBitsPerChannel = 16;
@@ -138,121 +126,72 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
     audioFormat.mFramesPerPacket = audioFormat.mBytesPerPacket / audioFormat.mBytesPerFrame;
     audioFormat.mReserved = 0;
 
-    status = AudioUnitSetProperty(audioUnit,
-                                  kAudioUnitProperty_StreamFormat,
-                                  kAudioUnitScope_Input,
-                                  OUTPUT_BUS,
-                                  &audioFormat,
-                                  sizeof(audioFormat));
-    if (status) {
-        Log(LOG_E, @"Unable to set audio unit to input: %d", (int32_t)status);
+    status = AudioQueueNewOutput(&audioFormat, FillOutputBuffer, nil, nil, nil, 0, &audioQueue);
+    if (status != noErr) {
+        NSLog(@"Error allocating output queue: %d\n", status);
         return status;
     }
-
-    AURenderCallbackStruct callbackStruct = {0};
-    callbackStruct.inputProc = playbackCallback;
-    callbackStruct.inputProcRefCon = NULL;
-
-    status = AudioUnitSetProperty(audioUnit,
-                                  kAudioUnitProperty_SetRenderCallback,
-                                  kAudioUnitScope_Input,
-                                  OUTPUT_BUS,
-                                  &callbackStruct,
-                                  sizeof(callbackStruct));
-    if (status) {
-        Log(LOG_E, @"Unable to set audio unit callback: %d", (int32_t)status);
+    
+    for (int i = 0; i < AUDIO_QUEUE_BUFFERS; i++) {
+        status = AudioQueueAllocateBuffer(audioQueue, audioFormat.mBytesPerFrame * FRAME_SIZE, &audioBuffers[i]);
+        if (status != noErr) {
+            NSLog(@"Error allocating output buffer: %d\n", status);
+            return status;
+        }
+        
+        FillOutputBuffer(nil, audioQueue, audioBuffers[i]);
+    }
+    
+    status = AudioQueueStart(audioQueue, nil);
+    if (status != noErr) {
+        NSLog(@"Error starting queue: %d\n", status);
         return status;
     }
-
-    status = AudioUnitInitialize(audioUnit);
-    if (status) {
-        Log(LOG_E, @"Unable to initialize audioUnit: %d", (int32_t)status);
-        return status;
-    }
-
-    status = AudioOutputUnitStart(audioUnit);
-    if (status) {
-        Log(LOG_E, @"Unable to start audioUnit: %d", (int32_t)status);
-        return status;
-    }
-
+    
     return status;
 }
 
 void ArCleanup(void)
 {
     if (opusDecoder != NULL) {
-        opus_decoder_destroy(opusDecoder);
+        opus_multistream_decoder_destroy(opusDecoder);
         opusDecoder = NULL;
     }
-
-    OSStatus status = AudioOutputUnitStop(audioUnit);
-    if (status) {
-        Log(LOG_E, @"Unable to stop audioUnit: %d", (int32_t)status);
-    }
-
-    status = AudioUnitUninitialize(audioUnit);
-    if (status) {
-        Log(LOG_E, @"Unable to uninitialize audioUnit: %d", (int32_t)status);
-    }
+    
+    // Stop before disposing to avoid massive delay inside
+    // AudioQueueDispose() (iOS bug?)
+    AudioQueueStop(audioQueue, true);
+    
+    // Also frees buffers
+    AudioQueueDispose(audioQueue, true);
+    
 #if TARGET_OS_IPHONE
     // Audio session is now inactive
     AVAudioSession* audioSession = [AVAudioSession sharedInstance];
     [audioSession setActive: YES error: nil];
 #endif
-    // This is safe because we're guaranteed that nobody
-    // is touching this list now
-    struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
-    while (audioBufferQueue != NULL) {
-        entry = audioBufferQueue;
-        audioBufferQueue = entry->next;
-        audioBufferQueueLength--;
-        free(entry);
-    }
 }
 
 void ArDecodeAndPlaySample(char* sampleData, int sampleLength)
 {
-    int decodedLength = opus_decode(opusDecoder, (unsigned char*)sampleData, sampleLength, decodedPcmBuffer, PCM_BUFFER_SIZE / 2, 0);
-    if (decodedLength > 0) {
-        // Return of opus_decode is samples per channel
-        decodedLength *= 4;
-
-        struct AUDIO_BUFFER_QUEUE_ENTRY *newEntry = malloc(sizeof(*newEntry) + decodedLength);
-        if (newEntry != NULL) {
-            newEntry->next = NULL;
-            newEntry->length = decodedLength;
-            newEntry->offset = 0;
-            memcpy(newEntry->data, decodedPcmBuffer, decodedLength);
-
-            [audioLock lock];
-            if (audioBufferQueueLength > MAX_QUEUE_ENTRIES) {
-                Log(LOG_W, @"Audio player too slow. Dropping all decoded samples!");
-
-                // Clear all values from the buffer queue
-                struct AUDIO_BUFFER_QUEUE_ENTRY *entry;
-                while (audioBufferQueue != NULL) {
-                    entry = audioBufferQueue;
-                    audioBufferQueue = entry->next;
-                    audioBufferQueueLength--;
-                    free(entry);
-                }
-            }
-
-            if (audioBufferQueue == NULL) {
-                audioBufferQueue = newEntry;
-            }
-            else {
-                struct AUDIO_BUFFER_QUEUE_ENTRY *lastEntry = audioBufferQueue;
-                while (lastEntry->next != NULL) {
-                    lastEntry = lastEntry->next;
-                }
-                lastEntry->next = newEntry;
-            }
-            audioBufferQueueLength++;
-
-            [audioLock unlock];
-        }
+    int decodeLen;
+    
+    // Check if there is space for this sample in the buffer. Again, this can race
+    // but in the worst case, we'll not see the sample callback having consumed a sample.
+    if (((audioBufferWriteIndex + 1) % CIRCULAR_BUFFER_SIZE) == audioBufferReadIndex) {
+        return;
+    }
+    
+    decodeLen = opus_multistream_decode(opusDecoder, (unsigned char *)sampleData, sampleLength,
+                                        audioCircularBuffer[audioBufferWriteIndex], FRAME_SIZE, 0);
+    if (decodeLen > 0) {
+        // Use a full memory barrier to ensure the circular buffer is written before incrementing the index
+        __sync_synchronize();
+        
+        // This can race with the reader in the sample callback, however this is a benign
+        // race since we'll either read the original value of s_WriteIndex (which is safe,
+        // we just won't consider this sample) or the new value of s_WriteIndex
+        audioBufferWriteIndex = (audioBufferWriteIndex + 1) % CIRCULAR_BUFFER_SIZE;
     }
 }
 
@@ -388,6 +327,7 @@ void ClLogMessage(const char* format, ...)
     _arCallbacks.init = ArInit;
     _arCallbacks.cleanup = ArCleanup;
     _arCallbacks.decodeAndPlaySample = ArDecodeAndPlaySample;
+    _arCallbacks.capabilities = CAPABILITY_DIRECT_SUBMIT;
 
     LiInitializeConnectionCallbacks(&_clCallbacks);
     _clCallbacks.stageStarting = ClStageStarting;
@@ -402,86 +342,34 @@ void ClLogMessage(const char* format, ...)
     return self;
 }
 
-static OSStatus playbackCallback(void *inRefCon,
-                                 AudioUnitRenderActionFlags *ioActionFlags,
-                                 const AudioTimeStamp *inTimeStamp,
-                                 UInt32 inBusNumber,
-                                 UInt32 inNumberFrames,
-                                 AudioBufferList *ioData) {
-    // Notes: ioData contains buffers (may be more than one!)
-    // Fill them up as much as you can. Remember to set the size value in each buffer to match how
-    // much data is in the buffer.
-
-    bool ranOutOfData = false;
-    for (int i = 0; i < ioData->mNumberBuffers; i++) {
-        ioData->mBuffers[i].mNumberChannels = 2;
-
-        if (ranOutOfData) {
-            ioData->mBuffers[i].mDataByteSize = 0;
-            continue;
-        }
-
-        if (ioData->mBuffers[i].mDataByteSize != 0) {
-            int thisBufferOffset = 0;
-
-        FillBufferAgain:
-            // Make sure there's data to write
-            if (ioData->mBuffers[i].mDataByteSize - thisBufferOffset == 0) {
-                continue;
-            }
-
-            struct AUDIO_BUFFER_QUEUE_ENTRY *audioEntry = NULL;
-
-            [audioLock lock];
-            if (audioBufferQueue != NULL) {
-                // Dequeue this entry temporarily
-                audioEntry = audioBufferQueue;
-                audioBufferQueue = audioBufferQueue->next;
-                audioBufferQueueLength--;
-            }
-            [audioLock unlock];
-
-            if (audioEntry == NULL) {
-                // No data left
-                ranOutOfData = true;
-                ioData->mBuffers[i].mDataByteSize = thisBufferOffset;
-                continue;
-            }
-
-            // Figure out how much data we can write
-            int min = MIN(ioData->mBuffers[i].mDataByteSize - thisBufferOffset, audioEntry->length);
-
-            // Copy data to the audio buffer
-            memcpy(&ioData->mBuffers[i].mData[thisBufferOffset], &audioEntry->data[audioEntry->offset], min);
-            thisBufferOffset += min;
-
-            if (min < audioEntry->length) {
-                // This entry still has unused data
-                audioEntry->length -= min;
-                audioEntry->offset += min;
-
-                // Requeue the entry
-                [audioLock lock];
-                audioEntry->next = audioBufferQueue;
-                audioBufferQueue = audioEntry;
-                audioBufferQueueLength++;
-                [audioLock unlock];
-            }
-            else {
-                // This entry is fully depleted so free it
-                free(audioEntry);
-
-                // Try to grab another sample to fill this buffer with
-                goto FillBufferAgain;
-            }
-
-            ioData->mBuffers[i].mDataByteSize = thisBufferOffset;
-        }
+static void FillOutputBuffer(void *aqData,
+                             AudioQueueRef inAQ,
+                             AudioQueueBufferRef inBuffer) {
+    inBuffer->mAudioDataByteSize = activeChannelCount * FRAME_SIZE * sizeof(short);
+    
+    assert(inBuffer->mAudioDataByteSize == inBuffer->mAudioDataBytesCapacity);
+    
+    // If the indexes aren't equal, we have a sample
+    if (audioBufferWriteIndex != audioBufferReadIndex) {
+        // Copy data to the audio buffer
+        memcpy(inBuffer->mAudioData,
+               audioCircularBuffer[audioBufferReadIndex],
+               inBuffer->mAudioDataByteSize);
+        
+        // Use a full memory barrier to ensure the circular buffer is read before incrementing the index
+        __sync_synchronize();
+        
+        // This can race with the reader in the AudDecDecodeAndPlaySample function. This is
+        // not a problem because at worst, it just won't see that we've consumed this sample yet.
+        audioBufferReadIndex = (audioBufferReadIndex + 1) % CIRCULAR_BUFFER_SIZE;
     }
-
-    return noErr;
+    else {
+        // No data, so play silence
+        memset(inBuffer->mAudioData, 0, inBuffer->mAudioDataByteSize);
+    }
+    
+    AudioQueueEnqueueBuffer(inAQ, inBuffer, 0, NULL);
 }
-
 
 -(void) main
 {
