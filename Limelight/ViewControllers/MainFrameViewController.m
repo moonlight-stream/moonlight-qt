@@ -63,7 +63,10 @@ static NSMutableSet* hostList;
     UIAlertController* failedDialog = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
                                                      message:message
                                               preferredStyle:UIAlertControllerStyleAlert];
-    [failedDialog addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+    [failedDialog addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
+    }]];
+    [failedDialog addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:nil]];
     [self presentViewController:failedDialog animated:YES completion:nil];
     
     [_discMan startDiscovery];
@@ -136,7 +139,10 @@ static NSMutableSet* hostList;
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching App List Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
-                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
+                }]];
+                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:nil]];
                 [self presentViewController:applistAlert animated:YES completion:nil];
                 host.online = NO;
                 [self showHostSelectionView];
@@ -237,7 +243,10 @@ static NSMutableSet* hostList;
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Network Error"
                                                                    message:@"Failed to resolve host."
                                                             preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
+    }]];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:nil]];
     [self presentViewController:alert animated:YES completion:nil];
 }
 
@@ -288,7 +297,10 @@ static NSMutableSet* hostList;
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching Server Info Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
-                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
+                }]];
+                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:nil]];
                 [self presentViewController:applistAlert animated:YES completion:nil];
                 host.online = NO;
                 [self showHostSelectionView];
@@ -327,6 +339,10 @@ static NSMutableSet* hostList;
                 wolAlert.message = @"Sent WOL Packet";
             }
             [self presentViewController:wolAlert animated:YES completion:nil];
+        }]];
+        
+        [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Connection Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
         }]];
     }
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
@@ -368,7 +384,10 @@ static NSMutableSet* hostList;
                     });
                 } else {
                     UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
-                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
+                    }]];
+                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:nil]];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [self presentViewController:hostNotFoundAlert animated:YES completion:nil];
                     });
@@ -465,7 +484,7 @@ static NSMutableSet* hostList;
                                                                                      preferredStyle:UIAlertControllerStyleAlert];
                                             }
                                             
-                                            [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDestructive handler:nil]];
+                                            [alert addAction:[UIAlertAction actionWithTitle:@"Ok" style:UIAlertActionStyleDefault handler:nil]];
                                             dispatch_async(dispatch_get_main_queue(), ^{
                                                 [self updateAppsForHost:app.host];
                                                 [self presentViewController:alert animated:YES completion:nil];
