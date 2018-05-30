@@ -128,14 +128,14 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
 
     status = AudioQueueNewOutput(&audioFormat, FillOutputBuffer, nil, nil, nil, 0, &audioQueue);
     if (status != noErr) {
-        NSLog(@"Error allocating output queue: %d\n", status);
+        Log(LOG_E, @"Error allocating output queue: %d\n", status);
         return status;
     }
     
     for (int i = 0; i < AUDIO_QUEUE_BUFFERS; i++) {
         status = AudioQueueAllocateBuffer(audioQueue, audioFormat.mBytesPerFrame * FRAME_SIZE, &audioBuffers[i]);
         if (status != noErr) {
-            NSLog(@"Error allocating output buffer: %d\n", status);
+            Log(LOG_E, @"Error allocating output buffer: %d\n", status);
             return status;
         }
         
@@ -144,7 +144,7 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
     
     status = AudioQueueStart(audioQueue, nil);
     if (status != noErr) {
-        NSLog(@"Error starting queue: %d\n", status);
+        Log(LOG_E, @"Error starting queue: %d\n", status);
         return status;
     }
     

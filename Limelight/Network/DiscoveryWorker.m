@@ -112,7 +112,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
         }
         
         if (receivedResponse) {
-            Log(LOG_I, @"Received serverinfo response on try %d", i);
+            Log(LOG_D, @"Received serverinfo response on try %d", i);
             break;
         }
         else {
