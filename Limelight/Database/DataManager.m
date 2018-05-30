@@ -31,7 +31,7 @@
     }
     
     _managedObjectContext = [[NSManagedObjectContext alloc] initWithConcurrencyType:NSMainQueueConcurrencyType];
-    [_managedObjectContext setPersistentStoreCoordinator:_appDelegate.persistentStoreCoordinator];
+    [_managedObjectContext setParentContext:[_appDelegate managedObjectContext]];
     
     return self;
 }
@@ -175,7 +175,7 @@
 
 - (void) saveData {
     NSError* error;
-    if (![_managedObjectContext save:&error]) {
+    if ([_managedObjectContext hasChanges] && ![_managedObjectContext save:&error]) {
         Log(LOG_E, @"Unable to save hosts to database: %@", error);
     }
 

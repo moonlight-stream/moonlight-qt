@@ -91,12 +91,14 @@ static NSOperationQueue* mainQueue;
 
 - (void)saveContext
 {
-    NSError *error = nil;
-    NSManagedObjectContext *managedObjectContext = self.managedObjectContext;
+    NSManagedObjectContext *managedObjectContext = [self managedObjectContext];
     if (managedObjectContext != nil) {
-        if ([managedObjectContext hasChanges] && ![managedObjectContext save:&error]) {
-            Log(LOG_E, @"Critical database error: %@, %@", error, [error userInfo]);
-        } 
+        [managedObjectContext performBlock:^{
+            NSError *error = nil;
+            if ([managedObjectContext hasChanges] && ![managedObjectContext save:&error]) {
+                Log(LOG_E, @"Critical database error: %@, %@", error, [error userInfo]);
+            }
+        }];
     }
 }
 
