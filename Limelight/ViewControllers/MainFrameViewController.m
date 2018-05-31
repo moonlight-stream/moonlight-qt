@@ -317,12 +317,21 @@ static NSMutableSet* hostList;
             if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
                 Log(LOG_I, @"Already Paired");
                 [self alreadyPaired];
-            } else {
+            }
+            // Only pair when this was the result of explicit user action
+            else if (view != nil) {
                 Log(LOG_I, @"Trying to pair");
                 // Polling the server while pairing causes the server to screw up
                 [self->_discMan stopDiscoveryBlocking];
                 PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:self->_cert callback:self];
                 [self->_opQueue addOperation:pMan];
+            }
+            else {
+                // Not user action, so just return to host screen
+                dispatch_async(dispatch_get_main_queue(), ^{
+                    [self hideLoadingFrame];
+                    [self showHostSelectionView];
+                });
             }
         }
     });
