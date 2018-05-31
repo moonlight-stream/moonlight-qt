@@ -56,6 +56,7 @@
 
 - (void) returnToMainFrame {
     [_controllerSupport cleanup];
+    [UIApplication sharedApplication].idleTimerDisabled = NO;
     [self.navigationController popToRootViewControllerAnimated:YES];
 }
 
@@ -84,6 +85,9 @@
     Log(LOG_I, @"Connection terminated: %ld", errorCode);
     
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Allow the display to go to sleep now
+        [UIApplication sharedApplication].idleTimerDisabled = NO;
+        
         UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection was terminated" preferredStyle:UIAlertControllerStyleAlert];
         [conTermAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             [self returnToMainFrame];
@@ -112,6 +116,9 @@
     Log(LOG_I, @"Stage %s failed: %ld", stageName, errorCode);
 
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Allow the display to go to sleep now
+        [UIApplication sharedApplication].idleTimerDisabled = NO;
+        
         UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
                                                                        message:[NSString stringWithFormat:@"%s failed with error %ld",
                                                                                 stageName, errorCode]
@@ -132,6 +139,9 @@
     Log(LOG_I, @"Launch failed: %@", message);
     
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Allow the display to go to sleep now
+        [UIApplication sharedApplication].idleTimerDisabled = NO;
+        
         UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
                                                                        message:message
                                                                 preferredStyle:UIAlertControllerStyleAlert];
