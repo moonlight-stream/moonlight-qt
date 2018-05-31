@@ -240,6 +240,12 @@ void ClLogMessage(const char* format, ...)
 
 -(void) terminate
 {
+    // Interrupt any action blocking LiStartConnection(). This is
+    // thread-safe and done outside initLock on purpose, since we
+    // won't be able to acquire it if LiStartConnection is in
+    // progress.
+    LiInterruptConnection();
+    
     // We dispatch this async to get out because this can be invoked
     // on a thread inside common and we don't want to deadlock. It also avoids
     // blocking on the caller's thread waiting to acquire initLock.
