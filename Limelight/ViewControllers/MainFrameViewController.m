@@ -550,11 +550,16 @@ static NSMutableSet* hostList;
 
 - (void) showLoadingFrame {
     LoadingFrameViewController* loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
-    [self.navigationController presentViewController:loadingFrame animated:YES completion:nil];
+    
+    // Avoid animating this as it significantly prolongs the loading frame's
+    // time on screen and can lead to warnings about dismissing while it's
+    // still animating.
+    [self.navigationController presentViewController:loadingFrame animated:NO completion:nil];
 }
 
 - (void) hideLoadingFrame {
-    [self dismissViewControllerAnimated:YES completion:nil];
+    // See comment above in showLoadingFrame about why we don't animate this
+    [self dismissViewControllerAnimated:NO completion:nil];
     [self enableNavigation];
 }
 
