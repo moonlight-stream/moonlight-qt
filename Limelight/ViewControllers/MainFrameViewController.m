@@ -333,7 +333,7 @@ static NSMutableSet* hostList;
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
     if (!host.online) {
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Wake" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-            UIAlertController* wolAlert = [UIAlertController alertControllerWithTitle:@"Wake On Lan" message:@"" preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertController* wolAlert = [UIAlertController alertControllerWithTitle:@"Wake On LAN" message:@"" preferredStyle:UIAlertControllerStyleAlert];
             [wolAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
             if (host.pairState != PairStatePaired) {
                 wolAlert.message = @"Cannot wake host because you are not paired";
