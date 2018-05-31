@@ -302,7 +302,13 @@ static NSMutableSet* hostList;
                     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
                 }]];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                [self presentViewController:applistAlert animated:YES completion:nil];
+                
+                if (view != nil) {
+                    // Only display an alert if this was the result of a real
+                    // user action, not just passively entering the foreground again
+                    [self presentViewController:applistAlert animated:YES completion:nil];
+                }
+                
                 host.online = NO;
                 [self showHostSelectionView];
             });
