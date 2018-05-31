@@ -23,6 +23,8 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     
     self.callback = callback;
     
+    scanActive = FALSE;
+    
     mDNSBrowser = [[NSNetServiceBrowser alloc] init];
     [mDNSBrowser setDelegate:self];
     
@@ -33,12 +35,20 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void) searchForHosts {
+    if (scanActive) {
+        return;
+    }
+    
     Log(LOG_I, @"Starting mDNS discovery");
     scanActive = TRUE;
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
 }
 
 - (void) stopSearching {
+    if (!scanActive) {
+        return;
+    }
+    
     Log(LOG_I, @"Stopping mDNS discovery");
     scanActive = FALSE;
     [mDNSBrowser stop];

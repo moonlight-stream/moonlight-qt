@@ -70,6 +70,10 @@
 }
 
 - (void) startDiscovery {
+    if (shouldDiscover) {
+        return;
+    }
+    
     Log(LOG_I, @"Starting discovery");
     shouldDiscover = YES;
     [_mdnsMan searchForHosts];
@@ -79,6 +83,10 @@
 }
 
 - (void) stopDiscovery {
+    if (!shouldDiscover) {
+        return;
+    }
+    
     Log(LOG_I, @"Stopping discovery");
     shouldDiscover = NO;
     [_mdnsMan stopSearching];
@@ -87,10 +95,18 @@
 
 - (void) stopDiscoveryBlocking {
     Log(LOG_I, @"Stopping discovery and waiting for workers to stop");
-    shouldDiscover = NO;
-    [_mdnsMan stopSearching];
-    [_opQueue cancelAllOperations];
+    
+    if (shouldDiscover) {
+        shouldDiscover = NO;
+        [_mdnsMan stopSearching];
+        [_opQueue cancelAllOperations];
+    }
+    
+    // Ensure we always wait, just in case discovery
+    // was stopped already but in an async manner that
+    // left operations in progress.
     [_opQueue waitUntilAllOperationsAreFinished];
+    
     Log(LOG_I, @"All discovery workers stopped");
 }
 
