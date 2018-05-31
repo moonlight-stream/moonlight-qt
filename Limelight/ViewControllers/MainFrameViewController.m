@@ -42,6 +42,7 @@
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
     UIButton* _pullArrow;
+    bool _background;
 }
 static NSMutableSet* hostList;
 
@@ -620,6 +621,11 @@ static NSMutableSet* hostList;
                                                  name: UIApplicationWillEnterForegroundNotification
                                                object: nil];
     
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(handleEnterBackground)
+                                                 name: UIApplicationWillResignActiveNotification
+                                               object: nil];
+    
     [self updateHosts];
     [self.view addSubview:hostScrollView];
     [self.view addSubview:_pullArrow];
@@ -632,10 +638,21 @@ static NSMutableSet* hostList;
 
 -(void)handleReturnToForeground
 {
+    _background = NO;
+    
+    [_discMan startDiscovery];
+    
     // This will refresh the applist when a paired host is selected
     if (_selectedHost != nil && _selectedHost.pairState == PairStatePaired) {
         [self hostClicked:_selectedHost view:nil];
     }
+}
+
+-(void)handleEnterBackground
+{
+    _background = YES;
+    
+    [_discMan stopDiscovery];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -651,9 +668,14 @@ static NSMutableSet* hostList;
     [self.navigationController.navigationBar setShadowImage:fakeImage];
     [self.navigationController.navigationBar setBackgroundImage:fakeImage forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
     
-    [_discMan startDiscovery];
-    
-    [self handleReturnToForeground];
+    // We can get here on home press while streaming
+    // since the stream view segues to us just before
+    // entering the background. We can't check the app
+    // state here (since it's in transition), so we have
+    // to use this variable that we set.
+    if (!_background) {
+        [_discMan startDiscovery];
+    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated
