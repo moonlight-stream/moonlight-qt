@@ -269,8 +269,13 @@
     if (displayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
         Log(LOG_E, @"Display layer rendering failed: %@", displayLayer.error);
         
-        // Recreate the display layer
-        [self reinitializeDisplayLayer];
+        // Recreate the display layer on the main thread.
+        // We need to use dispatch_sync() or we may miss
+        // some parameter sets while the layer is being
+        // recreated.
+        dispatch_sync(dispatch_get_main_queue(), ^{
+            [self reinitializeDisplayLayer];
+        });
         
         // Request an IDR frame to initialize the new decoder
         free(data);
@@ -337,14 +342,19 @@
         CFDictionarySetValue(dict, kCMSampleAttachmentKey_NotSync, kCFBooleanFalse);
         CFDictionarySetValue(dict, kCMSampleAttachmentKey_DependsOnOthers, kCFBooleanFalse);
     }
-    
-    [displayLayer enqueueSampleBuffer:sampleBuffer];
+
 #if !TARGET_OS_IPHONE
     _view.frameCount++;
 #endif
-    // Dereference the buffers
-    CFRelease(blockBuffer);
-    CFRelease(sampleBuffer);
+
+    // Enqueue video samples on the main thread
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self->displayLayer enqueueSampleBuffer:sampleBuffer];
+        
+        // Dereference the buffers
+        CFRelease(blockBuffer);
+        CFRelease(sampleBuffer);
+    });
     
     return DR_OK;
 }
