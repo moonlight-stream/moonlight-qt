@@ -638,7 +638,7 @@ static NSMutableSet* hostList;
     
     [[NSNotificationCenter defaultCenter] addObserver: self
                                              selector: @selector(handleReturnToForeground)
-                                                 name: UIApplicationWillEnterForegroundNotification
+                                                 name: UIApplicationDidBecomeActiveNotification
                                                object: nil];
     
     [[NSNotificationCenter defaultCenter] addObserver: self
