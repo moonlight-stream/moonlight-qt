@@ -68,7 +68,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceDidResolveAddress:(NSNetService *)service {
-    Log(LOG_I, @"Resolved address: %@ -> %@", service, service.hostName);
+    Log(LOG_D, @"Resolved address: %@ -> %@", service, service.hostName);
     [self.callback updateHosts:[self getFoundHosts]];
 }
 
@@ -84,7 +84,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didFindService:(NSNetService *)aNetService moreComing:(BOOL)moreComing {
-    Log(LOG_I, @"Found service: %@", aNetService);
+    Log(LOG_D, @"Found service: %@", aNetService);
     [aNetService setDelegate:self];
     [aNetService resolveWithTimeout:5];
     

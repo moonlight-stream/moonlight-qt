@@ -168,10 +168,10 @@
             DiscoveryWorker* worker = (DiscoveryWorker*)[self createWorkerForHost:host];
             [worker discoverHost];
             if ([self addHostToDiscovery:host]) {
-                Log(LOG_I, @"Adding host to discovery: %@", host.name);
+                Log(LOG_D, @"Adding host to discovery: %@", host.name);
                 [self->_callback updateAllHosts:self->_hostQueue];
             } else {
-                Log(LOG_I, @"Not adding host to discovery: %@", host.name);
+                Log(LOG_D, @"Not adding host to discovery: %@", host.name);
             }
         }
     });
