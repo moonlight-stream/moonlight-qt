@@ -11,7 +11,6 @@
 
 @implementation MDNSManager {
     NSNetServiceBrowser* mDNSBrowser;
-    NSMutableArray* domains;
     NSMutableArray* services;
     BOOL scanActive;
 }
@@ -28,7 +27,6 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     mDNSBrowser = [[NSNetServiceBrowser alloc] init];
     [mDNSBrowser setDelegate:self];
     
-    domains = [[NSMutableArray alloc] init];
     services = [[NSMutableArray alloc] init];
     
     return self;
@@ -54,22 +52,12 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     [mDNSBrowser stop];
 }
 
-- (NSArray*) getFoundHosts {
-    NSMutableArray* hosts = [[NSMutableArray alloc] init];
-    for (NSNetService* service in services) {
-        if (service.hostName != nil) {
-            TemporaryHost* host = [[TemporaryHost alloc] init];
-            host.activeAddress = host.localAddress = service.hostName;
-            host.name = service.hostName;
-            [hosts addObject:host];
-        }
-    }
-    return hosts;
-}
-
 - (void)netServiceDidResolveAddress:(NSNetService *)service {
     Log(LOG_D, @"Resolved address: %@ -> %@", service, service.hostName);
-    [self.callback updateHosts:[self getFoundHosts]];
+    TemporaryHost* host = [[TemporaryHost alloc] init];
+    host.activeAddress = host.localAddress = service.hostName;
+    host.name = service.hostName;
+    [self.callback updateHost:host];
 }
 
 - (void)netService:(NSNetService *)sender didNotResolve:(NSDictionary *)errorDict {
