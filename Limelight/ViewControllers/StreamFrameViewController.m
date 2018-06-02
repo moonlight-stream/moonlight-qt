@@ -75,9 +75,9 @@
 - (void) connectionStarted {
     Log(LOG_I, @"Connection started");
     dispatch_async(dispatch_get_main_queue(), ^{
-        [self.spinner stopAnimating];
-        [self.stageLabel setText:@"Waiting for first frame..."];
-        [self.stageLabel sizeToFit];
+        // Leave the spinner spinning until it's obscured by
+        // the first frame of video.
+        self.stageLabel.hidden = YES;
         [(StreamView*)self.view setupOnScreenControls: self->_controllerSupport swipeDelegate:self];
     });
 }
