@@ -450,6 +450,7 @@ static NSMutableSet* hostList;
         [alertController addAction:[UIAlertAction actionWithTitle:
                                     [app.id isEqualToString:currentApp.id] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
                                         Log(LOG_I, @"Quitting application: %@", currentApp.name);
+                                        [self showLoadingFrame];
                                         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
                                             HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
                                             HttpResponse* quitResponse = [[HttpResponse alloc] init];
@@ -486,6 +487,7 @@ static NSMutableSet* hostList;
                                                 
                                                 dispatch_async(dispatch_get_main_queue(), ^{
                                                     [self updateAppsForHost:app.host];
+                                                    [self hideLoadingFrame];
                                                     [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                                 });
                                                 
@@ -503,6 +505,7 @@ static NSMutableSet* hostList;
                                             [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                                             dispatch_async(dispatch_get_main_queue(), ^{
                                                 [self updateAppsForHost:app.host];
+                                                [self hideLoadingFrame];
                                                 [self presentViewController:alert animated:YES completion:nil];
                                             });
                                         });
