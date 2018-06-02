@@ -951,7 +951,7 @@ static float L3_Y;
     || [self isDeadZone:touch
                  startX:_rightStickBackground.frame.origin.x - 15
                  startY:_rightStickBackground.frame.origin.y - 15
-                   endX:_rightStickBackground.frame.origin.y + _rightStickBackground.frame.size.width + 15
+                   endX:_rightStickBackground.frame.origin.x + _rightStickBackground.frame.size.width + 15
                    endY:_view.frame.origin.y + _view.frame.size.height];
 }
 
