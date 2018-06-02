@@ -836,26 +836,31 @@ static float L3_Y;
 }
 
 - (BOOL) isInDeadZone:(UITouch*) touch {
-    switch (_level) {
-        case OnScreenControlsLevelFull:
-            return [self isDpadDeadZone:touch]
-            || [self isAbxyDeadZone:touch]
-            || [self isTriggerDeadZone:touch]
-            || [self isBumperDeadZone:touch]
-            || [self isStartSelectDeadZone:touch];
-        case OnScreenControlsLevelSimple:
-            return [self isTriggerDeadZone:touch]
-            || [self isStartSelectDeadZone:touch]
-            || [self isL3R3DeadZone:touch];
-        case OnScreenControlsLevelAutoGCExtendedGamepad:
-            return [self isL3R3DeadZone:touch]
-            || [self isStartSelectDeadZone:touch];
-        case OnScreenControlsLevelAutoGCGamepad:
-            return [self isTriggerDeadZone:touch]
-            || [self isStartSelectDeadZone:touch];
-        default:
-            return false;
+    // Dynamically evaluate deadzones based on the controls
+    // on screen at the time
+    if (_leftButton.superlayer != nil && [self isDpadDeadZone:touch]) {
+        return true;
     }
+    else if (_aButton.superlayer != nil && [self isAbxyDeadZone:touch]) {
+        return true;
+    }
+    else if (_l2Button.superlayer != nil && [self isTriggerDeadZone:touch]) {
+        return true;
+    }
+    else if (_l1Button.superlayer != nil && [self isBumperDeadZone:touch]) {
+        return true;
+    }
+    else if (_startButton.superlayer != nil && [self isStartSelectDeadZone:touch]) {
+        return true;
+    }
+    else if (_l3Button.superlayer != nil && [self isL3R3DeadZone:touch]) {
+        return true;
+    }
+    else if (_leftStickBackground.superlayer != nil && [self isStickDeadZone:touch]) {
+        return true;
+    }
+    
+    return false;
 }
 
 - (BOOL) isDpadDeadZone:(UITouch*) touch {
@@ -923,6 +928,19 @@ static float L3_Y;
                  startX:_view.frame.origin.x
                  startY:_selectButton.frame.origin.y
                    endX:_selectButton.frame.origin.x + _selectButton.frame.size.width
+                   endY:_view.frame.origin.y + _view.frame.size.height];
+}
+
+- (BOOL) isStickDeadZone:(UITouch*) touch {
+    return [self isDeadZone:touch
+                     startX:_leftStickBackground.frame.origin.x - 15
+                     startY:_leftStickBackground.frame.origin.y - 15
+                       endX:_leftStickBackground.frame.origin.x + _leftStickBackground.frame.size.width + 15
+                       endY:_view.frame.origin.y + _view.frame.size.height]
+    || [self isDeadZone:touch
+                 startX:_rightStickBackground.frame.origin.x - 15
+                 startY:_rightStickBackground.frame.origin.y - 15
+                   endX:_rightStickBackground.frame.origin.x + _rightStickBackground.frame.size.width + 15
                    endY:_view.frame.origin.y + _view.frame.size.height];
 }
 
