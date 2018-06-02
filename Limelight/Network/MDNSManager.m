@@ -13,6 +13,7 @@
     NSNetServiceBrowser* mDNSBrowser;
     NSMutableArray* services;
     BOOL scanActive;
+    BOOL timerPending;
 }
 
 static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
@@ -39,7 +40,13 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
     
     Log(LOG_I, @"Starting mDNS discovery");
     scanActive = TRUE;
-    [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
+
+    if (!timerPending) {
+        timerPending = TRUE;
+
+        // Just invoke the timer callback to save a little code
+        [self startSearchTimerCallback:nil];
+    }
 }
 
 - (void) stopSearching {
@@ -73,11 +80,13 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didFindService:(NSNetService *)aNetService moreComing:(BOOL)moreComing {
     Log(LOG_D, @"Found service: %@", aNetService);
-    [aNetService setDelegate:self];
-    [aNetService resolveWithTimeout:5];
     
-    [services removeObject:aNetService];
-    [services addObject:aNetService];
+    if (![services containsObject:aNetService]) {
+        Log(LOG_I, @"Found new host: %@", aNetService.name);
+        [aNetService setDelegate:self];
+        [aNetService resolveWithTimeout:5];
+        [services addObject:aNetService];
+    }
 }
 
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didRemoveService:(NSNetService *)aNetService moreComing:(BOOL)moreComing {
@@ -88,23 +97,29 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 - (void)netServiceBrowser:(NSNetServiceBrowser *)aNetServiceBrowser didNotSearch:(NSDictionary *)errorDict {
     Log(LOG_W, @"Did not perform search: \n%@", [errorDict description]);
     
-    // Schedule a retry in 2 seconds
-    [NSTimer scheduledTimerWithTimeInterval:2.0
-                                     target:self
-                                   selector:@selector(retrySearchTimerCallback:)
-                                   userInfo:nil
-                                    repeats:NO];
+    // We'll schedule a retry in startSearchTimerCallback
 }
 
-- (void)retrySearchTimerCallback:(NSTimer *)timer {
+- (void)startSearchTimerCallback:(NSTimer *)timer {
     // Check if we've been stopped since this was queued
     if (!scanActive) {
+        timerPending = FALSE;
         return;
     }
     
-    Log(LOG_I, @"Retrying mDNS search");
+    Log(LOG_D, @"Restarting mDNS search");
     [mDNSBrowser stop];
     [mDNSBrowser searchForServicesOfType:NV_SERVICE_TYPE inDomain:@""];
+    
+    // Search again in 5 seconds. We need to do this because
+    // we want more aggressive querying than Bonjour will normally
+    // do for when we're at the hosts screen. This also covers scenarios
+    // where discovery didn't work, like if WiFi was disabled.
+    [NSTimer scheduledTimerWithTimeInterval:5.0
+                                     target:self
+                                   selector:@selector(startSearchTimerCallback:)
+                                   userInfo:nil
+                                    repeats:NO];
 }
 
 - (void)retryResolveTimerCallback:(NSTimer *)timer {
