@@ -88,10 +88,13 @@
     _config.appVersion = appversion;
     _config.gfeVersion = gfeVersion;
     
-    VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc]initWithView:_renderView];
-    _connection = [[Connection alloc] initWithConfig:_config renderer:renderer connectionCallbacks:_callbacks];
-    NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
-    [opQueue addOperation:_connection];
+    // Initializing the renderer must be done on the main thread
+    dispatch_async(dispatch_get_main_queue(), ^{
+        VideoDecoderRenderer* renderer = [[VideoDecoderRenderer alloc] initWithView:self->_renderView];
+        self->_connection = [[Connection alloc] initWithConfig:self->_config renderer:renderer connectionCallbacks:self->_callbacks];
+        NSOperationQueue* opQueue = [[NSOperationQueue alloc] init];
+        [opQueue addOperation:self->_connection];
+    });
 }
 
 - (void) stopStream

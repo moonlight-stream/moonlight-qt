@@ -33,6 +33,10 @@
     displayLayer.position = CGPointMake(CGRectGetMidX(_view.bounds), CGRectGetMidY(_view.bounds));
     displayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
     
+    // Hide the layer until we get an IDR frame. This ensures we
+    // can see the loading progress label as the stream is starting.
+    displayLayer.hidden = YES;
+    
     if (oldLayer != nil) {
         // Switch out the old display layer with the new one
         [_view.layer replaceSublayer:oldLayer with:displayLayer];
@@ -349,7 +353,11 @@
 
     // Enqueue video samples on the main thread
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Enqueue the next frame
         [self->displayLayer enqueueSampleBuffer:sampleBuffer];
+        
+        // Ensure the layer is visible now
+        self->displayLayer.hidden = NO;
         
         // Dereference the buffers
         CFRelease(blockBuffer);
