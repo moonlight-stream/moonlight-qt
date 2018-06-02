@@ -420,6 +420,7 @@ static NSMutableSet* hostList;
     _streamConfig = [[StreamConfiguration alloc] init];
     _streamConfig.host = app.host.activeAddress;
     _streamConfig.appID = app.id;
+    _streamConfig.appName = app.name;
     
     DataManager* dataMan = [[DataManager alloc] init];
     TemporarySettings* streamSettings = [dataMan getSettings];

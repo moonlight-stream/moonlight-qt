@@ -34,8 +34,9 @@
     
     [self.navigationController setNavigationBarHidden:YES animated:YES];
     
-    [self.stageLabel setText:@"Starting App"];
+    [self.stageLabel setText:[NSString stringWithFormat:@"Starting %@...", self.streamConfig.appName]];
     [self.stageLabel sizeToFit];
+    self.stageLabel.textAlignment = NSTextAlignmentCenter;
     self.stageLabel.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
     self.spinner.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2 - self.stageLabel.frame.size.height - self.spinner.frame.size.height);
     [UIApplication sharedApplication].idleTimerDisabled = YES;

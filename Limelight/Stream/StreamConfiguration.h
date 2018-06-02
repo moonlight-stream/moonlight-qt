@@ -12,6 +12,7 @@
 @property NSString* appVersion;
 @property NSString* gfeVersion;
 @property NSString* appID;
+@property NSString* appName;
 @property int width;
 @property int height;
 @property int frameRate;
