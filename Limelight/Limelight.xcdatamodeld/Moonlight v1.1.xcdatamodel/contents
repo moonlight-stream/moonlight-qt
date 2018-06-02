@@ -14,6 +14,7 @@
         <attribute name="mac" optional="YES" attributeType="String" syncable="YES"/>
         <attribute name="name" attributeType="String" syncable="YES"/>
         <attribute name="pairState" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="NO" syncable="YES"/>
+        <attribute name="serverCodecModeSupport" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES" syncable="YES"/>
         <attribute name="uuid" optional="YES" attributeType="String" syncable="YES"/>
         <relationship name="appList" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="App" inverseName="host" inverseEntity="App" syncable="YES"/>
     </entity>

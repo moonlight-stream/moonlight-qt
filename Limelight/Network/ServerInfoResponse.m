@@ -39,6 +39,11 @@
     } else {
         host.pairState = PairStateUnknown;
     }
+    
+    NSString *serverCodecModeString = [self getStringTag:@"ServerCodecModeSupport"];
+    if (serverCodecModeString != nil) {
+        host.serverCodecModeSupport = [[serverCodecModeString trim] intValue];
+    }
 }
 
 @end

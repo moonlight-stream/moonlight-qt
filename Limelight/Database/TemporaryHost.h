@@ -24,6 +24,7 @@ NS_ASSUME_NONNULL_BEGIN
 @property (nonatomic, retain) NSString *mac;
 @property (nonatomic, retain) NSString *name;
 @property (nonatomic, retain) NSString *uuid;
+@property (nonatomic)         int serverCodecModeSupport;
 @property (nonatomic, retain) NSMutableSet *appList;
 
 - (id) initFromHost:(Host*)host;

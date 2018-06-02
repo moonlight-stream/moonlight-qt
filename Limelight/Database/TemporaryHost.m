@@ -30,6 +30,7 @@
     self.name = host.name;
     self.uuid = host.uuid;
     self.pairState = [host.pairState intValue];
+    self.serverCodecModeSupport = host.serverCodecModeSupport;
     
     NSMutableSet *appList = [[NSMutableSet alloc] init];
 
@@ -61,6 +62,7 @@
     }
     parentHost.name = self.name;
     parentHost.uuid = self.uuid;
+    parentHost.serverCodecModeSupport = self.serverCodecModeSupport;
     parentHost.pairState = [NSNumber numberWithInt:self.pairState];
 }
 
