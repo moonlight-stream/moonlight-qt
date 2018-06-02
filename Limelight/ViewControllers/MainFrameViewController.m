@@ -418,8 +418,7 @@ static NSMutableSet* hostList;
     [self presentViewController:alertController animated:YES completion:nil];
 }
 
-- (void) appClicked:(TemporaryApp *)app {
-    Log(LOG_D, @"Clicked app: %@", app.name);
+- (void) prepareToStreamApp:(TemporaryApp *)app {
     _streamConfig = [[StreamConfiguration alloc] init];
     _streamConfig.host = app.host.activeAddress;
     _streamConfig.appID = app.id;
@@ -458,6 +457,10 @@ static NSMutableSet* hostList;
             (AVPlayer.availableHDRModes & AVPlayerHDRModeHDR10) != 0 && // Display supported
             NO; // TODO: User wants it enabled
     }
+}
+
+- (void) appClicked:(TemporaryApp *)app {
+    Log(LOG_D, @"Clicked app: %@", app.name);
     
     [_appManager stopRetrieving];
     
@@ -473,6 +476,7 @@ static NSMutableSet* hostList;
         [alertController addAction:[UIAlertAction
                                     actionWithTitle:[app.id isEqualToString:currentApp.id] ? @"Resume App" : @"Resume Running App" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
                                         Log(LOG_I, @"Resuming application: %@", currentApp.name);
+                                        [self prepareToStreamApp:currentApp];
                                         [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                     }]];
         [alertController addAction:[UIAlertAction actionWithTitle:
@@ -516,6 +520,7 @@ static NSMutableSet* hostList;
                                                 dispatch_async(dispatch_get_main_queue(), ^{
                                                     [self updateAppsForHost:app.host];
                                                     [self hideLoadingFrame];
+                                                    [self prepareToStreamApp:app];
                                                     [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
                                                 });
                                                 
@@ -541,6 +546,7 @@ static NSMutableSet* hostList;
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
         [self presentViewController:alertController animated:YES completion:nil];
     } else {
+        [self prepareToStreamApp:app];
         [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
     }
 }
