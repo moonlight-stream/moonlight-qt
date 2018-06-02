@@ -176,6 +176,7 @@ static NSMutableSet* hostList;
         for (TemporaryApp* savedApp in host.appList) {
             if ([app.id isEqualToString:savedApp.id]) {
                 savedApp.name = app.name;
+                savedApp.hdrSupported = app.hdrSupported;
                 appAlreadyInList = YES;
                 break;
             }

@@ -19,6 +19,7 @@
 static const char* TAG_APP = "App";
 static const char* TAG_APP_TITLE = "AppTitle";
 static const char* TAG_APP_ID = "ID";
+static const char* TAG_HDR_SUPPORTED = "IsHdrSupported";
 
 - (void)populateWithData:(NSData *)xml {
     self.data = xml;
@@ -66,19 +67,24 @@ static const char* TAG_APP_ID = "ID";
             xmlNodePtr appInfoNode = node->xmlChildrenNode;
             NSString* appName = @"";
             NSString* appId = nil;
+            NSString* hdrSupported = @"0";
             while (appInfoNode != NULL) {
                 if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_TITLE)) {
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
                     if (nodeVal != NULL) {
                         appName = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
                         xmlFree(nodeVal);
-                    } else {
-                        appName = @"";
                     }
                 } else if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_APP_ID)) {
                     xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
                     if (nodeVal != NULL) {
                         appId = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
+                        xmlFree(nodeVal);
+                    }
+                } else if (!xmlStrcmp(appInfoNode->name, (xmlChar*)TAG_HDR_SUPPORTED)) {
+                    xmlChar* nodeVal = xmlNodeListGetString(docPtr, appInfoNode->xmlChildrenNode, 1);
+                    if (nodeVal != NULL) {
+                        hdrSupported = [[NSString alloc] initWithCString:(const char*)nodeVal encoding:NSUTF8StringEncoding];
                         xmlFree(nodeVal);
                     }
                 }
@@ -88,6 +94,7 @@ static const char* TAG_APP_ID = "ID";
                 TemporaryApp* app = [[TemporaryApp alloc] init];
                 app.name = appName;
                 app.id = appId;
+                app.hdrSupported = [hdrSupported intValue] != 0;
                 [_appList addObject:app];
             }
         }
