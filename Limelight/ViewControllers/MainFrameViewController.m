@@ -677,7 +677,6 @@ static NSMutableSet* hostList;
                                                  name: UIApplicationWillResignActiveNotification
                                                object: nil];
     
-    [self updateHosts];
     [self.view addSubview:hostScrollView];
     [self.view addSubview:_pullArrow];
 }
@@ -690,6 +689,9 @@ static NSMutableSet* hostList;
 -(void)beginForegroundRefresh
 {
     if (!_background) {
+        // This will kick off box art caching
+        [self updateHosts];
+        
         [_discMan startDiscovery];
         
         // This will refresh the applist when a paired host is selected
@@ -799,6 +801,13 @@ static NSMutableSet* hostList;
             compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
             prevEdge = compView.frame.origin.x + compView.frame.size.width;
             [hostScrollView addSubview:compView];
+            
+            // Start jobs to decode the box art in advance
+            for (TemporaryApp* app in comp.appList) {
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+                    [self updateBoxArtCacheForApp:app];
+                });
+            }
         }
     }
     
@@ -820,11 +829,27 @@ static NSMutableSet* hostList;
 // This function forces immediate decoding of the UIImage, rather
 // than the default lazy decoding that results in janky scrolling.
 + (UIImage*) loadBoxArtForCaching:(TemporaryApp*)app {
+    UIImage* boxArt;
     
     CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)app.image, NULL);
-    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, (__bridge CFDictionaryRef)@{(id)kCGImageSourceShouldCacheImmediately: (id)kCFBooleanTrue});
+    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil);
     
-    UIImage *boxArt = [UIImage imageWithCGImage:cgImage];
+    size_t width = CGImageGetWidth(cgImage);
+    size_t height = CGImageGetHeight(cgImage);
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef imageContext =  CGBitmapContextCreate(NULL, width, height, 8, width * 4, colorSpace,
+                                                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+    CGColorSpaceRelease(colorSpace);
+
+    CGContextDrawImage(imageContext, CGRectMake(0, 0, width, height), cgImage);
+    
+    CGImageRef outputImage = CGBitmapContextCreateImage(imageContext);
+
+    boxArt = [UIImage imageWithCGImage:outputImage];
+    
+    CGImageRelease(outputImage);
+    CGContextRelease(imageContext);
     
     CGImageRelease(cgImage);
     CFRelease(source);
@@ -849,33 +874,6 @@ static NSMutableSet* hostList;
     
     _sortedAppList = [host.appList allObjects];
     _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
-    
-    // Split the sorted array in half to allow 2 jobs to process app assets at once
-    NSArray *firstHalf;
-    NSArray *secondHalf;
-    NSRange range;
-    
-    range.location = 0;
-    range.length = [_sortedAppList count] / 2;
-    
-    firstHalf = [_sortedAppList subarrayWithRange:range];
-    
-    range.location = range.length;
-    range.length = [_sortedAppList count] - range.length;
-    
-    secondHalf = [_sortedAppList subarrayWithRange:range];
-    
-    // Start 2 jobs
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (TemporaryApp* app in firstHalf) {
-            [self updateBoxArtCacheForApp:app];
-        }
-    });
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        for (TemporaryApp* app in secondHalf) {
-            [self updateBoxArtCacheForApp:app];
-        }
-    });
     
     [hostScrollView removeFromSuperview];
     [self.collectionView reloadData];
