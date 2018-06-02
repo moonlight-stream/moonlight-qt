@@ -205,12 +205,12 @@ static float L3_Y;
         case OnScreenControlsLevelSimple:
             [self setupSimpleControls];
             
-            [self drawTriggers];
-            [self drawStartSelect];
-            [self drawL3R3];
-            [self hideButtons];
+            [self hideTriggers];
+            [self hideL3R3];
             [self hideBumpers];
             [self hideSticks];
+            [self drawStartSelect];
+            [self drawButtons];
             break;
         case OnScreenControlsLevelFull:
             [self setupComplexControls];
