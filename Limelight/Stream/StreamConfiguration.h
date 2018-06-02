@@ -26,5 +26,6 @@
 @property int audioChannelCount;
 @property int audioChannelMask;
 @property BOOL enableHdr;
+@property BOOL multiController;
 
 @end

@@ -11,13 +11,14 @@
 #if !TARGET_OS_IPHONE
 #import "Gamepad.h"
 #endif
+#import "StreamConfiguration.h"
 @class Controller;
 
 @class OnScreenControls;
 
 @interface ControllerSupport : NSObject
 
--(id) init;
+-(id) initWithConfig:(StreamConfiguration*)streamConfig;
 
 #if TARGET_OS_IPHONE
 -(void) initAutoOnScreenControlMode:(OnScreenControls*)osc;
@@ -42,7 +43,7 @@
 
 -(void) updateFinished:(Controller*)controller;
 
-+(int) getConnectedGamepadMask;
++(int) getConnectedGamepadMask:(StreamConfiguration*)streamConfig;
 
 @property (nonatomic, strong) id connectObserver;
 @property (nonatomic, strong) id disconnectObserver;

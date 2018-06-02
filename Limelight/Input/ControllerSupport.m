@@ -38,6 +38,7 @@
     
     bool _oscEnabled;
     char _controllerNumbers;
+    bool _multiController;
 }
 
 // UPDATE_BUTTON_FLAG(controller, flag, pressed)
@@ -154,7 +155,8 @@
     [_controllerStreamLock lock];
     @synchronized(controller) {
         // Player 1 is always present for OSC
-        LiSendMultiControllerEvent(controller.playerIndex, _controllerNumbers | (_oscEnabled ? 1 : 0), controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
+        LiSendMultiControllerEvent(_multiController ? controller.playerIndex : 0,
+                                   (_multiController ? _controllerNumbers : 1) | (_oscEnabled ? 1 : 0), controller.lastButtonFlags, controller.lastLeftTrigger, controller.lastRightTrigger, controller.lastLeftStickX, controller.lastLeftStickY, controller.lastRightStickX, controller.lastRightStickY);
     }
     [_controllerStreamLock unlock];
 }
@@ -360,14 +362,21 @@
     return count;
 }
 
-+(int) getConnectedGamepadMask {
++(int) getConnectedGamepadMask:(StreamConfiguration*)streamConfig {
     int mask = 0;
-
-    int i = 0;
-    for (GCController* controller in [GCController controllers]) {
-        if ([ControllerSupport isSupportedGamepad:controller]) {
-            mask |= 1 << i++;
+    
+    if (streamConfig.multiController) {
+        int i = 0;
+        for (GCController* controller in [GCController controllers]) {
+            if ([ControllerSupport isSupportedGamepad:controller]) {
+                mask |= 1 << i++;
+            }
         }
+    }
+    else {
+        // Some games don't deal with having controller reconnected
+        // properly so always report controller 1 if not in MC mode
+        mask = 0x1;
     }
     
 #if TARGET_OS_IPHONE
@@ -377,19 +386,21 @@
     // Even if no gamepads are present, we will always count one
     // if OSC is enabled.
     if (level != OnScreenControlsLevelOff) {
-        mask |= 1;
+        mask |= 0x1;
     }
 #endif
+    
     return mask;
 }
 
--(id) init
+-(id) initWithConfig:(StreamConfiguration*)streamConfig
 {
     self = [super init];
     
     _controllerStreamLock = [[NSLock alloc] init];
     _controllers = [[NSMutableDictionary alloc] init];
     _controllerNumbers = 0;
+    _multiController = streamConfig.multiController;
 
     _player0osc = [[Controller alloc] init];
     _player0osc.playerIndex = 0;
@@ -404,6 +415,8 @@
 #endif
     
     Log(LOG_I, @"Number of supported controllers connected: %d", [ControllerSupport getGamepadCount]);
+    Log(LOG_I, @"Multi-controller: %d", _multiController);
+    
     for (GCController* controller in [GCController controllers]) {
         if ([ControllerSupport isSupportedGamepad:controller]) {
             [self assignController:controller];

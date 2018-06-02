@@ -432,10 +432,13 @@ static NSMutableSet* hostList;
     _streamConfig.bitRate = [streamSettings.bitrate intValue];
     _streamConfig.height = [streamSettings.height intValue];
     _streamConfig.width = [streamSettings.width intValue];
-    _streamConfig.gamepadMask = [ControllerSupport getConnectedGamepadMask];
     _streamConfig.streamingRemotely = [streamSettings.streamingRemotely intValue];
     _streamConfig.optimizeGameSettings = YES;
     _streamConfig.playAudioOnPC = NO;
+    
+    // multiController must be set before calling getConnectedGamepadMask
+    _streamConfig.multiController = YES;
+    _streamConfig.gamepadMask = [ControllerSupport getConnectedGamepadMask:_streamConfig];
     
     // TODO: Detect attached surround sound system then address 5.1 TODOs
     // in Connection.m

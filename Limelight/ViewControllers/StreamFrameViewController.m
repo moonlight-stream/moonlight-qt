@@ -41,7 +41,7 @@
     self.spinner.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2 - self.stageLabel.frame.size.height - self.spinner.frame.size.height);
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
-    _controllerSupport = [[ControllerSupport alloc] init];
+    _controllerSupport = [[ControllerSupport alloc] initWithConfig:self.streamConfig];
     
     _streamMan = [[StreamManager alloc] initWithConfig:self.streamConfig
                                             renderView:self.view
