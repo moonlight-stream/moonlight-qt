@@ -324,11 +324,11 @@ void ClLogMessage(const char* format, ...)
     LiInitializeVideoCallbacks(&_drCallbacks);
     _drCallbacks.setup = DrDecoderSetup;
     _drCallbacks.submitDecodeUnit = DrSubmitDecodeUnit;
-    _drCallbacks.capabilities = CAPABILITY_DIRECT_SUBMIT;
 
     // RFI doesn't work properly with HEVC on iOS 11 with an iPhone SE (at least)
     // It doesnt work on macOS either, tested with Network Link Conditioner.
-    _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
+    _drCallbacks.capabilities = CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC |
+                                CAPABILITY_DIRECT_SUBMIT;
 
     LiInitializeAudioCallbacks(&_arCallbacks);
     _arCallbacks.init = ArInit;
