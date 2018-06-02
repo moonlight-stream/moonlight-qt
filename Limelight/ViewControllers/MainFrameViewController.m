@@ -28,6 +28,8 @@
 #import "IdManager.h"
 #import "ConnectionHelper.h"
 
+#import <VideoToolbox/VideoToolbox.h>
+
 @implementation MainFrameViewController {
     NSOperationQueue* _opQueue;
     TemporaryHost* _selectedHost;
@@ -432,6 +434,27 @@ static NSMutableSet* hostList;
     _streamConfig.width = [streamSettings.width intValue];
     _streamConfig.gamepadMask = [ControllerSupport getConnectedGamepadMask];
     _streamConfig.streamingRemotely = [streamSettings.streamingRemotely intValue];
+    _streamConfig.optimizeGameSettings = YES;
+    _streamConfig.playAudioOnPC = NO;
+    
+    // TODO: Detect attached surround sound system then address 5.1 TODOs
+    // in Connection.m
+    _streamConfig.audioChannelCount = 2;
+    _streamConfig.audioChannelMask = 0x3;
+    
+    // HDR requires HDR10 game, HDR10 display, and HEVC Main10 decoder on the client.
+    // It additionally requires an HEVC Main10 encoder on the server (GTX 1000+).
+    //
+    // It should also be a user preference when supported, since some games may require
+    // higher peak brightness than the iOS device can support to look correct in HDR mode.
+    if (@available(iOS 11.3, *)) {
+        _streamConfig.enableHdr =
+            app.hdrSupported && // App supported
+            (app.host.serverCodecModeSupport & 0x200) != 0 && // HEVC Main10 encoding on host PC GPU
+            VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) && // Decoder supported
+            (AVPlayer.availableHDRModes & AVPlayerHDRModeHDR10) != 0 && // Display supported
+            NO; // TODO: User wants it enabled
+    }
     
     [_appManager stopRetrieving];
     

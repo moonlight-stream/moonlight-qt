@@ -167,14 +167,26 @@ static const NSString* HTTPS_PORT = @"47984";
     return [self createRequestFromString:urlString enableTimeout:TRUE];
 }
 
-- (NSURLRequest*) newLaunchRequest:(NSString*)appId width:(int)width height:(int)height refreshRate:(int)refreshRate rikey:(NSString*)rikey rikeyid:(int)rikeyid gamepadMask:(int)gamepadMask {
-    NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=1&rikey=%@&rikeyid=%d&remoteControllersBitmap=%d&gcmap=%d", _baseHTTPSURL, _uniqueId, appId, width, height, refreshRate, rikey, rikeyid, gamepadMask, gamepadMask];
+- (NSURLRequest*) newLaunchRequest:(StreamConfiguration*)config {
+    NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=%d&rikey=%@&rikeyid=%d%@&localAudioPlayMode=%d&surroundAudioInfo=%d&remoteControllersBitmap=%d&gcmap=%d",
+                           _baseHTTPSURL, _uniqueId,
+                           config.appID,
+                           config.width, config.height, config.frameRate,
+                           config.optimizeGameSettings ? 1 : 0,
+                           [Utils bytesToHex:config.riKey], config.riKeyId,
+                           config.enableHdr ? @"&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0": @"",
+                           config.playAudioOnPC ? 1 : 0,
+                           (config.audioChannelMask << 16) | config.audioChannelCount,
+                           config.gamepadMask, config.gamepadMask];
     // This blocks while the app is launching
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
 
-- (NSURLRequest*) newResumeRequestWithRiKey:(NSString*)riKey riKeyId:(int)riKeyId {
-    NSString* urlString = [NSString stringWithFormat:@"%@/resume?uniqueid=%@&rikey=%@&rikeyid=%d", _baseHTTPSURL, _uniqueId, riKey, riKeyId];
+- (NSURLRequest*) newResumeRequest:(StreamConfiguration*)config {
+    NSString* urlString = [NSString stringWithFormat:@"%@/resume?uniqueid=%@&rikey=%@&rikeyid=%d&surroundAudioInfo=%d",
+                           _baseHTTPSURL, _uniqueId,
+                           [Utils bytesToHex:config.riKey], config.riKeyId,
+                           (config.audioChannelMask << 16) | config.audioChannelCount];
     // This blocks while the app is resuming
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }

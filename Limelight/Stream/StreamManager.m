@@ -104,14 +104,7 @@
 
 - (BOOL) launchApp:(HttpManager*)hMan {
     HttpResponse* launchResp = [[HttpResponse alloc] init];
-    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:launchResp withUrlRequest:
-                          [hMan newLaunchRequest:_config.appID
-                                           width:_config.width
-                                          height:_config.height
-                                     refreshRate:_config.frameRate
-                                           rikey:[Utils bytesToHex:_config.riKey]
-                                         rikeyid:_config.riKeyId
-                                     gamepadMask:_config.gamepadMask]]];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:launchResp withUrlRequest:[hMan newLaunchRequest:_config]]];
     NSString *gameSession = [launchResp getStringTag:@"gamesession"];
     if (launchResp == NULL || ![launchResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to launch app"];
@@ -128,9 +121,7 @@
 
 - (BOOL) resumeApp:(HttpManager*)hMan {
     HttpResponse* resumeResp = [[HttpResponse alloc] init];
-    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:resumeResp withUrlRequest:
-                          [hMan newResumeRequestWithRiKey:[Utils bytesToHex:_config.riKey]
-                                                  riKeyId:_config.riKeyId]]];
+    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:resumeResp withUrlRequest:[hMan newResumeRequest:_config]]];
     NSString* resume = [resumeResp getStringTag:@"resume"];
     if (resumeResp == NULL || ![resumeResp isStatusOk]) {
         [_callbacks launchFailed:@"Failed to resume app"];

@@ -21,5 +21,10 @@
 @property int streamingRemotely;
 @property NSData* riKey;
 @property int gamepadMask;
+@property BOOL optimizeGameSettings;
+@property BOOL playAudioOnPC;
+@property int audioChannelCount;
+@property int audioChannelMask;
+@property BOOL enableHdr;
 
 @end

@@ -90,7 +90,9 @@ int ArInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, v
     // Clear the circular buffer
     audioBufferWriteIndex = audioBufferReadIndex = 0;
 
-    // We only support stereo for now
+    // We only support stereo for now.
+    // TODO: Ensure AudioToolbox's channel mapping matches Opus's
+    // and correct if neccessary.
     assert(audioConfiguration == AUDIO_CONFIGURATION_STEREO);
 
     activeChannelCount = opusConfig->channelCount;
@@ -281,9 +283,20 @@ void ClLogMessage(const char* format, ...)
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;
     _streamConfig.bitrate = config.bitRate;
-
-    // This will activate the remote streaming optimization in moonlight-common if needed
     _streamConfig.streamingRemotely = config.streamingRemotely;
+    _streamConfig.enableHdr = config.enableHdr;
+    
+    switch (config.audioChannelCount) {
+        case 2:
+            _streamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
+            break;
+        case 6:
+            _streamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
+            break;
+        default:
+            Log(LOG_E, @"Unknown audio channel count: %d", config.audioChannelCount);
+            abort();
+    }
 
 #if TARGET_OS_IPHONE
     // On iOS 11, we can use HEVC if the server supports encoding it
@@ -301,6 +314,9 @@ void ClLogMessage(const char* format, ...)
             _streamConfig.supportsHevc = true;
     }
 #endif
+    
+    // HEVC must be supported when HDR is enabled
+    assert(!_streamConfig.enableHdr || _streamConfig.supportsHevc);
     
     // Use some of the HEVC encoding efficiency improvements to
     // reduce bandwidth usage while still gaining some image
