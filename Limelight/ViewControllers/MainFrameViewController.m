@@ -434,6 +434,7 @@ static NSMutableSet* hostList;
     _streamConfig.streamingRemotely = streamSettings.streamingRemotely;
     _streamConfig.optimizeGameSettings = streamSettings.optimizeGames;
     _streamConfig.playAudioOnPC = streamSettings.playAudioOnPC;
+    _streamConfig.allowHevc = streamSettings.useHevc;
     
     // multiController must be set before calling getConnectedGamepadMask
     _streamConfig.multiController = streamSettings.multiController;

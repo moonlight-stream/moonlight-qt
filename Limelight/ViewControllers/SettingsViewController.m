@@ -83,8 +83,11 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
         resolution = 1;
     }
     
+    [self.optimizeSettingsSelector setSelectedSegmentIndex:currentSettings.optimizeGames ? 1 : 0];
+    [self.multiControllerSelector setSelectedSegmentIndex:currentSettings.multiController ? 1 : 0];
+    [self.audioOnPCSelector setSelectedSegmentIndex:currentSettings.playAudioOnPC ? 1 : 0];
+    [self.hevcSelector setSelectedSegmentIndex:currentSettings.useHevc ? 1 : 0];
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
-    [self.remoteSelector setSelectedSegmentIndex:currentSettings.streamingRemotely ? 1 : 0];
     [self.resolutionSelector setSelectedSegmentIndex:resolution];
     [self.resolutionSelector addTarget:self action:@selector(newResolutionFpsChosen) forControlEvents:UIControlEventValueChanged];
     [self.framerateSelector setSelectedSegmentIndex:framerate];
@@ -93,11 +96,6 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [self.bitrateSlider setValue:(_bitrate / BITRATE_INTERVAL) animated:YES];
     [self.bitrateSlider addTarget:self action:@selector(bitrateSliderMoved) forControlEvents:UIControlEventValueChanged];
     [self updateBitrateText];
-    [self.remoteSelector addTarget:self action:@selector(remoteStreamingChanged) forControlEvents:UIControlEventValueChanged];
-}
-
-- (void) remoteStreamingChanged {
-    // This function can be used to reconfigure the settings view to offer more remote streaming options (i.e. reduce the audio frequency to 24kHz, enable/disable the HEVC bitrate multiplier, ...)
 }
 
 - (void) newResolutionFpsChosen {
@@ -143,10 +141,6 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [self.bitrateLabel setText:[NSString stringWithFormat:bitrateFormat, _bitrate / 1000.]];
 }
 
-- (NSInteger) getRemoteOptions {
-    return [self.remoteSelector selectedSegmentIndex];
-}
-
 - (NSInteger) getChosenFrameRate {
     return [self.framerateSelector selectedSegmentIndex] == 0 ? 30 : 60;
 }
@@ -167,9 +161,21 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     NSInteger height = [self getChosenStreamHeight];
     NSInteger width = [self getChosenStreamWidth];
     NSInteger onscreenControls = [self.onscreenControlSelector selectedSegmentIndex];
-    BOOL streamingRemotely = [self.remoteSelector selectedSegmentIndex] == 1 ? YES : NO;
-    [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls
-        remote: streamingRemotely];
+    BOOL optimizeGames = [self.optimizeSettingsSelector selectedSegmentIndex] == 1;
+    BOOL multiController = [self.multiControllerSelector selectedSegmentIndex] == 1;
+    BOOL audioOnPC = [self.audioOnPCSelector selectedSegmentIndex] == 1;
+    BOOL useHevc = [self.hevcSelector selectedSegmentIndex] == 1;
+    [dataMan saveSettingsWithBitrate:_bitrate
+                           framerate:framerate
+                              height:height
+                               width:width
+                    onscreenControls:onscreenControls
+                              remote:NO
+                       optimizeGames:optimizeGames
+                     multiController:multiController
+                           audioOnPC:audioOnPC
+                             useHevc:useHevc
+                           enableHdr:NO];
 }
 
 - (void)didReceiveMemoryWarning {
