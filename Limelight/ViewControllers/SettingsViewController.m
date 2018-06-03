@@ -10,13 +10,46 @@
 #import "TemporarySettings.h"
 #import "DataManager.h"
 
-#define BITRATE_INTERVAL 500 // in kbps
-
 @implementation SettingsViewController {
     NSInteger _bitrate;
     Boolean _adjustedForSafeArea;
 }
 static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
+static const int bitrateTable[] = {
+    500,
+    1000,
+    1500,
+    2000,
+    2500,
+    3000,
+    4000,
+    5000,
+    6000,
+    7000,
+    8000,
+    9000,
+    10000,
+    12000,
+    15000,
+    18000,
+    20000,
+    30000,
+    40000,
+    50000
+};
+
+-(int)getSliderValueForBitrate:(NSInteger)bitrate {
+    int i;
+    
+    for (i = 0; i < (sizeof(bitrateTable) / sizeof(*bitrateTable)); i++) {
+        if (bitrate <= bitrateTable[i]) {
+            return i;
+        }
+    }
+    
+    // Return the last entry in the table
+    return i - 1;
+}
 
 -(void)viewDidLayoutSubviews {
     // On iPhone layouts, this view is rooted at a ScrollView. To make it
@@ -69,8 +102,9 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     DataManager* dataMan = [[DataManager alloc] init];
     TemporarySettings* currentSettings = [dataMan getSettings];
     
-    // Bitrate is persisted in kbps
-    _bitrate = [currentSettings.bitrate integerValue];
+    // Ensure we pick a bitrate that falls exactly onto a slider notch
+    _bitrate = bitrateTable[[self getSliderValueForBitrate:[currentSettings.bitrate intValue]]];
+    
     NSInteger framerate = [currentSettings.framerate integerValue] == 30 ? 0 : 1;
     NSInteger resolution;
     if ([currentSettings.height integerValue] == 360) {
@@ -93,7 +127,9 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     [self.framerateSelector setSelectedSegmentIndex:framerate];
     [self.framerateSelector addTarget:self action:@selector(newResolutionFpsChosen) forControlEvents:UIControlEventValueChanged];
     [self.onscreenControlSelector setSelectedSegmentIndex:onscreenControls];
-    [self.bitrateSlider setValue:(_bitrate / BITRATE_INTERVAL) animated:YES];
+    [self.bitrateSlider setMinimumValue:0];
+    [self.bitrateSlider setMaximumValue:(sizeof(bitrateTable) / sizeof(*bitrateTable)) - 1];
+    [self.bitrateSlider setValue:[self getSliderValueForBitrate:_bitrate] animated:YES];
     [self.bitrateSlider addTarget:self action:@selector(bitrateSliderMoved) forControlEvents:UIControlEventValueChanged];
     [self updateBitrateText];
 }
@@ -125,14 +161,17 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
         defaultBitrate = 1000;
     }
     
+    // We should always be exactly on a slider position with default bitrates
     _bitrate = defaultBitrate;
-    [self.bitrateSlider setValue:defaultBitrate / BITRATE_INTERVAL animated:YES];
+    assert(bitrateTable[[self getSliderValueForBitrate:_bitrate]] == _bitrate);
+    [self.bitrateSlider setValue:[self getSliderValueForBitrate:_bitrate] animated:YES];
     
     [self updateBitrateText];
 }
 
 - (void) bitrateSliderMoved {
-    _bitrate = BITRATE_INTERVAL * (int)self.bitrateSlider.value;
+    assert(self.bitrateSlider.value < (sizeof(bitrateTable) / sizeof(*bitrateTable)));
+    _bitrate = bitrateTable[(int)self.bitrateSlider.value];
     [self updateBitrateText];
 }
 
