@@ -180,14 +180,18 @@
     if (controller != NULL) {
         controller.controllerPausedHandler = ^(GCController *controller) {
             Controller* limeController = [self->_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
-            [self setButtonFlag:limeController flags:PLAY_FLAG];
-            [self updateFinished:limeController];
             
-            // Pause for 100 ms
-            usleep(100 * 1000);
-            
-            [self clearButtonFlag:limeController flags:PLAY_FLAG];
-            [self updateFinished:limeController];
+            // Get off the main thread
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                [self setButtonFlag:limeController flags:PLAY_FLAG];
+                [self updateFinished:limeController];
+                
+                // Pause for 100 ms
+                usleep(100 * 1000);
+                
+                [self clearButtonFlag:limeController flags:PLAY_FLAG];
+                [self updateFinished:limeController];
+            });
         };
         
         if (controller.extendedGamepad != NULL) {

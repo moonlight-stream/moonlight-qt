@@ -132,25 +132,29 @@
         }
         else if (!touchMoved) {
             if ([[event allTouches] count]  == 2) {
-                Log(LOG_D, @"Sending right mouse button press");
-                
-                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
-                
-                // Wait 100 ms to simulate a real button press
-                usleep(100 * 1000);
-                
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
-            } else {
-                if (!isDragging){
-                    Log(LOG_D, @"Sending left mouse button press");
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                    Log(LOG_D, @"Sending right mouse button press");
                     
-                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+                    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
                     
                     // Wait 100 ms to simulate a real button press
                     usleep(100 * 1000);
-                }
-                isDragging = false;
-                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+                    
+                    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+                });
+            } else {
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                    if (!self->isDragging){
+                        Log(LOG_D, @"Sending left mouse button press");
+                        
+                        LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+                        
+                        // Wait 100 ms to simulate a real button press
+                        usleep(100 * 1000);
+                    }
+                    self->isDragging = false;
+                    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+                });
             }
         }
         
