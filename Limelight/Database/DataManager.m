@@ -224,7 +224,7 @@
 - (App*) getAppForTemporaryApp:(TemporaryApp*)tempApp withAppRecords:(NSArray*)apps {
     for (App* app in apps) {
         if ([app.id isEqualToString:tempApp.id] &&
-            [app.host.uuid isEqualToString:app.host.uuid]) {
+            [app.host.uuid isEqualToString:tempApp.host.uuid]) {
             return app;
         }
     }
