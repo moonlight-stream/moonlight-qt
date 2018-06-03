@@ -297,6 +297,11 @@ void ClLogMessage(const char* format, ...)
             Log(LOG_E, @"Unknown audio channel count: %d", config.audioChannelCount);
             abort();
     }
+    
+    // HDR implies HEVC allowed
+    if (config.enableHdr) {
+        config.allowHevc = YES;
+    }
 
 #if TARGET_OS_IPHONE
     // On iOS 11, we can use HEVC if the server supports encoding it
@@ -305,13 +310,13 @@ void ClLogMessage(const char* format, ...)
     // to freeze after a few minutes with HEVC prior to iOS 11.3.
     // As a result, we will only use HEVC on iOS 11.3 or later.
     if (@available(iOS 11.3, *)) {
-        _streamConfig.supportsHevc = VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
+        _streamConfig.supportsHevc = config.allowHevc && VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC);
     }
 #else
     if (@available(macOS 10.13, *)) {
         // Streaming with limited bandwidth will result in better quality with HEVC
         if (VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) || _streamConfig.streamingRemotely != 0)
-            _streamConfig.supportsHevc = true;
+            _streamConfig.supportsHevc = config.allowHevc;
     }
 #endif
     

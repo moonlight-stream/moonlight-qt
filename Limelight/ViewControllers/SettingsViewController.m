@@ -84,8 +84,7 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     }
     
     NSInteger onscreenControls = [currentSettings.onscreenControls integerValue];
-    NSInteger streamingRemotely = [currentSettings.streamingRemotely integerValue];
-    [self.remoteSelector setSelectedSegmentIndex:streamingRemotely];
+    [self.remoteSelector setSelectedSegmentIndex:currentSettings.streamingRemotely ? 1 : 0];
     [self.resolutionSelector setSelectedSegmentIndex:resolution];
     [self.resolutionSelector addTarget:self action:@selector(newResolutionFpsChosen) forControlEvents:UIControlEventValueChanged];
     [self.framerateSelector setSelectedSegmentIndex:framerate];
@@ -168,7 +167,7 @@ static NSString* bitrateFormat = @"Bitrate: %.1f Mbps";
     NSInteger height = [self getChosenStreamHeight];
     NSInteger width = [self getChosenStreamWidth];
     NSInteger onscreenControls = [self.onscreenControlSelector selectedSegmentIndex];
-    NSInteger streamingRemotely = [self.remoteSelector selectedSegmentIndex];
+    BOOL streamingRemotely = [self.remoteSelector selectedSegmentIndex] == 1 ? YES : NO;
     [dataMan saveSettingsWithBitrate:_bitrate framerate:framerate height:height width:width onscreenControls:onscreenControls
         remote: streamingRemotely];
 }

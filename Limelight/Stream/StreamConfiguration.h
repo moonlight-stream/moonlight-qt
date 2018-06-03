@@ -18,7 +18,7 @@
 @property int frameRate;
 @property int bitRate;
 @property int riKeyId;
-@property int streamingRemotely;
+@property BOOL streamingRemotely;
 @property NSData* riKey;
 @property int gamepadMask;
 @property BOOL optimizeGameSettings;
@@ -27,5 +27,6 @@
 @property int audioChannelMask;
 @property BOOL enableHdr;
 @property BOOL multiController;
+@property BOOL allowHevc;
 
 @end
