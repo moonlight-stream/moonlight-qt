@@ -178,6 +178,7 @@ static const NSString* HTTPS_PORT = @"47984";
                            config.playAudioOnPC ? 1 : 0,
                            (config.audioChannelMask << 16) | config.audioChannelCount,
                            config.gamepadMask, config.gamepadMask];
+    Log(LOG_I, @"Requesting: %@", urlString);
     // This blocks while the app is launching
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
@@ -187,6 +188,7 @@ static const NSString* HTTPS_PORT = @"47984";
                            _baseHTTPSURL, _uniqueId,
                            [Utils bytesToHex:config.riKey], config.riKeyId,
                            (config.audioChannelMask << 16) | config.audioChannelCount];
+    Log(LOG_I, @"Requesting: %@", urlString);
     // This blocks while the app is resuming
     return [self createRequestFromString:urlString enableTimeout:FALSE];
 }
