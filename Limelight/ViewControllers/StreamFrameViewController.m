@@ -19,6 +19,7 @@
 @implementation StreamFrameViewController {
     ControllerSupport *_controllerSupport;
     StreamManager *_streamMan;
+    NSTimer *_inactivityTimer;
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -42,7 +43,7 @@
     [UIApplication sharedApplication].idleTimerDisabled = YES;
     
     _controllerSupport = [[ControllerSupport alloc] initWithConfig:self.streamConfig];
-    
+    _inactivityTimer = nil;
     _streamMan = [[StreamManager alloc] initWithConfig:self.streamConfig
                                             renderView:self.view
                                    connectionCallbacks:self];
@@ -53,6 +54,24 @@
                                              selector:@selector(applicationWillResignActive:)
                                                  name:UIApplicationWillResignActiveNotification
                                                object:nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(applicationDidBecomeActive:)
+                                                 name: UIApplicationDidBecomeActiveNotification
+                                               object: nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(applicationDidEnterBackground:)
+                                                 name: UIApplicationDidEnterBackgroundNotification
+                                               object: nil];
+}
+
+- (void)viewDidDisappear:(BOOL)animated {
+    if (_inactivityTimer != nil) {
+        [_inactivityTimer invalidate];
+        _inactivityTimer = nil;
+    }
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void) returnToMainFrame {
@@ -61,13 +80,55 @@
     [self.navigationController popToRootViewControllerAnimated:YES];
 }
 
+// This will fire if the user opens control center or gets a low battery message
 - (void)applicationWillResignActive:(NSNotification *)notification {
+    if (_inactivityTimer != nil) {
+        [_inactivityTimer invalidate];
+    }
+    
+    // Terminate the stream if the app is inactive for 10 seconds
+    Log(LOG_I, @"Starting inactivity termination timer");
+    _inactivityTimer = [NSTimer scheduledTimerWithTimeInterval:10
+                                                      target:self
+                                                    selector:@selector(inactiveTimerExpired:)
+                                                    userInfo:nil
+                                                     repeats:NO];
+}
+
+- (void)inactiveTimerExpired:(NSTimer*)timer {
+    Log(LOG_I, @"Terminating stream after inactivity");
+
+    [_streamMan stopStream];
+    [self returnToMainFrame];
+    
+    _inactivityTimer = nil;
+}
+
+- (void)applicationDidBecomeActive:(NSNotification *)notification {
+    // Stop the background timer, since we're foregrounded again
+    if (_inactivityTimer != nil) {
+        Log(LOG_I, @"Stopping inactivity timer after becoming active again");
+        [_inactivityTimer invalidate];
+        _inactivityTimer = nil;
+    }
+}
+
+// This fires when the home button is pressed
+- (void)applicationDidEnterBackground:(UIApplication *)application {
+    Log(LOG_I, @"Terminating stream immediately for backgrounding");
+
+    if (_inactivityTimer != nil) {
+        [_inactivityTimer invalidate];
+        _inactivityTimer = nil;
+    }
+    
     [_streamMan stopStream];
     [self returnToMainFrame];
 }
 
 - (void)edgeSwiped {
-    Log(LOG_D, @"User swiped to end stream");
+    Log(LOG_I, @"User swiped to end stream");
+    
     [_streamMan stopStream];
     [self returnToMainFrame];
 }
