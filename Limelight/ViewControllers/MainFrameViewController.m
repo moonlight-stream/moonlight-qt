@@ -674,23 +674,8 @@ static NSMutableSet* hostList;
     [self retrieveSavedHosts];
     _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
     
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(handleReturnToForeground)
-                                                 name: UIApplicationDidBecomeActiveNotification
-                                               object: nil];
-    
-    [[NSNotificationCenter defaultCenter] addObserver: self
-                                             selector: @selector(handleEnterBackground)
-                                                 name: UIApplicationWillResignActiveNotification
-                                               object: nil];
-    
     [self.view addSubview:hostScrollView];
     [self.view addSubview:_pullArrow];
-}
-
--(void)dealloc
-{
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 -(void)beginForegroundRefresh
@@ -735,6 +720,16 @@ static NSMutableSet* hostList;
     [self.navigationController.navigationBar setShadowImage:fakeImage];
     [self.navigationController.navigationBar setBackgroundImage:fakeImage forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
     
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(handleReturnToForeground)
+                                                 name: UIApplicationDidBecomeActiveNotification
+                                               object: nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(handleEnterBackground)
+                                                 name: UIApplicationWillResignActiveNotification
+                                               object: nil];
+    
     // We can get here on home press while streaming
     // since the stream view segues to us just before
     // entering the background. We can't check the app
@@ -752,11 +747,17 @@ static NSMutableSet* hostList;
 - (void)viewDidDisappear:(BOOL)animated
 {
     [super viewDidDisappear:animated];
-    // when discovery stops, we must create a new instance because you cannot restart an NSOperation when it is finished
+    
+    // when discovery stops, we must create a new instance because
+    // you cannot restart an NSOperation when it is finished
     [_discMan stopDiscovery];
     
     // Purge the box art cache
     [_boxArtCache removeAllObjects];
+    
+    // Remove our lifetime observers to avoid triggering them
+    // while streaming
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void) retrieveSavedHosts {
