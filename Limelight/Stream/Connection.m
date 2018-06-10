@@ -21,6 +21,9 @@
     CONNECTION_LISTENER_CALLBACKS _clCallbacks;
     DECODER_RENDERER_CALLBACKS _drCallbacks;
     AUDIO_RENDERER_CALLBACKS _arCallbacks;
+    char _hostString[256];
+    char _appVersionString[32];
+    char _gfeVersionString[32];
 }
 
 static NSLock* initLock;
@@ -267,12 +270,24 @@ void ClLogMessage(const char* format, ...)
     if (initLock == nil) {
         initLock = [[NSLock alloc] init];
     }
+    
+    strncpy(_hostString,
+            [config.host cStringUsingEncoding:NSUTF8StringEncoding],
+            sizeof(_hostString));
+    strncpy(_appVersionString,
+            [config.appVersion cStringUsingEncoding:NSUTF8StringEncoding],
+            sizeof(_appVersionString));
+    if (config.gfeVersion != nil) {
+        strncpy(_gfeVersionString,
+                [config.gfeVersion cStringUsingEncoding:NSUTF8StringEncoding],
+                sizeof(_gfeVersionString));
+    }
 
     LiInitializeServerInformation(&_serverInfo);
-    _serverInfo.address = [config.host cStringUsingEncoding:NSUTF8StringEncoding];
-    _serverInfo.serverInfoAppVersion = [config.appVersion cStringUsingEncoding:NSUTF8StringEncoding];
+    _serverInfo.address = _hostString;
+    _serverInfo.serverInfoAppVersion = _appVersionString;
     if (config.gfeVersion != nil) {
-        _serverInfo.serverInfoGfeVersion = [config.gfeVersion cStringUsingEncoding:NSUTF8StringEncoding];
+        _serverInfo.serverInfoGfeVersion = _gfeVersionString;
     }
 
     renderer = myRenderer;
