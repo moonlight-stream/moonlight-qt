@@ -37,42 +37,10 @@ private:
     QString m_StatusMessage;
 };
 
-class NvComputer
-{
-public:
-    NvComputer() {}
-
-    enum PairState
-    {
-        PS_UNKNOWN,
-        PS_PAIRED,
-        PS_NOT_PAIRED
-    };
-
-    enum ComputerState
-    {
-        CS_UNKNOWN,
-        CS_ONLINE,
-        CS_OFFLINE
-    };
-
-    QString m_Name;
-    QString m_Uuid;
-    QString m_MacAddress;
-    QString m_LocalAddress;
-    QString m_RemoteAddress;
-    int m_RunningGameId;
-    PairState m_PairState;
-    ComputerState m_State;
-};
-
 class NvHTTP
 {
 public:
     NvHTTP(QString address, IdentityManager im);
-
-    NvComputer
-    getComputerInfo();
 
     int
     getCurrentGame(QString serverInfo);

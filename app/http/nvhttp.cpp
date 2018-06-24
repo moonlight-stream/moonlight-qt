@@ -23,45 +23,6 @@ NvHTTP::NvHTTP(QString address, IdentityManager im) :
     m_BaseUrlHttps.setPort(47984);
 }
 
-NvComputer
-NvHTTP::getComputerInfo()
-{
-    NvComputer computer;
-    QString serverInfo = getServerInfo();
-
-    computer.m_Name = getXmlString(serverInfo, "hostname");
-    if (computer.m_Name == nullptr)
-    {
-        computer.m_Name = "UNKNOWN";
-    }
-
-    computer.m_Uuid = getXmlString(serverInfo, "uniqueid");
-    computer.m_MacAddress = getXmlString(serverInfo, "mac");
-
-    // If there's no LocalIP field, use the address we hit the server on
-    computer.m_LocalAddress = getXmlString(serverInfo, "LocalIP");
-    if (computer.m_LocalAddress == nullptr)
-    {
-        computer.m_LocalAddress = m_Address;
-    }
-
-    // If there's no ExternalIP field, use the address we hit the server on
-    computer.m_RemoteAddress = getXmlString(serverInfo, "ExternalIP");
-    if (computer.m_RemoteAddress == nullptr)
-    {
-        computer.m_RemoteAddress = m_Address;
-    }
-
-    computer.m_PairState = getXmlString(serverInfo, "PairStatus") == "1" ?
-                NvComputer::PS_PAIRED : NvComputer::PS_NOT_PAIRED;
-
-    computer.m_RunningGameId = getCurrentGame(serverInfo);
-
-    computer.m_State = NvComputer::CS_ONLINE;
-
-    return computer;
-}
-
 QVector<int>
 NvHTTP::getServerVersionQuad(QString serverInfo)
 {
