@@ -245,6 +245,10 @@ NvHTTP::openConnection(QUrl baseUrl,
         reply->abort();
     }
 
+    // We must clear out cached authentication and connections or
+    // GFE will puke next time
+    m_Nam.clearAccessCache();
+
     // Handle error
     if (reply->error() != QNetworkReply::NoError)
     {
