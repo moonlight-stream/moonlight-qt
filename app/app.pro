@@ -29,29 +29,29 @@ macx {
 }
 unix:!macx {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl
+    PKGCONFIG += openssl sdl2
 }
 
 SOURCES += \
     main.cpp \
-    mainwindow.cpp \
-    nvhttp.cpp \
-    nvpairingmanager.cpp \
-    identitymanager.cpp \
-    popupmanager.cpp \
-    streamwidget.cpp
+    streaming/audio.c \
+    streaming/input.c \
+    gui/mainwindow.cpp \
+    gui/popupmanager.cpp \
+    http/identitymanager.cpp \
+    http/nvhttp.cpp \
+    http/nvpairingmanager.cpp
 
 HEADERS += \
-    mainwindow.h \
-    nvhttp.h \
-    nvpairingmanager.h \
-    identitymanager.h \
     utils.h \
-    popupmanager.h \
-    streamwidget.h
+    gui/mainwindow.h \
+    gui/popupmanager.h \
+    http/identitymanager.h \
+    http/nvhttp.h \
+    http/nvpairingmanager.h
 
 FORMS += \
-    mainwindow.ui
+    gui/mainwindow.ui
 
 RESOURCES += \
     resources.qrc

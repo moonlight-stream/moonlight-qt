@@ -1,9 +1,9 @@
-#include "mainwindow.h"
+#include "gui/mainwindow.h"
 #include "ui_mainwindow.h"
-#include "popupmanager.h"
-#include "identitymanager.h"
-#include "nvpairingmanager.h"
-#include "nvhttp.h"
+#include "gui/popupmanager.h"
+#include "http/identitymanager.h"
+#include "http/nvpairingmanager.h"
+#include "http/nvhttp.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),

@@ -1,7 +1,7 @@
 #pragma once
 
-#include <identitymanager.h>
-#include <nvhttp.h>
+#include "http/identitymanager.h"
+#include "http/nvhttp.h"
 
 #include <openssl/aes.h>
 #include <openssl/x509.h>
