@@ -151,9 +151,4 @@ INCLUDEPATH += \
     $$OPUS_DIR/celt       \
     $$OPUS_DIR/silk/fixed
 
-CONFIG += warn_off
-
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}
+CONFIG += warn_off staticlib

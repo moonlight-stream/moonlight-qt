@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT       += core gui network gamepad
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -22,14 +22,32 @@ DEFINES += QT_DEPRECATED_WARNINGS
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
+win32 {
+    INCLUDEPATH += $$PWD/../libs/windows/include
+
+    contains(QT_ARCH, i386) {
+        LIBS += -L$$PWD/../libs/windows/lib/x86
+    }
+    contains(QT_ARCH, x86_64) {
+        LIBS += -L$$PWD/../libs/windows/lib/x64
+    }
+
+    LIBS += ws2_32.lib winmm.lib
+}
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
-    LIBS += $$PWD/../libs/mac/lib/libssl.1.1.dylib
-    LIBS += $$PWD/../libs/mac/lib/libcrypto.1.1.dylib
+    LIBS += -L$$PWD/../libs/mac/lib
 }
 unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2
+}
+
+LIBS += -lSDL2
+win32 {
+    LIBS += -llibssl -llibcrypto
+} else {
+    LIBS += -lssl -lcrypto
 }
 
 SOURCES += \

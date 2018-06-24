@@ -9,10 +9,11 @@ QT -= core gui
 TARGET = moonlight-common-c
 TEMPLATE = lib
 
+win32 {
+    INCLUDEPATH += $$PWD/../libs/windows/include
+}
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
-    LIBS += $$PWD/../libs/mac/lib/libssl.1.1.dylib
-    LIBS += $$PWD/../libs/mac/lib/libcrypto.1.1.dylib
 }
 unix:!macx {
     CONFIG += link_pkgconfig
@@ -56,10 +57,5 @@ INCLUDEPATH += \
     $$RS_DIR \
     $$ENET_DIR/include \
     $$COMMON_C_DIR/src
-CONFIG += warn_off
+CONFIG += warn_off staticlib
 DEFINES += HAS_SOCKLEN_T
-
-unix {
-    target.path = /usr/lib
-    INSTALLS += target
-}

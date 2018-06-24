@@ -10,6 +10,8 @@
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
+#include <openssl/bn.h>
+#include <openssl/x509.h>
 
 IdentityManager::IdentityManager()
 {
@@ -74,8 +76,25 @@ IdentityManager::IdentityManager()
 
     X509_set_version(cert, 2);
     ASN1_INTEGER_set(X509_get_serialNumber(cert), 0);
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
     X509_gmtime_adj(X509_get_notBefore(cert), 0);
     X509_gmtime_adj(X509_get_notAfter(cert), 60 * 60 * 24 * 365 * 20); // 20 yrs
+#else
+    ASN1_TIME* before = ASN1_STRING_dup(X509_get0_notBefore(cert));
+    THROW_BAD_ALLOC_IF_NULL(before);
+    ASN1_TIME* after = ASN1_STRING_dup(X509_get0_notAfter(cert));
+    THROW_BAD_ALLOC_IF_NULL(after);
+
+    X509_gmtime_adj(before, 0);
+    X509_gmtime_adj(after, 60 * 60 * 24 * 365 * 20); // 20 yrs
+
+    X509_set1_notBefore(cert, before);
+    X509_set1_notAfter(cert, after);
+
+    ASN1_STRING_free(before);
+    ASN1_STRING_free(after);
+#endif
+
     X509_set_pubkey(cert, pk);
 
     X509_NAME* name = X509_get_subject_name(cert);
@@ -97,11 +116,11 @@ IdentityManager::IdentityManager()
 
     BUF_MEM* mem;
     BIO_get_mem_ptr(biokey, &mem);
-    m_CachedPrivateKey = QByteArray(mem->data, mem->length);
+    m_CachedPrivateKey = QByteArray(mem->data, (int)mem->length);
     QTextStream(&privateKeyFile) << m_CachedPrivateKey;
 
     BIO_get_mem_ptr(biocert, &mem);
-    m_CachedPemCert = QByteArray(mem->data, mem->length);
+    m_CachedPemCert = QByteArray(mem->data, (int)mem->length);
     QTextStream(&certificateFile) << m_CachedPemCert;
 
     X509_free(cert);
@@ -132,7 +151,7 @@ IdentityManager::getSslConfig()
     PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
 
     QSslCertificate cert = QSslCertificate(m_CachedPemCert);
-    QSslKey key = QSslKey(QByteArray::fromRawData(mem->data, mem->length), QSsl::Rsa);
+    QSslKey key = QSslKey(QByteArray::fromRawData(mem->data, (int)mem->length), QSsl::Rsa);
     Q_ASSERT(!cert.isNull());
     Q_ASSERT(!key.isNull());
 
