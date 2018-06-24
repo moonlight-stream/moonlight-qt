@@ -58,7 +58,9 @@ SOURCES += \
     gui/popupmanager.cpp \
     http/identitymanager.cpp \
     http/nvhttp.cpp \
-    http/nvpairingmanager.cpp
+    http/nvpairingmanager.cpp \
+    streaming/video.c \
+    streaming/connection.cpp
 
 HEADERS += \
     utils.h \
@@ -66,13 +68,14 @@ HEADERS += \
     gui/popupmanager.h \
     http/identitymanager.h \
     http/nvhttp.h \
-    http/nvpairingmanager.h
+    http/nvpairingmanager.h \
+    streaming/streaming.h
 
 FORMS += \
     gui/mainwindow.ui
 
 RESOURCES += \
-    resources.qrc
+    gui/resources.qrc
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../moonlight-common-c/release/ -lmoonlight-common-c
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../moonlight-common-c/debug/ -lmoonlight-common-c

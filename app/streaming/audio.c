@@ -128,3 +128,12 @@ void SdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
         }
     }
 }
+
+AUDIO_RENDERER_CALLBACKS k_AudioCallbacks = {
+    SdlAudioInit,
+    SdlAudioStart,
+    SdlAudioStop,
+    SdlAudioCleanup,
+    SdlAudioDecodeAndPlaySample,
+    CAPABILITY_DIRECT_SUBMIT
+};

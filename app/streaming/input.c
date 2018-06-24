@@ -24,11 +24,11 @@ typedef struct _GAMEPAD_STATE {
 } GAMEPAD_STATE, *PGAMEPAD_STATE;
 
 #define MAX_GAMEPADS 4
-GAMEPAD_STATE g_GamepadState[MAX_GAMEPADS];
-unsigned short g_GamepadMask;
-bool g_MultiController;
+static GAMEPAD_STATE g_GamepadState[MAX_GAMEPADS];
+static unsigned short g_GamepadMask;
+static bool g_MultiController;
 
-const short k_ButtonMap[] = {
+static const short k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
     BACK_FLAG, SPECIAL_FLAG, PLAY_FLAG,
     LS_CLK_FLAG, RS_CLK_FLAG,
@@ -320,7 +320,7 @@ static PGAMEPAD_STATE FindStateForGamepad(SDL_JoystickID id)
     return NULL;
 }
 
-void SendGamepadState(PGAMEPAD_STATE state)
+static void SendGamepadState(PGAMEPAD_STATE state)
 {
     SDL_assert(g_GamepadMask == 0x1 || g_MultiController);
     LiSendMultiControllerEvent(state->index,

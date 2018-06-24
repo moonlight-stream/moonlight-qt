@@ -20,23 +20,6 @@ MainWindow::MainWindow(QWidget *parent) :
 //    connect(myButton, &QAbstractButton::clicked, this, &MainWindow::on_actionExit_triggered);
 }
 
-void MainWindow::closeEvent(QCloseEvent *event)
-{
-    const QMessageBox::StandardButton ret
-        = QMessageBox::warning(this, tr("Application"),
-                               tr("something-something-close?"),
-                               QMessageBox::Yes | QMessageBox::No);
-    switch (ret) {
-    case QMessageBox::Yes:
-        event->accept();
-        break;
-    case QMessageBox::No:
-    default:
-        event->ignore();
-        break;
-    }
-}
-
 MainWindow::~MainWindow()
 {
     delete ui;

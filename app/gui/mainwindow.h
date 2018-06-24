@@ -16,9 +16,6 @@ public:
     explicit MainWindow(QWidget *parent = 0);
     ~MainWindow();
 
-protected:
-    void closeEvent(QCloseEvent *event) override;
-
 private slots:
     void on_actionExit_triggered();
     void on_newHostBtn_clicked();

@@ -153,7 +153,7 @@ NvPairingManager::signMessage(QByteArray message)
     size_t signatureLength = 0;
     EVP_DigestSignFinal(ctx, NULL, &signatureLength);
 
-    QByteArray signature(signatureLength, 0);
+    QByteArray signature((int)signatureLength, 0);
     EVP_DigestSignFinal(ctx, reinterpret_cast<unsigned char*>(signature.data()), &signatureLength);
 
     EVP_MD_CTX_destroy(ctx);
