@@ -1,4 +1,5 @@
 #include "nvhttp.h"
+#include <Limelight.h>
 
 #include <QDebug>
 #include <QUuid>
@@ -128,6 +129,96 @@ NvHTTP::getServerInfo()
     }
 
     return serverInfo;
+}
+
+static QString
+getSurroundAudioInfoString(int audioConfig)
+{
+    int channelMask;
+    int channelCount;
+
+    switch (audioConfig)
+    {
+    case AUDIO_CONFIGURATION_STEREO:
+        channelCount = 2;
+        channelMask = 0x3;
+        break;
+    case AUDIO_CONFIGURATION_51_SURROUND:
+        channelCount = 6;
+        channelMask = 0xFC;
+        break;
+    default:
+        Q_ASSERT(false);
+        return 0;
+    }
+
+    return QString::number(channelMask << 16 | channelCount);
+}
+
+void
+NvHTTP::launchApp(int appId,
+                  PSTREAM_CONFIGURATION streamConfig,
+                  bool sops,
+                  bool localAudio,
+                  int gamepadMask)
+{
+    QString response =
+            openConnectionToString(m_BaseUrlHttps,
+                                   "launch",
+                                   "appid="+QString::number(appId)+
+                                   "&mode="+QString::number(streamConfig->width)+"x"+
+                                   QString::number(streamConfig->height)+"x"+
+                                   QString::number(streamConfig->fps)+
+                                   "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
+                                   "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
+                                   "&rikeyid="+QString::number(*(int*)streamConfig->remoteInputAesIv)+
+                                   (streamConfig->enableHdr ?
+                                       "&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" :
+                                        "")+
+                                   "&localAudioPlayMode="+QString::number(localAudio ? 1 : 0)+
+                                   "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration)+
+                                   "&remoteControllersBitmap="+QString::number(gamepadMask)+
+                                   "&gcmap="+QString::number(gamepadMask),
+                                   false);
+
+    // Throws if the request failed
+    verifyResponseStatus(response);
+}
+
+void
+NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
+{
+    QString response =
+            openConnectionToString(m_BaseUrlHttps,
+                                   "resume",
+                                   "rikey="+QString(QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex())+
+                                   "&rikeyid="+QString::number(*(int*)streamConfig->remoteInputAesIv)+
+                                   "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration),
+                                   false);
+
+    // Throws if the request failed
+    verifyResponseStatus(response);
+}
+
+void
+NvHTTP::quitApp()
+{
+    QString response =
+            openConnectionToString(m_BaseUrlHttps,
+                                   "cancel",
+                                   nullptr,
+                                   false);
+
+    // Throws if the request failed
+    verifyResponseStatus(response);
+
+    // Newer GFE versions will just return success even if quitting fails
+    // if we're not the original requestor.
+    if (getCurrentGame(getServerInfo()) != 0) {
+        // Generate a synthetic GfeResponseException letting the caller know
+        // that they can't kill someone else's stream.
+        throw GfeHttpResponseException(599, "");
+    }
 }
 
 void

@@ -14,6 +14,7 @@ extern DECODER_RENDERER_CALLBACKS k_VideoCallbacks;
 int SdlDetermineAudioConfiguration(void);
 
 void SdlInitializeGamepad(bool multiController);
+int SdlGetAttachedGamepadMask(void);
 void SdlHandleControllerDeviceEvent(SDL_ControllerDeviceEvent* event);
 void SdlHandleControllerButtonEvent(SDL_ControllerButtonEvent* event);
 void SdlHandleControllerAxisEvent(SDL_ControllerAxisEvent* event);

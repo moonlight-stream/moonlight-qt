@@ -2,6 +2,8 @@
 
 #include "identitymanager.h"
 
+#include <Limelight.h>
+
 #include <QUrl>
 #include <QtNetwork/QNetworkAccessManager>
 
@@ -97,6 +99,19 @@ public:
 
     QVector<int>
     getServerVersionQuad(QString serverInfo);
+
+    void
+    quitApp();
+
+    void
+    resumeApp(PSTREAM_CONFIGURATION streamConfig);
+
+    void
+    launchApp(int appId,
+              PSTREAM_CONFIGURATION streamConfig,
+              bool sops,
+              bool localAudio,
+              int gamepadMask);
 
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;

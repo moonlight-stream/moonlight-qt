@@ -474,6 +474,22 @@ void SdlHandleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
     }
 }
 
+int SdlGetAttachedGamepadMask(void)
+{
+    int i;
+    int count;
+    int mask;
+
+    count = mask = 0;
+    for (i = 0; i < SDL_NumJoysticks(); i++) {
+        if (SDL_IsGameController(i)) {
+            mask |= (1 << count++);
+        }
+    }
+
+    return mask;
+}
+
 void SdlInitializeGamepad(bool multiController)
 {
     g_MultiController = multiController;
