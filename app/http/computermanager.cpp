@@ -125,7 +125,6 @@ class PcMonitorThread : public QThread
             // We must have at least 1 address for this host
             Q_ASSERT(uniqueAddressList.count() != 0);
 
-
             bool stateChanged = false;
             for (int i = 0; i < TRIES_BEFORE_OFFLINING; i++) {
                 for (auto& address : uniqueAddressList) {
@@ -152,24 +151,18 @@ class PcMonitorThread : public QThread
                 }
             }
 
-            if (stateChanged) {
-                // Tell anyone listening that we've changed state
-                emit computerStateChanged(m_Computer);
-            }
-
             // Grab the applist if it's empty or it's been long enough that we need to refresh
             pollsSinceLastAppListFetch++;
             if (m_Computer->state == NvComputer::CS_ONLINE &&
                     (m_Computer->appList.isEmpty() || pollsSinceLastAppListFetch >= POLLS_PER_APPLIST_FETCH)) {
-                stateChanged = false;
-
                 if (UpdateAppList(stateChanged)) {
                     pollsSinceLastAppListFetch = 0;
                 }
+            }
 
-                if (stateChanged) {
-                    emit computerStateChanged(m_Computer);
-                }
+            if (stateChanged) {
+                // Tell anyone listening that we've changed state
+                emit computerStateChanged(m_Computer);
             }
 
             // Wait a bit to poll again
