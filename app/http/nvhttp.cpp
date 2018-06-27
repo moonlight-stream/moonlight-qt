@@ -8,6 +8,7 @@
 #include <QTimer>
 #include <QXmlStreamReader>
 #include <QSslKey>
+#include <QImageReader>
 
 #define REQUEST_TIMEOUT_MS 5000
 
@@ -242,6 +243,20 @@ NvHTTP::verifyResponseStatus(QString xml)
             }
         }
     }
+}
+
+QImage
+NvHTTP::getBoxArt(int appId)
+{
+    QNetworkReply* reply = openConnection(m_BaseUrlHttps,
+                                          "appasset",
+                                          "appid="+QString::number(appId)+
+                                          "&AssetType=2&AssetIdx=0",
+                                          true);
+    QImage image = QImageReader(reply).read();
+    delete reply;
+
+    return image;
 }
 
 QByteArray

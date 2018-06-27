@@ -107,6 +107,9 @@ public:
     QVector<NvApp>
     getAppList();
 
+    QImage
+    getBoxArt(int appId);
+
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;
 private:
