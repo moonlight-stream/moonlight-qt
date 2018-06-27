@@ -303,7 +303,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
 
     QString pairChallengeXml = m_Http.openConnectionToString(m_Http.m_BaseUrlHttps,
                                                              "pair",
-                                                             "devicename=roth&updateState=1&phase=pairchallenge",
+                                                             "devicename=roth&updateState=1&phrase=pairchallenge",
                                                              true);
     NvHTTP::verifyResponseStatus(pairChallengeXml);
     if (NvHTTP::getXmlString(pairChallengeXml, "paired") != "1")
