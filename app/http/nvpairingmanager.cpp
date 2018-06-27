@@ -10,11 +10,10 @@
 #include <openssl/x509.h>
 #include <openssl/evp.h>
 
-NvPairingManager::NvPairingManager(QString address, IdentityManager im) :
-    m_Http(address, im),
-    m_Im(im)
+NvPairingManager::NvPairingManager(QString address) :
+    m_Http(address)
 {
-    QByteArray cert = m_Im.getCertificate();
+    QByteArray cert = IdentityManager::get()->getCertificate();
     BIO *bio = BIO_new_mem_buf(cert.data(), -1);
     THROW_BAD_ALLOC_IF_NULL(bio);
 
@@ -25,7 +24,7 @@ NvPairingManager::NvPairingManager(QString address, IdentityManager im) :
         throw new std::runtime_error("Unable to load certificate");
     }
 
-    QByteArray pk = m_Im.getPrivateKey();
+    QByteArray pk = IdentityManager::get()->getPrivateKey();
     bio = BIO_new_mem_buf(pk.data(), -1);
     THROW_BAD_ALLOC_IF_NULL(bio);
 
@@ -198,7 +197,7 @@ NvPairingManager::pair(QString serverInfo, QString pin)
     QString getCert = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
                                                     "pair",
                                                     "devicename=roth&updateState=1&phrase=getservercert&salt=" +
-                                                    salt.toHex() + "&clientcert=" + m_Im.getCertificate().toHex(),
+                                                    salt.toHex() + "&clientcert=" + IdentityManager::get()->getCertificate().toHex(),
                                                     false);
     m_Http.verifyResponseStatus(getCert);
     if (m_Http.getXmlString(getCert, "paired") != "1")

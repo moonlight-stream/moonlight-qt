@@ -19,7 +19,7 @@ public:
         ALREADY_IN_PROGRESS
     };
 
-    NvPairingManager(QString address, IdentityManager im);
+    NvPairingManager(QString address);
 
     ~NvPairingManager();
 
@@ -52,7 +52,6 @@ private:
     signMessage(QByteArray message);
 
     NvHTTP m_Http;
-    IdentityManager m_Im;
     X509* m_Cert;
     EVP_PKEY* m_PrivateKey;
 };

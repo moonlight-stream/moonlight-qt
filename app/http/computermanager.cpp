@@ -23,9 +23,8 @@ class PcMonitorThread : public QThread
 #define TRIES_BEFORE_OFFLINING 2
 #define POLLS_PER_APPLIST_FETCH 10
 
-    PcMonitorThread(NvComputer* computer, IdentityManager im)
-        : m_Im(im),
-          m_Computer(computer)
+    PcMonitorThread(NvComputer* computer)
+        : m_Computer(computer)
     {
 
     }
@@ -49,7 +48,7 @@ class PcMonitorThread : public QThread
 
     bool TryPollComputer(QString& address, bool& changed)
     {
-        NvHTTP http(address, m_Im);
+        NvHTTP http(address);
 
         QString serverInfo;
         try {
@@ -174,6 +173,5 @@ signals:
    void computerStateChanged(NvComputer* computer);
 
 private:
-    IdentityManager m_Im;
     NvComputer* m_Computer;
 };

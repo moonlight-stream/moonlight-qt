@@ -11,9 +11,8 @@
 
 #define REQUEST_TIMEOUT_MS 5000
 
-NvHTTP::NvHTTP(QString address, IdentityManager im) :
-    m_Address(address),
-    m_Im(im)
+NvHTTP::NvHTTP(QString address) :
+    m_Address(address)
 {
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
@@ -266,14 +265,14 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Build a URL for the request
     QUrl url(baseUrl);
     url.setPath("/" + command);
-    url.setQuery("uniqueid=" + m_Im.getUniqueId() +
+    url.setQuery("uniqueid=" + IdentityManager::get()->getUniqueId() +
                  "&uuid=" + QUuid::createUuid().toRfc4122().toHex() +
                  ((arguments != nullptr) ? ("&" + arguments) : ""));
 
     QNetworkRequest request = QNetworkRequest(url);
 
     // Add our client certificate
-    request.setSslConfiguration(m_Im.getSslConfig());
+    request.setSslConfiguration(IdentityManager::get()->getSslConfig());
 
     QNetworkReply* reply = m_Nam.get(request);
 

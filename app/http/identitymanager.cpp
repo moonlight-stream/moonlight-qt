@@ -13,6 +13,20 @@
 #include <openssl/bn.h>
 #include <openssl/x509.h>
 
+IdentityManager* IdentityManager::s_Im = nullptr;
+
+IdentityManager*
+IdentityManager::get()
+{
+    // This will always be called first on the main thread,
+    // so it's safe to initialize without locks.
+    if (s_Im == nullptr) {
+        s_Im = new IdentityManager();
+    }
+
+    return s_Im;
+}
+
 IdentityManager::IdentityManager()
 {
     m_RootDirectory = QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));

@@ -40,7 +40,7 @@ private:
 class NvHTTP
 {
 public:
-    NvHTTP(QString address, IdentityManager im);
+    NvHTTP(QString address);
 
     int
     getCurrentGame(QString serverInfo);
@@ -92,5 +92,4 @@ private:
 
     QString m_Address;
     QNetworkAccessManager m_Nam;
-    IdentityManager m_Im;
 };

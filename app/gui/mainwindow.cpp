@@ -35,11 +35,9 @@ void MainWindow::on_newHostBtn_clicked()
     QString hostname = popupmanager::getHostnameDialog(this);
     if (!hostname.isEmpty()) {
 
-        IdentityManager im = IdentityManager();
-        NvPairingManager pm(hostname, im);
+        NvPairingManager pm(hostname);
 
         QString pin = pm.generatePinString();
-        NvHTTP http(hostname, im);
         pm.pair(http.getServerInfo(), pin);
     }
 }
