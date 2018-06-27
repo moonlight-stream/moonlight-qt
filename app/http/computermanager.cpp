@@ -60,16 +60,19 @@ NvComputer::serialize(QSettings& settings)
     settings.setValue(SER_REMOTEADDR, remoteAddress);
     settings.setValue(SER_MANUALADDR, manualAddress);
 
-    settings.remove(SER_APPLIST);
-    settings.beginWriteArray(SER_APPLIST);
-    for (int i = 0; i < appList.count(); i++) {
-        settings.setArrayIndex(i);
+    // Avoid deleting an existing applist if we couldn't get one
+    if (!appList.isEmpty()) {
+        settings.remove(SER_APPLIST);
+        settings.beginWriteArray(SER_APPLIST);
+        for (int i = 0; i < appList.count(); i++) {
+            settings.setArrayIndex(i);
 
-        settings.setValue(SER_APPNAME, appList[i].name);
-        settings.setValue(SER_APPID, appList[i].id);
-        settings.setValue(SER_APPHDR, appList[i].hdrSupported);
+            settings.setValue(SER_APPNAME, appList[i].name);
+            settings.setValue(SER_APPID, appList[i].id);
+            settings.setValue(SER_APPHDR, appList[i].hdrSupported);
+        }
+        settings.endArray();
     }
-    settings.endArray();
 }
 
 NvComputer::NvComputer(QString address, QString serverInfo)
@@ -161,6 +164,7 @@ ComputerManager::ComputerManager()
 void ComputerManager::saveHosts()
 {
     QSettings settings;
+    QReadLocker lock(&m_Lock);
 
     settings.remove(SER_HOSTS);
     settings.beginWriteArray(SER_HOSTS);
@@ -229,20 +233,26 @@ bool ComputerManager::addNewHost(QString address, bool mdns)
         bool changed = existingComputer->update(*newComputer);
         delete newComputer;
 
+        // Drop the lock before notifying
+        lock.unlock();
+
         // Tell our client if something changed
         if (changed) {
-            emit computerStateChanged(existingComputer);
+            handleComputerStateChanged(existingComputer);
         }
     }
     else {
         // Store this in our active sets
         m_KnownHosts[newComputer->uuid] = newComputer;
 
-        // Tell our client about this new PC
-        emit computerStateChanged(newComputer);
-
-        // Start polling if enabled
+        // Start polling if enabled (write lock required)
         startPollingComputer(newComputer);
+
+        // Drop the lock before notifying
+        lock.unlock();
+
+        // Tell our client about this new PC
+        handleComputerStateChanged(newComputer);
     }
 
     return true;
@@ -264,6 +274,9 @@ void
 ComputerManager::handleComputerStateChanged(NvComputer* computer)
 {
     emit computerStateChanged(computer);
+
+    // Save updated hosts to QSettings
+    saveHosts();
 }
 
 // Must hold m_Lock for write
