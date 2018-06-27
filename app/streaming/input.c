@@ -347,19 +347,19 @@ void SdlHandleControllerAxisEvent(SDL_ControllerAxisEvent* event)
             state->lsX = event->value;
             break;
         case SDL_CONTROLLER_AXIS_LEFTY:
-            state->lsY = event->value;
+            state->lsY = -event->value;
             break;
         case SDL_CONTROLLER_AXIS_RIGHTX:
             state->rsX = event->value;
             break;
         case SDL_CONTROLLER_AXIS_RIGHTY:
-            state->rsY = event->value;
+            state->rsY = -event->value;
             break;
         case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-            state->lt = (unsigned char)((event->value + 32768UL) * 255 / 65535);
+            state->lt = (unsigned char)(event->value * 255UL / 32767);
             break;
         case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-            state->rt = (unsigned char)((event->value + 32768UL) * 255 / 65535);
+            state->rt = (unsigned char)(event->value * 255UL / 32767);
             break;
         default:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
