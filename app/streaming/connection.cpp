@@ -63,10 +63,6 @@ StartConnection(PSERVER_INFORMATION serverInfo, PSTREAM_CONFIGURATION streamConf
     // Hold onto this for our callbacks
     g_ProgressBox = progressBox;
 
-    if (streamConfig->audioConfiguration < 0) {
-        // This signals to us that we should auto-detect
-        streamConfig->audioConfiguration = SdlDetermineAudioConfiguration();
-    }
 
     LiInitializeConnectionCallbacks(&listener);
     listener.stageStarting = ClStageStarting;
