@@ -169,7 +169,7 @@ NvPairingManager::saltPin(QByteArray salt, QString pin)
 NvPairingManager::PairState
 NvPairingManager::pair(QString serverInfo, QString pin)
 {
-    int serverMajorVersion = m_Http.getServerVersionQuad(serverInfo).at(0);
+    int serverMajorVersion = NvHTTP::getServerVersionQuad(serverInfo).at(0);
     qDebug() << "Pairing with server generation: " << serverMajorVersion;
 
     QCryptographicHash::Algorithm hashAlgo;
@@ -199,14 +199,14 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                     "devicename=roth&updateState=1&phrase=getservercert&salt=" +
                                                     salt.toHex() + "&clientcert=" + IdentityManager::get()->getCertificate().toHex(),
                                                     false);
-    m_Http.verifyResponseStatus(getCert);
-    if (m_Http.getXmlString(getCert, "paired") != "1")
+    NvHTTP::verifyResponseStatus(getCert);
+    if (NvHTTP::getXmlString(getCert, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #1";
         return PairState::FAILED;
     }
 
-    QByteArray serverCert = m_Http.getXmlStringFromHex(getCert, "plaincert");
+    QByteArray serverCert = NvHTTP::getXmlStringFromHex(getCert, "plaincert");
     if (serverCert == nullptr)
     {
         qDebug() << "Server likely already pairing";
@@ -221,8 +221,8 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                          "devicename=roth&updateState=1&clientchallenge=" +
                                                          encryptedChallenge.toHex(),
                                                          true);
-    m_Http.verifyResponseStatus(challengeXml);
-    if (m_Http.getXmlString(challengeXml, "paired") != "1")
+    NvHTTP::verifyResponseStatus(challengeXml);
+    if (NvHTTP::getXmlString(challengeXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #2";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
@@ -252,15 +252,15 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                     "devicename=roth&updateState=1&serverchallengeresp=" +
                                                     encryptedChallengeResponseHash.toHex(),
                                                     true);
-    m_Http.verifyResponseStatus(respXml);
-    if (m_Http.getXmlString(respXml, "paired") != "1")
+    NvHTTP::verifyResponseStatus(respXml);
+    if (NvHTTP::getXmlString(respXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #3";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
         return PairState::FAILED;
     }
 
-    QByteArray pairingSecret = m_Http.getXmlStringFromHex(respXml, "pairingsecret");
+    QByteArray pairingSecret = NvHTTP::getXmlStringFromHex(respXml, "pairingsecret");
     QByteArray serverSecret = QByteArray(pairingSecret.data(), 16);
     QByteArray serverSignature = QByteArray(&pairingSecret.data()[16], 256);
 
@@ -293,8 +293,8 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                           "devicename=roth&updateState=1&clientpairingsecret=" +
                                                           clientPairingSecret.toHex(),
                                                           true);
-    m_Http.verifyResponseStatus(secretRespXml);
-    if (m_Http.getXmlString(secretRespXml, "paired") != "1")
+    NvHTTP::verifyResponseStatus(secretRespXml);
+    if (NvHTTP::getXmlString(secretRespXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #4";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
@@ -305,8 +305,8 @@ NvPairingManager::pair(QString serverInfo, QString pin)
                                                              "pair",
                                                              "devicename=roth&updateState=1&phase=pairchallenge",
                                                              true);
-    m_Http.verifyResponseStatus(pairChallengeXml);
-    if (m_Http.getXmlString(pairChallengeXml, "paired") != "1")
+    NvHTTP::verifyResponseStatus(pairChallengeXml);
+    if (NvHTTP::getXmlString(pairChallengeXml, "paired") != "1")
     {
         qDebug() << "Failed pairing at stage #5";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
