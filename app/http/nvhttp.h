@@ -42,19 +42,23 @@ class NvHTTP
 public:
     NvHTTP(QString address);
 
+    static
     int
     getCurrentGame(QString serverInfo);
 
     QString
     getServerInfo();
 
+    static
     void
     verifyResponseStatus(QString xml);
 
+    static
     QString
     getXmlString(QString xml,
                  QString tagName);
 
+    static
     QByteArray
     getXmlStringFromHex(QString xml,
                         QString tagName);
@@ -65,6 +69,7 @@ public:
                            QString arguments,
                            bool enableTimeout);
 
+    static
     QVector<int>
     getServerVersionQuad(QString serverInfo);
 

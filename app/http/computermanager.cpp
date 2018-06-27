@@ -3,6 +3,77 @@
 
 #include <QThread>
 
+NvComputer::NvComputer(QString address, QString serverInfo)
+{
+    this->name = NvHTTP::getXmlString(serverInfo, "hostname");
+    if (this->name.isNull()) {
+        this->name = "UNKNOWN";
+    }
+
+    this->uuid = NvHTTP::getXmlString(serverInfo, "uniqueid");
+    QString newMacString = NvHTTP::getXmlString(serverInfo, "mac");
+    if (newMacString != "00:00:00:00:00:00") {
+        QStringList macOctets = newMacString.split(':');
+        for (QString macOctet : macOctets) {
+            this->macAddress.append((char) macOctet.toInt(nullptr, 16));
+        }
+    }
+
+    QString codecSupport = NvHTTP::getXmlString(serverInfo, "ServerCodecModeSupport");
+    if (!codecSupport.isNull()) {
+        this->serverCodecModeSupport = codecSupport.toInt();
+    }
+    else {
+        this->serverCodecModeSupport = 0;
+    }
+
+    this->localAddress = NvHTTP::getXmlString(serverInfo, "LocalIP");
+    this->remoteAddress = NvHTTP::getXmlString(serverInfo, "ExternalIP");
+    this->pairState = NvHTTP::getXmlString(serverInfo, "PairStatus") == "1" ?
+                PS_PAIRED : PS_NOT_PAIRED;
+    this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
+    this->activeAddress = address;
+    this->state = NvComputer::CS_ONLINE;
+}
+
+bool NvComputer::update(NvComputer& that)
+{
+    bool changed = false;
+
+    // Lock us for write and them for read
+    QWriteLocker thisLock(&this->lock);
+    QReadLocker thatLock(&that.lock);
+
+    // UUID may not change or we're talking to a new PC
+    Q_ASSERT(this->uuid == that.uuid);
+
+#define ASSIGN_IF_CHANGED(field)       \
+    if (this->field != that.field) {   \
+        this->field = that.field;      \
+        changed = true;                \
+    }
+
+#define ASSIGN_IF_CHANGED_AND_NONEMPTY(field) \
+    if (!that.field.isEmpty() &&              \
+        this->field != that.field) {          \
+        this->field = that.field;             \
+        changed = true;                       \
+    }
+
+    ASSIGN_IF_CHANGED(name);
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(macAddress);
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(localAddress);
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(remoteAddress);
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(manualAddress);
+    ASSIGN_IF_CHANGED(pairState);
+    ASSIGN_IF_CHANGED(serverCodecModeSupport);
+    ASSIGN_IF_CHANGED(currentGameId);
+    ASSIGN_IF_CHANGED(activeAddress);
+    ASSIGN_IF_CHANGED(state);
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(appList);
+    return changed;
+}
+
 ComputerManager::ComputerManager()
     : m_Polling(false)
 {
@@ -11,173 +82,118 @@ ComputerManager::ComputerManager()
 
 void ComputerManager::startPolling()
 {
+    QWriteLocker lock(&m_Lock);
+
     m_Polling = true;
 
-
+    QMapIterator<QString, NvComputer*> i(m_KnownHosts);
+    while (i.hasNext()) {
+        i.next();
+        startPollingComputer(i.value());
+    }
 }
 
-class PcMonitorThread : public QThread
+void ComputerManager::stopPollingAsync()
 {
-    Q_OBJECT
+    QWriteLocker lock(&m_Lock);
 
-#define TRIES_BEFORE_OFFLINING 2
-#define POLLS_PER_APPLIST_FETCH 10
+    m_Polling = false;
 
-    PcMonitorThread(NvComputer* computer)
-        : m_Computer(computer)
-    {
+    // Interrupt all threads, but don't wait for them to terminate
+    QMutableMapIterator<QString, QThread*> i(m_PollThreads);
+    while (i.hasNext()) {
+        i.next();
 
+        // The threads will delete themselves when they terminate
+        i.value()->requestInterruption();
     }
+}
 
-#define DECLARE_UPDATE_COMPUTER_FIELD(Type)                 \
-    bool UpdateComputerField(Type& oldValue, Type newValue) \
-    {                                                       \
-        if (oldValue == newValue) {                         \
-            return false;                                   \
-        }                                                   \
-                                                            \
-        oldValue = newValue;                                \
-        return true;                                        \
-    }
+bool ComputerManager::addNewHost(QString address, bool mdns)
+{
+    NvHTTP http(address);
 
-    DECLARE_UPDATE_COMPUTER_FIELD(QString)
-    DECLARE_UPDATE_COMPUTER_FIELD(int)
-    DECLARE_UPDATE_COMPUTER_FIELD(QByteArray)
-    DECLARE_UPDATE_COMPUTER_FIELD(NvComputer::ComputerState)
-    DECLARE_UPDATE_COMPUTER_FIELD(NvComputer::PairState)
-
-    bool TryPollComputer(QString& address, bool& changed)
-    {
-        NvHTTP http(address);
-
-        QString serverInfo;
-        try {
-            serverInfo = http.getServerInfo();
-        } catch (...) {
-            return false;
-        }
-
-        // Ensure the machine that responded is the one we intended to contact
-        if (!m_Computer->uuid.isNull() && m_Computer->uuid != http.getXmlString(serverInfo, "uniqueid")) {
-            qInfo() << "Found unexpected PC at address " << address;
-            return false;
-        }
-
-        changed = false;
-
-        QString newName = http.getXmlString(serverInfo, "hostname");
-        if (newName.isNull()) {
-            newName = "UNKNOWN";
-        }
-        changed |= UpdateComputerField(m_Computer->name, newName);
-        changed |= UpdateComputerField(m_Computer->uuid, http.getXmlString(serverInfo, "uniqueid"));
-
-        QString newMacString = http.getXmlString(serverInfo, "mac");
-        QByteArray newMac;
-        if (newMacString != "00:00:00:00:00:00") {
-            QStringList macOctets = newMacString.split(':');
-            for (QString macOctet : macOctets) {
-                newMac.append((char) macOctet.toInt(nullptr, 16));
-            }
-            changed |= UpdateComputerField(m_Computer->macAddress, newMac);
-        }
-        changed |= UpdateComputerField(m_Computer->localAddress, http.getXmlString(serverInfo, "LocalIP"));
-        changed |= UpdateComputerField(m_Computer->remoteAddress, http.getXmlString(serverInfo, "ExternalIP"));
-        changed |= UpdateComputerField(m_Computer->pairState, http.getXmlString(serverInfo, "PairStatus") == "1" ?
-                    NvComputer::PS_PAIRED : NvComputer::PS_NOT_PAIRED);
-        changed |= UpdateComputerField(m_Computer->currentGameId, http.getCurrentGame(serverInfo));
-        changed |= UpdateComputerField(m_Computer->activeAddress, address);
-        changed |= UpdateComputerField(m_Computer->state, NvComputer::CS_ONLINE);
-
-        return true;
-    }
-
-    bool UpdateAppList(bool& changed)
-    {
-        changed = false;
+    QString serverInfo;
+    try {
+        serverInfo = http.getServerInfo();
+    } catch (...) {
         return false;
     }
 
-    void run() override
-    {
-        // Always fetch the applist the first time
-        int pollsSinceLastAppListFetch = POLLS_PER_APPLIST_FETCH;
-        while (!isInterruptionRequested()) {
-            QVector<QString> uniqueAddressList;
+    NvComputer* newComputer = new NvComputer(address, serverInfo);
 
-            // Start with addresses correctly ordered
-            uniqueAddressList.append(m_Computer->activeAddress);
-            uniqueAddressList.append(m_Computer->localAddress);
-            uniqueAddressList.append(m_Computer->remoteAddress);
-            uniqueAddressList.append(m_Computer->manualAddress);
-
-            // Prune duplicates (always giving precedence to the first)
-            for (int i = 0; i < uniqueAddressList.count(); i++) {
-                if (uniqueAddressList[i].isEmpty() || uniqueAddressList[i].isNull()) {
-                    uniqueAddressList.remove(i);
-                    i--;
-                    continue;
-                }
-                for (int j = i + 1; j < uniqueAddressList.count(); j++) {
-                    if (uniqueAddressList[i] == uniqueAddressList[j]) {
-                        // Always remove the later occurrence
-                        uniqueAddressList.remove(j);
-                        j--;
-                    }
-                }
-            }
-
-            // We must have at least 1 address for this host
-            Q_ASSERT(uniqueAddressList.count() != 0);
-
-            bool stateChanged = false;
-            for (int i = 0; i < TRIES_BEFORE_OFFLINING; i++) {
-                for (auto& address : uniqueAddressList) {
-                    if (isInterruptionRequested()) {
-                        return;
-                    }
-
-                    if (TryPollComputer(address, stateChanged)) {
-                        break;
-                    }
-                }
-
-                // No need to continue retrying if we're online
-                if (m_Computer->state == NvComputer::CS_ONLINE) {
-                    break;
-                }
-            }
-
-            // Check if we failed after all retry attempts
-            if (m_Computer->state != NvComputer::CS_ONLINE) {
-                if (m_Computer->state != NvComputer::CS_OFFLINE) {
-                    m_Computer->state = NvComputer::CS_OFFLINE;
-                    stateChanged = true;
-                }
-            }
-
-            // Grab the applist if it's empty or it's been long enough that we need to refresh
-            pollsSinceLastAppListFetch++;
-            if (m_Computer->state == NvComputer::CS_ONLINE &&
-                    (m_Computer->appList.isEmpty() || pollsSinceLastAppListFetch >= POLLS_PER_APPLIST_FETCH)) {
-                if (UpdateAppList(stateChanged)) {
-                    pollsSinceLastAppListFetch = 0;
-                }
-            }
-
-            if (stateChanged) {
-                // Tell anyone listening that we've changed state
-                emit computerStateChanged(m_Computer);
-            }
-
-            // Wait a bit to poll again
-            QThread::sleep(3);
-        }
+    // Update addresses depending on the context
+    if (mdns) {
+        newComputer->localAddress = address;
+    }
+    else {
+        newComputer->manualAddress = address;
     }
 
-signals:
-   void computerStateChanged(NvComputer* computer);
+    // Check if this PC already exists
+    QWriteLocker lock(&m_Lock);
+    NvComputer* existingComputer = m_KnownHosts[newComputer->uuid];
+    if (existingComputer != nullptr) {
+        // Fold it into the existing PC
+        bool changed = existingComputer->update(*newComputer);
+        delete newComputer;
 
-private:
-    NvComputer* m_Computer;
-};
+        // Tell our client if something changed
+        if (changed) {
+            emit computerStateChanged(existingComputer);
+        }
+    }
+    else {
+        // Store this in our active sets
+        m_KnownHosts[newComputer->uuid] = newComputer;
+
+        // Tell our client about this new PC
+        emit computerStateChanged(newComputer);
+
+        // Start polling if enabled
+        startPollingComputer(newComputer);
+    }
+
+    return true;
+}
+
+void
+ComputerManager::handlePollThreadTermination(NvComputer* computer)
+{
+    QWriteLocker lock(&m_Lock);
+
+    QThread* me = m_PollThreads[computer->uuid];
+    Q_ASSERT(me != nullptr);
+
+    m_PollThreads.remove(computer->uuid);
+    me->deleteLater();
+}
+
+void
+ComputerManager::handleComputerStateChanged(NvComputer* computer)
+{
+    emit computerStateChanged(computer);
+}
+
+// Must hold m_Lock for write
+void
+ComputerManager::startPollingComputer(NvComputer* computer)
+{
+    if (!m_Polling) {
+        return;
+    }
+
+    if (m_PollThreads.contains(computer->uuid)) {
+        Q_ASSERT(m_PollThreads[computer->uuid]->isRunning());
+        return;
+    }
+
+    PcMonitorThread* thread = new PcMonitorThread(computer);
+    connect(thread, SIGNAL(terminating(NvComputer*)),
+            this, SLOT(handlePollThreadTermination(NvComputer*)));
+    connect(thread, SIGNAL(computerStateChanged(NvComputer*)),
+            this, SLOT(handleComputerStateChanged(NvComputer*)));
+    m_PollThreads[computer->uuid] = thread;
+    thread->start();
+}
+
