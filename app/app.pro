@@ -60,7 +60,8 @@ SOURCES += \
     http/nvhttp.cpp \
     http/nvpairingmanager.cpp \
     streaming/video.c \
-    streaming/connection.cpp
+    streaming/connection.cpp \
+    http/computermanager.cpp
 
 HEADERS += \
     utils.h \
@@ -69,13 +70,14 @@ HEADERS += \
     http/identitymanager.h \
     http/nvhttp.h \
     http/nvpairingmanager.h \
-    streaming/streaming.h
+    streaming/streaming.h \
+    http/computermanager.h
 
 FORMS += \
     gui/mainwindow.ui
 
 RESOURCES += \
-    gui/resources.qrc
+    resources.qrc
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../moonlight-common-c/release/ -lmoonlight-common-c
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../moonlight-common-c/debug/ -lmoonlight-common-c
