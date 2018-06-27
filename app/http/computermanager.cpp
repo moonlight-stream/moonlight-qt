@@ -57,6 +57,12 @@ class PcMonitorThread : public QThread
             return false;
         }
 
+        // Ensure the machine that responded is the one we intended to contact
+        if (!m_Computer->uuid.isNull() && m_Computer->uuid != http.getXmlString(serverInfo, "uniqueid")) {
+            qInfo() << "Found unexpected PC at address " << address;
+            return false;
+        }
+
         changed = false;
 
         QString newName = http.getXmlString(serverInfo, "hostname");
