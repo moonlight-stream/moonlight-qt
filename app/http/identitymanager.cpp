@@ -2,16 +2,16 @@
 #include "utils.h"
 
 #include <QDebug>
-#include <QFile>
-#include <QTextStream>
-#include <QSslCertificate>
-#include <QSslKey>
-#include <QStandardPaths>
+#include <QRandomGenerator64>
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/bn.h>
 #include <openssl/x509.h>
+
+#define SER_UNIQUEID "uniqueid"
+#define SER_CERT "certificate"
+#define SER_KEY "key"
 
 IdentityManager* IdentityManager::s_Im = nullptr;
 
@@ -27,50 +27,8 @@ IdentityManager::get()
     return s_Im;
 }
 
-IdentityManager::IdentityManager()
+void IdentityManager::createCredentials(QSettings& settings)
 {
-    m_RootDirectory = QDir(QStandardPaths::writableLocation(QStandardPaths::AppConfigLocation));
-    if (!m_RootDirectory.exists())
-    {
-        m_RootDirectory.mkpath(".");
-    }
-
-    QFile uniqueIdFile(m_RootDirectory.filePath("uniqueid"));
-    if (uniqueIdFile.open(QIODevice::ReadOnly))
-    {
-        m_CachedUniqueId = QTextStream(&uniqueIdFile).readAll();
-        qDebug() << "Loaded cached unique ID: " << m_CachedUniqueId;
-    }
-    else
-    {
-        for (int i = 0; i < 16; i++)
-        {
-            int n = qrand() % 16;
-            m_CachedUniqueId.append(QString::number(n, 16));
-        }
-
-        qDebug() << "Generated new unique ID: " << m_CachedUniqueId;
-
-        uniqueIdFile.open(QIODevice::ReadWrite);
-        QTextStream(&uniqueIdFile) << m_CachedUniqueId;
-    }
-
-    QFile certificateFile(m_RootDirectory.filePath("cert"));
-    QFile privateKeyFile(m_RootDirectory.filePath("key"));
-
-    if (certificateFile.open(QIODevice::ReadOnly) && privateKeyFile.open(QIODevice::ReadOnly))
-    {
-        // Not cached yet, but it's on disk
-        m_CachedPemCert = certificateFile.readAll();
-        m_CachedPrivateKey = privateKeyFile.readAll();
-
-        qDebug() << "Loaded cached identity key pair from disk";
-        return;
-    }
-
-    privateKeyFile.close();
-    certificateFile.close();
-
     X509* cert = X509_new();
     THROW_BAD_ALLOC_IF_NULL(cert);
 
@@ -112,7 +70,9 @@ IdentityManager::IdentityManager()
     X509_set_pubkey(cert, pk);
 
     X509_NAME* name = X509_get_subject_name(cert);
-    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC, reinterpret_cast<unsigned char *>(const_cast<char*>("NVIDIA GameStream Client")), -1, -1, 0);
+    X509_NAME_add_entry_by_txt(name, "CN", MBSTRING_ASC,
+                               reinterpret_cast<unsigned char *>(const_cast<char*>("NVIDIA GameStream Client")),
+                               -1, -1, 0);
     X509_set_issuer_name(cert, name);
 
     X509_sign(cert, pk, EVP_sha1());
@@ -125,17 +85,12 @@ IdentityManager::IdentityManager()
     THROW_BAD_ALLOC_IF_NULL(biocert);
     PEM_write_bio_X509(biocert, cert);
 
-    privateKeyFile.open(QIODevice::WriteOnly);
-    certificateFile.open(QIODevice::WriteOnly);
-
     BUF_MEM* mem;
     BIO_get_mem_ptr(biokey, &mem);
     m_CachedPrivateKey = QByteArray(mem->data, (int)mem->length);
-    QTextStream(&privateKeyFile) << m_CachedPrivateKey;
 
     BIO_get_mem_ptr(biocert, &mem);
     m_CachedPemCert = QByteArray(mem->data, (int)mem->length);
-    QTextStream(&certificateFile) << m_CachedPemCert;
 
     X509_free(cert);
     EVP_PKEY_free(pk);
@@ -143,45 +98,107 @@ IdentityManager::IdentityManager()
     BIO_free(biokey);
     BIO_free(biocert);
 
-    qDebug() << "Wrote new identity credentials to disk";
+    settings.setValue(SER_CERT, m_CachedPemCert);
+    settings.setValue(SER_KEY, m_CachedPrivateKey);
+
+    qDebug() << "Wrote new identity credentials to settings";
+}
+
+IdentityManager::IdentityManager()
+{
+    QSettings settings;
+
+    m_CachedPemCert = settings.value(SER_CERT).toByteArray();
+    m_CachedPrivateKey = settings.value(SER_KEY).toByteArray();
+
+    if (m_CachedPemCert.isEmpty() || m_CachedPrivateKey.isEmpty()) {
+        qDebug() << "No existing credentials found";
+        createCredentials(settings);
+    }
+    else if (getSslCertificate().isNull()) {
+        qWarning() << "Certificate is unreadable";
+        createCredentials(settings);
+    }
+    else if (getSslKey().isNull()) {
+        qWarning() << "Private key is unreadable";
+        createCredentials(settings);
+    }
+
+    // We should have valid credentials now. If not, we're screwed
+    if (getSslCertificate().isNull()) {
+        qFatal("Newly generated certificate is unreadable");
+    }
+    if (getSslKey().isNull()) {
+        qFatal("Newly generated private key is unreadable");
+    }
+}
+
+QSslCertificate
+IdentityManager::getSslCertificate()
+{
+    if (m_CachedSslCert.isNull()) {
+        m_CachedSslCert = QSslCertificate(m_CachedPemCert);
+    }
+    return m_CachedSslCert;
+}
+
+QSslKey
+IdentityManager::getSslKey()
+{
+    if (m_CachedSslKey.isNull()) {
+        BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.data(), -1);
+        THROW_BAD_ALLOC_IF_NULL(bio);
+
+        EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
+        BIO_free(bio);
+
+        bio = BIO_new(BIO_s_mem());
+        THROW_BAD_ALLOC_IF_NULL(bio);
+
+        // We must write out our PEM in the old PKCS1 format for SecureTransport
+        // on macOS/iOS to be able to read it.
+        BUF_MEM* mem;
+        BIO_get_mem_ptr(bio, &mem);
+        PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+
+        m_CachedSslKey = QSslKey(QByteArray::fromRawData(mem->data, (int)mem->length), QSsl::Rsa);
+
+        BIO_free(bio);
+        EVP_PKEY_free(pk);
+    }
+    return m_CachedSslKey;
 }
 
 QSslConfiguration
 IdentityManager::getSslConfig()
 {
-    BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.data(), -1);
-    THROW_BAD_ALLOC_IF_NULL(bio);
-
-    EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
-    BIO_free(bio);
-
-    bio = BIO_new(BIO_s_mem());
-    THROW_BAD_ALLOC_IF_NULL(bio);
-
-    // We must write out our PEM in the old PKCS1 format for SecureTransport
-    // on macOS/iOS to be able to read it.
-    BUF_MEM* mem;
-    BIO_get_mem_ptr(bio, &mem);
-    PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
-
-    QSslCertificate cert = QSslCertificate(m_CachedPemCert);
-    QSslKey key = QSslKey(QByteArray::fromRawData(mem->data, (int)mem->length), QSsl::Rsa);
-    Q_ASSERT(!cert.isNull());
-    Q_ASSERT(!key.isNull());
-
-    BIO_free(bio);
-    EVP_PKEY_free(pk);
-
     QSslConfiguration sslConfig(QSslConfiguration::defaultConfiguration());
-    sslConfig.setLocalCertificate(cert);
-    sslConfig.setPrivateKey(key);
-
+    sslConfig.setLocalCertificate(getSslCertificate());
+    sslConfig.setPrivateKey(getSslKey());
     return sslConfig;
 }
 
 QString
 IdentityManager::getUniqueId()
 {
+    if (m_CachedUniqueId.isNull()) {
+        QSettings settings;
+
+        // Load the unique ID from settings
+        m_CachedUniqueId = settings.value(SER_UNIQUEID).toString();
+        if (!m_CachedUniqueId.isEmpty() && !m_CachedUniqueId.isNull()) {
+            qDebug() << "Loaded unique ID from settings: " << m_CachedUniqueId;
+        }
+        else {
+            // Generate a new unique ID in base 16
+            m_CachedUniqueId = QString::number(
+                        QRandomGenerator64::securelySeeded().generate64(), 16);
+
+            qDebug() << "Generated new unique ID: " << m_CachedUniqueId;
+
+            settings.setValue(SER_UNIQUEID, m_CachedUniqueId);
+        }
+    }
     return m_CachedUniqueId;
 }
 

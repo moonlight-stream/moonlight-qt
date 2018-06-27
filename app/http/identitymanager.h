@@ -1,7 +1,9 @@
 #pragma once
 
-#include <QDir>
 #include <QSslConfiguration>
+#include <QSslCertificate>
+#include <QSslKey>
+#include <QSettings>
 
 class IdentityManager
 {
@@ -25,11 +27,23 @@ public:
 private:
     IdentityManager();
 
-    QDir m_RootDirectory;
+    QSslCertificate
+    getSslCertificate();
 
+    QSslKey
+    getSslKey();
+
+    void
+    createCredentials(QSettings& settings);
+
+    // Initialized in constructor
     QByteArray m_CachedPrivateKey;
     QByteArray m_CachedPemCert;
+
+    // Lazy initialized
     QString m_CachedUniqueId;
+    QSslCertificate m_CachedSslCert;
+    QSslKey m_CachedSslKey;
 
     static IdentityManager* s_Im;
 };
