@@ -3,6 +3,75 @@
 
 #include <QThread>
 
+#define SER_HOSTS "hosts"
+#define SER_NAME "hostname"
+#define SER_UUID "uuid"
+#define SER_MAC "mac"
+#define SER_CODECSUPP "codecsupport"
+#define SER_LOCALADDR "localaddress"
+#define SER_REMOTEADDR "remoteaddress"
+#define SER_MANUALADDR "manualaddress"
+#define SER_APPLIST "apps"
+
+#define SER_APPNAME "name"
+#define SER_APPID "id"
+#define SER_APPHDR "hdr"
+
+NvComputer::NvComputer(QSettings& settings)
+{
+    this->name = settings.value(SER_NAME).toString();
+    this->uuid = settings.value(SER_UUID).toString();
+    this->macAddress = settings.value(SER_MAC).toByteArray();
+    this->serverCodecModeSupport = settings.value(SER_CODECSUPP).toInt();
+    this->localAddress = settings.value(SER_LOCALADDR).toString();
+    this->remoteAddress = settings.value(SER_REMOTEADDR).toString();
+    this->manualAddress = settings.value(SER_MANUALADDR).toString();
+
+    int appCount = settings.beginReadArray(SER_APPLIST);
+    for (int i = 0; i < appCount; i++) {
+        NvApp app;
+
+        settings.setArrayIndex(i);
+
+        app.name = settings.value(SER_APPNAME).toString();
+        app.id = settings.value(SER_APPID).toInt();
+        app.hdrSupported = settings.value(SER_APPHDR).toBool();
+
+        this->appList.append(app);
+    }
+    settings.endArray();
+
+    this->activeAddress = nullptr;
+    this->currentGameId = 0;
+    this->pairState = PS_UNKNOWN;
+    this->state = CS_UNKNOWN;
+}
+
+void
+NvComputer::serialize(QSettings& settings)
+{
+    QReadLocker lock(&this->lock);
+
+    settings.setValue(SER_NAME, name);
+    settings.setValue(SER_UUID, uuid);
+    settings.setValue(SER_MAC, macAddress);
+    settings.setValue(SER_CODECSUPP, serverCodecModeSupport);
+    settings.setValue(SER_LOCALADDR, localAddress);
+    settings.setValue(SER_REMOTEADDR, remoteAddress);
+    settings.setValue(SER_MANUALADDR, manualAddress);
+
+    settings.remove(SER_APPLIST);
+    settings.beginWriteArray(SER_APPLIST);
+    for (int i = 0; i < appList.count(); i++) {
+        settings.setArrayIndex(i);
+
+        settings.setValue(SER_APPNAME, appList[i].name);
+        settings.setValue(SER_APPID, appList[i].id);
+        settings.setValue(SER_APPHDR, appList[i].hdrSupported);
+    }
+    settings.endArray();
+}
+
 NvComputer::NvComputer(QString address, QString serverInfo)
 {
     this->name = NvHTTP::getXmlString(serverInfo, "hostname");
@@ -77,7 +146,29 @@ bool NvComputer::update(NvComputer& that)
 ComputerManager::ComputerManager()
     : m_Polling(false)
 {
+    QSettings settings;
 
+    // Inflate our hosts from QSettings
+    int hosts = settings.beginReadArray(SER_HOSTS);
+    for (int i = 0; i < hosts; i++) {
+        settings.setArrayIndex(i);
+        NvComputer* computer = new NvComputer(settings);
+        m_KnownHosts[computer->uuid] = computer;
+    }
+    settings.endArray();
+}
+
+void ComputerManager::saveHosts()
+{
+    QSettings settings;
+
+    settings.remove(SER_HOSTS);
+    settings.beginWriteArray(SER_HOSTS);
+    for (int i = 0; i < m_KnownHosts.count(); i++) {
+        settings.setArrayIndex(i);
+        m_KnownHosts[m_KnownHosts.keys()[i]]->serialize(settings);
+    }
+    settings.endArray();
 }
 
 void ComputerManager::startPolling()

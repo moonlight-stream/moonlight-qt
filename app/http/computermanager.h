@@ -3,14 +3,20 @@
 
 #include <QThread>
 #include <QReadWriteLock>
+#include <QSettings>
 
 class NvComputer
 {
 public:
     NvComputer(QString address, QString serverInfo);
 
+    NvComputer(QSettings& settings);
+
     bool
     update(NvComputer& that);
+
+    void
+    serialize(QSettings& settings);
 
     enum PairState
     {
@@ -225,6 +231,8 @@ private slots:
     void handlePollThreadTermination(NvComputer* computer);
 
 private:
+    void saveHosts();
+
     void startPollingComputer(NvComputer* computer);
 
     bool m_Polling;

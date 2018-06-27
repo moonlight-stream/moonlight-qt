@@ -16,6 +16,11 @@ int main(int argc, char *argv[])
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", QByteArray("1"));
 
+    // Set these here to allow us to use the default QSettings constructor
+    QCoreApplication::setOrganizationName("Moonlight Game Streaming Project");
+    QCoreApplication::setOrganizationDomain("moonlight-stream.com");
+    QCoreApplication::setApplicationName("Moonlight");
+
     QApplication a(argc, argv);
     MainWindow w;
     w.show();
