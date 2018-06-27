@@ -4,19 +4,6 @@
 #include <QThread>
 #include <QReadWriteLock>
 
-class NvApp
-{
-public:
-    bool operator==(const NvApp& other) const
-    {
-        return id == other.id;
-    }
-
-    int id;
-    QString name;
-    bool hdrSupported;
-};
-
 class NvComputer
 {
 public:
@@ -101,7 +88,28 @@ private:
 
     bool updateAppList(bool& changed)
     {
-        return false;
+        Q_ASSERT(m_Computer->activeAddress != nullptr);
+
+        NvHTTP http(m_Computer->activeAddress);
+
+        QVector<NvApp> appList;
+
+        try {
+            appList = http.getAppList();
+            if (appList.isEmpty()) {
+                return false;
+            }
+        } catch (...) {
+            return false;
+        }
+
+        QWriteLocker lock(&m_Computer->lock);
+        if (m_Computer->appList != appList) {
+            m_Computer->appList = appList;
+            changed = true;
+        }
+
+        return true;
     }
 
     void run() override

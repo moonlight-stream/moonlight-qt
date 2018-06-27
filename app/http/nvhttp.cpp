@@ -181,6 +181,44 @@ NvHTTP::quitApp()
     }
 }
 
+QVector<NvApp>
+NvHTTP::getAppList()
+{
+    QString appxml = openConnectionToString(m_BaseUrlHttps,
+                                            "applist",
+                                            nullptr,
+                                            true);
+    verifyResponseStatus(appxml);
+
+    QXmlStreamReader xmlReader(appxml);
+    QVector<NvApp> apps;
+    while (!xmlReader.atEnd()) {
+        while (xmlReader.readNextStartElement()) {
+            QStringRef name = xmlReader.name();
+            if (xmlReader.name() == "App") {
+                // We must have a valid app before advancing to the next one
+                if (!apps.isEmpty() && !apps.last().isInitialized()) {
+                    qWarning() << "Invalid applist XML";
+                    Q_ASSERT(false);
+                    return QVector<NvApp>();
+                }
+                apps.append(NvApp());
+            }
+            else if (xmlReader.name() == "AppTitle") {
+                apps.last().name = xmlReader.readElementText();
+            }
+            else if (xmlReader.name() == "ID") {
+                apps.last().id = xmlReader.readElementText().toInt();
+            }
+            else if (xmlReader.name() == "IsHdrSupported") {
+                apps.last().hdrSupported = xmlReader.readElementText() == "1";
+            }
+        }
+    }
+
+    return apps;
+}
+
 void
 NvHTTP::verifyResponseStatus(QString xml)
 {

@@ -7,6 +7,24 @@
 #include <QUrl>
 #include <QtNetwork/QNetworkAccessManager>
 
+class NvApp
+{
+public:
+    bool operator==(const NvApp& other) const
+    {
+        return id == other.id;
+    }
+
+    bool isInitialized()
+    {
+        return id != 0 && !name.isNull();
+    }
+
+    int id;
+    QString name;
+    bool hdrSupported;
+};
+
 class GfeHttpResponseException : public std::exception
 {
 public:
@@ -85,6 +103,9 @@ public:
               bool sops,
               bool localAudio,
               int gamepadMask);
+
+    QVector<NvApp>
+    getAppList();
 
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;
