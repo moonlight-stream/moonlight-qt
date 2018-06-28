@@ -1,7 +1,7 @@
 #include "gui/mainwindow.h"
 #include <QApplication>
 
-#include "http/nvhttp.h"
+#include "backend/nvhttp.h"
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing

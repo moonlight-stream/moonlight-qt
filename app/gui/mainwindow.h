@@ -1,8 +1,8 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include "http/computermanager.h"
-#include "http/boxartmanager.h"
+#include "backend/computermanager.h"
+#include "backend/boxartmanager.h"
 
 #include <QMainWindow>
 #include <QtWidgets>

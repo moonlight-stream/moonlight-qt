@@ -56,24 +56,24 @@ SOURCES += \
     streaming/input.c \
     gui/mainwindow.cpp \
     gui/popupmanager.cpp \
-    http/identitymanager.cpp \
-    http/nvhttp.cpp \
-    http/nvpairingmanager.cpp \
+    backend/identitymanager.cpp \
+    backend/nvhttp.cpp \
+    backend/nvpairingmanager.cpp \
     streaming/video.c \
     streaming/connection.cpp \
-    http/computermanager.cpp \
-    http/boxartmanager.cpp
+    backend/computermanager.cpp \
+    backend/boxartmanager.cpp
 
 HEADERS += \
     utils.h \
     gui/mainwindow.h \
     gui/popupmanager.h \
-    http/identitymanager.h \
-    http/nvhttp.h \
-    http/nvpairingmanager.h \
+    backend/identitymanager.h \
+    backend/nvhttp.h \
+    backend/nvpairingmanager.h \
     streaming/streaming.h \
-    http/computermanager.h \
-    http/boxartmanager.h
+    backend/computermanager.h \
+    backend/boxartmanager.h
 
 FORMS += \
     gui/mainwindow.ui

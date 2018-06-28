@@ -1,12 +1,11 @@
 #include "gui/mainwindow.h"
 #include "ui_mainwindow.h"
 #include "gui/popupmanager.h"
-#include "http/identitymanager.h"
-#include "http/nvpairingmanager.h"
-#include "http/nvhttp.h"
+#include "backend/identitymanager.h"
+#include "backend/nvpairingmanager.h"
 #include "streaming/streaming.h"
-#include "http/computermanager.h"
-#include "http/boxartmanager.h"
+#include "backend/computermanager.h"
+#include "backend/boxartmanager.h"
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
