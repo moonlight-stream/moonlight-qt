@@ -209,15 +209,22 @@ void Session::exec()
     Q_ASSERT(m_Computer->currentGameId == 0 ||
              m_Computer->currentGameId == m_App.id);
 
-    if (m_Computer->currentGameId != 0) {
-        http.resumeApp(&m_StreamConfig);
+    try {
+        if (m_Computer->currentGameId != 0) {
+            http.resumeApp(&m_StreamConfig);
+        }
+        else {
+            http.launchApp(m_App.id, &m_StreamConfig,
+                           prefs.enableGameOptimizations,
+                           prefs.playAudioOnHost,
+                           inputHandler.getAttachedGamepadMask());
+        }
+    } catch (const GfeHttpResponseException& e) {
+        m_ProgressBox.close();
+        // TODO: display error dialog
+        return;
     }
-    else {
-        http.launchApp(m_App.id, &m_StreamConfig,
-                       prefs.enableGameOptimizations,
-                       prefs.playAudioOnHost,
-                       inputHandler.getAttachedGamepadMask());
-    }
+
 
     QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
     QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
