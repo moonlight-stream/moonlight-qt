@@ -480,6 +480,11 @@ int SdlGetAttachedGamepadMask(void)
     int count;
     int mask;
 
+    if (!g_MultiController) {
+        // Player 1 is always present in non-MC mode
+        return 0x1;
+    }
+
     count = mask = 0;
     for (i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
