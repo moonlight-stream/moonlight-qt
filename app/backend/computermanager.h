@@ -37,6 +37,8 @@ public:
     PairState pairState;
     QString activeAddress;
     int currentGameId;
+    QString gfeVersion;
+    QString appVersion;
 
     // Persisted traits
     QString localAddress;

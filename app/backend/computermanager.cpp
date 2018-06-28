@@ -45,6 +45,8 @@ NvComputer::NvComputer(QSettings& settings)
     this->currentGameId = 0;
     this->pairState = PS_UNKNOWN;
     this->state = CS_UNKNOWN;
+    this->gfeVersion = nullptr;
+    this->appVersion = nullptr;
 }
 
 void
@@ -104,6 +106,8 @@ NvComputer::NvComputer(QString address, QString serverInfo)
     this->pairState = NvHTTP::getXmlString(serverInfo, "PairStatus") == "1" ?
                 PS_PAIRED : PS_NOT_PAIRED;
     this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
+    this->appVersion = NvHTTP::getXmlString(serverInfo, "appversion");
+    this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
     this->activeAddress = address;
     this->state = NvComputer::CS_ONLINE;
 }
@@ -142,6 +146,8 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED(currentGameId);
     ASSIGN_IF_CHANGED(activeAddress);
     ASSIGN_IF_CHANGED(state);
+    ASSIGN_IF_CHANGED(gfeVersion);
+    ASSIGN_IF_CHANGED(appVersion);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(appList);
     return changed;
 }

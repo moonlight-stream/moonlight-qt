@@ -3,12 +3,10 @@
 #include "gui/popupmanager.h"
 #include "backend/identitymanager.h"
 #include "backend/nvpairingmanager.h"
-#include "streaming/streaming.h"
+#include "streaming/session.hpp"
 #include "backend/computermanager.h"
 #include "backend/boxartmanager.h"
 #include "settings/streamingpreferences.h"
-
-#include <QRandomGenerator>
 
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -57,92 +55,28 @@ void MainWindow::computerStateChanged(NvComputer* computer)
         // Stop polling before launching a game
         m_ComputerManager.stopPollingAsync();
 
-#if 1
-        STREAM_CONFIGURATION streamConfig;
-        StreamingPreferences prefs;
+        Session session(computer, computer->appList.last());
+        QStringList warnings;
+        QString errorMessage;
 
-        LiInitializeStreamConfiguration(&streamConfig);
-        // TODO: Validate 4K and 4K60 based on serverinfo
-        streamConfig.width = prefs.width;
-        streamConfig.height = prefs.height;
-        streamConfig.fps = prefs.fps;
-        streamConfig.bitrate = prefs.bitrateKbps;
-        streamConfig.packetSize = 1024;
-        streamConfig.hevcBitratePercentageMultiplier = 75;
-        for (int i = 0; i < sizeof(streamConfig.remoteInputAesKey); i++) {
-            streamConfig.remoteInputAesKey[i] =
-                    (char)(QRandomGenerator::global()->generate() % 256);
-        }
-        *(int*)streamConfig.remoteInputAesIv = qToBigEndian(QRandomGenerator::global()->generate());
-        switch (prefs.audioConfig)
-        {
-        case StreamingPreferences::AC_AUTO:
-            streamConfig.audioConfiguration = SdlDetermineAudioConfiguration();
-            break;
-        case StreamingPreferences::AC_FORCE_STEREO:
-            streamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
-            break;
-        case StreamingPreferences::AC_FORCE_SURROUND:
-            streamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
-            break;
-        }
-        switch (prefs.videoCodecConfig)
-        {
-        case StreamingPreferences::VCC_AUTO:
-            // TODO: Determine if HEVC is better depending on the decoder
-            streamConfig.supportsHevc = true;
-            streamConfig.enableHdr = false;
-            break;
-        case StreamingPreferences::VCC_FORCE_H264:
-            streamConfig.supportsHevc = false;
-            streamConfig.enableHdr = false;
-            break;
-        case StreamingPreferences::VCC_FORCE_HEVC:
-            streamConfig.supportsHevc = true;
-            streamConfig.enableHdr = false;
-            break;
-        case StreamingPreferences::VCC_FORCE_HEVC_HDR:
-            streamConfig.supportsHevc = true;
-            streamConfig.enableHdr = true;
-            break;
+        // First check for a fatal configuration error
+        errorMessage = session.checkForFatalValidationError();
+        if (!errorMessage.isEmpty()) {
+            // TODO: display error dialog
+            goto AfterStreaming;
         }
 
-        // TODO: Validate HEVC support based on decoder caps
-        // TODO: Validate HDR support based on decoder caps, display, server caps, and app
-
-        // Initialize the gamepad code with our preferences
-        // Note: must be done before SdlGetAttachedGamepadMask!
-        SdlInitializeGamepad(prefs.multiController);
-
-        QMessageBox* box = new QMessageBox(nullptr);
-        box->setAttribute(Qt::WA_DeleteOnClose); //makes sure the msgbox is deleted automatically when closed
-        box->setStandardButtons(QMessageBox::Cancel);
-        box->setText("Launching game...");
-        box->open();
-
-        if (computer->currentGameId != 0) {
-            http.resumeApp(&streamConfig);
-        }
-        else {
-            http.launchApp(999999, &streamConfig,
-                           prefs.enableGameOptimizations,
-                           prefs.playAudioOnHost,
-                           SdlGetAttachedGamepadMask());
+        // Check for any informational messages to display
+        warnings = session.checkForAdvisoryValidationError();
+        if (!warnings.isEmpty()) {
+            // TODO: display toast or something before we start
         }
 
-        SERVER_INFORMATION hostInfo;
-        QString serverInfo = http.getServerInfo();
+        // Run the streaming session until termination
+        session.exec();
 
-        QByteArray hostnameStr = computer->activeAddress.toLatin1();
-        QByteArray siAppVersion = http.getXmlString(serverInfo, "appversion").toLatin1();
-        QByteArray siGfeVersion = http.getXmlString(serverInfo, "GfeVersion").toLatin1();
-
-        hostInfo.address = hostnameStr.data();
-        hostInfo.serverInfoAppVersion = siAppVersion.data();
-        hostInfo.serverInfoGfeVersion = siGfeVersion.data();
-
-        StartConnection(&hostInfo, &streamConfig, box);
-#endif
+    AfterStreaming:
+        m_ComputerManager.startPolling();
     }
 }
 

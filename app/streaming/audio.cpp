@@ -1,16 +1,17 @@
+#include "session.hpp"
+
 #include <Limelight.h>
-#include <opus_multistream.h>
 #include <SDL.h>
 
 #define MAX_CHANNELS 6
 #define SAMPLES_PER_FRAME 240
 
-static SDL_AudioDeviceID g_AudioDevice;
-static OpusMSDecoder* g_OpusDecoder;
-static short g_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
-static OPUS_MULTISTREAM_CONFIGURATION g_OpusConfig;
+SDL_AudioDeviceID Session::s_AudioDevice;
+OpusMSDecoder* Session::s_OpusDecoder;
+short Session::s_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
+int Session::s_ChannelCount;
 
-int SdlDetermineAudioConfiguration(void)
+int Session::sdlDetermineAudioConfiguration()
 {
     SDL_AudioSpec want, have;
     SDL_AudioDeviceID dev;
@@ -48,7 +49,9 @@ int SdlDetermineAudioConfiguration(void)
     }
 }
 
-int SdlAudioInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusConfig, void* arContext, int arFlags)
+int Session::sdlAudioInit(int audioConfiguration,
+                          POPUS_MULTISTREAM_CONFIGURATION opusConfig,
+                          void* arContext, int arFlags)
 {
     SDL_AudioSpec want, have;
     int error;
@@ -59,81 +62,72 @@ int SdlAudioInit(int audioConfiguration, POPUS_MULTISTREAM_CONFIGURATION opusCon
     want.channels = opusConfig->channelCount;
     want.samples = 1024;
 
-    g_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
-    if (g_AudioDevice == 0) {
+    s_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
+    if (s_AudioDevice == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to open audio device: %s",
                      SDL_GetError());
         return -1;
     }
 
-    g_OpusDecoder = opus_multistream_decoder_create(opusConfig->sampleRate,
+    s_OpusDecoder = opus_multistream_decoder_create(opusConfig->sampleRate,
                                                     opusConfig->channelCount,
                                                     opusConfig->streams,
                                                     opusConfig->coupledStreams,
                                                     opusConfig->mapping,
                                                     &error);
-    if (g_OpusDecoder == NULL) {
+    if (s_OpusDecoder == NULL) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create decoder: %d",
                      error);
-        SDL_CloseAudioDevice(g_AudioDevice);
-        g_AudioDevice = 0;
+        SDL_CloseAudioDevice(s_AudioDevice);
+        s_AudioDevice = 0;
         return -2;
     }
 
-    SDL_memcpy(&g_OpusConfig, opusConfig, sizeof(g_OpusConfig));
+    s_ChannelCount = opusConfig->channelCount;
 
     return 0;
 }
 
-void SdlAudioStart(void)
+void Session::sdlAudioStart()
 {
     // Unpause the audio device
-    SDL_PauseAudioDevice(g_AudioDevice, 0);
+    SDL_PauseAudioDevice(s_AudioDevice, 0);
 }
 
-void SdlAudioStop(void)
+void Session::sdlAudioStop()
 {
     // Pause the audio device
-    SDL_PauseAudioDevice(g_AudioDevice, 1);
+    SDL_PauseAudioDevice(s_AudioDevice, 1);
 }
 
-void SdlAudioCleanup(void)
+void Session::sdlAudioCleanup()
 {
-    SDL_CloseAudioDevice(g_AudioDevice);
-    g_AudioDevice = 0;
+    SDL_CloseAudioDevice(s_AudioDevice);
+    s_AudioDevice = 0;
 
-    opus_multistream_decoder_destroy(g_OpusDecoder);
-    g_OpusDecoder = NULL;
+    opus_multistream_decoder_destroy(s_OpusDecoder);
+    s_OpusDecoder = NULL;
 }
 
-void SdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
+void Session::sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
 {
     int samplesDecoded;
 
-    samplesDecoded = opus_multistream_decode(g_OpusDecoder,
+    samplesDecoded = opus_multistream_decode(s_OpusDecoder,
                                              (unsigned char*)sampleData,
                                              sampleLength,
-                                             g_OpusDecodeBuffer,
+                                             s_OpusDecodeBuffer,
                                              SAMPLES_PER_FRAME,
                                              0);
     if (samplesDecoded > 0) {
-        if (SDL_QueueAudio(g_AudioDevice,
-                           g_OpusDecodeBuffer,
-                           sizeof(short) * samplesDecoded * g_OpusConfig.channelCount) < 0) {
+        if (SDL_QueueAudio(s_AudioDevice,
+                           s_OpusDecodeBuffer,
+                           sizeof(short) * samplesDecoded * s_ChannelCount) < 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to queue audio sample: %s",
                          SDL_GetError());
         }
     }
 }
-
-AUDIO_RENDERER_CALLBACKS k_AudioCallbacks = {
-    SdlAudioInit,
-    SdlAudioStart,
-    SdlAudioStop,
-    SdlAudioCleanup,
-    SdlAudioDecodeAndPlaySample,
-    CAPABILITY_DIRECT_SUBMIT
-};

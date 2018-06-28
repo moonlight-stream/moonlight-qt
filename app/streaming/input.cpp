@@ -1,6 +1,6 @@
 #include <Limelight.h>
 #include <SDL.h>
-#include <stdbool.h>
+#include "input.hpp"
 
 #define VK_0 0x30
 #define VK_A 0x41
@@ -12,23 +12,7 @@
 #define VK_NUMPAD1 0x61
 #endif
 
-typedef struct _GAMEPAD_STATE {
-    SDL_GameController* controller;
-    SDL_JoystickID jsId;
-    short index;
-
-    short buttons;
-    short lsX, lsY;
-    short rsX, rsY;
-    unsigned char lt, rt;
-} GAMEPAD_STATE, *PGAMEPAD_STATE;
-
-#define MAX_GAMEPADS 4
-static GAMEPAD_STATE g_GamepadState[MAX_GAMEPADS];
-static unsigned short g_GamepadMask;
-static bool g_MultiController;
-
-static const short k_ButtonMap[] = {
+const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
     BACK_FLAG, SPECIAL_FLAG, PLAY_FLAG,
     LS_CLK_FLAG, RS_CLK_FLAG,
@@ -36,7 +20,16 @@ static const short k_ButtonMap[] = {
     UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG
 };
 
-void SdlHandleKeyEvent(SDL_KeyboardEvent* event)
+SdlInputHandler::SdlInputHandler(bool multiController)
+    : m_MultiController(multiController)
+{
+    if (!m_MultiController) {
+        // Player 1 is always present in non-MC mode
+        m_GamepadMask = 0x1;
+    }
+}
+
+void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
     short keyCode;
     char modifiers;
@@ -257,7 +250,7 @@ void SdlHandleKeyEvent(SDL_KeyboardEvent* event)
                         modifiers);
 }
 
-void SdlHandleMouseButtonEvent(SDL_MouseButtonEvent* event)
+void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 {
     int button;
 
@@ -289,7 +282,7 @@ void SdlHandleMouseButtonEvent(SDL_MouseButtonEvent* event)
                            button);
 }
 
-void SdlHandleMouseMotionEvent(SDL_MouseMotionEvent* event)
+void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 {
     if (event->xrel != 0 || event->yrel != 0) {
         LiSendMouseMoveEvent((unsigned short)event->xrel,
@@ -297,34 +290,35 @@ void SdlHandleMouseMotionEvent(SDL_MouseMotionEvent* event)
     }
 }
 
-void SdlHandleMouseWheelEvent(SDL_MouseWheelEvent* event)
+void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 {
     if (event->y != 0) {
         LiSendScrollEvent((signed char)event->y);
     }
 }
 
-static PGAMEPAD_STATE FindStateForGamepad(SDL_JoystickID id)
+GamepadState*
+SdlInputHandler::findStateForGamepad(SDL_JoystickID id)
 {
     int i;
 
     for (i = 0; i < MAX_GAMEPADS; i++) {
-        if (g_GamepadState[i].jsId == id) {
-            SDL_assert(!g_MultiController || g_GamepadState[i].index == i);
-            return &g_GamepadState[i];
+        if (m_GamepadState[i].jsId == id) {
+            SDL_assert(!m_MultiController || m_GamepadState[i].index == i);
+            return &m_GamepadState[i];
         }
     }
 
     // This should only happen with > 4 gamepads
     SDL_assert(SDL_NumJoysticks() > 4);
-    return NULL;
+    return nullptr;
 }
 
-static void SendGamepadState(PGAMEPAD_STATE state)
+void SdlInputHandler::sendGamepadState(GamepadState* state)
 {
-    SDL_assert(g_GamepadMask == 0x1 || g_MultiController);
+    SDL_assert(m_GamepadMask == 0x1 || m_MultiController);
     LiSendMultiControllerEvent(state->index,
-                               g_GamepadMask,
+                               m_GamepadMask,
                                state->buttons,
                                state->lt,
                                state->rt,
@@ -334,9 +328,9 @@ static void SendGamepadState(PGAMEPAD_STATE state)
                                state->rsY);
 }
 
-void SdlHandleControllerAxisEvent(SDL_ControllerAxisEvent* event)
+void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
 {
-    PGAMEPAD_STATE state = FindStateForGamepad(event->which);
+    GamepadState* state = findStateForGamepad(event->which);
     if (state == NULL) {
         return;
     }
@@ -368,12 +362,12 @@ void SdlHandleControllerAxisEvent(SDL_ControllerAxisEvent* event)
             return;
     }
 
-    SendGamepadState(state);
+    sendGamepadState(state);
 }
 
-void SdlHandleControllerButtonEvent(SDL_ControllerButtonEvent* event)
+void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* event)
 {
-    PGAMEPAD_STATE state = FindStateForGamepad(event->which);
+    GamepadState* state = findStateForGamepad(event->which);
     if (state == NULL) {
         return;
     }
@@ -385,19 +379,19 @@ void SdlHandleControllerButtonEvent(SDL_ControllerButtonEvent* event)
         state->buttons &= ~k_ButtonMap[event->button];
     }
 
-    SendGamepadState(state);
+    sendGamepadState(state);
 }
 
-void SdlHandleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
+void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
 {
-    PGAMEPAD_STATE state;
+    GamepadState* state;
 
     if (event->type == SDL_CONTROLLERDEVICEADDED) {
         int i;
         const char* name;
 
         for (i = 0; i < MAX_GAMEPADS; i++) {
-            if (g_GamepadState[i].controller == NULL) {
+            if (m_GamepadState[i].controller == NULL) {
                 // Found an empty slot
                 break;
             }
@@ -409,8 +403,8 @@ void SdlHandleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
             return;
         }
 
-        state = &g_GamepadState[i];
-        if (g_MultiController) {
+        state = &m_GamepadState[i];
+        if (m_MultiController) {
             state->index = i;
         }
         else {
@@ -435,29 +429,29 @@ void SdlHandleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
                     name != NULL ? name : "<null>");
         
         // Add this gamepad to the gamepad mask
-        if (g_MultiController) {
-            SDL_assert(!(g_GamepadMask & (1 << state->index)));
-            g_GamepadMask |= (1 << state->index);
+        if (m_MultiController) {
+            SDL_assert(!(m_GamepadMask & (1 << state->index)));
+            m_GamepadMask |= (1 << state->index);
         }
         else {
-            SDL_assert(g_GamepadMask == 0x1);
+            SDL_assert(m_GamepadMask == 0x1);
         }
 
         // Send an empty event to tell the PC we've arrived
-        SendGamepadState(state);
+        sendGamepadState(state);
     }
     else if (event->type == SDL_CONTROLLERDEVICEREMOVED) {
-        state = FindStateForGamepad(event->which);
+        state = findStateForGamepad(event->which);
         if (state != NULL) {
             SDL_GameControllerClose(state->controller);
 
             // Remove this from the gamepad mask in MC-mode
-            if (g_MultiController) {
-                SDL_assert(g_GamepadMask & (1 << state->index));
-                g_GamepadMask &= ~(1 << state->index);
+            if (m_MultiController) {
+                SDL_assert(m_GamepadMask & (1 << state->index));
+                m_GamepadMask &= ~(1 << state->index);
             }
             else {
-                SDL_assert(g_GamepadMask == 0x1);
+                SDL_assert(m_GamepadMask == 0x1);
             }
 
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -465,7 +459,7 @@ void SdlHandleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
                         state->index);
 
             // Send a final event to let the PC know this gamepad is gone
-            LiSendMultiControllerEvent(state->index, g_GamepadMask,
+            LiSendMultiControllerEvent(state->index, m_GamepadMask,
                                        0, 0, 0, 0, 0, 0, 0);
 
             // Clear all remaining state from this slot
@@ -474,13 +468,13 @@ void SdlHandleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
     }
 }
 
-int SdlGetAttachedGamepadMask(void)
+int SdlInputHandler::getAttachedGamepadMask()
 {
     int i;
     int count;
     int mask;
 
-    if (!g_MultiController) {
+    if (!m_MultiController) {
         // Player 1 is always present in non-MC mode
         return 0x1;
     }
@@ -493,13 +487,4 @@ int SdlGetAttachedGamepadMask(void)
     }
 
     return mask;
-}
-
-void SdlInitializeGamepad(bool multiController)
-{
-    g_MultiController = multiController;
-    if (!g_MultiController) {
-        // Player 1 is always present in non-MC mode
-        g_GamepadMask = 0x01;
-    }
 }

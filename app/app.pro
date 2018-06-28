@@ -52,18 +52,18 @@ win32 {
 
 SOURCES += \
     main.cpp \
-    streaming/audio.c \
-    streaming/input.c \
     gui/mainwindow.cpp \
     gui/popupmanager.cpp \
     backend/identitymanager.cpp \
     backend/nvhttp.cpp \
     backend/nvpairingmanager.cpp \
-    streaming/video.c \
-    streaming/connection.cpp \
     backend/computermanager.cpp \
     backend/boxartmanager.cpp \
-    settings/streamingpreferences.cpp
+    settings/streamingpreferences.cpp \
+    streaming/input.cpp \
+    streaming/session.cpp \
+    streaming/audio.cpp \
+    streaming/video.cpp
 
 HEADERS += \
     utils.h \
@@ -72,10 +72,11 @@ HEADERS += \
     backend/identitymanager.h \
     backend/nvhttp.h \
     backend/nvpairingmanager.h \
-    streaming/streaming.h \
     backend/computermanager.h \
     backend/boxartmanager.h \
-    settings/streamingpreferences.h
+    settings/streamingpreferences.h \
+    streaming/input.hpp \
+    streaming/session.hpp
 
 FORMS += \
     gui/mainwindow.ui
