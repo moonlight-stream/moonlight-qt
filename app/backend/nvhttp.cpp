@@ -9,6 +9,7 @@
 #include <QXmlStreamReader>
 #include <QSslKey>
 #include <QImageReader>
+#include <QtEndian>
 
 #define REQUEST_TIMEOUT_MS 5000
 
@@ -132,7 +133,7 @@ NvHTTP::launchApp(int appId,
                                    QString::number(streamConfig->fps)+
                                    "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
                                    "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
-                                   "&rikeyid="+QString::number(*(int*)streamConfig->remoteInputAesIv)+
+                                   "&rikeyid="+QString::number(qFromBigEndian(*(int*)streamConfig->remoteInputAesIv))+
                                    (streamConfig->enableHdr ?
                                        "&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" :
                                         "")+
@@ -153,7 +154,7 @@ NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
             openConnectionToString(m_BaseUrlHttps,
                                    "resume",
                                    "rikey="+QString(QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex())+
-                                   "&rikeyid="+QString::number(*(int*)streamConfig->remoteInputAesIv)+
+                                   "&rikeyid="+QString::number(qFromBigEndian(*(int*)streamConfig->remoteInputAesIv))+
                                    "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration),
                                    false);
 
