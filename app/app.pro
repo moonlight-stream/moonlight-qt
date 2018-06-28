@@ -62,7 +62,8 @@ SOURCES += \
     streaming/video.c \
     streaming/connection.cpp \
     backend/computermanager.cpp \
-    backend/boxartmanager.cpp
+    backend/boxartmanager.cpp \
+    settings/streamingpreferences.cpp
 
 HEADERS += \
     utils.h \
@@ -73,7 +74,8 @@ HEADERS += \
     backend/nvpairingmanager.h \
     streaming/streaming.h \
     backend/computermanager.h \
-    backend/boxartmanager.h
+    backend/boxartmanager.h \
+    settings/streamingpreferences.h
 
 FORMS += \
     gui/mainwindow.ui
