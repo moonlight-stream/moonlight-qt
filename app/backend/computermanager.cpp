@@ -213,6 +213,10 @@ void ComputerManager::deleteHost(NvComputer* computer)
         // We must wait here because we're going to delete computer
         // and we can't do that out from underneath the poller.
         pollingThread->wait();
+
+        // The thread is safe to delete now
+        Q_ASSERT(pollingThread->isFinished());
+        delete pollingThread;
     }
 
     m_PollThreads.remove(computer->uuid);
@@ -232,8 +236,16 @@ void ComputerManager::stopPollingAsync()
     while (i.hasNext()) {
         i.next();
 
-        // The threads will delete themselves when they terminate
+        QThread* thread = i.value();
+
+        // Let this thread delete itself when it's finished
+        connect(thread, SIGNAL(finished()),
+                thread, SLOT(deleteLater()));
+
+        // The threads will delete themselves when they terminate,
+        // but we remove them from the polling threads map here.
         i.value()->requestInterruption();
+        i.remove();
     }
 }
 
@@ -292,18 +304,6 @@ bool ComputerManager::addNewHost(QString address, bool mdns)
 }
 
 void
-ComputerManager::handlePollThreadTermination(NvComputer* computer)
-{
-    QWriteLocker lock(&m_Lock);
-
-    QThread* me = m_PollThreads[computer->uuid];
-    Q_ASSERT(me != nullptr);
-
-    m_PollThreads.remove(computer->uuid);
-    me->deleteLater();
-}
-
-void
 ComputerManager::handleComputerStateChanged(NvComputer* computer)
 {
     emit computerStateChanged(computer);
@@ -326,8 +326,6 @@ ComputerManager::startPollingComputer(NvComputer* computer)
     }
 
     PcMonitorThread* thread = new PcMonitorThread(computer);
-    connect(thread, SIGNAL(terminating(NvComputer*)),
-            this, SLOT(handlePollThreadTermination(NvComputer*)));
     connect(thread, SIGNAL(computerStateChanged(NvComputer*)),
             this, SLOT(handleComputerStateChanged(NvComputer*)));
     m_PollThreads[computer->uuid] = thread;

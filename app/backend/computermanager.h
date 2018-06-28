@@ -156,7 +156,7 @@ private:
             for (int i = 0; i < TRIES_BEFORE_OFFLINING; i++) {
                 for (auto& address : uniqueAddressList) {
                     if (isInterruptionRequested()) {
-                        goto Terminate;
+                        return;
                     }
 
                     if (tryPollComputer(address, stateChanged)) {
@@ -198,14 +198,10 @@ private:
             // Wait a bit to poll again
             QThread::sleep(3);
         }
-
-    Terminate:
-        emit terminating(m_Computer);
     }
 
 signals:
    void computerStateChanged(NvComputer* computer);
-   void terminating(NvComputer* computer);
 
 private:
     NvComputer* m_Computer;
@@ -234,8 +230,6 @@ signals:
 
 private slots:
     void handleComputerStateChanged(NvComputer* computer);
-
-    void handlePollThreadTermination(NvComputer* computer);
 
 private:
     void saveHosts();
