@@ -53,9 +53,9 @@ private:
     void sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength);
 
     STREAM_CONFIGURATION m_StreamConfig;
-    QMessageBox m_ProgressBox;
     NvComputer* m_Computer;
     NvApp m_App;
+    QMessageBox m_ProgressBox;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;

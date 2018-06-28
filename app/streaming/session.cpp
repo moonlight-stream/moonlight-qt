@@ -99,7 +99,7 @@ Session::Session(NvComputer* computer, NvApp& app)
     m_StreamConfig.bitrate = prefs.bitrateKbps;
     m_StreamConfig.packetSize = 1024;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
-    for (int i = 0; i < sizeof(m_StreamConfig.remoteInputAesKey); i++) {
+    for (unsigned int i = 0; i < sizeof(m_StreamConfig.remoteInputAesKey); i++) {
         m_StreamConfig.remoteInputAesKey[i] =
                 (char)(QRandomGenerator::global()->generate() % 256);
     }
