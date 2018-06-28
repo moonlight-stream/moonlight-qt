@@ -19,7 +19,7 @@ public:
         ALREADY_IN_PROGRESS
     };
 
-    NvPairingManager(QString address);
+    explicit NvPairingManager(QString address);
 
     ~NvPairingManager();
 

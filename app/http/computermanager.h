@@ -8,9 +8,9 @@
 class NvComputer
 {
 public:
-    NvComputer(QString address, QString serverInfo);
+    explicit NvComputer(QString address, QString serverInfo);
 
-    NvComputer(QSettings& settings);
+    explicit NvComputer(QSettings& settings);
 
     bool
     update(NvComputer& that);
@@ -214,7 +214,7 @@ class ComputerManager : public QObject
     Q_OBJECT
 
 public:
-    ComputerManager();
+    explicit ComputerManager(QObject *parent = nullptr);
 
     void startPolling();
 

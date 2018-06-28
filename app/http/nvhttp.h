@@ -58,7 +58,7 @@ private:
 class NvHTTP
 {
 public:
-    NvHTTP(QString address);
+    explicit NvHTTP(QString address);
 
     static
     int

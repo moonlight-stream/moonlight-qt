@@ -146,8 +146,9 @@ bool NvComputer::update(NvComputer& that)
     return changed;
 }
 
-ComputerManager::ComputerManager()
-    : m_Polling(false)
+ComputerManager::ComputerManager(QObject *parent)
+    : QObject(parent),
+      m_Polling(false)
 {
     QSettings settings;
 
