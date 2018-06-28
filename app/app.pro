@@ -61,7 +61,8 @@ SOURCES += \
     http/nvpairingmanager.cpp \
     streaming/video.c \
     streaming/connection.cpp \
-    http/computermanager.cpp
+    http/computermanager.cpp \
+    http/boxartmanager.cpp
 
 HEADERS += \
     utils.h \
@@ -71,7 +72,8 @@ HEADERS += \
     http/nvhttp.h \
     http/nvpairingmanager.h \
     streaming/streaming.h \
-    http/computermanager.h
+    http/computermanager.h \
+    http/boxartmanager.h
 
 FORMS += \
     gui/mainwindow.ui

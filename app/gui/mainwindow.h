@@ -1,6 +1,9 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
+#include "http/computermanager.h"
+#include "http/boxartmanager.h"
+
 #include <QMainWindow>
 #include <QtWidgets>
 
@@ -21,10 +24,13 @@ private slots:
     void on_newHostBtn_clicked();
     void addHostToDisplay(QMap<QString, bool>);
     void on_selectHostComboBox_activated(const QString &);
+    void computerStateChanged(NvComputer* computer);
+    void boxArtLoadComplete(NvComputer* computer, NvApp app, QImage image);
 
 private:
     Ui::MainWindow *ui;
-
+    BoxArtManager m_BoxArtManager;
+    ComputerManager m_ComputerManager;
 };
 
 #endif // MAINWINDOW_H

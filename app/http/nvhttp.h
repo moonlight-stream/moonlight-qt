@@ -25,6 +25,8 @@ public:
     bool hdrSupported;
 };
 
+Q_DECLARE_METATYPE(NvApp)
+
 class GfeHttpResponseException : public std::exception
 {
 public:
