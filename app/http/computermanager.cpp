@@ -189,6 +189,32 @@ void ComputerManager::startPolling()
     }
 }
 
+QVector<NvComputer*> ComputerManager::getComputers()
+{
+    QReadLocker lock(&m_Lock);
+
+    return QVector<NvComputer*>::fromList(m_KnownHosts.values());
+}
+
+void ComputerManager::deleteHost(NvComputer* computer)
+{
+    QWriteLocker lock(&m_Lock);
+
+    QThread* pollingThread = m_PollThreads[computer->uuid];
+    if (pollingThread != nullptr) {
+        pollingThread->requestInterruption();
+
+        // We must wait here because we're going to delete computer
+        // and we can't do that out from underneath the poller.
+        pollingThread->wait();
+    }
+
+    m_PollThreads.remove(computer->uuid);
+    m_KnownHosts.remove(computer->uuid);
+
+    delete computer;
+}
+
 void ComputerManager::stopPollingAsync()
 {
     QWriteLocker lock(&m_Lock);

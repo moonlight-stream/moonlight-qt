@@ -222,6 +222,11 @@ public:
 
     bool addNewHost(QString address, bool mdns);
 
+    QVector<NvComputer*> getComputers();
+
+    // computer is deleted inside this call
+    void deleteHost(NvComputer* computer);
+
 signals:
     void computerStateChanged(NvComputer* computer);
 
