@@ -249,7 +249,7 @@ void Session::exec()
     m_ProgressBox.close();
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
-    //SDL_CreateWindow("SDL", 0, 0, 1280, 720, SDL_WINDOW_INPUT_GRABBED);
+    SDL_Window* wnd = SDL_CreateWindow("SDL Test Window", 0, 0, 1280, 720, SDL_WINDOW_INPUT_GRABBED);
 
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
@@ -295,4 +295,5 @@ void Session::exec()
 Exit:
     s_ActiveSession = nullptr;
     LiStopConnection();
+    SDL_DestroyWindow(wnd);
 }

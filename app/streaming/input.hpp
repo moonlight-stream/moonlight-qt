@@ -20,6 +20,8 @@ class SdlInputHandler
 public:
     explicit SdlInputHandler(bool multiController);
 
+    ~SdlInputHandler();
+
     void handleKeyEvent(SDL_KeyboardEvent* event);
 
     void handleMouseButtonEvent(SDL_MouseButtonEvent* event);

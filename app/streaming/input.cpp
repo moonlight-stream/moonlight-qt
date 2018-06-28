@@ -27,12 +27,74 @@ SdlInputHandler::SdlInputHandler(bool multiController)
         // Player 1 is always present in non-MC mode
         m_GamepadMask = 0x1;
     }
+
+    SDL_zero(m_GamepadState);
+}
+
+SdlInputHandler::~SdlInputHandler()
+{
+    for (int i = 0; i < MAX_GAMEPADS; i++) {
+        if (m_GamepadState[i].controller != nullptr) {
+            SDL_GameControllerClose(m_GamepadState[i].controller);
+        }
+    }
 }
 
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
     short keyCode;
     char modifiers;
+
+    // Check for our special key combos
+    if ((event->state == SDL_PRESSED) &&
+            (event->keysym.mod & KMOD_CTRL) &&
+            (event->keysym.mod & KMOD_ALT) &&
+            (event->keysym.mod & KMOD_SHIFT)) {
+
+        // Check for quit combo (Ctrl+Alt+Shift+Q)
+        if (event->keysym.sym == SDLK_q) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected quit key combo");
+
+            // Force raise all keys in the combo to avoid
+            // leaving them down after disconnecting
+            LiSendKeyboardEvent(0xA0, KEY_ACTION_UP, 0);
+            LiSendKeyboardEvent(0xA1, KEY_ACTION_UP, 0);
+            LiSendKeyboardEvent(0xA2, KEY_ACTION_UP, 0);
+            LiSendKeyboardEvent(0xA3, KEY_ACTION_UP, 0);
+            LiSendKeyboardEvent(0xA4, KEY_ACTION_UP, 0);
+            LiSendKeyboardEvent(0xA5, KEY_ACTION_UP, 0);
+
+            SDL_Event event;
+
+            // Drain the event queue of any additional input
+            // that might be processed before our quit message.
+            while (SDL_PollEvent(&event));
+
+            // Push a quit event to the main loop
+            event.type = SDL_QUIT;
+            event.quit.timestamp = SDL_GetTicks();
+            SDL_PushEvent(&event);
+            return;
+        }
+        // Check for the unbind combo (Ctrl+Alt+Shift+Z)
+        else if (event->keysym.sym == SDLK_z) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected mouse unbind combo");
+
+            // TODO: disable mouse capture then recapture when
+            // we regain focus or on click.
+            return;
+        }
+        // Check for the full-screen combo (Ctrl+Alt+Shift+X)
+        else if (event->keysym.sym == SDLK_x) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected full-screen toggle combo");
+
+            // TODO: toggle full-screen
+            return;
+        }
+    }
 
     // Set modifier flags
     modifiers = 0;
