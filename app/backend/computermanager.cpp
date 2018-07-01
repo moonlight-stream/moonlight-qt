@@ -154,7 +154,8 @@ bool NvComputer::update(NvComputer& that)
 
 ComputerManager::ComputerManager(QObject *parent)
     : QObject(parent),
-      m_Polling(false)
+      m_Polling(false),
+      m_MdnsBrowser(nullptr)
 {
     QSettings settings;
 
@@ -186,13 +187,41 @@ void ComputerManager::startPolling()
 {
     QWriteLocker lock(&m_Lock);
 
+    if (m_Polling) {
+        return;
+    }
+
     m_Polling = true;
 
+    // Start an MDNS query for GameStream hosts
+    m_MdnsBrowser = new QMdnsEngine::Browser(&m_MdnsServer, "_nvstream._tcp.local.", &m_MdnsCache);
+    connect(m_MdnsBrowser, &QMdnsEngine::Browser::serviceAdded,
+            this, [this](const QMdnsEngine::Service& service) {
+        qDebug() << "Discovered mDNS host: " << service.hostname();
+
+        MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, &m_MdnsCache, service);
+        connect(pendingComputer, SIGNAL(resolvedv4(MdnsPendingComputer*,QHostAddress)),
+                this, SLOT(handleMdnsServiceResolved(MdnsPendingComputer*,QHostAddress)));
+        m_PendingResolution.append(pendingComputer);
+    });
+
+    // Start polling threads for each known host
     QMapIterator<QString, NvComputer*> i(m_KnownHosts);
     while (i.hasNext()) {
         i.next();
         startPollingComputer(i.value());
     }
+}
+
+void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
+                                                const QHostAddress& address)
+{
+    qDebug() << "Resolved " << computer->hostname() << " to " << address.toString();
+
+    addNewHost(address.toString(), true);
+
+    m_PendingResolution.removeOne(computer);
+    computer->deleteLater();
 }
 
 QVector<NvComputer*> ComputerManager::getComputers()
@@ -229,7 +258,22 @@ void ComputerManager::stopPollingAsync()
 {
     QWriteLocker lock(&m_Lock);
 
+    if (!m_Polling) {
+        return;
+    }
+
     m_Polling = false;
+
+    // Delete machines that haven't been resolved yet
+    while (!m_PendingResolution.isEmpty()) {
+        MdnsPendingComputer* computer = m_PendingResolution.first();
+        computer->deleteLater();
+        m_PendingResolution.removeFirst();
+    }
+
+    // Delete the browser to stop discovery
+    delete m_MdnsBrowser;
+    m_MdnsBrowser = nullptr;
 
     // Interrupt all threads, but don't wait for them to terminate
     QMutableMapIterator<QString, QThread*> i(m_PollThreads);
