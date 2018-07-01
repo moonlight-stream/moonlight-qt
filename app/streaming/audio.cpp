@@ -49,9 +49,9 @@ int Session::sdlDetermineAudioConfiguration()
     }
 }
 
-int Session::sdlAudioInit(int audioConfiguration,
+int Session::sdlAudioInit(int /* audioConfiguration */,
                           POPUS_MULTISTREAM_CONFIGURATION opusConfig,
-                          void* arContext, int arFlags)
+                          void* /* arContext */, int /* arFlags */)
 {
     SDL_AudioSpec want, have;
     int error;
