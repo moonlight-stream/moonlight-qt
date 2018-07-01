@@ -4,3 +4,6 @@
 [submodule "opus/opus"]
 	path = opus/opus
 	url = https://github.com/xiph/opus.git
+[submodule "qmdnsengine/qmdnsengine"]
+	path = qmdnsengine/qmdnsengine
+	url = https://github.com/cgutman/qmdnsengine.git

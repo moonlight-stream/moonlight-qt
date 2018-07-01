@@ -97,3 +97,10 @@ else:unix: LIBS += -L$$OUT_PWD/../opus/ -lopus
 
 INCLUDEPATH += $$PWD/../opus/opus/include
 DEPENDPATH += $$PWD/../opus/opus/include
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qmdnsengine/release/ -lqmdnsengine
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qmdnsengine/debug/ -lqmdnsengine
+else:unix: LIBS += -L$$OUT_PWD/../qmdnsengine/ -lqmdnsengine
+
+INCLUDEPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
+DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
