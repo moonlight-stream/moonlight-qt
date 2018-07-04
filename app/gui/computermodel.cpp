@@ -23,6 +23,8 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
             return "Add PC";
         case AddPcRole:
             return true;
+        default:
+            return QVariant();
         }
     }
     else if (index.row() > m_Computers.count()) {
@@ -69,6 +71,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[OnlineRole] = "online";
     names[PairedRole] = "paired";
     names[BusyRole] = "busy";
+    names[AddPcRole] = "addPc";
 
     return names;
 }

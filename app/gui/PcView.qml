@@ -4,9 +4,15 @@ import QtQuick.Controls 2.2
 import ComputerModel 1.0
 
 Frame {
+    anchors.fill: parent
+
     GridView {
         anchors.fill: parent
-        cellWidth: 200; cellHeight: 300;
+        anchors.leftMargin: 5
+        anchors.topMargin: 5
+        anchors.rightMargin: 5
+        anchors.bottomMargin: 5
+        cellWidth: 350; cellHeight: 350;
         focus: true
 
         model: ComputerModel {}
@@ -16,7 +22,7 @@ Frame {
 
             Image {
                 id: pcIcon
-                y: 10; anchors.horizontalCenter: parent.horizontalCenter;
+                anchors.horizontalCenter: parent.horizontalCenter;
                 source: {
                     model.addPc ? "ic_add_to_queue_white_48px.svg" : "ic_tv_white_48px.svg"
                 }
@@ -34,7 +40,7 @@ Frame {
                 width: parent.width
                 anchors.top: pcIcon.bottom
                 minimumPointSize: 12
-                font.pointSize: 36
+                font.pointSize: 48
                 horizontalAlignment: Text.AlignHCenter
                 fontSizeMode: Text.HorizontalFit
             }
@@ -63,6 +69,7 @@ Frame {
 
                 id: pcPairedText
                 text: getStatusText(model)
+                visible: !model.addPc
 
                 width: parent.width
                 anchors.top: pcNameText.bottom
