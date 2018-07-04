@@ -57,7 +57,8 @@ SOURCES += \
     streaming/input.cpp \
     streaming/session.cpp \
     streaming/audio.cpp \
-    streaming/video.cpp
+    streaming/video.cpp \
+    gui/computermodel.cpp
 
 HEADERS += \
     utils.h \
@@ -68,7 +69,8 @@ HEADERS += \
     backend/boxartmanager.h \
     settings/streamingpreferences.h \
     streaming/input.hpp \
-    streaming/session.hpp
+    streaming/session.hpp \
+    gui/computermodel.h
 
 RESOURCES += \
     resources.qrc \

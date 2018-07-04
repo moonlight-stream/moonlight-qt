@@ -2,5 +2,8 @@
     <qresource prefix="/">
         <file>gui/main.qml</file>
         <file>gui/qtquickcontrols2.conf</file>
+        <file>gui/PcView.qml</file>
+        <file>gui/ic_tv_white_48px.svg</file>
+        <file>gui/ic_add_to_queue_white_48px.svg</file>
     </qresource>
 </RCC>

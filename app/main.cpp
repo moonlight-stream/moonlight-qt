@@ -1,7 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
-#include "backend/nvhttp.h"
+#include "gui/computermodel.h"
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing
@@ -25,6 +25,9 @@ int main(int argc, char *argv[])
     qRegisterMetaType<NvApp>("NvApp");
 
     QGuiApplication app(argc, argv);
+
+    // Register our C++ types for QML
+    qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
 
     // Load the main.qml file
     QQmlApplicationEngine engine;

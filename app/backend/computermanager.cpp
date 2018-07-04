@@ -199,7 +199,7 @@ QVector<QString> NvComputer::uniqueAddresses()
     }
 
     // We must have at least 1 address
-    Q_ASSERT(uniqueAddressList.count() != 0);
+    Q_ASSERT(!uniqueAddressList.isEmpty());
 
     return uniqueAddressList;
 }
