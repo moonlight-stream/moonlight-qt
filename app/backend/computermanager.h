@@ -21,6 +21,12 @@ public:
     bool
     update(NvComputer& that);
 
+    bool
+    wake();
+
+    QVector<QString>
+    uniqueAddresses();
+
     void
     serialize(QSettings& settings);
 
@@ -131,36 +137,9 @@ private:
         // Always fetch the applist the first time
         int pollsSinceLastAppListFetch = POLLS_PER_APPLIST_FETCH;
         while (!isInterruptionRequested()) {
-            QVector<QString> uniqueAddressList;
-
-            // Start with addresses correctly ordered
-            uniqueAddressList.append(m_Computer->activeAddress);
-            uniqueAddressList.append(m_Computer->localAddress);
-            uniqueAddressList.append(m_Computer->remoteAddress);
-            uniqueAddressList.append(m_Computer->manualAddress);
-
-            // Prune duplicates (always giving precedence to the first)
-            for (int i = 0; i < uniqueAddressList.count(); i++) {
-                if (uniqueAddressList[i].isEmpty() || uniqueAddressList[i].isNull()) {
-                    uniqueAddressList.remove(i);
-                    i--;
-                    continue;
-                }
-                for (int j = i + 1; j < uniqueAddressList.count(); j++) {
-                    if (uniqueAddressList[i] == uniqueAddressList[j]) {
-                        // Always remove the later occurrence
-                        uniqueAddressList.remove(j);
-                        j--;
-                    }
-                }
-            }
-
-            // We must have at least 1 address for this host
-            Q_ASSERT(uniqueAddressList.count() != 0);
-
             bool stateChanged = false;
             for (int i = 0; i < TRIES_BEFORE_OFFLINING; i++) {
-                for (auto& address : uniqueAddressList) {
+                for (auto& address : m_Computer->uniqueAddresses()) {
                     if (isInterruptionRequested()) {
                         return;
                     }

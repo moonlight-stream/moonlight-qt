@@ -2,6 +2,8 @@
 #include "nvhttp.h"
 
 #include <QThread>
+#include <QUdpSocket>
+#include <QHostInfo>
 
 #define SER_HOSTS "hosts"
 #define SER_NAME "hostname"
@@ -110,6 +112,96 @@ NvComputer::NvComputer(QString address, QString serverInfo)
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
     this->activeAddress = address;
     this->state = NvComputer::CS_ONLINE;
+}
+
+bool NvComputer::wake()
+{
+    if (state == NvComputer::CS_ONLINE) {
+        qWarning() << name << " is already online";
+        return true;
+    }
+
+    if (macAddress.isNull()) {
+        qWarning() << name << " has no MAC address stored";
+        return false;
+    }
+
+    const quint16 WOL_PORTS[] = {
+        7, 9, // Standard WOL ports
+        47998, 47999, 48000, // Ports opened by GFE
+    };
+
+    // Create the WoL payload
+    QByteArray wolPayload;
+    wolPayload.append(QByteArray::fromHex("FFFFFFFFFFFF"));
+    for (int i = 0; i < 16; i++) {
+        wolPayload.append(macAddress);
+    }
+    Q_ASSERT(wolPayload.count() == 102);
+
+    // Add the addresses that we know this host to be
+    // and broadcast addresses for this link just in
+    // case the host has timed out in ARP entries.
+    QVector<QString> addressList = uniqueAddresses();
+    addressList.append("255.255.255.255");
+
+    // Try all unique address strings or host names
+    bool success = false;
+    for (QString& addressString : addressList) {
+        QHostInfo hostInfo = QHostInfo::fromName(addressString);
+
+        // Try all IP addresses that this string resolves to
+        for (QHostAddress& address : hostInfo.addresses()) {
+            QUdpSocket sock;
+
+            // Bind to any address on the correct protocol
+            if (sock.bind(address.protocol() == QUdpSocket::IPv4Protocol ?
+                          QHostAddress::AnyIPv4 : QHostAddress::AnyIPv6)) {
+
+                // Send to all ports
+                for (quint16 port : WOL_PORTS) {
+                    if (sock.writeDatagram(wolPayload, address, port)) {
+                        qDebug() << "Send WoL packet to " << name << " via " << address.toString() << ":" << port;
+                        success = true;
+                    }
+                }
+            }
+        }
+    }
+
+    return success;
+}
+
+QVector<QString> NvComputer::uniqueAddresses()
+{
+    QVector<QString> uniqueAddressList;
+
+    // Start with addresses correctly ordered
+    uniqueAddressList.append(activeAddress);
+    uniqueAddressList.append(localAddress);
+    uniqueAddressList.append(remoteAddress);
+    uniqueAddressList.append(manualAddress);
+
+    // Prune duplicates (always giving precedence to the first)
+    for (int i = 0; i < uniqueAddressList.count(); i++) {
+        if (uniqueAddressList[i].isEmpty() || uniqueAddressList[i].isNull()) {
+            uniqueAddressList.remove(i);
+            i--;
+            continue;
+        }
+        for (int j = i + 1; j < uniqueAddressList.count(); j++) {
+            if (uniqueAddressList[i] == uniqueAddressList[j]) {
+                // Always remove the later occurrence
+                uniqueAddressList.remove(j);
+                j--;
+            }
+        }
+    }
+
+    // We must have at least 1 address
+    Q_ASSERT(uniqueAddressList.count() != 0);
+
+    return uniqueAddressList;
 }
 
 bool NvComputer::update(NvComputer& that)
