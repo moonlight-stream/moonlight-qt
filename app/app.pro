@@ -1,12 +1,8 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2018-04-28T14:01:01
-#
-#-------------------------------------------------
+QT += core quick network
+CONFIG += c++11
 
-QT       += core gui network
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+# TODO: Rid ourselves of QtWidgets
+QT += widgets
 
 TARGET = moonlight-qt
 TEMPLATE = app
@@ -52,8 +48,6 @@ win32 {
 
 SOURCES += \
     main.cpp \
-    gui/mainwindow.cpp \
-    gui/popupmanager.cpp \
     backend/identitymanager.cpp \
     backend/nvhttp.cpp \
     backend/nvpairingmanager.cpp \
@@ -67,8 +61,6 @@ SOURCES += \
 
 HEADERS += \
     utils.h \
-    gui/mainwindow.h \
-    gui/popupmanager.h \
     backend/identitymanager.h \
     backend/nvhttp.h \
     backend/nvpairingmanager.h \
@@ -78,11 +70,15 @@ HEADERS += \
     streaming/input.hpp \
     streaming/session.hpp
 
-FORMS += \
-    gui/mainwindow.ui
-
 RESOURCES += \
-    resources.qrc
+    resources.qrc \
+    qml.qrc
+
+# Additional import path used to resolve QML modules in Qt Creator's code model
+QML_IMPORT_PATH =
+
+# Additional import path used to resolve QML modules just for Qt Quick Designer
+QML_DESIGNER_IMPORT_PATH =
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../moonlight-common-c/release/ -lmoonlight-common-c
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../moonlight-common-c/debug/ -lmoonlight-common-c
@@ -104,3 +100,8 @@ else:unix: LIBS += -L$$OUT_PWD/../qmdnsengine/ -lqmdnsengine
 
 INCLUDEPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
+
+# Default rules for deployment.
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target

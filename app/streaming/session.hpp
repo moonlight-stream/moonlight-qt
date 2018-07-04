@@ -7,7 +7,6 @@
 
 #include <QMessageBox>
 
-
 class Session
 {
 public:

@@ -1,5 +1,5 @@
-#include "gui/mainwindow.h"
-#include <QApplication>
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
 
 #include "backend/nvhttp.h"
 
@@ -10,6 +10,8 @@
 
 int main(int argc, char *argv[])
 {
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", QByteArray("1"));
@@ -22,9 +24,13 @@ int main(int argc, char *argv[])
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
 
-    QApplication a(argc, argv);
-    MainWindow w;
-    w.show();
+    QGuiApplication app(argc, argv);
+
+    // Load the main.qml file
+    QQmlApplicationEngine engine;
+    engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
+    if (engine.rootObjects().isEmpty())
+        return -1;
 
     // Ensure that SDL is always initialized since we may need to use it
     // for non-streaming purposes (like checking on audio devices)
@@ -37,7 +43,7 @@ int main(int argc, char *argv[])
                      SDL_GetError());
     }
 
-    int err = a.exec();
+    int err = app.exec();
 
     SDL_Quit();
 
