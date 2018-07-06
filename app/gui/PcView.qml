@@ -100,7 +100,8 @@ GridView {
                             pairDialog.open()
                         }
                         else {
-                            // TODO: error dialog
+                            // cannot pair while something is streaming or attempting to pair
+                            pairingFailedDialog.open()
                         }
                     }
                 }
@@ -109,6 +110,15 @@ GridView {
                 }
             }
         }
+    }
+
+    MessageDialog {
+        id: pairingFailedDialog
+        // don't allow edits to the rest of the window while open
+        modality:Qt.WindowModal
+
+        text:"This PC is busy: make sure no game is streaming, and try again"
+        standardButtons: Dialog.OK
     }
 
     MessageDialog {
