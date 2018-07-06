@@ -5,6 +5,8 @@ import QtQuick.Layouts 1.11
 
 import ComputerModel 1.0
 
+import ComputerManager 1.0
+
 GridView {
     anchors.fill: parent
     anchors.leftMargin: 5
@@ -14,7 +16,24 @@ GridView {
     cellWidth: 350; cellHeight: 350;
     focus: true
 
-    model: ComputerModel {}
+    Component.onCompleted: {
+        // Start polling when this view is shown
+        ComputerManager.startPolling()
+    }
+
+    Component.onDestruction: {
+        // Stop polling when this view is destroyed
+        ComputerManager.stopPollingAsync()
+    }
+
+    function createModel()
+    {
+        var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent, '')
+        model.initialize(ComputerManager)
+        return model
+    }
+
+    model: createModel()
 
     delegate: Item {
         width: 300; height: 300;

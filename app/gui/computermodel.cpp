@@ -1,13 +1,16 @@
 #include "computermodel.h"
+#include "backend/nvpairingmanager.h"
 
 ComputerModel::ComputerModel(QObject* object)
-    : QAbstractListModel(object)
+    : QAbstractListModel(object) {}
+
+void ComputerModel::initialize(ComputerManager* computerManager)
 {
-    connect(&m_ComputerManager, &ComputerManager::computerStateChanged,
+    m_ComputerManager = computerManager;
+    connect(m_ComputerManager, &ComputerManager::computerStateChanged,
             this, &ComputerModel::handleComputerStateChanged);
 
-    m_Computers = m_ComputerManager.getComputers();
-    m_ComputerManager.startPolling();
+    m_Computers = m_ComputerManager->getComputers();
 }
 
 QVariant ComputerModel::data(const QModelIndex& index, int role) const
@@ -74,6 +77,21 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     return names;
 }
 
+void ComputerModel::deleteComputer(int computerIndex)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+
+    beginRemoveRows(QModelIndex(), computerIndex, computerIndex);
+
+    // m_Computer[computerIndex] will be deleted by this call
+    m_ComputerManager->deleteHost(m_Computers[computerIndex]);
+
+    // Remove the now invalid item
+    m_Computers.removeAt(computerIndex);
+
+    endRemoveRows();
+}
+
 void ComputerModel::handleComputerStateChanged(NvComputer* computer)
 {
     // If this is an existing computer, we can report the data changed
@@ -90,6 +108,6 @@ void ComputerModel::handleComputerStateChanged(NvComputer* computer)
     }
 
     // Our view of the world must be in sync with ComputerManager's
-    Q_ASSERT(m_Computers.count() == m_ComputerManager.getComputers().count());
+    Q_ASSERT(m_Computers.count() == m_ComputerManager->getComputers().count());
 }
 

@@ -3,6 +3,8 @@ import QtQuick.Controls 2.2
 
 import AppModel 1.0
 
+import ComputerManager 1.0
+
 GridView {
     property int computerIndex
 
@@ -16,8 +18,8 @@ GridView {
 
     function createModel()
     {
-        var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, "")
-        model.initialize(computerIndex)
+        var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, '')
+        model.initialize(ComputerManager, computerIndex)
         return model
     }
 

@@ -20,7 +20,7 @@ public:
     explicit AppModel(QObject *parent = nullptr);
 
     // Must be called before any QAbstractListModel functions
-    Q_INVOKABLE void initialize(int computerIndex);
+    Q_INVOKABLE void initialize(ComputerManager* computerManager, int computerIndex);
 
     QVariant data(const QModelIndex &index, int role) const override;
 
@@ -36,7 +36,7 @@ private slots:
 private:
     NvComputer* m_Computer;
     BoxArtManager m_BoxArtManager;
-    ComputerManager m_ComputerManager;
+    ComputerManager* m_ComputerManager;
     QVector<NvApp> m_Apps;
     int m_CurrentGameId;
 };

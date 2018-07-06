@@ -30,6 +30,11 @@ int main(int argc, char *argv[])
     // Register our C++ types for QML
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
+    qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
+                                              "ComputerManager",
+                                              [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                  return new ComputerManager();
+                                              });
 
     // Load the main.qml file
     QQmlApplicationEngine engine;

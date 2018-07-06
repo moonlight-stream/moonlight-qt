@@ -242,11 +242,11 @@ class ComputerManager : public QObject
 public:
     explicit ComputerManager(QObject *parent = nullptr);
 
-    void startPolling();
+    Q_INVOKABLE void startPolling();
 
-    void stopPollingAsync();
+    Q_INVOKABLE void stopPollingAsync();
 
-    bool addNewHost(QString address, bool mdns);
+    Q_INVOKABLE bool addNewHost(QString address, bool mdns);
 
     QVector<NvComputer*> getComputers();
 

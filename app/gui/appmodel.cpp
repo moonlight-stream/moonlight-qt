@@ -3,20 +3,20 @@
 AppModel::AppModel(QObject *parent)
     : QAbstractListModel(parent)
 {
-    connect(&m_ComputerManager, &ComputerManager::computerStateChanged,
-            this, &AppModel::handleComputerStateChanged);
     connect(&m_BoxArtManager, &BoxArtManager::boxArtLoadComplete,
             this, &AppModel::handleBoxArtLoaded);
 }
 
-void AppModel::initialize(int computerIndex)
+void AppModel::initialize(ComputerManager* computerManager, int computerIndex)
 {
-    Q_ASSERT(computerIndex < m_ComputerManager.getComputers().count());
-    m_Computer = m_ComputerManager.getComputers().at(computerIndex);
+    m_ComputerManager = computerManager;
+    connect(m_ComputerManager, &ComputerManager::computerStateChanged,
+            this, &AppModel::handleComputerStateChanged);
+
+    Q_ASSERT(computerIndex < m_ComputerManager->getComputers().count());
+    m_Computer = m_ComputerManager->getComputers().at(computerIndex);
     m_Apps = m_Computer->appList;
     m_CurrentGameId = m_Computer->currentGameId;
-
-    m_ComputerManager.startPolling();
 }
 
 int AppModel::rowCount(const QModelIndex &parent) const
