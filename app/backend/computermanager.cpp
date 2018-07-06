@@ -42,6 +42,7 @@ NvComputer::NvComputer(QSettings& settings)
         this->appList.append(app);
     }
     settings.endArray();
+    sortAppList();
 
     this->activeAddress = nullptr;
     this->currentGameId = 0;
@@ -77,6 +78,13 @@ NvComputer::serialize(QSettings& settings)
         }
         settings.endArray();
     }
+}
+
+void NvComputer::sortAppList()
+{
+    std::stable_sort(appList.begin(), appList.end(), [](const NvApp& app1, const NvApp& app2) {
+       return app1.name.toLower() < app2.name.toLower();
+    });
 }
 
 NvComputer::NvComputer(QString address, QString serverInfo)

@@ -13,6 +13,11 @@
 
 class NvComputer
 {
+    friend class PcMonitorThread;
+
+private:
+    void sortAppList();
+
 public:
     explicit NvComputer(QString address, QString serverInfo);
 
@@ -126,6 +131,7 @@ private:
         QWriteLocker lock(&m_Computer->lock);
         if (m_Computer->appList != appList) {
             m_Computer->appList = appList;
+            m_Computer->sortAppList();
             changed = true;
         }
 
