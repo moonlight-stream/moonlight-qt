@@ -42,12 +42,6 @@ NvPairingManager::~NvPairingManager()
     EVP_PKEY_free(m_PrivateKey);
 }
 
-QString
-NvPairingManager::generatePinString()
-{
-    return QString::asprintf("%04d", QRandomGenerator::global()->bounded(10000));
-}
-
 QByteArray
 NvPairingManager::generateRandomBytes(int length)
 {
@@ -167,9 +161,9 @@ NvPairingManager::saltPin(QByteArray salt, QString pin)
 }
 
 NvPairingManager::PairState
-NvPairingManager::pair(QString serverInfo, QString pin)
+NvPairingManager::pair(QString appVersion, QString pin)
 {
-    int serverMajorVersion = NvHTTP::getServerVersionQuad(serverInfo).at(0);
+    int serverMajorVersion = NvHTTP::parseQuad(appVersion).at(0);
     qDebug() << "Pairing with server generation: " << serverMajorVersion;
 
     QCryptographicHash::Algorithm hashAlgo;

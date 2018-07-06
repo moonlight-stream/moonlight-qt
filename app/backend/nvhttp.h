@@ -91,7 +91,7 @@ public:
 
     static
     QVector<int>
-    getServerVersionQuad(QString serverInfo);
+    parseQuad(QString quad);
 
     void
     quitApp();

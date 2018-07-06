@@ -1,5 +1,4 @@
 #include "computermodel.h"
-#include "backend/nvpairingmanager.h"
 
 ComputerModel::ComputerModel(QObject* object)
     : QAbstractListModel(object) {}
@@ -9,6 +8,8 @@ void ComputerModel::initialize(ComputerManager* computerManager)
     m_ComputerManager = computerManager;
     connect(m_ComputerManager, &ComputerManager::computerStateChanged,
             this, &ComputerModel::handleComputerStateChanged);
+    connect(m_ComputerManager, &ComputerManager::pairingCompleted,
+            this, &ComputerModel::handlePairingCompleted);
 
     m_Computers = m_ComputerManager->getComputers();
 }
@@ -90,6 +91,18 @@ void ComputerModel::deleteComputer(int computerIndex)
     m_Computers.removeAt(computerIndex);
 
     endRemoveRows();
+}
+
+void ComputerModel::pairComputer(int computerIndex, QString pin)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+
+    m_ComputerManager->pairHost(m_Computers[computerIndex], pin);
+}
+
+void ComputerModel::handlePairingCompleted(NvComputer*, QString error)
+{
+    emit pairingCompleted(error.isNull() ? QVariant() : error);
 }
 
 void ComputerModel::handleComputerStateChanged(NvComputer* computer)

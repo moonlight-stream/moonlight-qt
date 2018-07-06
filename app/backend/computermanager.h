@@ -1,5 +1,6 @@
 #pragma once
 #include "nvhttp.h"
+#include "nvpairingmanager.h"
 
 #include <qmdnsengine/server.h>
 #include <qmdnsengine/cache.h>
@@ -10,6 +11,7 @@
 #include <QThread>
 #include <QReadWriteLock>
 #include <QSettings>
+#include <QRunnable>
 
 class NvComputer
 {
@@ -239,6 +241,8 @@ class ComputerManager : public QObject
 {
     Q_OBJECT
 
+    friend class DeferredHostDeletionTask;
+
 public:
     explicit ComputerManager(QObject *parent = nullptr);
 
@@ -248,6 +252,8 @@ public:
 
     Q_INVOKABLE bool addNewHost(QString address, bool mdns);
 
+    void pairHost(NvComputer* computer, QString pin);
+
     QVector<NvComputer*> getComputers();
 
     // computer is deleted inside this call
@@ -255,6 +261,8 @@ public:
 
 signals:
     void computerStateChanged(NvComputer* computer);
+
+    void pairingCompleted(NvComputer* computer, QString error);
 
 private slots:
     void handleComputerStateChanged(NvComputer* computer);
@@ -274,4 +282,55 @@ private:
     QMdnsEngine::Browser* m_MdnsBrowser;
     QMdnsEngine::Cache m_MdnsCache;
     QVector<MdnsPendingComputer*> m_PendingResolution;
+};
+
+class PendingPairingTask : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    PendingPairingTask(ComputerManager* computerManager, NvComputer* computer, QString pin)
+        : m_ComputerManager(computerManager),
+          m_Computer(computer),
+          m_Pin(pin)
+    {
+        connect(this, &PendingPairingTask::pairingCompleted,
+                computerManager, &ComputerManager::pairingCompleted);
+    }
+
+signals:
+    void pairingCompleted(NvComputer* computer, QString error);
+
+private:
+    void run()
+    {
+        NvPairingManager pairingManager(m_Computer->activeAddress);
+
+        try {
+           NvPairingManager::PairState result = pairingManager.pair(m_Computer->appVersion, m_Pin);
+           switch (result)
+           {
+           case NvPairingManager::PairState::PIN_WRONG:
+               emit pairingCompleted(m_Computer, "The PIN from the PC didn't match. Please try again.");
+               break;
+           case NvPairingManager::PairState::FAILED:
+               emit pairingCompleted(m_Computer, "Pairing failed. Please try again.");
+               break;
+           case NvPairingManager::PairState::ALREADY_IN_PROGRESS:
+               emit pairingCompleted(m_Computer, "Another pairing attempt is already in progress.");
+               break;
+           case NvPairingManager::PairState::PAIRED:
+               emit pairingCompleted(m_Computer, nullptr);
+               break;
+           }
+        } catch (const GfeHttpResponseException& e) {
+            emit pairingCompleted(m_Computer,
+                                  QString::fromLocal8Bit(e.getStatusMessage()) +
+                                  " (Error " + QString::number(e.getStatusCode()));
+        }
+    }
+
+    ComputerManager* m_ComputerManager;
+    NvComputer* m_Computer;
+    QString m_Pin;
 };

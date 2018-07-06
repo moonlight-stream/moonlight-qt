@@ -4,6 +4,7 @@
 #include <QThread>
 #include <QUdpSocket>
 #include <QHostInfo>
+#include <QThreadPool>
 
 #define SER_HOSTS "hosts"
 #define SER_NAME "hostname"
@@ -331,27 +332,54 @@ QVector<NvComputer*> ComputerManager::getComputers()
     return QVector<NvComputer*>::fromList(m_KnownHosts.values());
 }
 
-void ComputerManager::deleteHost(NvComputer* computer)
+class DeferredHostDeletionTask : public QRunnable
 {
-    QWriteLocker lock(&m_Lock);
+public:
+    DeferredHostDeletionTask(ComputerManager* cm, NvComputer* computer)
+        : m_Computer(computer),
+          m_ComputerManager(cm) {}
 
-    QThread* pollingThread = m_PollThreads[computer->uuid];
-    if (pollingThread != nullptr) {
-        pollingThread->requestInterruption();
+    void run()
+    {
+        QWriteLocker lock(&m_ComputerManager->m_Lock);
 
-        // We must wait here because we're going to delete computer
-        // and we can't do that out from underneath the poller.
-        pollingThread->wait();
+        QThread* pollingThread = m_ComputerManager->m_PollThreads[m_Computer->uuid];
+        if (pollingThread != nullptr) {
+            pollingThread->requestInterruption();
 
-        // The thread is safe to delete now
-        Q_ASSERT(pollingThread->isFinished());
-        delete pollingThread;
+            // We must wait here because we're going to delete computer
+            // and we can't do that out from underneath the poller.
+            pollingThread->wait();
+
+            // The thread is safe to delete now
+            Q_ASSERT(pollingThread->isFinished());
+            delete pollingThread;
+        }
+
+        m_ComputerManager->m_PollThreads.remove(m_Computer->uuid);
+        m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
+
+        delete m_Computer;
     }
 
-    m_PollThreads.remove(computer->uuid);
-    m_KnownHosts.remove(computer->uuid);
+private:
+    NvComputer* m_Computer;
+    ComputerManager* m_ComputerManager;
+};
 
-    delete computer;
+void ComputerManager::deleteHost(NvComputer* computer)
+{
+    // Punt to a worker thread to avoid stalling the
+    // UI while waiting for the polling thread to die
+    QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(this, computer));
+}
+
+void ComputerManager::pairHost(NvComputer* computer, QString pin)
+{
+    // Punt to a worker thread to avoid stalling the
+    // UI while waiting for pairing to complete
+    PendingPairingTask* pairing = new PendingPairingTask(this, computer, pin);
+    QThreadPool::globalInstance()->start(pairing);
 }
 
 void ComputerManager::stopPollingAsync()

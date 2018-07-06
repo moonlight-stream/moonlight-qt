@@ -8,6 +8,8 @@ import ComputerModel 1.0
 import ComputerManager 1.0
 
 GridView {
+    property ComputerModel computerModel : createModel()
+
     anchors.fill: parent
     anchors.leftMargin: 5
     anchors.topMargin: 5
@@ -26,10 +28,26 @@ GridView {
         ComputerManager.stopPollingAsync()
     }
 
+    function pairingComplete(error)
+    {
+        // Close the PIN dialog
+        pairDialog.close()
+
+        // Start polling again
+        ComputerManager.startPolling()
+
+        // Display a failed dialog if we got an error
+        if (error !== null) {
+            pairingFailedDialog.text = error
+            pairingFailedDialog.open()
+        }
+    }
+
     function createModel()
     {
         var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent, '')
         model.initialize(ComputerManager)
+        model.pairingCompleted.connect(pairingComplete)
         return model
     }
 
@@ -114,12 +132,20 @@ GridView {
                     else {
                         if (!model.busy) {
                             var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
+
+                            // Stop polling, since pairing may make GFE unresponsive
+                            ComputerManager.stopPollingAsync()
+
+                            // Kick off pairing in the background
+                            computerModel.pairComputer(index, pin)
+
+                            // Display the pairing dialog
                             pairDialog.pin = pin
-                            // TODO: initiate pairing request
                             pairDialog.open()
                         }
                         else {
                             // cannot pair while something is streaming or attempting to pair
+                            pairingFailedDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
                             pairingFailedDialog.open()
                         }
                     }
@@ -135,8 +161,7 @@ GridView {
         id: pairingFailedDialog
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
-
-        text:"This PC is busy: make sure no game is streaming, and try again"
+        icon: StandardIcon.Critical
         standardButtons: StandardButton.Ok
     }
 

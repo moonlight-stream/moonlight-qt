@@ -25,9 +25,8 @@ NvHTTP::NvHTTP(QString address) :
 }
 
 QVector<int>
-NvHTTP::getServerVersionQuad(QString serverInfo)
+NvHTTP::parseQuad(QString quad)
 {
-    QString quad = getXmlString(serverInfo, "appversion");
     QStringList parts = quad.split(".");
     QVector<int> ret;
 

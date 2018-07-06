@@ -29,8 +29,15 @@ public:
 
     Q_INVOKABLE void deleteComputer(int computerIndex);
 
+    Q_INVOKABLE void pairComputer(int computerIndex, QString pin);
+
+signals:
+    void pairingCompleted(QVariant error);
+
 private slots:
     void handleComputerStateChanged(NvComputer* computer);
+
+    void handlePairingCompleted(NvComputer* computer, QString error);
 
 private:
     QVector<NvComputer*> m_Computers;

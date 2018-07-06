@@ -23,11 +23,8 @@ public:
 
     ~NvPairingManager();
 
-    QString
-    generatePinString();
-
     PairState
-    pair(QString serverInfo, QString pin);
+    pair(QString appVersion, QString pin);
 
 private:
     QByteArray
