@@ -421,58 +421,12 @@ void ComputerManager::stopPollingAsync()
     }
 }
 
-bool ComputerManager::addNewHost(QString address, bool mdns)
+void ComputerManager::addNewHost(QString address, bool mdns)
 {
-    NvHTTP http(address);
-
-    QString serverInfo;
-    try {
-        serverInfo = http.getServerInfo();
-    } catch (...) {
-        return false;
-    }
-
-    NvComputer* newComputer = new NvComputer(address, serverInfo);
-
-    // Update addresses depending on the context
-    if (mdns) {
-        newComputer->localAddress = address;
-    }
-    else {
-        newComputer->manualAddress = address;
-    }
-
-    // Check if this PC already exists
-    QWriteLocker lock(&m_Lock);
-    NvComputer* existingComputer = m_KnownHosts[newComputer->uuid];
-    if (existingComputer != nullptr) {
-        // Fold it into the existing PC
-        bool changed = existingComputer->update(*newComputer);
-        delete newComputer;
-
-        // Drop the lock before notifying
-        lock.unlock();
-
-        // Tell our client if something changed
-        if (changed) {
-            handleComputerStateChanged(existingComputer);
-        }
-    }
-    else {
-        // Store this in our active sets
-        m_KnownHosts[newComputer->uuid] = newComputer;
-
-        // Start polling if enabled (write lock required)
-        startPollingComputer(newComputer);
-
-        // Drop the lock before notifying
-        lock.unlock();
-
-        // Tell our client about this new PC
-        handleComputerStateChanged(newComputer);
-    }
-
-    return true;
+    // Punt to a worker thread to avoid stalling the
+    // UI while waiting for serverinfo query to complete
+    PendingAddTask* addTask = new PendingAddTask(this, address, mdns);
+    QThreadPool::globalInstance()->start(addTask);
 }
 
 void

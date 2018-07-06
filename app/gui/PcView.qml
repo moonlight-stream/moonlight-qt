@@ -21,6 +21,9 @@ GridView {
     Component.onCompleted: {
         // Start polling when this view is shown
         ComputerManager.startPolling()
+
+        // Setup signals on CM
+        ComputerManager.computerAddCompleted.connect(addComplete)
     }
 
     Component.onDestruction: {
@@ -38,8 +41,16 @@ GridView {
 
         // Display a failed dialog if we got an error
         if (error !== null) {
-            pairingFailedDialog.text = error
-            pairingFailedDialog.open()
+            errorDialog.text = error
+            errorDialog.open()
+        }
+    }
+
+    function addComplete(success)
+    {
+        if (!success) {
+            errorDialog.text = "Unable to connect to the specified PC. Ensure GameStream is enabled in GeForce Experience."
+            errorDialog.open()
         }
     }
 
@@ -145,8 +156,8 @@ GridView {
                         }
                         else {
                             // cannot pair while something is streaming or attempting to pair
-                            pairingFailedDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
-                            pairingFailedDialog.open()
+                            errorDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
+                            errorDialog.open()
                         }
                     }
                 }
@@ -158,7 +169,7 @@ GridView {
     }
 
     MessageDialog {
-        id: pairingFailedDialog
+        id: errorDialog
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
         icon: StandardIcon.Critical
@@ -189,7 +200,7 @@ GridView {
             editTextItem.selectAll()
         }
         onAccepted: {
-            console.log("accepted, with value: " + editText.text)
+            ComputerManager.addNewHost(editText.text, false)
         }
 
         ColumnLayout {

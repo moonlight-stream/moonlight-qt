@@ -16,6 +16,16 @@ GridView {
     cellWidth: 225; cellHeight: 350;
     focus: true
 
+    Component.onCompleted: {
+        // Start polling when this view is shown
+        ComputerManager.startPolling()
+    }
+
+    Component.onDestruction: {
+        // Stop polling when this view is destroyed
+        ComputerManager.stopPollingAsync()
+    }
+
     function createModel()
     {
         var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, '')

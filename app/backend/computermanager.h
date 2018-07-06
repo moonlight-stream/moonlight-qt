@@ -242,6 +242,7 @@ class ComputerManager : public QObject
     Q_OBJECT
 
     friend class DeferredHostDeletionTask;
+    friend class PendingAddTask;
 
 public:
     explicit ComputerManager(QObject *parent = nullptr);
@@ -250,7 +251,7 @@ public:
 
     Q_INVOKABLE void stopPollingAsync();
 
-    Q_INVOKABLE bool addNewHost(QString address, bool mdns);
+    Q_INVOKABLE void addNewHost(QString address, bool mdns);
 
     void pairHost(NvComputer* computer, QString pin);
 
@@ -263,6 +264,8 @@ signals:
     void computerStateChanged(NvComputer* computer);
 
     void pairingCompleted(NvComputer* computer, QString error);
+
+    void computerAddCompleted(QVariant success);
 
 private slots:
     void handleComputerStateChanged(NvComputer* computer);
@@ -333,4 +336,94 @@ private:
     ComputerManager* m_ComputerManager;
     NvComputer* m_Computer;
     QString m_Pin;
+};
+
+class PendingAddTask : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    PendingAddTask(ComputerManager* computerManager, QString address, bool mdns)
+        : m_ComputerManager(computerManager),
+          m_Address(address),
+          m_Mdns(mdns)
+    {
+        connect(this, &PendingAddTask::computerAddCompleted,
+                computerManager, &ComputerManager::computerAddCompleted);
+        connect(this, &PendingAddTask::computerStateChanged,
+                computerManager, &ComputerManager::handleComputerStateChanged);
+    }
+
+signals:
+    void computerAddCompleted(QVariant success);
+
+    void computerStateChanged(NvComputer* computer);
+
+private:
+    void run()
+    {
+        NvHTTP http(m_Address);
+
+        QString serverInfo;
+        try {
+            serverInfo = http.getServerInfo();
+        } catch (...) {
+            emit computerAddCompleted(false);
+            return;
+        }
+
+        NvComputer* newComputer = new NvComputer(m_Address, serverInfo);
+
+        // Update addresses depending on the context
+        if (m_Mdns) {
+            newComputer->localAddress = m_Address;
+        }
+        else {
+            newComputer->manualAddress = m_Address;
+        }
+
+        // Check if this PC already exists
+        QWriteLocker lock(&m_ComputerManager->m_Lock);
+        NvComputer* existingComputer = m_ComputerManager->m_KnownHosts[newComputer->uuid];
+        if (existingComputer != nullptr) {
+            // Fold it into the existing PC
+            bool changed = existingComputer->update(*newComputer);
+            delete newComputer;
+
+            // Drop the lock before notifying
+            lock.unlock();
+
+            // For non-mDNS clients, let them know it succeeded
+            if (!m_Mdns) {
+                emit computerAddCompleted(true);
+            }
+
+            // Tell our client if something changed
+            if (changed) {
+                emit computerStateChanged(existingComputer);
+            }
+        }
+        else {
+            // Store this in our active sets
+            m_ComputerManager->m_KnownHosts[newComputer->uuid] = newComputer;
+
+            // Start polling if enabled (write lock required)
+            m_ComputerManager->startPollingComputer(newComputer);
+
+            // Drop the lock before notifying
+            lock.unlock();
+
+            // For non-mDNS clients, let them know it succeeded
+            if (!m_Mdns) {
+                emit computerAddCompleted(true);
+            }
+
+            // Tell our client about this new PC
+            emit computerStateChanged(newComputer);
+        }
+    }
+
+    ComputerManager* m_ComputerManager;
+    QString m_Address;
+    bool m_Mdns;
 };

@@ -31,6 +31,8 @@ public:
 
     Q_INVOKABLE void pairComputer(int computerIndex, QString pin);
 
+    Q_INVOKABLE bool wakeComputer(int computerIndex);
+
 signals:
     void pairingCompleted(QVariant error);
 

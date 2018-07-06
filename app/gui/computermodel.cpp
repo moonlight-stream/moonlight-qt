@@ -93,6 +93,13 @@ void ComputerModel::deleteComputer(int computerIndex)
     endRemoveRows();
 }
 
+bool ComputerModel::wakeComputer(int computerIndex)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+
+    return m_Computers[computerIndex]->wake();
+}
+
 void ComputerModel::pairComputer(int computerIndex, QString pin)
 {
     Q_ASSERT(computerIndex < m_Computers.count());
