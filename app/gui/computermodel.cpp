@@ -121,13 +121,12 @@ void ComputerModel::handleComputerStateChanged(NvComputer* computer)
         emit dataChanged(createIndex(index, 0), createIndex(index, 0));
     }
     else {
-        // This is a new PC that will be inserted at the end
-        beginInsertRows(QModelIndex(), m_Computers.count(), m_Computers.count());
-        m_Computers.append(computer);
-        endInsertRows();
+        // This is a new PC which may be inserted at an arbitrary point
+        // in our computer list (since it comes from CM's QMap). Reload
+        // the whole model state to ensure it stays consistent.
+        beginResetModel();
+        m_Computers = m_ComputerManager->getComputers();
+        endResetModel();
     }
-
-    // Our view of the world must be in sync with ComputerManager's
-    Q_ASSERT(m_Computers.count() == m_ComputerManager->getComputers().count());
 }
 
