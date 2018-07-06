@@ -39,7 +39,7 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
     case OnlineRole:
         return computer->state == NvComputer::CS_ONLINE;
     case PairedRole:
-        return computer->state == NvComputer::PS_PAIRED;
+        return computer->pairState == NvComputer::PS_PAIRED;
     case BusyRole:
         return computer->currentGameId != 0;
     case AddPcRole:
