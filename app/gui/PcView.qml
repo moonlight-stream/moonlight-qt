@@ -94,8 +94,8 @@ GridView {
                     }
                     else {
                         if (!model.busy) {
-                            // TODO: generate pin
-                            pairDialog.text = pairDialog.text.replace("XXXX", "1234")
+                            var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
+                            pairDialog.pin = pin
                             // TODO: initiate pairing request
                             pairDialog.open()
                         }
@@ -118,16 +118,16 @@ GridView {
         modality:Qt.WindowModal
 
         text:"This PC is busy: make sure no game is streaming, and try again"
-        standardButtons: Dialog.OK
+        standardButtons: StandardButton.Ok
     }
 
     MessageDialog {
         id: pairDialog
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
-
-        text:"Please enter XXXX on your GameStream PC. This dialog will close when pairing is completed."
-        standardButtons: Dialog.Cancel
+        property string pin : "0000"
+        text:"Please enter " + pin + " on your GameStream PC. This dialog will close when pairing is completed."
+        standardButtons: StandardButton.Cancel
         onRejected: {
             // FIXME: We should interrupt pairing here
         }
