@@ -9,6 +9,9 @@ ApplicationWindow {
     title: qsTr("Stack")
     color: "#333333"
 
-    PcView {
+    StackView {
+        id: stackView
+        initialItem: "PcView.qml"
+        anchors.fill: parent
     }
 }

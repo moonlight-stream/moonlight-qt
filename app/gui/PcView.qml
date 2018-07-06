@@ -81,20 +81,31 @@ GridView {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                parent.GridView.view.currentIndex = index
-                if(model.addPc) {
-                    // TODO: read the output of the dialog
-                    inputDialog.on
-                    inputDialog.open()
-
-                } else if(!model.paired && !model.busy) {
-
-                    // TODO: generate pin
-                    pairDialog.text = pairDialog.text.replace("XXXX", "1234")
-                    // TODO: initiate pairing request
-                    pairDialog.open()
-                } else if (model.online) {
-                    // go to game view
+                if (model.addPc) {
+                    addPcDialog.open()
+                }
+                else if (model.online) {
+                    if (model.paired) {
+                        // go to game view
+                        var component = Qt.createComponent("AppView.qml")
+                        var appView = component.createObject(stackView)
+                        appView.computerIndex = index
+                        stackView.push(appView)
+                    }
+                    else {
+                        if (!model.busy) {
+                            // TODO: generate pin
+                            pairDialog.text = pairDialog.text.replace("XXXX", "1234")
+                            // TODO: initiate pairing request
+                            pairDialog.open()
+                        }
+                        else {
+                            // TODO: error dialog
+                        }
+                    }
+                }
+                else {
+                    // TODO: Wake on LAN and delete PC options
                 }
             }
         }
@@ -105,22 +116,17 @@ GridView {
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
 
-        title:"pair to a PC"
-        text:"please enter XXXX on your GeForce enabled PC"
-        standardButtons: Dialog.Ok | Dialog.Cancel
-        onAccepted: {
-            console.log("accepted")
-        }
+        text:"Please enter XXXX on your GameStream PC. This dialog will close when pairing is completed."
+        standardButtons: Dialog.Cancel
         onRejected: {
-            console.log("rejected")
+            // FIXME: We should interrupt pairing here
         }
     }
 
-
     Dialog {
-        id: inputDialog
-        property string label: "enter the address of your GeForce enabled PC"
-        property string hint: "example.foo.local"
+        id: addPcDialog
+        property string label: "Enter the IP address of your GameStream PC"
+        property string hint: "192.168.1.100"
         property alias editText : editTextItem
 
         standardButtons: StandardButton.Ok | StandardButton.Cancel
@@ -131,25 +137,20 @@ GridView {
         onAccepted: {
             console.log("accepted, with value: " + editText.text)
         }
-        onRejected: {
-            console.log("rejected")
-        }
 
         ColumnLayout {
             Text {
-                id: inputDialogLabel
-                text: inputDialog.label
+                id: addPcDialogLabel
+                text: addPcDialog.label
             }
             Rectangle {
                 implicitWidth: parent.parent.width
                 height: editTextItem.height
 
                 TextInput {
-                    // TODO: calculate this properly
-                    height: 20
                     id: editTextItem
                     inputMethodHints: Qt.ImhPreferUppercase
-                    text: inputDialog.hint
+                    text: addPcDialog.hint
                 }
             }
         }
