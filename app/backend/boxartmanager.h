@@ -15,28 +15,27 @@ class BoxArtManager : public QObject
 public:
     explicit BoxArtManager(QObject *parent = nullptr);
 
-    QImage
+    QUrl
     loadBoxArt(NvComputer* computer, NvApp& app);
 
 signals:
     void
-    boxArtLoadComplete(NvComputer* computer, NvApp app, QImage image);
+    boxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image);
 
 public slots:
 
 private slots:
     void
-    handleBoxArtLoadComplete(NvComputer* computer, NvApp app, QImage image);
+    handleBoxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image);
 
 private:
-    QImage
+    QUrl
     loadBoxArtFromNetwork(NvComputer* computer, int appId);
 
     QString
     getFilePathForBoxArt(NvComputer* computer, int appId);
 
     QDir m_BoxArtDir;
-    QImage m_PlaceholderImage;
 };
 
 class NetworkBoxArtLoadTask : public QObject, public QRunnable
@@ -49,18 +48,18 @@ public:
           m_Computer(computer),
           m_App(app)
     {
-        connect(this, SIGNAL(boxArtFetchCompleted(NvComputer*,NvApp,QImage)),
-                boxArtManager, SLOT(handleBoxArtLoadComplete(NvComputer*,NvApp,QImage)));
+        connect(this, SIGNAL(boxArtFetchCompleted(NvComputer*,NvApp,QUrl)),
+                boxArtManager, SLOT(handleBoxArtLoadComplete(NvComputer*,NvApp,QUrl)));
     }
 
 signals:
-    void boxArtFetchCompleted(NvComputer* computer, NvApp app, QImage image);
+    void boxArtFetchCompleted(NvComputer* computer, NvApp app, QUrl image);
 
 private:
     void run()
     {
-        QImage image = m_Bam->loadBoxArtFromNetwork(m_Computer, m_App.id);
-        if (image.isNull()) {
+        QUrl image = m_Bam->loadBoxArtFromNetwork(m_Computer, m_App.id);
+        if (image.isEmpty()) {
             // Give it another shot if it fails once
             image = m_Bam->loadBoxArtFromNetwork(m_Computer, m_App.id);
         }

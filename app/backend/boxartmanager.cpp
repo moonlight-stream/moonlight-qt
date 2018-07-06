@@ -7,8 +7,7 @@
 BoxArtManager::BoxArtManager(QObject *parent) :
     QObject(parent),
     m_BoxArtDir(
-        QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/boxart"),
-    m_PlaceholderImage(":/res/no_app_image.png")
+        QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/boxart")
 {
     if (!m_BoxArtDir.exists()) {
         m_BoxArtDir.mkpath(".");
@@ -32,16 +31,12 @@ BoxArtManager::getFilePathForBoxArt(NvComputer* computer, int appId)
     return dir.filePath(QString::number(appId) + ".png");
 }
 
-QImage BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
+QUrl BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
 {
     // Try to open the cached file
-    QFile cacheFile(getFilePathForBoxArt(computer, app.id));
-    if (cacheFile.open(QFile::ReadOnly)) {
-        // Return what we have if it's a valid image
-        QImage image = QImageReader(&cacheFile).read();
-        if (!image.isNull()) {
-            return image;
-        }
+    QString cacheFilePath = getFilePathForBoxArt(computer, app.id);
+    if (QFile::exists(cacheFilePath)) {
+        return QUrl::fromLocalFile(cacheFilePath);
     }
 
     // If we get here, we need to fetch asynchronously.
@@ -51,18 +46,22 @@ QImage BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
 
     // Return the placeholder then we can notify the caller
     // later when the real image is ready.
-    return m_PlaceholderImage;
+    return QUrl("qrc:/res/no_app_image.png");
 }
 
-void BoxArtManager::handleBoxArtLoadComplete(NvComputer* computer, NvApp app, QImage image)
+void BoxArtManager::handleBoxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image)
 {
+    if (image.isEmpty()) {
+        image = QUrl("qrc:/res/no_app_image.png");
+    }
     emit boxArtLoadComplete(computer, app, image);
 }
 
-QImage BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, int appId)
+QUrl BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, int appId)
 {
     NvHTTP http(computer->activeAddress);
 
+    QString cachePath = getFilePathForBoxArt(computer, appId);
     QImage image;
     try {
         image = http.getBoxArt(appId);
@@ -70,8 +69,10 @@ QImage BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, int appId)
 
     // Cache the box art on disk if it loaded
     if (!image.isNull()) {
-        image.save(getFilePathForBoxArt(computer, appId));
+        if (image.save(cachePath)) {
+            return QUrl::fromLocalFile(cachePath);
+        }
     }
 
-    return image;
+    return QUrl();
 }
