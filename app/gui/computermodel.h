@@ -4,6 +4,8 @@
 
 class ComputerModel : public QAbstractListModel
 {
+    Q_OBJECT
+
     enum Roles
     {
         NameRole = Qt::UserRole,
@@ -14,7 +16,7 @@ class ComputerModel : public QAbstractListModel
     };
 
 public:
-    ComputerModel(QObject* object = nullptr);
+    explicit ComputerModel(QObject* object = nullptr);
 
     QVariant data(const QModelIndex &index, int role) const override;
 

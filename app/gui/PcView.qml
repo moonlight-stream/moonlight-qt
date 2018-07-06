@@ -5,100 +5,96 @@ import QtQuick.Layouts 1.11
 
 import ComputerModel 1.0
 
-Frame {
+GridView {
     anchors.fill: parent
+    anchors.leftMargin: 5
+    anchors.topMargin: 5
+    anchors.rightMargin: 5
+    anchors.bottomMargin: 5
+    cellWidth: 350; cellHeight: 350;
+    focus: true
 
-    GridView {
-        anchors.fill: parent
-        anchors.leftMargin: 5
-        anchors.topMargin: 5
-        anchors.rightMargin: 5
-        anchors.bottomMargin: 5
-        cellWidth: 350; cellHeight: 350;
-        focus: true
+    model: ComputerModel {}
 
-        model: ComputerModel {}
+    delegate: Item {
+        width: 300; height: 300;
 
-        delegate: Item {
-            width: 300; height: 300;
-
-            Image {
-                id: pcIcon
-                anchors.horizontalCenter: parent.horizontalCenter;
-                source: {
-                    model.addPc ? "ic_add_to_queue_white_48px.svg" : "ic_tv_white_48px.svg"
-                }
-                sourceSize {
-                    width: 200
-                    height: 200
-                }
+        Image {
+            id: pcIcon
+            anchors.horizontalCenter: parent.horizontalCenter;
+            source: {
+                model.addPc ? "ic_add_to_queue_white_48px.svg" : "ic_tv_white_48px.svg"
             }
-
-            Text {
-                id: pcNameText
-                text: model.name
-                color: "white"
-
-                width: parent.width
-                anchors.top: pcIcon.bottom
-                minimumPointSize: 12
-                font.pointSize: 48
-                horizontalAlignment: Text.AlignHCenter
-                fontSizeMode: Text.HorizontalFit
+            sourceSize {
+                width: 200
+                height: 200
             }
+        }
 
-            Text {
-                function getStatusText(model)
-                {
-                    if (model.online) {
-                        var text = "<font color=\"green\">Online</font>"
-                        text += "<font color=\"white\"> - </font>"
-                        if (model.paired) {
-                            text += "<font color=\"skyblue\">Paired</font>"
-                        }
-                        else if (model.busy) {
-                            text += "<font color=\"red\">Busy</font>"
-                        }
-                        else {
-                            text += "<font color=\"red\">Not Paired</font>"
-                        }
-                        return text
+        Text {
+            id: pcNameText
+            text: model.name
+            color: "white"
+
+            width: parent.width
+            anchors.top: pcIcon.bottom
+            minimumPointSize: 12
+            font.pointSize: 48
+            horizontalAlignment: Text.AlignHCenter
+            fontSizeMode: Text.HorizontalFit
+        }
+
+        Text {
+            function getStatusText(model)
+            {
+                if (model.online) {
+                    var text = "<font color=\"green\">Online</font>"
+                    text += "<font color=\"white\"> - </font>"
+                    if (model.paired) {
+                        text += "<font color=\"skyblue\">Paired</font>"
+                    }
+                    else if (model.busy) {
+                        text += "<font color=\"red\">Busy</font>"
                     }
                     else {
-                        return "<font color=\"red\">Offline</font>";
+                        text += "<font color=\"red\">Not Paired</font>"
                     }
+                    return text
                 }
-
-                id: pcPairedText
-                text: getStatusText(model)
-                visible: !model.addPc
-
-                width: parent.width
-                anchors.top: pcNameText.bottom
-                minimumPointSize: 12
-                font.pointSize: 36
-                horizontalAlignment: Text.AlignHCenter
-                fontSizeMode: Text.HorizontalFit
+                else {
+                    return "<font color=\"red\">Offline</font>";
+                }
             }
 
-            MouseArea {
-                anchors.fill: parent
-                onClicked: {
-                    parent.GridView.view.currentIndex = index
-                    if(model.addPc) {
-                        // TODO: read the output of the dialog
-                        inputDialog.on
-                        inputDialog.open()
+            id: pcPairedText
+            text: getStatusText(model)
+            visible: !model.addPc
 
-                    } else if(!model.paired && !model.busy) {
+            width: parent.width
+            anchors.top: pcNameText.bottom
+            minimumPointSize: 12
+            font.pointSize: 36
+            horizontalAlignment: Text.AlignHCenter
+            fontSizeMode: Text.HorizontalFit
+        }
 
-                        // TODO: generate pin
-                        pairDialog.text = pairDialog.text.replace("XXXX", "1234")
-                        // TODO: initiate pairing request
-                        pairDialog.open()
-                    } else if (model.online) {
-                        // go to game view
-                    }
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                parent.GridView.view.currentIndex = index
+                if(model.addPc) {
+                    // TODO: read the output of the dialog
+                    inputDialog.on
+                    inputDialog.open()
+
+                } else if(!model.paired && !model.busy) {
+
+                    // TODO: generate pin
+                    pairDialog.text = pairDialog.text.replace("XXXX", "1234")
+                    // TODO: initiate pairing request
+                    pairDialog.open()
+                } else if (model.online) {
+                    // go to game view
                 }
             }
         }

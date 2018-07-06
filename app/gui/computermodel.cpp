@@ -27,10 +27,8 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
             return QVariant();
         }
     }
-    else if (index.row() > m_Computers.count()) {
-        qWarning() << "Index out of bounds: " << index.row();
-        return QVariant();
-    }
+
+    Q_ASSERT(index.row() < m_Computers.count());
 
     NvComputer* computer = m_Computers[index.row()];
     QReadLocker lock(&computer->lock);
