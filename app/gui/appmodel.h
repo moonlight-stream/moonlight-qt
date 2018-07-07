@@ -2,6 +2,7 @@
 
 #include "backend/boxartmanager.h"
 #include "backend/computermanager.h"
+#include "streaming/session.hpp"
 
 #include <QAbstractListModel>
 
@@ -21,6 +22,8 @@ public:
 
     // Must be called before any QAbstractListModel functions
     Q_INVOKABLE void initialize(ComputerManager* computerManager, int computerIndex);
+
+    Q_INVOKABLE Session* createSessionForApp(int appIndex);
 
     QVariant data(const QModelIndex &index, int role) const override;
 

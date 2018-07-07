@@ -52,6 +52,11 @@ public:
         return m_StatusCode;
     }
 
+    QString toQString() const
+    {
+        return m_StatusMessage + " (Error " + QString::number(m_StatusCode) + ")";
+    }
+
 private:
     int m_StatusCode;
     QString m_StatusMessage;

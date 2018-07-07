@@ -7,6 +7,7 @@ import ComputerManager 1.0
 
 GridView {
     property int computerIndex
+    property AppModel appModel : createModel()
 
     anchors.fill: parent
     anchors.leftMargin: 5
@@ -33,7 +34,7 @@ GridView {
         return model
     }
 
-    model: createModel()
+    model: appModel
 
     delegate: Item {
         width: 200; height: 300;
@@ -64,7 +65,8 @@ GridView {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                parent.GridView.view.currentIndex = index
+                var session = appModel.createSessionForGame(index);
+                session.exec();
             }
         }
     }

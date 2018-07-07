@@ -19,6 +19,14 @@ void AppModel::initialize(ComputerManager* computerManager, int computerIndex)
     m_CurrentGameId = m_Computer->currentGameId;
 }
 
+Session* AppModel::createSessionForApp(int appIndex)
+{
+    Q_ASSERT(appIndex < m_Apps.count());
+    NvApp app = m_Apps.at(appIndex);
+
+    return new Session(m_Computer, app);
+}
+
 int AppModel::rowCount(const QModelIndex &parent) const
 {
     // For list models only the root node (an invalid parent) should return the list's size. For all

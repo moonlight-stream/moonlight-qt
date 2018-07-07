@@ -78,6 +78,26 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     return names;
 }
 
+Session* ComputerModel::createSessionForCurrentGame(int computerIndex)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+
+    NvComputer* computer = m_Computers[computerIndex];
+
+    // We must currently be streaming a game to use this function
+    Q_ASSERT(computer->currentGameId != 0);
+
+    for (NvApp& app : computer->appList) {
+        if (app.id == computer->currentGameId) {
+            return new Session(computer, app);
+        }
+    }
+
+    // We have a current running app but it's not in our app list
+    Q_ASSERT(false);
+    return nullptr;
+}
+
 void ComputerModel::deleteComputer(int computerIndex)
 {
     Q_ASSERT(computerIndex < m_Computers.count());

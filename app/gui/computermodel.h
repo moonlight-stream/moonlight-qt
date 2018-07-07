@@ -1,4 +1,5 @@
 #include "backend/computermanager.h"
+#include "streaming/session.hpp"
 
 #include <QAbstractListModel>
 
@@ -32,6 +33,8 @@ public:
     Q_INVOKABLE void pairComputer(int computerIndex, QString pin);
 
     Q_INVOKABLE bool wakeComputer(int computerIndex);
+
+    Q_INVOKABLE Session* createSessionForCurrentGame(int computerIndex);
 
 signals:
     void pairingCompleted(QVariant error);

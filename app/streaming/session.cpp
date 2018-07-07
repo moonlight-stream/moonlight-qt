@@ -5,7 +5,6 @@
 #include <SDL.h>
 
 #include <QRandomGenerator>
-#include <QMessageBox>
 #include <QtEndian>
 #include <QCoreApplication>
 
@@ -35,28 +34,19 @@ Session* Session::s_ActiveSession;
 
 void Session::clStageStarting(int stage)
 {
-    char buffer[512];
-    sprintf(buffer, "Starting %s...", LiGetStageName(stage));
-
     // We know this is called on the same thread as LiStartConnection()
     // which happens to be the main thread, so it's cool to interact
     // with the GUI in these callbacks.
-    s_ActiveSession->m_ProgressBox.setText(buffer);
+    emit s_ActiveSession->stageStarting(QString::fromLocal8Bit(LiGetStageName(stage)));
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void Session::clStageFailed(int stage, long errorCode)
 {
-    s_ActiveSession->m_ProgressBox.close();
-
-    // TODO: Open error dialog
-    char buffer[512];
-    sprintf(buffer, "Failed %s with error: %ld",
-            LiGetStageName(stage), errorCode);
-
     // We know this is called on the same thread as LiStartConnection()
     // which happens to be the main thread, so it's cool to interact
     // with the GUI in these callbacks.
+    emit s_ActiveSession->stageFailed(QString::fromLocal8Bit(LiGetStageName(stage)), errorCode);
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
@@ -87,8 +77,7 @@ void Session::clLogMessage(const char* format, ...)
 
 Session::Session(NvComputer* computer, NvApp& app)
     : m_Computer(computer),
-      m_App(app),
-      m_ProgressBox(nullptr)
+      m_App(app)
 {
     StreamingPreferences prefs;
 
@@ -138,13 +127,7 @@ Session::Session(NvComputer* computer, NvApp& app)
     }
 }
 
-QString Session::checkForFatalValidationError()
-{
-    // Nothing here yet
-    return nullptr;
-}
-
-QStringList Session::checkForAdvisoryValidationError()
+bool Session::validateLaunch()
 {
     NvHTTP http(m_Computer->activeAddress);
     QStringList warningList;
@@ -155,12 +138,12 @@ QStringList Session::checkForAdvisoryValidationError()
 
         // Check that the app supports HDR
         if (!m_App.hdrSupported) {
-            warningList.append(m_App.name + " doesn't support HDR10.");
+            emit displayLaunchWarning(m_App.name + " doesn't support HDR10.");
         }
         // Check that the server GPU supports HDR
         else if (!(m_Computer->serverCodecModeSupport & 0x200)) {
-            warningList.append("Your host PC GPU doesn't support HDR streaming. "
-                               "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
+            emit displayLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
+                                      "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
         }
         else {
             // TODO: Also validate client decoder and display capabilites
@@ -183,11 +166,21 @@ QStringList Session::checkForAdvisoryValidationError()
         // TODO: Validate HEVC support based on decoder caps
     }
 
-    return warningList;
+    // Always allow the launch to proceed for now
+    return true;
 }
 
 void Session::exec()
 {
+    // Check for validation errors/warnings and emit
+    // signals for them, if appropriate
+    if (!validateLaunch()) {
+        return;
+    }
+
+    // Manually pump the UI thread for the view
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
     // We're now active
     s_ActiveSession = this;
 
@@ -195,21 +188,13 @@ void Session::exec()
     StreamingPreferences prefs;
     SdlInputHandler inputHandler(prefs.multiController);
 
-    m_ProgressBox.setStandardButtons(QMessageBox::Cancel);
-    m_ProgressBox.setText("Launching "+m_App.name+"...");
-    m_ProgressBox.open();
-
-    // Ensure the progress box is immediately visible
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-
-    NvHTTP http(m_Computer->activeAddress);
-
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
     Q_ASSERT(m_Computer->currentGameId == 0 ||
              m_Computer->currentGameId == m_App.id);
 
     try {
+        NvHTTP http(m_Computer->activeAddress);
         if (m_Computer->currentGameId != 0) {
             http.resumeApp(&m_StreamConfig);
         }
@@ -220,11 +205,9 @@ void Session::exec()
                            inputHandler.getAttachedGamepadMask());
         }
     } catch (const GfeHttpResponseException& e) {
-        m_ProgressBox.close();
-        // TODO: display error dialog
+        emit displayLaunchError(e.toQString());
         return;
     }
-
 
     QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
     QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
@@ -251,9 +234,8 @@ void Session::exec()
         return;
     }
 
-    // Before we get into our SDL loop, close the message box used to
-    // display progress
-    m_ProgressBox.close();
+    // Pump the message loop to update the UI
+    emit connectionStarted();
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     SDL_Window* wnd = SDL_CreateWindow("SDL Test Window", 0, 0, 1280, 720, SDL_WINDOW_INPUT_GRABBED);

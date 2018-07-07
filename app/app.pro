@@ -1,9 +1,6 @@
 QT += core quick network
 CONFIG += c++11
 
-# TODO: Rid ourselves of QtWidgets
-QT += widgets
-
 TARGET = moonlight-qt
 TEMPLATE = app
 

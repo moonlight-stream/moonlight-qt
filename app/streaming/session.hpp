@@ -5,20 +5,29 @@
 #include "backend/computermanager.h"
 #include "input.hpp"
 
-#include <QMessageBox>
-
-class Session
+class Session : public QObject
 {
+    Q_OBJECT
+
 public:
     explicit Session(NvComputer* computer, NvApp& app);
 
-    QString checkForFatalValidationError();
+    Q_INVOKABLE void exec();
 
-    QStringList checkForAdvisoryValidationError();
+signals:
+    void stageStarting(QString stage);
 
-    void exec();
+    void stageFailed(QString stage, long errorCode);
+
+    void connectionStarted();
+
+    void displayLaunchError(QString text);
+
+    void displayLaunchWarning(QString text);
 
 private:
+    bool validateLaunch();
+
     static
     void clStageStarting(int stage);
 
@@ -54,7 +63,6 @@ private:
     STREAM_CONFIGURATION m_StreamConfig;
     NvComputer* m_Computer;
     NvApp m_App;
-    QMessageBox m_ProgressBox;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;

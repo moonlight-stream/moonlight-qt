@@ -327,9 +327,7 @@ private:
                break;
            }
         } catch (const GfeHttpResponseException& e) {
-            emit pairingCompleted(m_Computer,
-                                  QString::fromLocal8Bit(e.getStatusMessage()) +
-                                  " (Error " + QString::number(e.getStatusCode()));
+            emit pairingCompleted(m_Computer, e.toQString());
         }
     }
 
