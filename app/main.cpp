@@ -1,14 +1,15 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 
+// Don't let SDL hook our main function, since Qt is already
+// doing the same thing. This needs to be before any headers
+// that might include SDL.h themselves.
+#define SDL_MAIN_HANDLED
+#include <SDL.h>
+
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
 #include "streaming/session.hpp"
-
-// Don't let SDL hook our main function, since Qt is already
-// doing the same thing
-#define SDL_MAIN_HANDLED
-#include <SDL.h>
 
 int main(int argc, char *argv[])
 {
