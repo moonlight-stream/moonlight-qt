@@ -65,7 +65,8 @@ GridView {
         MouseArea {
             anchors.fill: parent
             onClicked: {
-                var session = appModel.createSessionForGame(index);
+                // TODO: Check if a different game is running
+                var session = appModel.createSessionForApp(index);
                 session.exec();
             }
         }

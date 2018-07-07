@@ -86,10 +86,9 @@ GridView {
 
             width: parent.width
             anchors.top: pcIcon.bottom
-            minimumPointSize: 12
-            font.pointSize: 48
+            font.pointSize: 36
             horizontalAlignment: Text.AlignHCenter
-            fontSizeMode: Text.HorizontalFit
+            wrapMode: Text.Wrap
         }
 
         Text {
@@ -120,10 +119,8 @@ GridView {
 
             width: parent.width
             anchors.top: pcNameText.bottom
-            minimumPointSize: 12
-            font.pointSize: 36
+            font.pointSize: 24
             horizontalAlignment: Text.AlignHCenter
-            fontSizeMode: Text.HorizontalFit
         }
 
         MouseArea {
