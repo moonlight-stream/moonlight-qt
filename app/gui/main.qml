@@ -23,7 +23,7 @@ ApplicationWindow {
 
             ToolButton {
                 // Only make the button visible if the user has navigated somewhere.
-                visible: stackView.depth > 1 ? true : false
+                visible: stackView.depth > 1
 
                 icon.source: "qrc:/res/arrow_left.png"
                 onClicked: stackView.pop()
