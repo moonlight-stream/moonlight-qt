@@ -39,6 +39,12 @@ GridView {
     delegate: Item {
         width: 200; height: 300;
 
+        Component.onCompleted: {
+            if (model.running) {
+                appNameText.text = "<font color=\"green\">Running</font><font color=\"white\"> - </font>" + appNameText.text
+            }
+        }
+
         Image {
             id: appIcon
             anchors.horizontalCenter: parent.horizontalCenter;
