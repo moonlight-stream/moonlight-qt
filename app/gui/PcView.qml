@@ -17,6 +17,7 @@ GridView {
     anchors.bottomMargin: 5
     cellWidth: 350; cellHeight: 350;
     focus: true
+    objectName: "Computers"
 
     Component.onCompleted: {
         // Start polling when this view is shown

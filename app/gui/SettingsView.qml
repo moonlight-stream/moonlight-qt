@@ -3,4 +3,5 @@ Rectangle {
     // TODO
     id: settingsPage
     color: "#333333"
+    objectName: "Settings"
 }

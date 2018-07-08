@@ -39,7 +39,7 @@ ApplicationWindow {
 
             Label {
                 id: titleLabel
-                text: "TODO - need the page name as a string"
+                text: stackView.currentItem.objectName
                 font.pixelSize: 20
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
@@ -61,7 +61,7 @@ ApplicationWindow {
             ToolButton {
                 icon.source: "qrc:/res/question_mark.png"
 
-                // TODO need to bring browser to foreground.
+                // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
 
                 Menu {
