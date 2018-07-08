@@ -293,8 +293,7 @@ class PendingPairingTask : public QObject, public QRunnable
 
 public:
     PendingPairingTask(ComputerManager* computerManager, NvComputer* computer, QString pin)
-        : m_ComputerManager(computerManager),
-          m_Computer(computer),
+        : m_Computer(computer),
           m_Pin(pin)
     {
         connect(this, &PendingPairingTask::pairingCompleted,
@@ -331,7 +330,6 @@ private:
         }
     }
 
-    ComputerManager* m_ComputerManager;
     NvComputer* m_Computer;
     QString m_Pin;
 };
