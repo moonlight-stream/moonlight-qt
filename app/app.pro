@@ -106,3 +106,10 @@ DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+macx {
+    QMAKE_INFO_PLIST = $$PWD/Info.plist
+    APP_QML_FILES.files = res/macos.icns
+    APP_QML_FILES.path = Contents/Resources
+    QMAKE_BUNDLE_DATA += APP_QML_FILES
+}
