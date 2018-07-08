@@ -17,6 +17,7 @@ GridView {
     anchors.bottomMargin: 5
     cellWidth: 350; cellHeight: 350;
     focus: true
+    objectName: "Computers"
 
     Component.onCompleted: {
         // Start polling when this view is shown
@@ -135,6 +136,7 @@ GridView {
                         var component = Qt.createComponent("AppView.qml")
                         var appView = component.createObject(stackView)
                         appView.computerIndex = index
+                        appView.objectName = "Apps on " + model.name
                         stackView.push(appView)
                     }
                     else {

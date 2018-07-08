@@ -6,5 +6,6 @@
         <file>gui/ic_tv_white_48px.svg</file>
         <file>gui/ic_add_to_queue_white_48px.svg</file>
         <file>gui/AppView.qml</file>
+        <file>gui/SettingsView.qml</file>
     </qresource>
 </RCC>

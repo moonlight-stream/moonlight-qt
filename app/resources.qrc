@@ -5,5 +5,8 @@
         <file>res/ic_remove_from_queue_white_48px.svg</file>
         <file>res/ic_videogame_asset_white_48px.svg</file>
         <file>res/no_app_image.png</file>
+        <file>res/settings.png</file>
+        <file>res/question_mark.png</file>
+        <file>res/arrow_left.png</file>
     </qresource>
 </RCC>
