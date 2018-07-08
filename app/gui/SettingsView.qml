@@ -6,7 +6,6 @@ Page {
     objectName: "Settings"
 
     Column {
-        id: column
         x: 10
         y: 10
         width: settingsPage.width
@@ -14,13 +13,13 @@ Page {
 
         GroupBox {
             // TODO save the settings
-            id: streamingSettingsGroupBox
+            id: basicSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
             title: qsTr("Basic Settings")
+            font.pointSize: 12
 
             Column {
-                id: column1
                 anchors.fill: parent
                 spacing: 5
 
@@ -43,6 +42,8 @@ Page {
                 ComboBox {
                     id: resolutionComboBox
                     currentIndex : 4
+                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
+                    font.pointSize: 9
                     model: ListModel {
                         id: resolutionListModel
                         // TODO have values associated with the text.
@@ -93,8 +94,125 @@ Page {
                         console.debug(slider.value + " Slider moved")
                     }
                 }
+
+                CheckBox {
+                    id: fullScreenCheck
+                    text: qsTr("Stretch video to full-screen")
+                    font.pointSize:  12
+                }
+
+                CheckBox {
+                    id: pipObserverCheck
+                    text: qsTr("Enable Picture-in-Picture observer mode")
+                    font.pointSize: 12
+                }
+            }
+        }
+
+        GroupBox {
+            id: audioSettingsGroupBox
+            width: (parent.width - 20)
+            padding: 12
+            title: qsTr("Audio Settings")
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: surroundSoundCheck
+                    text: qsTr("Enable 5.1 surround sound")
+                    font.pointSize:  12
+                }
+            }
+        }
+
+        GroupBox {
+            id: gamepadSettingsGroupBox
+            width: (parent.width - 20)
+            padding: 12
+            title: qsTr("Gamepad Settings")
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: multiControllerCheck
+                    text: qsTr("Multiple controller support")
+                    font.pointSize:  12
+                }
+                CheckBox {
+                    id: mouseEmulationCheck
+                    text: qsTr("Mouse emulation via gamepad")
+                    font.pointSize:  12
+                }
+            }
+        }
+
+        GroupBox {
+            id: onScreenControlsGroupBox
+            width: (parent.width - 20)
+            padding: 12
+            title: qsTr("On-screen Controls Settings")
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: onScreenControlsCheck
+                    text: qsTr("Show on-screen controls")
+                    font.pointSize:  12
+                }
+            }
+        }
+
+        GroupBox {
+            id: hostSettingsGroupBox
+            width: (parent.width - 20)
+            padding: 12
+            title: qsTr("Host Settings")
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: optimizeGameSettingsCheck
+                    text: qsTr("Optimize Game Settings")
+                    font.pointSize:  12
+                }
+
+                CheckBox {
+                    id: audioPcCheck
+                    text: qsTr("Play audio on PC")
+                    font.pointSize:  12
+                }
+            }
+        }
+
+        GroupBox {
+            id: advancedSettingsGroupBox
+            width: (parent.width - 20)
+            padding: 12
+            title: qsTr("Advanced Settings")
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: neverDropFramesCheck
+                    text: qsTr("Never Drop Frames")
+                    font.pointSize:  12
+                }
             }
         }
     }
-    // TODO add more settings
 }
