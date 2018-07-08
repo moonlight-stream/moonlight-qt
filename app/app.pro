@@ -36,7 +36,7 @@ unix:!macx {
     PKGCONFIG += openssl sdl2
 }
 
-LIBS += -lSDL2
+LIBS += -lSDL2 -lavcodec -lavdevice -lavformat -lavutil
 win32 {
     LIBS += -llibssl -llibcrypto
 } else {
