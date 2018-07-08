@@ -16,7 +16,6 @@ Page {
             // TODO save the settings
             id: streamingSettingsGroupBox
             width: (parent.width - 20)
-            //height: 200
             padding: 12
             title: qsTr("Basic Settings")
 
@@ -97,10 +96,5 @@ Page {
             }
         }
     }
-
-
-
-    // TODO - add settings
-
-
+    // TODO add more settings
 }
