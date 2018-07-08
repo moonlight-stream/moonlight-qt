@@ -3,11 +3,20 @@
 #include <Limelight.h>
 #include <opus_multistream.h>
 #include "backend/computermanager.h"
+#include "settings/streamingpreferences.h"
 #include "input.hpp"
+
+extern "C" {
+#include <libavcodec/avcodec.h>
+}
+
+#define SDL_CODE_FRAME_READY 0
 
 class Session : public QObject
 {
     Q_OBJECT
+
+    friend class SdlInputHandler;
 
 public:
     explicit Session(NvComputer* computer, NvApp& app);
@@ -28,6 +37,14 @@ signals:
 private:
     bool validateLaunch();
 
+    int getDecoderCapabilities();
+
+    int sdlDetermineAudioConfiguration();
+
+    void renderFrame(SDL_UserEvent* event);
+
+    void dropFrame(SDL_UserEvent* event);
+
     static
     void clStageStarting(int stage);
 
@@ -41,7 +58,13 @@ private:
     void clLogMessage(const char* format, ...);
 
     static
-    int sdlDetermineAudioConfiguration();
+    int drSetup(int videoFormat, int width, int height, int frameRate, void*, int);
+
+    static
+    void drCleanup();
+
+    static
+    int drSubmitDecodeUnit(PDECODE_UNIT du);
 
     static
     int sdlAudioInit(int audioConfiguration,
@@ -60,9 +83,18 @@ private:
     static
     void sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength);
 
+    StreamingPreferences m_Preferences;
     STREAM_CONFIGURATION m_StreamConfig;
+    DECODER_RENDERER_CALLBACKS m_VideoCallbacks;
     NvComputer* m_Computer;
     NvApp m_App;
+    SDL_Window* m_Window;
+    SDL_Renderer* m_Renderer;
+    SDL_Texture* m_Texture;
+
+    static AVPacket s_Pkt;
+    static AVCodecContext* s_VideoDecoderCtx;
+    static QByteArray s_DecodeBuffer;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;
@@ -70,7 +102,6 @@ private:
     static int s_ChannelCount;
 
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
-    static DECODER_RENDERER_CALLBACKS k_VideoCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
 };

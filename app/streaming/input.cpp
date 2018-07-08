@@ -1,6 +1,6 @@
 #include <Limelight.h>
 #include <SDL.h>
-#include "input.hpp"
+#include "streaming/session.hpp"
 
 #define VK_0 0x30
 #define VK_A 0x41
@@ -80,20 +80,27 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         // Check for the unbind combo (Ctrl+Alt+Shift+Z)
         else if (event->keysym.sym == SDLK_z) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected mouse unbind combo");
-
-            // TODO: disable mouse capture then recapture when
-            // we regain focus or on click.
+                        "Detected mouse capture toggle combo");
+            SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
             return;
         }
         // Check for the full-screen combo (Ctrl+Alt+Shift+X)
         else if (event->keysym.sym == SDLK_x) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected full-screen toggle combo");
-
-            // TODO: toggle full-screen
+            if (SDL_GetWindowFlags(Session::s_ActiveSession->m_Window) & SDL_WINDOW_FULLSCREEN) {
+                SDL_SetWindowFullscreen(Session::s_ActiveSession->m_Window, 0);
+            }
+            else {
+                SDL_SetWindowFullscreen(Session::s_ActiveSession->m_Window, SDL_WINDOW_FULLSCREEN);
+            }
             return;
         }
+    }
+
+    if (!SDL_GetRelativeMouseMode()) {
+        // Not capturing
+        return;
     }
 
     // Set modifier flags
@@ -316,6 +323,18 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 {
     int button;
 
+    // Capture the mouse again if clicked when unbound
+    if (event->button == SDL_BUTTON_LEFT &&
+            event->state == SDL_PRESSED &&
+            !SDL_GetRelativeMouseMode()) {
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+        return;
+    }
+    else if (!SDL_GetRelativeMouseMode()) {
+        // Not capturing
+        return;
+    }
+
     switch (event->button)
     {
         case SDL_BUTTON_LEFT:
@@ -346,6 +365,11 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 
 void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 {
+    if (!SDL_GetRelativeMouseMode()) {
+        // Not capturing
+        return;
+    }
+
     if (event->xrel != 0 || event->yrel != 0) {
         LiSendMouseMoveEvent((unsigned short)event->xrel,
                              (unsigned short)event->yrel);
@@ -354,6 +378,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 
 void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 {
+    if (!SDL_GetRelativeMouseMode()) {
+        // Not capturing
+        return;
+    }
+
     if (event->y != 0) {
         LiSendScrollEvent((signed char)event->y);
     }

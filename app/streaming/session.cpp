@@ -3,6 +3,7 @@
 
 #include <Limelight.h>
 #include <SDL.h>
+#include "utils.h"
 
 #include <QRandomGenerator>
 #include <QtEndian>
@@ -27,8 +28,6 @@ AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
     Session::sdlAudioDecodeAndPlaySample,
     CAPABILITY_DIRECT_SUBMIT
 };
-
-DECODER_RENDERER_CALLBACKS Session::k_VideoCallbacks;
 
 Session* Session::s_ActiveSession;
 
@@ -79,13 +78,17 @@ Session::Session(NvComputer* computer, NvApp& app)
     : m_Computer(computer),
       m_App(app)
 {
-    StreamingPreferences prefs;
+    LiInitializeVideoCallbacks(&m_VideoCallbacks);
+    m_VideoCallbacks.setup = drSetup;
+    m_VideoCallbacks.cleanup = drCleanup;
+    m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
+    m_VideoCallbacks.capabilities = getDecoderCapabilities();
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
-    m_StreamConfig.width = prefs.width;
-    m_StreamConfig.height = prefs.height;
-    m_StreamConfig.fps = prefs.fps;
-    m_StreamConfig.bitrate = prefs.bitrateKbps;
+    m_StreamConfig.width = m_Preferences.width;
+    m_StreamConfig.height = m_Preferences.height;
+    m_StreamConfig.fps = m_Preferences.fps;
+    m_StreamConfig.bitrate = m_Preferences.bitrateKbps;
     m_StreamConfig.packetSize = 1024;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
     for (unsigned int i = 0; i < sizeof(m_StreamConfig.remoteInputAesKey); i++) {
@@ -93,7 +96,7 @@ Session::Session(NvComputer* computer, NvApp& app)
                 (char)(QRandomGenerator::global()->generate() % 256);
     }
     *(int*)m_StreamConfig.remoteInputAesIv = qToBigEndian(QRandomGenerator::global()->generate());
-    switch (prefs.audioConfig)
+    switch (m_Preferences.audioConfig)
     {
     case StreamingPreferences::AC_AUTO:
         m_StreamConfig.audioConfiguration = sdlDetermineAudioConfiguration();
@@ -105,7 +108,7 @@ Session::Session(NvComputer* computer, NvApp& app)
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
         break;
     }
-    switch (prefs.videoCodecConfig)
+    switch (m_Preferences.videoCodecConfig)
     {
     case StreamingPreferences::VCC_AUTO:
         // TODO: Determine if HEVC is better depending on the decoder
@@ -226,7 +229,7 @@ void Session::exec()
     }
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
-                                &k_VideoCallbacks, &k_AudioCallbacks,
+                                &m_VideoCallbacks, &k_AudioCallbacks,
                                 NULL, 0, NULL, 0);
     if (err != 0) {
         // We already displayed an error dialog in the stage failure
@@ -238,7 +241,50 @@ void Session::exec()
     emit connectionStarted();
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
-    SDL_Window* wnd = SDL_CreateWindow("SDL Test Window", 0, 0, 1280, 720, SDL_WINDOW_INPUT_GRABBED);
+    m_Window = SDL_CreateWindow("Moonlight",
+                                SDL_WINDOWPOS_UNDEFINED,
+                                SDL_WINDOWPOS_UNDEFINED,
+                                m_StreamConfig.width,
+                                m_StreamConfig.height,
+                                (m_Preferences.fullScreen ?
+                                    SDL_WINDOW_FULLSCREEN :
+                                    0));
+    if (!m_Window) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateWindow() failed: %s",
+                     SDL_GetError());
+        LiStopConnection();
+        return;
+    }
+
+    m_Renderer = SDL_CreateRenderer(m_Window, -1,
+                                    SDL_RENDERER_ACCELERATED);
+    if (!m_Renderer) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRenderer() failed: %s",
+                     SDL_GetError());
+        LiStopConnection();
+        SDL_DestroyWindow(m_Window);
+        return;
+    }
+
+    m_Texture = SDL_CreateTexture(m_Renderer,
+                                  SDL_PIXELFORMAT_YV12,
+                                  SDL_TEXTUREACCESS_STREAMING,
+                                  m_StreamConfig.width,
+                                  m_StreamConfig.height);
+    if (!m_Texture) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRenderer() failed: %s",
+                     SDL_GetError());
+        LiStopConnection();
+        SDL_DestroyRenderer(m_Renderer);
+        SDL_DestroyWindow(m_Window);
+        return;
+    }
+
+    // Capture the mouse
+    SDL_SetRelativeMouseMode(SDL_TRUE);
 
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
@@ -249,6 +295,25 @@ void Session::exec()
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Quit event received");
             goto Exit;
+        case SDL_USEREVENT: {
+            SDL_Event nextEvent;
+
+            SDL_assert(event.user.code == SDL_CODE_FRAME_READY);
+
+            // Drop any earlier frames
+            while (SDL_PeepEvents(&nextEvent,
+                                  1,
+                                  SDL_GETEVENT,
+                                  SDL_USEREVENT,
+                                  SDL_USEREVENT) == 1) {
+                dropFrame(&event.user);
+                event = nextEvent;
+            }
+
+            // Render the last frame
+            renderFrame(&event.user);
+            break;
+        }
         case SDL_KEYUP:
         case SDL_KEYDOWN:
             inputHandler.handleKeyEvent(&event.key);
@@ -284,5 +349,7 @@ void Session::exec()
 Exit:
     s_ActiveSession = nullptr;
     LiStopConnection();
-    SDL_DestroyWindow(wnd);
+    SDL_DestroyTexture(m_Texture);
+    SDL_DestroyRenderer(m_Renderer);
+    SDL_DestroyWindow(m_Window);
 }

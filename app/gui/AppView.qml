@@ -66,8 +66,16 @@ GridView {
             anchors.fill: parent
             onClicked: {
                 // TODO: Check if a different game is running
-                var session = appModel.createSessionForApp(index);
-                session.exec();
+                var session = appModel.createSessionForApp(index)
+
+                // Don't poll while the stream is running
+                ComputerManager.stopPollingAsync()
+
+                // Run the streaming session to completion
+                session.exec()
+
+                // Start polling again
+                ComputerManager.startPolling()
             }
         }
     }
