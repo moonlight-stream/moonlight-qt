@@ -22,9 +22,10 @@ ApplicationWindow {
             anchors.fill: parent
 
             ToolButton {
+                // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1 ? true : false
-                icon.source: "qrc:/res/arrow_left.png"
 
+                icon.source: "qrc:/res/arrow_left.png"
                 onClicked: stackView.pop()
 
                 Menu {
