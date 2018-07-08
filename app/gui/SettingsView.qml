@@ -9,16 +9,16 @@ Page {
         id: column
         x: 10
         y: 10
-        width: 200
+        width: settingsPage.width
         height: 400
 
         GroupBox {
             // TODO save the settings
             id: streamingSettingsGroupBox
-            width: 200
-            height: 200
+            width: (parent.width - 20)
+            //height: 200
             padding: 12
-            title: qsTr("Streaming Settings")
+            title: qsTr("Basic Settings")
 
             Column {
                 id: column1
@@ -26,35 +26,73 @@ Page {
                 spacing: 5
 
                 Label {
-                    id: label
-                    text: qsTr("Resolution")
+                    width: parent.width
+                    id: resFPStitle
+                    text: qsTr("Resolution and FPS target")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                Label {
+                    width: parent.width
+                    id: resFPSdesc
+                    text: qsTr("Setting values too high for your device may cause lag or crashing")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
                 }
 
                 ComboBox {
                     id: resolutionComboBox
+                    currentIndex : 4
                     model: ListModel {
                         id: resolutionListModel
-                        ListElement { text: "Resolution1" }
-                        ListElement { text: "Resolution2" }
-                        ListElement { text: "Resolution3" }
+                        // TODO have values associated with the text.
+                        ListElement { text: "360p 30 FPS" }
+                        ListElement { text: "360p 60 FPS" }
+                        ListElement { text: "720p 30 FPS" }
+                        ListElement { text: "720p 60 FPS" }
+                        ListElement { text: "1080p 30 FPS" }
+                        ListElement { text: "1080p 60 FPS" }
+                        ListElement { text: "4K 30 FPS" }
+                        ListElement { text: "4K 60 FPS" }
                     }
                     onCurrentIndexChanged: console.debug(resolutionListModel.get(currentIndex).text + " selected resolution")
                 }
 
                 Label {
-                    id: fpsLabel
-                    text: qsTr("FPS")
+                    width: parent.width
+                    id: bitrateTitle
+                    text: qsTr("Video bitrate target")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
                 }
 
-                ComboBox {
-                    id: fpsComboBox
-                    model: ListModel {
-                        id: fpsListModel
-                        ListElement { text: "FPS1" }
-                        ListElement { text: "FPS2" }
-                        ListElement { text: "FPS3" }
+                Label {
+                    width: parent.width
+                    id: bitrateDesc
+                    text: qsTr("Lower bitrate to reduce stuttering. Raise bitrate to increase image quality.")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                }
+
+                Slider {
+                    id: slider
+                    wheelEnabled: true
+
+                    // TODO value should be loaded as the current value.
+                    value: 500
+                    stepSize: 500
+                    from : 500
+                    to: 10000
+                    snapMode: "SnapOnRelease"
+                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
+
+                    // TODO store the value
+                    // TODO display the current value to the user
+                    onValueChanged:
+                    {
+                        console.debug(slider.value + " Slider moved")
                     }
-                    onCurrentIndexChanged: console.debug(resolutionListModel.get(currentIndex).text + " selected FPS")
                 }
             }
         }
