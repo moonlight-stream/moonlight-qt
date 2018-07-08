@@ -38,7 +38,7 @@ ApplicationWindow {
             Label {
                 id: titleLabel
                 text: stackView.currentItem.objectName
-                font.pixelSize: 20
+                font.pointSize: 15
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
                 verticalAlignment: Qt.AlignVCenter
