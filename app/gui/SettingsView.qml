@@ -1,7 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 
-Page {
+ScrollView {
     id: settingsPage
     objectName: "Settings"
 
@@ -16,7 +16,7 @@ Page {
             id: basicSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
-            title: qsTr("Basic Settings")
+            title: "<font color=\"skyblue\">Basic Settings</font>"
             font.pointSize: 12
 
             Column {
@@ -28,7 +28,8 @@ Page {
                     id: resFPStitle
                     text: qsTr("Resolution and FPS target")
                     font.pointSize: 12
-                    wrapMode: Text.Wrap
+                    wrapMode: Text.Wrap                    
+                    color: "white"
                 }
 
                 Label {
@@ -37,6 +38,7 @@ Page {
                     text: qsTr("Setting values too high for your device may cause lag or crashing")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
+                    color: "white"
                 }
 
                 ComboBox {
@@ -65,6 +67,7 @@ Page {
                     text: qsTr("Video bitrate target")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+                    color: "white"
                 }
 
                 Label {
@@ -73,6 +76,7 @@ Page {
                     text: qsTr("Lower bitrate to reduce stuttering. Raise bitrate to increase image quality.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
+                    color: "white"
                 }
 
                 Slider {
@@ -97,13 +101,13 @@ Page {
 
                 CheckBox {
                     id: fullScreenCheck
-                    text: qsTr("Stretch video to full-screen")
+                    text: "<font color=\"white\">Stretch video to full-screen</font>"
                     font.pointSize:  12
                 }
 
                 CheckBox {
                     id: pipObserverCheck
-                    text: qsTr("Enable Picture-in-Picture observer mode")
+                    text: "<font color=\"white\">Enable Picture-in-Picture observer mode</font>"
                     font.pointSize: 12
                 }
             }
@@ -113,7 +117,7 @@ Page {
             id: audioSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
-            title: qsTr("Audio Settings")
+            title: "<font color=\"skyblue\">Audio Settings</font>"
             font.pointSize: 12
 
             Column {
@@ -122,7 +126,7 @@ Page {
 
                 CheckBox {
                     id: surroundSoundCheck
-                    text: qsTr("Enable 5.1 surround sound")
+                    text: "<font color=\"white\">Enable 5.1 surround sound</font>"
                     font.pointSize:  12
                 }
             }
@@ -132,7 +136,7 @@ Page {
             id: gamepadSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
-            title: qsTr("Gamepad Settings")
+            title: "<font color=\"skyblue\">Gamepad Settings</font>"
             font.pointSize: 12
 
             Column {
@@ -141,12 +145,12 @@ Page {
 
                 CheckBox {
                     id: multiControllerCheck
-                    text: qsTr("Multiple controller support")
+                    text: "<font color=\"white\">Multiple controller support</font>"
                     font.pointSize:  12
                 }
                 CheckBox {
                     id: mouseEmulationCheck
-                    text: qsTr("Mouse emulation via gamepad")
+                    text: "<font color=\"white\">Mouse emulation via gamepad</font>"
                     font.pointSize:  12
                 }
             }
@@ -156,7 +160,7 @@ Page {
             id: onScreenControlsGroupBox
             width: (parent.width - 20)
             padding: 12
-            title: qsTr("On-screen Controls Settings")
+            title: "<font color=\"skyblue\">On-screen Controls Settings</font>"
             font.pointSize: 12
 
             Column {
@@ -165,7 +169,7 @@ Page {
 
                 CheckBox {
                     id: onScreenControlsCheck
-                    text: qsTr("Show on-screen controls")
+                    text: "<font color=\"white\">Show on-screen controls</font>"
                     font.pointSize:  12
                 }
             }
@@ -175,7 +179,7 @@ Page {
             id: hostSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
-            title: qsTr("Host Settings")
+            title: "<font color=\"skyblue\">Host Settings</font>"
             font.pointSize: 12
 
             Column {
@@ -184,13 +188,13 @@ Page {
 
                 CheckBox {
                     id: optimizeGameSettingsCheck
-                    text: qsTr("Optimize Game Settings")
+                    text: "<font color=\"white\">Optimize game settings</font>"
                     font.pointSize:  12
                 }
 
                 CheckBox {
                     id: audioPcCheck
-                    text: qsTr("Play audio on PC")
+                    text: "<font color=\"white\">Play audio on PC</font>"
                     font.pointSize:  12
                 }
             }
@@ -200,7 +204,7 @@ Page {
             id: advancedSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
-            title: qsTr("Advanced Settings")
+            title: "<font color=\"skyblue\">Advanced Settings</font>"
             font.pointSize: 12
 
             Column {
@@ -209,7 +213,7 @@ Page {
 
                 CheckBox {
                     id: neverDropFramesCheck
-                    text: qsTr("Never Drop Frames")
+                    text: "<font color=\"white\">Never drop frames</font>"
                     font.pointSize:  12
                 }
             }
