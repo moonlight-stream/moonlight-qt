@@ -1,7 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.3
-import QtQuick.Layouts 1.11
+import QtQuick.Layouts 1.3
 
 import ComputerModel 1.0
 
