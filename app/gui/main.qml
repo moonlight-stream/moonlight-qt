@@ -25,24 +25,13 @@ ApplicationWindow {
             anchors.fill: parent
 
             ToolButton {
-                icon.source: "qrc:/res/settings.png"
-                onClicked: stackView.push("qrc:/gui/SettingsView.qml")
+                visible: stackView.depth > 1 ? true : false
+                icon.source: "qrc:/res/arrow_left.png"
+
+                onClicked: stackView.pop()
 
                 Menu {
-                    id: optionsMenu
-                    x: parent.width - width
-                    transformOrigin: Menu.TopRight
-                }
-            }
-
-            ToolButton {
-                icon.source: "qrc:/res/question_mark.png"
-
-                // TODO need to bring browser to foreground.
-                onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
-
-                Menu {
-                    id: helpButton
+                    id: backButton
                     x: parent.width - width
                     transformOrigin: Menu.TopRight
                 }
@@ -56,6 +45,30 @@ ApplicationWindow {
                 horizontalAlignment: Qt.AlignHCenter
                 verticalAlignment: Qt.AlignVCenter
                 Layout.fillWidth: true
+            }
+
+            ToolButton {
+                icon.source: "qrc:/res/settings.png"
+                onClicked: stackView.push("qrc:/gui/SettingsView.qml")
+
+                Menu {
+                    id: optionsMenu
+                    x: parent.width
+                    transformOrigin: Menu.TopRight
+                }
+            }
+
+            ToolButton {
+                icon.source: "qrc:/res/question_mark.png"
+
+                // TODO need to bring browser to foreground.
+                onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
+
+                Menu {
+                    id: helpButton
+                    x: parent.width
+                    transformOrigin: Menu.TopRight
+                }
             }
         }
 

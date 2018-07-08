@@ -7,5 +7,6 @@
         <file>res/no_app_image.png</file>
         <file>res/settings.png</file>
         <file>res/question_mark.png</file>
+        <file>res/arrow_left.png</file>
     </qresource>
 </RCC>
