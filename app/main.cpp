@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QIcon>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -28,6 +29,9 @@ int main(int argc, char *argv[])
     qRegisterMetaType<NvApp>("NvApp");
 
     QGuiApplication app(argc, argv);
+
+    // FIXME this icon is low-resolution and appears a little fuzzy.
+    app.setWindowIcon(QIcon(":/res/icon128.png"));
 
     // Register our C++ types for QML
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
