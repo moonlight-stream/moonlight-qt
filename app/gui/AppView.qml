@@ -10,7 +10,7 @@ GridView {
     property AppModel appModel : createModel()
 
     anchors.fill: parent
-    anchors.leftMargin: 5
+    anchors.leftMargin: (parent.width % (cellWidth + anchors.rightMargin)) / 2
     anchors.topMargin: 5
     anchors.rightMargin: 5
     anchors.bottomMargin: 5
