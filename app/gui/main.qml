@@ -10,7 +10,7 @@ ApplicationWindow {
 
     StackView {
         id: stackView
-        initialItem: "PcView.qml"
+        initialItem: "PreferencesView.qml"
         anchors.fill: parent
     }
 }
