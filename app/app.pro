@@ -31,16 +31,16 @@ macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
     LIBS += -L$$PWD/../libs/mac/lib
 }
+
 unix:!macx {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl sdl2
+    PKGCONFIG += openssl sdl2 libavcodec libavdevice libavformat libavutil
 }
-
-LIBS += -lSDL2 -lavcodec -lavdevice -lavformat -lavutil
 win32 {
-    LIBS += -llibssl -llibcrypto
-} else {
-    LIBS += -lssl -lcrypto
+    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavdevice -lavformat -lavutil
+}
+macx {
+    LIBS += -lssl -lcrypto -lSDL2 -lavcodec.58 -lavdevice.58 -lavformat.58 -lavutil.56
 }
 
 SOURCES += \
