@@ -69,39 +69,5 @@ ApplicationWindow {
                 }
             }
         }
-
     }
-    Drawer {
-        id: drawer
-        width: Math.min(window.width, window.height) / 3 * 2
-        height: window.height
-        interactive: stackView.depth === 1
-
-        ListView {
-            id: listView
-
-            focus: true
-            currentIndex: -1
-            anchors.fill: parent
-
-            delegate: ItemDelegate {
-                width: parent.width
-                text: model.title
-                highlighted: ListView.isCurrentItem
-                onClicked: {
-                    listView.currentIndex = index
-                    stackView.push(model.source)
-                    drawer.close()
-                }
-            }
-
-            model: ListModel {
-                ListElement { title: "Settings"; source: "qrc:/gui/SettingsView.qml" }
-                ListElement { title: "PCs"; source: "qrc:/gui/PcView.qml" }
-            }
-
-            ScrollIndicator.vertical: ScrollIndicator { }
-        }
-    }
-
 }
