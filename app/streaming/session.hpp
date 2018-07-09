@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QSemaphore>
+
 #include <Limelight.h>
 #include <opus_multistream.h>
 #include "backend/computermanager.h"
@@ -17,6 +19,7 @@ class Session : public QObject
     Q_OBJECT
 
     friend class SdlInputHandler;
+    friend class DeferredSessionCleanupTask;
 
 public:
     explicit Session(NvComputer* computer, NvApp& app);
@@ -104,4 +107,5 @@ private:
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
+    static QSemaphore s_ActiveSessionSemaphore;
 };

@@ -8,6 +8,7 @@
 #include <QRandomGenerator>
 #include <QtEndian>
 #include <QCoreApplication>
+#include <QThreadPool>
 
 CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clStageStarting,
@@ -30,6 +31,7 @@ AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
 };
 
 Session* Session::s_ActiveSession;
+QSemaphore Session::s_ActiveSessionSemaphore(1);
 
 void Session::clStageStarting(int stage)
 {
@@ -76,7 +78,10 @@ void Session::clLogMessage(const char* format, ...)
 
 Session::Session(NvComputer* computer, NvApp& app)
     : m_Computer(computer),
-      m_App(app)
+      m_App(app),
+      m_Window(nullptr),
+      m_Renderer(nullptr),
+      m_Texture(nullptr)
 {
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
@@ -194,6 +199,29 @@ bool Session::validateLaunch()
     return true;
 }
 
+
+class DeferredSessionCleanupTask : public QRunnable
+{
+    void run() override
+    {
+        // Finish cleanup of the connection state
+        LiStopConnection();
+        if (Session::s_ActiveSession->m_Texture != nullptr) {
+            SDL_DestroyTexture(Session::s_ActiveSession->m_Texture);
+        }
+        if (Session::s_ActiveSession->m_Renderer != nullptr) {
+            SDL_DestroyRenderer(Session::s_ActiveSession->m_Renderer);
+        }
+        if (Session::s_ActiveSession->m_Window != nullptr) {
+            SDL_DestroyWindow(Session::s_ActiveSession->m_Window);
+        }
+
+        // Allow another session to start now that we're cleaned up
+        Session::s_ActiveSession = nullptr;
+        Session::s_ActiveSessionSemaphore.release();
+    }
+};
+
 void Session::exec()
 {
     // Check for validation errors/warnings and emit
@@ -204,6 +232,9 @@ void Session::exec()
 
     // Manually pump the UI thread for the view
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+
+    // Wait for any old session to finish cleanup
+    s_ActiveSessionSemaphore.acquire();
 
     // We're now active
     s_ActiveSession = this;
@@ -230,6 +261,7 @@ void Session::exec()
         }
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(e.toQString());
+        s_ActiveSessionSemaphore.release();
         return;
     }
 
@@ -255,6 +287,7 @@ void Session::exec()
     if (err != 0) {
         // We already displayed an error dialog in the stage failure
         // listener.
+        s_ActiveSessionSemaphore.release();
         return;
     }
 
@@ -274,8 +307,7 @@ void Session::exec()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateWindow() failed: %s",
                      SDL_GetError());
-        LiStopConnection();
-        return;
+        goto DispatchDeferredCleanup;
     }
 
     m_Renderer = SDL_CreateRenderer(m_Window, -1,
@@ -284,9 +316,7 @@ void Session::exec()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
                      SDL_GetError());
-        LiStopConnection();
-        SDL_DestroyWindow(m_Window);
-        return;
+        goto DispatchDeferredCleanup;
     }
 
     m_Texture = SDL_CreateTexture(m_Renderer,
@@ -298,10 +328,7 @@ void Session::exec()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
                      SDL_GetError());
-        LiStopConnection();
-        SDL_DestroyRenderer(m_Renderer);
-        SDL_DestroyWindow(m_Window);
-        return;
+        goto DispatchDeferredCleanup;
     }
 
     // Capture the mouse
@@ -315,7 +342,7 @@ void Session::exec()
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Quit event received");
-            goto Exit;
+            goto DispatchDeferredCleanup;
         case SDL_USEREVENT: {
             SDL_Event nextEvent;
 
@@ -367,10 +394,17 @@ void Session::exec()
                  "SDL_WaitEvent() failed: %s",
                  SDL_GetError());
 
-Exit:
-    s_ActiveSession = nullptr;
-    LiStopConnection();
-    SDL_DestroyTexture(m_Texture);
-    SDL_DestroyRenderer(m_Renderer);
-    SDL_DestroyWindow(m_Window);
+DispatchDeferredCleanup:
+    // Uncapture the mouse and hide the window immediately,
+    // so we can return to the Qt GUI ASAP.
+    SDL_SetRelativeMouseMode(SDL_FALSE);
+    if (m_Window != nullptr) {
+        SDL_HideWindow(m_Window);
+    }
+
+    // Cleanup can take a while, so dispatch it to a worker thread.
+    // When it is complete, it will release our s_ActiveSessionSemaphore
+    // reference.
+    QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask());
 }
+
