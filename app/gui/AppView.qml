@@ -17,14 +17,20 @@ GridView {
     cellWidth: 225; cellHeight: 350;
     focus: true
 
-    Component.onCompleted: {
-        // Start polling when this view is shown
-        ComputerManager.startPolling()
-    }
+    // The StackView will trigger a visibility change when
+    // we're pushed onto it, causing our onVisibleChanged
+    // routine to run, but only if we start as invisible
+    visible: false
 
-    Component.onDestruction: {
-        // Stop polling when this view is destroyed
-        ComputerManager.stopPollingAsync()
+    onVisibleChanged: {
+        if (visible) {
+            // Start polling when this view is shown
+            ComputerManager.startPolling()
+        }
+        else {
+            // Stop polling when this view is not on top
+            ComputerManager.stopPollingAsync()
+        }
     }
 
     function createModel()

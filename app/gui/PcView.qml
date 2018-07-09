@@ -19,17 +19,25 @@ GridView {
     focus: true
     objectName: "Computers"
 
-    Component.onCompleted: {
-        // Start polling when this view is shown
-        ComputerManager.startPolling()
+    // The StackView will trigger a visibility change when
+    // we're pushed onto it, causing our onVisibleChanged
+    // routine to run, but only if we start as invisible
+    visible: false
 
+    Component.onCompleted: {
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
     }
 
-    Component.onDestruction: {
-        // Stop polling when this view is destroyed
-        ComputerManager.stopPollingAsync()
+    onVisibleChanged: {
+        if (visible) {
+            // Start polling when this view is shown
+            ComputerManager.startPolling()
+        }
+        else {
+            // Stop polling when this view is not top-most
+            ComputerManager.stopPollingAsync()
+        }
     }
 
     function pairingComplete(error)

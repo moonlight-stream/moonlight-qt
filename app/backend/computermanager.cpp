@@ -269,7 +269,7 @@ bool NvComputer::update(NvComputer& that)
 
 ComputerManager::ComputerManager(QObject *parent)
     : QObject(parent),
-      m_Polling(false),
+      m_PollingRef(0),
       m_MdnsBrowser(nullptr)
 {
     QSettings settings;
@@ -302,11 +302,9 @@ void ComputerManager::startPolling()
 {
     QWriteLocker lock(&m_Lock);
 
-    if (m_Polling) {
+    if (++m_PollingRef > 1) {
         return;
     }
-
-    m_Polling = true;
 
     // Start an MDNS query for GameStream hosts
     m_MdnsBrowser = new QMdnsEngine::Browser(&m_MdnsServer, "_nvstream._tcp.local.", &m_MdnsCache);
@@ -400,11 +398,10 @@ void ComputerManager::stopPollingAsync()
 {
     QWriteLocker lock(&m_Lock);
 
-    if (!m_Polling) {
+    Q_ASSERT(m_PollingRef > 0);
+    if (--m_PollingRef > 0) {
         return;
     }
-
-    m_Polling = false;
 
     // Delete machines that haven't been resolved yet
     while (!m_PendingResolution.isEmpty()) {
@@ -456,7 +453,7 @@ ComputerManager::handleComputerStateChanged(NvComputer* computer)
 void
 ComputerManager::startPollingComputer(NvComputer* computer)
 {
-    if (!m_Polling) {
+    if (m_PollingRef == 0) {
         return;
     }
 

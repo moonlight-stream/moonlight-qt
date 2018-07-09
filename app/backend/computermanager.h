@@ -279,7 +279,7 @@ private:
 
     void startPollingComputer(NvComputer* computer);
 
-    bool m_Polling;
+    int m_PollingRef;
     QReadWriteLock m_Lock;
     QMap<QString, NvComputer*> m_KnownHosts;
     QMap<QString, QThread*> m_PollThreads;
