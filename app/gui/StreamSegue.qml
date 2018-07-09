@@ -52,6 +52,9 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
+            // Hide the toolbar before we start loading
+            toolBar.visible = false
+
             // Hook up our signals
             session.stageStarting.connect(stageStarting)
             session.stageFailed.connect(stageFailed)
@@ -67,6 +70,10 @@ Item {
 
             // Exit this view
             stackView.pop()
+        }
+        else {
+            // Show the toolbar again when we become hidden
+            toolBar.visible = true
         }
     }
 

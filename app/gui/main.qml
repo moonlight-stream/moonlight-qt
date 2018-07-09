@@ -36,6 +36,7 @@ ApplicationWindow {
     }
 
     header: ToolBar {
+        id: toolBar
 
         RowLayout {
             spacing: 20
