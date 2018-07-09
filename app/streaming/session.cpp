@@ -203,7 +203,7 @@ void Session::exec()
         }
         else {
             http.launchApp(m_App.id, &m_StreamConfig,
-                           prefs.enableGameOptimizations,
+                           prefs.gameOptimizations,
                            prefs.playAudioOnHost,
                            inputHandler.getAttachedGamepadMask());
         }

@@ -11,6 +11,7 @@
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
 #include "streaming/session.hpp"
+#include "settings/streamingpreferences.h"
 
 int main(int argc, char *argv[])
 {
@@ -36,6 +37,7 @@ int main(int argc, char *argv[])
     // Register our C++ types for QML
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
+    qmlRegisterType<StreamingPreferences>("StreamingPreferences", 1, 0, "StreamingPreferences");
     qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
                                               "ComputerManager",

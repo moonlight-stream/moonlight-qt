@@ -1,14 +1,18 @@
 #pragma once
 
-class StreamingPreferences
+#include <QObject>
+
+class StreamingPreferences : public QObject
 {
+    Q_OBJECT
+
 public:
     StreamingPreferences();
 
-    static int
+    Q_INVOKABLE static int
     getDefaultBitrate(int width, int height, int fps);
 
-    void save();
+    Q_INVOKABLE void save();
 
     void reload();
 
@@ -18,6 +22,7 @@ public:
         AC_FORCE_STEREO,
         AC_FORCE_SURROUND
     };
+    Q_ENUM(AudioConfig)
 
     enum VideoCodecConfig
     {
@@ -26,6 +31,27 @@ public:
         VCC_FORCE_HEVC,
         VCC_FORCE_HEVC_HDR
     };
+    Q_ENUM(VideoCodecConfig)
+
+    enum VideoDecoderSelection
+    {
+        VDS_AUTO,
+        VDS_FORCE_HARDWARE,
+        VDS_FORCE_SOFTWARE
+    };
+    Q_ENUM(VideoDecoderSelection)
+
+    Q_PROPERTY(int width MEMBER width NOTIFY resolutionOrFpsChanged)
+    Q_PROPERTY(int height MEMBER height NOTIFY resolutionOrFpsChanged)
+    Q_PROPERTY(int fps MEMBER fps NOTIFY resolutionOrFpsChanged)
+    Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
+    Q_PROPERTY(bool fullScreen MEMBER fullScreen NOTIFY fullScreenChanged)
+    Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
+    Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
+    Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
+    Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
+    Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
+    Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
 
     // Directly accessible members for preferences
     int width;
@@ -33,10 +59,22 @@ public:
     int fps;
     int bitrateKbps;
     bool fullScreen;
-    bool enableGameOptimizations;
+    bool gameOptimizations;
     bool playAudioOnHost;
     bool multiController;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
+    VideoDecoderSelection videoDecoderSelection;
+
+signals:
+    void resolutionOrFpsChanged();
+    void bitrateChanged();
+    void fullScreenChanged();
+    void gameOptimizationsChanged();
+    void playAudioOnHostChanged();
+    void multiControllerChanged();
+    void audioConfigChanged();
+    void videoCodecConfigChanged();
+    void videoDecoderSelectionChanged();
 };
 

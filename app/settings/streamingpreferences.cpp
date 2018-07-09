@@ -13,6 +13,7 @@
 #define SER_MULTICONT "multicontroller"
 #define SER_AUDIOCFG "audiocfg"
 #define SER_VIDEOCFG "videocfg"
+#define SER_VIDEODEC "videodec"
 
 StreamingPreferences::StreamingPreferences()
 {
@@ -28,13 +29,15 @@ void StreamingPreferences::reload()
     fps = settings.value(SER_FPS, 60).toInt();
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps)).toInt();
     fullScreen = settings.value(SER_FULLSCREEN, true).toBool();
-    enableGameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
+    gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
     playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
     multiController = settings.value(SER_MULTICONT, true).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_AUTO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
                                                   static_cast<int>(VideoCodecConfig::VCC_AUTO)).toInt());
+    videoDecoderSelection = static_cast<VideoDecoderSelection>(settings.value(SER_VIDEODEC,
+                                                  static_cast<int>(VideoDecoderSelection::VDS_AUTO)).toInt());
 }
 
 void StreamingPreferences::save()
@@ -46,11 +49,12 @@ void StreamingPreferences::save()
     settings.setValue(SER_FPS, fps);
     settings.setValue(SER_BITRATE, bitrateKbps);
     settings.setValue(SER_FULLSCREEN, fullScreen);
-    settings.setValue(SER_GAMEOPTS, enableGameOptimizations);
+    settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);
     settings.setValue(SER_MULTICONT, multiController);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
+    settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
