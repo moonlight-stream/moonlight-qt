@@ -136,8 +136,19 @@ Session::Session(NvComputer* computer, NvApp& app)
 
 bool Session::validateLaunch()
 {
-    NvHTTP http(m_Computer->activeAddress);
     QStringList warningList;
+
+    if (m_StreamConfig.supportsHevc) {
+        if (m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
+                m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR) {
+            if (m_Computer->maxLumaPixelsHEVC == 0) {
+                emit displayLaunchWarning("Your host PC GPU doesn't support HEVC. "
+                                          "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
+            }
+        }
+
+        // TODO: Validate HEVC support based on decoder caps
+    }
 
     if (m_StreamConfig.enableHdr) {
         // Turn HDR back off unless all criteria are met.
@@ -161,16 +172,22 @@ bool Session::validateLaunch()
     }
 
     if (m_StreamConfig.width >= 3840) {
-        if (m_StreamConfig.fps >= 60) {
-            // TODO: Validate 4K60 support based on serverinfo
-        }
-        else {
-            // TODO: Validate 4K30 support based on serverinfo
-        }
-    }
+        // Only allow 4K on GFE 3.x+
+        if (m_Computer->gfeVersion.isNull() || m_Computer->gfeVersion.startsWith("2.")) {
+            emit displayLaunchWarning("GeForce Experience 3.0 or higher is required for 4K streaming.");
 
-    if (m_StreamConfig.supportsHevc) {
-        // TODO: Validate HEVC support based on decoder caps
+            m_StreamConfig.width = 1920;
+            m_StreamConfig.height = 1080;
+        }
+        // This list is sorted from least to greatest
+        else if (m_Computer->displayModes.last().width < 3840 ||
+                 (m_Computer->displayModes.last().refreshRate < 60 && m_StreamConfig.fps >= 60)) {
+            emit displayLaunchWarning("Your host PC GPU doesn't support 4K streaming. "
+                                      "A GeForce GTX 900-series (Maxwell) or later GPU is required for 4K streaming.");
+
+            m_StreamConfig.width = 1920;
+            m_StreamConfig.height = 1080;
+        }
     }
 
     // Always allow the launch to proceed for now

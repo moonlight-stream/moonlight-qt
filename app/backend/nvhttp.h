@@ -27,6 +27,21 @@ public:
 
 Q_DECLARE_METATYPE(NvApp)
 
+class NvDisplayMode
+{
+public:
+    bool operator==(const NvDisplayMode& other) const
+    {
+        return width == other.width &&
+                height == other.height &&
+                refreshRate == other.refreshRate;
+    }
+
+    int width;
+    int height;
+    int refreshRate;
+};
+
 class GfeHttpResponseException : public std::exception
 {
 public:
@@ -116,6 +131,10 @@ public:
 
     QImage
     getBoxArt(int appId);
+
+    static
+    QVector<NvDisplayMode>
+    getDisplayModeList(QString serverInfo);
 
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;

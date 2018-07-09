@@ -58,6 +58,9 @@ public:
     int currentGameId;
     QString gfeVersion;
     QString appVersion;
+    QVector<NvDisplayMode> displayModes;
+    int maxLumaPixelsHEVC;
+    int serverCodecModeSupport;
 
     // Persisted traits
     QString localAddress;
@@ -66,7 +69,6 @@ public:
     QByteArray macAddress;
     QString name;
     QString uuid;
-    int serverCodecModeSupport;
     QVector<NvApp> appList;
 
     // Synchronization

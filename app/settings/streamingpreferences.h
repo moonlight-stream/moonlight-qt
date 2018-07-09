@@ -41,9 +41,9 @@ public:
     };
     Q_ENUM(VideoDecoderSelection)
 
-    Q_PROPERTY(int width MEMBER width NOTIFY resolutionOrFpsChanged)
-    Q_PROPERTY(int height MEMBER height NOTIFY resolutionOrFpsChanged)
-    Q_PROPERTY(int fps MEMBER fps NOTIFY resolutionOrFpsChanged)
+    Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
+    Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
+    Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
     Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
     Q_PROPERTY(bool fullScreen MEMBER fullScreen NOTIFY fullScreenChanged)
     Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
@@ -67,7 +67,7 @@ public:
     VideoDecoderSelection videoDecoderSelection;
 
 signals:
-    void resolutionOrFpsChanged();
+    void displayModeChanged();
     void bitrateChanged();
     void fullScreenChanged();
     void gameOptimizationsChanged();

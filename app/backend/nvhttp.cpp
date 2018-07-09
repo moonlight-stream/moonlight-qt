@@ -182,6 +182,33 @@ NvHTTP::quitApp()
     }
 }
 
+QVector<NvDisplayMode>
+NvHTTP::getDisplayModeList(QString serverInfo)
+{
+    QXmlStreamReader xmlReader(serverInfo);
+    QVector<NvDisplayMode> modes;
+
+    while (!xmlReader.atEnd()) {
+        while (xmlReader.readNextStartElement()) {
+            QStringRef name = xmlReader.name();
+            if (xmlReader.name() == "DisplayMode") {
+                modes.append(NvDisplayMode());
+            }
+            else if (xmlReader.name() == "Width") {
+                modes.last().width = xmlReader.readElementText().toInt();
+            }
+            else if (xmlReader.name() == "Height") {
+                modes.last().height = xmlReader.readElementText().toInt();
+            }
+            else if (xmlReader.name() == "RefreshRate") {
+                modes.last().refreshRate = xmlReader.readElementText().toInt();
+            }
+        }
+    }
+
+    return modes;
+}
+
 QVector<NvApp>
 NvHTTP::getAppList()
 {

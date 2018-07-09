@@ -10,7 +10,6 @@
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
 #define SER_MAC "mac"
-#define SER_CODECSUPP "codecsupport"
 #define SER_LOCALADDR "localaddress"
 #define SER_REMOTEADDR "remoteaddress"
 #define SER_MANUALADDR "manualaddress"
@@ -25,7 +24,6 @@ NvComputer::NvComputer(QSettings& settings)
     this->name = settings.value(SER_NAME).toString();
     this->uuid = settings.value(SER_UUID).toString();
     this->macAddress = settings.value(SER_MAC).toByteArray();
-    this->serverCodecModeSupport = settings.value(SER_CODECSUPP).toInt();
     this->localAddress = settings.value(SER_LOCALADDR).toString();
     this->remoteAddress = settings.value(SER_REMOTEADDR).toString();
     this->manualAddress = settings.value(SER_MANUALADDR).toString();
@@ -61,7 +59,6 @@ NvComputer::serialize(QSettings& settings)
     settings.setValue(SER_NAME, name);
     settings.setValue(SER_UUID, uuid);
     settings.setValue(SER_MAC, macAddress);
-    settings.setValue(SER_CODECSUPP, serverCodecModeSupport);
     settings.setValue(SER_LOCALADDR, localAddress);
     settings.setValue(SER_REMOTEADDR, remoteAddress);
     settings.setValue(SER_MANUALADDR, manualAddress);
@@ -111,6 +108,21 @@ NvComputer::NvComputer(QString address, QString serverInfo)
     else {
         this->serverCodecModeSupport = 0;
     }
+
+    QString maxLumaPixelsHEVC = NvHTTP::getXmlString(serverInfo, "MaxLumaPixelsHEVC");
+    if (!maxLumaPixelsHEVC.isNull()) {
+        this->maxLumaPixelsHEVC = maxLumaPixelsHEVC.toInt();
+    }
+    else {
+        this->maxLumaPixelsHEVC = 0;
+    }
+
+    this->displayModes = NvHTTP::getDisplayModeList(serverInfo);
+    std::stable_sort(this->displayModes.begin(), this->displayModes.end(),
+                     [](const NvDisplayMode& mode1, const NvDisplayMode& mode2) {
+        return mode1.width * mode1.height * mode1.refreshRate <
+                mode2.width * mode2.height * mode2.refreshRate;
+    });
 
     this->localAddress = NvHTTP::getXmlString(serverInfo, "LocalIP");
     this->remoteAddress = NvHTTP::getXmlString(serverInfo, "ExternalIP");
@@ -249,7 +261,9 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED(state);
     ASSIGN_IF_CHANGED(gfeVersion);
     ASSIGN_IF_CHANGED(appVersion);
+    ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(appList);
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(displayModes);
     return changed;
 }
 
