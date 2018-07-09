@@ -1,6 +1,7 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QIcon>
+#include <QQuickStyle>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -44,6 +45,8 @@ int main(int argc, char *argv[])
                                               [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                   return new ComputerManager();
                                               });
+
+    QQuickStyle::setStyle("Material");
 
     // Load the main.qml file
     QQmlApplicationEngine engine;

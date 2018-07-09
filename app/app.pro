@@ -1,4 +1,4 @@
-QT += core quick network
+QT += core quick network quickcontrols2
 CONFIG += c++11
 
 TARGET = moonlight-qt
