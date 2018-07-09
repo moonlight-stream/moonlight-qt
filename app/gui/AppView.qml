@@ -18,6 +18,10 @@ GridView {
     cellWidth: 225; cellHeight: 350;
     focus: true
 
+    // Cache delegates for 1000px in both directions to improve
+    // scrolling and resizing performance
+    cacheBuffer: 1000
+
     // The StackView will trigger a visibility change when
     // we're pushed onto it, causing our onVisibleChanged
     // routine to run, but only if we start as invisible
