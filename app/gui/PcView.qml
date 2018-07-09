@@ -81,7 +81,7 @@ GridView {
             id: pcIcon
             anchors.horizontalCenter: parent.horizontalCenter;
             source: {
-                model.addPc ? "ic_add_to_queue_white_48px.svg" : "ic_tv_white_48px.svg"
+                model.addPc ? "qrc:/res/ic_add_to_queue_white_48px.svg" : "qrc:/res/ic_tv_white_48px.svg"
             }
             sourceSize {
                 width: 200
