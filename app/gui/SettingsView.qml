@@ -1,9 +1,19 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 
+import StreamingPreferences 1.0
+
 ScrollView {
     id: settingsPage
     objectName: "Settings"
+
+    StreamingPreferences {
+        id: prefs
+    }
+
+    Component.onDestruction: {
+        prefs.save()
+    }
 
     Column {
         x: 10
@@ -35,7 +45,7 @@ ScrollView {
                 Label {
                     width: parent.width
                     id: resFPSdesc
-                    text: qsTr("Setting values too high for your device may cause lag or crashing")
+                    text: qsTr("Setting values too high for your device may cause lag or crashes")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                     color: "white"
@@ -43,14 +53,12 @@ ScrollView {
 
                 ComboBox {
                     id: resolutionComboBox
-                    currentIndex : 4
+                    currentIndex : 1
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
                     font.pointSize: 9
                     model: ListModel {
                         id: resolutionListModel
                         // TODO have values associated with the text.
-                        ListElement { text: "360p 30 FPS" }
-                        ListElement { text: "360p 60 FPS" }
                         ListElement { text: "720p 30 FPS" }
                         ListElement { text: "720p 60 FPS" }
                         ListElement { text: "1080p 30 FPS" }
@@ -64,7 +72,7 @@ ScrollView {
                 Label {
                     width: parent.width
                     id: bitrateTitle
-                    text: qsTr("Video bitrate target")
+                    text: qsTr("Video bitrate: ")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                     color: "white"
@@ -73,7 +81,7 @@ ScrollView {
                 Label {
                     width: parent.width
                     id: bitrateDesc
-                    text: qsTr("Lower bitrate to reduce stuttering. Raise bitrate to increase image quality.")
+                    text: qsTr("Lower bitrate to reduce lag and stuttering. Raise bitrate to increase image quality.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                     color: "white"
@@ -84,31 +92,27 @@ ScrollView {
                     wheelEnabled: true
 
                     // TODO value should be loaded as the current value.
-                    value: 500
+                    value: prefs.bitrateKbps
                     stepSize: 500
                     from : 500
-                    to: 10000
+                    to: 100000
                     snapMode: "SnapOnRelease"
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
 
-                    // TODO store the value
-                    // TODO display the current value to the user
-                    onValueChanged:
-                    {
-                        console.debug(slider.value + " Slider moved")
+                    onValueChanged: {
+                        bitrateTitle.text = "Video bitrate: " + (value / 1000.0) + " Mbps"
+                        prefs.bitrateKbps = value
                     }
                 }
 
                 CheckBox {
                     id: fullScreenCheck
-                    text: "<font color=\"white\">Stretch video to full-screen</font>"
+                    text: "<font color=\"white\">Full-screen</font>"
                     font.pointSize:  12
-                }
-
-                CheckBox {
-                    id: pipObserverCheck
-                    text: "<font color=\"white\">Enable Picture-in-Picture observer mode</font>"
-                    font.pointSize: 12
+                    checked: prefs.fullScreen
+                    onCheckedChanged: {
+                        prefs.fullScreen = checked
+                    }
                 }
             }
         }
@@ -147,6 +151,10 @@ ScrollView {
                     id: multiControllerCheck
                     text: "<font color=\"white\">Multiple controller support</font>"
                     font.pointSize:  12
+                    checked: prefs.multiController
+                    onCheckedChanged: {
+                        prefs.multiController = checked
+                    }
                 }
                 CheckBox {
                     id: mouseEmulationCheck
@@ -190,12 +198,20 @@ ScrollView {
                     id: optimizeGameSettingsCheck
                     text: "<font color=\"white\">Optimize game settings</font>"
                     font.pointSize:  12
+                    checked: prefs.gameOptimizations
+                    onCheckedChanged: {
+                        prefs.gameOptimizations = checked
+                    }
                 }
 
                 CheckBox {
                     id: audioPcCheck
-                    text: "<font color=\"white\">Play audio on PC</font>"
+                    text: "<font color=\"white\">Play audio on host PC</font>"
                     font.pointSize:  12
+                    checked: prefs.playAudioOnHost
+                    onCheckedChanged: {
+                        prefs.playAudioOnHost = checked
+                    }
                 }
             }
         }
