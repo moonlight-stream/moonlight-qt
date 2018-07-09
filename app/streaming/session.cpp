@@ -112,7 +112,11 @@ Session::Session(NvComputer* computer, NvApp& app)
     {
     case StreamingPreferences::VCC_AUTO:
         // TODO: Determine if HEVC is better depending on the decoder
-        m_StreamConfig.supportsHevc = true;
+        // NOTE: HEVC currently uses only 1 slice regardless of what
+        // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
+        // never use it for software decoding (unless common-c starts
+        // respecting it for HEVC).
+        m_StreamConfig.supportsHevc = false;
         m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:

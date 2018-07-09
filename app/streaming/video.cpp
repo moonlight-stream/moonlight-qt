@@ -5,6 +5,8 @@ AVPacket Session::s_Pkt;
 AVCodecContext* Session::s_VideoDecoderCtx;
 QByteArray Session::s_DecodeBuffer;
 
+#define MAX_SLICES 4
+
 int Session::getDecoderCapabilities()
 {
     int caps = 0;
@@ -13,7 +15,7 @@ int Session::getDecoderCapabilities()
     caps |= CAPABILITY_DIRECT_SUBMIT;
 
     // Slice up to 4 times for parallel decode, once slice per core
-    caps |= CAPABILITY_SLICES_PER_FRAME(std::min(4, SDL_GetCPUCount()));
+    caps |= CAPABILITY_SLICES_PER_FRAME(std::min(MAX_SLICES, SDL_GetCPUCount()));
 
     return caps;
 }
@@ -51,7 +53,7 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
     // Enable slice multi-threading for software decoding
     s_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
     s_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
-    s_VideoDecoderCtx->thread_count = SDL_GetCPUCount();
+    s_VideoDecoderCtx->thread_count = std::min(MAX_SLICES, SDL_GetCPUCount());
 
     // Setup decoding parameters
     s_VideoDecoderCtx->width = width;
