@@ -72,16 +72,12 @@ GridView {
             anchors.fill: parent
             onClicked: {
                 // TODO: Check if a different game is running
-                var session = appModel.createSessionForApp(index)
 
-                // Don't poll while the stream is running
-                ComputerManager.stopPollingAsync()
-
-                // Run the streaming session to completion
-                session.exec()
-
-                // Start polling again
-                ComputerManager.startPolling()
+                var component = Qt.createComponent("StreamSegue.qml")
+                var segue = component.createObject(stackView)
+                segue.appname = model.name
+                segue.session = appModel.createSessionForApp(index)
+                stackView.push(segue)
             }
         }
     }
