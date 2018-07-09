@@ -15,6 +15,22 @@ ApplicationWindow {
         anchors.fill: parent
     }
 
+    function navigateTo(url, objectName)
+    {
+        var existingItem = stackView.find(function(item, index) {
+            return item.objectName === objectName
+        })
+
+        if (existingItem !== null) {
+            // Pop to the existing item
+            stackView.pop(existingItem)
+        }
+        else {
+            // Create a new item
+            stackView.push(url)
+        }
+    }
+
     header: ToolBar {
 
         RowLayout {
@@ -46,17 +62,6 @@ ApplicationWindow {
             }
 
             ToolButton {
-                icon.source: "qrc:/res/settings.png"
-                onClicked: stackView.push("qrc:/gui/SettingsView.qml")
-
-                Menu {
-                    id: optionsMenu
-                    x: parent.width
-                    transformOrigin: Menu.TopRight
-                }
-            }
-
-            ToolButton {
                 icon.source: "qrc:/res/question_mark.png"
 
                 // TODO need to make sure browser is brought to foreground.
@@ -64,6 +69,28 @@ ApplicationWindow {
 
                 Menu {
                     id: helpButton
+                    x: parent.width
+                    transformOrigin: Menu.TopRight
+                }
+            }
+
+            ToolButton {
+                icon.source: "qrc:/res/ic_videogame_asset_white_48px.svg"
+                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
+
+                Menu {
+                    id: gamepadMappingMenu
+                    x: parent.width
+                    transformOrigin: Menu.TopRight
+                }
+            }
+
+            ToolButton {
+                icon.source: "qrc:/res/settings.png"
+                onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
+
+                Menu {
+                    id: optionsMenu
                     x: parent.width
                     transformOrigin: Menu.TopRight
                 }

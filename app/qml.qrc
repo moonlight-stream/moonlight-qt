@@ -8,5 +8,6 @@
         <file>gui/AppView.qml</file>
         <file>gui/SettingsView.qml</file>
         <file>gui/StreamSegue.qml</file>
+        <file>gui/GamepadMapper.qml</file>
     </qresource>
 </RCC>
