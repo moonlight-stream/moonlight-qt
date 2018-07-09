@@ -10,6 +10,7 @@ import ComputerManager 1.0
 GridView {
     property ComputerModel computerModel : createModel()
 
+    id: pcGrid
     anchors.fill: parent
     anchors.leftMargin: 5
     anchors.topMargin: 5
@@ -225,6 +226,17 @@ GridView {
                     text: addPcDialog.hint
                 }
             }
+        }
+    }
+
+    ScrollBar.vertical: ScrollBar {
+        parent: pcGrid.parent
+        anchors {
+            top: pcGrid.top
+            left: pcGrid.right
+            bottom: pcGrid.bottom
+
+            leftMargin: -10
         }
     }
 }

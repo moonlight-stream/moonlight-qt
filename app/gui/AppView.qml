@@ -9,6 +9,7 @@ GridView {
     property int computerIndex
     property AppModel appModel : createModel()
 
+    id: appGrid
     anchors.fill: parent
     anchors.leftMargin: (parent.width % (cellWidth + anchors.rightMargin)) / 2
     anchors.topMargin: 5
@@ -85,6 +86,17 @@ GridView {
                 segue.session = appModel.createSessionForApp(index)
                 stackView.push(segue)
             }
+        }
+    }
+
+    ScrollBar.vertical: ScrollBar {
+        parent: appGrid.parent
+        anchors {
+            top: appGrid.top
+            left: appGrid.right
+            bottom: appGrid.bottom
+
+            leftMargin: -10
         }
     }
 }
