@@ -44,6 +44,12 @@ private:
 
     int sdlDetermineAudioConfiguration();
 
+    static
+    enum AVPixelFormat getHwFormat(AVCodecContext*,
+                                   const enum AVPixelFormat* pixFmts);
+
+    bool isHardwareDecodeAvailable(int videoFormat);
+
     void renderFrame(SDL_UserEvent* event);
 
     void dropFrame(SDL_UserEvent* event);
@@ -98,6 +104,8 @@ private:
     static AVPacket s_Pkt;
     static AVCodecContext* s_VideoDecoderCtx;
     static QByteArray s_DecodeBuffer;
+    static AVBufferRef* s_HwDeviceCtx;
+    static const AVCodecHWConfig* s_HwDecodeCfg;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;

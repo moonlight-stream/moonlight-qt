@@ -4,6 +4,12 @@
 AVPacket Session::s_Pkt;
 AVCodecContext* Session::s_VideoDecoderCtx;
 QByteArray Session::s_DecodeBuffer;
+AVBufferRef* Session::s_HwDeviceCtx;
+const AVCodecHWConfig* Session::s_HwDecodeCfg;
+
+#ifdef _WIN32
+#include <D3D9.h>
+#endif
 
 #define MAX_SLICES 4
 
@@ -15,9 +21,65 @@ int Session::getDecoderCapabilities()
     caps |= CAPABILITY_DIRECT_SUBMIT;
 
     // Slice up to 4 times for parallel decode, once slice per core
-    caps |= CAPABILITY_SLICES_PER_FRAME(std::min(MAX_SLICES, SDL_GetCPUCount()));
+    caps |= CAPABILITY_SLICES_PER_FRAME(qMin(MAX_SLICES, SDL_GetCPUCount()));
 
     return caps;
+}
+
+bool Session::isHardwareDecodeAvailable(int videoFormat)
+{
+    AVCodec* decoder;
+
+    if (videoFormat & VIDEO_FORMAT_MASK_H264) {
+        decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
+    }
+    else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
+        decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
+    }
+    else {
+        Q_ASSERT(false);
+        decoder = nullptr;
+    }
+
+    if (!decoder) {
+        // We don't support this codec at all
+        return false;
+    }
+
+    for (int i = 0;; i++) {
+        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
+        if (!config) {
+            return false;
+        }
+
+        if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
+            continue;
+        }
+
+        // Look for acceleration types we support
+        switch (config->device_type) {
+        case AV_HWDEVICE_TYPE_DXVA2:
+            // FIXME: Validate profiles
+            return true;
+        default:
+            continue;
+        }
+    }
+}
+
+enum AVPixelFormat Session::getHwFormat(AVCodecContext*,
+                                        const enum AVPixelFormat* pixFmts)
+{
+    const enum AVPixelFormat *p;
+
+    for (p = pixFmts; *p != -1; p++) {
+        if (*p == s_HwDecodeCfg->pix_fmt)
+            return *p;
+    }
+
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Failed to find HW surface format");
+    return AV_PIX_FMT_NONE;
 }
 
 int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */, void*, int)
@@ -43,6 +105,51 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
         return -1;
     }
 
+    SDL_assert(!s_HwDecodeCfg);
+    for (int i = 0; !s_HwDecodeCfg; i++) {
+        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
+        if (!config) {
+            // Ran out of configs
+            break;
+        }
+
+        if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
+            continue;
+        }
+
+        // Look for acceleration types we support
+        switch (config->device_type) {
+        case AV_HWDEVICE_TYPE_DXVA2:
+            s_HwDecodeCfg = config;
+            break;
+        default:
+            continue;
+        }
+    }
+
+    // These will be cleaned up by the Session class outside
+    // of our cleanup routine.
+    s_ActiveSession->m_Renderer = SDL_CreateRenderer(s_ActiveSession->m_Window, -1,
+                                                     SDL_RENDERER_ACCELERATED);
+    if (!s_ActiveSession->m_Renderer) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRenderer() failed: %s",
+                     SDL_GetError());
+        return -1;
+    }
+
+    s_ActiveSession->m_Texture = SDL_CreateTexture(s_ActiveSession->m_Renderer,
+                                                   s_HwDecodeCfg ? SDL_PIXELFORMAT_NV12 : SDL_PIXELFORMAT_YV12,
+                                                   SDL_TEXTUREACCESS_STREAMING,
+                                                   width,
+                                                   height);
+    if (!s_ActiveSession->m_Texture) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRenderer() failed: %s",
+                     SDL_GetError());
+        return -1;
+    }
+
     s_VideoDecoderCtx = avcodec_alloc_context3(decoder);
     if (!s_VideoDecoderCtx) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -50,15 +157,42 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
         return -1;
     }
 
-    // Enable slice multi-threading for software decoding
+    if (s_HwDecodeCfg != nullptr) {
+        int err = av_hwdevice_ctx_create(&s_HwDeviceCtx,
+                                         s_HwDecodeCfg->device_type,
+                                         nullptr,
+                                         nullptr,
+                                         0);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to initialize hardware decoder: %d %x",
+                         s_HwDecodeCfg->device_type,
+                         err);
+            return -1;
+        }
+
+        // Pass our ownership of our reference to the decoder context
+        s_VideoDecoderCtx->hw_device_ctx = s_HwDeviceCtx;
+    }
+
+    // Always request low delay decoding
     s_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
-    s_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
-    s_VideoDecoderCtx->thread_count = std::min(MAX_SLICES, SDL_GetCPUCount());
+
+    // Enable slice multi-threading for software decoding
+    if (!s_HwDecodeCfg) {
+        s_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
+        s_VideoDecoderCtx->thread_count = qMin(MAX_SLICES, SDL_GetCPUCount());
+    }
 
     // Setup decoding parameters
     s_VideoDecoderCtx->width = width;
     s_VideoDecoderCtx->height = height;
     s_VideoDecoderCtx->pix_fmt = AV_PIX_FMT_YUV420P; // FIXME: HDR
+
+    // Attach hardware decoding callbacks
+    if (s_HwDecodeCfg != nullptr) {
+        s_VideoDecoderCtx->get_format = getHwFormat;
+    }
 
     int err = avcodec_open2(s_VideoDecoderCtx, decoder, nullptr);
     if (err < 0) {
@@ -80,6 +214,8 @@ void Session::drCleanup()
     avcodec_close(s_VideoDecoderCtx);
     av_free(s_VideoDecoderCtx);
     s_VideoDecoderCtx = nullptr;
+
+    s_HwDecodeCfg = nullptr;
 }
 
 int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
