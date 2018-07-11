@@ -45,9 +45,16 @@ private:
     int sdlDetermineAudioConfiguration();
 
     static
+    bool chooseDecoder(int videoFormat,
+                       AVCodec*& chosenDecoder,
+                       const AVCodecHWConfig*& chosenHwConfig,
+                       AVBufferRef*& newHwContext);
+
+    static
     enum AVPixelFormat getHwFormat(AVCodecContext*,
                                    const enum AVPixelFormat* pixFmts);
 
+    static
     bool isHardwareDecodeAvailable(int videoFormat);
 
     void renderFrame(SDL_UserEvent* event);

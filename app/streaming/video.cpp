@@ -26,30 +26,39 @@ int Session::getDecoderCapabilities()
     return caps;
 }
 
-bool Session::isHardwareDecodeAvailable(int videoFormat)
+bool Session::chooseDecoder(int videoFormat,
+                            AVCodec*& chosenDecoder,
+                            const AVCodecHWConfig*& chosenHwConfig,
+                            AVBufferRef*& newHwContext)
 {
-    AVCodec* decoder;
+    int err;
 
     if (videoFormat & VIDEO_FORMAT_MASK_H264) {
-        decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
+        chosenDecoder = avcodec_find_decoder(AV_CODEC_ID_H264);
     }
     else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
-        decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
+        chosenDecoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
     }
     else {
         Q_ASSERT(false);
-        decoder = nullptr;
+        chosenDecoder = nullptr;
     }
 
-    if (!decoder) {
-        // We don't support this codec at all
+    if (!chosenDecoder) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to find decoder for format: %x",
+                     videoFormat);
         return false;
     }
 
     for (int i = 0;; i++) {
-        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
+        const AVCodecHWConfig *config = avcodec_get_hw_config(chosenDecoder, i);
         if (!config) {
-            return false;
+            // No matching hardware acceleration support.
+            // This is not an error.
+            chosenHwConfig = nullptr;
+            newHwContext = nullptr;
+            return true;
         }
 
         if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
@@ -58,12 +67,55 @@ bool Session::isHardwareDecodeAvailable(int videoFormat)
 
         // Look for acceleration types we support
         switch (config->device_type) {
+        case AV_HWDEVICE_TYPE_VAAPI:
+        case AV_HWDEVICE_TYPE_VDPAU:
         case AV_HWDEVICE_TYPE_DXVA2:
-            // FIXME: Validate profiles
+            // Ensure we can actually use this decoder. FFmpeg may
+            // have returned decoders it thinks we can use but they
+            // may not really be usable when it goes to load the libraries.
+            err = av_hwdevice_ctx_create(&newHwContext,
+                                         config->device_type,
+                                         nullptr,
+                                         nullptr,
+                                         0);
+            if (err < 0) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Failed to initialize hardware decoder: %d %x",
+                             config->device_type,
+                             err);
+                continue;
+            }
+
+            // FIXME: Validate profiles (free newHwContext on failure)
+
+            chosenHwConfig = config;
             return true;
         default:
             continue;
         }
+    }
+}
+
+bool Session::isHardwareDecodeAvailable(int videoFormat)
+{
+    AVCodec* decoder;
+    const AVCodecHWConfig* hwConfig;
+    AVBufferRef* hwCtx;
+
+    if (chooseDecoder(videoFormat, decoder, hwConfig, hwCtx)) {
+        if (hwCtx != nullptr) {
+            // Free the context, since we don't actually need it
+            av_buffer_unref(&hwCtx);
+            return true;
+        }
+        else {
+            // Didn't find a working HW codec
+            return false;
+        }
+    }
+    else {
+        // Failed to find *any* decoder, including software
+        return false;
     }
 }
 
@@ -88,43 +140,9 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
 
     av_init_packet(&s_Pkt);
 
-    switch (videoFormat) {
-    case VIDEO_FORMAT_H264:
-        decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
-        break;
-    case VIDEO_FORMAT_H265:
-    case VIDEO_FORMAT_H265_MAIN10:
-        decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
-        break;
-    }
-
-    if (!decoder) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Unable to find decoder for format: %x",
-                     videoFormat);
+    if (!chooseDecoder(videoFormat, decoder, s_HwDecodeCfg, s_HwDeviceCtx)) {
+        // Error logged in chooseDecoder()
         return -1;
-    }
-
-    SDL_assert(!s_HwDecodeCfg);
-    for (int i = 0; !s_HwDecodeCfg; i++) {
-        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
-        if (!config) {
-            // Ran out of configs
-            break;
-        }
-
-        if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
-            continue;
-        }
-
-        // Look for acceleration types we support
-        switch (config->device_type) {
-        case AV_HWDEVICE_TYPE_DXVA2:
-            s_HwDecodeCfg = config;
-            break;
-        default:
-            continue;
-        }
     }
 
     // These will be cleaned up by the Session class outside
@@ -139,7 +157,7 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
     }
 
     s_ActiveSession->m_Texture = SDL_CreateTexture(s_ActiveSession->m_Renderer,
-                                                   s_HwDecodeCfg ? SDL_PIXELFORMAT_NV12 : SDL_PIXELFORMAT_YV12,
+                                                   SDL_PIXELFORMAT_YV12,
                                                    SDL_TEXTUREACCESS_STREAMING,
                                                    width,
                                                    height);
@@ -157,23 +175,8 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
         return -1;
     }
 
-    if (s_HwDecodeCfg != nullptr) {
-        int err = av_hwdevice_ctx_create(&s_HwDeviceCtx,
-                                         s_HwDecodeCfg->device_type,
-                                         nullptr,
-                                         nullptr,
-                                         0);
-        if (err < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to initialize hardware decoder: %d %x",
-                         s_HwDecodeCfg->device_type,
-                         err);
-            return -1;
-        }
-
-        // Pass our ownership of our reference to the decoder context
-        s_VideoDecoderCtx->hw_device_ctx = s_HwDeviceCtx;
-    }
+    // Pass our ownership of our reference to the decoder context (if we have one)
+    s_VideoDecoderCtx->hw_device_ctx = s_HwDeviceCtx;
 
     // Always request low delay decoding
     s_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
@@ -182,6 +185,10 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
     if (!s_HwDecodeCfg) {
         s_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
         s_VideoDecoderCtx->thread_count = qMin(MAX_SLICES, SDL_GetCPUCount());
+    }
+    else {
+        // No threading for HW decode
+        s_VideoDecoderCtx->thread_count = 1;
     }
 
     // Setup decoding parameters
