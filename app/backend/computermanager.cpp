@@ -49,6 +49,8 @@ NvComputer::NvComputer(QSettings& settings)
     this->state = CS_UNKNOWN;
     this->gfeVersion = nullptr;
     this->appVersion = nullptr;
+    this->maxLumaPixelsHEVC = 0;
+    this->serverCodecModeSupport = 0;
 }
 
 void
