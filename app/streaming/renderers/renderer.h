@@ -12,6 +12,7 @@ public:
                             int videoFormat,
                             int width,
                             int height) = 0;
+    virtual bool prepareDecoderContext(AVCodecContext* context) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
 };
 
@@ -23,6 +24,7 @@ public:
                             int videoFormat,
                             int width,
                             int height);
+    virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrame(AVFrame* frame);
 
 private:

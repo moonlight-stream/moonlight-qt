@@ -111,11 +111,16 @@ Session::Session(NvComputer* computer, NvApp& app)
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
         break;
     }
+
     switch (m_Preferences.videoCodecConfig)
     {
     case StreamingPreferences::VCC_AUTO:
         // TODO: Determine if HEVC is better depending on the decoder
-        m_StreamConfig.supportsHevc = isHardwareDecodeAvailable(VIDEO_FORMAT_H265);
+        m_StreamConfig.supportsHevc =
+                isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                          VIDEO_FORMAT_H265,
+                                          m_StreamConfig.width,
+                                          m_StreamConfig.height);
         m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:
@@ -145,7 +150,10 @@ bool Session::validateLaunch()
                                           "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
             }
         }
-        else if (!isHardwareDecodeAvailable(VIDEO_FORMAT_H265)) {
+        else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                            VIDEO_FORMAT_H265,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height)) {
             // NOTE: HEVC currently uses only 1 slice regardless of what
             // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
             // never use it for software decoding (unless common-c starts
@@ -167,7 +175,10 @@ bool Session::validateLaunch()
             emit displayLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
                                       "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
         }
-        else if (!isHardwareDecodeAvailable(VIDEO_FORMAT_H265_MAIN10)) {
+        else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                            VIDEO_FORMAT_H265_MAIN10,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height)) {
             emit displayLaunchWarning("Your client PC GPU doesn't support HEVC Main10 decoding for HDR streaming.");
         }
         else {

@@ -18,13 +18,17 @@ SdlRenderer::~SdlRenderer()
     }
 }
 
+bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
+{
+    /* Nothing to do */
+    return true;
+}
+
 bool SdlRenderer::initialize(SDL_Window* window,
                              int,
                              int width,
                              int height)
 {
-    // These will be cleaned up by the Session class outside
-    // of our cleanup routine.
     m_Renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

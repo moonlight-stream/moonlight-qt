@@ -7,7 +7,7 @@
 #include "backend/computermanager.h"
 #include "settings/streamingpreferences.h"
 #include "input.hpp"
-#include "renderer.h"
+#include "renderers/renderer.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -46,17 +46,21 @@ private:
     int sdlDetermineAudioConfiguration();
 
     static
-    bool chooseDecoder(int videoFormat,
+    bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
+                       SDL_Window* window,
+                       int videoFormat,
+                       int width, int height,
                        AVCodec*& chosenDecoder,
                        const AVCodecHWConfig*& chosenHwConfig,
-                       AVBufferRef*& newHwContext);
+                       IRenderer*& newRenderer);
 
     static
     enum AVPixelFormat getHwFormat(AVCodecContext*,
                                    const enum AVPixelFormat* pixFmts);
 
     static
-    bool isHardwareDecodeAvailable(int videoFormat);
+    bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
+                                   int videoFormat, int width, int height);
 
     void renderFrame(SDL_UserEvent* event);
 

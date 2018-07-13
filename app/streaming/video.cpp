@@ -1,10 +1,13 @@
 #include <Limelight.h>
 #include "session.hpp"
 
+#ifdef _WIN32
+#include "renderers/dxva2.h"
+#endif
+
 AVPacket Session::s_Pkt;
 AVCodecContext* Session::s_VideoDecoderCtx;
 QByteArray Session::s_DecodeBuffer;
-AVBufferRef* Session::s_HwDeviceCtx;
 const AVCodecHWConfig* Session::s_HwDecodeCfg;
 IRenderer* Session::s_Renderer;
 
@@ -23,13 +26,14 @@ int Session::getDecoderCapabilities()
     return caps;
 }
 
-bool Session::chooseDecoder(int videoFormat,
+bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
+                            SDL_Window* window,
+                            int videoFormat,
+                            int width, int height,
                             AVCodec*& chosenDecoder,
                             const AVCodecHWConfig*& chosenHwConfig,
-                            AVBufferRef*& newHwContext)
+                            IRenderer*& newRenderer)
 {
-    int err;
-
     if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         chosenDecoder = avcodec_find_decoder(AV_CODEC_ID_H264);
     }
@@ -50,12 +54,20 @@ bool Session::chooseDecoder(int videoFormat,
 
     for (int i = 0;; i++) {
         const AVCodecHWConfig *config = avcodec_get_hw_config(chosenDecoder, i);
-        if (!config) {
+        if (!config || vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
             // No matching hardware acceleration support.
             // This is not an error.
             chosenHwConfig = nullptr;
-            newHwContext = nullptr;
-            return true;
+            newRenderer = new SdlRenderer();
+            if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
+                    newRenderer->initialize(window, videoFormat, width, height)) {
+                return true;
+            }
+            else {
+                delete newRenderer;
+                newRenderer = nullptr;
+                return false;
+            }
         }
 
         if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
@@ -64,71 +76,54 @@ bool Session::chooseDecoder(int videoFormat,
 
         // Look for acceleration types we support
         switch (config->device_type) {
-        case AV_HWDEVICE_TYPE_VAAPI:
-        case AV_HWDEVICE_TYPE_VDPAU:
+#ifdef _WIN32
         case AV_HWDEVICE_TYPE_DXVA2:
-            // Ensure we can actually use this decoder. FFmpeg may
-            // have returned decoders it thinks we can use but they
-            // may not really be usable when it goes to load the libraries.
-            err = av_hwdevice_ctx_create(&newHwContext,
-                                         config->device_type,
-                                         nullptr,
-                                         nullptr,
-                                         0);
-            if (err < 0) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Failed to initialize hardware decoder: %d %x",
-                             config->device_type,
-                             err);
-                continue;
-            }
-
-            // FIXME: Validate profiles (free newHwContext on failure)
-
-            chosenHwConfig = config;
-            return true;
+            newRenderer = new DXVA2Renderer();
+#endif
+            break;
         default:
             continue;
         }
-    }
-}
 
-bool Session::isHardwareDecodeAvailable(int videoFormat)
-{
-    AVCodec* decoder;
-    const AVCodecHWConfig* hwConfig;
-    AVBufferRef* hwCtx;
-
-    if (chooseDecoder(videoFormat, decoder, hwConfig, hwCtx)) {
-        if (hwCtx != nullptr) {
-            // Free the context, since we don't actually need it
-            av_buffer_unref(&hwCtx);
+        if (newRenderer->initialize(window, videoFormat, width, height)) {
+            chosenHwConfig = config;
             return true;
         }
         else {
-            // Didn't find a working HW codec
-            return false;
+            // Failed to initialize
+            delete newRenderer;
+            newRenderer = nullptr;
         }
-    }
-    else {
-        // Failed to find *any* decoder, including software
-        return false;
     }
 }
 
-enum AVPixelFormat Session::getHwFormat(AVCodecContext*,
-                                        const enum AVPixelFormat* pixFmts)
+bool Session::isHardwareDecodeAvailable(
+        StreamingPreferences::VideoDecoderSelection vds,
+        int videoFormat, int width, int height)
 {
-    const enum AVPixelFormat *p;
+    AVCodec* decoder;
+    const AVCodecHWConfig* hwConfig;
+    IRenderer* renderer;
 
-    for (p = pixFmts; *p != -1; p++) {
-        if (*p == s_HwDecodeCfg->pix_fmt)
-            return *p;
+    // Create temporary window to instantiate the decoder
+    SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
+    if (!window) {
+        return false;
     }
 
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "Failed to find HW surface format");
-    return AV_PIX_FMT_NONE;
+    if (chooseDecoder(vds, window, videoFormat, width, height, decoder, hwConfig, renderer)) {
+        // The renderer may have referenced the window, so
+        // we must delete the renderer before the window.
+        delete renderer;
+
+        SDL_DestroyWindow(window);
+        return hwConfig != nullptr;
+    }
+    else {
+        SDL_DestroyWindow(window);
+        // Failed to find *any* decoder, including software
+        return false;
+    }
 }
 
 int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */, void*, int)
@@ -137,7 +132,10 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
 
     av_init_packet(&s_Pkt);
 
-    if (!chooseDecoder(videoFormat, decoder, s_HwDecodeCfg, s_HwDeviceCtx)) {
+    if (!chooseDecoder(s_ActiveSession->m_Preferences.videoDecoderSelection,
+                       s_ActiveSession->m_Window,
+                       videoFormat, width, height,
+                       decoder, s_HwDecodeCfg, s_Renderer)) {
         // Error logged in chooseDecoder()
         return -1;
     }
@@ -146,11 +144,9 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
     if (!s_VideoDecoderCtx) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to allocate video decoder context");
+        delete s_Renderer;
         return -1;
     }
-
-    // Pass our ownership of our reference to the decoder context (if we have one)
-    s_VideoDecoderCtx->hw_device_ctx = s_HwDeviceCtx;
 
     // Always request low delay decoding
     s_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
@@ -170,9 +166,11 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
     s_VideoDecoderCtx->height = height;
     s_VideoDecoderCtx->pix_fmt = AV_PIX_FMT_YUV420P; // FIXME: HDR
 
-    // Attach hardware decoding callbacks
-    if (s_HwDecodeCfg != nullptr) {
-        s_VideoDecoderCtx->get_format = getHwFormat;
+    // Allow the renderer to attach data to this decoder
+    if (!s_Renderer->prepareDecoderContext(s_VideoDecoderCtx)) {
+        delete s_Renderer;
+        av_free(s_VideoDecoderCtx);
+        return -1;
     }
 
     int err = avcodec_open2(s_VideoDecoderCtx, decoder, nullptr);
@@ -180,18 +178,7 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to open decoder for format: %x",
                      videoFormat);
-        av_free(s_VideoDecoderCtx);
-        return -1;
-    }
-
-    if (s_HwDecodeCfg == nullptr) {
-        s_Renderer = new SdlRenderer();
-    }
-
-    SDL_assert(s_Renderer != nullptr);
-    if (!s_Renderer->initialize(s_ActiveSession->m_Window,
-                                videoFormat, width, height)) {
-        avcodec_close(s_VideoDecoderCtx);
+        delete s_Renderer;
         av_free(s_VideoDecoderCtx);
         return -1;
     }
