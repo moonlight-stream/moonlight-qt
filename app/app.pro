@@ -57,8 +57,11 @@ SOURCES += \
     streaming/video.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
-    streaming/renderers/sdl.cpp \
-    streaming/renderers/dxva2.cpp
+    streaming/renderers/sdl.cpp
+
+win32 {
+    SOURCES += streaming/renderers/dxva2.cpp
+}
 
 HEADERS += \
     utils.h \
@@ -72,8 +75,11 @@ HEADERS += \
     streaming/session.hpp \
     gui/computermodel.h \
     gui/appmodel.h \
-    streaming/renderers/renderer.h \
-    streaming/renderers/dxva2.h
+    streaming/renderers/renderer.h
+
+win32 {
+    HEADERS += streaming/renderers/dxva2.h
+}
 
 RESOURCES += \
     resources.qrc \

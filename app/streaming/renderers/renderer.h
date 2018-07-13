@@ -8,6 +8,7 @@ extern "C" {
 
 class IRenderer {
 public:
+    virtual ~IRenderer() {}
     virtual bool initialize(SDL_Window* window,
                             int videoFormat,
                             int width,
