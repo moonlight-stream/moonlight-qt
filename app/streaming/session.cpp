@@ -79,9 +79,7 @@ void Session::clLogMessage(const char* format, ...)
 Session::Session(NvComputer* computer, NvApp& app)
     : m_Computer(computer),
       m_App(app),
-      m_Window(nullptr),
-      m_Renderer(nullptr),
-      m_Texture(nullptr)
+      m_Window(nullptr)
 {
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
@@ -210,12 +208,6 @@ class DeferredSessionCleanupTask : public QRunnable
     {
         // Finish cleanup of the connection state
         LiStopConnection();
-        if (Session::s_ActiveSession->m_Texture != nullptr) {
-            SDL_DestroyTexture(Session::s_ActiveSession->m_Texture);
-        }
-        if (Session::s_ActiveSession->m_Renderer != nullptr) {
-            SDL_DestroyRenderer(Session::s_ActiveSession->m_Renderer);
-        }
         if (Session::s_ActiveSession->m_Window != nullptr) {
             SDL_DestroyWindow(Session::s_ActiveSession->m_Window);
         }

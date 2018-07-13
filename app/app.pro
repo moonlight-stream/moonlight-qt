@@ -56,7 +56,8 @@ SOURCES += \
     streaming/audio.cpp \
     streaming/video.cpp \
     gui/computermodel.cpp \
-    gui/appmodel.cpp
+    gui/appmodel.cpp \
+    streaming/renderers/sdl.cpp
 
 HEADERS += \
     utils.h \
@@ -69,7 +70,8 @@ HEADERS += \
     streaming/input.hpp \
     streaming/session.hpp \
     gui/computermodel.h \
-    gui/appmodel.h
+    gui/appmodel.h \
+    streaming/renderer.h
 
 RESOURCES += \
     resources.qrc \

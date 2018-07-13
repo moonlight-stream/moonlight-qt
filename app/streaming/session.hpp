@@ -7,6 +7,7 @@
 #include "backend/computermanager.h"
 #include "settings/streamingpreferences.h"
 #include "input.hpp"
+#include "renderer.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -105,14 +106,13 @@ private:
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
-    SDL_Renderer* m_Renderer;
-    SDL_Texture* m_Texture;
 
     static AVPacket s_Pkt;
     static AVCodecContext* s_VideoDecoderCtx;
     static QByteArray s_DecodeBuffer;
     static AVBufferRef* s_HwDeviceCtx;
     static const AVCodecHWConfig* s_HwDecodeCfg;
+    static IRenderer* s_Renderer;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;

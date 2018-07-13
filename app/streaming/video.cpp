@@ -6,10 +6,7 @@ AVCodecContext* Session::s_VideoDecoderCtx;
 QByteArray Session::s_DecodeBuffer;
 AVBufferRef* Session::s_HwDeviceCtx;
 const AVCodecHWConfig* Session::s_HwDecodeCfg;
-
-#ifdef _WIN32
-#include <D3D9.h>
-#endif
+IRenderer* Session::s_Renderer;
 
 #define MAX_SLICES 4
 
@@ -145,29 +142,6 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
         return -1;
     }
 
-    // These will be cleaned up by the Session class outside
-    // of our cleanup routine.
-    s_ActiveSession->m_Renderer = SDL_CreateRenderer(s_ActiveSession->m_Window, -1,
-                                                     SDL_RENDERER_ACCELERATED);
-    if (!s_ActiveSession->m_Renderer) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRenderer() failed: %s",
-                     SDL_GetError());
-        return -1;
-    }
-
-    s_ActiveSession->m_Texture = SDL_CreateTexture(s_ActiveSession->m_Renderer,
-                                                   SDL_PIXELFORMAT_YV12,
-                                                   SDL_TEXTUREACCESS_STREAMING,
-                                                   width,
-                                                   height);
-    if (!s_ActiveSession->m_Texture) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRenderer() failed: %s",
-                     SDL_GetError());
-        return -1;
-    }
-
     s_VideoDecoderCtx = avcodec_alloc_context3(decoder);
     if (!s_VideoDecoderCtx) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -210,6 +184,18 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
         return -1;
     }
 
+    if (s_HwDecodeCfg == nullptr) {
+        s_Renderer = new SdlRenderer();
+    }
+
+    SDL_assert(s_Renderer != nullptr);
+    if (!s_Renderer->initialize(s_ActiveSession->m_Window,
+                                videoFormat, width, height)) {
+        avcodec_close(s_VideoDecoderCtx);
+        av_free(s_VideoDecoderCtx);
+        return -1;
+    }
+
     // 1MB frame buffer to start
     s_DecodeBuffer = QByteArray(1024 * 1024, 0);
 
@@ -223,6 +209,9 @@ void Session::drCleanup()
     s_VideoDecoderCtx = nullptr;
 
     s_HwDecodeCfg = nullptr;
+
+    delete s_Renderer;
+    s_Renderer = nullptr;
 }
 
 int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
@@ -290,18 +279,7 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
 void Session::renderFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
-
-    SDL_UpdateYUVTexture(m_Texture, nullptr,
-                         frame->data[0],
-                         frame->linesize[0],
-                         frame->data[1],
-                         frame->linesize[1],
-                         frame->data[2],
-                         frame->linesize[2]);
-    SDL_RenderClear(m_Renderer);
-    SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
-    SDL_RenderPresent(m_Renderer);
-
+    s_Renderer->renderFrame(frame);
     av_frame_free(&frame);
 }
 
