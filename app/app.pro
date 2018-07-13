@@ -25,7 +25,7 @@ win32 {
         LIBS += -L$$PWD/../libs/windows/lib/x64
     }
 
-    LIBS += ws2_32.lib winmm.lib
+    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib
 }
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
@@ -56,7 +56,12 @@ SOURCES += \
     streaming/audio.cpp \
     streaming/video.cpp \
     gui/computermodel.cpp \
-    gui/appmodel.cpp
+    gui/appmodel.cpp \
+    streaming/renderers/sdl.cpp
+
+win32 {
+    SOURCES += streaming/renderers/dxva2.cpp
+}
 
 HEADERS += \
     utils.h \
@@ -69,7 +74,12 @@ HEADERS += \
     streaming/input.hpp \
     streaming/session.hpp \
     gui/computermodel.h \
-    gui/appmodel.h
+    gui/appmodel.h \
+    streaming/renderers/renderer.h
+
+win32 {
+    HEADERS += streaming/renderers/dxva2.h
+}
 
 RESOURCES += \
     resources.qrc \

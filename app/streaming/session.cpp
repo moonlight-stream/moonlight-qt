@@ -79,9 +79,7 @@ void Session::clLogMessage(const char* format, ...)
 Session::Session(NvComputer* computer, NvApp& app)
     : m_Computer(computer),
       m_App(app),
-      m_Window(nullptr),
-      m_Renderer(nullptr),
-      m_Texture(nullptr)
+      m_Window(nullptr)
 {
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
@@ -113,15 +111,16 @@ Session::Session(NvComputer* computer, NvApp& app)
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
         break;
     }
+
     switch (m_Preferences.videoCodecConfig)
     {
     case StreamingPreferences::VCC_AUTO:
         // TODO: Determine if HEVC is better depending on the decoder
-        // NOTE: HEVC currently uses only 1 slice regardless of what
-        // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
-        // never use it for software decoding (unless common-c starts
-        // respecting it for HEVC).
-        m_StreamConfig.supportsHevc = false;
+        m_StreamConfig.supportsHevc =
+                isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                          VIDEO_FORMAT_H265,
+                                          m_StreamConfig.width,
+                                          m_StreamConfig.height);
         m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:
@@ -151,8 +150,16 @@ bool Session::validateLaunch()
                                           "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
             }
         }
-
-        // TODO: Validate HEVC support based on decoder caps
+        else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                            VIDEO_FORMAT_H265,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height)) {
+            // NOTE: HEVC currently uses only 1 slice regardless of what
+            // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
+            // never use it for software decoding (unless common-c starts
+            // respecting it for HEVC).
+            m_StreamConfig.supportsHevc = false;
+        }
     }
 
     if (m_StreamConfig.enableHdr) {
@@ -168,8 +175,14 @@ bool Session::validateLaunch()
             emit displayLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
                                       "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
         }
+        else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                            VIDEO_FORMAT_H265_MAIN10,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height)) {
+            emit displayLaunchWarning("Your client PC GPU doesn't support HEVC Main10 decoding for HDR streaming.");
+        }
         else {
-            // TODO: Also validate client decoder and display capabilites
+            // TODO: Also validate display capabilites
 
             // Validation successful so HDR is good to go
             m_StreamConfig.enableHdr = true;
@@ -206,12 +219,6 @@ class DeferredSessionCleanupTask : public QRunnable
     {
         // Finish cleanup of the connection state
         LiStopConnection();
-        if (Session::s_ActiveSession->m_Texture != nullptr) {
-            SDL_DestroyTexture(Session::s_ActiveSession->m_Texture);
-        }
-        if (Session::s_ActiveSession->m_Renderer != nullptr) {
-            SDL_DestroyRenderer(Session::s_ActiveSession->m_Renderer);
-        }
         if (Session::s_ActiveSession->m_Window != nullptr) {
             SDL_DestroyWindow(Session::s_ActiveSession->m_Window);
         }
@@ -265,6 +272,23 @@ void Session::exec()
         return;
     }
 
+    m_Window = SDL_CreateWindow("Moonlight",
+                                SDL_WINDOWPOS_UNDEFINED,
+                                SDL_WINDOWPOS_UNDEFINED,
+                                m_StreamConfig.width,
+                                m_StreamConfig.height,
+                                SDL_WINDOW_HIDDEN |
+                                (m_Preferences.fullScreen ?
+                                    SDL_WINDOW_FULLSCREEN :
+                                    0));
+    if (!m_Window) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateWindow() failed: %s",
+                     SDL_GetError());
+        s_ActiveSessionSemaphore.release();
+        return;
+    }
+
     QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
     QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
 
@@ -295,44 +319,14 @@ void Session::exec()
     emit connectionStarted();
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
-    m_Window = SDL_CreateWindow("Moonlight",
-                                SDL_WINDOWPOS_UNDEFINED,
-                                SDL_WINDOWPOS_UNDEFINED,
-                                m_StreamConfig.width,
-                                m_StreamConfig.height,
-                                (m_Preferences.fullScreen ?
-                                    SDL_WINDOW_FULLSCREEN :
-                                    0));
-    if (!m_Window) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateWindow() failed: %s",
-                     SDL_GetError());
-        goto DispatchDeferredCleanup;
-    }
-
-    m_Renderer = SDL_CreateRenderer(m_Window, -1,
-                                    SDL_RENDERER_ACCELERATED);
-    if (!m_Renderer) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRenderer() failed: %s",
-                     SDL_GetError());
-        goto DispatchDeferredCleanup;
-    }
-
-    m_Texture = SDL_CreateTexture(m_Renderer,
-                                  SDL_PIXELFORMAT_YV12,
-                                  SDL_TEXTUREACCESS_STREAMING,
-                                  m_StreamConfig.width,
-                                  m_StreamConfig.height);
-    if (!m_Texture) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRenderer() failed: %s",
-                     SDL_GetError());
-        goto DispatchDeferredCleanup;
-    }
+    // Show the streaming window
+    SDL_ShowWindow(m_Window);
 
     // Capture the mouse
     SDL_SetRelativeMouseMode(SDL_TRUE);
+
+    // Disable the screen saver
+    SDL_DisableScreenSaver();
 
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
@@ -398,6 +392,7 @@ DispatchDeferredCleanup:
     // Uncapture the mouse and hide the window immediately,
     // so we can return to the Qt GUI ASAP.
     SDL_SetRelativeMouseMode(SDL_FALSE);
+    SDL_EnableScreenSaver();
     if (m_Window != nullptr) {
         SDL_HideWindow(m_Window);
     }
