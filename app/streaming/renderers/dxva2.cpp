@@ -3,6 +3,8 @@
 
 #include <Limelight.h>
 
+DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0xD2,0x5C,0x15,0xB3,0xD6);
+
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
 DXVA2Renderer::DXVA2Renderer() :
@@ -17,7 +19,8 @@ DXVA2Renderer::DXVA2Renderer() :
     m_ProcService(nullptr),
     m_Processor(nullptr)
 {
-    RtlZeroMemory(&m_DecSurfaces, sizeof(m_DecSurfaces));
+    RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
+    RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
 }
 
 DXVA2Renderer::~DXVA2Renderer()
@@ -62,11 +65,11 @@ AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, int)
 
 bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context)
 {
+    // m_DXVAContext.workaround and report_id already initialized elsewhere
     m_DXVAContext.decoder = m_Decoder;
     m_DXVAContext.cfg = &m_Config;
     m_DXVAContext.surface = m_DecSurfaces;
     m_DXVAContext.surface_count = ARRAYSIZE(m_DecSurfaces);
-    m_DXVAContext.workaround = 0;
 
     context->hwaccel_context = &m_DXVAContext;
 
@@ -96,6 +99,8 @@ int DXVA2Renderer::ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int)
 
     frame->data[3] = frame->buf[0]->data;
     frame->format = AV_PIX_FMT_DXVA2_VLD;
+    frame->width = me->m_Width;
+    frame->height = me->m_Height;
 
     return 0;
 }
@@ -145,6 +150,11 @@ bool DXVA2Renderer::initializeDecoder()
             if (IsEqualGUID(guids[i], DXVA2_ModeH264_E) ||
                     IsEqualGUID(guids[i], DXVA2_ModeH264_F)) {
                 chosenDeviceGuid = guids[i];
+                break;
+            }
+            else if (IsEqualGUID(guids[i], DXVADDI_Intel_ModeH264_E)) {
+                chosenDeviceGuid = guids[i];
+                m_DXVAContext.workaround |= FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO;
                 break;
             }
         }
