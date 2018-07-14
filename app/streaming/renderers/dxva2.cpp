@@ -55,7 +55,9 @@ AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, int)
     DXVA2Renderer* me = reinterpret_cast<DXVA2Renderer*>(opaque);
 
     if (me->m_SurfacesUsed < ARRAYSIZE(me->m_DecSurfaces)) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "Using buffer: %d", me->m_SurfacesUsed);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "DXVA2 decoder surface high-water mark: %d",
+                    me->m_SurfacesUsed);
         return av_buffer_create((uint8_t*)me->m_DecSurfaces[me->m_SurfacesUsed++],
                                 sizeof(*me->m_DecSurfaces), ffPoolDummyDelete, 0, 0);
     }
@@ -297,7 +299,7 @@ bool DXVA2Renderer::initializeRenderer()
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Device %d can't convert YUV2RGB: %x",
                             i,
-                            caps.DeviceCaps);
+                            caps.VideoProcessorOperations);
                 continue;
             }
 
