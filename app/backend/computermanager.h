@@ -366,7 +366,9 @@ private:
         try {
             serverInfo = http.getServerInfo();
         } catch (...) {
-            emit computerAddCompleted(false);
+            if (!m_Mdns) {
+                emit computerAddCompleted(false);
+            }
             return;
         }
 
