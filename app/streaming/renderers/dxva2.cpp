@@ -342,6 +342,11 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     m_Width = width;
     m_Height = height;
 
+    // FFmpeg will be decoding on different threads than the main thread that we're
+    // currently running on right now. We must set this hint so SDL will pass
+    // D3DCREATE_MULTITHREADED to IDirect3D9::CreateDevice().
+    SDL_SetHint(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1");
+
     m_SdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_SdlRenderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
