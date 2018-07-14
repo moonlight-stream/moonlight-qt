@@ -115,11 +115,6 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         modifiers |= MODIFIER_SHIFT;
     }
 
-    // Ignore repeats
-    if (event->repeat != 0) {
-        return;
-    }
-
     // Set keycode
     if (event->keysym.sym >= SDLK_0 && event->keysym.sym <= SDLK_9) {
         keyCode = (event->keysym.sym - SDLK_0) + VK_0;
