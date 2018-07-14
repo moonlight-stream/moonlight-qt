@@ -285,12 +285,26 @@ bool DXVA2Renderer::initializeRenderer()
         DXVA2_VideoProcessorCaps caps;
         hr = m_ProcService->GetVideoProcessorCaps(guids[i], &m_Desc, renderTargetDesc.Format, &caps);
         if (SUCCEEDED(hr)) {
+            if (!(caps.DeviceCaps & DXVA2_VPDev_HardwareDevice)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Device %d is not hardware: %x",
+                            i,
+                            caps.DeviceCaps);
+                continue;
+            }
+            else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGB) &&
+                     !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Device %d can't convert YUV2RGB: %x",
+                            i,
+                            caps.DeviceCaps);
+                continue;
+            }
+
             m_ProcService->GetProcAmpRange(guids[i], &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Brightness, &m_BrightnessRange);
             m_ProcService->GetProcAmpRange(guids[i], &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Contrast, &m_ContrastRange);
             m_ProcService->GetProcAmpRange(guids[i], &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Hue, &m_HueRange);
             m_ProcService->GetProcAmpRange(guids[i], &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Saturation, &m_SaturationRange);
-
-            // TODO: Validate some caps?
 
             hr = m_ProcService->CreateVideoProcessor(guids[i], &m_Desc, renderTargetDesc.Format, 0, &m_Processor);
             if (FAILED(hr)) {
