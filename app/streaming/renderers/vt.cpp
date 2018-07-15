@@ -31,6 +31,7 @@ bool VTRenderer::initialize(SDL_Window* window,
     if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         // Prior to 10.13, we'll just assume everything has
         // H.264 support and fail open to allow VT decode.
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
         if (__builtin_available(macOS 10.13, *)) {
             if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_H264)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -38,12 +39,15 @@ bool VTRenderer::initialize(SDL_Window* window,
                 return false;
             }
         }
-        else {
+        else
+#endif
+        {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Assuming H.264 HW decode on < macOS 10.13");
         }
     }
     else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
+#if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
         if (__builtin_available(macOS 10.13, *)) {
             if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -51,7 +55,9 @@ bool VTRenderer::initialize(SDL_Window* window,
                 return false;
             }
         }
-        else {
+        else
+#endif
+        {
             // Fail closed for HEVC if we're not on 10.13+
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "No HEVC support on < macOS 10.13");
