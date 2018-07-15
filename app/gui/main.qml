@@ -46,7 +46,7 @@ ApplicationWindow {
                 // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1
 
-                icon.source: "qrc:/res/arrow_left.png"
+                icon.source: "qrc:/res/arrow_left.svg"
                 onClicked: stackView.pop()
 
                 Menu {
@@ -67,7 +67,7 @@ ApplicationWindow {
             }
 
             ToolButton {
-                icon.source: "qrc:/res/question_mark.png"
+                icon.source: "qrc:/res/question_mark.svg"
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
@@ -91,7 +91,7 @@ ApplicationWindow {
             }
 
             ToolButton {
-                icon.source: "qrc:/res/settings.png"
+                icon.source: "qrc:/res/settings.svg"
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
 
                 Menu {
