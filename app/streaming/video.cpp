@@ -5,6 +5,10 @@
 #include "renderers/dxva2.h"
 #endif
 
+#ifdef __APPLE__
+#include "renderers/vt.h"
+#endif
+
 AVPacket Session::s_Pkt;
 AVCodecContext* Session::s_VideoDecoderCtx;
 QByteArray Session::s_DecodeBuffer;
@@ -79,6 +83,11 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 #ifdef _WIN32
         case AV_HWDEVICE_TYPE_DXVA2:
             newRenderer = new DXVA2Renderer();
+            break;
+#endif
+#ifdef __APPLE__
+        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
+            newRenderer = new VTRenderer();
             break;
 #endif
         default:

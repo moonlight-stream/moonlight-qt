@@ -62,6 +62,9 @@ SOURCES += \
 win32 {
     SOURCES += streaming/renderers/dxva2.cpp
 }
+macx {
+    SOURCES += streaming/renderers/vt.cpp
+}
 
 HEADERS += \
     utils.h \
@@ -79,6 +82,9 @@ HEADERS += \
 
 win32 {
     HEADERS += streaming/renderers/dxva2.h
+}
+macx {
+    HEADERS += streaming/renderers/vt.h
 }
 
 RESOURCES += \
