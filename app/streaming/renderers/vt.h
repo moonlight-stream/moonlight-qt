@@ -2,6 +2,8 @@
 
 #include "renderer.h"
 
+#import <VideoToolbox/VideoToolbox.h>
+
 class VTRenderer : public IRenderer
 {
 public:
@@ -15,4 +17,5 @@ public:
     virtual void renderFrame(AVFrame* frame);
 
 private:
+    AVBufferRef* m_HwContext;
 };
