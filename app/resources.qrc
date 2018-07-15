@@ -1,6 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/icon128.png</file>
         <file>res/ic_remove_circle_outline_white_48px.svg</file>
         <file>res/ic_remove_from_queue_white_48px.svg</file>
         <file>res/ic_videogame_asset_white_48px.svg</file>
@@ -10,5 +9,6 @@
         <file>res/settings.svg</file>
         <file>res/arrow_left.svg</file>
         <file>res/question_mark.svg</file>
+        <file>res/moonlight.svg</file>
     </qresource>
 </RCC>

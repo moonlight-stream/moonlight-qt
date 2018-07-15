@@ -32,8 +32,7 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    // FIXME this icon is low-resolution and appears a little fuzzy.
-    app.setWindowIcon(QIcon(":/res/icon128.png"));
+    app.setWindowIcon(QIcon(":/res/moonlight.svg"));
 
     // Register our C++ types for QML
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
