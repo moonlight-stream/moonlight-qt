@@ -92,7 +92,6 @@ Session::Session(NvComputer* computer, NvApp& app)
     m_StreamConfig.height = m_Preferences.height;
     m_StreamConfig.fps = m_Preferences.fps;
     m_StreamConfig.bitrate = m_Preferences.bitrateKbps;
-    m_StreamConfig.packetSize = 1024;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
     for (unsigned int i = 0; i < sizeof(m_StreamConfig.remoteInputAesKey); i++) {
         m_StreamConfig.remoteInputAesKey[i] =
@@ -135,6 +134,20 @@ Session::Session(NvComputer* computer, NvApp& app)
         m_StreamConfig.supportsHevc = true;
         m_StreamConfig.enableHdr = true;
         break;
+    }
+
+    if (computer->activeAddress == computer->remoteAddress) {
+        m_StreamConfig.streamingRemotely = 1;
+    }
+    else {
+        m_StreamConfig.streamingRemotely = 0;
+    }
+
+    if (computer->activeAddress == computer->localAddress) {
+        m_StreamConfig.packetSize = 1392;
+    }
+    else {
+        m_StreamConfig.packetSize = 1024;
     }
 }
 
