@@ -122,6 +122,8 @@ private:
     static OpusMSDecoder* s_OpusDecoder;
     static short s_OpusDecodeBuffer[];
     static int s_ChannelCount;
+    static int s_PendingDrops;
+    static unsigned int s_SampleIndex;
 
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;

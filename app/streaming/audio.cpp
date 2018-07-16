@@ -5,11 +5,16 @@
 
 #define MAX_CHANNELS 6
 #define SAMPLES_PER_FRAME 240
+#define MIN_QUEUED_FRAMES 2
+#define MAX_QUEUED_FRAMES 4
+#define DROP_RATIO_DENOM 32
 
 SDL_AudioDeviceID Session::s_AudioDevice;
 OpusMSDecoder* Session::s_OpusDecoder;
 short Session::s_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
 int Session::s_ChannelCount;
+int Session::s_PendingDrops;
+unsigned int Session::s_SampleIndex;
 
 int Session::sdlDetermineAudioConfiguration()
 {
@@ -60,7 +65,12 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
     want.freq = opusConfig->sampleRate;
     want.format = AUDIO_S16;
     want.channels = opusConfig->channelCount;
-    want.samples = 1024;
+
+    // This is supposed to be a power of 2, but our
+    // frames contain a non-power of 2 number of samples,
+    // so the slop would require buffering another full frame.
+    // Specifying non-Po2 seems to work for our supported platforms.
+    want.samples = SAMPLES_PER_FRAME;
 
     s_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
     if (s_AudioDevice == 0) {
@@ -86,6 +96,8 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
     }
 
     s_ChannelCount = opusConfig->channelCount;
+    s_SampleIndex = 0;
+    s_PendingDrops = 0;
 
     return 0;
 }
@@ -114,6 +126,25 @@ void Session::sdlAudioCleanup()
 void Session::sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
 {
     int samplesDecoded;
+
+    s_SampleIndex++;
+
+    Uint32 queuedAudio = SDL_GetQueuedAudioSize(s_AudioDevice);
+    Uint32 framesQueued = queuedAudio / (SAMPLES_PER_FRAME * s_ChannelCount * sizeof(short));
+
+    if (framesQueued - s_PendingDrops > MAX_QUEUED_FRAMES) {
+        // Pend enough drops to get us back to MIN_QUEUED_FRAMES
+        s_PendingDrops += (framesQueued - MIN_QUEUED_FRAMES);
+    }
+
+    // Determine if this frame should be dropped
+    if (framesQueued <= MIN_QUEUED_FRAMES) {
+        s_PendingDrops = 0;
+    }
+    else if (s_PendingDrops != 0 && s_SampleIndex % DROP_RATIO_DENOM == 0) {
+        s_PendingDrops--;
+        return;
+    }
 
     samplesDecoded = opus_multistream_decode(s_OpusDecoder,
                                              (unsigned char*)sampleData,
