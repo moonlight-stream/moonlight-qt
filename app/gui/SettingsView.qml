@@ -52,21 +52,75 @@ ScrollView {
                 }
 
                 ComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        // load the saved width/height/fps, and iterate through the ComboBox until a match is found
+                        // set it to that index.
+                        var saved_width = prefs.width
+                        var saved_height = prefs.height
+                        var saved_fps = prefs.fps
+                        currentIndex = 0
+                        for(var i = 0; i < resolutionComboBox.count; i++) {
+                            var el_width = parseInt(resolutionListModel.get(i).video_width);
+                            var el_height = parseInt(resolutionListModel.get(i).video_height);
+                            var el_fps = parseInt(resolutionListModel.get(i).video_fps);
+                          if(saved_width === el_width &&
+                                  saved_height === el_height &&
+                                  saved_fps === el_fps) {
+                              currentIndex = i
+                          }
+                        }
+                    }
+
                     id: resolutionComboBox
-                    currentIndex : 1
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
                     font.pointSize: 9
+                    textRole: "text"
                     model: ListModel {
                         id: resolutionListModel
-                        // TODO have values associated with the text.
-                        ListElement { text: "720p 30 FPS" }
-                        ListElement { text: "720p 60 FPS" }
-                        ListElement { text: "1080p 30 FPS" }
-                        ListElement { text: "1080p 60 FPS" }
-                        ListElement { text: "4K 30 FPS" }
-                        ListElement { text: "4K 60 FPS" }
+                        ListElement {
+                            text: "720p 30 FPS"
+                            video_width: "1280"
+                            video_height: "720"
+                            video_fps: "30"
+                        }
+                        ListElement {
+                            text: "720p 60 FPS"
+                            video_width: "1280"
+                            video_height: "720"
+                            video_fps: "60"
+                        }
+                        ListElement {
+                            text: "1080p 30 FPS"
+                            video_width: "1920"
+                            video_height: "1080"
+                            video_fps: "30"
+                        }
+                        ListElement {
+                            text: "1080p 60 FPS"
+                            video_width: "1920"
+                            video_height: "1080"
+                            video_fps: "60"
+                        }
+                        ListElement {
+                            text: "4K 30 FPS"
+                            video_width: "3840"
+                            video_height: "2160"
+                            video_fps: "30"
+                        }
+                        ListElement {
+                            text: "4K 60 FPS"
+                            video_width: "3840"
+                            video_height: "2160"
+                            video_fps: "60"
+                        }
                     }
-                    onCurrentIndexChanged: console.debug(resolutionListModel.get(currentIndex).text + " selected resolution")
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        prefs.width = parseInt(resolutionListModel.get(currentIndex).video_width)
+                        prefs.height = parseInt(resolutionListModel.get(currentIndex).video_height)
+                        prefs.fps = parseInt(resolutionListModel.get(currentIndex).video_fps)
+                    }
                 }
 
                 Label {
@@ -132,6 +186,7 @@ ScrollView {
                     id: surroundSoundCheck
                     text: "<font color=\"white\">Enable 5.1 surround sound</font>"
                     font.pointSize:  12
+                    // TODO: make this actually do anything
                 }
             }
         }
@@ -160,6 +215,7 @@ ScrollView {
                     id: mouseEmulationCheck
                     text: "<font color=\"white\">Mouse emulation via gamepad</font>"
                     font.pointSize:  12
+                    // TODO: make this actually do anything
                 }
             }
         }
@@ -179,6 +235,7 @@ ScrollView {
                     id: onScreenControlsCheck
                     text: "<font color=\"white\">Show on-screen controls</font>"
                     font.pointSize:  12
+                    // TODO: make this actually do anything
                 }
             }
         }
