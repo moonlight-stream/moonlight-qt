@@ -37,6 +37,10 @@ bool SdlRenderer::initialize(SDL_Window* window,
         return false;
     }
 
+    // The window may be smaller than the stream size, so ensure our
+    // logical rendering surface size is equal to the stream size
+    SDL_RenderSetLogicalSize(m_Renderer, width, height);
+
     m_Texture = SDL_CreateTexture(m_Renderer,
                                   SDL_PIXELFORMAT_YV12,
                                   SDL_TEXTUREACCESS_STREAMING,

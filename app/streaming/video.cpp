@@ -139,6 +139,9 @@ int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */
 {
     AVCodec* decoder;
 
+    // Use linear filtering when renderer scaling is required
+    SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+
     av_init_packet(&s_Pkt);
 
     if (!chooseDecoder(s_ActiveSession->m_Preferences.videoDecoderSelection,
