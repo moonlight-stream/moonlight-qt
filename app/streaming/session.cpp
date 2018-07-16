@@ -285,15 +285,60 @@ void Session::exec()
         return;
     }
 
+    int flags = SDL_WINDOW_HIDDEN;
+    int width, height;
+    if (m_Preferences.fullScreen) {
+        SDL_DisplayMode desired, closest;
+
+        SDL_zero(desired);
+        desired.w = m_StreamConfig.width;
+        desired.h = m_StreamConfig.height;
+        desired.refresh_rate = m_StreamConfig.fps;
+
+        if (SDL_GetClosestDisplayMode(0, &desired, &closest)) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Closest match for %dx%dx%d is %dx%dx%d",
+                        desired.w, desired.h, desired.refresh_rate,
+                        closest.w, closest.h, closest.refresh_rate);
+            width = closest.w;
+            height = closest.h;
+        }
+        else if (SDL_GetCurrentDisplayMode(0, &closest) == 0) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using current display mode: %dx%dx%d",
+                        closest.w, closest.h, closest.refresh_rate);
+            width = closest.w;
+            height = closest.h;
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to get current or closest display mode");
+            width = m_StreamConfig.width;
+            height = m_StreamConfig.height;
+        }
+
+        flags |= SDL_WINDOW_FULLSCREEN;
+    }
+    else {
+        SDL_DisplayMode current;
+
+        width = m_StreamConfig.width;
+        height = m_StreamConfig.height;
+
+        if (SDL_GetCurrentDisplayMode(0, &current) == 0) {
+            if (current.w <= m_StreamConfig.width || current.h <= m_StreamConfig.height) {
+                // If we match or exceed the dimensions of the display, maximize the window
+                flags |= SDL_WINDOW_MAXIMIZED;
+            }
+        }
+    }
+
     m_Window = SDL_CreateWindow("Moonlight",
                                 SDL_WINDOWPOS_UNDEFINED,
                                 SDL_WINDOWPOS_UNDEFINED,
-                                m_StreamConfig.width,
-                                m_StreamConfig.height,
-                                SDL_WINDOW_HIDDEN |
-                                (m_Preferences.fullScreen ?
-                                    SDL_WINDOW_FULLSCREEN :
-                                    0));
+                                width,
+                                height,
+                                flags);
     if (!m_Window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateWindow() failed: %s",
