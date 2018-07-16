@@ -41,7 +41,7 @@ win32 {
 }
 macx {
     LIBS += -lssl -lcrypto -lSDL2 -lavcodec.58 -lavdevice.58 -lavformat.58 -lavutil.56
-    LIBS += -framework VideoToolbox
+    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreGraphics -framework CoreMedia -framework AppKit
 }
 
 SOURCES += \
@@ -64,7 +64,7 @@ win32 {
     SOURCES += streaming/renderers/dxva2.cpp
 }
 macx {
-    SOURCES += streaming/renderers/vt.cpp
+    SOURCES += streaming/renderers/vt.mm
 }
 
 HEADERS += \

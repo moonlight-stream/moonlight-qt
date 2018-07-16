@@ -2,20 +2,10 @@
 
 #include "renderer.h"
 
-#import <VideoToolbox/VideoToolbox.h>
-
-class VTRenderer : public IRenderer
-{
+// A factory is required to avoid pulling in
+// incompatible Objective-C headers.
+class VTRendererFactory {
 public:
-    VTRenderer();
-    virtual ~VTRenderer();
-    virtual bool initialize(SDL_Window* window,
-                            int videoFormat,
-                            int width,
-                            int height);
-    virtual bool prepareDecoderContext(AVCodecContext* context);
-    virtual void renderFrame(AVFrame* frame);
-
-private:
-    AVBufferRef* m_HwContext;
+    static
+    IRenderer* createRenderer();
 };

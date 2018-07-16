@@ -87,7 +87,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 #endif
 #ifdef __APPLE__
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-            newRenderer = new VTRenderer();
+            newRenderer = VTRendererFactory::createRenderer();
             break;
 #endif
         default:
