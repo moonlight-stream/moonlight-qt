@@ -123,7 +123,9 @@ private:
     static short s_OpusDecodeBuffer[];
     static int s_ChannelCount;
     static int s_PendingDrops;
+    static int s_PendingHardDrops;
     static unsigned int s_SampleIndex;
+    static Uint32 s_BaselinePendingData;
 
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;

@@ -7,6 +7,7 @@
 #define SAMPLES_PER_FRAME 240
 #define MIN_QUEUED_FRAMES 2
 #define MAX_QUEUED_FRAMES 4
+#define STOP_THE_WORLD_LIMIT 20
 #define DROP_RATIO_DENOM 32
 
 SDL_AudioDeviceID Session::s_AudioDevice;
@@ -14,7 +15,9 @@ OpusMSDecoder* Session::s_OpusDecoder;
 short Session::s_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
 int Session::s_ChannelCount;
 int Session::s_PendingDrops;
+int Session::s_PendingHardDrops;
 unsigned int Session::s_SampleIndex;
+Uint32 Session::s_BaselinePendingData;
 
 int Session::sdlDetermineAudioConfiguration()
 {
@@ -95,9 +98,26 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
         return -2;
     }
 
+    // SDL counts pending samples in the queued
+    // audio size using the WASAPI backend. This
+    // includes silence, which can throw off our
+    // pending data count. Get a baseline so we
+    // can exclude that data.
+    s_BaselinePendingData = 0;
+#ifdef _WIN32
+    for (int i = 0; i < 100; i++) {
+        s_BaselinePendingData = qMax(s_BaselinePendingData, SDL_GetQueuedAudioSize(s_AudioDevice));
+        SDL_Delay(10);
+    }
+#endif
+    s_BaselinePendingData *= 2;
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Baseline pending audio data: %d bytes",
+                s_BaselinePendingData);
+
     s_ChannelCount = opusConfig->channelCount;
     s_SampleIndex = 0;
-    s_PendingDrops = 0;
+    s_PendingDrops = s_PendingHardDrops = 0;
 
     return 0;
 }
@@ -129,19 +149,33 @@ void Session::sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
 
     s_SampleIndex++;
 
-    Uint32 queuedAudio = SDL_GetQueuedAudioSize(s_AudioDevice);
+    Uint32 queuedAudio = qMax((int)SDL_GetQueuedAudioSize(s_AudioDevice) - (int)s_BaselinePendingData, 0);
     Uint32 framesQueued = queuedAudio / (SAMPLES_PER_FRAME * s_ChannelCount * sizeof(short));
 
-    if (framesQueued - s_PendingDrops > MAX_QUEUED_FRAMES) {
-        // Pend enough drops to get us back to MIN_QUEUED_FRAMES
-        s_PendingDrops += (framesQueued - MIN_QUEUED_FRAMES);
+    // Pend enough drops to get us back to MIN_QUEUED_FRAMES
+    if (framesQueued - s_PendingHardDrops > STOP_THE_WORLD_LIMIT) {
+        s_PendingHardDrops = framesQueued - MIN_QUEUED_FRAMES;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Pending hard drop of %u audio frames",
+                    s_PendingHardDrops);
+    }
+    else if (framesQueued - s_PendingHardDrops - s_PendingDrops > MAX_QUEUED_FRAMES) {
+        s_PendingDrops = framesQueued - MIN_QUEUED_FRAMES;
     }
 
     // Determine if this frame should be dropped
     if (framesQueued <= MIN_QUEUED_FRAMES) {
-        s_PendingDrops = 0;
+        s_PendingDrops = s_PendingHardDrops = 0;
+    }
+    else if (s_PendingHardDrops != 0) {
+        // Hard drops happen all at once to forcefully
+        // resync with the source.
+        s_PendingHardDrops--;
+        return;
     }
     else if (s_PendingDrops != 0 && s_SampleIndex % DROP_RATIO_DENOM == 0) {
+        // Normal drops are interspersed with the audio data
+        // to hide the glitches.
         s_PendingDrops--;
         return;
     }
