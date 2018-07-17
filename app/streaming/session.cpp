@@ -386,6 +386,14 @@ void Session::exec()
     // Disable the screen saver
     SDL_DisableScreenSaver();
 
+    // Raise the priority of the main thread, since it handles
+    // time-sensitive video rendering
+    if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Unable to set main thread to high priority: %s",
+                    SDL_GetError());
+    }
+
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
