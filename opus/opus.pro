@@ -32,14 +32,14 @@ contains(QT_ARCH, x86_64) {
 
 QMAKE_CFLAGS += -O2
 
-SOURCES_SSE += \
+SOURCES_SSE = \
     $$OPUS_DIR/celt/x86/pitch_sse.c
 
-SOURCES_SSE2 += \
+SOURCES_SSE2 = \
     $$OPUS_DIR/celt/x86/pitch_sse2.c \
     $$OPUS_DIR/celt/x86/vq_sse2.c
 
-SOURCES_SSE41 += \
+SOURCES_SSE41 = \
     $$OPUS_DIR/celt/x86/pitch_sse4_1.c \
     $$OPUS_DIR/celt/x86/celt_lpc_sse4_1.c \
     $$OPUS_DIR/silk/x86/NSQ_sse4_1.c \
@@ -63,7 +63,6 @@ SOURCES += \
     $$OPUS_DIR/celt/x86/x86cpu.c \
     $$OPUS_DIR/celt/mathops.c \
     $$OPUS_DIR/celt/vq.c \
-    $$OPUS_DIR/celt/opus_custom_demo.c \
     $$OPUS_DIR/celt/bands.c \
     $$OPUS_DIR/celt/celt.c \
     $$OPUS_DIR/celt/celt_lpc.c \
@@ -72,12 +71,10 @@ SOURCES += \
     $$OPUS_DIR/src/opus_decoder.c \
     $$OPUS_DIR/src/opus_compare.c \
     $$OPUS_DIR/src/opus_multistream_encoder.c \
-    $$OPUS_DIR/src/opus_demo.c \
     $$OPUS_DIR/src/opus.c \
     $$OPUS_DIR/src/mapping_matrix.c \
     $$OPUS_DIR/src/mlp.c \
     $$OPUS_DIR/src/opus_multistream_decoder.c \
-    $$OPUS_DIR/src/repacketizer_demo.c \
     $$OPUS_DIR/src/analysis.c \
     $$OPUS_DIR/src/opus_projection_encoder.c \
     $$OPUS_DIR/src/repacketizer.c \
@@ -205,7 +202,7 @@ CONFIG += warn_off staticlib
 
 win32-msvc* {
     # No flags required to build with SSE on MSVC
-    SOURCES += SOURCES_SSE SOURCSE_SSE2 SOURCES_SSE41
+    SOURCES += $$SOURCES_SSE $$SOURCES_SSE2 $$SOURCES_SSE41
 }
 else {
     sse.name = sse
