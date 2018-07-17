@@ -210,21 +210,21 @@ else {
     sse.dependency_type = TYPE_C
     sse.variable_out = OBJECTS
     sse.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
-    sse.commands = $${QMAKE_CC} $(CFLAGS) -msse $(INCPATH) -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
+    sse.commands = $${QMAKE_CC} -c $(CFLAGS) -msse $(INCPATH) -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 
     sse2.name = sse2
     sse2.input = SOURCES_SSE2
     sse2.dependency_type = TYPE_C
     sse2.variable_out = OBJECTS
     sse2.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
-    sse2.commands = $${QMAKE_CC} $(CFLAGS) -msse2 $(INCPATH) -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
+    sse2.commands = $${QMAKE_CC} -c $(CFLAGS) -msse2 $(INCPATH) -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 
     sse41.name = sse41
     sse41.input = SOURCES_SSE41
     sse41.dependency_type = TYPE_C
     sse41.variable_out = OBJECTS
     sse41.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
-    sse41.commands = $${QMAKE_CC} $(CFLAGS) -msse4.1 $(INCPATH) -c ${QMAKE_FILE_IN} -o ${QMAKE_FILE_OUT}
+    sse41.commands = $${QMAKE_CC} -c $(CFLAGS) -msse4.1 $(INCPATH) -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 
     QMAKE_EXTRA_COMPILERS += sse sse2 sse41
 }
