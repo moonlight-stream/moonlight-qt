@@ -51,19 +51,19 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             (event->keysym.mod & KMOD_ALT) &&
             (event->keysym.mod & KMOD_SHIFT)) {
 
+        // Force raise all keys in the combo to avoid
+        // leaving them down after disconnecting
+        LiSendKeyboardEvent(0xA0, KEY_ACTION_UP, 0);
+        LiSendKeyboardEvent(0xA1, KEY_ACTION_UP, 0);
+        LiSendKeyboardEvent(0xA2, KEY_ACTION_UP, 0);
+        LiSendKeyboardEvent(0xA3, KEY_ACTION_UP, 0);
+        LiSendKeyboardEvent(0xA4, KEY_ACTION_UP, 0);
+        LiSendKeyboardEvent(0xA5, KEY_ACTION_UP, 0);
+
         // Check for quit combo (Ctrl+Alt+Shift+Q)
         if (event->keysym.sym == SDLK_q) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected quit key combo");
-
-            // Force raise all keys in the combo to avoid
-            // leaving them down after disconnecting
-            LiSendKeyboardEvent(0xA0, KEY_ACTION_UP, 0);
-            LiSendKeyboardEvent(0xA1, KEY_ACTION_UP, 0);
-            LiSendKeyboardEvent(0xA2, KEY_ACTION_UP, 0);
-            LiSendKeyboardEvent(0xA3, KEY_ACTION_UP, 0);
-            LiSendKeyboardEvent(0xA4, KEY_ACTION_UP, 0);
-            LiSendKeyboardEvent(0xA5, KEY_ACTION_UP, 0);
 
             SDL_Event event;
 
