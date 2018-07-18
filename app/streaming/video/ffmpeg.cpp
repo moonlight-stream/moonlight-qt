@@ -217,14 +217,8 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
     if (err == 0) {
-        SDL_Event event;
-
-        event.type = SDL_USEREVENT;
-        event.user.code = SDL_CODE_FRAME_READY;
-        event.user.data1 = frame;
-
-        // The main thread will handle freeing this
-        SDL_PushEvent(&event);
+        // Queue the frame for rendering from the main thread
+        queueFrame(frame);
     }
     else {
         av_frame_free(&frame);
