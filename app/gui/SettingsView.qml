@@ -22,7 +22,6 @@ ScrollView {
         height: 400
 
         GroupBox {
-            // TODO save the settings
             id: basicSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
@@ -148,7 +147,6 @@ ScrollView {
                     id: slider
                     wheelEnabled: true
 
-                    // TODO value should be loaded as the current value.
                     value: prefs.bitrateKbps
 
                     stepSize: 500
@@ -177,6 +175,7 @@ ScrollView {
         }
 
         GroupBox {
+
             id: audioSettingsGroupBox
             width: (parent.width - 20)
             padding: 12
@@ -191,7 +190,13 @@ ScrollView {
                     id: surroundSoundCheck
                     text: "<font color=\"white\">Enable 5.1 surround sound</font>"
                     font.pointSize:  12
-                    // TODO: make this actually do anything
+
+                    // the backend actually supports auto/stereo/5.1.  We'll expose stereo/5.1
+                    checked: prefs.audioConfig === StreamingPreferences.AC_FORCE_SURROUND
+
+                    onCheckedChanged: {
+                        prefs.audioConfig = checked ? StreamingPreferences.AC_FORCE_SURROUND : StreamingPreferences.AC_FORCE_STEREO
+                    }
                 }
             }
         }
