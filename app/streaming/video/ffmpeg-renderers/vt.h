@@ -7,5 +7,5 @@
 class VTRendererFactory {
 public:
     static
-    IRenderer* createRenderer();
+    IFFmpegRenderer* createRenderer();
 };

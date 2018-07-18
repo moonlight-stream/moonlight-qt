@@ -5,6 +5,8 @@
 #include <SDL.h>
 #include "utils.h"
 
+#include "video/ffmpeg.h"
+
 #include <QRandomGenerator>
 #include <QtEndian>
 #include <QCoreApplication>
@@ -76,16 +78,99 @@ void Session::clLogMessage(const char* format, ...)
     va_end(ap);
 }
 
+bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
+                            SDL_Window* window, int videoFormat, int width, int height,
+                            int frameRate, IVideoDecoder*& chosenDecoder)
+{
+    chosenDecoder = new FFmpegVideoDecoder();
+    if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "FFmpeg-based video decoder chosen");
+        return true;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load FFmpeg decoder");
+        delete chosenDecoder;
+        chosenDecoder = nullptr;
+    }
+
+    // If we reach this, we didn't initialize any decoders successfully
+    return false;
+}
+
+int Session::drSetup(int videoFormat, int width, int height, int frameRate, void *, int)
+{
+    if (!chooseDecoder(s_ActiveSession->m_Preferences.videoDecoderSelection,
+                       s_ActiveSession->m_Window,
+                       videoFormat, width, height, frameRate,
+                       s_ActiveSession->m_VideoDecoder)) {
+        return -1;
+    }
+
+    return 0;
+}
+
+int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
+{
+    // Use a lock since we'll be yanking this decoder out
+    // from underneath the session when we initiate destruction.
+    // We need to destroy the decoder on the main thread to satisfy
+    // some API constraints (like DXVA2).
+    SDL_AtomicLock(&s_ActiveSession->m_DecoderLock);
+    IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
+    if (decoder != nullptr) {
+        int ret = decoder->submitDecodeUnit(du);
+        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+        return ret;
+    }
+    else {
+        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+        return DR_OK;
+    }
+}
+
+bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
+                                        int videoFormat, int width, int height, int frameRate)
+{
+    IVideoDecoder* decoder;
+
+    SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
+    if (!window) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create window for hardware decode test: %s",
+                     SDL_GetError());
+        return false;
+    }
+
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, decoder)) {
+        SDL_DestroyWindow(window);
+        return false;
+    }
+
+    SDL_DestroyWindow(window);
+
+    bool ret = decoder->isHardwareAccelerated();
+    delete decoder;
+    return ret;
+}
+
 Session::Session(NvComputer* computer, NvApp& app)
     : m_Computer(computer),
       m_App(app),
-      m_Window(nullptr)
+      m_Window(nullptr),
+      m_VideoDecoder(nullptr),
+      m_DecoderLock(0)
 {
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
-    m_VideoCallbacks.cleanup = drCleanup;
     m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
-    m_VideoCallbacks.capabilities = getDecoderCapabilities();
+
+    // Submit for decode without using a separate thread
+    m_VideoCallbacks.capabilities |= CAPABILITY_DIRECT_SUBMIT;
+
+    // Slice up to 4 times for parallel decode, once slice per core
+    m_VideoCallbacks.capabilities |= CAPABILITY_SLICES_PER_FRAME(qMin(MAX_SLICES, SDL_GetCPUCount()));
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
     m_StreamConfig.width = m_Preferences.width;
@@ -119,7 +204,8 @@ Session::Session(NvComputer* computer, NvApp& app)
                 isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
                                           VIDEO_FORMAT_H265,
                                           m_StreamConfig.width,
-                                          m_StreamConfig.height);
+                                          m_StreamConfig.height,
+                                          m_StreamConfig.fps);
         m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:
@@ -166,7 +252,8 @@ bool Session::validateLaunch()
         else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
                                             VIDEO_FORMAT_H265,
                                             m_StreamConfig.width,
-                                            m_StreamConfig.height)) {
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps)) {
             // NOTE: HEVC currently uses only 1 slice regardless of what
             // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
             // never use it for software decoding (unless common-c starts
@@ -191,7 +278,8 @@ bool Session::validateLaunch()
         else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
                                             VIDEO_FORMAT_H265_MAIN10,
                                             m_StreamConfig.width,
-                                            m_StreamConfig.height)) {
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps)) {
             emit displayLaunchWarning("Your client PC GPU doesn't support HEVC Main10 decoding for HDR streaming.");
         }
         else {
@@ -414,12 +502,12 @@ void Session::exec()
                                   SDL_GETEVENT,
                                   SDL_USEREVENT,
                                   SDL_USEREVENT) == 1) {
-                dropFrame(&event.user);
+                m_VideoDecoder->dropFrame(&event.user);
                 event = nextEvent;
             }
 
             // Render the last frame
-            renderFrame(&event.user);
+            m_VideoDecoder->renderFrame(&event.user);
             break;
         }
         case SDL_KEYUP:
@@ -462,6 +550,12 @@ DispatchDeferredCleanup:
     if (m_Window != nullptr) {
         SDL_HideWindow(m_Window);
     }
+
+    // Destroy the decoder, since this must be done on the main thread
+    SDL_AtomicLock(&m_DecoderLock);
+    delete m_VideoDecoder;
+    m_VideoDecoder = nullptr;
+    SDL_AtomicUnlock(&m_DecoderLock);
 
     // Cleanup can take a while, so dispatch it to a worker thread.
     // When it is complete, it will release our s_ActiveSessionSemaphore
