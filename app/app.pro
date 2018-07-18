@@ -41,7 +41,7 @@ win32 {
 }
 macx {
     LIBS += -lssl -lcrypto -lSDL2 -lavcodec.58 -lavdevice.58 -lavformat.58 -lavutil.56
-    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreGraphics -framework CoreMedia -framework AppKit
+    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
 }
 
 SOURCES += \

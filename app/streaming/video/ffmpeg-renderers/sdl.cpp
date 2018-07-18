@@ -65,6 +65,10 @@ void SdlRenderer::renderFrame(AVFrame* frame)
                          frame->linesize[1],
                          frame->data[2],
                          frame->linesize[2]);
+
+    // Done with the frame now
+    av_frame_free(&frame);
+
     SDL_RenderClear(m_Renderer);
     SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
     SDL_RenderPresent(m_Renderer);

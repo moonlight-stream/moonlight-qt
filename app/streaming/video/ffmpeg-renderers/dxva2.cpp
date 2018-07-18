@@ -400,15 +400,18 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
     case D3DERR_DEVICELOST:
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D device lost!");
+        av_frame_free(&frame);
         return;
     case D3DERR_DEVICENOTRESET:
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D device not reset!");
+        av_frame_free(&frame);
         return;
     default:
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unknown D3D error: %x",
                      hr);
+        av_frame_free(&frame);
         return;
     }
 
@@ -449,4 +452,6 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
     }
 
     m_Device->Present(nullptr, nullptr, nullptr, nullptr);
+
+    av_frame_free(&frame);
 }

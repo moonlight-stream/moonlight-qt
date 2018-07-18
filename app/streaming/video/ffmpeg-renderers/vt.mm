@@ -7,9 +7,14 @@
 #include <SDL_syswm.h>
 #include <Limelight.h>
 
+#include <QQueue>
+
 #import <Cocoa/Cocoa.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
+#import <CoreVideo/CoreVideo.h>
+
+#define FRAME_HISTORY_ENTRIES 8
 
 class VTRenderer : public IFFmpegRenderer
 {
@@ -18,9 +23,10 @@ public:
         : m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
-          m_View(nullptr)
+          m_View(nullptr),
+          m_DisplayLink(nullptr),
+          m_FrameQueueLock(0)
     {
-
     }
 
     virtual ~VTRenderer()
@@ -32,8 +38,120 @@ public:
         if (m_FormatDesc != nullptr) {
             CFRelease(m_FormatDesc);
         }
+
+        if (m_DisplayLink != nullptr) {
+            CVDisplayLinkStop(m_DisplayLink);
+            CVDisplayLinkRelease(m_DisplayLink);
+        }
+
+        while (!m_FrameQueue.isEmpty()) {
+            AVFrame* frame = m_FrameQueue.dequeue();
+            av_frame_free(&frame);
+        }
     }
 
+    void drawFrame(uint64_t vsyncTime)
+    {
+        OSStatus status;
+
+        SDL_AtomicLock(&m_FrameQueueLock);
+
+        int frameDropTarget;
+
+        // If the queue length history entries are large, be strict
+        // about dropping excess frames.
+        frameDropTarget = 1;
+        for (int i = 0; i < m_FrameQueueHistory.count(); i++) {
+            if (m_FrameQueueHistory[i] <= 1) {
+                // Be lenient as long as the queue length
+                // resolves before the end of frame history
+                frameDropTarget = 3;
+            }
+        }
+
+        if (m_FrameQueueHistory.count() == FRAME_HISTORY_ENTRIES) {
+            m_FrameQueueHistory.dequeue();
+        }
+
+        m_FrameQueueHistory.enqueue(m_FrameQueue.count());
+
+        // Catch up if we're several frames ahead
+        while (m_FrameQueue.count() > frameDropTarget) {
+            AVFrame* frame = m_FrameQueue.dequeue();
+            av_frame_free(&frame);
+        }
+
+        if (m_FrameQueue.isEmpty()) {
+            SDL_AtomicUnlock(&m_FrameQueueLock);
+            return;
+        }
+
+        // Grab the first frame
+        AVFrame* frame = m_FrameQueue.dequeue();
+        SDL_AtomicUnlock(&m_FrameQueueLock);
+
+        CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
+
+        // If the format has changed or doesn't exist yet, construct it with the
+        // pixel buffer data
+        if (!m_FormatDesc || !CMVideoFormatDescriptionMatchesImageBuffer(m_FormatDesc, pixBuf)) {
+            if (m_FormatDesc != nullptr) {
+                CFRelease(m_FormatDesc);
+            }
+            status = CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault,
+                                                                  pixBuf, &m_FormatDesc);
+            if (status != noErr) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "CMVideoFormatDescriptionCreateForImageBuffer() failed: %d",
+                             status);
+                av_frame_free(&frame);
+                return;
+            }
+        }
+
+        // Queue this sample for the next v-sync
+        CMSampleTimingInfo timingInfo = {
+            .duration = kCMTimeInvalid,
+            .decodeTimeStamp = kCMTimeInvalid,
+            .presentationTimeStamp = CMTimeMake(vsyncTime, 1000 * 1000 * 1000)
+        };
+
+        CMSampleBufferRef sampleBuffer;
+        status = CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault,
+                                                          pixBuf,
+                                                          m_FormatDesc,
+                                                          &timingInfo,
+                                                          &sampleBuffer);
+        if (status != noErr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CMSampleBufferCreateReadyWithImageBuffer() failed: %d",
+                         status);
+            av_frame_free(&frame);
+            return;
+        }
+
+        [m_DisplayLayer enqueueSampleBuffer:sampleBuffer];
+
+        CFRelease(sampleBuffer);
+        av_frame_free(&frame);
+    }
+
+    static
+    CVReturn
+    displayLinkOutputCallback(
+        CVDisplayLinkRef,
+        const CVTimeStamp*,
+        const CVTimeStamp* vsyncTime,
+        CVOptionFlags,
+        CVOptionFlags*,
+        void *displayLinkContext)
+    {
+        VTRenderer* me = reinterpret_cast<VTRenderer*>(displayLinkContext);
+
+        me->drawFrame(vsyncTime->hostTime);
+
+        return kCVReturnSuccess;
+    }
 
     virtual bool initialize(SDL_Window* window,
                             int videoFormat,
@@ -113,6 +231,10 @@ public:
             return false;
         }
 
+        CVDisplayLinkCreateWithActiveCGDisplays(&m_DisplayLink);
+        CVDisplayLinkSetOutputCallback(m_DisplayLink, displayLinkOutputCallback, this);
+        CVDisplayLinkStart(m_DisplayLink);
+
         return true;
     }
 
@@ -124,49 +246,15 @@ public:
 
     virtual void renderFrame(AVFrame* frame) override
     {
-        CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
-        OSStatus status;
-
         if (m_DisplayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Resetting failed AVSampleBufferDisplay layer");
             setupDisplayLayer();
         }
 
-        // If the format has changed or doesn't exist yet, construct it with the
-        // pixel buffer data
-        if (!m_FormatDesc || !CMVideoFormatDescriptionMatchesImageBuffer(m_FormatDesc, pixBuf)) {
-            status = CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault,
-                                                                  pixBuf, &m_FormatDesc);
-            if (status != noErr) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "CMVideoFormatDescriptionCreateForImageBuffer() failed: %d",
-                             status);
-                return;
-            }
-        }
-
-        CMSampleBufferRef sampleBuffer;
-        status = CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault,
-                                                          pixBuf,
-                                                          m_FormatDesc,
-                                                          &kCMTimingInfoInvalid,
-                                                          &sampleBuffer);
-        if (status != noErr) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CMSampleBufferCreateReadyWithImageBuffer() failed: %d",
-                         status);
-            return;
-        }
-
-        CFArrayRef attachments = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, true);
-        CFMutableDictionaryRef dict = (CFMutableDictionaryRef)CFArrayGetValueAtIndex(attachments, 0);
-
-        CFDictionarySetValue(dict, kCMSampleAttachmentKey_DisplayImmediately, kCFBooleanTrue);
-
-        [m_DisplayLayer enqueueSampleBuffer:sampleBuffer];
-
-        CFRelease(sampleBuffer);
+        SDL_AtomicLock(&m_FrameQueueLock);
+        m_FrameQueue.enqueue(frame);
+        SDL_AtomicUnlock(&m_FrameQueueLock);
     }
 
 private:
@@ -192,6 +280,10 @@ private:
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
     NSView* m_View;
+    CVDisplayLinkRef m_DisplayLink;
+    QQueue<AVFrame*> m_FrameQueue;
+    QQueue<int> m_FrameQueueHistory;
+    SDL_SpinLock m_FrameQueueLock;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {

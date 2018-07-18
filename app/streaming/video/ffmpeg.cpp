@@ -232,7 +232,6 @@ void FFmpegVideoDecoder::renderFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
     m_Renderer->renderFrame(frame);
-    av_frame_free(&frame);
 }
 
 // Called on main thread
