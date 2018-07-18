@@ -1,7 +1,15 @@
-<?xml version="1.0"?>
 <svg xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:cc="http://creativecommons.org/ns#" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns:svg="http://www.w3.org/2000/svg" xmlns="http://www.w3.org/2000/svg" version="1.0">
-  <g transform="translate(-135,491) scale(0.100000,-0.100000)">
-    <circle cx="4755" cy="1505" r="3400" fill="#565C64">
+  <defs>
+    <filter id="f1" y="-40%" width="120%" height="220%">
+      <feOffset xmlns="http://www.w3.org/2000/svg" result="offOut" in="SourceAlpha" dy="-100"/>
+      <feGaussianBlur result="blurOut" in="offOut" stdDeviation="200"/>
+      <feBlend in="SourceGraphic" in2="blurOut" mode="normal"/>
+    </filter>
+  </defs>
+  <!-- -105, 521 are within 0.5 pixel-perfect -->
+  <!-- offsetting more to show shadow -->
+  <g transform="translate(-95,530) scale(0.100000,-0.100000)" filter="url(#f1)">
+    <circle cx="4755" cy="1505" r="3700" fill="#565C64">
      </circle>
     <path d="M4550 4230 c-582 -48 -1123 -271 -1568 -646 l-84 -70 869 -869 c477 -477 871 -868 876 -868 4 0 6 552 5 1228 l-3 1227 -25 1 c-14 0 -45 -1 -70 -3z" style="fill:#ffffff"/>
     <path xmlns="http://www.w3.org/2000/svg" d="M4867 4230 c-10 -9 -9 -2453 1 -2453 4 0 398 391 875 868 l869 869 -84 70 c-344 290 -749 492 -1178 587 -166 36 -469 74 -483 59z" style="fill:#ffffff"/>
