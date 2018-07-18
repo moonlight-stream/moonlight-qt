@@ -120,6 +120,9 @@ ScrollView {
                         prefs.width = parseInt(resolutionListModel.get(currentIndex).video_width)
                         prefs.height = parseInt(resolutionListModel.get(currentIndex).video_height)
                         prefs.fps = parseInt(resolutionListModel.get(currentIndex).video_fps)
+
+                        prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
+                        slider.value = prefs.bitrateKbps
                     }
                 }
 
@@ -147,9 +150,11 @@ ScrollView {
 
                     // TODO value should be loaded as the current value.
                     value: prefs.bitrateKbps
+
                     stepSize: 500
                     from : 500
                     to: 100000
+
                     snapMode: "SnapOnRelease"
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
 
