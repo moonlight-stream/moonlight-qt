@@ -5,10 +5,6 @@
 #include "ffmpeg-renderers/dxva2.h"
 #endif
 
-#ifdef __APPLE__
-#include "ffmpeg-renderers/vt.h"
-#endif
-
 bool FFmpegVideoDecoder::chooseDecoder(
         StreamingPreferences::VideoDecoderSelection vds,
         SDL_Window* window,
@@ -63,11 +59,6 @@ bool FFmpegVideoDecoder::chooseDecoder(
 #ifdef _WIN32
         case AV_HWDEVICE_TYPE_DXVA2:
             newRenderer = new DXVA2Renderer();
-            break;
-#endif
-#ifdef __APPLE__
-        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-            newRenderer = VTRendererFactory::createRenderer();
             break;
 #endif
         default:

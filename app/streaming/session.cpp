@@ -5,6 +5,10 @@
 #include <SDL.h>
 #include "utils.h"
 
+#ifdef __APPLE__
+#include "video/avfoundation.h"
+#endif
+
 #include "video/ffmpeg.h"
 
 #include <QRandomGenerator>
@@ -82,6 +86,21 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
                             int frameRate, IVideoDecoder*& chosenDecoder)
 {
+#ifdef __APPLE__
+    chosenDecoder = AVFoundationDecoderFactory::createDecoder();
+    if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "AVFoundation-based video decoder chosen");
+        return true;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load AVFoundation decoder");
+        delete chosenDecoder;
+        chosenDecoder = nullptr;
+    }
+#endif
+
     chosenDecoder = new FFmpegVideoDecoder();
     if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
