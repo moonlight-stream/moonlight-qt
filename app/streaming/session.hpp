@@ -7,13 +7,7 @@
 #include "backend/computermanager.h"
 #include "settings/streamingpreferences.h"
 #include "input.hpp"
-#include "video/ffmpeg-renderers/renderer.h"
-
-extern "C" {
-#include <libavcodec/avcodec.h>
-}
-
-#define SDL_CODE_FRAME_READY 0
+#include "video/decoder.h"
 
 class Session : public QObject
 {
@@ -46,25 +40,13 @@ private:
     int sdlDetermineAudioConfiguration();
 
     static
-    bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
-                       SDL_Window* window,
-                       int videoFormat,
-                       int width, int height,
-                       AVCodec*& chosenDecoder,
-                       const AVCodecHWConfig*& chosenHwConfig,
-                       IFFmpegRenderer*& newRenderer);
-
-    static
-    enum AVPixelFormat getHwFormat(AVCodecContext*,
-                                   const enum AVPixelFormat* pixFmts);
-
-    static
     bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
-                                   int videoFormat, int width, int height);
+                                   int videoFormat, int width, int height, int frameRate);
 
-    void renderFrame(SDL_UserEvent* event);
-
-    void dropFrame(SDL_UserEvent* event);
+    static
+    bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
+                       SDL_Window* window, int videoFormat, int width, int height,
+                       int frameRate, IVideoDecoder*& chosenDecoder);
 
     static
     void clStageStarting(int stage);
@@ -110,13 +92,8 @@ private:
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
-
-    static AVPacket s_Pkt;
-    static AVCodecContext* s_VideoDecoderCtx;
-    static QByteArray s_DecodeBuffer;
-    static AVBufferRef* s_HwDeviceCtx;
-    static const AVCodecHWConfig* s_HwDecodeCfg;
-    static IFFmpegRenderer* s_Renderer;
+    IVideoDecoder* m_VideoDecoder;
+    SDL_SpinLock m_DecoderLock;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;

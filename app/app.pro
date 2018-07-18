@@ -79,6 +79,8 @@ HEADERS += \
     streaming/session.hpp \
     gui/computermodel.h \
     gui/appmodel.h \
+    streaming/video/decoder.h \
+    streaming/video/ffmpeg.h \
     streaming/video/ffmpeg-renderers/renderer.h
 
 win32 {

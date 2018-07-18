@@ -1,5 +1,5 @@
 #include <Limelight.h>
-#include "streaming/session.hpp"
+#include "ffmpeg.h"
 
 #ifdef _WIN32
 #include "ffmpeg-renderers/dxva2.h"
@@ -9,34 +9,14 @@
 #include "ffmpeg-renderers/vt.h"
 #endif
 
-AVPacket Session::s_Pkt;
-AVCodecContext* Session::s_VideoDecoderCtx;
-QByteArray Session::s_DecodeBuffer;
-const AVCodecHWConfig* Session::s_HwDecodeCfg;
-IFFmpegRenderer* Session::s_Renderer;
-
-#define MAX_SLICES 4
-
-int Session::getDecoderCapabilities()
-{
-    int caps = 0;
-
-    // Submit for decode without using a separate thread
-    caps |= CAPABILITY_DIRECT_SUBMIT;
-
-    // Slice up to 4 times for parallel decode, once slice per core
-    caps |= CAPABILITY_SLICES_PER_FRAME(qMin(MAX_SLICES, SDL_GetCPUCount()));
-
-    return caps;
-}
-
-bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
-                            SDL_Window* window,
-                            int videoFormat,
-                            int width, int height,
-                            AVCodec*& chosenDecoder,
-                            const AVCodecHWConfig*& chosenHwConfig,
-                            IFFmpegRenderer*& newRenderer)
+bool FFmpegVideoDecoder::chooseDecoder(
+        StreamingPreferences::VideoDecoderSelection vds,
+        SDL_Window* window,
+        int videoFormat,
+        int width, int height,
+        AVCodec*& chosenDecoder,
+        const AVCodecHWConfig*& chosenHwConfig,
+        IFFmpegRenderer*& newRenderer)
 {
     if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         chosenDecoder = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -106,125 +86,104 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     }
 }
 
-bool Session::isHardwareDecodeAvailable(
-        StreamingPreferences::VideoDecoderSelection vds,
-        int videoFormat, int width, int height)
+bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
-    AVCodec* decoder;
-    const AVCodecHWConfig* hwConfig;
-    IFFmpegRenderer* renderer;
-
-    // Create temporary window to instantiate the decoder
-    SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
-    if (!window) {
-        return false;
-    }
-
-    if (chooseDecoder(vds, window, videoFormat, width, height, decoder, hwConfig, renderer)) {
-        // The renderer may have referenced the window, so
-        // we must delete the renderer before the window.
-        delete renderer;
-
-        SDL_DestroyWindow(window);
-        return hwConfig != nullptr;
-    }
-    else {
-        SDL_DestroyWindow(window);
-        // Failed to find *any* decoder, including software
-        return false;
-    }
+    return m_HwDecodeCfg != nullptr;
 }
 
-int Session::drSetup(int videoFormat, int width, int height, int /* frameRate */, void*, int)
+FFmpegVideoDecoder::FFmpegVideoDecoder()
+    : m_VideoDecoderCtx(nullptr),
+      m_DecodeBuffer(1024 * 1024, 0),
+      m_HwDecodeCfg(nullptr),
+      m_Renderer(nullptr)
 {
-    AVCodec* decoder;
+    av_init_packet(&m_Pkt);
 
     // Use linear filtering when renderer scaling is required
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
+}
 
-    av_init_packet(&s_Pkt);
+FFmpegVideoDecoder::~FFmpegVideoDecoder()
+{
+    avcodec_close(m_VideoDecoderCtx);
+    av_free(m_VideoDecoderCtx);
+    m_VideoDecoderCtx = nullptr;
 
-    if (!chooseDecoder(s_ActiveSession->m_Preferences.videoDecoderSelection,
-                       s_ActiveSession->m_Window,
-                       videoFormat, width, height,
-                       decoder, s_HwDecodeCfg, s_Renderer)) {
+    m_HwDecodeCfg = nullptr;
+
+    delete m_Renderer;
+    m_Renderer = nullptr;
+}
+
+bool FFmpegVideoDecoder::initialize(
+        StreamingPreferences::VideoDecoderSelection vds,
+        SDL_Window* window,
+        int videoFormat,
+        int width,
+        int height,
+        int)
+{
+    AVCodec* decoder;
+
+    if (!chooseDecoder(vds, window, videoFormat, width, height,
+                       decoder, m_HwDecodeCfg, m_Renderer)) {
         // Error logged in chooseDecoder()
-        return -1;
+        return false;
     }
 
-    s_VideoDecoderCtx = avcodec_alloc_context3(decoder);
-    if (!s_VideoDecoderCtx) {
+    m_VideoDecoderCtx = avcodec_alloc_context3(decoder);
+    if (!m_VideoDecoderCtx) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to allocate video decoder context");
-        delete s_Renderer;
-        return -1;
+        return false;
     }
 
     // Always request low delay decoding
-    s_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
+    m_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
 
     // Enable slice multi-threading for software decoding
-    if (!s_HwDecodeCfg) {
-        s_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
-        s_VideoDecoderCtx->thread_count = qMin(MAX_SLICES, SDL_GetCPUCount());
+    if (!m_HwDecodeCfg) {
+        m_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
+        m_VideoDecoderCtx->thread_count = qMin(MAX_SLICES, SDL_GetCPUCount());
     }
     else {
         // No threading for HW decode
-        s_VideoDecoderCtx->thread_count = 1;
+        m_VideoDecoderCtx->thread_count = 1;
     }
 
     // Setup decoding parameters
-    s_VideoDecoderCtx->width = width;
-    s_VideoDecoderCtx->height = height;
-    s_VideoDecoderCtx->pix_fmt = AV_PIX_FMT_YUV420P; // FIXME: HDR
+    m_VideoDecoderCtx->width = width;
+    m_VideoDecoderCtx->height = height;
+    m_VideoDecoderCtx->pix_fmt = AV_PIX_FMT_YUV420P; // FIXME: HDR
 
     // Allow the renderer to attach data to this decoder
-    if (!s_Renderer->prepareDecoderContext(s_VideoDecoderCtx)) {
-        delete s_Renderer;
-        av_free(s_VideoDecoderCtx);
-        return -1;
+    if (!m_Renderer->prepareDecoderContext(m_VideoDecoderCtx)) {
+        return false;
     }
 
-    int err = avcodec_open2(s_VideoDecoderCtx, decoder, nullptr);
+    int err = avcodec_open2(m_VideoDecoderCtx, decoder, nullptr);
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to open decoder for format: %x",
                      videoFormat);
-        delete s_Renderer;
-        av_free(s_VideoDecoderCtx);
-        return -1;
+        return false;
     }
 
-    // 1MB frame buffer to start
-    s_DecodeBuffer = QByteArray(1024 * 1024, 0);
-
-    return 0;
+    return true;
 }
 
-void Session::drCleanup()
-{
-    avcodec_close(s_VideoDecoderCtx);
-    av_free(s_VideoDecoderCtx);
-    s_VideoDecoderCtx = nullptr;
-
-    s_HwDecodeCfg = nullptr;
-
-    delete s_Renderer;
-    s_Renderer = nullptr;
-}
-
-int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
+int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 {
     PLENTRY entry = du->bufferList;
     int err;
 
-    if (du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE > s_DecodeBuffer.length()) {
-        s_DecodeBuffer = QByteArray(du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE, 0);
+    if (du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE > m_DecodeBuffer.length()) {
+        m_DecodeBuffer = QByteArray(du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE, 0);
     }
 
     int offset = 0;
     while (entry != nullptr) {
-        memcpy(&s_DecodeBuffer.data()[offset],
+        memcpy(&m_DecodeBuffer.data()[offset],
                entry->data,
                entry->length);
         offset += entry->length;
@@ -233,10 +192,10 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
 
     SDL_assert(offset == du->fullLength);
 
-    s_Pkt.data = reinterpret_cast<uint8_t*>(s_DecodeBuffer.data());
-    s_Pkt.size = du->fullLength;
+    m_Pkt.data = reinterpret_cast<uint8_t*>(m_DecodeBuffer.data());
+    m_Pkt.size = du->fullLength;
 
-    err = avcodec_send_packet(s_VideoDecoderCtx, &s_Pkt);
+    err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
     if (err < 0) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Decoding failed: %d", err);
@@ -256,7 +215,7 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
         return DR_OK;
     }
 
-    err = avcodec_receive_frame(s_VideoDecoderCtx, frame);
+    err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
     if (err == 0) {
         SDL_Event event;
 
@@ -275,15 +234,15 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
 }
 
 // Called on main thread
-void Session::renderFrame(SDL_UserEvent* event)
+void FFmpegVideoDecoder::renderFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
-    s_Renderer->renderFrame(frame);
+    m_Renderer->renderFrame(frame);
     av_frame_free(&frame);
 }
 
 // Called on main thread
-void Session::dropFrame(SDL_UserEvent* event)
+void FFmpegVideoDecoder::dropFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
     av_frame_free(&frame);
