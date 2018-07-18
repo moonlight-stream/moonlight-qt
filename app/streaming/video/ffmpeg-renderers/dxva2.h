@@ -9,7 +9,7 @@ extern "C" {
 #include <libavcodec/dxva2.h>
 }
 
-class DXVA2Renderer : public IRenderer
+class DXVA2Renderer : public IFFmpegRenderer
 {
 public:
     DXVA2Renderer();

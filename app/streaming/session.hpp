@@ -7,7 +7,7 @@
 #include "backend/computermanager.h"
 #include "settings/streamingpreferences.h"
 #include "input.hpp"
-#include "renderers/renderer.h"
+#include "video/ffmpeg-renderers/renderer.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -52,7 +52,7 @@ private:
                        int width, int height,
                        AVCodec*& chosenDecoder,
                        const AVCodecHWConfig*& chosenHwConfig,
-                       IRenderer*& newRenderer);
+                       IFFmpegRenderer*& newRenderer);
 
     static
     enum AVPixelFormat getHwFormat(AVCodecContext*,
@@ -116,7 +116,7 @@ private:
     static QByteArray s_DecodeBuffer;
     static AVBufferRef* s_HwDeviceCtx;
     static const AVCodecHWConfig* s_HwDecodeCfg;
-    static IRenderer* s_Renderer;
+    static IFFmpegRenderer* s_Renderer;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;

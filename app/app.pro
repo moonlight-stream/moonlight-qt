@@ -55,16 +55,16 @@ SOURCES += \
     streaming/input.cpp \
     streaming/session.cpp \
     streaming/audio.cpp \
-    streaming/video.cpp \
+    streaming/video/ffmpeg.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
-    streaming/renderers/sdl.cpp
+    streaming/video/ffmpeg-renderers/sdl.cpp
 
 win32 {
-    SOURCES += streaming/renderers/dxva2.cpp
+    SOURCES += streaming/video/ffmpeg-renderers/dxva2.cpp
 }
 macx {
-    SOURCES += streaming/renderers/vt.mm
+    SOURCES += streaming/video/ffmpeg-renderers/vt.mm
 }
 
 HEADERS += \
@@ -79,13 +79,13 @@ HEADERS += \
     streaming/session.hpp \
     gui/computermodel.h \
     gui/appmodel.h \
-    streaming/renderers/renderer.h
+    streaming/video/ffmpeg-renderers/renderer.h
 
 win32 {
-    HEADERS += streaming/renderers/dxva2.h
+    HEADERS += streaming/video/ffmpeg-renderers/dxva2.h
 }
 macx {
-    HEADERS += streaming/renderers/vt.h
+    HEADERS += streaming/video/ffmpeg-renderers/vt.h
 }
 
 RESOURCES += \

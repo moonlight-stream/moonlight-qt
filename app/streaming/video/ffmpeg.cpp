@@ -1,19 +1,19 @@
 #include <Limelight.h>
-#include "session.hpp"
+#include "streaming/session.hpp"
 
 #ifdef _WIN32
-#include "renderers/dxva2.h"
+#include "ffmpeg-renderers/dxva2.h"
 #endif
 
 #ifdef __APPLE__
-#include "renderers/vt.h"
+#include "ffmpeg-renderers/vt.h"
 #endif
 
 AVPacket Session::s_Pkt;
 AVCodecContext* Session::s_VideoDecoderCtx;
 QByteArray Session::s_DecodeBuffer;
 const AVCodecHWConfig* Session::s_HwDecodeCfg;
-IRenderer* Session::s_Renderer;
+IFFmpegRenderer* Session::s_Renderer;
 
 #define MAX_SLICES 4
 
@@ -36,7 +36,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             int width, int height,
                             AVCodec*& chosenDecoder,
                             const AVCodecHWConfig*& chosenHwConfig,
-                            IRenderer*& newRenderer)
+                            IFFmpegRenderer*& newRenderer)
 {
     if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         chosenDecoder = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -112,7 +112,7 @@ bool Session::isHardwareDecodeAvailable(
 {
     AVCodec* decoder;
     const AVCodecHWConfig* hwConfig;
-    IRenderer* renderer;
+    IFFmpegRenderer* renderer;
 
     // Create temporary window to instantiate the decoder
     SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);

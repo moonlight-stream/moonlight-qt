@@ -11,7 +11,7 @@
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 
-class VTRenderer : public IRenderer
+class VTRenderer : public IFFmpegRenderer
 {
 public:
     VTRenderer()
@@ -194,6 +194,6 @@ private:
     NSView* m_View;
 };
 
-IRenderer* VTRendererFactory::createRenderer() {
+IFFmpegRenderer* VTRendererFactory::createRenderer() {
     return new VTRenderer();
 }

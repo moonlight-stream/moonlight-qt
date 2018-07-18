@@ -6,9 +6,9 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-class IRenderer {
+class IFFmpegRenderer {
 public:
-    virtual ~IRenderer() {}
+    virtual ~IFFmpegRenderer() {}
     virtual bool initialize(SDL_Window* window,
                             int videoFormat,
                             int width,
@@ -17,7 +17,7 @@ public:
     virtual void renderFrame(AVFrame* frame) = 0;
 };
 
-class SdlRenderer : public IRenderer {
+class SdlRenderer : public IFFmpegRenderer {
 public:
     SdlRenderer();
     virtual ~SdlRenderer();
