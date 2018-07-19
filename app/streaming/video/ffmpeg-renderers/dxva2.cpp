@@ -376,6 +376,11 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
 
     m_Device = SDL_RenderGetD3D9Device(m_SdlRenderer);
 
+    // Draw a black frame until the video stream starts rendering
+    SDL_SetRenderDrawColor(m_SdlRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(m_SdlRenderer);
+    SDL_RenderPresent(m_SdlRenderer);
+
     RtlZeroMemory(&m_Desc, sizeof(m_Desc));
     m_Desc.SampleWidth = m_VideoWidth;
     m_Desc.SampleHeight = m_VideoHeight;
@@ -457,9 +462,6 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
 
     bltParams.TargetFrame = m_FrameIndex++;
     bltParams.TargetRect = sample.DstRect;
-    bltParams.BackgroundColor.Y = 0x1000;
-    bltParams.BackgroundColor.Cb = 0x8000;
-    bltParams.BackgroundColor.Cr = 0x8000;
     bltParams.BackgroundColor.Alpha = 0xFFFF;
 
     bltParams.DestFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
@@ -471,11 +473,22 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
 
     bltParams.Alpha = DXVA2_Fixed32OpaqueAlpha();
 
+    hr = m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0f, 0);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Clear() failed: %x",
+                     hr);
+        av_frame_free(&frame);
+        return;
+    }
+
     hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VideoProcessBlt() failed: %x",
                      hr);
+        av_frame_free(&frame);
+        return;
     }
 
     m_Device->Present(nullptr, nullptr, nullptr, nullptr);

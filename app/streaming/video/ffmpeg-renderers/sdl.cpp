@@ -41,6 +41,11 @@ bool SdlRenderer::initialize(SDL_Window* window,
     // logical rendering surface size is equal to the stream size
     SDL_RenderSetLogicalSize(m_Renderer, width, height);
 
+    // Draw a black frame until the video stream starts rendering
+    SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(m_Renderer);
+    SDL_RenderPresent(m_Renderer);
+
     m_Texture = SDL_CreateTexture(m_Renderer,
                                   SDL_PIXELFORMAT_YV12,
                                   SDL_TEXTUREACCESS_STREAMING,
