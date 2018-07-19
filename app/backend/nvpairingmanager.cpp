@@ -21,7 +21,7 @@ NvPairingManager::NvPairingManager(QString address) :
     BIO_free_all(bio);
     if (m_Cert == nullptr)
     {
-        throw new std::runtime_error("Unable to load certificate");
+        throw std::runtime_error("Unable to load certificate");
     }
 
     QByteArray pk = IdentityManager::get()->getPrivateKey();
@@ -32,7 +32,7 @@ NvPairingManager::NvPairingManager(QString address) :
     BIO_free_all(bio);
     if (m_PrivateKey == nullptr)
     {
-        throw new std::runtime_error("Unable to load private key");
+        throw std::runtime_error("Unable to load private key");
     }
 }
 

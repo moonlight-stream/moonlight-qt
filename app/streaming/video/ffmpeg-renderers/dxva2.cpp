@@ -1,4 +1,4 @@
-#include <Initguid.h>
+#include <initguid.h>
 #include "dxva2.h"
 
 #include <Limelight.h>
@@ -8,16 +8,16 @@ DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0x
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
 DXVA2Renderer::DXVA2Renderer() :
-    m_FrameIndex(0),
-    m_SurfacesUsed(0),
     m_SdlRenderer(nullptr),
     m_DecService(nullptr),
     m_Decoder(nullptr),
+    m_SurfacesUsed(0),
     m_Pool(nullptr),
     m_Device(nullptr),
     m_RenderTarget(nullptr),
     m_ProcService(nullptr),
-    m_Processor(nullptr)
+    m_Processor(nullptr),
+    m_FrameIndex(0)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
