@@ -140,15 +140,23 @@ public:
     CVReturn
     displayLinkOutputCallback(
         CVDisplayLinkRef,
-        const CVTimeStamp*,
-        const CVTimeStamp* vsyncTime,
+        const CVTimeStamp* now,
+        const CVTimeStamp* /* vsyncTime */,
         CVOptionFlags,
         CVOptionFlags*,
         void *displayLinkContext)
     {
         VTRenderer* me = reinterpret_cast<VTRenderer*>(displayLinkContext);
 
-        me->drawFrame(vsyncTime->hostTime);
+        // In my testing on macOS 10.13, this callback is invoked about 24 ms
+        // prior to the specified v-sync time (now - vsyncTime). Since this is
+        // greater than the standard v-sync interval (16 ms = 60 FPS), we will
+        // draw using the current host time, rather than the actual v-sync target
+        // time. Because the CVDisplayLink is in sync with the actual v-sync
+        // interval, even if many ms prior, we can safely use the current host time
+        // and get a consistent callback for each v-sync. This reduces video latency
+        // by at least 1 frame vs. rendering with the actual vsyncTime.
+        me->drawFrame(now->hostTime);
 
         return kCVReturnSuccess;
     }
