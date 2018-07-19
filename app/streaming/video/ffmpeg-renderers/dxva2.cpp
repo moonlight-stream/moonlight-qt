@@ -450,7 +450,7 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
         int drawWidth = (int)(m_DisplayHeight * srcAspectRatio);
         sample.DstRect.bottom = m_DisplayHeight;
         sample.DstRect.left = (m_DisplayWidth - drawWidth) / 2;
-        sample.DstRect.right = drawWidth;
+        sample.DstRect.right = sample.DstRect.left + drawWidth;
     }
 
     DXVA2_VideoProcessBltParams bltParams = {};
