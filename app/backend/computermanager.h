@@ -249,6 +249,8 @@ class ComputerManager : public QObject
 public:
     explicit ComputerManager(QObject *parent = nullptr);
 
+    virtual ~ComputerManager();
+
     Q_INVOKABLE void startPolling();
 
     Q_INVOKABLE void stopPollingAsync();

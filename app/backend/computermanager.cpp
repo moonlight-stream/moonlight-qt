@@ -286,6 +286,56 @@ ComputerManager::ComputerManager(QObject *parent)
     settings.endArray();
 }
 
+ComputerManager::~ComputerManager()
+{
+    QWriteLocker lock(&m_Lock);
+
+    // Delete machines that haven't been resolved yet
+    while (!m_PendingResolution.isEmpty()) {
+        MdnsPendingComputer* computer = m_PendingResolution.first();
+        delete computer;
+        m_PendingResolution.removeFirst();
+    }
+
+    // Delete the browser to stop discovery
+    delete m_MdnsBrowser;
+    m_MdnsBrowser = nullptr;
+
+    {
+        QMutableMapIterator<QString, QThread*> i(m_PollThreads);
+
+        // Interrupt all polling threads
+        while (i.hasNext()) {
+            i.next();
+            i.value()->requestInterruption();
+        }
+
+        // Wait for all threads to terminate before destroying
+        // the NvComputer objects.
+        i.toFront();
+        while (i.hasNext()) {
+            i.next();
+
+            QThread* thread = i.value();
+            thread->wait();
+            delete thread;
+
+            i.remove();
+        }
+    }
+
+    {
+        QMutableMapIterator<QString, NvComputer*> i(m_KnownHosts);
+
+        // Destroy all NvComputer objects
+        while (i.hasNext()) {
+            i.next();
+            delete i.value();
+            i.remove();
+        }
+    }
+}
+
 void ComputerManager::saveHosts()
 {
     QSettings settings;
