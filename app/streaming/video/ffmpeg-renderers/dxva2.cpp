@@ -101,8 +101,8 @@ int DXVA2Renderer::ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int)
 
     frame->data[3] = frame->buf[0]->data;
     frame->format = AV_PIX_FMT_DXVA2_VLD;
-    frame->width = me->m_Width;
-    frame->height = me->m_Height;
+    frame->width = me->m_VideoWidth;
+    frame->height = me->m_VideoHeight;
 
     return 0;
 }
@@ -218,8 +218,8 @@ bool DXVA2Renderer::initializeDecoder()
         alignment = 16;
     }
 
-    hr = m_DecService->CreateSurface(FFALIGN(m_Width, alignment),
-                                     FFALIGN(m_Height, alignment),
+    hr = m_DecService->CreateSurface(FFALIGN(m_VideoWidth, alignment),
+                                     FFALIGN(m_VideoHeight, alignment),
                                      ARRAYSIZE(m_DecSurfaces) - 1,
                                      m_Desc.Format,
                                      D3DPOOL_DEFAULT,
@@ -262,6 +262,9 @@ bool DXVA2Renderer::initializeRenderer()
     D3DSURFACE_DESC renderTargetDesc;
     m_RenderTarget->GetDesc(&renderTargetDesc);
 
+    m_DisplayWidth = renderTargetDesc.Width;
+    m_DisplayHeight = renderTargetDesc.Height;
+
     hr = DXVA2CreateVideoService(m_Device, IID_IDirectXVideoProcessorService,
                                  reinterpret_cast<void**>(&m_ProcService));
 
@@ -298,6 +301,14 @@ bool DXVA2Renderer::initializeRenderer()
                      !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Device %d can't convert YUV2RGB: %x",
+                            i,
+                            caps.VideoProcessorOperations);
+                continue;
+            }
+            else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchX) ||
+                     !(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchY)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Device %d can't stretch video: %x",
                             i,
                             caps.VideoProcessorOperations);
                 continue;
@@ -341,8 +352,8 @@ bool DXVA2Renderer::initializeRenderer()
 bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height)
 {
     m_VideoFormat = videoFormat;
-    m_Width = width;
-    m_Height = height;
+    m_VideoWidth = width;
+    m_VideoHeight = height;
 
     // FFmpeg will be decoding on different threads than the main thread that we're
     // currently running on right now. We must set this hint so SDL will pass
@@ -366,8 +377,8 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     m_Device = SDL_RenderGetD3D9Device(m_SdlRenderer);
 
     RtlZeroMemory(&m_Desc, sizeof(m_Desc));
-    m_Desc.SampleWidth = m_Width;
-    m_Desc.SampleHeight = m_Height;
+    m_Desc.SampleWidth = m_VideoWidth;
+    m_Desc.SampleHeight = m_VideoHeight;
     m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_ProgressiveChroma;
     m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_0_255;
     m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;
@@ -421,15 +432,31 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
     sample.SrcSurface = surface;
     sample.SrcRect.right = m_Desc.SampleWidth;
     sample.SrcRect.bottom = m_Desc.SampleHeight;
-    sample.DstRect = sample.SrcRect;
     sample.SampleFormat = m_Desc.SampleFormat;
     sample.PlanarAlpha = DXVA2_Fixed32OpaqueAlpha();
+
+    // Center in frame and preserve aspect ratio
+    double srcAspectRatio = (double)m_Desc.SampleWidth / (double)m_Desc.SampleHeight;
+    double dstAspectRatio = (double)m_DisplayWidth / (double)m_DisplayHeight;
+    if (dstAspectRatio < srcAspectRatio) {
+        // Greater height per width
+        int drawHeight = (int)(m_DisplayWidth / srcAspectRatio);
+        sample.DstRect.top = (m_DisplayHeight - drawHeight) / 2;
+        sample.DstRect.bottom = sample.DstRect.bottom + drawHeight;
+        sample.DstRect.right = m_DisplayWidth;
+    }
+    else {
+        // Greater width per height
+        int drawWidth = (int)(m_DisplayHeight * srcAspectRatio);
+        sample.DstRect.bottom = m_DisplayHeight;
+        sample.DstRect.left = (m_DisplayWidth - drawWidth) / 2;
+        sample.DstRect.right = drawWidth;
+    }
 
     DXVA2_VideoProcessBltParams bltParams = {};
 
     bltParams.TargetFrame = m_FrameIndex++;
-    bltParams.TargetRect.right = m_Desc.SampleWidth;
-    bltParams.TargetRect.bottom = m_Desc.SampleHeight;
+    bltParams.TargetRect = sample.DstRect;
     bltParams.BackgroundColor.Y = 0x1000;
     bltParams.BackgroundColor.Cb = 0x8000;
     bltParams.BackgroundColor.Cr = 0x8000;

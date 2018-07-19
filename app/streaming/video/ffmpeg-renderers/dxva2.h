@@ -39,8 +39,11 @@ private:
                                    const enum AVPixelFormat* pixFmts);
 
     int m_VideoFormat;
-    int m_Width;
-    int m_Height;
+    int m_VideoWidth;
+    int m_VideoHeight;
+
+    int m_DisplayWidth;
+    int m_DisplayHeight;
 
     SDL_Renderer* m_SdlRenderer;
 
