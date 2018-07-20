@@ -98,6 +98,7 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
       m_Renderer(nullptr)
 {
     av_init_packet(&m_Pkt);
+    SDL_AtomicSet(&m_QueuedFrames, 0);
 
     // Use linear filtering when renderer scaling is required
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
@@ -105,6 +106,28 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder()
 {
+    // Drop any frames still queued to ensure
+    // they are properly freed.
+    SDL_Event event;
+
+    while (SDL_AtomicGet(&m_QueuedFrames) > 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Waiting for %d frames to return",
+                    SDL_AtomicGet(&m_QueuedFrames));
+
+        if (SDL_PeepEvents(&event,
+                           1,
+                           SDL_GETEVENT,
+                           SDL_USEREVENT,
+                           SDL_USEREVENT) == 1) {
+            dropFrame(&event.user);
+        }
+        else {
+            SDL_Delay(100);
+            SDL_PumpEvents();
+        }
+    }
+
     avcodec_close(m_VideoDecoderCtx);
     av_free(m_VideoDecoderCtx);
     m_VideoDecoderCtx = nullptr;
@@ -218,6 +241,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
     if (err == 0) {
         // Queue the frame for rendering from the main thread
+        SDL_AtomicIncRef(&m_QueuedFrames);
         queueFrame(frame);
     }
     else {
@@ -232,6 +256,7 @@ void FFmpegVideoDecoder::renderFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
     m_Renderer->renderFrame(frame);
+    SDL_AtomicDecRef(&m_QueuedFrames);
 }
 
 // Called on main thread
@@ -239,4 +264,5 @@ void FFmpegVideoDecoder::dropFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
     av_frame_free(&frame);
+    SDL_AtomicDecRef(&m_QueuedFrames);
 }

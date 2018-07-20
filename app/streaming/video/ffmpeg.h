@@ -38,4 +38,5 @@ private:
     QByteArray m_DecodeBuffer;
     const AVCodecHWConfig* m_HwDecodeCfg;
     IFFmpegRenderer* m_Renderer;
+    SDL_atomic_t m_QueuedFrames;
 };

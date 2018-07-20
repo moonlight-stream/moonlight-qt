@@ -65,11 +65,11 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected quit key combo");
 
-            SDL_Event event;
+            // Uncapture the mouse to avoid processing any
+            // further keyboard input
+            SDL_SetRelativeMouseMode(SDL_FALSE);
 
-            // Drain the event queue of any additional input
-            // that might be processed before our quit message.
-            while (SDL_PollEvent(&event));
+            SDL_Event event;
 
             // Push a quit event to the main loop
             event.type = SDL_QUIT;
