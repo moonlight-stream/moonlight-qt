@@ -223,7 +223,7 @@ ScrollView {
                             val: StreamingPreferences.AC_FORCE_STEREO
                         }
                         ListElement {
-                            text: "Force surround"
+                            text: "Force 5.1 surround sound"
                             val: StreamingPreferences.AC_FORCE_SURROUND
                         }
                     }
