@@ -39,6 +39,12 @@ private:
 
     int sdlDetermineAudioConfiguration();
 
+    void getWindowDimensions(bool fullScreen,
+                             int& x, int& y,
+                             int& width, int& height);
+
+    void toggleFullscreen();
+
     static
     bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
                                    int videoFormat, int width, int height, int frameRate);

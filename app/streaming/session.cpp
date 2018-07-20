@@ -345,6 +345,91 @@ class DeferredSessionCleanupTask : public QRunnable
     }
 };
 
+void Session::getWindowDimensions(bool fullScreen,
+                                  int& x, int& y,
+                                  int& width, int& height)
+{
+    int displayIndex = 0;
+
+    if (m_Window != nullptr) {
+        displayIndex = SDL_GetWindowDisplayIndex(m_Window);
+        if (displayIndex < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetWindowDisplayIndex() failed: %s",
+                         SDL_GetError());
+
+            // Assume display 0
+            displayIndex = 0;
+        }
+    }
+
+    if (fullScreen) {
+        SDL_DisplayMode desired, closest;
+
+        SDL_zero(desired);
+        desired.w = m_StreamConfig.width;
+        desired.h = m_StreamConfig.height;
+        desired.refresh_rate = m_StreamConfig.fps;
+
+        if (SDL_GetClosestDisplayMode(displayIndex, &desired, &closest)) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Closest match for %dx%dx%d is %dx%dx%d",
+                        desired.w, desired.h, desired.refresh_rate,
+                        closest.w, closest.h, closest.refresh_rate);
+            width = closest.w;
+            height = closest.h;
+        }
+        else if (SDL_GetCurrentDisplayMode(displayIndex, &closest) == 0) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using current display mode: %dx%dx%d",
+                        closest.w, closest.h, closest.refresh_rate);
+            width = closest.w;
+            height = closest.h;
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to get current or closest display mode");
+            width = m_StreamConfig.width;
+            height = m_StreamConfig.height;
+        }
+
+        // Full-screen modes always start at the origin
+        x = y = SDL_WINDOWPOS_UNDEFINED;
+    }
+    else {
+        SDL_Rect usableBounds;
+        if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+            width = usableBounds.w;
+            height = usableBounds.h;
+            x = usableBounds.x;
+            y = usableBounds.y;
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetDisplayUsableBounds() failed: %s",
+                         SDL_GetError());
+
+            width = m_StreamConfig.width;
+            height = m_StreamConfig.height;
+            x = y = SDL_WINDOWPOS_UNDEFINED;
+        }
+    }
+}
+
+void Session::toggleFullscreen()
+{
+    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN);
+
+    int x, y, width, height;
+
+    getWindowDimensions(fullScreen, x, y, width, height);
+
+    SDL_SetWindowPosition(m_Window, x, y);
+    SDL_SetWindowSize(m_Window, width, height);
+
+    SDL_SetWindowFullscreen(m_Window, fullScreen ? SDL_WINDOW_FULLSCREEN : 0);
+}
+
 void Session::exec()
 {
     // Check for validation errors/warnings and emit
@@ -389,56 +474,17 @@ void Session::exec()
     }
 
     int flags = SDL_WINDOW_HIDDEN;
-    int width, height;
+    int x, y, width, height;
     if (m_Preferences.fullScreen) {
-        SDL_DisplayMode desired, closest;
-
-        SDL_zero(desired);
-        desired.w = m_StreamConfig.width;
-        desired.h = m_StreamConfig.height;
-        desired.refresh_rate = m_StreamConfig.fps;
-
-        if (SDL_GetClosestDisplayMode(0, &desired, &closest)) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Closest match for %dx%dx%d is %dx%dx%d",
-                        desired.w, desired.h, desired.refresh_rate,
-                        closest.w, closest.h, closest.refresh_rate);
-            width = closest.w;
-            height = closest.h;
-        }
-        else if (SDL_GetCurrentDisplayMode(0, &closest) == 0) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using current display mode: %dx%dx%d",
-                        closest.w, closest.h, closest.refresh_rate);
-            width = closest.w;
-            height = closest.h;
-        }
-        else {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Unable to get current or closest display mode");
-            width = m_StreamConfig.width;
-            height = m_StreamConfig.height;
-        }
-
         flags |= SDL_WINDOW_FULLSCREEN;
     }
-    else {
-        SDL_DisplayMode current;
 
-        width = m_StreamConfig.width;
-        height = m_StreamConfig.height;
-
-        if (SDL_GetCurrentDisplayMode(0, &current) == 0) {
-            if (current.w <= m_StreamConfig.width || current.h <= m_StreamConfig.height) {
-                // If we match or exceed the dimensions of the display, maximize the window
-                flags |= SDL_WINDOW_MAXIMIZED;
-            }
-        }
-    }
+    getWindowDimensions(m_Preferences.fullScreen,
+                        x, y, width, height);
 
     m_Window = SDL_CreateWindow("Moonlight",
-                                SDL_WINDOWPOS_UNDEFINED,
-                                SDL_WINDOWPOS_UNDEFINED,
+                                x,
+                                y,
                                 width,
                                 height,
                                 flags);

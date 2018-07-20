@@ -88,12 +88,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         else if (event->keysym.sym == SDLK_x) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected full-screen toggle combo");
-            if (SDL_GetWindowFlags(Session::s_ActiveSession->m_Window) & SDL_WINDOW_FULLSCREEN) {
-                SDL_SetWindowFullscreen(Session::s_ActiveSession->m_Window, 0);
-            }
-            else {
-                SDL_SetWindowFullscreen(Session::s_ActiveSession->m_Window, SDL_WINDOW_FULLSCREEN);
-            }
+            Session::s_ActiveSession->toggleFullscreen();
             return;
         }
     }
