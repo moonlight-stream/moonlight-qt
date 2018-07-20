@@ -157,10 +157,14 @@ IdentityManager::getSslKey()
 
         // We must write out our PEM in the old PKCS1 format for SecureTransport
         // on macOS/iOS to be able to read it.
+#ifdef Q_OS_DARWIN
+        PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+#else
+        PEM_write_bio_PrivateKey(bio, pk, nullptr, nullptr, 0, nullptr, 0);
+#endif
+
         BUF_MEM* mem;
         BIO_get_mem_ptr(bio, &mem);
-        PEM_write_bio_PrivateKey_traditional(bio, pk, nullptr, nullptr, 0, nullptr, 0);
-
         m_CachedSslKey = QSslKey(QByteArray::fromRawData(mem->data, (int)mem->length), QSsl::Rsa);
 
         BIO_free(bio);
