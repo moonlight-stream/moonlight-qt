@@ -343,6 +343,61 @@ ScrollView {
                     }
                 }
 
+
+
+                Label {
+                    width: parent.width
+                    id: resVCCTitle
+                    text: qsTr("Video codec")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    color: "white"
+                }
+
+                ComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        // load the saved width/height/fps, and iterate through the ComboBox until a match is found
+                        // set it to that index.
+                        var saved_vcc = prefs.videoCodecConfig
+                        currentIndex = 0
+                        for(var i = 0; i < codecListModel.count; i++) {
+                            var el_vcc = codecListModel.get(i).val;
+                          if(saved_vcc === el_vcc) {
+                              currentIndex = i
+                          }
+                        }
+                    }
+
+                    id: codecComboBox
+                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
+                    font.pointSize: 9
+                    textRole: "text"
+                    model: ListModel {
+                        id: codecListModel
+                        ListElement {
+                            text: "Auto"
+                            val: StreamingPreferences.VCC_AUTO
+                        }
+                        ListElement {
+                            text: "Force H264"
+                            val: StreamingPreferences.VCC_FORCE_H264
+                        }
+                        ListElement {
+                            text: "Force HEVC"
+                            val: StreamingPreferences.VCC_FORCE_HEVC
+                        }
+                        ListElement {
+                            text: "Force HEVC HDR"
+                            val: StreamingPreferences.VCC_FORCE_HEVC_HDR
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        prefs.videoCodecConfig = codecListModel.get(currentIndex).val
+                    }
+                }
+
             }
         }
     }
