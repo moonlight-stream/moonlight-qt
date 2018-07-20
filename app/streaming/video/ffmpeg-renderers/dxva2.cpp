@@ -409,28 +409,6 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
     HRESULT hr;
 
-    hr = m_Device->TestCooperativeLevel();
-    switch (hr) {
-    case D3D_OK:
-        break;
-    case D3DERR_DEVICELOST:
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3D device lost!");
-        av_frame_free(&frame);
-        return;
-    case D3DERR_DEVICENOTRESET:
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3D device not reset!");
-        av_frame_free(&frame);
-        return;
-    default:
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Unknown D3D error: %x",
-                     hr);
-        av_frame_free(&frame);
-        return;
-    }
-
     DXVA2_VideoSample sample = {};
     sample.Start = m_FrameIndex;
     sample.End = m_FrameIndex + 1;
@@ -473,25 +451,33 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
 
     bltParams.Alpha = DXVA2_Fixed32OpaqueAlpha();
 
-    hr = m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0f, 0);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Clear() failed: %x",
-                     hr);
+    if (SDL_RenderClear(m_SdlRenderer) != 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL_RenderClear() failed: %s",
+                    SDL_GetError());
         av_frame_free(&frame);
+
+        // We're going to cheat a little bit here. It seems SDL's
+        // renderer may flake out in scenarios like moving the window
+        // between monitors, so generate a synthetic reset event for
+        // the main loop to consume.
+        SDL_Event event;
+        event.type = SDL_RENDER_TARGETS_RESET;
+        SDL_PushEvent(&event);
+
         return;
     }
 
     hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
+    av_frame_free(&frame);
+
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VideoProcessBlt() failed: %x",
                      hr);
-        av_frame_free(&frame);
-        return;
     }
 
-    m_Device->Present(nullptr, nullptr, nullptr, nullptr);
-
-    av_frame_free(&frame);
+    // We must try to present to trigger SDL's logic to recover the render target,
+    // even if VideoProcessBlt() fails.
+    SDL_RenderPresent(m_SdlRenderer);
 }
