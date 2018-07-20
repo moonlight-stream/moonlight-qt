@@ -101,6 +101,11 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 
 int Session::drSetup(int videoFormat, int width, int height, int frameRate, void *, int)
 {
+    s_ActiveSession->m_ActiveVideoFormat = videoFormat;
+    s_ActiveSession->m_ActiveVideoWidth = width;
+    s_ActiveSession->m_ActiveVideoHeight = height;
+    s_ActiveSession->m_ActiveVideoFrameRate = frameRate;
+
     if (!chooseDecoder(s_ActiveSession->m_Preferences.videoDecoderSelection,
                        s_ActiveSession->m_Window,
                        videoFormat, width, height, frameRate,
@@ -117,7 +122,16 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // from underneath the session when we initiate destruction.
     // We need to destroy the decoder on the main thread to satisfy
     // some API constraints (like DXVA2).
+
     SDL_AtomicLock(&s_ActiveSession->m_DecoderLock);
+
+    if (s_ActiveSession->m_NeedsIdr) {
+        // If we reset our decoder, we'll need to request an IDR frame
+        s_ActiveSession->m_NeedsIdr = false;
+        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+        return DR_NEED_IDR;
+    }
+
     IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
     if (decoder != nullptr) {
         int ret = decoder->submitDecodeUnit(du);
@@ -160,7 +174,8 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_App(app),
       m_Window(nullptr),
       m_VideoDecoder(nullptr),
-      m_DecoderLock(0)
+      m_DecoderLock(0),
+      m_NeedsIdr(false)
 {
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
@@ -510,6 +525,32 @@ void Session::exec()
             m_VideoDecoder->renderFrame(&event.user);
             break;
         }
+
+        case SDL_RENDER_DEVICE_RESET:
+        case SDL_RENDER_TARGETS_RESET:
+            SDL_AtomicLock(&m_DecoderLock);
+
+            // Destroy the old decoder
+            delete m_VideoDecoder;
+
+            // Chose a new decoder (hopefully the same one, but possibly
+            // not if a GPU was removed or something).
+            if (!chooseDecoder(m_Preferences.videoDecoderSelection,
+                               m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
+                               m_ActiveVideoHeight, m_ActiveVideoFrameRate,
+                               s_ActiveSession->m_VideoDecoder)) {
+                SDL_AtomicUnlock(&m_DecoderLock);
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to recreate decoder after reset");
+                goto DispatchDeferredCleanup;
+            }
+
+            // Request an IDR frame to complete the reset
+            m_NeedsIdr = true;
+
+            SDL_AtomicUnlock(&m_DecoderLock);
+            break;
+
         case SDL_KEYUP:
         case SDL_KEYDOWN:
             inputHandler.handleKeyEvent(&event.key);

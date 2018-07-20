@@ -94,6 +94,12 @@ private:
     SDL_Window* m_Window;
     IVideoDecoder* m_VideoDecoder;
     SDL_SpinLock m_DecoderLock;
+    bool m_NeedsIdr;
+
+    int m_ActiveVideoFormat;
+    int m_ActiveVideoWidth;
+    int m_ActiveVideoHeight;
+    int m_ActiveVideoFrameRate;
 
     static SDL_AudioDeviceID s_AudioDevice;
     static OpusMSDecoder* s_OpusDecoder;

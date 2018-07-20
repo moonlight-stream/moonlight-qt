@@ -128,14 +128,9 @@ FFmpegVideoDecoder::~FFmpegVideoDecoder()
         }
     }
 
-    avcodec_close(m_VideoDecoderCtx);
-    av_free(m_VideoDecoderCtx);
-    m_VideoDecoderCtx = nullptr;
-
-    m_HwDecodeCfg = nullptr;
+    avcodec_free_context(&m_VideoDecoderCtx);
 
     delete m_Renderer;
-    m_Renderer = nullptr;
 }
 
 bool FFmpegVideoDecoder::initialize(
