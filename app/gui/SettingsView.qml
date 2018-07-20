@@ -186,18 +186,53 @@ ScrollView {
                 anchors.fill: parent
                 spacing: 5
 
-                CheckBox {
-                    id: surroundSoundCheck
-                    text: "<font color=\"white\">Enable 5.1 surround sound</font>"
-                    font.pointSize:  12
+                Label {
+                    width: parent.width
+                    id: resAudioTitle
+                    text: qsTr("Audio configuration")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    color: "white"
+                }
 
-                    // the backend actually supports auto/stereo/5.1.  We'll expose stereo/5.1
-                    checked: prefs.audioConfig === StreamingPreferences.AC_FORCE_SURROUND
+                ComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_audio = prefs.audioConfig
+                        currentIndex = 0
+                        for(var i = 0; i < audioListModel.count; i++) {
+                            var el_audio= audioListModel.get(i).val;
+                          if(saved_audio === el_audio) {
+                              currentIndex = i
+                          }
+                        }
+                    }
 
-                    onCheckedChanged: {
-                        prefs.audioConfig = checked ? StreamingPreferences.AC_FORCE_SURROUND : StreamingPreferences.AC_FORCE_STEREO
+                    id: audioComboBox
+                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
+                    font.pointSize: 9
+                    textRole: "text"
+                    model: ListModel {
+                        id: audioListModel
+                        ListElement {
+                            text: "Auto"
+                            val: StreamingPreferences.AC_AUTO
+                        }
+                        ListElement {
+                            text: "Force stereo"
+                            val: StreamingPreferences.AC_FORCE_STEREO
+                        }
+                        ListElement {
+                            text: "Force surround"
+                            val: StreamingPreferences.AC_FORCE_SURROUND
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        prefs.audioConfig = audioListModel.get(currentIndex).val
                     }
                 }
+
             }
         }
 
@@ -280,8 +315,6 @@ ScrollView {
                 ComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        // load the saved width/height/fps, and iterate through the ComboBox until a match is found
-                        // set it to that index.
                         var saved_vds = prefs.videoDecoderSelection
                         currentIndex = 0
                         for(var i = 0; i < decoderListModel.count; i++) {
@@ -317,8 +350,6 @@ ScrollView {
                     }
                 }
 
-
-
                 Label {
                     width: parent.width
                     id: resVCCTitle
@@ -331,8 +362,6 @@ ScrollView {
                 ComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        // load the saved width/height/fps, and iterate through the ComboBox until a match is found
-                        // set it to that index.
                         var saved_vcc = prefs.videoCodecConfig
                         currentIndex = 0
                         for(var i = 0; i < codecListModel.count; i++) {
