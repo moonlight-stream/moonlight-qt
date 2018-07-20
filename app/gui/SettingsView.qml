@@ -16,14 +16,13 @@ ScrollView {
     }
 
     Column {
-        x: 10
-        y: 10
-        width: settingsPage.width
-        height: 400
+        padding: 10
+        id: settingsColumn1
+        width: settingsPage.width / 2 - padding
 
         GroupBox {
             id: basicSettingsGroupBox
-            width: (parent.width - 20)
+            width: (parent.width - 2 * parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Basic Settings</font>"
             font.pointSize: 12
@@ -177,7 +176,7 @@ ScrollView {
         GroupBox {
 
             id: audioSettingsGroupBox
-            width: (parent.width - 20)
+            width: (parent.width - 2 * parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Audio Settings</font>"
             font.pointSize: 12
@@ -235,10 +234,17 @@ ScrollView {
 
             }
         }
+    }
+
+    Column {
+        padding: 10
+        anchors.left: settingsColumn1.right
+        id: settingsColumn2
+        width: settingsPage.width / 2 - padding
 
         GroupBox {
             id: gamepadSettingsGroupBox
-            width: (parent.width - 20)
+            width: (parent.width - parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Gamepad Settings</font>"
             font.pointSize: 12
@@ -261,7 +267,7 @@ ScrollView {
 
         GroupBox {
             id: hostSettingsGroupBox
-            width: (parent.width - 20)
+            width: (parent.width - parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Host Settings</font>"
             font.pointSize: 12
@@ -294,7 +300,7 @@ ScrollView {
 
         GroupBox {
             id: advancedSettingsGroupBox
-            width: (parent.width - 20)
+            width: (parent.width - parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Advanced Settings</font>"
             font.pointSize: 12
