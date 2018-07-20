@@ -223,7 +223,7 @@ ScrollView {
                 }
                 CheckBox {
                     id: mouseEmulationCheck
-                    text: "<font color=\"white\">Mouse emulation via gamepad</font>"
+                    text: "<font color=\"white\">UNUSED</font>"
                     font.pointSize:  12
                     // TODO: make this actually do anything
                 }
@@ -234,7 +234,7 @@ ScrollView {
             id: onScreenControlsGroupBox
             width: (parent.width - 20)
             padding: 12
-            title: "<font color=\"skyblue\">On-screen Controls Settings</font>"
+            title: "<font color=\"skyblue\">UNUSED</font>"
             font.pointSize: 12
 
             Column {
@@ -243,7 +243,7 @@ ScrollView {
 
                 CheckBox {
                     id: onScreenControlsCheck
-                    text: "<font color=\"white\">Show on-screen controls</font>"
+                    text: "<font color=\"white\">UNUSED</font>"
                     font.pointSize:  12
                     // TODO: make this actually do anything
                 }
@@ -294,11 +294,55 @@ ScrollView {
                 anchors.fill: parent
                 spacing: 5
 
-                CheckBox {
-                    id: neverDropFramesCheck
-                    text: "<font color=\"white\">Never drop frames</font>"
-                    font.pointSize:  12
+                Label {
+                    width: parent.width
+                    id: resVDSTitle
+                    text: qsTr("Video decoder")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    color: "white"
                 }
+
+                ComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        // load the saved width/height/fps, and iterate through the ComboBox until a match is found
+                        // set it to that index.
+                        var saved_vds = prefs.videoDecoderSelection
+                        currentIndex = 0
+                        for(var i = 0; i < decoderListModel.count; i++) {
+                            var el_vds = decoderListModel.get(i).val;
+                          if(saved_vds === el_vds) {
+                              currentIndex = i
+                          }
+                        }
+                    }
+
+                    id: decoderComboBox
+                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
+                    font.pointSize: 9
+                    textRole: "text"
+                    model: ListModel {
+                        id: decoderListModel
+                        ListElement {
+                            text: "Auto"
+                            val: StreamingPreferences.VDS_AUTO
+                        }
+                        ListElement {
+                            text: "Force software decoding"
+                            val: StreamingPreferences.VDS_FORCE_SOFTWARE
+                        }
+                        ListElement {
+                            text: "Force hardware decoding"
+                            val: StreamingPreferences.VDS_FORCE_HARDWARE
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        prefs.videoDecoderSelection = decoderListModel.get(currentIndex).val
+                    }
+                }
+
             }
         }
     }
