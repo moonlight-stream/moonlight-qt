@@ -221,32 +221,6 @@ ScrollView {
                         prefs.multiController = checked
                     }
                 }
-                CheckBox {
-                    id: mouseEmulationCheck
-                    text: "<font color=\"white\">UNUSED</font>"
-                    font.pointSize:  12
-                    // TODO: make this actually do anything
-                }
-            }
-        }
-
-        GroupBox {
-            id: onScreenControlsGroupBox
-            width: (parent.width - 20)
-            padding: 12
-            title: "<font color=\"skyblue\">UNUSED</font>"
-            font.pointSize: 12
-
-            Column {
-                anchors.fill: parent
-                spacing: 5
-
-                CheckBox {
-                    id: onScreenControlsCheck
-                    text: "<font color=\"white\">UNUSED</font>"
-                    font.pointSize:  12
-                    // TODO: make this actually do anything
-                }
             }
         }
 
