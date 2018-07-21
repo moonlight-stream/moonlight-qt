@@ -48,6 +48,10 @@ public:
             AVFrame* frame = m_FrameQueue.dequeue();
             av_frame_free(&frame);
         }
+
+        if (m_View != nullptr) {
+            [m_View removeFromSuperview];
+        }
     }
 
     void drawFrame(uint64_t vsyncTime)

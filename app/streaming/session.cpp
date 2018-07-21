@@ -629,6 +629,12 @@ void Session::exec()
             break;
         }
 
+        case SDL_WINDOWEVENT:
+            if (event.window.event != SDL_WINDOWEVENT_RESIZED) {
+                break;
+            }
+
+            // Fall through to recreate decoder on resize (full-screen toggle)
         case SDL_RENDER_DEVICE_RESET:
         case SDL_RENDER_TARGETS_RESET:
             SDL_AtomicLock(&m_DecoderLock);
