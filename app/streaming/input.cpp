@@ -23,6 +23,15 @@ const int SdlInputHandler::k_ButtonMap[] = {
 SdlInputHandler::SdlInputHandler(bool multiController)
     : m_MultiController(multiController)
 {
+    // We need to reinit this each time, since you only get
+    // an initial set of gamepad arrival events once per init.
+    SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
+    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
+                     SDL_GetError());
+    }
+
     if (!m_MultiController) {
         // Player 1 is always present in non-MC mode
         m_GamepadMask = 0x1;
@@ -38,6 +47,9 @@ SdlInputHandler::~SdlInputHandler()
             SDL_GameControllerClose(m_GamepadState[i].controller);
         }
     }
+
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+    SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
 }
 
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)

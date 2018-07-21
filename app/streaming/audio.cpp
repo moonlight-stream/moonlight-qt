@@ -23,6 +23,14 @@ int Session::sdlDetermineAudioConfiguration()
 {
     SDL_AudioSpec want, have;
     SDL_AudioDeviceID dev;
+    int ret;
+
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
+                     SDL_GetError());
+        return AUDIO_CONFIGURATION_STEREO;
+    }
 
     SDL_zero(want);
     want.freq = 48000;
@@ -38,7 +46,8 @@ int Session::sdlDetermineAudioConfiguration()
                      "Failed to open audio device");
         // We'll probably have issues during audio stream init, but we'll
         // try anyway
-        return AUDIO_CONFIGURATION_STEREO;
+        ret = AUDIO_CONFIGURATION_STEREO;
+        goto Exit;
     }
 
     SDL_CloseAudioDevice(dev);
@@ -50,11 +59,15 @@ int Session::sdlDetermineAudioConfiguration()
         // We don't support quadraphonic or 7.1 surround, but SDL
         // should be able to downmix or upmix better from 5.1 than
         // from stereo, so use 5.1 in non-stereo cases.
-        return AUDIO_CONFIGURATION_51_SURROUND;
+        ret = AUDIO_CONFIGURATION_51_SURROUND;
     }
     else {
-        return AUDIO_CONFIGURATION_STEREO;
+        ret = AUDIO_CONFIGURATION_STEREO;
     }
+
+Exit:
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    return ret;
 }
 
 int Session::sdlAudioInit(int /* audioConfiguration */,
@@ -63,6 +76,14 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
 {
     SDL_AudioSpec want, have;
     int error;
+
+    SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
+                     SDL_GetError());
+        return AUDIO_CONFIGURATION_STEREO;
+    }
 
     SDL_zero(want);
     want.freq = opusConfig->sampleRate;
@@ -80,6 +101,7 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to open audio device: %s",
                      SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
         return -1;
     }
 
@@ -95,6 +117,7 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
                      error);
         SDL_CloseAudioDevice(s_AudioDevice);
         s_AudioDevice = 0;
+        SDL_QuitSubSystem(SDL_INIT_AUDIO);
         return -2;
     }
 
@@ -140,7 +163,10 @@ void Session::sdlAudioCleanup()
     s_AudioDevice = 0;
 
     opus_multistream_decoder_destroy(s_OpusDecoder);
-    s_OpusDecoder = NULL;
+    s_OpusDecoder = nullptr;
+
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 }
 
 void Session::sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)

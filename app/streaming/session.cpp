@@ -149,23 +149,35 @@ bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelect
 {
     IVideoDecoder* decoder;
 
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
     SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
     if (!window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create window for hardware decode test: %s",
                      SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
     }
 
     if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, decoder)) {
         SDL_DestroyWindow(window);
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
     }
 
     SDL_DestroyWindow(window);
 
     bool ret = decoder->isHardwareAccelerated();
+
     delete decoder;
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
     return ret;
 }
 
@@ -335,9 +347,6 @@ class DeferredSessionCleanupTask : public QRunnable
     {
         // Finish cleanup of the connection state
         LiStopConnection();
-        if (Session::s_ActiveSession->m_Window != nullptr) {
-            SDL_DestroyWindow(Session::s_ActiveSession->m_Window);
-        }
 
         // Allow another session to start now that we're cleaned up
         Session::s_ActiveSession = nullptr;
@@ -473,6 +482,16 @@ void Session::exec()
         return;
     }
 
+    SDL_assert(!SDL_WasInit(SDL_INIT_VIDEO));
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        emit displayLaunchError(QString::fromLocal8Bit(SDL_GetError()));
+        s_ActiveSessionSemaphore.release();
+        return;
+    }
+
     int flags = SDL_WINDOW_HIDDEN;
     int x, y, width, height;
     if (m_Preferences.fullScreen) {
@@ -493,6 +512,7 @@ void Session::exec()
                      "SDL_CreateWindow() failed: %s",
                      SDL_GetError());
         s_ActiveSessionSemaphore.release();
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return;
     }
 
@@ -519,6 +539,7 @@ void Session::exec()
         // We already displayed an error dialog in the stage failure
         // listener.
         s_ActiveSessionSemaphore.release();
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return;
     }
 
@@ -634,15 +655,16 @@ DispatchDeferredCleanup:
     // so we can return to the Qt GUI ASAP.
     SDL_SetRelativeMouseMode(SDL_FALSE);
     SDL_EnableScreenSaver();
-    if (m_Window != nullptr) {
-        SDL_HideWindow(m_Window);
-    }
 
     // Destroy the decoder, since this must be done on the main thread
     SDL_AtomicLock(&m_DecoderLock);
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
     SDL_AtomicUnlock(&m_DecoderLock);
+
+    SDL_DestroyWindow(m_Window);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+    SDL_assert(!SDL_WasInit(SDL_INIT_VIDEO));
 
     // Cleanup can take a while, so dispatch it to a worker thread.
     // When it is complete, it will release our s_ActiveSessionSemaphore

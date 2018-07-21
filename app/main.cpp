@@ -53,12 +53,8 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty())
         return -1;
 
-    // Ensure that SDL is always initialized since we may need to use it
-    // for non-streaming purposes (like checking on audio devices)
     SDL_SetMainReady();
-    if (SDL_Init(SDL_INIT_VIDEO |
-                 SDL_INIT_AUDIO |
-                 SDL_INIT_GAMECONTROLLER) != 0) {
+    if (SDL_Init(0) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Init() failed: %s",
                      SDL_GetError());
