@@ -106,12 +106,9 @@ int Session::drSetup(int videoFormat, int width, int height, int frameRate, void
     s_ActiveSession->m_ActiveVideoHeight = height;
     s_ActiveSession->m_ActiveVideoFrameRate = frameRate;
 
-    if (!chooseDecoder(s_ActiveSession->m_Preferences.videoDecoderSelection,
-                       s_ActiveSession->m_Window,
-                       videoFormat, width, height, frameRate,
-                       s_ActiveSession->m_VideoDecoder)) {
-        return -1;
-    }
+    // Defer decoder setup until we've started streaming so we
+    // don't have to hide and show the SDL window (which seems to
+    // cause pointer hiding to break on Windows).
 
     return 0;
 }
@@ -518,40 +515,6 @@ void Session::exec()
         return;
     }
 
-    int flags = SDL_WINDOW_HIDDEN;
-    int x, y, width, height;
-    if (m_Preferences.fullScreen) {
-        flags |= SDL_WINDOW_FULLSCREEN;
-    }
-
-    getWindowDimensions(m_Preferences.fullScreen,
-                        x, y, width, height);
-
-    m_Window = SDL_CreateWindow("Moonlight",
-                                x,
-                                y,
-                                width,
-                                height,
-                                flags);
-    if (!m_Window) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateWindow() failed: %s",
-                     SDL_GetError());
-        s_ActiveSessionSemaphore.release();
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return;
-    }
-
-    // For non-full screen windows, call getWindowDimensions()
-    // again after creating a window to allow it to account
-    // for window chrome size.
-    if (!m_Preferences.fullScreen) {
-        getWindowDimensions(false, x, y, width, height);
-
-        SDL_SetWindowPosition(m_Window, x, y);
-        SDL_SetWindowSize(m_Window, width, height);
-    }
-
     QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
     QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
 
@@ -583,8 +546,35 @@ void Session::exec()
     emit connectionStarted();
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
-    // Show the streaming window
-    SDL_ShowWindow(m_Window);
+    int x, y, width, height;
+    getWindowDimensions(m_Preferences.fullScreen,
+                        x, y, width, height);
+
+    m_Window = SDL_CreateWindow("Moonlight",
+                                x,
+                                y,
+                                width,
+                                height,
+                                m_Preferences.fullScreen ?
+                                    SDL_WINDOW_FULLSCREEN : 0);
+    if (!m_Window) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateWindow() failed: %s",
+                     SDL_GetError());
+        s_ActiveSessionSemaphore.release();
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return;
+    }
+
+    // For non-full screen windows, call getWindowDimensions()
+    // again after creating a window to allow it to account
+    // for window chrome size.
+    if (!m_Preferences.fullScreen) {
+        getWindowDimensions(false, x, y, width, height);
+
+        SDL_SetWindowPosition(m_Window, x, y);
+        SDL_SetWindowSize(m_Window, width, height);
+    }
 
     // Capture the mouse
     SDL_SetRelativeMouseMode(SDL_TRUE);
@@ -630,11 +620,12 @@ void Session::exec()
         }
 
         case SDL_WINDOWEVENT:
-            if (event.window.event != SDL_WINDOWEVENT_RESIZED) {
+            // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event
+            if (event.window.event != SDL_WINDOWEVENT_RESIZED && event.window.event != SDL_WINDOWEVENT_SHOWN) {
                 break;
             }
 
-            // Fall through to recreate decoder on resize (full-screen toggle)
+            // Fall through
         case SDL_RENDER_DEVICE_RESET:
         case SDL_RENDER_TARGETS_RESET:
             SDL_AtomicLock(&m_DecoderLock);
