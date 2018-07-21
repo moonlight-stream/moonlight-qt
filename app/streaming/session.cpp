@@ -620,8 +620,10 @@ void Session::exec()
         }
 
         case SDL_WINDOWEVENT:
-            // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event
-            if (event.window.event != SDL_WINDOWEVENT_RESIZED && event.window.event != SDL_WINDOWEVENT_SHOWN) {
+            // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
+            // We use SDL_WINDOWEVENT_SIZE_CHANGED rather than SDL_WINDOWEVENT_RESIZED because the latter doesn't
+            // seem to fire when switching from windowed to full-screen on X11.
+            if (event.window.event != SDL_WINDOWEVENT_SIZE_CHANGED && event.window.event != SDL_WINDOWEVENT_SHOWN) {
                 break;
             }
 

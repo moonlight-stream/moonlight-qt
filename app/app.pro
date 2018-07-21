@@ -35,6 +35,7 @@ macx {
 unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 libavcodec libavdevice libavformat libavutil
+    LIBS += -ldl
 }
 win32 {
     LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavdevice -lavformat -lavutil
@@ -66,6 +67,9 @@ win32 {
 macx {
     SOURCES += streaming/video/ffmpeg-renderers/vt.mm
 }
+unix {
+    SOURCES += streaming/video/ffmpeg-renderers/vaapi.cpp
+}
 
 HEADERS += \
     utils.h \
@@ -88,6 +92,9 @@ win32 {
 }
 macx {
     HEADERS += streaming/video/ffmpeg-renderers/vt.h
+}
+unix {
+    HEADERS += streaming/video/ffmpeg-renderers/vaapi.h
 }
 
 RESOURCES += \
