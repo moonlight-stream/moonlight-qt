@@ -412,6 +412,22 @@ void Session::getWindowDimensions(bool fullScreen,
             height = usableBounds.h;
             x = usableBounds.x;
             y = usableBounds.y;
+
+            if (m_Window != nullptr) {
+                int top, left, bottom, right;
+
+                if (SDL_GetWindowBordersSize(m_Window, &top, &left, &bottom, &right) < 0) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Unable to get window border size");
+                    return;
+                }
+
+                x += left;
+                y += top;
+
+                width -= left + right;
+                height -= top + bottom;
+            }
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -431,12 +447,22 @@ void Session::toggleFullscreen()
 
     int x, y, width, height;
 
+    // If we're leaving full screen, toggle out before setting our size and position
+    // that way we have accurate display size metrics (not the size our stream changed it to).
+    if (!fullScreen) {
+        SDL_SetWindowFullscreen(m_Window, 0);
+    }
+
     getWindowDimensions(fullScreen, x, y, width, height);
 
-    SDL_SetWindowPosition(m_Window, x, y);
+    if (x != SDL_WINDOWPOS_UNDEFINED || y != SDL_WINDOWPOS_UNDEFINED) {
+        SDL_SetWindowPosition(m_Window, x, y);
+    }
     SDL_SetWindowSize(m_Window, width, height);
 
-    SDL_SetWindowFullscreen(m_Window, fullScreen ? SDL_WINDOW_FULLSCREEN : 0);
+    if (fullScreen) {
+        SDL_SetWindowFullscreen(m_Window, SDL_WINDOW_FULLSCREEN);
+    }
 }
 
 void Session::exec()
@@ -514,6 +540,16 @@ void Session::exec()
         s_ActiveSessionSemaphore.release();
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return;
+    }
+
+    // For non-full screen windows, call getWindowDimensions()
+    // again after creating a window to allow it to account
+    // for window chrome size.
+    if (!m_Preferences.fullScreen) {
+        getWindowDimensions(false, x, y, width, height);
+
+        SDL_SetWindowPosition(m_Window, x, y);
+        SDL_SetWindowSize(m_Window, width, height);
     }
 
     QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
