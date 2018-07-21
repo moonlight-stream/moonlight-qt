@@ -7,9 +7,7 @@
 
 #ifdef __APPLE__
 #include "ffmpeg-renderers/vt.h"
-#endif
-
-#ifdef Q_OS_UNIX
+#elif defined Q_OS_UNIX
 #include "ffmpeg-renderers/vaapi.h"
 #endif
 
@@ -73,8 +71,7 @@ bool FFmpegVideoDecoder::chooseDecoder(
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
             newRenderer = VTRendererFactory::createRenderer();
             break;
-#endif
-#ifdef Q_OS_UNIX
+#elif defined Q_OS_UNIX
         case AV_HWDEVICE_TYPE_VAAPI:
             newRenderer = new VAAPIRenderer();
             break;

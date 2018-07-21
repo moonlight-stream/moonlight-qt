@@ -67,7 +67,7 @@ win32 {
 macx {
     SOURCES += streaming/video/ffmpeg-renderers/vt.mm
 }
-unix {
+unix:!macx {
     SOURCES += streaming/video/ffmpeg-renderers/vaapi.cpp
 }
 
