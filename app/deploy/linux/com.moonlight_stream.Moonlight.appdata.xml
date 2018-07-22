@@ -1,0 +1,61 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <component type="desktop">
+	<id>com.moonlight_stream.Moonlight.desktop</id>
+	<metadata_license>CC0-1.0</metadata_license>
+	<project_license>GPL-3.0+</project_license>
+	<name>Moonlight</name>
+	<summary>Stream games from your NVIDIA GameStream-enabled PC</summary>
+
+	<description>
+		<p>Moonlight can stream games or other applications from a PC with an NVIDIA GeForce GTX 600-series or higher GPU and GeForce Experience installed.</p>
+		<p>GameStream utilizes the NVENC hardware encoder present on NVIDIA GPUs for low-latency streaming at up 4K 60 FPS. Moonlight can utilize VAAPI hardware acceleration for high-performance H.264 and HEVC video decoding with low CPU usage.</p>
+	</description>
+
+	<url type="homepage">https://moonlight-stream.com</url>
+	<url type="bugtracker">https://github.com/moonlight-stream/moonlight-qt/issues</url>
+	<url type="help">https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide</url>
+
+	<categories>
+		<category>Game</category>
+		<category>Qt</category>
+	</categories>
+
+	<developer_name>Moonlight Game Streaming Team</developer_name>
+	<update_contact>cameron@moonlight-stream.com</update_contact>
+
+	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
+
+	<provides>
+		<binary>moonlight-qt</binary>
+	</provides>
+
+    <content_rating type="oars-1.1">
+		<content_attribute id="violence-cartoon">none</content_attribute>
+		<content_attribute id="violence-fantasy">none</content_attribute>
+		<content_attribute id="violence-realistic">none</content_attribute>
+		<content_attribute id="violence-bloodshed">none</content_attribute>
+		<content_attribute id="violence-sexual">none</content_attribute>
+		<content_attribute id="violence-desecration">none</content_attribute>
+		<content_attribute id="violence-slavery">none</content_attribute>
+		<content_attribute id="violence-worship">none</content_attribute>
+		<content_attribute id="drugs-alcohol">none</content_attribute>
+		<content_attribute id="drugs-narcotics">none</content_attribute>
+		<content_attribute id="drugs-tobacco">none</content_attribute>
+		<content_attribute id="sex-nudity">none</content_attribute>
+		<content_attribute id="sex-themes">none</content_attribute>
+		<content_attribute id="sex-homosexuality">none</content_attribute>
+		<content_attribute id="sex-prostitution">none</content_attribute>
+		<content_attribute id="sex-adultery">none</content_attribute>
+		<content_attribute id="sex-appearance">none</content_attribute>
+		<content_attribute id="language-profanity">none</content_attribute>
+		<content_attribute id="language-humor">none</content_attribute>
+		<content_attribute id="language-discrimination">none</content_attribute>
+		<content_attribute id="social-chat">none</content_attribute>
+		<content_attribute id="social-info">moderate</content_attribute>
+		<content_attribute id="social-audio">none</content_attribute>
+		<content_attribute id="social-location">none</content_attribute>
+		<content_attribute id="social-contacts">none</content_attribute>
+		<content_attribute id="money-purchasing">none</content_attribute>
+		<content_attribute id="money-gambling">none</content_attribute>
+	</content_rating>
+</component>

@@ -38,7 +38,7 @@ unix:!macx {
     LIBS += -ldl
 
     packagesExist(libavcodec) {
-        PKGCONFIG += libavcodec libavdevice libavformat libavutil
+        PKGCONFIG += libavcodec libavutil
         CONFIG += ffmpeg
 
         packagesExist(libva) {
@@ -47,11 +47,11 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavdevice -lavformat -lavutil
+    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil
     CONFIG += ffmpeg
 }
 macx {
-    LIBS += -lssl -lcrypto -lSDL2 -lavcodec.58 -lavdevice.58 -lavformat.58 -lavutil.56
+    LIBS += -lssl -lcrypto -lSDL2 -lavcodec.58 -lavutil.56
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
     CONFIG += ffmpeg
 }
@@ -155,10 +155,27 @@ else:unix: LIBS += -L$$OUT_PWD/../qmdnsengine/ -lqmdnsengine
 INCLUDEPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 
-# Default rules for deployment.
-qnx: target.path = /tmp/$${TARGET}/bin
-else: unix:!android: target.path = /opt/$${TARGET}/bin
-!isEmpty(target.path): INSTALLS += target
+unix:!macx: {
+    isEmpty(PREFIX) {
+        PREFIX = /usr/local
+    }
+    isEmpty(BINDIR) {
+        BINDIR = bin
+    }
+
+    target.path = $$PREFIX/$$BINDIR/
+
+    desktop.files = deploy/linux/com.moonlight_stream.Moonlight.desktop
+    desktop.path = $$PREFIX/share/applications/
+
+    icons.files = res/moonlight.svg
+    icons.path = $$PREFIX/share/icons/hicolor/scalable/apps/
+
+    appdata.files = deploy/linux/com.moonlight_stream.Moonlight.appdata.xml
+    appdata.path = $$PREFIX/share/metainfo/
+
+    INSTALLS += target desktop icons appdata
+}
 
 macx {
     QMAKE_INFO_PLIST = $$PWD/Info.plist
