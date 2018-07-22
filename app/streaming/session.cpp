@@ -5,7 +5,9 @@
 #include <SDL.h>
 #include "utils.h"
 
+#ifdef HAVE_FFMPEG
 #include "video/ffmpeg.h"
+#endif
 
 #include <QRandomGenerator>
 #include <QtEndian>
