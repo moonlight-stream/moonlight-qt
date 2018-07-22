@@ -33,7 +33,7 @@ contains(QT_ARCH, x86_64) {
 }
 
 contains(QT_ARCH, arm) {
-    CONFIG += neon
+    CONFIG += arm
     DEFINES += \
         OPUS_ARM_MAY_HAVE_NEON_INTR=1
 }
