@@ -1,7 +1,13 @@
 QT += core quick network quickcontrols2
 CONFIG += c++11
 
-TARGET = moonlight-qt
+unix:!macx {
+    TARGET = moonlight
+} else {
+    # On macOS, this is the name displayed in the global menu bar
+    TARGET = Moonlight
+}
+
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use

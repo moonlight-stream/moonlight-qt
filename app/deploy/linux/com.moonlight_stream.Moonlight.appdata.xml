@@ -26,10 +26,10 @@
 	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
 
 	<provides>
-		<binary>moonlight-qt</binary>
+		<binary>moonlight</binary>
 	</provides>
 
-    <content_rating type="oars-1.1">
+	<content_rating type="oars-1.1">
 		<content_attribute id="violence-cartoon">none</content_attribute>
 		<content_attribute id="violence-fantasy">none</content_attribute>
 		<content_attribute id="violence-realistic">none</content_attribute>
