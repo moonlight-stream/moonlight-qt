@@ -402,6 +402,12 @@ void Session::getWindowDimensions(bool fullScreen,
         desired.h = m_StreamConfig.height;
         desired.refresh_rate = m_StreamConfig.fps;
 
+        // Trying to mode-set on my Fedora 28 workstation causes
+        // loss of the whole display that we try to adjust. It never
+        // comes back after the mode change until we revert the change
+        // by destroying the window. Possible KMS/X bug? Let's avoid
+        // exercising this path until we have a workaround.
+ #ifndef Q_OS_LINUX
         if (SDL_GetClosestDisplayMode(displayIndex, &desired, &closest)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Closest match for %dx%dx%d is %dx%dx%d",
@@ -410,7 +416,9 @@ void Session::getWindowDimensions(bool fullScreen,
             width = closest.w;
             height = closest.h;
         }
-        else if (SDL_GetCurrentDisplayMode(displayIndex, &closest) == 0) {
+        else
+#endif
+        if (SDL_GetCurrentDisplayMode(displayIndex, &closest) == 0) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Using current display mode: %dx%dx%d",
                         closest.w, closest.h, closest.refresh_rate);
