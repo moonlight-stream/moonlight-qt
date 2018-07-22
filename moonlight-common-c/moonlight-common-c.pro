@@ -59,3 +59,8 @@ INCLUDEPATH += \
     $$COMMON_C_DIR/src
 CONFIG += warn_off staticlib
 DEFINES += HAS_SOCKLEN_T
+
+# Older GCC versions defaulted to GNU89
+*-g++ {
+    QMAKE_CFLAGS += -std=gnu99
+}
