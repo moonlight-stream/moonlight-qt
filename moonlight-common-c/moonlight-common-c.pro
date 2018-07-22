@@ -60,6 +60,11 @@ INCLUDEPATH += \
 CONFIG += warn_off staticlib
 DEFINES += HAS_SOCKLEN_T
 
+debug {
+    # Enable asserts on debug builds
+    DEFINES += LC_DEBUG
+}
+
 # Older GCC versions defaulted to GNU89
 *-g++ {
     QMAKE_CFLAGS += -std=gnu99
