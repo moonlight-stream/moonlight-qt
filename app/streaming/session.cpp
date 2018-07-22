@@ -615,8 +615,12 @@ void Session::exec()
         SDL_SetWindowSize(m_Window, width, height);
     }
 
-    // Capture the mouse
+#ifndef QT_DEBUG
+    // Capture the mouse by default on release builds only.
+    // This prevents the mouse from becoming trapped inside
+    // Moonlight when it's halted at a debug break.
     SDL_SetRelativeMouseMode(SDL_TRUE);
+#endif
 
     // Disable the screen saver
     SDL_DisableScreenSaver();
