@@ -127,7 +127,7 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
     // pending data count. Get a baseline so we
     // can exclude that data.
     s_BaselinePendingData = 0;
-#ifdef _WIN32
+#ifdef Q_OS_WIN32
     for (int i = 0; i < 100; i++) {
         s_BaselinePendingData = qMax(s_BaselinePendingData, SDL_GetQueuedAudioSize(s_AudioDevice));
         SDL_Delay(10);

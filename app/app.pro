@@ -34,15 +34,26 @@ macx {
 
 unix:!macx {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl sdl2 libavcodec libavdevice libavformat libavutil
+    PKGCONFIG += openssl sdl2
     LIBS += -ldl
+
+    packagesExist(libavcodec) {
+        PKGCONFIG += libavcodec libavdevice libavformat libavutil
+        CONFIG += ffmpeg
+
+        packagesExist(libva) {
+            CONFIG += libva
+        }
+    }
 }
 win32 {
     LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavdevice -lavformat -lavutil
+    CONFIG += ffmpeg
 }
 macx {
     LIBS += -lssl -lcrypto -lSDL2 -lavcodec.58 -lavdevice.58 -lavformat.58 -lavutil.56
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
+    CONFIG += ffmpeg
 }
 
 SOURCES += \
@@ -56,20 +67,8 @@ SOURCES += \
     streaming/input.cpp \
     streaming/session.cpp \
     streaming/audio.cpp \
-    streaming/video/ffmpeg.cpp \
     gui/computermodel.cpp \
-    gui/appmodel.cpp \
-    streaming/video/ffmpeg-renderers/sdl.cpp
-
-win32 {
-    SOURCES += streaming/video/ffmpeg-renderers/dxva2.cpp
-}
-macx {
-    SOURCES += streaming/video/ffmpeg-renderers/vt.mm
-}
-unix:!macx {
-    SOURCES += streaming/video/ffmpeg-renderers/vaapi.cpp
-}
+    gui/appmodel.cpp
 
 HEADERS += \
     utils.h \
@@ -83,18 +82,37 @@ HEADERS += \
     streaming/session.hpp \
     gui/computermodel.h \
     gui/appmodel.h \
-    streaming/video/decoder.h \
-    streaming/video/ffmpeg.h \
-    streaming/video/ffmpeg-renderers/renderer.h
+    streaming/video/decoder.h
 
+# Platform-specific renderers and decoders
+ffmpeg {
+    message(FFmpeg decoder selected)
+
+    DEFINES += HAVE_FFMPEG
+    SOURCES += \
+        streaming/video/ffmpeg.cpp \
+        streaming/video/ffmpeg-renderers/sdl.cpp
+    HEADERS += \
+        streaming/video/ffmpeg.h \
+        streaming/video/ffmpeg-renderers/renderer.h
+}
+libva {
+    message(VAAPI renderer selected)
+
+    DEFINES += HAVE_LIBVA
+    SOURCES += streaming/video/ffmpeg-renderers/vaapi.cpp
+}
 win32 {
+    message(DXVA2 renderer selected)
+
+    SOURCES += streaming/video/ffmpeg-renderers/dxva2.cpp
     HEADERS += streaming/video/ffmpeg-renderers/dxva2.h
 }
 macx {
+    message(VideoToolbox renderer selected)
+
+    SOURCES += streaming/video/ffmpeg-renderers/vt.mm
     HEADERS += streaming/video/ffmpeg-renderers/vt.h
-}
-unix {
-    HEADERS += streaming/video/ffmpeg-renderers/vaapi.h
 }
 
 RESOURCES += \

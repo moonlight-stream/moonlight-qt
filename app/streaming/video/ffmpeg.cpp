@@ -1,13 +1,15 @@
 #include <Limelight.h>
 #include "ffmpeg.h"
 
-#ifdef _WIN32
+#ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
 #endif
 
-#ifdef __APPLE__
+#ifdef Q_OS_DARWIN
 #include "ffmpeg-renderers/vt.h"
-#elif defined Q_OS_UNIX
+#endif
+
+#ifdef HAVE_LIBVA
 #include "ffmpeg-renderers/vaapi.h"
 #endif
 
@@ -62,16 +64,17 @@ bool FFmpegVideoDecoder::chooseDecoder(
 
         // Look for acceleration types we support
         switch (config->device_type) {
-#ifdef _WIN32
+#ifdef Q_OS_WIN32
         case AV_HWDEVICE_TYPE_DXVA2:
             newRenderer = new DXVA2Renderer();
             break;
 #endif
-#ifdef __APPLE__
+#ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
             newRenderer = VTRendererFactory::createRenderer();
             break;
-#elif defined Q_OS_UNIX
+#endif
+#ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
             newRenderer = new VAAPIRenderer();
             break;
