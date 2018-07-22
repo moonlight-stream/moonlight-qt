@@ -12,6 +12,7 @@ DEFINES += \
     OPUS_BUILD=1
 
 contains(QT_ARCH, i386) {
+    CONFIG += x86
     DEFINES += \
         OPUS_X86_MAY_HAVE_SSE=1 \
         OPUS_X86_MAY_HAVE_SSE2=1 \
@@ -21,6 +22,7 @@ contains(QT_ARCH, i386) {
 
 # AMD64 implies SSE2 support
 contains(QT_ARCH, x86_64) {
+    CONFIG += x86
     DEFINES += \
         OPUS_X86_MAY_HAVE_SSE=1 \
         OPUS_X86_MAY_HAVE_SSE2=1 \
@@ -30,22 +32,50 @@ contains(QT_ARCH, x86_64) {
         OPUS_X86_PRESUME_SSE2=1
 }
 
+contains(QT_ARCH, arm) {
+    CONFIG += neon
+    DEFINES += \
+        OPUS_ARM_MAY_HAVE_NEON_INTR=1
+}
+
 QMAKE_CFLAGS += -O2
 
-SOURCES_SSE = \
-    $$OPUS_DIR/celt/x86/pitch_sse.c
+x86 {
+    SOURCES += \
+        $$OPUS_DIR/celt/x86/x86_celt_map.c \
+        $$OPUS_DIR/silk/x86/x86_silk_map.c \
+        $$OPUS_DIR/celt/x86/x86cpu.c
 
-SOURCES_SSE2 = \
-    $$OPUS_DIR/celt/x86/pitch_sse2.c \
-    $$OPUS_DIR/celt/x86/vq_sse2.c
+    SOURCES_SSE = \
+        $$OPUS_DIR/celt/x86/pitch_sse.c
 
-SOURCES_SSE41 = \
-    $$OPUS_DIR/celt/x86/pitch_sse4_1.c \
-    $$OPUS_DIR/celt/x86/celt_lpc_sse4_1.c \
-    $$OPUS_DIR/silk/x86/NSQ_sse4_1.c \
-    $$OPUS_DIR/silk/x86/VAD_sse4_1.c \
-    $$OPUS_DIR/silk/x86/NSQ_del_dec_sse4_1.c \
-    $$OPUS_DIR/silk/x86/VQ_WMat_EC_sse4_1.c
+    SOURCES_SSE2 = \
+        $$OPUS_DIR/celt/x86/pitch_sse2.c \
+        $$OPUS_DIR/celt/x86/vq_sse2.c
+
+    SOURCES_SSE41 = \
+        $$OPUS_DIR/celt/x86/pitch_sse4_1.c \
+        $$OPUS_DIR/celt/x86/celt_lpc_sse4_1.c \
+        $$OPUS_DIR/silk/x86/NSQ_sse4_1.c \
+        $$OPUS_DIR/silk/x86/VAD_sse4_1.c \
+        $$OPUS_DIR/silk/x86/NSQ_del_dec_sse4_1.c \
+        $$OPUS_DIR/silk/x86/VQ_WMat_EC_sse4_1.c
+}
+
+arm {
+    SOURCES += \
+        $$OPUS_DIR/celt/arm/arm_celt_map.c \
+        $$OPUS_DIR/celt/arm/armcpu.c
+
+    SOURCES_NEON = \
+        $$OPUS_DIR/celt/arm/celt_neon_intr.c \
+        $$OPUS_DIR/celt/arm/pitch_neon_intr.c \
+        $$OPUS_DIR/silk/arm/arm_silk_map.c \
+        $$OPUS_DIR/silk/arm/biquad_alt_neon_intr.c \
+        $$OPUS_DIR/silk/arm/LPC_inv_pred_gain_neon_intr.c \
+        $$OPUS_DIR/silk/arm/NSQ_del_dec_neon_intr.c \
+        $$OPUS_DIR/silk/arm/NSQ_neon.c
+}
 
 SOURCES += \
     $$OPUS_DIR/celt/quant_bands.c \
@@ -59,8 +89,6 @@ SOURCES += \
     $$OPUS_DIR/celt/cwrs.c \
     $$OPUS_DIR/celt/pitch.c \
     $$OPUS_DIR/celt/entdec.c \
-    $$OPUS_DIR/celt/x86/x86_celt_map.c \
-    $$OPUS_DIR/celt/x86/x86cpu.c \
     $$OPUS_DIR/celt/mathops.c \
     $$OPUS_DIR/celt/vq.c \
     $$OPUS_DIR/celt/bands.c \
@@ -82,7 +110,6 @@ SOURCES += \
     $$OPUS_DIR/src/opus_projection_decoder.c \
     $$OPUS_DIR/src/opus_multistream.c \
     $$OPUS_DIR/src/opus_encoder.c \
-    $$OPUS_DIR/silk/x86/x86_silk_map.c \
     $$OPUS_DIR/silk/NSQ_del_dec.c \
     $$OPUS_DIR/silk/ana_filt_bank_1.c \
     $$OPUS_DIR/silk/stereo_find_predictor.c \
@@ -201,8 +228,13 @@ INCLUDEPATH += \
 CONFIG += warn_off staticlib
 
 win32-msvc* {
-    # No flags required to build with SSE on MSVC
-    SOURCES += $$SOURCES_SSE $$SOURCES_SSE2 $$SOURCES_SSE41
+    # No flags required to build with SSE or NEON on MSVC
+    sse {
+        SOURCES += $$SOURCES_SSE $$SOURCES_SSE2 $$SOURCES_SSE41
+    }
+    neon {
+        SOURCES += $$SOURCES_NEON
+    }
 }
 else {
     sse.name = sse
@@ -226,5 +258,12 @@ else {
     sse41.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
     sse41.commands = $${QMAKE_CC} -c $(CFLAGS) -msse4.1 $(INCPATH) -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
 
-    QMAKE_EXTRA_COMPILERS += sse sse2 sse41
+    neon.name = neon
+    neon.input = SOURCES_NEON
+    neon.dependency_type = TYPE_C
+    neon.variable_out = OBJECTS
+    neon.output = ${QMAKE_VAR_OBJECTS_DIR}${QMAKE_FILE_IN_BASE}$${first(QMAKE_EXT_OBJ)}
+    neon.commands = $${QMAKE_CC} -c $(CFLAGS) $(INCPATH) -o ${QMAKE_FILE_OUT} ${QMAKE_FILE_IN}
+
+    QMAKE_EXTRA_COMPILERS += sse sse2 sse41 neon
 }
