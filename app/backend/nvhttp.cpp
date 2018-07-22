@@ -123,6 +123,11 @@ NvHTTP::launchApp(int appId,
                   bool localAudio,
                   int gamepadMask)
 {
+    int riKeyId;
+
+    memcpy(&riKeyId, streamConfig->remoteInputAesIv, sizeof(riKeyId));
+    riKeyId = qFromBigEndian(riKeyId);
+
     QString response =
             openConnectionToString(m_BaseUrlHttps,
                                    "launch",
@@ -132,7 +137,7 @@ NvHTTP::launchApp(int appId,
                                    QString::number(streamConfig->fps)+
                                    "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
                                    "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
-                                   "&rikeyid="+QString::number(qFromBigEndian(*(int*)streamConfig->remoteInputAesIv))+
+                                   "&rikeyid="+QString::number(riKeyId)+
                                    (streamConfig->enableHdr ?
                                        "&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" :
                                         "")+
@@ -149,11 +154,16 @@ NvHTTP::launchApp(int appId,
 void
 NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
 {
+    int riKeyId;
+
+    memcpy(&riKeyId, streamConfig->remoteInputAesIv, sizeof(riKeyId));
+    riKeyId = qFromBigEndian(riKeyId);
+
     QString response =
             openConnectionToString(m_BaseUrlHttps,
                                    "resume",
                                    "rikey="+QString(QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex())+
-                                   "&rikeyid="+QString::number(qFromBigEndian(*(int*)streamConfig->remoteInputAesIv))+
+                                   "&rikeyid="+QString::number(riKeyId)+
                                    "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration),
                                    false);
 
