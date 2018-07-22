@@ -9,6 +9,10 @@
 #include "video/ffmpeg.h"
 #endif
 
+#ifdef HAVE_SLVIDEO
+#include "video/sl.h"
+#endif
+
 #include <openssl/rand.h>
 
 #include <QtEndian>
@@ -85,6 +89,21 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
                             int frameRate, IVideoDecoder*& chosenDecoder)
 {
+#ifdef HAVE_SLVIDEO
+    chosenDecoder = new SLVideoDecoder();
+    if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "SLVideo video decoder chosen");
+        return true;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load SLVideo decoder");
+        delete chosenDecoder;
+        chosenDecoder = nullptr;
+    }
+#endif
+
 #ifdef HAVE_FFMPEG
     chosenDecoder = new FFmpegVideoDecoder();
     if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate)) {

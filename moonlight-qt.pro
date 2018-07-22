@@ -6,3 +6,7 @@ SUBDIRS = \
     app
 
 CONFIG += ordered
+
+# Run our compile tests
+load(configure)
+qtCompileTest(SLVideo)

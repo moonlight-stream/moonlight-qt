@@ -101,6 +101,15 @@ libva {
 
     DEFINES += HAVE_LIBVA
     SOURCES += streaming/video/ffmpeg-renderers/vaapi.cpp
+    HEADERS += streaming/video/ffmpeg-renderers/vaapi.h
+}
+config_SLVideo {
+    message(SLVideo decoder/renderer selected)
+
+    DEFINES += HAVE_SLVIDEO
+    LIBS += -lSLVideo
+    SOURCES += streaming/video/sl.cpp
+    HEADERS += streaming/video/sl.h
 }
 win32 {
     message(DXVA2 renderer selected)
