@@ -229,10 +229,10 @@ CONFIG += warn_off staticlib
 
 win32-msvc* {
     # No flags required to build with SSE or NEON on MSVC
-    sse {
+    x86 {
         SOURCES += $$SOURCES_SSE $$SOURCES_SSE2 $$SOURCES_SSE41
     }
-    neon {
+    arm {
         SOURCES += $$SOURCES_NEON
     }
 }
