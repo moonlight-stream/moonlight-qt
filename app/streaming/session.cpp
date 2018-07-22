@@ -13,6 +13,12 @@
 #include "video/sl.h"
 #endif
 
+#ifdef Q_OS_WIN32
+#define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN_DESKTOP
+#else
+#define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN
+#endif
+
 #include <openssl/rand.h>
 
 #include <QtEndian>
@@ -407,7 +413,7 @@ void Session::getWindowDimensions(bool fullScreen,
         // comes back after the mode change until we revert the change
         // by destroying the window. Possible KMS/X bug? Let's avoid
         // exercising this path until we have a workaround.
- #ifndef Q_OS_LINUX
+ #if !defined(Q_OS_LINUX) && SDL_OS_FULLSCREEN_FLAG == SDL_WINDOW_FULLSCREEN
         if (SDL_GetClosestDisplayMode(displayIndex, &desired, &closest)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Closest match for %dx%dx%d is %dx%dx%d",
@@ -473,7 +479,7 @@ void Session::getWindowDimensions(bool fullScreen,
 
 void Session::toggleFullscreen()
 {
-    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN);
+    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & SDL_OS_FULLSCREEN_FLAG);
 
     int x, y, width, height;
 
@@ -491,7 +497,7 @@ void Session::toggleFullscreen()
     SDL_SetWindowSize(m_Window, width, height);
 
     if (fullScreen) {
-        SDL_SetWindowFullscreen(m_Window, SDL_WINDOW_FULLSCREEN);
+        SDL_SetWindowFullscreen(m_Window, SDL_OS_FULLSCREEN_FLAG);
     }
 }
 
@@ -589,7 +595,7 @@ void Session::exec()
                                 width,
                                 height,
                                 m_Preferences.fullScreen ?
-                                    SDL_WINDOW_FULLSCREEN : 0);
+                                    SDL_OS_FULLSCREEN_FLAG : 0);
     if (!m_Window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateWindow() failed: %s",

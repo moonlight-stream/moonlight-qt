@@ -360,13 +360,9 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     // D3DCREATE_MULTITHREADED to IDirect3D9::CreateDevice().
     SDL_SetHint(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1");
 
-    // We want VSYNC when running in full-screen. DWM will give us
-    // tear-free video when running composited (windowed) without any
-    // extra latency waiting for VSYNC.
-    m_SdlRenderer = SDL_CreateRenderer(window, -1,
-                                       SDL_RENDERER_ACCELERATED |
-                                       ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) ?
-                                           SDL_RENDERER_PRESENTVSYNC : 0));
+    // We require full-screen desktop mode to avoid having to enable V-sync
+    // to synchronize frame delivery (which has a much higher latency penalty).
+    m_SdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_SdlRenderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
