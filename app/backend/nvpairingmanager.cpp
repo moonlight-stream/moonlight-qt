@@ -1,8 +1,6 @@
 #include "nvpairingmanager.h"
 #include "utils.h"
 
-#include <QRandomGenerator>
-
 #include <openssl/bio.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>

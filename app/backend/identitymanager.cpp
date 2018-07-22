@@ -2,12 +2,12 @@
 #include "utils.h"
 
 #include <QDebug>
-#include <QRandomGenerator64>
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
 #include <openssl/bn.h>
 #include <openssl/x509.h>
+#include <openssl/rand.h>
 
 #define SER_UNIQUEID "uniqueid"
 #define SER_CERT "certificate"
@@ -195,8 +195,9 @@ IdentityManager::getUniqueId()
         }
         else {
             // Generate a new unique ID in base 16
-            m_CachedUniqueId = QString::number(
-                        QRandomGenerator64::securelySeeded().generate64(), 16);
+            uint64_t uid;
+            RAND_bytes(reinterpret_cast<unsigned char*>(&uid), sizeof(uid));
+            m_CachedUniqueId = QString::number(uid, 16);
 
             qDebug() << "Generated new unique ID: " << m_CachedUniqueId;
 

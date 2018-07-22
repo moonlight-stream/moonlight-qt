@@ -9,7 +9,8 @@
 #include "video/ffmpeg.h"
 #endif
 
-#include <QRandomGenerator>
+#include <openssl/rand.h>
+
 #include <QtEndian>
 #include <QCoreApplication>
 #include <QThreadPool>
@@ -206,11 +207,12 @@ Session::Session(NvComputer* computer, NvApp& app)
     m_StreamConfig.fps = m_Preferences.fps;
     m_StreamConfig.bitrate = m_Preferences.bitrateKbps;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
-    for (unsigned int i = 0; i < sizeof(m_StreamConfig.remoteInputAesKey); i++) {
-        m_StreamConfig.remoteInputAesKey[i] =
-                (char)(QRandomGenerator::global()->generate() % 256);
-    }
-    *(int*)m_StreamConfig.remoteInputAesIv = qToBigEndian(QRandomGenerator::global()->generate());
+    RAND_bytes(reinterpret_cast<unsigned char*>(m_StreamConfig.remoteInputAesKey),
+               sizeof(m_StreamConfig.remoteInputAesKey));
+
+    // Only the first 4 bytes are populated in the RI key IV
+    RAND_bytes(reinterpret_cast<unsigned char*>(m_StreamConfig.remoteInputAesIv), 4);
+
     switch (m_Preferences.audioConfig)
     {
     case StreamingPreferences::AC_AUTO:
