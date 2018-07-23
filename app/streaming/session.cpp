@@ -19,11 +19,16 @@
 #define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN
 #endif
 
+#define ICON_SIZE 32
+
 #include <openssl/rand.h>
 
 #include <QtEndian>
 #include <QCoreApplication>
 #include <QThreadPool>
+#include <QSvgRenderer>
+#include <QPainter>
+#include <QImage>
 
 CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clStageStarting,
@@ -615,6 +620,25 @@ void Session::exec()
         SDL_SetWindowSize(m_Window, width, height);
     }
 
+    QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
+    QImage svgImage(ICON_SIZE, ICON_SIZE, QImage::Format_RGBA8888);
+    svgImage.fill(0);
+
+    QPainter svgPainter(&svgImage);
+    svgIconRenderer.render(&svgPainter);
+    SDL_Surface* iconSurface = SDL_CreateRGBSurfaceWithFormatFrom((void*)svgImage.constBits(),
+                                                                  svgImage.width(),
+                                                                  svgImage.height(),
+                                                                  32,
+                                                                  4 * svgImage.width(),
+                                                                  SDL_PIXELFORMAT_RGBA32);
+#ifdef Q_OS_WIN32
+    // Other platforms seem to preserve our Qt icon when creating a new window
+    if (iconSurface != nullptr) {
+        SDL_SetWindowIcon(m_Window, iconSurface);
+    }
+#endif
+
 #ifndef QT_DEBUG
     // Capture the mouse by default on release builds only.
     // This prevents the mouse from becoming trapped inside
@@ -741,6 +765,9 @@ DispatchDeferredCleanup:
     SDL_AtomicUnlock(&m_DecoderLock);
 
     SDL_DestroyWindow(m_Window);
+    if (iconSurface != nullptr) {
+        SDL_FreeSurface(iconSurface);
+    }
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
     SDL_assert(!SDL_WasInit(SDL_INIT_VIDEO));
 

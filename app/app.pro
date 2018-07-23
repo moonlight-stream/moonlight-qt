@@ -1,4 +1,4 @@
-QT += core quick network quickcontrols2
+QT += core quick network quickcontrols2 svg
 CONFIG += c++11
 
 unix:!macx {
