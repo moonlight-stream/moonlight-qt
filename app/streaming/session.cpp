@@ -432,7 +432,7 @@ void Session::getWindowDimensions(bool fullScreen,
         }
 
         // Full-screen modes always start at the origin
-        x = y = SDL_WINDOWPOS_UNDEFINED;
+        x = y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
     }
     else {
         SDL_Rect usableBounds;
@@ -465,7 +465,7 @@ void Session::getWindowDimensions(bool fullScreen,
 
             width = m_StreamConfig.width;
             height = m_StreamConfig.height;
-            x = y = SDL_WINDOWPOS_UNDEFINED;
+            x = y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
         }
     }
 }
@@ -484,9 +484,7 @@ void Session::toggleFullscreen()
 
     getWindowDimensions(fullScreen, x, y, width, height);
 
-    if (x != SDL_WINDOWPOS_UNDEFINED || y != SDL_WINDOWPOS_UNDEFINED) {
-        SDL_SetWindowPosition(m_Window, x, y);
-    }
+    SDL_SetWindowPosition(m_Window, x, y);
     SDL_SetWindowSize(m_Window, width, height);
 
     if (fullScreen) {
