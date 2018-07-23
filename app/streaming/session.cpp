@@ -19,7 +19,12 @@
 #define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN
 #endif
 
+#ifdef Q_OS_WIN32
+// Scaling the icon down on Win32 looks dreadful, so render at lower res
 #define ICON_SIZE 32
+#else
+#define ICON_SIZE 64
+#endif
 
 #include <openssl/rand.h>
 
@@ -632,7 +637,7 @@ void Session::exec()
                                                                   32,
                                                                   4 * svgImage.width(),
                                                                   SDL_PIXELFORMAT_RGBA32);
-#ifdef Q_OS_WIN32
+#ifndef Q_OS_DARWIN
     // Other platforms seem to preserve our Qt icon when creating a new window
     if (iconSurface != nullptr) {
         SDL_SetWindowIcon(m_Window, iconSurface);
