@@ -14,6 +14,9 @@
 #endif
 
 #ifdef Q_OS_WIN32
+// Using full-screen desktop allows us to avoid needing to enable V-sync
+// and it also avoids some strange flickering issues on my Win7 test machine
+// with Intel HD 5500 graphics.
 #define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN_DESKTOP
 #else
 #define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN
@@ -411,39 +414,19 @@ void Session::getWindowDimensions(bool fullScreen,
     }
 
     if (fullScreen) {
-        SDL_DisplayMode desired, closest;
+        SDL_DisplayMode currentMode;
 
-        SDL_zero(desired);
-        desired.w = m_StreamConfig.width;
-        desired.h = m_StreamConfig.height;
-        desired.refresh_rate = m_StreamConfig.fps;
-
-        // Trying to mode-set on my Fedora 28 workstation causes
-        // loss of the whole display that we try to adjust. It never
-        // comes back after the mode change until we revert the change
-        // by destroying the window. Possible KMS/X bug? Let's avoid
-        // exercising this path until we have a workaround.
- #if !defined(Q_OS_LINUX) && SDL_OS_FULLSCREEN_FLAG == SDL_WINDOW_FULLSCREEN
-        if (SDL_GetClosestDisplayMode(displayIndex, &desired, &closest)) {
+        if (SDL_GetCurrentDisplayMode(displayIndex, &currentMode) == 0) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Closest match for %dx%dx%d is %dx%dx%d",
-                        desired.w, desired.h, desired.refresh_rate,
-                        closest.w, closest.h, closest.refresh_rate);
-            width = closest.w;
-            height = closest.h;
-        }
-        else
-#endif
-        if (SDL_GetCurrentDisplayMode(displayIndex, &closest) == 0) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Using current display mode: %dx%dx%d",
-                        closest.w, closest.h, closest.refresh_rate);
-            width = closest.w;
-            height = closest.h;
+                        currentMode.w, currentMode.h, currentMode.refresh_rate);
+            width = currentMode.w;
+            height = currentMode.h;
         }
         else {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Unable to get current or closest display mode");
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to get current display mode: %s",
+                         SDL_GetError());
             width = m_StreamConfig.width;
             height = m_StreamConfig.height;
         }
