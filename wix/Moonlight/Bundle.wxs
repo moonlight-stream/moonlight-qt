@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+  <Bundle Name="Moonlight"
+          Version="!(bind.PackageVersion.MoonlightMsi)"
+          Manufacturer="Moonlight Game Streaming Team"
+          UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5">
+    <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
+      <!-- TODO: Add LaunchTarget -->
+      <!-- TODO: Add default installation directory -->
+      <bal:WixStandardBootstrapperApplication
+        ShowVersion="yes"
+        LicenseFile="license.rtf"
+        LogoFile="..\..\app\moonlight_wix.png"
+        ShowFilesInUse="yes"
+        />
+    </BootstrapperApplicationRef>
+    <Chain>
+      <MsiPackage Id="MoonlightMsi" SourceFile="$(var.MoonlightMsi.TargetPath)" />
+    </Chain>
+  </Bundle>
+</Wix>
