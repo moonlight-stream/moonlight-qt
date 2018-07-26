@@ -1,4 +1,5 @@
 #include "streamingpreferences.h"
+#include "streaming/session.hpp"
 
 #include <QSettings>
 
@@ -55,6 +56,15 @@ void StreamingPreferences::save()
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
+}
+
+bool StreamingPreferences::hasAnyHardwareAcceleration()
+{
+    // Always use VDS_AUTO to avoid spamming the user with warnings
+    // if they've forced software decoding.
+    return Session::isHardwareDecodeAvailable(VDS_AUTO,
+                                              VIDEO_FORMAT_H264,
+                                              1920, 1080, 60);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)

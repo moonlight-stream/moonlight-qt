@@ -14,6 +14,8 @@ public:
 
     Q_INVOKABLE void save();
 
+    Q_INVOKABLE static bool hasAnyHardwareAcceleration();
+
     void reload();
 
     enum AudioConfig

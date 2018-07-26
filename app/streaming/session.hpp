@@ -21,6 +21,10 @@ public:
 
     Q_INVOKABLE void exec();
 
+    static
+    bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
+                                   int videoFormat, int width, int height, int frameRate);
+
 signals:
     void stageStarting(QString stage);
 
@@ -44,10 +48,6 @@ private:
                              int& width, int& height);
 
     void toggleFullscreen();
-
-    static
-    bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
-                                   int videoFormat, int width, int height, int frameRate);
 
     static
     bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,

@@ -6,6 +6,7 @@ import QtQuick.Layouts 1.3
 import ComputerModel 1.0
 
 import ComputerManager 1.0
+import StreamingPreferences 1.0
 
 GridView {
     property ComputerModel computerModel : createModel()
@@ -25,9 +26,17 @@ GridView {
     // routine to run, but only if we start as invisible
     visible: false
 
+    StreamingPreferences {
+        id: prefs
+    }
+
     Component.onCompleted: {
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
+
+        if (!prefs.hasAnyHardwareAcceleration()) {
+            noHwDecoderDialog.open()
+        }
     }
 
     onVisibleChanged: {
@@ -182,6 +191,19 @@ GridView {
         modality:Qt.WindowModal
         icon: StandardIcon.Critical
         standardButtons: StandardButton.Ok
+    }
+
+    MessageDialog {
+        id: noHwDecoderDialog
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        text: "No functioning hardware accelerated H.264 video decoder was detected by Moonlight. " +
+              "Your streaming performance may be severely degraded in this configuration. " +
+              "Click the Help button for more information on solving this problem."
+        onHelp: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
+        }
     }
 
     MessageDialog {
