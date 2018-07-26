@@ -140,12 +140,12 @@ NvComputer::NvComputer(QString address, QString serverInfo)
 bool NvComputer::wake()
 {
     if (state == NvComputer::CS_ONLINE) {
-        qWarning() << name << " is already online";
+        qWarning() << name << "is already online";
         return true;
     }
 
     if (macAddress.isNull()) {
-        qWarning() << name << " has no MAC address stored";
+        qWarning() << name << "has no MAC address stored";
         return false;
     }
 
@@ -184,7 +184,7 @@ bool NvComputer::wake()
                 // Send to all ports
                 for (quint16 port : WOL_PORTS) {
                     if (sock.writeDatagram(wolPayload, address, port)) {
-                        qDebug() << "Send WoL packet to " << name << " via " << address.toString() << ":" << port;
+                        qInfo().nospace().noquote() << "Send WoL packet to " << name << " via " << address.toString() << ":" << port;
                         success = true;
                     }
                 }
@@ -362,7 +362,7 @@ void ComputerManager::startPolling()
     m_MdnsBrowser = new QMdnsEngine::Browser(&m_MdnsServer, "_nvstream._tcp.local.", &m_MdnsCache);
     connect(m_MdnsBrowser, &QMdnsEngine::Browser::serviceAdded,
             this, [this](const QMdnsEngine::Service& service) {
-        qDebug() << "Discovered mDNS host: " << service.hostname();
+        qInfo() << "Discovered mDNS host:" << service.hostname();
 
         MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, &m_MdnsCache, service);
         connect(pendingComputer, SIGNAL(resolvedv4(MdnsPendingComputer*,QHostAddress)),
@@ -381,7 +381,7 @@ void ComputerManager::startPolling()
 void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
                                                 const QHostAddress& address)
 {
-    qDebug() << "Resolved " << computer->hostname() << " to " << address.toString();
+    qInfo() << "Resolved" << computer->hostname() << "to" << address.toString();
 
     addNewHost(address.toString(), true);
 

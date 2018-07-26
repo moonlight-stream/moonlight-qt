@@ -101,7 +101,7 @@ void IdentityManager::createCredentials(QSettings& settings)
     settings.setValue(SER_CERT, m_CachedPemCert);
     settings.setValue(SER_KEY, m_CachedPrivateKey);
 
-    qDebug() << "Wrote new identity credentials to settings";
+    qInfo() << "Wrote new identity credentials to settings";
 }
 
 IdentityManager::IdentityManager()
@@ -112,7 +112,7 @@ IdentityManager::IdentityManager()
     m_CachedPrivateKey = settings.value(SER_KEY).toByteArray();
 
     if (m_CachedPemCert.isEmpty() || m_CachedPrivateKey.isEmpty()) {
-        qDebug() << "No existing credentials found";
+        qInfo() << "No existing credentials found";
         createCredentials(settings);
     }
     else if (getSslCertificate().isNull()) {
@@ -191,7 +191,7 @@ IdentityManager::getUniqueId()
         // Load the unique ID from settings
         m_CachedUniqueId = settings.value(SER_UNIQUEID).toString();
         if (!m_CachedUniqueId.isEmpty() && !m_CachedUniqueId.isNull()) {
-            qDebug() << "Loaded unique ID from settings: " << m_CachedUniqueId;
+            qInfo() << "Loaded unique ID from settings:" << m_CachedUniqueId;
         }
         else {
             // Generate a new unique ID in base 16
@@ -199,7 +199,7 @@ IdentityManager::getUniqueId()
             RAND_bytes(reinterpret_cast<unsigned char*>(&uid), sizeof(uid));
             m_CachedUniqueId = QString::number(uid, 16);
 
-            qDebug() << "Generated new unique ID: " << m_CachedUniqueId;
+            qInfo() << "Generated new unique ID:" << m_CachedUniqueId;
 
             settings.setValue(SER_UNIQUEID, m_CachedUniqueId);
         }

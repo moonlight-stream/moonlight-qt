@@ -275,7 +275,10 @@ NvHTTP::verifyResponseStatus(QString xml)
             else
             {
                 QString statusMessage = xmlReader.attributes().value("status_message").toString();
-                qDebug() << "Request failed: " << statusCode << " " << statusMessage;
+                if (statusCode != 401) {
+                    // 401 is expected for unpaired PCs when we fetch serverinfo over HTTPS
+                    qWarning() << "Request failed:" << statusCode << statusMessage;
+                }
                 throw GfeHttpResponseException(statusCode, statusMessage);
             }
         }
@@ -376,13 +379,13 @@ NvHTTP::openConnection(QUrl baseUrl,
     {
         QTimer::singleShot(REQUEST_TIMEOUT_MS, &loop, SLOT(quit()));
     }
-    qDebug() << "Executing request: " << url.toString();
+    qInfo() << "Executing request:" << url.toString();
     loop.exec(QEventLoop::ExcludeUserInputEvents);
 
     // Abort the request if it timed out
     if (!reply->isFinished())
     {
-        qDebug() << "Aborting timed out request for " << url.toString();
+        qWarning() << "Aborting timed out request for" << url.toString();
         reply->abort();
     }
 
@@ -393,7 +396,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Handle error
     if (reply->error() != QNetworkReply::NoError)
     {
-        qDebug() << command << " request failed with error " << reply->error();
+        qWarning() << command << " request failed with error " << reply->error();
         GfeHttpResponseException exception(reply->error(), reply->errorString());
         delete reply;
         throw exception;
