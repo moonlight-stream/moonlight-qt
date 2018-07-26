@@ -67,7 +67,7 @@ copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Building installer
-msbuild %SOURCE_ROOT%\wix\Moonlight\Moonlight.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
+msbuild %SOURCE_ROOT%\wix\Moonlight.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Build successful!

@@ -4,7 +4,7 @@
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
 
   <Bundle Name="Moonlight Game Streaming Client"
-          Version="!(bind.PackageVersion.MoonlightMsi)"
+          Version="!(bind.PackageVersion.Moonlight)"
           Manufacturer="Moonlight Game Streaming Team"
           UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
           HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
@@ -24,7 +24,7 @@
     </BootstrapperApplicationRef>
 
     <Chain>
-      <MsiPackage Id="MoonlightMsi" SourceFile="$(var.MoonlightMsi.TargetPath)" Vital="yes">
+      <MsiPackage Id="Moonlight" SourceFile="$(var.Moonlight.TargetPath)" Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
       </MsiPackage>
     </Chain>
