@@ -20,7 +20,9 @@ if "%ARCH%" NEQ "x86" (
     )
 )
 
-call "%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
+set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community
+
+call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 set BUILD_ROOT=%cd%\build
@@ -67,6 +69,7 @@ copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Building installer
+set VCREDIST_INSTALLER=%VS_PATH%\VC\Redist\MSVC\14.14.26405\vcredist_%ARCH%.exe
 msbuild %SOURCE_ROOT%\wix\Moonlight.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
 
