@@ -1,21 +1,33 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi" xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
-  <Bundle Name="Moonlight"
+
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+
+  <Bundle Name="Moonlight Game Streaming Client"
           Version="!(bind.PackageVersion.MoonlightMsi)"
           Manufacturer="Moonlight Game Streaming Team"
-          UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5">
+          UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
+          HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
+          UpdateUrl="https://github.com/moonlight-stream/moonlight-qt/releases"
+          DisableModify="yes"
+          IconSourceFile="..\..\app\moonlight.ico">
+
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]Moonlight Game Streaming\" />
+
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
-      <!-- TODO: Add LaunchTarget -->
-      <!-- TODO: Add default installation directory -->
       <bal:WixStandardBootstrapperApplication
         ShowVersion="yes"
         LicenseFile="license.rtf"
         LogoFile="..\..\app\moonlight_wix.png"
         ShowFilesInUse="yes"
-        />
+        LaunchTarget="[InstallFolder]Moonlight.exe" />
     </BootstrapperApplicationRef>
+
     <Chain>
-      <MsiPackage Id="MoonlightMsi" SourceFile="$(var.MoonlightMsi.TargetPath)" />
+      <MsiPackage Id="MoonlightMsi" SourceFile="$(var.MoonlightMsi.TargetPath)" Vital="yes">
+        <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+      </MsiPackage>
     </Chain>
+
   </Bundle>
 </Wix>

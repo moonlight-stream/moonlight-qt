@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+
   <Product Id="*"
            Name="Moonlight Game Streaming"
            Language="1033"
@@ -8,40 +10,64 @@
            Manufacturer="Moonlight Game Streaming Team"
            UpgradeCode="5c09f94e-f809-4c6a-9b7b-597c99f041fe">
 
-    <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+    <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
     <MediaTemplate CompressionLevel="high" />
 
-    <Feature Id="ProductFeature" Title="Moonlight" Level="1">
-      <ComponentGroupRef Id="Moonlight" />
+    <?if $(var.Platform) = x64 ?>
+      <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
+    <?else ?>
+      <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
+    <?endif ?>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="$(var.PlatformProgramFilesFolder)">
+        <Directory Id="INSTALLFOLDER" Name="Moonlight Game Streaming" />
+      </Directory>
+      <Directory Id="ProgramMenuFolder">
+        <Directory Id="ApplicationProgramsFolder" Name="Moonlight Game Streaming" />
+      </Directory>
+    </Directory>
+
+    <!-- There's no way to delete a registry key on uninstall but not major upgrade, so
+        we have to roll our own deletion via custom action -->
+    <CustomAction Id="DeleteRegistryKey"
+                  Directory="$(var.PlatformProgramFilesFolder)"
+                  ExeCommand="reg.exe delete &quot;HKCU\Software\Moonlight Game Streaming Project&quot; /f"
+                  Execute="deferred"
+                  Return="ignore"
+                  Impersonate="yes"/>
+    <InstallExecuteSequence>
+      <Custom Action="DeleteRegistryKey" Before="InstallFinalize">Installed AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
+    </InstallExecuteSequence>
+
+    <DirectoryRef Id="ApplicationProgramsFolder">
+      <Component Id="MoonlightShortcut" Guid="*">
+        <Shortcut Id="MoonlightStartMenuShortcut" 
+                  Name="Moonlight"
+                  Description="Stream games from a NVIDIA GameStream-compatible PC"
+                  Target="[#MoonlightExe]"
+                  WorkingDirectory="APPLICATIONROOTDIRECTORY" />
+        <RemoveFolder Id="CleanupMoonlightShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
+        <RegistryValue Root="HKCU" Key="Software\Moonlight Game Streaming Project" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+      </Component>
+    </DirectoryRef>
+
+    <DirectoryRef Id="INSTALLFOLDER">
+      <Component Id="Moonlight" Guid="*">
+        <File Id="MoonlightExe" KeyPath="yes" Checksum="yes" Source="$(var.SourceDir)\Moonlight.exe">
+          <fire:FirewallException Id="MoonlightFirewallException"
+                                  Scope="any"
+                                  Name="Moonlight Game Streaming Client" />
+        </File>
+      </Component>
+    </DirectoryRef>
+
+    <Feature Id="ProductFeature" Title="Moonlight" Level="1" ConfigurableDirectory="INSTALLFOLDER">
+      <ComponentRef Id="Moonlight" />
+      <ComponentRef Id="MoonlightShortcut" />
       <ComponentGroupRef Id="MoonlightDependencies" />
     </Feature>
   </Product>
-
-  <?if $(var.Platform) = x64 ?>
-    <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
-  <?else ?>
-    <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
-  <?endif ?>
-
-  <Fragment>
-    <Directory Id="TARGETDIR" Name="SourceDir">
-      <Directory Id="$(var.PlatformProgramFilesFolder)">
-        <Directory Id="INSTALLFOLDER" Name="Moonlight" />
-      </Directory>
-    </Directory>
-  </Fragment>
-
-  <!-- TODO: Delete registry values on full uninstall -->
-  <!-- TODO: Create shortcut to Moonlight -->
-  <!-- TODO: Exempt ourselves from Windows Firewall -->
-
-  <Fragment>
-    <ComponentGroup Id="Moonlight" Directory="INSTALLFOLDER">
-      <Component Id="CMP_MoonlightExe" Guid="*">
-        <File Id="MoonlightExe" KeyPath="yes" Checksum="yes" Source="$(var.SourceDir)\Moonlight.exe" />
-      </Component>
-    </ComponentGroup>
-  </Fragment>
 </Wix>
