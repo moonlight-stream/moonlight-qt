@@ -36,8 +36,32 @@ static QTime s_LoggerTime;
 static QTextStream s_LoggerStream(stdout);
 static QMutex s_LoggerLock;
 #ifdef LOG_TO_FILE
+#define MAX_LOG_LINES 10000
+static int s_LogLinesWritten = 0;
+static bool s_LogLimitReached = false;
 static QFile* s_LoggerFile;
 #endif
+
+void logToLoggerStream(QString& message)
+{
+    QMutexLocker lock(&s_LoggerLock);
+
+#ifdef LOG_TO_FILE
+    if (s_LogLimitReached) {
+        return;
+    }
+    else if (s_LogLinesWritten == MAX_LOG_LINES) {
+        s_LoggerStream << "Log size limit reached!" << endl;
+        s_LogLimitReached = true;
+        return;
+    }
+    else {
+        s_LogLinesWritten++;
+    }
+#endif
+
+    s_LoggerStream << message << endl;
+}
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
 {
@@ -62,15 +86,15 @@ void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const ch
     case SDL_LOG_PRIORITY_CRITICAL:
         priorityTxt = "Critical";
         break;
+    default:
+        priorityTxt = "Unknown";
+        break;
     }
 
     QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
     QString txt = QString("%1 - SDL %2 (%3): %4").arg(logTime.toString()).arg(priorityTxt).arg(category).arg(message);
 
-    {
-        QMutexLocker lock(&s_LoggerLock);
-        s_LoggerStream << txt << endl;
-    }
+    logToLoggerStream(txt);
 }
 
 void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString& msg)
@@ -98,10 +122,7 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
     QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
     QString txt = QString("%1 - Qt %2: %3").arg(logTime.toString()).arg(typeTxt).arg(msg);
 
-    {
-        QMutexLocker lock(&s_LoggerLock);
-        s_LoggerStream << txt << endl;
-    }
+    logToLoggerStream(txt);
 }
 
 #endif
