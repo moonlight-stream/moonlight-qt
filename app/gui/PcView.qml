@@ -14,7 +14,7 @@ GridView {
     id: pcGrid
     anchors.fill: parent
     anchors.leftMargin: (parent.width % (cellWidth + anchors.rightMargin)) / 2
-    anchors.topMargin: 5
+    anchors.topMargin: 20
     anchors.rightMargin: 5
     anchors.bottomMargin: 5
     cellWidth: 350; cellHeight: 350;
