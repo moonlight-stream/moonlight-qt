@@ -380,12 +380,12 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     RtlZeroMemory(&m_Desc, sizeof(m_Desc));
     m_Desc.SampleWidth = m_VideoWidth;
     m_Desc.SampleHeight = m_VideoHeight;
-    m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_ProgressiveChroma;
-    m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_0_255;
-    m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;
-    m_Desc.SampleFormat.VideoLighting = DXVA2_VideoLighting_dim;
-    m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT709;
-    m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_709;
+    m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Unknown;
+    m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_Unknown;
+    m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_Unknown;
+    m_Desc.SampleFormat.VideoLighting = DXVA2_VideoLighting_Unknown;
+    m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_Unknown;
+    m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
     m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
 
@@ -404,6 +404,97 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
     HRESULT hr;
+
+    switch (frame->color_range) {
+    case AVCOL_RANGE_JPEG:
+        m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_0_255;
+        break;
+    case AVCOL_RANGE_MPEG:
+        m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_16_235;
+        break;
+    default:
+        m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_Unknown;
+        break;
+    }
+
+    switch (frame->color_primaries) {
+    case AVCOL_PRI_BT709:
+        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT709;
+        break;
+    case AVCOL_PRI_BT470M:
+        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysM;
+        break;
+    case AVCOL_PRI_BT470BG:
+        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_BT470_2_SysBG;
+        break;
+    case AVCOL_PRI_SMPTE170M:
+        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE170M;
+        break;
+    case AVCOL_PRI_SMPTE240M:
+        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_SMPTE240M;
+        break;
+    default:
+        m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_Unknown;
+        break;
+    }
+
+    switch (frame->color_trc) {
+    case AVCOL_TRC_SMPTE170M:
+    case AVCOL_TRC_BT709:
+        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_709;
+        break;
+    case AVCOL_TRC_LINEAR:
+        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_10;
+        break;
+    case AVCOL_TRC_GAMMA22:
+        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_22;
+        break;
+    case AVCOL_TRC_GAMMA28:
+        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_28;
+        break;
+    case AVCOL_TRC_SMPTE240M:
+        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_240M;
+        break;
+    case AVCOL_TRC_IEC61966_2_1:
+        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_sRGB;
+        break;
+    default:
+        m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
+        break;
+    }
+
+    switch (frame->colorspace) {
+    case AVCOL_SPC_BT709:
+        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;
+        break;
+    case AVCOL_SPC_BT470BG:
+    case AVCOL_SPC_SMPTE170M:
+        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601;
+        break;
+    case AVCOL_SPC_SMPTE240M:
+        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_SMPTE240M;
+        break;
+    default:
+        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_Unknown;
+        break;
+    }
+
+    switch (frame->chroma_location) {
+    case AVCHROMA_LOC_LEFT:
+        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
+                                                     DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes;
+        break;
+    case AVCHROMA_LOC_CENTER:
+        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes;
+        break;
+    case AVCHROMA_LOC_TOPLEFT:
+        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
+                                                     DXVA2_VideoChromaSubsampling_Vertically_Cosited;
+        break;
+    default:
+        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Unknown;
+        break;
+    }
 
     DXVA2_VideoSample sample = {};
     sample.Start = m_FrameIndex;
