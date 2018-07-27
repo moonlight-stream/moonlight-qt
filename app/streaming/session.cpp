@@ -310,23 +310,30 @@ bool Session::validateLaunch()
     QStringList warningList;
 
     if (m_StreamConfig.supportsHevc) {
-        if (m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
-                m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR) {
-            if (m_Computer->maxLumaPixelsHEVC == 0) {
-                emit displayLaunchWarning("Your host PC GPU doesn't support HEVC. "
-                                          "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
-            }
-        }
-        else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
-                                            VIDEO_FORMAT_H265,
-                                            m_StreamConfig.width,
-                                            m_StreamConfig.height,
-                                            m_StreamConfig.fps)) {
+        bool hevcForced = m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
+                m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
+
+        if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                       VIDEO_FORMAT_H265,
+                                       m_StreamConfig.width,
+                                       m_StreamConfig.height,
+                                       m_StreamConfig.fps)) {
             // NOTE: HEVC currently uses only 1 slice regardless of what
             // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
             // never use it for software decoding (unless common-c starts
             // respecting it for HEVC).
             m_StreamConfig.supportsHevc = false;
+
+            if (hevcForced) {
+                emit displayLaunchWarning("This PC's GPU doesn't support HEVC decoding.");
+            }
+        }
+
+        if (hevcForced) {
+            if (m_Computer->maxLumaPixelsHEVC == 0) {
+                emit displayLaunchWarning("Your host PC GPU doesn't support HEVC. "
+                                          "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
+            }
         }
     }
 
@@ -348,7 +355,7 @@ bool Session::validateLaunch()
                                             m_StreamConfig.width,
                                             m_StreamConfig.height,
                                             m_StreamConfig.fps)) {
-            emit displayLaunchWarning("Your client PC GPU doesn't support HEVC Main10 decoding for HDR streaming.");
+            emit displayLaunchWarning("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming.");
         }
         else {
             // TODO: Also validate display capabilites
