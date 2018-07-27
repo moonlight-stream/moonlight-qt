@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension">
+     xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <Bundle Name="Moonlight Game Streaming Client"
           Version="!(bind.PackageVersion.Moonlight)"
@@ -12,7 +13,36 @@
           DisableModify="yes"
           IconSourceFile="..\..\app\moonlight.ico">
 
-    <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]Moonlight Game Streaming\" />
+    <bal:Condition Message="Moonlight requires Windows 7 or later.">
+      <![CDATA[VersionNT >= v6.1]]>
+    </bal:Condition>
+
+    <!-- https://stackoverflow.com/questions/46637094/how-can-i-find-the-upgrade-code-for-an-installed-msi-file -->
+    <?if $(env.ARCH) ~= x86 ?>
+      <util:ProductSearch Id="Find_VCRedist_x86"
+                          UpgradeCode="{C78B8E51-0C65-377E-85D1-282F689FE505}"
+                          Result="state"
+                          Variable="VCRedist_Present" />
+    <?elseif $(env.ARCH) ~= x64 ?>
+      <util:ProductSearch Id="Find_VCRedist_x64"
+                          UpgradeCode="{9B0BAA88-E15F-3A1F-ACC0-B206E9DDF71C}"
+                          Result="state"
+                          Variable="VCRedist_Present" />
+    <?else ?>
+      <?error Bad ARCH value ?>
+    <?endif ?>
+
+    <?if $(env.ARCH) ~= x64 ?>
+      <bal:Condition Message="This Moonlight installer requires a 64-bit OS.">
+        VersionNT64
+      </bal:Condition>
+    <?endif ?>
+
+    <?if $(env.ARCH) ~= x64 ?>
+      <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]Moonlight Game Streaming" />
+    <?elseif $(env.ARCH) ~= x86 ?>
+      <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]Moonlight Game Streaming" />
+    <?endif ?>
 
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication
@@ -20,13 +50,14 @@
         LicenseFile="license.rtf"
         LogoFile="..\..\app\moonlight_wix.png"
         ShowFilesInUse="yes"
-        LaunchTarget="[InstallFolder]Moonlight.exe" />
+        LaunchTarget="[InstallFolder]\Moonlight.exe" />
     </BootstrapperApplicationRef>
 
     <Chain>
       <ExePackage Cache="no"
                   PerMachine="yes"
                   Permanent="yes"
+                  InstallCondition="VCRedist_Present = 2"
                   Vital="yes"
                   Compressed="yes"
                   SourceFile="$(env.VCREDIST_INSTALLER)"

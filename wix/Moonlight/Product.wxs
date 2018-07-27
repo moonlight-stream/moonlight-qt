@@ -1,10 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?define ShortName = "Moonlight" ?>
+<?define FullName = "Moonlight Game Streaming Client" ?>
+
+<?define ShortcutName = "$(var.ShortName)" ?>
+<?define ShortcutDesc = "Stream games from a NVIDIA GameStream-compatible PC" ?>
+<?define InstallFolder = "Moonlight Game Streaming" ?>
+
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
 
   <Product Id="*"
-           Name="Moonlight Game Streaming"
+           Name="$(var.FullName)"
            Language="1033"
            Version="!(bind.fileVersion.MoonlightExe)"
            Manufacturer="Moonlight Game Streaming Team"
@@ -22,11 +29,12 @@
     <?endif ?>
 
     <Directory Id="TARGETDIR" Name="SourceDir">
+      <Directory Id="DesktopFolder" />
       <Directory Id="$(var.PlatformProgramFilesFolder)">
-        <Directory Id="INSTALLFOLDER" Name="Moonlight Game Streaming" />
+        <Directory Id="INSTALLFOLDER" Name="$(var.InstallFolder)" />
       </Directory>
       <Directory Id="ProgramMenuFolder">
-        <Directory Id="ApplicationProgramsFolder" Name="Moonlight Game Streaming" />
+        <Directory Id="ApplicationProgramsFolder" Name="$(var.InstallFolder)" />
       </Directory>
     </Directory>
 
@@ -42,31 +50,37 @@
       <Custom Action="DeleteRegistryKey" Before="InstallFinalize">Installed AND REMOVE~="ALL" AND NOT UPGRADINGPRODUCTCODE</Custom>
     </InstallExecuteSequence>
 
-    <DirectoryRef Id="ApplicationProgramsFolder">
-      <Component Id="MoonlightShortcut" Guid="*">
-        <Shortcut Id="MoonlightStartMenuShortcut" 
-                  Name="Moonlight"
-                  Description="Stream games from a NVIDIA GameStream-compatible PC"
-                  Target="[#MoonlightExe]"
-                  WorkingDirectory="APPLICATIONROOTDIRECTORY" />
-        <RemoveFolder Id="CleanupMoonlightShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
-        <RegistryValue Root="HKCU" Key="Software\Moonlight Game Streaming Project" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
-      </Component>
-    </DirectoryRef>
+    <Component Id="MoonlightShortcuts" Guid="*" Directory="INSTALLFOLDER">
+      <Shortcut Id="StartMenuShortcut" 
+                Name="$(var.ShortcutName)"
+                Description="$(var.ShortcutDesc)"
+                Target="[#MoonlightExe]"
+                Directory="ApplicationProgramsFolder"
+                WorkingDirectory="INSTALLFOLDER" />
+      <Shortcut Id="DesktopShortcut"
+                Name="$(var.ShortcutName)"
+                Description="$(var.ShortcutDesc)"
+                Target="[#MoonlightExe]"
+                Directory="DesktopFolder"
+                WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="CleanupStartMenuShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <RemoveFolder Id="CleanupDesktopShortcut" Directory="DesktopFolder" On="uninstall" />
+      <RegistryValue Root="HKCU" Key="Software\Moonlight Game Streaming Project" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
 
     <DirectoryRef Id="INSTALLFOLDER">
       <Component Id="Moonlight" Guid="*">
         <File Id="MoonlightExe" KeyPath="yes" Checksum="yes" Source="$(var.SourceDir)\Moonlight.exe">
           <fire:FirewallException Id="MoonlightFirewallException"
                                   Scope="any"
-                                  Name="Moonlight Game Streaming Client" />
+                                  Name="$(var.FullName)" />
         </File>
       </Component>
     </DirectoryRef>
 
     <Feature Id="ProductFeature" Title="Moonlight" Level="1" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentRef Id="Moonlight" />
-      <ComponentRef Id="MoonlightShortcut" />
+      <ComponentRef Id="MoonlightShortcuts" />
       <ComponentGroupRef Id="MoonlightDependencies" />
     </Feature>
   </Product>
