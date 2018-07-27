@@ -343,7 +343,9 @@ NvHTTP::openConnectionToString(QUrl baseUrl,
     QNetworkReply* reply = openConnection(baseUrl, command, arguments, enableTimeout);
     QString ret;
 
-    ret = QTextStream(reply).readAll();
+    QTextStream stream(reply);
+    stream.setCodec("UTF-8");
+    ret = stream.readAll();
     delete reply;
 
     return ret;
