@@ -123,10 +123,15 @@ void AppModel::handleBoxArtLoaded(NvComputer* computer, NvApp app, QUrl /* image
     Q_ASSERT(computer == m_Computer);
 
     int index = m_Apps.indexOf(app);
-    Q_ASSERT(index >= 0);
 
-    // Let our view know the box art data has changed for this app
-    emit dataChanged(createIndex(index, 0),
-                     createIndex(index, 0),
-                     QVector<int>() << BoxArtRole);
+    // Make sure we're not delivering a callback to an app that's already been removed
+    if (index >= 0) {
+        // Let our view know the box art data has changed for this app
+        emit dataChanged(createIndex(index, 0),
+                         createIndex(index, 0),
+                         QVector<int>() << BoxArtRole);
+    }
+    else {
+        qWarning() << "App not found for box art callback:" << app.name;
+    }
 }
