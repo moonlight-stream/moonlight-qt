@@ -72,11 +72,12 @@ GridView {
             color: "white"
 
             width: parent.width
-            height: 100
+            height: 125
             anchors.top: appIcon.bottom
-            font.pointSize: 26
+            font.pointSize: 22
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
+            elide: Text.ElideRight
         }
 
         MouseArea {
