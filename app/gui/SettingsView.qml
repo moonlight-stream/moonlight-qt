@@ -34,7 +34,7 @@ ScrollView {
                 Label {
                     width: parent.width
                     id: resFPStitle
-                    text: qsTr("Resolution and FPS target")
+                    text: qsTr("Resolution and FPS")
                     font.pointSize: 12
                     wrapMode: Text.Wrap                    
                     color: "white"
@@ -43,84 +43,113 @@ ScrollView {
                 Label {
                     width: parent.width
                     id: resFPSdesc
-                    text: qsTr("Setting values too high for your device may cause lag or crashes")
+                    text: qsTr("Setting values too high for your PC may cause lag, stuttering, or errors")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                     color: "white"
                 }
 
-                ComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
-                        // load the saved width/height/fps, and iterate through the ComboBox until a match is found
-                        // set it to that index.
-                        var saved_width = prefs.width
-                        var saved_height = prefs.height
-                        var saved_fps = prefs.fps
-                        currentIndex = 0
-                        for(var i = 0; i < resolutionComboBox.count; i++) {
-                            var el_width = parseInt(resolutionListModel.get(i).video_width);
-                            var el_height = parseInt(resolutionListModel.get(i).video_height);
-                            var el_fps = parseInt(resolutionListModel.get(i).video_fps);
-                          if(saved_width === el_width &&
-                                  saved_height === el_height &&
-                                  saved_fps === el_fps) {
-                              currentIndex = i
-                          }
+                Row {
+                    spacing: 5
+
+                    ComboBox {
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            // load the saved width/height, and iterate through the ComboBox until a match is found
+                            // and set it to that index.
+                            var saved_width = prefs.width
+                            var saved_height = prefs.height
+                            currentIndex = 0
+                            for (var i = 0; i < resolutionComboBox.count; i++) {
+                                var el_width = parseInt(resolutionListModel.get(i).video_width);
+                                var el_height = parseInt(resolutionListModel.get(i).video_height);
+                                if (saved_width === el_width && saved_height === el_height) {
+                                    currentIndex = i
+                                }
+                            }
+                        }
+
+                        id: resolutionComboBox
+                        font.pointSize: 9
+                        textRole: "text"
+                        model: ListModel {
+                            id: resolutionListModel
+                            ListElement {
+                                text: "720p"
+                                video_width: "1280"
+                                video_height: "720"
+                            }
+                            ListElement {
+                                text: "1080p"
+                                video_width: "1920"
+                                video_height: "1080"
+                            }
+                            ListElement {
+                                text: "1440p"
+                                video_width: "2560"
+                                video_height: "1440"
+                            }
+                            ListElement {
+                                text: "4K"
+                                video_width: "3840"
+                                video_height: "2160"
+                            }
+                        }
+                        // ::onActivated must be used, as it only listens for when the index is changed by a human
+                        onActivated : {
+                            prefs.width = parseInt(resolutionListModel.get(currentIndex).video_width)
+                            prefs.height = parseInt(resolutionListModel.get(currentIndex).video_height)
+
+                            prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
+                            slider.value = prefs.bitrateKbps
                         }
                     }
 
-                    id: resolutionComboBox
-                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
-                    font.pointSize: 9
-                    textRole: "text"
-                    model: ListModel {
-                        id: resolutionListModel
-                        ListElement {
-                            text: "720p 30 FPS"
-                            video_width: "1280"
-                            video_height: "720"
-                            video_fps: "30"
-                        }
-                        ListElement {
-                            text: "720p 60 FPS"
-                            video_width: "1280"
-                            video_height: "720"
-                            video_fps: "60"
-                        }
-                        ListElement {
-                            text: "1080p 30 FPS"
-                            video_width: "1920"
-                            video_height: "1080"
-                            video_fps: "30"
-                        }
-                        ListElement {
-                            text: "1080p 60 FPS"
-                            video_width: "1920"
-                            video_height: "1080"
-                            video_fps: "60"
-                        }
-                        ListElement {
-                            text: "4K 30 FPS"
-                            video_width: "3840"
-                            video_height: "2160"
-                            video_fps: "30"
-                        }
-                        ListElement {
-                            text: "4K 60 FPS"
-                            video_width: "3840"
-                            video_height: "2160"
-                            video_fps: "60"
-                        }
-                    }
-                    // ::onActivated must be used, as it only listens for when the index is changed by a human
-                    onActivated : {
-                        prefs.width = parseInt(resolutionListModel.get(currentIndex).video_width)
-                        prefs.height = parseInt(resolutionListModel.get(currentIndex).video_height)
-                        prefs.fps = parseInt(resolutionListModel.get(currentIndex).video_fps)
+                    ComboBox {
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            // Get the max supported FPS on this system
+                            var max_fps = prefs.getMaximumStreamingFrameRate();
 
-                        prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
-                        slider.value = prefs.bitrateKbps
+                            // Use 64 as the cutoff for adding a separate option to
+                            // handle wonky displays that report just over 60 Hz.
+                            if (max_fps > 64) {
+                                fpsListModel.append({"text": max_fps+" FPS", "video_fps": ""+max_fps})
+                            }
+
+                            var saved_fps = prefs.fps
+                            currentIndex = 0
+                            for (var i = 0; i < fpsComboBox.count; i++) {
+                                var el_fps = parseInt(fpsListModel.get(i).video_fps);
+                                if (el_fps === saved_fps) {
+                                    currentIndex = i
+                                }
+                            }
+                        }
+
+                        id: fpsComboBox
+                        font.pointSize: 9
+                        textRole: "text"
+                        model: ListModel {
+                            id: fpsListModel
+                            ListElement {
+                                text: "30 FPS"
+                                video_fps: "30"
+                            }
+                            ListElement {
+                                text: "60 FPS"
+                                video_fps: "60"
+                            }
+                            // A higher value may be added at runtime
+                            // based on the attached display refresh rate
+                        }
+                        // ::onActivated must be used, as it only listens for when the index is changed by a human
+                        onActivated : {
+                            prefs.fps = parseInt(fpsListModel.get(currentIndex).video_fps)
+
+                            prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
+                            slider.value = prefs.bitrateKbps
+                        }
                     }
                 }
 
@@ -150,7 +179,7 @@ ScrollView {
 
                     stepSize: 500
                     from : 500
-                    to: 100000
+                    to: 150000
 
                     snapMode: "SnapOnRelease"
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)

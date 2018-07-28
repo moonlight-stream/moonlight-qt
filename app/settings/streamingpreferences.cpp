@@ -95,22 +95,16 @@ int StreamingPreferences::getMaximumStreamingFrameRate()
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
 {
-    if (width * height * fps <=  1280 * 720 * 30) {
-        return 5000;
+    if (width * height <= 1280 * 720) {
+        return static_cast<int>(5000 * (fps / 30.0));
     }
-    else if (width * height * fps <= 1280 * 720 * 60) {
-        return 10000;
+    else if (width * height <= 1920 * 1080) {
+        return static_cast<int>(10000 * (fps / 30.0));
     }
-    else if (width * height * fps <= 1920 * 1080 * 30) {
-        return 10000;
+    else if (width * height <= 2560 * 1440) {
+        return static_cast<int>(20000 * (fps / 30.0));
     }
-    else if (width * height * fps <= 1920 * 1080 * 60) {
-        return 20000;
-    }
-    else if (width * height * fps <= 3840 * 2160 * 30) {
-        return 40000;
-    }
-    else /* if (width * height * fps <= 3840 * 2160 * 60) */ {
-        return 80000;
+    else /* if (width * height <= 3840 * 2160) */ {
+        return static_cast<int>(40000 * (fps / 30.0));
     }
 }
