@@ -67,6 +67,32 @@ bool StreamingPreferences::hasAnyHardwareAcceleration()
                                               1920, 1080, 60);
 }
 
+int StreamingPreferences::getMaximumStreamingFrameRate()
+{
+    // Never let the maximum drop below 60 FPS
+    int maxFrameRate = 60;
+
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return maxFrameRate;
+    }
+
+    for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
+        SDL_DisplayMode mode;
+        if (SDL_GetCurrentDisplayMode(i, &mode) == 0) {
+            // Cap the frame rate at 90 FPS, since I can't seem to get
+            // much more out of GFE even with the game rendering at > 300 FPS.
+            maxFrameRate = qMax(maxFrameRate, qMin(90, mode.refresh_rate));
+        }
+    }
+
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+    return maxFrameRate;
+}
+
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
 {
     if (width * height * fps <=  1280 * 720 * 30) {

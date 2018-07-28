@@ -16,6 +16,8 @@ public:
 
     Q_INVOKABLE static bool hasAnyHardwareAcceleration();
 
+    Q_INVOKABLE static int getMaximumStreamingFrameRate();
+
     void reload();
 
     enum AudioConfig
