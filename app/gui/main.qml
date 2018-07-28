@@ -80,6 +80,9 @@ ApplicationWindow {
             }
 
             ToolButton {
+                // TODO: Implement gamepad mapping then unhide this button
+                visible: false
+
                 icon.source: "qrc:/res/ic_videogame_asset_white_48px.svg"
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
 
