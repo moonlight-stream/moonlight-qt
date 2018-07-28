@@ -6,6 +6,8 @@ Moonlight also has mobile versions for [Android](https://github.com/moonlight-st
 
 This client is currently still in development (pre-alpha), but the streaming performance is already much better than the older Moonlight Chrome client on many machines. Test releases may be available for your OS on the [Releases page](https://github.com/moonlight-stream/moonlight-qt/releases).
 
+You can follow development on our [Discord server](https://discord.gg/khm2vwJ).
+
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
  - Supports streaming at up to 90 FPS on high refresh rate monitors
