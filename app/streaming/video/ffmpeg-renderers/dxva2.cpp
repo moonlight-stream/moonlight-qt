@@ -87,6 +87,9 @@ bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context)
         return false;
     }
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Using DXVA2 accelerated renderer");
+
     return true;
 }
 

@@ -23,6 +23,10 @@ SdlRenderer::~SdlRenderer()
 bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
 {
     /* Nothing to do */
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Using SDL software renderer");
+
     return true;
 }
 

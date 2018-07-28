@@ -88,6 +88,10 @@ bool
 VAAPIRenderer::prepareDecoderContext(AVCodecContext* context)
 {
     context->hw_device_ctx = av_buffer_ref(m_HwContext);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Using VAAPI accelerated renderer");
+
     return true;
 }
 

@@ -142,6 +142,10 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
     s_SampleIndex = 0;
     s_PendingDrops = s_PendingHardDrops = 0;
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio stream has %d channels",
+                opusConfig->channelCount);
+
     return 0;
 }
 

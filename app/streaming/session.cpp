@@ -153,6 +153,9 @@ int Session::drSetup(int videoFormat, int width, int height, int frameRate, void
     // don't have to hide and show the SDL window (which seems to
     // cause pointer hiding to break on Windows).
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Video stream is %dx%dx%d (format 0x%x)",
+                width, height, frameRate, videoFormat);
+
     return 0;
 }
 
@@ -254,6 +257,7 @@ Session::Session(NvComputer* computer, NvApp& app)
     switch (m_Preferences.audioConfig)
     {
     case StreamingPreferences::AC_AUTO:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Autodetecting audio configuration");
         m_StreamConfig.audioConfiguration = sdlDetermineAudioConfiguration();
         break;
     case StreamingPreferences::AC_FORCE_STEREO:
@@ -263,6 +267,10 @@ Session::Session(NvComputer* computer, NvApp& app)
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
         break;
     }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio configuration: %d",
+                m_StreamConfig.audioConfiguration);
 
     switch (m_Preferences.videoCodecConfig)
     {
