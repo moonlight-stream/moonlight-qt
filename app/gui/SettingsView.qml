@@ -243,15 +243,15 @@ ScrollView {
                     model: ListModel {
                         id: audioListModel
                         ListElement {
-                            text: "Auto"
+                            text: "Autodetect"
                             val: StreamingPreferences.AC_AUTO
                         }
                         ListElement {
-                            text: "Force stereo"
+                            text: "Stereo"
                             val: StreamingPreferences.AC_FORCE_STEREO
                         }
                         ListElement {
-                            text: "Force 5.1 surround sound"
+                            text: "5.1 surround sound"
                             val: StreamingPreferences.AC_FORCE_SURROUND
                         }
                     }
@@ -367,7 +367,7 @@ ScrollView {
                     model: ListModel {
                         id: decoderListModel
                         ListElement {
-                            text: "Auto"
+                            text: "Automatic (Recommended)"
                             val: StreamingPreferences.VDS_AUTO
                         }
                         ListElement {
@@ -414,21 +414,24 @@ ScrollView {
                     model: ListModel {
                         id: codecListModel
                         ListElement {
-                            text: "Auto"
+                            text: "Automatic (Recommended)"
                             val: StreamingPreferences.VCC_AUTO
                         }
                         ListElement {
-                            text: "Force H264"
+                            text: "Force H.264"
                             val: StreamingPreferences.VCC_FORCE_H264
                         }
                         ListElement {
                             text: "Force HEVC"
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
-                        ListElement {
+                        // HDR seems to be broken in GFE 3.14.1, and even when that's fixed
+                        // we'll probably need to gate this feature on OS support in our
+                        // renderers.
+                        /* ListElement {
                             text: "Force HEVC HDR"
                             val: StreamingPreferences.VCC_FORCE_HEVC_HDR
-                        }
+                        } */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
