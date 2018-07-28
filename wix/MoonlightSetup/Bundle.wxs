@@ -33,8 +33,12 @@
     <?endif ?>
 
     <?if $(env.ARCH) ~= x64 ?>
-      <bal:Condition Message="This Moonlight installer requires a 64-bit OS.">
+      <bal:Condition Message="This Moonlight installer requires a 64-bit (x64) OS. Please download the 32-bit (x86) installer.">
         VersionNT64
+      </bal:Condition>
+    <?elseif $(env.ARCH) ~= x86 ?>
+      <bal:Condition Message="This Moonlight installer requires a 32-bit (x86) OS. Please download the 64-bit (x64) installer.">
+        NOT VersionNT64
       </bal:Condition>
     <?endif ?>
 
