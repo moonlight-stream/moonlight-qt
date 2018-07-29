@@ -195,6 +195,8 @@ GridView {
                                 errorDialog.open()
                             }
                         }
+                    } else if(!model.online) {
+                        pcContextMenu.open()
                     }
 
                 }
