@@ -8,6 +8,8 @@ This client is currently still in development (pre-alpha), but the streaming per
 
 You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
+ ![Windows AppVeyor Status](https://ci.appveyor.com/api/projects/status/glj5cxqwy2w3bglv/branch/master?svg=true)
+
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
  - Supports streaming at up to 90 FPS on high refresh rate monitors
