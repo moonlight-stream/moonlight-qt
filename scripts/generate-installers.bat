@@ -78,6 +78,12 @@ set VCREDIST_INSTALLER=%VS_PATH%\VC\Redist\MSVC\14.14.26405\vcredist_%ARCH%.exe
 msbuild %SOURCE_ROOT%\wix\Moonlight.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
 
+if /i "%APPVEYOR%"=="true" (
+    echo Pushing artifacts
+    appveyor PushArtifact %DEPLOY_FOLDER%
+    appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightSetup.exe -FileName MoonlightSetup-%ARCH%-%BUILD_CONFIG%.exe
+)
+
 echo Build successful!
 exit /b 0
 
