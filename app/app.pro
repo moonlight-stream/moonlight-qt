@@ -185,16 +185,15 @@ unix:!macx: {
 
     INSTALLS += target desktop icons appdata
 }
-
 win32 {
     RC_ICONS = moonlight.ico
 }
-
 macx {
     QMAKE_INFO_PLIST = $$PWD/Info.plist
-    APP_QML_FILES.files = res/macos.icns
-    APP_QML_FILES.path = Contents/Resources
-    QMAKE_BUNDLE_DATA += APP_QML_FILES
+
+    APP_BUNDLE_RESOURCES.files = moonlight.icns
+    APP_BUNDLE_RESOURCES.path = Contents/Resources
+    QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES
 }
 
 VERSION = 0.0.3
