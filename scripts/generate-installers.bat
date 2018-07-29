@@ -6,17 +6,22 @@ setlocal enableDelayedExpansion
 set BUILD_CONFIG=%1
 set ARCH=%2
 
-if /I "%BUILD_CONFIG%" NEQ "debug" (
-    if /I "%BUILD_CONFIG%" NEQ "release" (
+rem Convert to lower case for windeployqt
+if /I "%BUILD_CONFIG%"=="debug" (
+    set BUILD_CONFIG=debug
+) else (
+    if /I "%BUILD_CONFIG%"=="release" (
+        set BUILD_CONFIG=release
+    ) else (
         echo Invalid build configuration
-        goto Error
+        exit /b 1
     )
 )
 
 if /I "%ARCH%" NEQ "x86" (
     if /I "%ARCH%" NEQ "x64" (
         echo Invalid build architecture
-        goto Error
+        exit /b 1
     )
 )
 
