@@ -5,8 +5,12 @@ git:
 
 matrix:
   include:
-    - sudo: required
+    - os: osx
+      compiler: clang
+    - os: linux
+      sudo: required
       dist: xenial
+      compiler: gcc
       addons:
         apt:
           sources:
@@ -18,10 +22,19 @@ matrix:
             - libesd0-dev
             - libgl-dev
 
-script:
-    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then source /opt/qt59/bin/qt59-env.sh; fi
+install:
+    - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5'
+    - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
     - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_VER=2.0.8 && wget https://www.libsdl.org/release/SDL2-$SDL2_VER.tar.gz && tar -xvf SDL2-$SDL2_VER.tar.gz && cd SDL2-$SDL2_VER && ./configure && make && sudo make install && cd ..; fi
-    - if [[ "$CC" == "gcc" ]]; then qmake moonlight-qt.pro -spec linux-g++; fi
-    - if [[ "$CC" == "clang" ]]; then qmake moonlight-qt.pro -spec linux-clang; fi
+
+before_script:
+    - '[ "$TRAVIS_OS_NAME" != "linux" ] || source /opt/qt59/bin/qt59-env.sh'
+    - qmake -v
+    - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
+    - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
+    - '[ "$TRAVIS_OS_NAME" != osx ]                          || export QMAKESPEC=macx-clang'
+
+script:
+    - qmake moonlight-qt.pro -spec $QMAKESPEC
     - make debug
     - make release
