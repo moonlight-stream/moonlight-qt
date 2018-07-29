@@ -142,44 +142,66 @@ GridView {
             horizontalAlignment: Text.AlignHCenter
         }
 
+        Menu {
+            id: pcContextMenu
+            MenuItem {
+                text: "Wake PC"
+                onTriggered: computerModel.wakeComputer(index)
+            }
+            MenuItem {
+                text: "Delete PC"
+                onTriggered: {
+                    deletePcDialog.pcIndex = index
+                    // get confirmation first, actual closing is called from the dialog
+                    deletePcDialog.open()
+                }
+            }
+        }
+
         MouseArea {
             anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton;
             onClicked: {
-                if (model.addPc) {
-                    addPcDialog.open()
-                }
-                else if (model.online) {
-                    if (model.paired) {
-                        // go to game view
-                        var component = Qt.createComponent("AppView.qml")
-                        var appView = component.createObject(stackView)
-                        appView.computerIndex = index
-                        appView.objectName = model.name
-                        stackView.push(appView)
+                if(mouse.button === Qt.LeftButton) {
+                    if (model.addPc) {
+                        addPcDialog.open()
                     }
-                    else {
-                        if (!model.busy) {
-                            var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
-
-                            // Stop polling, since pairing may make GFE unresponsive
-                            ComputerManager.stopPollingAsync()
-
-                            // Kick off pairing in the background
-                            computerModel.pairComputer(index, pin)
-
-                            // Display the pairing dialog
-                            pairDialog.pin = pin
-                            pairDialog.open()
+                    else if (model.online) {
+                        if (model.paired) {
+                            // go to game view
+                            var component = Qt.createComponent("AppView.qml")
+                            var appView = component.createObject(stackView)
+                            appView.computerIndex = index
+                            appView.objectName = model.name
+                            stackView.push(appView)
                         }
                         else {
-                            // cannot pair while something is streaming or attempting to pair
-                            errorDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
-                            errorDialog.open()
+                            if (!model.busy) {
+                                var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
+
+                                // Stop polling, since pairing may make GFE unresponsive
+                                ComputerManager.stopPollingAsync()
+
+                                // Kick off pairing in the background
+                                computerModel.pairComputer(index, pin)
+
+                                // Display the pairing dialog
+                                pairDialog.pin = pin
+                                pairDialog.open()
+                            }
+                            else {
+                                // cannot pair while something is streaming or attempting to pair
+                                errorDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
+                                errorDialog.open()
+                            }
                         }
                     }
+
                 }
-                else {
-                    // TODO: Wake on LAN and delete PC options
+                else { // right click
+                    if(!model.addPc) { // but only for actual PCs, not the add-pc option
+                        pcContextMenu.open()
+                    }
                 }
             }
         }
@@ -217,6 +239,22 @@ GridView {
             // FIXME: We should interrupt pairing here
         }
     }
+
+    MessageDialog {
+        id: deletePcDialog
+        // don't allow edits to the rest of the window while open
+        modality:Qt.WindowModal
+        property int pcIndex : -1;
+        text:"Are you sure you want to unpair from this PC?"
+        standardButtons: StandardButton.Yes |StandardButton.No
+        onYes: {
+            console.log("deleting PC pairing for PC at index: " + pcIndex)
+            computerModel.deleteComputer(pcIndex);
+            // hack to remove the child from the gridview
+            model = createModel()
+        }
+    }
+
 
     Dialog {
         id: addPcDialog
