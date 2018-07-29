@@ -9,6 +9,7 @@ This client is currently still in development (pre-alpha), but the streaming per
 You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
  [![Windows AppVeyor Status](https://ci.appveyor.com/api/projects/status/glj5cxqwy2w3bglv/branch/master?svg=true)](https://ci.appveyor.com/project/cgutman/moonlight-qt/branch/master)
+ [![Mac and Linux Travis CI Status](https://travis-ci.org/moonlight-stream/moonlight-qt.svg?branch=master)](https://travis-ci.org/moonlight-stream/moonlight-qt)
 
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
