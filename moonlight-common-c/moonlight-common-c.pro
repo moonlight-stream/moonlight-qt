@@ -9,6 +9,9 @@ QT -= core gui
 TARGET = moonlight-common-c
 TEMPLATE = lib
 
+# Support debug and release builds from command line for CI
+CONFIG += debug_and_release
+
 win32 {
     INCLUDEPATH += $$PWD/../libs/windows/include
 }

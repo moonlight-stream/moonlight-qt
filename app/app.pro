@@ -8,6 +8,9 @@ unix:!macx {
     TARGET = Moonlight
 }
 
+# Support debug and release builds from command line for CI
+CONFIG += debug_and_release
+
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use

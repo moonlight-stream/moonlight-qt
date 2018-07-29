@@ -4,6 +4,9 @@ QT += network
 TARGET = qmdnsengine
 TEMPLATE = lib
 
+# Support debug and release builds from command line for CI
+CONFIG += debug_and_release
+
 QMDNSE_DIR = $$PWD/qmdnsengine/src
 DEFINES += \
     QT_NO_SIGNALS_SLOTS_KEYWORDS

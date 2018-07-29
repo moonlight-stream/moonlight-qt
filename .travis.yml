@@ -1,0 +1,27 @@
+language: cpp
+
+git:
+  depth: 1
+
+matrix:
+  include:
+    - sudo: required
+      dist: xenial
+      addons:
+        apt:
+          sources:
+            - sourceline: 'ppa:beineri/opt-qt596-xenial'
+          packages:
+            - qt59base
+            - qt59quickcontrols2
+            - qt59svg
+            - libesd0-dev
+            - libgl-dev
+
+script:
+    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then source /opt/qt59/bin/qt59-env.sh; fi
+    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_VER=2.0.8 && wget https://www.libsdl.org/release/SDL2-$SDL2_VER.tar.gz && tar -xvf SDL2-$SDL2_VER.tar.gz && cd SDL2-$SDL2_VER && ./configure && make && sudo make install && cd ..; fi
+    - if [[ "$CC" == "gcc" ]]; then qmake moonlight-qt.pro -spec linux-g++; fi
+    - if [[ "$CC" == "clang" ]]; then qmake moonlight-qt.pro -spec linux-clang; fi
+    - make debug
+    - make release

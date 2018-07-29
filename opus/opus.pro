@@ -3,6 +3,9 @@ QT -= core gui
 TARGET = opus
 TEMPLATE = lib
 
+# Support debug and release builds from command line for CI
+CONFIG += debug_and_release
+
 OPUS_DIR = $$PWD/opus
 DEFINES += \
     USE_ALLOCA=1 \
