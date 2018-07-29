@@ -37,8 +37,8 @@ win32 {
     LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib
 }
 macx {
-    INCLUDEPATH += $$PWD/../libs/mac/include
-    LIBS += -L$$PWD/../libs/mac/lib
+    INCLUDEPATH += $$PWD/../libs/mac/include $$PWD/../libs/mac/Frameworks/SDL2.framework/Versions/A/Headers
+    LIBS += -L$$PWD/../libs/mac/lib -F$$PWD/../libs/mac/Frameworks
 }
 
 unix:!macx {
@@ -60,7 +60,7 @@ win32 {
     CONFIG += ffmpeg
 }
 macx {
-    LIBS += -lssl -lcrypto -lSDL2 -lavcodec.58 -lavutil.56
+    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -framework SDL2
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
     CONFIG += ffmpeg
 }
