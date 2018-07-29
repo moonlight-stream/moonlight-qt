@@ -6,15 +6,15 @@ setlocal enableDelayedExpansion
 set BUILD_CONFIG=%1
 set ARCH=%2
 
-if "%BUILD_CONFIG%" NEQ "debug" (
-    if "%BUILD_CONFIG%" NEQ "release" (
+if /I "%BUILD_CONFIG%" NEQ "debug" (
+    if /I "%BUILD_CONFIG%" NEQ "release" (
         echo Invalid build configuration
         goto Error
     )
 )
 
-if "%ARCH%" NEQ "x86" (
-    if "%ARCH%" NEQ "x64" (
+if /I "%ARCH%" NEQ "x86" (
+    if /I "%ARCH%" NEQ "x64" (
         echo Invalid build architecture
         goto Error
     )
@@ -78,4 +78,4 @@ exit /b 0
 
 :Error
 echo Build failed!
-exit /b %ERRORLEVEL%
+exit /b !ERRORLEVEL!
