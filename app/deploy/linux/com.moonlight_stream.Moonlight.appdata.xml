@@ -25,6 +25,11 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.0.4" date="2018-07-29">
+			<description>
+				<p>Initial pre-alpha release for Linux. Please file bugs!</p>
+			</description>
+		</release>
 	</releases>
 
 	<categories>
