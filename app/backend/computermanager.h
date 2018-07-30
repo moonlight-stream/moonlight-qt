@@ -148,31 +148,26 @@ private:
         int pollsSinceLastAppListFetch = POLLS_PER_APPLIST_FETCH;
         while (!isInterruptionRequested()) {
             bool stateChanged = false;
-            for (int i = 0; i < TRIES_BEFORE_OFFLINING; i++) {
+            bool online = false;
+            for (int i = 0; i < TRIES_BEFORE_OFFLINING && !online; i++) {
                 for (auto& address : m_Computer->uniqueAddresses()) {
                     if (isInterruptionRequested()) {
                         return;
                     }
 
                     if (tryPollComputer(address, stateChanged)) {
+                        online = true;
                         break;
                     }
-                }
-
-                // No need to continue retrying if we're online
-                if (m_Computer->state == NvComputer::CS_ONLINE) {
-                    break;
                 }
             }
 
             // Check if we failed after all retry attempts
             // Note: we don't need to acquire the read lock here,
             // because we're on the writing thread.
-            if (m_Computer->state != NvComputer::CS_ONLINE) {
-                if (m_Computer->state != NvComputer::CS_OFFLINE) {
-                    m_Computer->state = NvComputer::CS_OFFLINE;
-                    stateChanged = true;
-                }
+            if (!online && m_Computer->state != NvComputer::CS_OFFLINE) {
+                m_Computer->state = NvComputer::CS_OFFLINE;
+                stateChanged = true;
             }
 
             // Grab the applist if it's empty or it's been long enough that we need to refresh
