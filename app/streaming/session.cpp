@@ -13,10 +13,10 @@
 #include "video/sl.h"
 #endif
 
-#ifdef Q_OS_WIN32
-// Using full-screen desktop allows us to avoid needing to enable V-sync
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
+// Using full-screen desktop allows us to avoid needing to enable V-sync on Windows
 // and it also avoids some strange flickering issues on my Win7 test machine
-// with Intel HD 5500 graphics.
+// with Intel HD 5500 graphics. It also allows Spaces to work on macOS.
 #define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN_DESKTOP
 #else
 #define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN
