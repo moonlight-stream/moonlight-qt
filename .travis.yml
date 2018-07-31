@@ -21,6 +21,7 @@ matrix:
             - qt59svg
             - libesd0-dev
             - libgl-dev
+            - libopus-dev
 
 install:
     - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5'

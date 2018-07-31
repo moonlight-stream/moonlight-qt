@@ -1,9 +1,6 @@
 [submodule "moonlight-common-c/moonlight-common-c"]
 	path = moonlight-common-c/moonlight-common-c
 	url = https://github.com/moonlight-stream/moonlight-common-c.git
-[submodule "opus/opus"]
-	path = opus/opus
-	url = https://github.com/xiph/opus.git
 [submodule "qmdnsengine/qmdnsengine"]
 	path = qmdnsengine/qmdnsengine
 	url = https://github.com/cgutman/qmdnsengine.git

@@ -43,7 +43,7 @@ macx {
 
 unix:!macx {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl sdl2
+    PKGCONFIG += openssl sdl2 opus
     LIBS += -ldl
 
     packagesExist(libavcodec) {
@@ -56,11 +56,11 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil
+    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus
     CONFIG += ffmpeg
 }
 macx {
-    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -framework SDL2
+    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -framework SDL2
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
     CONFIG += ffmpeg
 }
@@ -149,13 +149,6 @@ else:unix: LIBS += -L$$OUT_PWD/../moonlight-common-c/ -lmoonlight-common-c
 
 INCLUDEPATH += $$PWD/../moonlight-common-c/moonlight-common-c/src
 DEPENDPATH += $$PWD/../moonlight-common-c/moonlight-common-c/src
-
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../opus/release/ -lopus
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../opus/debug/ -lopus
-else:unix: LIBS += -L$$OUT_PWD/../opus/ -lopus
-
-INCLUDEPATH += $$PWD/../opus/opus/include
-DEPENDPATH += $$PWD/../opus/opus/include
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../qmdnsengine/release/ -lqmdnsengine
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../qmdnsengine/debug/ -lqmdnsengine
