@@ -647,6 +647,12 @@ void Session::exec()
     SDL_SetRelativeMouseMode(SDL_TRUE);
 #endif
 
+    // Stop text input. SDL enables it by default
+    // when we initialize the video subsystem, but this
+    // causes an IME popup when certain keys are held down
+    // on macOS.
+    SDL_StopTextInput();
+
     // Disable the screen saver
     SDL_DisableScreenSaver();
 
