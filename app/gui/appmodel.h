@@ -25,6 +25,12 @@ public:
 
     Q_INVOKABLE Session* createSessionForApp(int appIndex);
 
+    Q_INVOKABLE int getRunningAppIndex();
+
+    Q_INVOKABLE QString getRunningAppName();
+
+    Q_INVOKABLE void quitRunningApp();
+
     QVariant data(const QModelIndex &index, int role) const override;
 
     int rowCount(const QModelIndex &parent) const override;

@@ -19,6 +19,32 @@ void AppModel::initialize(ComputerManager* computerManager, int computerIndex)
     m_CurrentGameId = m_Computer->currentGameId;
 }
 
+int AppModel::getRunningAppIndex()
+{
+    if (m_CurrentGameId != 0) {
+        for (int i = 0; i < m_Apps.count(); i++) {
+            if (m_Apps[i].id == m_CurrentGameId) {
+                return i;
+            }
+        }
+    }
+
+    return -1;
+}
+
+QString AppModel::getRunningAppName()
+{
+    if (m_CurrentGameId != 0) {
+        for (int i = 0; i < m_Apps.count(); i++) {
+            if (m_Apps[i].id == m_CurrentGameId) {
+                return m_Apps[i].name;
+            }
+        }
+    }
+
+    return nullptr;
+}
+
 Session* AppModel::createSessionForApp(int appIndex)
 {
     Q_ASSERT(appIndex < m_Apps.count());
@@ -68,6 +94,11 @@ QHash<int, QByteArray> AppModel::roleNames() const
     names[BoxArtRole] = "boxart";
 
     return names;
+}
+
+void AppModel::quitRunningApp()
+{
+    m_ComputerManager->quitRunningApp(m_Computer);
 }
 
 void AppModel::handleComputerStateChanged(NvComputer* computer)

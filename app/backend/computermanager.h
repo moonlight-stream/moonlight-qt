@@ -16,9 +16,13 @@
 class NvComputer
 {
     friend class PcMonitorThread;
+    friend class ComputerManager;
+    friend class PendingQuitTask;
 
 private:
     void sortAppList();
+
+    bool pendingQuit;
 
 public:
     explicit NvComputer(QString address, QString serverInfo);
@@ -254,6 +258,8 @@ public:
 
     void pairHost(NvComputer* computer, QString pin);
 
+    void quitRunningApp(NvComputer* computer);
+
     QVector<NvComputer*> getComputers();
 
     // computer is deleted inside this call
@@ -265,6 +271,8 @@ signals:
     void pairingCompleted(NvComputer* computer, QString error);
 
     void computerAddCompleted(QVariant success);
+
+    void quitAppCompleted(QString error);
 
 private slots:
     void handleComputerStateChanged(NvComputer* computer);
@@ -331,6 +339,51 @@ private:
 
     NvComputer* m_Computer;
     QString m_Pin;
+};
+
+class PendingQuitTask : public QObject, public QRunnable
+{
+    Q_OBJECT
+
+public:
+    PendingQuitTask(ComputerManager* computerManager, NvComputer* computer)
+        : m_Computer(computer)
+    {
+        connect(this, &PendingQuitTask::quitAppFailed,
+                computerManager, &ComputerManager::quitAppCompleted);
+    }
+
+signals:
+    void quitAppFailed(QString error);
+
+private:
+    void run()
+    {
+        NvHTTP http(m_Computer->activeAddress);
+
+        try {
+            if (m_Computer->currentGameId != 0) {
+                http.quitApp();
+
+                if (http.getCurrentGame(http.getServerInfo()) != 0) {
+                    {
+                        QWriteLocker lock(&m_Computer->lock);
+                        m_Computer->pendingQuit = false;
+                    }
+                    emit quitAppFailed("Unable to quit game that wasn't started by this computer. "
+                                       "You must quit the game on the host PC manually or use the device that originally started the game.");
+                }
+            }
+        } catch (const GfeHttpResponseException& e) {
+            {
+                QWriteLocker lock(&m_Computer->lock);
+                m_Computer->pendingQuit = false;
+            }
+            emit quitAppFailed(e.toQString());
+        }
+    }
+
+    NvComputer* m_Computer;
 };
 
 class PendingAddTask : public QObject, public QRunnable

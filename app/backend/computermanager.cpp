@@ -446,6 +446,15 @@ void ComputerManager::pairHost(NvComputer* computer, QString pin)
     QThreadPool::globalInstance()->start(pairing);
 }
 
+void ComputerManager::quitRunningApp(NvComputer* computer)
+{
+    QWriteLocker lock(&computer->lock);
+    computer->pendingQuit = true;
+
+    PendingQuitTask* quit = new PendingQuitTask(this, computer);
+    QThreadPool::globalInstance()->start(quit);
+}
+
 void ComputerManager::stopPollingAsync()
 {
     QWriteLocker lock(&m_Lock);
@@ -496,6 +505,11 @@ void
 ComputerManager::handleComputerStateChanged(NvComputer* computer)
 {
     emit computerStateChanged(computer);
+
+    if (computer->pendingQuit && computer->currentGameId == 0) {
+        computer->pendingQuit = false;
+        emit quitAppCompleted(nullptr);
+    }
 
     // Save updated hosts to QSettings
     saveHosts();
