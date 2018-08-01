@@ -13,8 +13,13 @@ if /I "%BUILD_CONFIG%"=="debug" (
     if /I "%BUILD_CONFIG%"=="release" (
         set BUILD_CONFIG=release
     ) else (
-        echo Invalid build configuration
-        exit /b 1
+        if /I "%BUILD_CONFIG%"=="signed-release" (
+            set BUILD_CONFIG=release
+            set SIGN=1
+        ) else (
+            echo Invalid build configuration
+            exit /b 1
+        )
     )
 )
 
@@ -26,6 +31,7 @@ if /I "%ARCH%" NEQ "x86" (
 )
 
 set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community
+set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 1B3C676E831A94EC0327C3347EB32C68C26B3A67 /v
 
 call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
@@ -66,22 +72,42 @@ windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\ap
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Harvesting files for WiX
-heat dir %DEPLOY_FOLDER% -srd -sfrag -ag -sw5150 -cg MoonlightDependencies -var var.SourceDir -dr INSTALLFOLDER -out %BUILD_FOLDER%\Dependencies.wxs
+"%WIX%\bin\heat" dir %DEPLOY_FOLDER% -srd -sfrag -ag -sw5150 -cg MoonlightDependencies -var var.SourceDir -dr INSTALLFOLDER -out %BUILD_FOLDER%\Dependencies.wxs
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Copying application binary to deployment directory
 copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
+if "%SIGN%"=="1" (
+    echo Signing deployed binaries
+    for /r "%DEPLOY_FOLDER%" %%f in (*.dll *.exe) do (
+        signtool %SIGNTOOL_PARAMS% %%f
+        if !ERRORLEVEL! NEQ 0 goto Error
+    )
+)
+
 echo Building installer
 set VCREDIST_INSTALLER=%VS_PATH%\VC\Redist\MSVC\14.14.26405\vcredist_%ARCH%.exe
 msbuild %SOURCE_ROOT%\wix\Moonlight.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
 
+if "%SIGN%"=="1" (
+    echo Signing installer binary
+    "%WIX%\bin\insignia" -ib %INSTALLER_FOLDER%\MoonlightSetup.exe -o %BUILD_FOLDER%\engine.exe
+    if !ERRORLEVEL! NEQ 0 goto Error
+    signtool %SIGNTOOL_PARAMS% %BUILD_FOLDER%\engine.exe
+    if !ERRORLEVEL! NEQ 0 goto Error
+    "%WIX%\bin\insignia" -ab %BUILD_FOLDER%\engine.exe %INSTALLER_FOLDER%\MoonlightSetup.exe -o %INSTALLER_FOLDER%\MoonlightSetup.exe
+    if !ERRORLEVEL! NEQ 0 goto Error
+    signtool %SIGNTOOL_PARAMS% %INSTALLER_FOLDER%\MoonlightSetup.exe
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
+
 if /i "%APPVEYOR%"=="true" (
     echo Pushing artifacts
-    appveyor PushArtifact %DEPLOY_FOLDER%
     appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightSetup.exe -FileName MoonlightSetup-%ARCH%-%BUILD_CONFIG%.exe
+    if !ERRORLEVEL! NEQ 0 goto Error
 )
 
 echo Build successful!
