@@ -24,6 +24,7 @@ public:
 private:
     bool initializeDecoder();
     bool initializeRenderer();
+    bool isDecoderBlacklisted();
 
     static
     AVBufferRef* ffPoolAlloc(void* opaque, int size);

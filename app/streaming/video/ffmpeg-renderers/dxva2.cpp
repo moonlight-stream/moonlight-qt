@@ -129,6 +129,10 @@ bool DXVA2Renderer::initializeDecoder()
 {
     HRESULT hr;
 
+    if (isDecoderBlacklisted()) {
+        return false;
+    }
+
     hr = DXVA2CreateVideoService(m_Device, IID_IDirectXVideoDecoderService,
                                  reinterpret_cast<void**>(&m_DecService));
     if (FAILED(hr)) {
@@ -350,6 +354,103 @@ bool DXVA2Renderer::initializeRenderer()
     }
 
     return true;
+}
+
+bool DXVA2Renderer::isDecoderBlacklisted()
+{
+    IDirect3D9* d3d9;
+    HRESULT hr;
+    bool result = false;
+
+    // TODO: Update for HEVC Main10
+    SDL_assert(m_VideoFormat != VIDEO_FORMAT_H265_MAIN10);
+
+    hr = m_Device->GetDirect3D(&d3d9);
+    if (SUCCEEDED(hr)) {
+        D3DCAPS9 caps;
+
+        hr = m_Device->GetDeviceCaps(&caps);
+        if (SUCCEEDED(hr)) {
+            D3DADAPTER_IDENTIFIER9 id;
+
+            hr = d3d9->GetAdapterIdentifier(caps.AdapterOrdinal, 0, &id);
+            if (SUCCEEDED(hr)) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Detected GPU: %s (%x:%x)",
+                            id.Description,
+                            id.VendorId,
+                            id.DeviceId);
+
+                if (id.VendorId == 0x8086) {
+                    // Intel seems to encode the series in the high byte of
+                    // the device ID. We want to avoid the "Partial" acceleration
+                    // support explicitly. Those will claim to have HW acceleration
+                    // but perform badly.
+                    // https://en.wikipedia.org/wiki/Intel_Graphics_Technology#Capabilities_(GPU_video_acceleration)
+                    // https://raw.githubusercontent.com/GameTechDev/gpudetect/master/IntelGfx.cfg
+                    switch (id.DeviceId & 0xFF00) {
+                    case 0x0400: // Haswell
+                    case 0x0A00: // Haswell
+                    case 0x0D00: // Haswell
+                    case 0x1600: // Broadwell
+                    case 0x2200: // Cherry Trail and Braswell
+                        // Blacklist these for HEVC to avoid hybrid decode
+                        result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
+                        break;
+                    default:
+                        // Everything else is fine with whatever it says it supports
+                        result = false;
+                        break;
+                    }
+                }
+                else if (id.VendorId == 0x10DE) {
+                    // For NVIDIA, we wait to avoid those GPUs with Feature Set E
+                    // for HEVC decoding, since that's hybrid.
+                    // https://en.wikipedia.org/wiki/Nvidia_PureVideo
+                    // http://envytools.readthedocs.io/en/latest/hw/pciid.html (missing GM200)
+                    if ((id.DeviceId >= 0x1340 && id.DeviceId <= 0x137F) || // GM108
+                            (id.DeviceId >= 0x1380 && id.DeviceId <= 0x13BF) || // GM107
+                            (id.DeviceId >= 0x13C0 && id.DeviceId <= 0x13FF) || // GM204
+                            (id.DeviceId >= 0x1617 && id.DeviceId <= 0x161A) || // GM204
+                            (id.DeviceId == 0x1667) || // GM204
+                            (id.DeviceId >= 0x17C0 && id.DeviceId <= 0x17FF)) { // GM200
+                        // Avoid HEVC on Feature Set E GPUs
+                        result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
+                    }
+                    else {
+                        result = false;
+                    }
+                }
+                else if (id.VendorId == 0x1DA2) {
+                    // AMD doesn't seem to do hybrid acceleration?
+                    result = false;
+                }
+                else {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Unrecognized vendor ID: %x",
+                                id.VendorId);
+                }
+            }
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "GetDeviceCaps() failed: %x", hr);
+        }
+
+        d3d9->Release();
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "GetDirect3D() failed: %x", hr);
+    }
+
+    if (result) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "GPU blacklisted for format %x",
+                    m_VideoFormat);
+    }
+
+    return result;
 }
 
 bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height)
