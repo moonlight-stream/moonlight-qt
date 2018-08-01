@@ -147,6 +147,8 @@ GridView {
             MenuItem {
                 text: "Wake PC"
                 onTriggered: computerModel.wakeComputer(index)
+                visible: !model.online && model.wakeable
+                height: visible ? implicitHeight : 0
             }
             MenuItem {
                 text: "Delete PC"
@@ -247,7 +249,7 @@ GridView {
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
         property int pcIndex : -1;
-        text:"Are you sure you want to unpair from this PC?"
+        text:"Are you sure you want to remove this PC?"
         standardButtons: StandardButton.Yes |StandardButton.No
         onYes: {
             console.log("deleting PC pairing for PC at index: " + pcIndex)
@@ -256,7 +258,6 @@ GridView {
             model = createModel()
         }
     }
-
 
     Dialog {
         id: addPcDialog

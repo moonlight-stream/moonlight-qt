@@ -13,6 +13,7 @@ class ComputerModel : public QAbstractListModel
         OnlineRole,
         PairedRole,
         BusyRole,
+        WakeableRole,
         AddPcRole
     };
 

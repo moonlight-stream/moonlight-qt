@@ -46,6 +46,8 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return computer->pairState == NvComputer::PS_PAIRED;
     case BusyRole:
         return computer->currentGameId != 0;
+    case WakeableRole:
+        return !computer->macAddress.isEmpty();
     case AddPcRole:
         return false;
     default:
@@ -74,6 +76,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[PairedRole] = "paired";
     names[BusyRole] = "busy";
     names[AddPcRole] = "addPc";
+    names[WakeableRole] = "wakeable";
 
     return names;
 }
