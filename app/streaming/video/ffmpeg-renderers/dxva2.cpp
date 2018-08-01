@@ -421,7 +421,7 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                         result = false;
                     }
                 }
-                else if (id.VendorId == 0x1DA2) {
+                else if (id.VendorId == 0x1002) {
                     // AMD doesn't seem to do hybrid acceleration?
                     result = false;
                 }
