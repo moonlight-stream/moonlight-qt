@@ -81,7 +81,7 @@ GridView {
         return model
     }
 
-    model: createModel()
+    model: computerModel
 
     delegate: Item {
         width: 300; height: 300;
@@ -250,12 +250,10 @@ GridView {
         modality:Qt.WindowModal
         property int pcIndex : -1;
         text:"Are you sure you want to remove this PC?"
-        standardButtons: StandardButton.Yes |StandardButton.No
+        standardButtons: StandardButton.Yes | StandardButton.No
         onYes: {
             console.log("deleting PC pairing for PC at index: " + pcIndex)
             computerModel.deleteComputer(pcIndex);
-            // hack to remove the child from the gridview
-            model = createModel()
         }
     }
 
