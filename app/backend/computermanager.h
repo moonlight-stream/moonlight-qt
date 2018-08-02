@@ -364,22 +364,20 @@ private:
         try {
             if (m_Computer->currentGameId != 0) {
                 http.quitApp();
-
-                if (http.getCurrentGame(http.getServerInfo()) != 0) {
-                    {
-                        QWriteLocker lock(&m_Computer->lock);
-                        m_Computer->pendingQuit = false;
-                    }
-                    emit quitAppFailed("Unable to quit game that wasn't started by this computer. "
-                                       "You must quit the game on the host PC manually or use the device that originally started the game.");
-                }
             }
         } catch (const GfeHttpResponseException& e) {
             {
                 QWriteLocker lock(&m_Computer->lock);
                 m_Computer->pendingQuit = false;
             }
-            emit quitAppFailed(e.toQString());
+            if (e.getStatusCode() == 599) {
+                // 599 is a special code we make a custom message for
+                emit quitAppFailed("The running game wasn't started by this PC. "
+                                   "You must quit the game on the host PC manually or use the device that originally started the game.");
+            }
+            else {
+                emit quitAppFailed(e.toQString());
+            }
         }
     }
 
