@@ -51,6 +51,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->appVersion = nullptr;
     this->maxLumaPixelsHEVC = 0;
     this->serverCodecModeSupport = 0;
+    this->pendingQuit = false;
 }
 
 void
@@ -135,6 +136,7 @@ NvComputer::NvComputer(QString address, QString serverInfo)
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
     this->activeAddress = address;
     this->state = NvComputer::CS_ONLINE;
+    this->pendingQuit = false;
 }
 
 bool NvComputer::wake()
@@ -508,7 +510,7 @@ ComputerManager::handleComputerStateChanged(NvComputer* computer)
 
     if (computer->pendingQuit && computer->currentGameId == 0) {
         computer->pendingQuit = false;
-        emit quitAppCompleted(nullptr);
+        emit quitAppCompleted(QVariant());
     }
 
     // Save updated hosts to QSettings

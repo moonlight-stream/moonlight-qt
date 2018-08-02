@@ -6,5 +6,6 @@
         <file>gui/SettingsView.qml</file>
         <file>gui/StreamSegue.qml</file>
         <file>gui/GamepadMapper.qml</file>
+        <file>gui/QuitSegue.qml</file>
     </qresource>
 </RCC>

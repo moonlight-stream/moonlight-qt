@@ -6,8 +6,8 @@ import Session 1.0
 
 Item {
     property Session session
-    property string appname
-    property string stageText : "Starting " + appname + "..."
+    property string appName
+    property string stageText : "Starting " + appName + "..."
 
     anchors.fill: parent
 

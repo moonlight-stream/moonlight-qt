@@ -1,4 +1,5 @@
 import QtQuick 2.9
+import QtQuick.Dialogs 1.3
 import QtQuick.Controls 2.2
 
 import AppModel 1.0
@@ -50,12 +51,6 @@ GridView {
     delegate: Item {
         width: 200; height: 300;
 
-        Component.onCompleted: {
-            if (model.running) {
-                appNameText.text = "<font color=\"green\">Running</font><font color=\"white\"> - </font>" + appNameText.text
-            }
-        }
-
         Image {
             id: appIcon
             anchors.horizontalCenter: parent.horizontalCenter;
@@ -68,7 +63,15 @@ GridView {
 
         Text {
             id: appNameText
-            text: model.name
+            text: {
+                if (model.running) {
+                    return "<font color=\"green\">Running</font><font color=\"white\"> - </font>" + model.name
+                }
+                else {
+                    return model.name
+                }
+            }
+
             color: "white"
 
             width: parent.width
@@ -80,16 +83,86 @@ GridView {
             elide: Text.ElideRight
         }
 
+        function launchOrResumeSelectedApp()
+        {
+            var runningIndex = appModel.getRunningAppIndex()
+            if (runningIndex >= 0 && runningIndex !== index) {
+                quitAppDialog.appName = appModel.getRunningAppName()
+                quitAppDialog.segueToStream = true
+                quitAppDialog.open()
+                return
+            }
+
+            var component = Qt.createComponent("StreamSegue.qml")
+            var segue = component.createObject(stackView)
+            segue.appName = model.name
+            segue.session = appModel.createSessionForApp(index)
+            stackView.push(segue)
+        }
+
+        MessageDialog {
+            id: quitAppDialog
+            modality:Qt.WindowModal
+            property string appName : "";
+            property bool segueToStream : false
+            text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
+            standardButtons: StandardButton.Yes | StandardButton.No
+            onYes: {
+                var component = Qt.createComponent("QuitSegue.qml")
+                var segue = component.createObject(stackView)
+                segue.appName = appName
+                if (segueToStream) {
+                    // Store the session and app name if we're going to stream after
+                    // successfully quitting the old app.
+                    segue.nextAppName = model.name
+                    segue.nextSession = appModel.createSessionForApp(index)
+                }
+                else {
+                    segue.nextAppName = null
+                    segue.nextSession = null
+                }
+
+                stackView.push(segue)
+
+                // Trigger the quit after pushing the quit segue on screen
+                appModel.quitRunningApp()
+            }
+        }
+
         MouseArea {
             anchors.fill: parent
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             onClicked: {
-                // TODO: Check if a different game is running
+                if (mouse.button === Qt.LeftButton) {
+                    // Nothing is running or this app is running
+                    launchOrResumeSelectedApp()
+                }
+                else {
+                    // Right click
+                    appContextMenu.open()
+                }
+            }
+        }
 
-                var component = Qt.createComponent("StreamSegue.qml")
-                var segue = component.createObject(stackView)
-                segue.appname = model.name
-                segue.session = appModel.createSessionForApp(index)
-                stackView.push(segue)
+        Menu {
+            id: appContextMenu
+            MenuItem {
+                text: model.running ? "Resume Game" : "Launch Game"
+                onTriggered: {
+                    appContextMenu.close()
+                    launchOrResumeSelectedApp()
+                }
+                height: visible ? implicitHeight : 0
+            }
+            MenuItem {
+                text: "Quit Game"
+                onTriggered: {
+                    quitAppDialog.appName = appModel.getRunningAppName()
+                    quitAppDialog.segueToStream = false
+                    quitAppDialog.open()
+                }
+                visible: model.running
+                height: visible ? implicitHeight : 0
             }
         }
     }

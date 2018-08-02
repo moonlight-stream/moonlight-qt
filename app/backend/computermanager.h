@@ -272,7 +272,7 @@ signals:
 
     void computerAddCompleted(QVariant success);
 
-    void quitAppCompleted(QString error);
+    void quitAppCompleted(QVariant error);
 
 private slots:
     void handleComputerStateChanged(NvComputer* computer);
