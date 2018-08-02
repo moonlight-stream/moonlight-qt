@@ -82,9 +82,9 @@ int StreamingPreferences::getMaximumStreamingFrameRate()
     for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
         SDL_DisplayMode mode;
         if (SDL_GetCurrentDisplayMode(i, &mode) == 0) {
-            // Cap the frame rate at 90 FPS, since I can't seem to get
-            // much more out of GFE even with the game rendering at > 300 FPS.
-            maxFrameRate = qMax(maxFrameRate, qMin(90, mode.refresh_rate));
+            // Cap the frame rate at 120 FPS. Past this, the encoders start
+            // to max out and drop frames.
+            maxFrameRate = qMax(maxFrameRate, qMin(120, mode.refresh_rate));
         }
     }
 
