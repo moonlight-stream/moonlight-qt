@@ -25,6 +25,17 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.0.5" date="2018-08-01">
+			<description>
+				<p>Changes from 0.0.4:</p>
+				<ul>
+					<li>Fixed a bug causing increased frame drops and input lag</li>
+					<li>Added support for quitting running games</li>
+					<li>Added support for waking sleeping PCs with Wake-on-LAN</li>
+					<li>Increased the FPS limit to 120 FPS</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.0.4a" date="2018-07-30">
 			<description>
 				<p>Initial pre-alpha release for Linux. Please file bugs!</p>
