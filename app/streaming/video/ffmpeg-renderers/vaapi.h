@@ -38,10 +38,6 @@ public:
     virtual void renderFrame(AVFrame* frame);
 
 private:
-    static
-    enum AVPixelFormat ffGetFormat(AVCodecContext*,
-                                   const enum AVPixelFormat* pixFmts);
-
     Window m_XWindow;
     AVBufferRef* m_HwContext;
     void* m_X11VaLibHandle;
@@ -51,4 +47,3 @@ private:
     int m_DisplayWidth;
     int m_DisplayHeight;
 };
-

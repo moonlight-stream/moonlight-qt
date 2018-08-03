@@ -53,6 +53,10 @@ unix:!macx {
         packagesExist(libva) {
             CONFIG += libva
         }
+
+        packagesExist(vdpau) {
+            CONFIG += libvdpau
+        }
     }
 }
 win32 {
@@ -111,6 +115,13 @@ libva {
     DEFINES += HAVE_LIBVA
     SOURCES += streaming/video/ffmpeg-renderers/vaapi.cpp
     HEADERS += streaming/video/ffmpeg-renderers/vaapi.h
+}
+libvdpau {
+    message(VDPAU renderer selected)
+
+    DEFINES += HAVE_LIBVDPAU
+    SOURCES += streaming/video/ffmpeg-renderers/vdpau.cpp
+    HEADERS += streaming/video/ffmpeg-renderers/vdpau.h
 }
 config_SLVideo {
     message(SLVideo decoder/renderer selected)

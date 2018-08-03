@@ -138,6 +138,10 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     }
 #endif
 
+#if !defined(HAVE_FFMPEG) && !defined(HAVE_SLVIDEO)
+#error No video decoding libraries available!
+#endif
+
     // If we reach this, we didn't initialize any decoders successfully
     return false;
 }

@@ -70,7 +70,6 @@ VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height)
         return false;
     }
 
-
     err = av_hwdevice_ctx_create(&m_HwContext,
                                  AV_HWDEVICE_TYPE_VAAPI,
                                  nullptr, nullptr, 0);
@@ -78,6 +77,14 @@ VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create VAAPI context: %d",
                      err);
+        return false;
+    }
+
+    // This quirk is set for the VDPAU wrapper which doesn't work with our VAAPI renderer
+    if (((AVVAAPIDeviceContext*)((AVHWDeviceContext*)(m_HwContext->data))->hwctx)->driver_quirks & AV_VAAPI_DRIVER_QUIRK_SURFACE_ATTRIBUTES) {
+        // Fail and let our VDPAU renderer pick this up
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Avoiding VDPAU wrapper for VAAPI decoding");
         return false;
     }
 

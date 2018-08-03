@@ -13,6 +13,10 @@
 #include "ffmpeg-renderers/vaapi.h"
 #endif
 
+#ifdef HAVE_LIBVDPAU
+#include "ffmpeg-renderers/vdpau.h"
+#endif
+
 // This is gross but it allows us to use sizeof()
 #include "ffmpeg_videosamples.cpp"
 
@@ -195,6 +199,10 @@ IFFmpegRenderer* FFmpegVideoDecoder::createAcceleratedRenderer(const AVCodecHWCo
 #ifdef HAVE_LIBVA
     case AV_HWDEVICE_TYPE_VAAPI:
         return new VAAPIRenderer();
+#endif
+#ifdef HAVE_LIBVDPAU
+    case AV_HWDEVICE_TYPE_VDPAU:
+        return new VDPAURenderer();
 #endif
     default:
         return nullptr;
