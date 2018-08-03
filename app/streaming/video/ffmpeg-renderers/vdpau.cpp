@@ -216,6 +216,11 @@ bool VDPAURenderer::prepareDecoderContext(AVCodecContext* context)
 {
     context->hw_device_ctx = av_buffer_ref(m_HwContext);
 
+    // Allow HEVC usage on VDPAU. This was disabled by FFmpeg due to
+    // GL interop issues, but we use VDPAU for rendering so it's no issue.
+    // https://github.com/FFmpeg/FFmpeg/commit/64ecb78b7179cab2dbdf835463104679dbb7c895
+    context->hwaccel_flags |= AV_HWACCEL_FLAG_ALLOW_PROFILE_MISMATCH;
+
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using VDPAU accelerated renderer");
 
