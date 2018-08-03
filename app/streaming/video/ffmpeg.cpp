@@ -167,6 +167,11 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoForma
         }
     }
 
+#ifdef QT_DEBUG
+    // Restore default log level before streaming
+    av_log_set_level(AV_LOG_INFO);
+#endif
+
     return true;
 }
 
@@ -204,6 +209,11 @@ bool FFmpegVideoDecoder::initialize(
         int)
 {
     AVCodec* decoder;
+
+#ifdef QT_DEBUG
+    // Increase log level during initialization
+    av_log_set_level(AV_LOG_DEBUG);
+#endif
 
     if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
