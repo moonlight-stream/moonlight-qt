@@ -128,6 +128,9 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoForma
         return false;
     }
 
+    // Nobody must override our ffGetFormat
+    SDL_assert(m_VideoDecoderCtx->get_format == ffGetFormat);
+
     // Stash a pointer to this object in the context
     SDL_assert(m_VideoDecoderCtx->opaque == nullptr);
     m_VideoDecoderCtx->opaque = this;
@@ -157,8 +160,6 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoForma
 
         err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
         if (err < 0) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Test decode failed: %d", err);
             char errorstring[512];
             av_strerror(err, errorstring, sizeof(errorstring));
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -305,8 +306,6 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
     if (err < 0) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Decoding failed: %d", err);
         char errorstring[512];
         av_strerror(err, errorstring, sizeof(errorstring));
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
