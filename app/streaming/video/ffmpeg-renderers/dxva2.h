@@ -35,10 +35,6 @@ private:
     static
     int ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int flags);
 
-    static
-    enum AVPixelFormat ffGetFormat(AVCodecContext*,
-                                   const enum AVPixelFormat* pixFmts);
-
     int m_VideoFormat;
     int m_VideoWidth;
     int m_VideoHeight;

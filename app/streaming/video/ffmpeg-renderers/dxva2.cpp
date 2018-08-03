@@ -75,7 +75,6 @@ bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context)
 
     context->hwaccel_context = &m_DXVAContext;
 
-    context->get_format = ffGetFormat;
     context->get_buffer2 = ffGetBuffer2;
 
     context->opaque = this;
@@ -108,21 +107,6 @@ int DXVA2Renderer::ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int)
     frame->height = me->m_VideoHeight;
 
     return 0;
-}
-
-enum AVPixelFormat DXVA2Renderer::ffGetFormat(AVCodecContext*,
-                                              const enum AVPixelFormat* pixFmts)
-{
-    const enum AVPixelFormat *p;
-
-    for (p = pixFmts; *p != -1; p++) {
-        if (*p == AV_PIX_FMT_DXVA2_VLD)
-            return *p;
-    }
-
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "Failed to find DXVA2 HW surface format");
-    return AV_PIX_FMT_NONE;
 }
 
 bool DXVA2Renderer::initializeDecoder()

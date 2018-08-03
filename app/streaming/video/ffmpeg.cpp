@@ -13,91 +13,33 @@
 #include "ffmpeg-renderers/vaapi.h"
 #endif
 
-bool FFmpegVideoDecoder::chooseDecoder(
-        StreamingPreferences::VideoDecoderSelection vds,
-        SDL_Window* window,
-        int videoFormat,
-        int width, int height,
-        AVCodec*& chosenDecoder,
-        const AVCodecHWConfig*& chosenHwConfig,
-        IFFmpegRenderer*& newRenderer)
-{
-    if (videoFormat & VIDEO_FORMAT_MASK_H264) {
-        chosenDecoder = avcodec_find_decoder(AV_CODEC_ID_H264);
-    }
-    else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
-        chosenDecoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
-    }
-    else {
-        Q_ASSERT(false);
-        chosenDecoder = nullptr;
-    }
-
-    if (!chosenDecoder) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Unable to find decoder for format: %x",
-                     videoFormat);
-        return false;
-    }
-
-    for (int i = 0;; i++) {
-        const AVCodecHWConfig *config = avcodec_get_hw_config(chosenDecoder, i);
-        if (!config || vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
-            // No matching hardware acceleration support.
-            // This is not an error.
-            chosenHwConfig = nullptr;
-            newRenderer = new SdlRenderer();
-            if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
-                    newRenderer->initialize(window, videoFormat, width, height)) {
-                return true;
-            }
-            else {
-                delete newRenderer;
-                newRenderer = nullptr;
-                return false;
-            }
-        }
-
-        if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
-            continue;
-        }
-
-        // Look for acceleration types we support
-        switch (config->device_type) {
-#ifdef Q_OS_WIN32
-        case AV_HWDEVICE_TYPE_DXVA2:
-            newRenderer = new DXVA2Renderer();
-            break;
-#endif
-#ifdef Q_OS_DARWIN
-        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-            newRenderer = VTRendererFactory::createRenderer();
-            break;
-#endif
-#ifdef HAVE_LIBVA
-        case AV_HWDEVICE_TYPE_VAAPI:
-            newRenderer = new VAAPIRenderer();
-            break;
-#endif
-        default:
-            continue;
-        }
-
-        if (newRenderer->initialize(window, videoFormat, width, height)) {
-            chosenHwConfig = config;
-            return true;
-        }
-        else {
-            // Failed to initialize
-            delete newRenderer;
-            newRenderer = nullptr;
-        }
-    }
-}
+// This is gross but it allows us to use sizeof()
+#include "ffmpeg_videosamples.cpp"
 
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr;
+}
+
+enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
+                                                   const enum AVPixelFormat* pixFmts)
+{
+    FFmpegVideoDecoder* decoder = (FFmpegVideoDecoder*)context->opaque;
+    const enum AVPixelFormat *p;
+
+    for (p = pixFmts; *p != -1; p++) {
+        // Only match our hardware decoding codec or SW pixel
+        // format (if not using hardware decoding). It's crucial
+        // to override the default get_format() which will try
+        // to gracefully fall back to software decode and break us.
+        if (*p == (decoder->m_HwDecodeCfg ?
+                   decoder->m_HwDecodeCfg->pix_fmt :
+                   context->pix_fmt)) {
+            return *p;
+        }
+    }
+
+    return AV_PIX_FMT_NONE;
 }
 
 FFmpegVideoDecoder::FFmpegVideoDecoder()
@@ -114,6 +56,11 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
 }
 
 FFmpegVideoDecoder::~FFmpegVideoDecoder()
+{
+    reset();
+}
+
+void FFmpegVideoDecoder::reset()
 {
     // Drop any frames still queued to ensure
     // they are properly freed.
@@ -140,30 +87,20 @@ FFmpegVideoDecoder::~FFmpegVideoDecoder()
     avcodec_free_context(&m_VideoDecoderCtx);
 
     delete m_Renderer;
+    m_Renderer = nullptr;
 }
 
-bool FFmpegVideoDecoder::initialize(
-        StreamingPreferences::VideoDecoderSelection vds,
-        SDL_Window* window,
-        int videoFormat,
-        int width,
-        int height,
-        int)
+bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoFormat, int width, int height, bool testOnly)
 {
-    AVCodec* decoder;
-
-    if (!chooseDecoder(vds, window, videoFormat, width, height,
-                       decoder, m_HwDecodeCfg, m_Renderer)) {
-        // Error logged in chooseDecoder()
-        return false;
-    }
-
     m_VideoDecoderCtx = avcodec_alloc_context3(decoder);
     if (!m_VideoDecoderCtx) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to allocate video decoder context");
         return false;
     }
+
+    // Stash a pointer to this object in the context
+    m_VideoDecoderCtx->opaque = this;
 
     // Always request low delay decoding
     m_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
@@ -182,6 +119,7 @@ bool FFmpegVideoDecoder::initialize(
     m_VideoDecoderCtx->width = width;
     m_VideoDecoderCtx->height = height;
     m_VideoDecoderCtx->pix_fmt = AV_PIX_FMT_YUV420P; // FIXME: HDR
+    m_VideoDecoderCtx->get_format = ffGetFormat;
 
     // Allow the renderer to attach data to this decoder
     if (!m_Renderer->prepareDecoderContext(m_VideoDecoderCtx)) {
@@ -196,7 +134,127 @@ bool FFmpegVideoDecoder::initialize(
         return false;
     }
 
+    // FFMpeg doesn't completely initialize the codec until the codec
+    // config data comes in. This would be too late for us to change
+    // our minds on the selected video codec, so we'll do a trial run
+    // now to see if things will actually work when the video stream
+    // comes in.
+    if (testOnly) {
+        if (videoFormat & VIDEO_FORMAT_MASK_H264) {
+            m_Pkt.data = (uint8_t*)k_H264TestFrame;
+            m_Pkt.size = sizeof(k_H264TestFrame);
+        }
+        else {
+            m_Pkt.data = (uint8_t*)k_HEVCTestFrame;
+            m_Pkt.size = sizeof(k_HEVCTestFrame);
+        }
+
+        err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
+        if (err < 0) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Test decode failed: %d", err);
+            char errorstring[512];
+            av_strerror(err, errorstring, sizeof(errorstring));
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Test decode failed: %s", errorstring);
+            return false;
+        }
+    }
+
     return true;
+}
+
+bool FFmpegVideoDecoder::initialize(
+        StreamingPreferences::VideoDecoderSelection vds,
+        SDL_Window* window,
+        int videoFormat,
+        int width,
+        int height,
+        int)
+{
+    AVCodec* decoder;
+
+    if (videoFormat & VIDEO_FORMAT_MASK_H264) {
+        decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
+    }
+    else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
+        decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
+    }
+    else {
+        Q_ASSERT(false);
+        decoder = nullptr;
+    }
+
+    if (!decoder) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to find decoder for format: %x",
+                     videoFormat);
+        return false;
+    }
+
+    for (int i = 0;; i++) {
+        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
+        if (!config || vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
+            // No matching hardware acceleration support.
+            // This is not an error.
+            m_HwDecodeCfg = nullptr;
+            m_Renderer = new SdlRenderer();
+            if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
+                    m_Renderer->initialize(window, videoFormat, width, height) &&
+                    completeInitialization(decoder, videoFormat, width, height, false)) {
+                return true;
+            }
+            else {
+                reset();
+                return false;
+            }
+        }
+
+        if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
+            continue;
+        }
+
+        // Look for acceleration types we support
+        switch (config->device_type) {
+#ifdef Q_OS_WIN32
+        case AV_HWDEVICE_TYPE_DXVA2:
+            m_Renderer = new DXVA2Renderer();
+            break;
+#endif
+#ifdef Q_OS_DARWIN
+        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
+            m_Renderer = VTRendererFactory::createRenderer();
+            break;
+#endif
+#ifdef HAVE_LIBVA
+        case AV_HWDEVICE_TYPE_VAAPI:
+            m_Renderer = new VAAPIRenderer();
+            break;
+#endif
+        default:
+            continue;
+        }
+
+        m_HwDecodeCfg = config;
+        // Submit test frame to ensure this codec really works
+        if (m_Renderer->initialize(window, videoFormat, width, height) &&
+                completeInitialization(decoder, videoFormat, width, height, true)) {
+            // OK, it worked, so now let's initialize it for real
+            if (m_Renderer->initialize(window, videoFormat, width, height) &&
+                    completeInitialization(decoder, videoFormat, width, height, false)) {
+                return true;
+            }
+            else {
+                SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                "Decoder failed to initialize after successful test");
+                reset();
+            }
+        }
+        else {
+            // Failed to initialize or test frame failed, so keep looking
+            reset();
+        }
+    }
 }
 
 int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
