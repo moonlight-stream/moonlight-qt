@@ -25,6 +25,8 @@ public:
 private:
     bool completeInitialization(AVCodec* decoder, int videoFormat, int width, int height, bool testOnly);
 
+    IFFmpegRenderer* createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg);
+
     void reset();
 
     static

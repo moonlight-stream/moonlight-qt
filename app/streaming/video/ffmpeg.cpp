@@ -164,6 +164,31 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoForma
     return true;
 }
 
+IFFmpegRenderer* FFmpegVideoDecoder::createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg)
+{
+    if (!(hwDecodeCfg->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
+        return nullptr;
+    }
+
+    // Look for acceleration types we support
+    switch (hwDecodeCfg->device_type) {
+#ifdef Q_OS_WIN32
+    case AV_HWDEVICE_TYPE_DXVA2:
+        return new DXVA2Renderer();
+#endif
+#ifdef Q_OS_DARWIN
+    case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
+        return VTRendererFactory::createRenderer();
+#endif
+#ifdef HAVE_LIBVA
+    case AV_HWDEVICE_TYPE_VAAPI:
+        return new VAAPIRenderer();
+#endif
+    default:
+        return nullptr;
+    }
+}
+
 bool FFmpegVideoDecoder::initialize(
         StreamingPreferences::VideoDecoderSelection vds,
         SDL_Window* window,
@@ -210,28 +235,8 @@ bool FFmpegVideoDecoder::initialize(
             }
         }
 
-        if (!(config->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
-            continue;
-        }
-
-        // Look for acceleration types we support
-        switch (config->device_type) {
-#ifdef Q_OS_WIN32
-        case AV_HWDEVICE_TYPE_DXVA2:
-            m_Renderer = new DXVA2Renderer();
-            break;
-#endif
-#ifdef Q_OS_DARWIN
-        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-            m_Renderer = VTRendererFactory::createRenderer();
-            break;
-#endif
-#ifdef HAVE_LIBVA
-        case AV_HWDEVICE_TYPE_VAAPI:
-            m_Renderer = new VAAPIRenderer();
-            break;
-#endif
-        default:
+        m_Renderer = createAcceleratedRenderer(config);
+        if (!m_Renderer) {
             continue;
         }
 
@@ -240,7 +245,9 @@ bool FFmpegVideoDecoder::initialize(
         if (m_Renderer->initialize(window, videoFormat, width, height) &&
                 completeInitialization(decoder, videoFormat, width, height, true)) {
             // OK, it worked, so now let's initialize it for real
-            if (m_Renderer->initialize(window, videoFormat, width, height) &&
+            reset();
+            if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
+                    m_Renderer->initialize(window, videoFormat, width, height) &&
                     completeInitialization(decoder, videoFormat, width, height, false)) {
                 return true;
             }
