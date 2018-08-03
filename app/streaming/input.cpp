@@ -23,6 +23,9 @@ const int SdlInputHandler::k_ButtonMap[] = {
 SdlInputHandler::SdlInputHandler(bool multiController)
     : m_MultiController(multiController)
 {
+    // Allow gamepad input when the app doesn't have focus
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
     // We need to reinit this each time, since you only get
     // an initial set of gamepad arrival events once per init.
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
