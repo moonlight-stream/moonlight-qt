@@ -1,5 +1,6 @@
 #include <initguid.h>
 #include "dxva2.h"
+#include "../ffmpeg.h"
 
 #include <Limelight.h>
 
@@ -77,8 +78,6 @@ bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context)
 
     context->get_buffer2 = ffGetBuffer2;
 
-    context->opaque = this;
-
     m_Pool = av_buffer_pool_init2(ARRAYSIZE(m_DecSurfaces), this, ffPoolAlloc, nullptr);
     if (!m_Pool) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -94,7 +93,7 @@ bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context)
 
 int DXVA2Renderer::ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int)
 {
-    DXVA2Renderer* me = reinterpret_cast<DXVA2Renderer*>(context->opaque);
+    DXVA2Renderer* me = (DXVA2Renderer*)((FFmpegVideoDecoder*)context->opaque)->getRenderer();
 
     frame->buf[0] = av_buffer_pool_get(me->m_Pool);
     if (!frame->buf[0]) {

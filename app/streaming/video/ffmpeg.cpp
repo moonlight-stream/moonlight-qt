@@ -60,6 +60,11 @@ FFmpegVideoDecoder::~FFmpegVideoDecoder()
     reset();
 }
 
+IFFmpegRenderer* FFmpegVideoDecoder::getRenderer()
+{
+    return m_Renderer;
+}
+
 void FFmpegVideoDecoder::reset()
 {
     // Drop any frames still queued to ensure
@@ -99,9 +104,6 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoForma
         return false;
     }
 
-    // Stash a pointer to this object in the context
-    m_VideoDecoderCtx->opaque = this;
-
     // Always request low delay decoding
     m_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
 
@@ -125,6 +127,10 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoForma
     if (!m_Renderer->prepareDecoderContext(m_VideoDecoderCtx)) {
         return false;
     }
+
+    // Stash a pointer to this object in the context
+    SDL_assert(m_VideoDecoderCtx->opaque == nullptr);
+    m_VideoDecoderCtx->opaque = this;
 
     int err = avcodec_open2(m_VideoDecoderCtx, decoder, nullptr);
     if (err < 0) {

@@ -22,8 +22,11 @@ public:
     virtual void renderFrame(SDL_UserEvent* event) override;
     virtual void dropFrame(SDL_UserEvent* event) override;
 
+    virtual IFFmpegRenderer* getRenderer();
+
 private:
-    bool completeInitialization(AVCodec* decoder, int videoFormat, int width, int height, bool testOnly);
+    bool completeInitialization(AVCodec* decoder, int videoFormat,
+                                int width, int height, bool testOnly);
 
     IFFmpegRenderer* createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg);
 
