@@ -23,7 +23,8 @@ matrix:
             - libesd0-dev
             - libgl-dev
             - libopus-dev
-            - ffmpeg
+            - libavcodec-dev
+            - libavutil-dev
             - libva-dev
             - libvdpau-dev
 
