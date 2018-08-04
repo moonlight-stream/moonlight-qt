@@ -499,6 +499,7 @@ void Session::toggleFullscreen()
     // that way we have accurate display size metrics (not the size our stream changed it to).
     if (!fullScreen) {
         SDL_SetWindowFullscreen(m_Window, 0);
+        SDL_SetWindowResizable(m_Window, SDL_TRUE);
     }
 
     getWindowDimensions(fullScreen, x, y, width, height);
@@ -507,6 +508,7 @@ void Session::toggleFullscreen()
     SDL_SetWindowSize(m_Window, width, height);
 
     if (fullScreen) {
+        SDL_SetWindowResizable(m_Window, SDL_FALSE);
         SDL_SetWindowFullscreen(m_Window, SDL_OS_FULLSCREEN_FLAG);
     }
 }
@@ -623,6 +625,10 @@ void Session::exec()
 
         SDL_SetWindowPosition(m_Window, x, y);
         SDL_SetWindowSize(m_Window, width, height);
+
+        // Passing SDL_WINDOW_RESIZABLE to set this during window
+        // creation causes our window to be full screen for some reason
+        SDL_SetWindowResizable(m_Window, SDL_TRUE);
     }
 
     QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
