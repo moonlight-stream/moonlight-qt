@@ -475,6 +475,13 @@ void Session::getWindowDimensions(bool fullScreen,
 
                 width -= left + right;
                 height -= top + bottom;
+
+                // If the stream window can fit within the usable drawing area with 1:1
+                // scaling, do that rather than filling the screen.
+                if (m_StreamConfig.width < width && m_StreamConfig.height < height) {
+                    width = m_StreamConfig.width;
+                    height = m_StreamConfig.height;
+                }
             }
         }
         else {
