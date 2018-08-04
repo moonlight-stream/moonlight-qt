@@ -337,6 +337,10 @@ bool Session::validateLaunch()
 {
     QStringList warningList;
 
+    if (m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
+        emitLaunchWarning("Your settings selection to force software decoding may cause streaming performance problems.");
+    }
+
     if (m_StreamConfig.supportsHevc) {
         bool hevcForced = m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
                 m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
