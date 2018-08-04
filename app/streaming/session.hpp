@@ -39,6 +39,8 @@ signals:
 private:
     bool validateLaunch();
 
+    void emitLaunchWarning(QString text);
+
     int getDecoderCapabilities();
 
     int sdlDetermineAudioConfiguration();

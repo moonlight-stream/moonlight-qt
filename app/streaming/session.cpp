@@ -317,6 +317,22 @@ Session::Session(NvComputer* computer, NvApp& app)
     }
 }
 
+void Session::emitLaunchWarning(QString text)
+{
+    // Emit the warning to the UI
+    emit displayLaunchWarning(text);
+
+    // Wait a little bit so the user can actually read what we just said.
+    // This wait is a little longer than the actual toast timeout (3 seconds)
+    // to allow it to transition off the screen before continuing.
+    uint32_t start = SDL_GetTicks();
+    while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
+        // Pump the UI loop while we wait
+        SDL_Delay(5);
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+}
+
 bool Session::validateLaunch()
 {
     QStringList warningList;
@@ -337,14 +353,14 @@ bool Session::validateLaunch()
             m_StreamConfig.supportsHevc = false;
 
             if (hevcForced) {
-                emit displayLaunchWarning("This PC's GPU doesn't support HEVC decoding.");
+                emitLaunchWarning("This PC's GPU doesn't support HEVC decoding.");
             }
         }
 
         if (hevcForced) {
             if (m_Computer->maxLumaPixelsHEVC == 0) {
-                emit displayLaunchWarning("Your host PC GPU doesn't support HEVC. "
-                                          "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
+                emitLaunchWarning("Your host PC GPU doesn't support HEVC. "
+                                  "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
             }
         }
     }
@@ -355,19 +371,19 @@ bool Session::validateLaunch()
 
         // Check that the app supports HDR
         if (!m_App.hdrSupported) {
-            emit displayLaunchWarning(m_App.name + " doesn't support HDR10.");
+            emitLaunchWarning(m_App.name + " doesn't support HDR10.");
         }
         // Check that the server GPU supports HDR
         else if (!(m_Computer->serverCodecModeSupport & 0x200)) {
-            emit displayLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
-                                      "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
+            emitLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
+                              "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
         }
         else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
                                             VIDEO_FORMAT_H265_MAIN10,
                                             m_StreamConfig.width,
                                             m_StreamConfig.height,
                                             m_StreamConfig.fps)) {
-            emit displayLaunchWarning("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming.");
+            emitLaunchWarning("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming.");
         }
         else {
             // TODO: Also validate display capabilites
@@ -380,7 +396,7 @@ bool Session::validateLaunch()
     if (m_StreamConfig.width >= 3840) {
         // Only allow 4K on GFE 3.x+
         if (m_Computer->gfeVersion.isNull() || m_Computer->gfeVersion.startsWith("2.")) {
-            emit displayLaunchWarning("GeForce Experience 3.0 or higher is required for 4K streaming.");
+            emitLaunchWarning("GeForce Experience 3.0 or higher is required for 4K streaming.");
 
             m_StreamConfig.width = 1920;
             m_StreamConfig.height = 1080;
@@ -388,8 +404,8 @@ bool Session::validateLaunch()
         // This list is sorted from least to greatest
         else if (m_Computer->displayModes.last().width < 3840 ||
                  (m_Computer->displayModes.last().refreshRate < 60 && m_StreamConfig.fps >= 60)) {
-            emit displayLaunchWarning("Your host PC GPU doesn't support 4K streaming. "
-                                      "A GeForce GTX 900-series (Maxwell) or later GPU is required for 4K streaming.");
+            emitLaunchWarning("Your host PC GPU doesn't support 4K streaming. "
+                              "A GeForce GTX 900-series (Maxwell) or later GPU is required for 4K streaming.");
 
             m_StreamConfig.width = 1920;
             m_StreamConfig.height = 1080;
