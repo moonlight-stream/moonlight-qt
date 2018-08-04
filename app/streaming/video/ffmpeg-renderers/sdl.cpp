@@ -31,18 +31,10 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
 }
 
 bool SdlRenderer::initialize(SDL_Window* window,
-                             int videoFormat,
+                             int,
                              int width,
                              int height)
 {
-    // NOTE: HEVC currently uses only 1 slice regardless of what
-    // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
-    // never use it for software decoding (unless common-c starts
-    // respecting it for HEVC).
-    if (videoFormat != VIDEO_FORMAT_H264) {
-        return false;
-    }
-
     m_Renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

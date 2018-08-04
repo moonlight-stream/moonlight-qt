@@ -338,7 +338,7 @@ bool Session::validateLaunch()
     QStringList warningList;
 
     if (m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
-        emitLaunchWarning("Your settings selection to force software decoding may cause streaming performance problems.");
+        emitLaunchWarning("Your settings selection to force software decoding may cause poor streaming performance.");
     }
 
     if (m_StreamConfig.supportsHevc) {
@@ -349,15 +349,14 @@ bool Session::validateLaunch()
                                        VIDEO_FORMAT_H265,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
-                                       m_StreamConfig.fps)) {
-            // NOTE: HEVC currently uses only 1 slice regardless of what
-            // we provide in CAPABILITY_SLICES_PER_FRAME(), so we should
-            // never use it for software decoding (unless common-c starts
-            // respecting it for HEVC).
-            m_StreamConfig.supportsHevc = false;
-
+                                       m_StreamConfig.fps) &&
+                m_Preferences.videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE) {
             if (hevcForced) {
+                emitLaunchWarning("Using software decoding due to your selection to force HEVC. This may cause poor streaming performance.");
+            }
+            else {
                 emitLaunchWarning("This PC's GPU doesn't support HEVC decoding.");
+                m_StreamConfig.supportsHevc = false;
             }
         }
 
