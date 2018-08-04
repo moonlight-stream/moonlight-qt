@@ -28,22 +28,22 @@ VDPAURenderer::VDPAURenderer()
 
 VDPAURenderer::~VDPAURenderer()
 {
-    for (int i = 0; i < OUTPUT_SURFACE_COUNT; i++) {
-        if (m_OutputSurface[i] != 0) {
-            m_VdpOutputSurfaceDestroy(m_OutputSurface[i]);
-        }
+    if (m_PresentationQueue != 0) {
+        m_VdpPresentationQueueDestroy(m_PresentationQueue);
     }
 
     if (m_VideoMixer != 0) {
         m_VdpVideoMixerDestroy(m_VideoMixer);
     }
 
-    if (m_PresentationQueue != 0) {
-        m_VdpPresentationQueueDestroy(m_PresentationQueue);
-    }
-
     if (m_PresentationQueueTarget != 0) {
         m_VdpPresentationQueueTargetDestroy(m_PresentationQueueTarget);
+    }
+
+    for (int i = 0; i < OUTPUT_SURFACE_COUNT; i++) {
+        if (m_OutputSurface[i] != 0) {
+            m_VdpOutputSurfaceDestroy(m_OutputSurface[i]);
+        }
     }
 
     // This must be done last as it frees VDPAU context required to call
@@ -164,9 +164,23 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
 
     // Create the output surfaces
     for (int i = 0; i < OUTPUT_SURFACE_COUNT; i++) {
-        status = m_VdpOutputSurfaceCreate(vdpauCtx->device, m_OutputSurfaceFormat,
-                                          m_DisplayWidth, m_DisplayHeight,
-                                          &m_OutputSurface[i]);
+        // It seems there's some lazy freeing going on or something in VDPAU
+        // because we can get VDP_STATUS_RESOURCES, then wait a bit and it'll
+        // complete without a problem.
+        int tries = 1;
+        do {
+            status = m_VdpOutputSurfaceCreate(vdpauCtx->device, m_OutputSurfaceFormat,
+                                              m_DisplayWidth, m_DisplayHeight,
+                                              &m_OutputSurface[i]);
+            if (status != VDP_STATUS_OK) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "VdpOutputSurfaceCreate() try #%d: %s",
+                            tries,
+                            m_VdpGetErrorString(status));
+                SDL_Delay(250);
+            }
+        } while (status == VDP_STATUS_RESOURCES && ++tries <= 10);
+
         if (status != VDP_STATUS_OK) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VdpOutputSurfaceCreate() failed: %s",
