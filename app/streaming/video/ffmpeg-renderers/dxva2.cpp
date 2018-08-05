@@ -199,18 +199,11 @@ bool DXVA2Renderer::initializeDecoder()
         return false;
     }
 
-    int alignment;
-
-    // HEVC using DXVA requires 128B alignment
-    if (m_VideoFormat & VIDEO_FORMAT_MASK_H265) {
-        alignment = 128;
-    }
-    else {
-        alignment = 16;
-    }
-
-    hr = m_DecService->CreateSurface(FFALIGN(m_VideoWidth, alignment),
-                                     FFALIGN(m_VideoHeight, alignment),
+    // Alignment was already taken care of
+    SDL_assert(m_Desc.SampleWidth % 16 == 0);
+    SDL_assert(m_Desc.SampleHeight % 16 == 0);
+    hr = m_DecService->CreateSurface(m_Desc.SampleWidth,
+                                     m_Desc.SampleHeight,
                                      ARRAYSIZE(m_DecSurfaces) - 1,
                                      m_Desc.Format,
                                      D3DPOOL_DEFAULT,
@@ -466,8 +459,19 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     SDL_RenderPresent(m_SdlRenderer);
 
     RtlZeroMemory(&m_Desc, sizeof(m_Desc));
-    m_Desc.SampleWidth = m_VideoWidth;
-    m_Desc.SampleHeight = m_VideoHeight;
+
+    int alignment;
+
+    // HEVC using DXVA requires 128B alignment
+    if (m_VideoFormat & VIDEO_FORMAT_MASK_H265) {
+        alignment = 128;
+    }
+    else {
+        alignment = 16;
+    }
+
+    m_Desc.SampleWidth = FFALIGN(m_VideoWidth, alignment);
+    m_Desc.SampleHeight = FFALIGN(m_VideoHeight, alignment);
     m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Unknown;
     m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_Unknown;
     m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_Unknown;
@@ -588,16 +592,16 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
     sample.Start = m_FrameIndex;
     sample.End = m_FrameIndex + 1;
     sample.SrcSurface = surface;
-    sample.SrcRect.right = m_Desc.SampleWidth;
-    sample.SrcRect.bottom = m_Desc.SampleHeight;
+    sample.SrcRect.right = m_VideoWidth;
+    sample.SrcRect.bottom = m_VideoHeight;
     sample.SampleFormat = m_Desc.SampleFormat;
     sample.PlanarAlpha = DXVA2_Fixed32OpaqueAlpha();
 
     // Center in frame and preserve aspect ratio
     SDL_Rect src, dst;
     src.x = src.y = 0;
-    src.w = m_Desc.SampleWidth;
-    src.h = m_Desc.SampleHeight;
+    src.w = m_VideoWidth;
+    src.h = m_VideoHeight;
     dst.x = dst.y = 0;
     dst.w = m_DisplayWidth;
     dst.h = m_DisplayHeight;
