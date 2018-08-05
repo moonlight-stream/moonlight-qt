@@ -88,7 +88,7 @@ GridView {
 
         Image {
             id: pcIcon
-            anchors.horizontalCenter: parent.horizontalCenter;
+            anchors.horizontalCenter: parent.horizontalCenter
             source: {
                 model.addPc ? "qrc:/res/ic_add_to_queue_white_48px.svg" : "qrc:/res/ic_tv_white_48px.svg"
             }
@@ -101,20 +101,24 @@ GridView {
         Image {
             // TODO: Tooltip
             id: stateIcon
-            anchors.centerIn: pcIcon // TODO: Center within screen
+            anchors.horizontalCenter: pcIcon.horizontalCenter
+            anchors.verticalCenter: pcIcon.verticalCenter
+            anchors.verticalCenterOffset: -10
             visible: !model.addPc && !model.statusUnknown && (!model.online || !model.paired)
             source: !model.online ? "qrc:/res/baseline-warning-24px.svg" : "qrc:/res/baseline-lock-24px.svg"
             sourceSize {
-                width: 50
-                height: 50
+                width: 75
+                height: 75
             }
         }
 
         BusyIndicator {
             id: statusUnknownSpinner
-            anchors.centerIn: pcIcon
-            width: 50
-            height: 50
+            anchors.horizontalCenter: pcIcon.horizontalCenter
+            anchors.verticalCenter: pcIcon.verticalCenter
+            anchors.verticalCenterOffset: -10
+            width: 75
+            height: 75
             visible: !model.addPc && model.statusUnknown
         }
 
