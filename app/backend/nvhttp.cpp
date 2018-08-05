@@ -67,6 +67,7 @@ NvHTTP::getServerInfo()
         serverInfo = openConnectionToString(m_BaseUrlHttps,
                                             "serverinfo",
                                             nullptr,
+                                            true,
                                             true);
         // Throws if the request failed
         verifyResponseStatus(serverInfo);
@@ -79,6 +80,7 @@ NvHTTP::getServerInfo()
             serverInfo = openConnectionToString(m_BaseUrlHttp,
                                                 "serverinfo",
                                                 nullptr,
+                                                true,
                                                 true);
             verifyResponseStatus(serverInfo);
         }
@@ -338,9 +340,10 @@ QString
 NvHTTP::openConnectionToString(QUrl baseUrl,
                                QString command,
                                QString arguments,
-                               bool enableTimeout)
+                               bool enableTimeout,
+                               bool suppressLogging)
 {
-    QNetworkReply* reply = openConnection(baseUrl, command, arguments, enableTimeout);
+    QNetworkReply* reply = openConnection(baseUrl, command, arguments, enableTimeout, suppressLogging);
     QString ret;
 
     QTextStream stream(reply);
@@ -355,7 +358,8 @@ QNetworkReply*
 NvHTTP::openConnection(QUrl baseUrl,
                        QString command,
                        QString arguments,
-                       bool enableTimeout)
+                       bool enableTimeout,
+                       bool suppressLogging)
 {
     // Build a URL for the request
     QUrl url(baseUrl);
@@ -381,13 +385,17 @@ NvHTTP::openConnection(QUrl baseUrl,
     {
         QTimer::singleShot(REQUEST_TIMEOUT_MS, &loop, SLOT(quit()));
     }
-    qInfo() << "Executing request:" << url.toString();
+    if (!suppressLogging) {
+        qInfo() << "Executing request:" << url.toString();
+    }
     loop.exec(QEventLoop::ExcludeUserInputEvents);
 
     // Abort the request if it timed out
     if (!reply->isFinished())
     {
-        qWarning() << "Aborting timed out request for" << url.toString();
+        if (!suppressLogging) {
+            qWarning() << "Aborting timed out request for" << url.toString();
+        }
         reply->abort();
     }
 
@@ -398,7 +406,9 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Handle error
     if (reply->error() != QNetworkReply::NoError)
     {
-        qWarning() << command << " request failed with error " << reply->error();
+        if (!suppressLogging) {
+            qWarning() << command << " request failed with error " << reply->error();
+        }
         GfeHttpResponseException exception(reply->error(), reply->errorString());
         delete reply;
         throw exception;

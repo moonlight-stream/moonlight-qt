@@ -107,7 +107,8 @@ public:
     openConnectionToString(QUrl baseUrl,
                            QString command,
                            QString arguments,
-                           bool enableTimeout);
+                           bool enableTimeout,
+                           bool suppressLogging = false);
 
     static
     QVector<int>
@@ -143,7 +144,8 @@ private:
     openConnection(QUrl baseUrl,
                    QString command,
                    QString arguments,
-                   bool enableTimeout);
+                   bool enableTimeout,
+                   bool suppressLogging = false);
 
     QString m_Address;
     QNetworkAccessManager m_Nam;
