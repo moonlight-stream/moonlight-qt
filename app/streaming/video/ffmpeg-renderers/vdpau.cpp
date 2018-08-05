@@ -1,4 +1,5 @@
 #include "vdpau.h"
+#include <streaming/streamutils.h>
 
 #include <SDL_syswm.h>
 
@@ -256,25 +257,20 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
 
     VdpRect outputRect;
 
-    // Center in frame and preserve aspect ratio
-    double srcAspectRatio = (double)m_VideoWidth / (double)m_VideoHeight;
-    double dstAspectRatio = (double)m_DisplayWidth / (double)m_DisplayHeight;
-    if (dstAspectRatio < srcAspectRatio) {
-        // Greater height per width
-        uint32_t drawHeight = (uint32_t)(m_DisplayWidth / srcAspectRatio);
-        outputRect.y0 = (m_DisplayHeight - drawHeight) / 2;
-        outputRect.y1 = outputRect.y0 + drawHeight;
-        outputRect.x0 = 0;
-        outputRect.x1 = outputRect.x0 + m_DisplayWidth;
-    }
-    else {
-        // Greater width per height
-        uint32_t drawWidth = (uint32_t)(m_DisplayHeight * srcAspectRatio);
-        outputRect.y0 = 0;
-        outputRect.y1 = outputRect.y0 + m_DisplayHeight;
-        outputRect.x0 = (m_DisplayWidth - drawWidth) / 2;
-        outputRect.x1 = outputRect.x0 + drawWidth;
-    }
+    SDL_Rect src, dst;
+    src.x = src.y = 0;
+    src.w = m_VideoWidth;
+    src.h = m_VideoHeight;
+    dst.x = dst.y = 0;
+    dst.w = m_DisplayWidth;
+    dst.h = m_DisplayHeight;
+
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    outputRect.x0 = dst.x;
+    outputRect.x1 = dst.x + dst.w;
+    outputRect.y0 = dst.y;
+    outputRect.y1 = dst.y + dst.h;
 
     // Render the next frame into the output surface
     status = m_VdpVideoMixerRender(m_VideoMixer,

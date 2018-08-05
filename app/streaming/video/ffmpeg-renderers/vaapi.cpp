@@ -1,4 +1,5 @@
 #include "vaapi.h"
+#include <streaming/streamutils.h>
 
 #include <dlfcn.h>
 
@@ -109,34 +110,23 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
 
-    // Center in frame and preserve aspect ratio
-    int x, y, width, height;
-    double srcAspectRatio = (double)m_VideoWidth / (double)m_VideoHeight;
-    double dstAspectRatio = (double)m_DisplayWidth / (double)m_DisplayHeight;
-    if (dstAspectRatio < srcAspectRatio) {
-        // Greater height per width
-        int drawHeight = (int)(m_DisplayWidth / srcAspectRatio);
-        y = (m_DisplayHeight - drawHeight) / 2;
-        height = drawHeight;
-        x = 0;
-        width = m_DisplayWidth;
-    }
-    else {
-        // Greater width per height
-        int drawWidth = (int)(m_DisplayHeight * srcAspectRatio);
-        y = 0;
-        height = m_DisplayHeight;
-        x = (m_DisplayWidth - drawWidth) / 2;
-        width = drawWidth;
-    }
+    SDL_Rect src, dst;
+    src.x = src.y = 0;
+    src.w = m_VideoWidth;
+    src.h = m_VideoHeight;
+    dst.x = dst.y = 0;
+    dst.w = m_DisplayWidth;
+    dst.h = m_DisplayHeight;
+
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
     m_vaPutSurface(vaDeviceContext->display,
                    surface,
                    m_XWindow,
                    0, 0,
                    m_VideoWidth, m_VideoHeight,
-                   x, y,
-                   width, height,
+                   dst.x, dst.y,
+                   dst.w, dst.h,
                    NULL, 0, 0);
 
     av_frame_free(&frame);
