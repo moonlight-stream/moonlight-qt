@@ -61,19 +61,21 @@ GridView {
             }
         }
 
+        Image {
+            id: runningIcon
+            anchors.centerIn: appIcon
+            visible: model.running
+            source: "qrc:/res/baseline-play_circle_filled_white-48px.svg"
+            sourceSize {
+                width: 75
+                height: 75
+            }
+        }
+
         Text {
             id: appNameText
-            text: {
-                if (model.running) {
-                    return "<font color=\"green\">Running</font><font color=\"white\"> - </font>" + model.name
-                }
-                else {
-                    return model.name
-                }
-            }
-
+            text: model.name
             color: "white"
-
             width: parent.width
             height: 125
             anchors.top: appIcon.bottom
