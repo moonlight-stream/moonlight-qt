@@ -162,7 +162,7 @@ ScrollView {
                                 var el_fps = parseInt(fpsListModel.get(i).video_fps);
 
                                 // Pick the highest value lesser or equal to the saved FPS
-                                if (el_fps >= saved_fps) {
+                                if (saved_fps >= el_fps) {
                                     currentIndex = i
                                 }
                             }
