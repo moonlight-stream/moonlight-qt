@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+#include <QRect>
 
 class StreamingPreferences : public QObject
 {
@@ -17,6 +18,8 @@ public:
     Q_INVOKABLE static bool hasAnyHardwareAcceleration();
 
     Q_INVOKABLE static int getMaximumStreamingFrameRate();
+
+    Q_INVOKABLE QRect getDisplayResolution(int displayIndex);
 
     void reload();
 

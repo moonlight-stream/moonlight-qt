@@ -450,6 +450,24 @@ void Session::getWindowDimensions(bool fullScreen,
 {
     int displayIndex = 0;
 
+    // If there's a display matching this exact resolution, pick that
+    // one (for native full-screen streaming). Otherwise, assume
+    // display 0 for now. TODO: Default to the screen that the Qt window is on
+    if (fullScreen) {
+        for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
+            SDL_DisplayMode mode;
+            if (SDL_GetCurrentDisplayMode(i, &mode) == 0 &&
+                    m_ActiveVideoWidth == mode.w &&
+                    m_ActiveVideoHeight == mode.h) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Found exact resolution match on display: %d",
+                            i);
+                displayIndex = i;
+                break;
+            }
+        }
+    }
+
     if (m_Window != nullptr) {
         displayIndex = SDL_GetWindowDisplayIndex(m_Window);
         if (displayIndex < 0) {

@@ -93,15 +93,50 @@ int StreamingPreferences::getMaximumStreamingFrameRate()
     return maxFrameRate;
 }
 
+QRect StreamingPreferences::getDisplayResolution(int displayIndex)
+{
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return QRect();
+    }
+
+    if (displayIndex >= SDL_GetNumVideoDisplays()) {
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return QRect();
+    }
+
+    SDL_DisplayMode mode;
+    int err = SDL_GetCurrentDisplayMode(displayIndex, &mode);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+    if (err == 0) {
+        return QRect(0, 0, mode.w, mode.h);
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetCurrentDisplayMode() failed: %s",
+                     SDL_GetError());
+        return QRect();
+    }
+}
+
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
 {
-    if (width * height <= 1280 * 720) {
+    // This table prefers 16:10 resolutions because they are
+    // only slightly more pixels than the 16:9 equivalents, so
+    // we don't want to bump those 16:10 resolutions up to the
+    // next 16:9 slot.
+
+    // This covers 1280x720 and 1280x800 too
+    if (width * height <= 1366 * 768) {
         return static_cast<int>(5000 * (fps / 30.0));
     }
-    else if (width * height <= 1920 * 1080) {
+    else if (width * height <= 1920 * 1200) {
         return static_cast<int>(10000 * (fps / 30.0));
     }
-    else if (width * height <= 2560 * 1440) {
+    else if (width * height <= 2560 * 1600) {
         return static_cast<int>(20000 * (fps / 30.0));
     }
     else /* if (width * height <= 3840 * 2160) */ {

@@ -43,7 +43,7 @@ ScrollView {
                 Label {
                     width: parent.width
                     id: resFPSdesc
-                    text: qsTr("Setting values too high for your PC may cause lag, stuttering, or errors")
+                    text: qsTr("Setting values too high for your PC may cause lag, stuttering, or errors.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                     color: "white"
@@ -55,6 +55,41 @@ ScrollView {
                     ComboBox {
                         // ignore setting the index at first, and actually set it when the component is loaded
                         Component.onCompleted: {
+                            // Add native resolutions for all attached displays
+                            for (var displayIndex = 0;; displayIndex++) {
+                                var screenRect = prefs.getDisplayResolution(displayIndex)
+                                if (screenRect.width === 0) {
+                                    // Exceeded max count of displays
+                                    break
+                                }
+
+                                var indexToAdd = 0
+                                for (var j = 0; j < resolutionComboBox.count; j++) {
+                                    var existing_width = parseInt(resolutionListModel.get(j).video_width);
+                                    var existing_height = parseInt(resolutionListModel.get(j).video_height);
+
+                                    if (screenRect.width * screenRect.height === existing_width * existing_height) {
+                                        // Duplicate entry, skip
+                                        indexToAdd = -1
+                                        break
+                                    }
+                                    else if (screenRect.width * screenRect.height > existing_width * existing_height) {
+                                        // Candidate entrypoint after this entry
+                                        indexToAdd = j + 1
+                                    }
+                                }
+
+                                // Insert this display's resolution if it's not a duplicate
+                                if (indexToAdd >= 0) {
+                                    resolutionListModel.insert(indexToAdd,
+                                                               {
+                                                                   "text": "Native ("+screenRect.width+"x"+screenRect.height+")",
+                                                                   "video_width": ""+screenRect.width,
+                                                                   "video_height": ""+screenRect.height
+                                                               })
+                                }
+                            }
+
                             // load the saved width/height, and iterate through the ComboBox until a match is found
                             // and set it to that index.
                             var saved_width = prefs.width
@@ -63,17 +98,21 @@ ScrollView {
                             for (var i = 0; i < resolutionComboBox.count; i++) {
                                 var el_width = parseInt(resolutionListModel.get(i).video_width);
                                 var el_height = parseInt(resolutionListModel.get(i).video_height);
-                                if (saved_width === el_width && saved_height === el_height) {
+
+                                // Pick the highest value lesser or equal to the saved resolution
+                                if (saved_width * saved_height >= el_width * el_height) {
                                     currentIndex = i
                                 }
                             }
                         }
 
                         id: resolutionComboBox
-                        font.pointSize: 9
+                        width: 200
                         textRole: "text"
                         model: ListModel {
                             id: resolutionListModel
+                            // Other elements may be added at runtime
+                            // based on attached display resolution
                             ListElement {
                                 text: "720p"
                                 video_width: "1280"
@@ -121,14 +160,15 @@ ScrollView {
                             currentIndex = 0
                             for (var i = 0; i < fpsComboBox.count; i++) {
                                 var el_fps = parseInt(fpsListModel.get(i).video_fps);
-                                if (el_fps === saved_fps) {
+
+                                // Pick the highest value lesser or equal to the saved FPS
+                                if (el_fps >= saved_fps) {
                                     currentIndex = i
                                 }
                             }
                         }
 
                         id: fpsComboBox
-                        font.pointSize: 9
                         textRole: "text"
                         model: ListModel {
                             id: fpsListModel
@@ -238,7 +278,6 @@ ScrollView {
 
                     id: audioComboBox
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
-                    font.pointSize: 9
                     textRole: "text"
                     model: ListModel {
                         id: audioListModel
@@ -362,7 +401,6 @@ ScrollView {
 
                     id: decoderComboBox
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
-                    font.pointSize: 9
                     textRole: "text"
                     model: ListModel {
                         id: decoderListModel
@@ -409,7 +447,6 @@ ScrollView {
 
                     id: codecComboBox
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
-                    font.pointSize: 9
                     textRole: "text"
                     model: ListModel {
                         id: codecListModel
