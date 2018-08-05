@@ -81,7 +81,8 @@ SOURCES += \
     streaming/session.cpp \
     streaming/audio.cpp \
     gui/computermodel.cpp \
-    gui/appmodel.cpp
+    gui/appmodel.cpp \
+    streaming/streamutils.cpp
 
 HEADERS += \
     utils.h \
@@ -95,7 +96,8 @@ HEADERS += \
     streaming/session.hpp \
     gui/computermodel.h \
     gui/appmodel.h \
-    streaming/video/decoder.h
+    streaming/video/decoder.h \
+    streaming/streamutils.h
 
 # Platform-specific renderers and decoders
 ffmpeg {

@@ -1,6 +1,7 @@
 #include <initguid.h>
 #include "dxva2.h"
 #include "../ffmpeg.h"
+#include <streaming/streamutils.h>
 
 #include <Limelight.h>
 
@@ -593,22 +594,20 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
     sample.PlanarAlpha = DXVA2_Fixed32OpaqueAlpha();
 
     // Center in frame and preserve aspect ratio
-    double srcAspectRatio = (double)m_Desc.SampleWidth / (double)m_Desc.SampleHeight;
-    double dstAspectRatio = (double)m_DisplayWidth / (double)m_DisplayHeight;
-    if (dstAspectRatio < srcAspectRatio) {
-        // Greater height per width
-        int drawHeight = (int)(m_DisplayWidth / srcAspectRatio);
-        sample.DstRect.top = (m_DisplayHeight - drawHeight) / 2;
-        sample.DstRect.bottom = sample.DstRect.bottom + drawHeight;
-        sample.DstRect.right = m_DisplayWidth;
-    }
-    else {
-        // Greater width per height
-        int drawWidth = (int)(m_DisplayHeight * srcAspectRatio);
-        sample.DstRect.bottom = m_DisplayHeight;
-        sample.DstRect.left = (m_DisplayWidth - drawWidth) / 2;
-        sample.DstRect.right = sample.DstRect.left + drawWidth;
-    }
+    SDL_Rect src, dst;
+    src.x = src.y = 0;
+    src.w = m_Desc.SampleWidth;
+    src.h = m_Desc.SampleHeight;
+    dst.x = dst.y = 0;
+    dst.w = m_DisplayWidth;
+    dst.h = m_DisplayHeight;
+
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    sample.DstRect.left = dst.x;
+    sample.DstRect.right = dst.x + dst.w;
+    sample.DstRect.top = dst.y;
+    sample.DstRect.bottom = dst.y + dst.h;
 
     DXVA2_VideoProcessBltParams bltParams = {};
 
