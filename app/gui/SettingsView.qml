@@ -68,7 +68,7 @@ ScrollView {
                                     var existing_width = parseInt(resolutionListModel.get(j).video_width);
                                     var existing_height = parseInt(resolutionListModel.get(j).video_height);
 
-                                    if (screenRect.width * screenRect.height === existing_width * existing_height) {
+                                    if (screenRect.width === existing_width && screenRect.height === existing_height) {
                                         // Duplicate entry, skip
                                         indexToAdd = -1
                                         break
