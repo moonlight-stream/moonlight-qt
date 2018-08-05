@@ -102,12 +102,20 @@ GridView {
             // TODO: Tooltip
             id: stateIcon
             anchors.centerIn: pcIcon // TODO: Center within screen
-            visible: !model.addPc && (!model.online || !model.paired)
+            visible: !model.addPc && !model.statusUnknown && (!model.online || !model.paired)
             source: !model.online ? "qrc:/res/baseline-warning-24px.svg" : "qrc:/res/baseline-lock-24px.svg"
             sourceSize {
                 width: 50
                 height: 50
             }
+        }
+
+        BusyIndicator {
+            id: statusUnknownSpinner
+            anchors.centerIn: pcIcon
+            width: 50
+            height: 50
+            visible: !model.addPc && model.statusUnknown
         }
 
         Text {

@@ -50,6 +50,8 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return !computer->macAddress.isEmpty();
     case AddPcRole:
         return false;
+    case StatusUnknownRole:
+        return computer->state == NvComputer::CS_UNKNOWN;
     default:
         return QVariant();
     }
@@ -77,6 +79,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[BusyRole] = "busy";
     names[AddPcRole] = "addPc";
     names[WakeableRole] = "wakeable";
+    names[StatusUnknownRole] = "statusUnknown";
 
     return names;
 }
