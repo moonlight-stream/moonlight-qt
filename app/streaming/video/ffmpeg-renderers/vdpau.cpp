@@ -9,7 +9,7 @@
                                             return false; \
                                         }
 
-#define GET_PROC_ADDRESS(id, func) status = vdpauCtx->get_proc_address(vdpauCtx->device, id, (void**)func); \
+#define GET_PROC_ADDRESS(id, func) status = vdpauCtx->get_proc_address(m_Device, id, (void**)func); \
                                    BAIL_ON_FAIL(status, id)
 
 const VdpRGBAFormat VDPAURenderer::k_OutputFormats[] = {
@@ -75,6 +75,7 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
 
     AVHWDeviceContext* devCtx = (AVHWDeviceContext*)m_HwContext->data;
     AVVDPAUDeviceContext* vdpauCtx = (AVVDPAUDeviceContext*)devCtx->hwctx;
+    m_Device = vdpauCtx->device;
 
     GET_PROC_ADDRESS(VDP_FUNC_ID_GET_ERROR_STRING, &m_VdpGetErrorString);
     GET_PROC_ADDRESS(VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_DESTROY, &m_VdpPresentationQueueTargetDestroy);
@@ -89,6 +90,7 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_CREATE, &m_VdpOutputSurfaceCreate);
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_DESTROY, &m_VdpOutputSurfaceDestroy);
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_QUERY_CAPABILITIES, &m_VdpOutputSurfaceQueryCapabilities);
+    GET_PROC_ADDRESS(VDP_FUNC_ID_VIDEO_SURFACE_GET_PARAMETERS, &m_VdpVideoSurfaceGetParameters);
 
     SDL_GetWindowSize(window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
 
@@ -106,7 +108,7 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
     if (info.subsystem == SDL_SYSWM_X11) {
         GET_PROC_ADDRESS(VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
                          &m_VdpPresentationQueueTargetCreateX11);
-        status = m_VdpPresentationQueueTargetCreateX11(vdpauCtx->device,
+        status = m_VdpPresentationQueueTargetCreateX11(m_Device,
                                                        info.info.x11.window,
                                                        &m_PresentationQueueTarget);
         if (status != VDP_STATUS_OK) {
@@ -133,7 +135,7 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
     for (int i = 0; i < OUTPUT_SURFACE_FORMAT_COUNT; i++) {
         VdpBool supported;
         uint32_t maxWidth, maxHeight;
-        status = m_VdpOutputSurfaceQueryCapabilities(vdpauCtx->device, k_OutputFormats[i],
+        status = m_VdpOutputSurfaceQueryCapabilities(m_Device, k_OutputFormats[i],
                                                      &supported, &maxWidth, &maxHeight);
         if (status != VDP_STATUS_OK) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -170,7 +172,7 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
         // complete without a problem.
         int tries = 1;
         do {
-            status = m_VdpOutputSurfaceCreate(vdpauCtx->device, m_OutputSurfaceFormat,
+            status = m_VdpOutputSurfaceCreate(m_Device, m_OutputSurfaceFormat,
                                               m_DisplayWidth, m_DisplayHeight,
                                               &m_OutputSurface[i]);
             if (status != VDP_STATUS_OK) {
@@ -190,7 +192,7 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
         }
     }
 
-    status = m_VdpPresentationQueueCreate(vdpauCtx->device, m_PresentationQueueTarget,
+    status = m_VdpPresentationQueueCreate(m_Device, m_PresentationQueueTarget,
                                           &m_PresentationQueue);
     if (status != VDP_STATUS_OK) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -199,30 +201,9 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
         return false;
     }
 
-    // Set the background to black
-    VdpColor color;
-    SDL_zero(color);
+    // Set the background to opaque black
+    VdpColor color = {0.0, 0.0, 0.0, 1.0};
     m_VdpPresentationQueueSetBackgroundColor(m_PresentationQueue, &color);
-
-#define PARAM_COUNT 2
-    const VdpVideoMixerParameter params[PARAM_COUNT] = {
-        VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_WIDTH,
-        VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_HEIGHT,
-    };
-    const void* const paramValues[PARAM_COUNT] = {
-        &m_VideoWidth,
-        &m_VideoHeight,
-    };
-
-    status = m_VdpVideoMixerCreate(vdpauCtx->device, 0, nullptr,
-                                   PARAM_COUNT, params, paramValues,
-                                   &m_VideoMixer);
-    if (status != VDP_STATUS_OK) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "VdpVideoMixerCreate() failed: %s",
-                     m_VdpGetErrorString(status));
-        return false;
-    }
 
     return true;
 }
@@ -251,11 +232,51 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
     VdpOutputSurface chosenSurface = m_OutputSurface[m_NextSurfaceIndex];
     m_NextSurfaceIndex = (m_NextSurfaceIndex + 1) % OUTPUT_SURFACE_COUNT;
 
+    // We need to create the mixer on the fly, because we don't know the dimensions
+    // of our video surfaces in advance of decoding
+    if (m_VideoMixer == 0) {
+        VdpChromaType chroma;
+        uint32_t videoSurfaceWidth, videoSurfaceHeight;
+        status = m_VdpVideoSurfaceGetParameters(videoSurface, &chroma, &videoSurfaceWidth, &videoSurfaceHeight);
+        if (status != VDP_STATUS_OK) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "VdpVideoSurfaceGetParameters() failed: %s",
+                         m_VdpGetErrorString(status));
+            av_frame_free(&frame);
+            return;
+        }
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "VDPAU surface size: %dx%d",
+                    videoSurfaceWidth, videoSurfaceHeight);
+
+    #define PARAM_COUNT 2
+        const VdpVideoMixerParameter params[PARAM_COUNT] = {
+            VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_WIDTH,
+            VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_HEIGHT,
+        };
+        const void* const paramValues[PARAM_COUNT] = {
+            &videoSurfaceWidth,
+            &videoSurfaceHeight,
+        };
+
+        status = m_VdpVideoMixerCreate(m_Device, 0, nullptr,
+                                       PARAM_COUNT, params, paramValues,
+                                       &m_VideoMixer);
+        if (status != VDP_STATUS_OK) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "VdpVideoMixerCreate() failed: %s",
+                         m_VdpGetErrorString(status));
+            av_frame_free(&frame);
+            return;
+        }
+    }
+
     // Wait for this frame to be off the screen
     VdpTime pts;
     m_VdpPresentationQueueBlockUntilSurfaceIdle(m_PresentationQueue, chosenSurface, &pts);
 
-    VdpRect outputRect;
+    VdpRect sourceRect, outputRect;
 
     SDL_Rect src, dst;
     src.x = src.y = 0;
@@ -272,6 +293,10 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
     outputRect.y0 = dst.y;
     outputRect.y1 = dst.y + dst.h;
 
+    sourceRect.x0 = sourceRect.y0 = 0;
+    sourceRect.x1 = m_VideoWidth;
+    sourceRect.y1 = m_VideoHeight;
+
     // Render the next frame into the output surface
     status = m_VdpVideoMixerRender(m_VideoMixer,
                                    VDP_INVALID_HANDLE, nullptr,
@@ -279,7 +304,7 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
                                    0, nullptr,
                                    videoSurface,
                                    0, nullptr,
-                                   nullptr,
+                                   &sourceRect,
                                    chosenSurface,
                                    &outputRect,
                                    nullptr,

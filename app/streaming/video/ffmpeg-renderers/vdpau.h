@@ -28,6 +28,7 @@ private:
     VdpPresentationQueue m_PresentationQueue;
     VdpVideoMixer m_VideoMixer;
     VdpRGBAFormat m_OutputSurfaceFormat;
+    VdpDevice m_Device;
 
 #define OUTPUT_SURFACE_COUNT 3
     VdpOutputSurface m_OutputSurface[OUTPUT_SURFACE_COUNT];
@@ -49,6 +50,7 @@ private:
     VdpOutputSurfaceCreate* m_VdpOutputSurfaceCreate;
     VdpOutputSurfaceDestroy* m_VdpOutputSurfaceDestroy;
     VdpOutputSurfaceQueryCapabilities* m_VdpOutputSurfaceQueryCapabilities;
+    VdpVideoSurfaceGetParameters* m_VdpVideoSurfaceGetParameters;
 
     // X11 stuff
     VdpPresentationQueueTargetCreateX11* m_VdpPresentationQueueTargetCreateX11;
