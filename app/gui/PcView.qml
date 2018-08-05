@@ -98,6 +98,18 @@ GridView {
             }
         }
 
+        Image {
+            // TODO: Tooltip
+            id: stateIcon
+            anchors.centerIn: pcIcon // TODO: Center within screen
+            visible: !model.addPc && (!model.online || !model.paired)
+            source: !model.online ? "qrc:/res/baseline-warning-24px.svg" : "qrc:/res/baseline-lock-24px.svg"
+            sourceSize {
+                width: 50
+                height: 50
+            }
+        }
+
         Text {
             id: pcNameText
             text: model.name
@@ -108,38 +120,6 @@ GridView {
             font.pointSize: 36
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
-        }
-
-        Text {
-            function getStatusText(model)
-            {
-                if (model.online) {
-                    var text = "<font color=\"green\">Online</font>"
-                    text += "<font color=\"white\"> - </font>"
-                    if (model.paired) {
-                        text += "<font color=\"skyblue\">Paired</font>"
-                    }
-                    else if (model.busy) {
-                        text += "<font color=\"red\">Busy</font>"
-                    }
-                    else {
-                        text += "<font color=\"red\">Not Paired</font>"
-                    }
-                    return text
-                }
-                else {
-                    return "<font color=\"red\">Offline</font>";
-                }
-            }
-
-            id: pcPairedText
-            text: getStatusText(model)
-            visible: !model.addPc
-
-            width: parent.width
-            anchors.top: pcNameText.bottom
-            font.pointSize: 24
-            horizontalAlignment: Text.AlignHCenter
         }
 
         Menu {
