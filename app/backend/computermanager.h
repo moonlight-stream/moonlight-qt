@@ -65,6 +65,7 @@ public:
     QVector<NvDisplayMode> displayModes;
     int maxLumaPixelsHEVC;
     int serverCodecModeSupport;
+    QString gpuModel;
 
     // Persisted traits
     QString localAddress;

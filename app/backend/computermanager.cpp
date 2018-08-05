@@ -52,6 +52,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->maxLumaPixelsHEVC = 0;
     this->serverCodecModeSupport = 0;
     this->pendingQuit = false;
+    this->gpuModel = nullptr;
 }
 
 void
@@ -134,6 +135,7 @@ NvComputer::NvComputer(QString address, QString serverInfo)
     this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
     this->appVersion = NvHTTP::getXmlString(serverInfo, "appversion");
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
+    this->gpuModel = NvHTTP::getXmlString(serverInfo, "gputype");
     this->activeAddress = address;
     this->state = NvComputer::CS_ONLINE;
     this->pendingQuit = false;
@@ -266,6 +268,7 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED(gfeVersion);
     ASSIGN_IF_CHANGED(appVersion);
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
+    ASSIGN_IF_CHANGED(gpuModel);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(appList);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(displayModes);
     return changed;

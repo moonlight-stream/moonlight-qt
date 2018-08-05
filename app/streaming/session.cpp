@@ -236,6 +236,8 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_DecoderLock(0),
       m_NeedsIdr(false)
 {
+    qDebug() << "Server GPU:" << m_Computer->gpuModel;
+
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
     m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
@@ -244,7 +246,11 @@ Session::Session(NvComputer* computer, NvApp& app)
     m_VideoCallbacks.capabilities |= CAPABILITY_DIRECT_SUBMIT;
 
     // Slice up to 4 times for parallel decode, once slice per core
-    m_VideoCallbacks.capabilities |= CAPABILITY_SLICES_PER_FRAME(qMin(MAX_SLICES, SDL_GetCPUCount()));
+    int slices = qMin(MAX_SLICES, SDL_GetCPUCount());
+    m_VideoCallbacks.capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Encoder configured for %d slices per frame",
+                slices);
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
     m_StreamConfig.width = m_Preferences.width;
@@ -252,6 +258,11 @@ Session::Session(NvComputer* computer, NvApp& app)
     m_StreamConfig.fps = m_Preferences.fps;
     m_StreamConfig.bitrate = m_Preferences.bitrateKbps;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Video bitrate: %d kbps",
+                m_StreamConfig.bitrate);
+
     RAND_bytes(reinterpret_cast<unsigned char*>(m_StreamConfig.remoteInputAesKey),
                sizeof(m_StreamConfig.remoteInputAesKey));
 
