@@ -2,6 +2,8 @@
 #include <SDL.h>
 #include "streaming/session.hpp"
 
+#include <QtGlobal>
+
 #define VK_0 0x30
 #define VK_A 0x41
 
@@ -441,13 +443,18 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
             state->lsX = event->value;
             break;
         case SDL_CONTROLLER_AXIS_LEFTY:
-            state->lsY = -event->value;
+            // Signed values have one more negative value than
+            // positive value, so inverting the sign on -32768
+            // could actually cause the value to overflow and
+            // wrap around to be negative again. Avoid that by
+            // capping the value at 32767.
+            state->lsY = -qMax(event->value, (short)-32767);
             break;
         case SDL_CONTROLLER_AXIS_RIGHTX:
             state->rsX = event->value;
             break;
         case SDL_CONTROLLER_AXIS_RIGHTY:
-            state->rsY = -event->value;
+            state->rsY = -qMax(event->value, (short)-32767);
             break;
         case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
             state->lt = (unsigned char)(event->value * 255UL / 32767);
