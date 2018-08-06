@@ -594,6 +594,18 @@ void Session::exec()
     Q_ASSERT(m_Computer->currentGameId == 0 ||
              m_Computer->currentGameId == m_App.id);
 
+    bool enableGameOptimizations = false;
+    for (const NvDisplayMode &mode : m_Computer->displayModes) {
+        if (mode.width == m_StreamConfig.width &&
+                mode.height == m_StreamConfig.height) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Found host supported resolution: %dx%d",
+                        mode.width, mode.height);
+            enableGameOptimizations = prefs.gameOptimizations;
+            break;
+        }
+    }
+
     try {
         NvHTTP http(m_Computer->activeAddress);
         if (m_Computer->currentGameId != 0) {
@@ -601,7 +613,7 @@ void Session::exec()
         }
         else {
             http.launchApp(m_App.id, &m_StreamConfig,
-                           prefs.gameOptimizations,
+                           enableGameOptimizations,
                            prefs.playAudioOnHost,
                            inputHandler.getAttachedGamepadMask());
         }
