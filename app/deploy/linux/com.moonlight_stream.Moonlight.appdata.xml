@@ -7,8 +7,16 @@
 	<summary>Stream games from your NVIDIA GameStream-enabled PC</summary>
 
 	<description>
-		<p>Moonlight can stream games or other applications from a PC with an NVIDIA GeForce GTX 600-series or higher GPU and GeForce Experience installed.</p>
-		<p>GameStream utilizes the NVENC hardware encoder present on NVIDIA GPUs for low-latency streaming at up 4K 60 FPS. Moonlight can utilize VAAPI hardware acceleration for high-performance H.264 and HEVC video decoding with low CPU usage.</p>
+		<p>Moonlight can stream games and other applications from a PC with an NVIDIA GeForce GTX 600-series or higher GPU and GeForce Experience installed.</p>
+		<p>Features include:</p>
+		<ul>
+			<li>Streaming at up to 4K resolution</li>
+			<li>Support for up to 120 FPS streaming on high refresh rate monitors</li>
+			<li>Hardware accelerated video decoding with VAAPI and VDPAU support</li>
+			<li>5.1 surround sound audio support</li>
+			<li>HEVC support for better video compression efficiency</li>
+			<li>Gamepad support with SDL mapping compatibility</li>
+		</ul>
 	</description>
 
 	<url type="homepage">https://moonlight-stream.com</url>
@@ -25,6 +33,25 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.1.0" date="2018-08-05">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Allow streaming at the client's native resolution</li>
+					<li>VDPAU hardware decoding support for NVIDIA GPUs</li>
+					<li>Updated UI to replace status text with icons</li>
+					<li>Stream window is now resizable</li>
+					<li>Display warnings during game launch for configuration issues</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Gamepad input now works even if the app doesn't have focus</li>
+					<li>Fixed streaming black screen if the host supported HEVC but the client didn't</li>
+					<li>Fixed broken video scaling causing extra stretching and off-center video</li>
+					<li>Fixed gamepad input issue causing some Y axis inputs to be reversed</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.0.5" date="2018-08-01">
 			<description>
 				<p>Changes from 0.0.4:</p>

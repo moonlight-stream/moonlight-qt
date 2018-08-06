@@ -4,7 +4,7 @@
 
 Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and  [iOS](https://github.com/moonlight-stream/moonlight-ios).
 
-This client is currently still in development (pre-alpha), but the streaming performance is already much better than the older Moonlight Chrome client on many machines. Test releases may be available for your OS on the [Releases page](https://github.com/moonlight-stream/moonlight-qt/releases).
+See the [releases page](https://github.com/moonlight-stream/moonlight-qt/releases) for download links for Windows and Mac. For Linux, we're on [Flathub](https://flathub.org/apps/details/com.moonlight_stream.Moonlight).
 
 You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
