@@ -227,6 +227,7 @@ NvHTTP::getAppList()
     QString appxml = openConnectionToString(m_BaseUrlHttps,
                                             "applist",
                                             nullptr,
+                                            true,
                                             true);
     verifyResponseStatus(appxml);
 
