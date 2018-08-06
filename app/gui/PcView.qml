@@ -139,7 +139,7 @@ GridView {
             MenuItem {
                 text: "Wake PC"
                 onTriggered: computerModel.wakeComputer(index)
-                visible: !model.online && model.wakeable
+                visible: !model.addPc && !model.online && model.wakeable
                 height: visible ? implicitHeight : 0
             }
             MenuItem {
