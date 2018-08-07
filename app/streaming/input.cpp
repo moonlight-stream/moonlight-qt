@@ -158,6 +158,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_CLEAR:
                 keyCode = 0x0C;
                 break;
+            case SDL_SCANCODE_KP_ENTER: // FIXME: Is this correct?
             case SDL_SCANCODE_RETURN:
                 keyCode = 0x0D;
                 break;
@@ -235,7 +236,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_KP_MINUS:
                 keyCode = 0x6D;
                 break;
-            case SDL_SCANCODE_KP_DECIMAL:
+            case SDL_SCANCODE_KP_PERIOD:
                 keyCode = 0x6E;
                 break;
             case SDL_SCANCODE_KP_DIVIDE:
@@ -288,6 +289,9 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 break;
             case SDL_SCANCODE_SEMICOLON:
                 keyCode = 0xBA;
+                break;
+            case SDL_SCANCODE_EQUALS:
+                keyCode = 0xBB;
                 break;
             case SDL_SCANCODE_COMMA:
                 keyCode = 0xBC;
