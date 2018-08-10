@@ -73,6 +73,7 @@ ApplicationWindow {
 
                 id: updateButton
                 icon.source: "qrc:/res/update.svg"
+                icon.color: "#0BF200"
 
                 // Invisible until we get a callback notifying us that
                 // an update is available
