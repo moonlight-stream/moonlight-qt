@@ -75,6 +75,11 @@ ApplicationWindow {
                 icon.source: "qrc:/res/update.svg"
                 icon.color: "#0BF200"
 
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: "Update available for Moonlight"
+
                 // Invisible until we get a callback notifying us that
                 // an update is available
                 visible: false
@@ -102,6 +107,11 @@ ApplicationWindow {
             ToolButton {
                 icon.source: "qrc:/res/question_mark.svg"
 
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: "Help"
+
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
 
@@ -115,6 +125,11 @@ ApplicationWindow {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
 
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: "Gamepad Mapper"
+
                 icon.source: "qrc:/res/ic_videogame_asset_white_48px.svg"
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
 
@@ -127,6 +142,11 @@ ApplicationWindow {
             ToolButton {
                 icon.source: "qrc:/res/settings.svg"
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: "Settings"
 
                 Menu {
                     x: parent.width
