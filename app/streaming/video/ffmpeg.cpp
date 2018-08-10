@@ -20,6 +20,8 @@
 // This is gross but it allows us to use sizeof()
 #include "ffmpeg_videosamples.cpp"
 
+#define FAILED_DECODES_RESET_THRESHOLD 20
+
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr;
@@ -50,7 +52,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
     : m_VideoDecoderCtx(nullptr),
       m_DecodeBuffer(1024 * 1024, 0),
       m_HwDecodeCfg(nullptr),
-      m_Renderer(nullptr)
+      m_Renderer(nullptr),
+      m_ConsecutiveFailedDecodes(0)
 {
     av_init_packet(&m_Pkt);
     SDL_AtomicSet(&m_QueuedFrames, 0);
@@ -317,7 +320,20 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         char errorstring[512];
         av_strerror(err, errorstring, sizeof(errorstring));
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Decoding failed: %s", errorstring);
+                    "avcodec_send_packet() failed: %s", errorstring);
+
+        // If we've failed a bunch of decodes in a row, the decoder/renderer is
+        // clearly unhealthy, so let's generate a synthetic reset event to trigger
+        // the event loop to destroy and recreate the decoder.
+        if (++m_ConsecutiveFailedDecodes == FAILED_DECODES_RESET_THRESHOLD) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Resetting decoder due to consistent failure");
+
+            SDL_Event event;
+            event.type = SDL_RENDER_DEVICE_RESET;
+            SDL_PushEvent(&event);
+        }
+
         return DR_NEED_IDR;
     }
 
@@ -332,12 +348,29 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
     if (err == 0) {
+        // Reset failed decodes count if we reached this far
+        m_ConsecutiveFailedDecodes = 0;
+
         // Queue the frame for rendering from the main thread
         SDL_AtomicIncRef(&m_QueuedFrames);
         queueFrame(frame);
     }
     else {
         av_frame_free(&frame);
+
+        char errorstring[512];
+        av_strerror(err, errorstring, sizeof(errorstring));
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "avcodec_receive_frame() failed: %s", errorstring);
+
+        if (++m_ConsecutiveFailedDecodes == FAILED_DECODES_RESET_THRESHOLD) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Resetting decoder due to consistent failure");
+
+            SDL_Event event;
+            event.type = SDL_RENDER_DEVICE_RESET;
+            SDL_PushEvent(&event);
+        }
     }
 
     return DR_OK;

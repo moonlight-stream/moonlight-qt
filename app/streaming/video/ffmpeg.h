@@ -42,6 +42,7 @@ private:
     const AVCodecHWConfig* m_HwDecodeCfg;
     IFFmpegRenderer* m_Renderer;
     SDL_atomic_t m_QueuedFrames;
+    int m_ConsecutiveFailedDecodes;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCTestFrame[];
