@@ -361,9 +361,9 @@ bool Session::validateLaunch()
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
                                        m_StreamConfig.fps) &&
-                m_Preferences.videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE) {
+                m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_AUTO) {
             if (hevcForced) {
-                emitLaunchWarning("Using software decoding due to your selection to force HEVC. This may cause poor streaming performance.");
+                emitLaunchWarning("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.");
             }
             else {
                 emitLaunchWarning("This PC's GPU doesn't support HEVC decoding.");
@@ -375,6 +375,11 @@ bool Session::validateLaunch()
             if (m_Computer->maxLumaPixelsHEVC == 0) {
                 emitLaunchWarning("Your host PC GPU doesn't support HEVC. "
                                   "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
+
+                // Moonlight-common-c will handle this case already, but we want
+                // to set this explicitly here so we can do our hardware acceleration
+                // check below.
+                m_StreamConfig.supportsHevc = false;
             }
         }
     }
@@ -426,7 +431,23 @@ bool Session::validateLaunch()
         }
     }
 
-    // Always allow the launch to proceed for now
+    if (m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
+            !isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                                       m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
+                                       m_StreamConfig.width,
+                                       m_StreamConfig.height,
+                                       m_StreamConfig.fps)) {
+        if (m_Preferences.videoCodecConfig == StreamingPreferences::VCC_AUTO) {
+            emit displayLaunchError("Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC's GPU.");
+        }
+        else {
+            emit displayLaunchError("Your codec selection and force hardware decoding setting are not compatible. This PC's GPU lacks support for decoding your chosen codec.");
+        }
+
+        // Fail the launch, because we won't manage to get a decoder for the actual stream
+        return false;
+    }
+
     return true;
 }
 
