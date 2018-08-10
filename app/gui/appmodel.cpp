@@ -108,6 +108,14 @@ void AppModel::handleComputerStateChanged(NvComputer* computer)
         return;
     }
 
+    // If the computer has gone offline or we've been unpaired,
+    // signal the UI so we can go back to the PC view.
+    if (m_Computer->state == NvComputer::CS_OFFLINE ||
+            m_Computer->pairState == NvComputer::PS_NOT_PAIRED) {
+        emit computerLost();
+        return;
+    }
+
     // First, process additions/removals from the app list. This
     // is required because the new game may now be running, so
     // we can't check that first.

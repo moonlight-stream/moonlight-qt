@@ -42,6 +42,9 @@ private slots:
 
     void handleBoxArtLoaded(NvComputer* computer, NvApp app, QUrl image);
 
+signals:
+    void computerLost();
+
 private:
     NvComputer* m_Computer;
     BoxArtManager m_BoxArtManager;

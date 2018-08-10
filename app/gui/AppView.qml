@@ -28,14 +28,24 @@ GridView {
     // routine to run, but only if we start as invisible
     visible: false
 
+    function computerLost()
+    {
+        // Go back to the PC view on PC loss
+        stackView.pop()
+    }
+
     onVisibleChanged: {
         if (visible) {
             // Start polling when this view is shown
             ComputerManager.startPolling()
+
+            appModel.computerLost.connect(computerLost)
         }
         else {
             // Stop polling when this view is not on top
             ComputerManager.stopPollingAsync()
+
+            appModel.computerLost.disconnect(computerLost)
         }
     }
 
