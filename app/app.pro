@@ -82,7 +82,8 @@ SOURCES += \
     streaming/audio.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
-    streaming/streamutils.cpp
+    streaming/streamutils.cpp \
+    backend/autoupdatechecker.cpp
 
 HEADERS += \
     utils.h \
@@ -97,7 +98,8 @@ HEADERS += \
     gui/computermodel.h \
     gui/appmodel.h \
     streaming/video/decoder.h \
-    streaming/streamutils.h
+    streaming/streamutils.h \
+    backend/autoupdatechecker.h
 
 # Platform-specific renderers and decoders
 ffmpeg {
@@ -203,3 +205,4 @@ macx {
 }
 
 VERSION = 0.1.0
+DEFINES += VERSION_STR=\\\"0.1.0\\\"

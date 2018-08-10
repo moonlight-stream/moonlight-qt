@@ -4,6 +4,8 @@ import QtQuick.Layouts 1.3
 
 import QtQuick.Controls.Material 2.1
 
+import AutoUpdateChecker 1.0
+
 ApplicationWindow {
     id: window
     visible: true
@@ -67,13 +69,42 @@ ApplicationWindow {
             }
 
             ToolButton {
+                property string browserUrl: ""
+
+                id: updateButton
+                icon.source: "qrc:/res/update.svg"
+
+                // Invisible until we get a callback notifying us that
+                // an update is available
+                visible: false
+
+                onClicked: Qt.openUrlExternally(browserUrl);
+
+                Menu {
+                    x: parent.width
+                    transformOrigin: Menu.TopRight
+                }
+
+
+                function updateAvailable(url)
+                {
+                    updateButton.browserUrl = url
+                    updateButton.visible = true
+                }
+
+                Component.onCompleted: {
+                    AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
+                    AutoUpdateChecker.start()
+                }
+            }
+
+            ToolButton {
                 icon.source: "qrc:/res/question_mark.svg"
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
 
                 Menu {
-                    id: helpButton
                     x: parent.width
                     transformOrigin: Menu.TopRight
                 }
@@ -87,7 +118,6 @@ ApplicationWindow {
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
 
                 Menu {
-                    id: gamepadMappingMenu
                     x: parent.width
                     transformOrigin: Menu.TopRight
                 }
@@ -98,7 +128,6 @@ ApplicationWindow {
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
 
                 Menu {
-                    id: optionsMenu
                     x: parent.width
                     transformOrigin: Menu.TopRight
                 }

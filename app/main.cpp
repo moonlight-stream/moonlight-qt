@@ -13,6 +13,7 @@
 
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
+#include "backend/autoupdatechecker.h"
 #include "streaming/session.hpp"
 #include "settings/streamingpreferences.h"
 
@@ -172,6 +173,11 @@ int main(int argc, char *argv[])
                                               [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                   return new ComputerManager();
                                               });
+    qmlRegisterSingletonType<AutoUpdateChecker>("AutoUpdateChecker", 1, 0,
+                                                "AutoUpdateChecker",
+                                                [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                    return new AutoUpdateChecker();
+                                                });
 
     QQuickStyle::setStyle("Material");
 
