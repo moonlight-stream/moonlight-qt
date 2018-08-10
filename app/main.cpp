@@ -132,7 +132,13 @@ int main(int argc, char *argv[])
 {
 #ifdef USE_CUSTOM_LOGGER
 #ifdef LOG_TO_FILE
+#ifdef Q_OS_DARWIN
+    // On macOS, $TMPDIR is some random folder under /var/folders/ that nobody can
+    // easily find, so use the system's global tmp directory instead.
+    QDir tempDir("/tmp");
+#else
     QDir tempDir(QDir::tempPath());
+#endif
     s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
     if (s_LoggerFile->open(QIODevice::WriteOnly)) {
         qInfo() << "Redirecting log output to " << s_LoggerFile->fileName();
