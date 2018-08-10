@@ -386,8 +386,8 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
     }
 
     if (event->xrel != 0 || event->yrel != 0) {
-        LiSendMouseMoveEvent((unsigned short)event->xrel,
-                             (unsigned short)event->yrel);
+        LiSendMouseMoveEvent((short)event->xrel,
+                             (short)event->yrel);
     }
 }
 
