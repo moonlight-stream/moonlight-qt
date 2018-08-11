@@ -1,3 +1,4 @@
+# This script requires create-dmg to be installed from https://github.com/sindresorhus/create-dmg
 BUILD_CONFIG=$1
 
 fail()
@@ -40,12 +41,12 @@ echo Copying frameworks dependencies
 mkdir $BUILD_FOLDER/app/Moonlight.app/Contents/Frameworks
 cp -R $SOURCE_ROOT/libs/mac/Frameworks/ $BUILD_FOLDER/app/Moonlight.app/Contents/Frameworks/ || fail "Framework copy failed!"
 
-echo Creating DMG
+echo Creating app bundle
 EXTRA_ARGS=
 if [ "$BUILD_CONFIG" == "Debug" ]; then EXTRA_ARGS="$EXTRA_ARGS -use-debug-libs"; fi
 if [ "$SIGNING_KEY" != "" ]; then EXTRA_ARGS="$EXTRA_ARGS -codesign=$SIGNING_KEY"; fi
 echo Extra deployment arguments: $EXTRA_ARGS
-macdeployqt $BUILD_FOLDER/app/Moonlight.app -dmg $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
+macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
 
-echo Deploying DMG
-mv $BUILD_FOLDER/app/Moonlight.dmg $INSTALLER_FOLDER/
+echo Creating DMG
+create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER || fail "create-dmg failed!"
