@@ -31,6 +31,7 @@ if /I "%ARCH%" NEQ "x86" (
 )
 
 set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community
+set VCREDIST_PATH=%VS_PATH%\VC\Redist\MSVC\14.14.26405
 set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 1B3C676E831A94EC0327C3347EB32C68C26B3A67 /v
 
 call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
@@ -88,8 +89,16 @@ if "%SIGN%"=="1" (
 )
 
 echo Building installer
-set VCREDIST_INSTALLER=%VS_PATH%\VC\Redist\MSVC\14.14.26405\vcredist_%ARCH%.exe
+set VCREDIST_INSTALLER=%VCREDIST_PATH%\vcredist_%ARCH%.exe
 msbuild %SOURCE_ROOT%\wix\Moonlight.sln /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
+if !ERRORLEVEL! NEQ 0 goto Error
+
+echo Building portable package
+rem This must be done after WiX harvesting and signing, since the VCRT dlls are MS signed
+rem and should not be harvested for inclusion in the full installer
+copy "%VCREDIST_PATH%\%ARCH%\Microsoft.VC141.CRT\*.dll" %DEPLOY_FOLDER%
+if !ERRORLEVEL! NEQ 0 goto Error
+7z a %INSTALLER_FOLDER%\MoonlightPortable.zip %DEPLOY_FOLDER%\*
 if !ERRORLEVEL! NEQ 0 goto Error
 
 if "%SIGN%"=="1" (
@@ -107,6 +116,8 @@ if "%SIGN%"=="1" (
 if /i "%APPVEYOR%"=="true" (
     echo Pushing artifacts
     appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightSetup.exe -FileName MoonlightSetup-%ARCH%-%BUILD_CONFIG%.exe
+    if !ERRORLEVEL! NEQ 0 goto Error
+    appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightPortable.zip -FileName MoonlightPortable-%ARCH%-%BUILD_CONFIG%.zip
     if !ERRORLEVEL! NEQ 0 goto Error
 )
 
