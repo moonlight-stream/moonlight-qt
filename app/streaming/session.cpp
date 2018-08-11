@@ -742,7 +742,9 @@ void Session::exec()
     // Capture the mouse by default on release builds only.
     // This prevents the mouse from becoming trapped inside
     // Moonlight when it's halted at a debug break.
-    SDL_SetRelativeMouseMode(SDL_TRUE);
+    if (m_Preferences.fullScreen) {
+        SDL_SetRelativeMouseMode(SDL_TRUE);
+    }
 #endif
 
     // Stop text input. SDL enables it by default
