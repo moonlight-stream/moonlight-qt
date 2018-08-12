@@ -26,16 +26,6 @@ VAAPIRenderer::~VAAPIRenderer()
     }
 }
 
-void VAAPIRenderer::vaapiLogError(void*, const char *message)
-{
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "VAAPI: %s", message);
-}
-
-void VAAPIRenderer::vaapiLogInfo(void*, const char *message)
-{
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "VAAPI: %s", message);
-}
-
 bool
 VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height)
 {
@@ -104,9 +94,6 @@ VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height)
                      info.subsystem);
         return false;
     }
-
-    vaSetErrorCallback(vaDeviceContext->display, &VAAPIRenderer::vaapiLogError, nullptr);
-    vaSetInfoCallback(vaDeviceContext->display, &VAAPIRenderer::vaapiLogInfo, nullptr);
 
     int major, minor;
     VAStatus status;

@@ -38,9 +38,6 @@ public:
     virtual void renderFrame(AVFrame* frame);
 
 private:
-    static void vaapiLogError(void*, const char *message);
-    static void vaapiLogInfo(void*, const char *message);
-
     int m_WindowSystem;
     AVBufferRef* m_HwContext;
 
