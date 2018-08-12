@@ -19,7 +19,7 @@
 
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
 
-    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." />
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate CompressionLevel="high" />
 
     <?if $(var.Platform) = x64 ?>

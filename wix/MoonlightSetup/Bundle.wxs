@@ -42,6 +42,9 @@
       </bal:Condition>
     <?endif ?>
 
+    <!-- HACK: Force replacement of lower versioned files too. This is only safe because we don't install any shared files -->
+    <Variable Name="REINSTALLMODE" bal:Overridable="yes" Value="dmus" />
+
     <?if $(env.ARCH) ~= x64 ?>
       <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]Moonlight Game Streaming" />
     <?elseif $(env.ARCH) ~= x86 ?>
@@ -71,6 +74,7 @@
       </ExePackage>
       <MsiPackage Id="Moonlight" SourceFile="$(var.Moonlight.TargetPath)" Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
       </MsiPackage>
     </Chain>
 
