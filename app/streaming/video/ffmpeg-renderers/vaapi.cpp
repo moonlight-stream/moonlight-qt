@@ -1,8 +1,6 @@
 #include "vaapi.h"
 #include <streaming/streamutils.h>
 
-#include <dlfcn.h>
-
 #include <SDL_syswm.h>
 
 VAAPIRenderer::VAAPIRenderer()

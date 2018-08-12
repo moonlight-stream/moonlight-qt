@@ -44,7 +44,6 @@ macx {
 unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 opus
-    LIBS += -ldl
 
     packagesExist(libavcodec) {
         PKGCONFIG += libavcodec libavutil
