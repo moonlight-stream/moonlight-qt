@@ -22,6 +22,9 @@ matrix:
             - qt59svg
             - libesd0-dev
             - libgl-dev
+            - libegl1-mesa-dev
+            - libxkbcommon-dev
+            - wayland-protocols
             - libopus-dev
             - libavcodec-dev
             - libavutil-dev
