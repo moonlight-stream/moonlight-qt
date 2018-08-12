@@ -21,7 +21,10 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
  - Gamepad support with SDL gamepad mappings
 
 ## Building
-1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download (select MSVC toolchain on Windows)
+1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download
+    - On Windows, install Visual Studio 2017 and select MSVC 2017 toolchain during Qt installation
+    - On Mac, install the latest version of XCode
+    - On Linux, install your distro equivalents of: `openssl-devel qt5-devel SDL2-devel ffmpeg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel`
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
 3. Open the project in Qt Creator or build from qmake on the command line
 
