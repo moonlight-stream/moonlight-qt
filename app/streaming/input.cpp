@@ -41,6 +41,10 @@ SdlInputHandler::SdlInputHandler(bool multiController)
         // Player 1 is always present in non-MC mode
         m_GamepadMask = 0x1;
     }
+    else {
+        // Otherwise, detect gamepads on the fly
+        m_GamepadMask = 0;
+    }
 
     SDL_zero(m_GamepadState);
 }
