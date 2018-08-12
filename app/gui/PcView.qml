@@ -34,7 +34,10 @@ GridView {
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
 
-        if (!prefs.hasAnyHardwareAcceleration()) {
+        if (prefs.isRunningWayland()) {
+            waylandDialog.open()
+        }
+        else if (!prefs.hasAnyHardwareAcceleration()) {
             noHwDecoderDialog.open()
         }
     }
@@ -219,6 +222,18 @@ GridView {
         text: "No functioning hardware accelerated H.264 video decoder was detected by Moonlight. " +
               "Your streaming performance may be severely degraded in this configuration. " +
               "Click the Help button for more information on solving this problem."
+        onHelp: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
+        }
+    }
+
+    MessageDialog {
+        id: waylandDialog
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        text: "Moonlight does not support hardware acceleration on Wayland. Continuing on Wayland may result in poor streaming performance. " +
+              "Please switch to an X session for optimal performance."
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
         }

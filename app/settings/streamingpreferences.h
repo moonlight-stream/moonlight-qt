@@ -17,6 +17,8 @@ public:
 
     Q_INVOKABLE static bool hasAnyHardwareAcceleration();
 
+    Q_INVOKABLE static bool isRunningWayland();
+
     Q_INVOKABLE static int getMaximumStreamingFrameRate();
 
     Q_INVOKABLE QRect getDisplayResolution(int displayIndex);

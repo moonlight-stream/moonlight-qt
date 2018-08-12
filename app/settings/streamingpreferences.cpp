@@ -67,6 +67,11 @@ bool StreamingPreferences::hasAnyHardwareAcceleration()
                                               1920, 1080, 60);
 }
 
+bool StreamingPreferences::isRunningWayland()
+{
+    return qgetenv("XDG_SESSION_TYPE") == QByteArray("wayland");
+}
+
 int StreamingPreferences::getMaximumStreamingFrameRate()
 {
     // Never let the maximum drop below 60 FPS
