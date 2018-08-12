@@ -33,6 +33,18 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.2.0" date="2018-08-12">
+			<description>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed functionality of '=', 'Numpad Dot', and 'Numpad Enter' keys</li>
+					<li>Fixed uninitialized variable causing strange gamepad behavior</li>
+					<li>Added a warning for incompatible configs and decoder failures</li>
+					<li>Added a warning for Wayland performance issues</li>
+					<li>Stopped capturing the mouse by default for windowed streams</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.1.0" date="2018-08-05">
 			<description>
 				<p>New features:</p>
