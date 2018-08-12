@@ -826,6 +826,7 @@ void Session::exec()
                 SDL_AtomicUnlock(&m_DecoderLock);
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Failed to recreate decoder after reset");
+                emit displayLaunchError("Unable to initialize video decoder. Please check your streaming settings and try again.");
                 goto DispatchDeferredCleanup;
             }
 
