@@ -51,6 +51,12 @@ unix:!macx {
         CONFIG += ffmpeg
 
         packagesExist(libva) {
+            packagesExist(libva-x11) {
+                CONFIG += libva-x11
+            }
+            packagesExist(libva-wayland) {
+                CONFIG += libva-wayland
+            }
             CONFIG += libva
         }
 
@@ -116,9 +122,22 @@ ffmpeg {
 libva {
     message(VAAPI renderer selected)
 
+    PKGCONFIG += libva
     DEFINES += HAVE_LIBVA
     SOURCES += streaming/video/ffmpeg-renderers/vaapi.cpp
     HEADERS += streaming/video/ffmpeg-renderers/vaapi.h
+}
+libva-x11 {
+    message(VAAPI X11 support enabled)
+
+    PKGCONFIG += libva-x11
+    DEFINES += HAVE_LIBVA_X11
+}
+libva-wayland {
+    message(VAAPI Wayland support enabled)
+
+    PKGCONFIG += libva-wayland
+    DEFINES += HAVE_LIBVA_WAYLAND
 }
 libvdpau {
     message(VDPAU renderer selected)

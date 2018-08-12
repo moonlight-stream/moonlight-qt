@@ -97,9 +97,9 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height)
     SDL_VERSION(&info.version);
 
     if (!SDL_GetWindowWMInfo(window, &info)) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "SDL_GetWindowWMInfo() failed: %s",
-                    SDL_GetError());
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetWindowWMInfo() failed: %s",
+                     SDL_GetError());
         return false;
     }
 

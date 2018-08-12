@@ -4,29 +4,17 @@
 
 extern "C" {
 #include <va/va.h>
+#ifdef HAVE_LIBVA_X11
 #include <va/va_x11.h>
+#endif
+#ifdef HAVE_LIBVA_WAYLAND
+#include <va/va_wayland.h>
+#endif
 #include <libavutil/hwcontext_vaapi.h>
 }
 
 class VAAPIRenderer : public IFFmpegRenderer
 {
-    typedef VAStatus (*vaPutSurface_t)(
-        VADisplay dpy,
-        VASurfaceID surface,
-        Drawable draw, /* X Drawable */
-        short srcx,
-        short srcy,
-        unsigned short srcw,
-        unsigned short srch,
-        short destx,
-        short desty,
-        unsigned short destw,
-        unsigned short desth,
-        VARectangle *cliprects,
-        unsigned int number_cliprects,
-        unsigned int flags
-    );
-
 public:
     VAAPIRenderer();
     virtual ~VAAPIRenderer();
@@ -38,10 +26,21 @@ public:
     virtual void renderFrame(AVFrame* frame);
 
 private:
-    Window m_XWindow;
+    static void vaapiLogError(void*, const char *message);
+    static void vaapiLogInfo(void*, const char *message);
+
+    int m_WindowSystem;
     AVBufferRef* m_HwContext;
-    void* m_X11VaLibHandle;
-    vaPutSurface_t m_vaPutSurface;
+
+#ifdef HAVE_LIBVA_X11
+    Window m_XWindow;
+#endif
+
+#ifdef HAVE_LIBVA_WAYLAND
+    struct wl_surface* m_WaylandSurface;
+    struct wl_display* m_WaylandDisplay;
+#endif
+
     int m_VideoWidth;
     int m_VideoHeight;
     int m_DisplayWidth;
