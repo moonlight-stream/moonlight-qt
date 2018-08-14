@@ -756,6 +756,10 @@ void Session::exec()
     // Disable the screen saver
     SDL_DisableScreenSaver();
 
+    // Set timer resolution to 1 ms on Windows for greater
+    // sleep precision and more accurate callback timing.
+    SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "1");
+
     // Raise the priority of the main thread, since it handles
     // time-sensitive video rendering
     if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
@@ -873,6 +877,7 @@ DispatchDeferredCleanup:
     // so we can return to the Qt GUI ASAP.
     SDL_SetRelativeMouseMode(SDL_FALSE);
     SDL_EnableScreenSaver();
+    SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
 
     // Destroy the decoder, since this must be done on the main thread
     SDL_AtomicLock(&m_DecoderLock);

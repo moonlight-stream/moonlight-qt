@@ -200,6 +200,11 @@ int main(int argc, char *argv[])
                      SDL_GetError());
     }
 
+    // Avoid the default behavior of changing the timer resolution to 1 ms.
+    // We don't want this all the time that Moonlight is open. We will set
+    // it manually when we start streaming.
+    SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
+
     int err = app.exec();
 
     SDL_Quit();
