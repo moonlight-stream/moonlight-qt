@@ -235,9 +235,10 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
     // We need to create the mixer on the fly, because we don't know the dimensions
     // of our video surfaces in advance of decoding
     if (m_VideoMixer == 0) {
-        VdpChromaType chroma;
+        VdpChromaType videoSurfaceChroma;
         uint32_t videoSurfaceWidth, videoSurfaceHeight;
-        status = m_VdpVideoSurfaceGetParameters(videoSurface, &chroma, &videoSurfaceWidth, &videoSurfaceHeight);
+        status = m_VdpVideoSurfaceGetParameters(videoSurface, &videoSurfaceChroma,
+                                                &videoSurfaceWidth, &videoSurfaceHeight);
         if (status != VDP_STATUS_OK) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VdpVideoSurfaceGetParameters() failed: %s",
@@ -250,14 +251,16 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
                     "VDPAU surface size: %dx%d",
                     videoSurfaceWidth, videoSurfaceHeight);
 
-    #define PARAM_COUNT 2
+    #define PARAM_COUNT 3
         const VdpVideoMixerParameter params[PARAM_COUNT] = {
             VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_WIDTH,
             VDP_VIDEO_MIXER_PARAMETER_VIDEO_SURFACE_HEIGHT,
+            VDP_VIDEO_MIXER_PARAMETER_CHROMA_TYPE,
         };
         const void* const paramValues[PARAM_COUNT] = {
             &videoSurfaceWidth,
             &videoSurfaceHeight,
+            &videoSurfaceChroma,
         };
 
         status = m_VdpVideoMixerCreate(m_Device, 0, nullptr,
