@@ -44,16 +44,10 @@ Item {
         if (visible) {
             // Connect the quit completion signal
             ComputerManager.quitAppCompleted.connect(quitAppCompleted)
-
-            // We must be polling or we won't get the quitAppCompleted() callback
-            ComputerManager.startPolling()
         }
         else {
             // Disconnect the signal
             ComputerManager.quitAppCompleted.disconnect(quitAppCompleted)
-
-            // Stop polling when this view is not on top
-            ComputerManager.stopPollingAsync()
         }
     }
 

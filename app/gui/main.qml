@@ -1,12 +1,16 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
+import QtQuick.Window 2.2
 
 import QtQuick.Controls.Material 2.1
 
+import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 
 ApplicationWindow {
+    property bool pollingActive: false
+
     id: window
     visible: true
     width: 1280
@@ -19,6 +23,24 @@ ApplicationWindow {
         id: stackView
         initialItem: "PcView.qml"
         anchors.fill: parent
+    }
+
+    onVisibilityChanged: {
+        // We don't want to just use 'active' here because that will stop polling if
+        // we lose focus, which might be overzealous for users with multiple screens
+        // where we may be clearly visible on the other display. Ideally we'll poll
+        // only if the window is visible to the user (not if obscured by other windows),
+        // but it seems difficult to do this portably.
+        var shouldPoll = visibility !== Window.Minimized && visibility !== Window.Hidden
+
+        if (shouldPoll && !pollingActive) {
+            ComputerManager.startPolling()
+            pollingActive = true
+        }
+        else if (!shouldPoll && pollingActive) {
+            ComputerManager.stopPollingAsync()
+            pollingActive = false
+        }
     }
 
     function navigateTo(url, objectName)

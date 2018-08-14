@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.3
 import QtQuick.Layouts 1.3
+import QtQuick.Window 2.2
 
 import ComputerModel 1.0
 
@@ -42,24 +43,10 @@ GridView {
         }
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            // Start polling when this view is shown
-            ComputerManager.startPolling()
-        }
-        else {
-            // Stop polling when this view is not top-most
-            ComputerManager.stopPollingAsync()
-        }
-    }
-
     function pairingComplete(error)
     {
         // Close the PIN dialog
         pairDialog.close()
-
-        // Start polling again
-        ComputerManager.startPolling()
 
         // Display a failed dialog if we got an error
         if (error !== null) {
@@ -175,9 +162,6 @@ GridView {
                         else {
                             if (!model.busy) {
                                 var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
-
-                                // Stop polling, since pairing may make GFE unresponsive
-                                ComputerManager.stopPollingAsync()
 
                                 // Kick off pairing in the background
                                 computerModel.pairComputer(index, pin)

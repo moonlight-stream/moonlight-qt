@@ -36,15 +36,9 @@ GridView {
 
     onVisibleChanged: {
         if (visible) {
-            // Start polling when this view is shown
-            ComputerManager.startPolling()
-
             appModel.computerLost.connect(computerLost)
         }
         else {
-            // Stop polling when this view is not on top
-            ComputerManager.stopPollingAsync()
-
             appModel.computerLost.disconnect(computerLost)
         }
     }
