@@ -113,10 +113,13 @@ ffmpeg {
     DEFINES += HAVE_FFMPEG
     SOURCES += \
         streaming/video/ffmpeg.cpp \
-        streaming/video/ffmpeg-renderers/sdl.cpp
+        streaming/video/ffmpeg-renderers/sdl.cpp \
+        streaming/video/ffmpeg-renderers/pacer.cpp
+
     HEADERS += \
         streaming/video/ffmpeg.h \
-        streaming/video/ffmpeg-renderers/renderer.h
+        streaming/video/ffmpeg-renderers/renderer.h \
+        streaming/video/ffmpeg-renderers/pacer.h
 }
 libva {
     message(VAAPI renderer selected)

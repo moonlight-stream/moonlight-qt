@@ -2,19 +2,16 @@
 // libavutil both defining AVMediaType
 #define AVMediaType AVMediaType_FFmpeg
 #include "vt.h"
+#include "pacer.h"
 #undef AVMediaType
 
 #include <SDL_syswm.h>
 #include <Limelight.h>
 
-#include <QQueue>
-
 #import <Cocoa/Cocoa.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import <CoreVideo/CoreVideo.h>
-
-#define FRAME_HISTORY_ENTRIES 8
 
 class VTRenderer : public IFFmpegRenderer
 {
@@ -24,13 +21,14 @@ public:
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
           m_View(nullptr),
-          m_DisplayLink(nullptr),
-          m_FrameQueueLock(0)
+          m_DisplayLink(nullptr)
     {
     }
 
     virtual ~VTRenderer()
     {
+        m_Pacer.drain();
+
         if (m_HwContext != nullptr) {
             av_buffer_unref(&m_HwContext);
         }
@@ -44,11 +42,6 @@ public:
             CVDisplayLinkRelease(m_DisplayLink);
         }
 
-        while (!m_FrameQueue.isEmpty()) {
-            AVFrame* frame = m_FrameQueue.dequeue();
-            av_frame_free(&frame);
-        }
-
         if (m_View != nullptr) {
             [m_View removeFromSuperview];
         }
@@ -58,41 +51,10 @@ public:
     {
         OSStatus status;
 
-        SDL_AtomicLock(&m_FrameQueueLock);
-
-        int frameDropTarget;
-
-        // If the queue length history entries are large, be strict
-        // about dropping excess frames.
-        frameDropTarget = 1;
-        for (int i = 0; i < m_FrameQueueHistory.count(); i++) {
-            if (m_FrameQueueHistory[i] <= 1) {
-                // Be lenient as long as the queue length
-                // resolves before the end of frame history
-                frameDropTarget = 3;
-            }
-        }
-
-        if (m_FrameQueueHistory.count() == FRAME_HISTORY_ENTRIES) {
-            m_FrameQueueHistory.dequeue();
-        }
-
-        m_FrameQueueHistory.enqueue(m_FrameQueue.count());
-
-        // Catch up if we're several frames ahead
-        while (m_FrameQueue.count() > frameDropTarget) {
-            AVFrame* frame = m_FrameQueue.dequeue();
-            av_frame_free(&frame);
-        }
-
-        if (m_FrameQueue.isEmpty()) {
-            SDL_AtomicUnlock(&m_FrameQueueLock);
+        AVFrame* frame = m_Pacer.getFrameAtVsync();
+        if (frame == nullptr) {
             return;
         }
-
-        // Grab the first frame
-        AVFrame* frame = m_FrameQueue.dequeue();
-        SDL_AtomicUnlock(&m_FrameQueueLock);
 
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 
@@ -268,9 +230,7 @@ public:
             setupDisplayLayer();
         }
 
-        SDL_AtomicLock(&m_FrameQueueLock);
-        m_FrameQueue.enqueue(frame);
-        SDL_AtomicUnlock(&m_FrameQueueLock);
+        m_Pacer.submitFrame(frame);
     }
 
 private:
@@ -297,9 +257,7 @@ private:
     CMVideoFormatDescriptionRef m_FormatDesc;
     NSView* m_View;
     CVDisplayLinkRef m_DisplayLink;
-    QQueue<AVFrame*> m_FrameQueue;
-    QQueue<int> m_FrameQueueHistory;
-    SDL_SpinLock m_FrameQueueLock;
+    Pacer m_Pacer;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {
