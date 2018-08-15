@@ -182,8 +182,13 @@ void Session::sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
     Uint32 queuedAudio = qMax((int)SDL_GetQueuedAudioSize(s_AudioDevice) - (int)s_BaselinePendingData, 0);
     Uint32 framesQueued = queuedAudio / (SAMPLES_PER_FRAME * s_ChannelCount * sizeof(short));
 
+    // We must check this prior to the below checks to ensure we don't
+    // underflow if framesQueued - s_PendingHardDrops < 0.
+    if (framesQueued <= MIN_QUEUED_FRAMES) {
+        s_PendingDrops = s_PendingHardDrops = 0;
+    }
     // Pend enough drops to get us back to MIN_QUEUED_FRAMES
-    if (framesQueued - s_PendingHardDrops > STOP_THE_WORLD_LIMIT) {
+    else if (framesQueued - s_PendingHardDrops > STOP_THE_WORLD_LIMIT) {
         s_PendingHardDrops = framesQueued - MIN_QUEUED_FRAMES;
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Pending hard drop of %u audio frames",
@@ -194,10 +199,7 @@ void Session::sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
     }
 
     // Determine if this frame should be dropped
-    if (framesQueued <= MIN_QUEUED_FRAMES) {
-        s_PendingDrops = s_PendingHardDrops = 0;
-    }
-    else if (s_PendingHardDrops != 0) {
+    if (s_PendingHardDrops != 0) {
         // Hard drops happen all at once to forcefully
         // resync with the source.
         s_PendingHardDrops--;
