@@ -17,7 +17,8 @@ public:
     virtual bool initialize(SDL_Window* window,
                             int videoFormat,
                             int width,
-                            int height);
+                            int height,
+                            int maxFps);
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrame(AVFrame* frame);
 

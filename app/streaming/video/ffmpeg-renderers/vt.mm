@@ -130,6 +130,7 @@ public:
     virtual bool initialize(SDL_Window* window,
                             int videoFormat,
                             int,
+                            int,
                             int) override
     {
         int err;

@@ -218,7 +218,7 @@ bool FFmpegVideoDecoder::initialize(
         int videoFormat,
         int width,
         int height,
-        int)
+        int maxFps)
 {
     AVCodec* decoder;
 
@@ -253,7 +253,7 @@ bool FFmpegVideoDecoder::initialize(
             m_HwDecodeCfg = nullptr;
             m_Renderer = new SdlRenderer();
             if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
-                    m_Renderer->initialize(window, videoFormat, width, height) &&
+                    m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
                     completeInitialization(decoder, videoFormat, width, height, false)) {
                 return true;
             }
@@ -270,12 +270,12 @@ bool FFmpegVideoDecoder::initialize(
 
         m_HwDecodeCfg = config;
         // Submit test frame to ensure this codec really works
-        if (m_Renderer->initialize(window, videoFormat, width, height) &&
+        if (m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
                 completeInitialization(decoder, videoFormat, width, height, true)) {
             // OK, it worked, so now let's initialize it for real
             reset();
             if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
-                    m_Renderer->initialize(window, videoFormat, width, height) &&
+                    m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
                     completeInitialization(decoder, videoFormat, width, height, false)) {
                 return true;
             }

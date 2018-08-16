@@ -16,7 +16,7 @@ public:
                             int videoFormat,
                             int width,
                             int height,
-                            int frameRate) override;
+                            int maxFps) override;
     virtual bool isHardwareAccelerated() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
     virtual void renderFrame(SDL_UserEvent* event) override;

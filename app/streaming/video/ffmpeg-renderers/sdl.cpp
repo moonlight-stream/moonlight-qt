@@ -33,7 +33,8 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
 bool SdlRenderer::initialize(SDL_Window* window,
                              int,
                              int width,
-                             int height)
+                             int height,
+                             int)
 {
     m_Renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_Renderer) {

@@ -430,7 +430,7 @@ bool DXVA2Renderer::isDecoderBlacklisted()
     return result;
 }
 
-bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height)
+bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int)
 {
     m_VideoFormat = videoFormat;
     m_VideoWidth = width;

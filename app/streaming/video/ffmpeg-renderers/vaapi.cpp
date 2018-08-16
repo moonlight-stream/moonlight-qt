@@ -27,7 +27,7 @@ VAAPIRenderer::~VAAPIRenderer()
 }
 
 bool
-VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height)
+VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height, int)
 {
     int err;
     SDL_SysWMinfo info;
