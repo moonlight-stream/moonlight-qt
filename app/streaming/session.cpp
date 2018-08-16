@@ -676,8 +676,8 @@ void Session::exec()
     if (err != 0) {
         // We already displayed an error dialog in the stage failure
         // listener.
-        s_ActiveSessionSemaphore.release();
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        s_ActiveSessionSemaphore.release();
         return;
     }
 
@@ -700,8 +700,8 @@ void Session::exec()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateWindow() failed: %s",
                      SDL_GetError());
-        s_ActiveSessionSemaphore.release();
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        s_ActiveSessionSemaphore.release();
         return;
     }
 
