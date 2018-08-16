@@ -23,8 +23,6 @@ public:
 
     void vsyncCallback();
 
-    void drain();
-
 private:
     QQueue<AVFrame*> m_FrameQueue;
     QQueue<int> m_FrameQueueHistory;

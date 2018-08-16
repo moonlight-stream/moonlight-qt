@@ -22,7 +22,14 @@ Pacer::Pacer(IFFmpegRenderer* renderer) :
 
 Pacer::~Pacer()
 {
-    drain();
+    // Stop V-sync callbacks
+    delete m_VsyncSource;
+    m_VsyncSource = nullptr;
+
+    while (!m_FrameQueue.isEmpty()) {
+        AVFrame* frame = m_FrameQueue.dequeue();
+        av_frame_free(&frame);
+    }
 }
 
 // Called in an arbitrary thread by the IVsyncSource on V-sync
@@ -137,18 +144,6 @@ void Pacer::submitFrame(AVFrame* frame)
     }
     else {
         m_VsyncRenderer->renderFrameAtVsync(frame);
-        av_frame_free(&frame);
-    }
-}
-
-void Pacer::drain()
-{
-    // Stop V-sync callbacks
-    delete m_VsyncSource;
-    m_VsyncSource = nullptr;
-
-    while (!m_FrameQueue.isEmpty()) {
-        AVFrame* frame = m_FrameQueue.dequeue();
         av_frame_free(&frame);
     }
 }
