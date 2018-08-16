@@ -20,7 +20,7 @@
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
 
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" />
-    <MediaTemplate CompressionLevel="high" />
+    <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
 
     <?if $(var.Platform) = x64 ?>
       <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>

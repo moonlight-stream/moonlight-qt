@@ -6,6 +6,7 @@
     <SchemaVersion>2.0</SchemaVersion>
     <OutputName>MoonlightSetup</OutputName>
     <OutputType>Bundle</OutputType>
+    <DefineSolutionProperties>false</DefineSolutionProperties>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>Debug</DefineConstants>
