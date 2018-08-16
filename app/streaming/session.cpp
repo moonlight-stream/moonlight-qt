@@ -821,7 +821,7 @@ void Session::exec()
             // Destroy the old decoder
             delete m_VideoDecoder;
 
-            // Chose a new decoder (hopefully the same one, but possibly
+            // Choose a new decoder (hopefully the same one, but possibly
             // not if a GPU was removed or something).
             if (!chooseDecoder(m_Preferences.videoDecoderSelection,
                                m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,

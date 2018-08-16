@@ -96,10 +96,10 @@ void FFmpegVideoDecoder::reset()
         }
     }
 
-    avcodec_free_context(&m_VideoDecoderCtx);
-
     delete m_Renderer;
     m_Renderer = nullptr;
+
+    avcodec_free_context(&m_VideoDecoderCtx);
 }
 
 bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoFormat, int width, int height, bool testOnly)

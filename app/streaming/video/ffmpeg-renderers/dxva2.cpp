@@ -11,6 +11,7 @@ DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0x
 
 DXVA2Renderer::DXVA2Renderer() :
     m_SdlRenderer(nullptr),
+    m_Pacer(this),
     m_DecService(nullptr),
     m_Decoder(nullptr),
     m_SurfacesUsed(0),
@@ -27,6 +28,8 @@ DXVA2Renderer::DXVA2Renderer() :
 
 DXVA2Renderer::~DXVA2Renderer()
 {
+    m_Pacer.drain();
+
     SAFE_COM_RELEASE(m_DecService);
     SAFE_COM_RELEASE(m_Decoder);
     SAFE_COM_RELEASE(m_Device);
@@ -430,11 +433,15 @@ bool DXVA2Renderer::isDecoderBlacklisted()
     return result;
 }
 
-bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int)
+bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int maxFps)
 {
     m_VideoFormat = videoFormat;
     m_VideoWidth = width;
     m_VideoHeight = height;
+
+    if (!m_Pacer.initialize(window, maxFps)) {
+        return false;
+    }
 
     // FFmpeg will be decoding on different threads than the main thread that we're
     // currently running on right now. We must set this hint so SDL will pass
@@ -493,6 +500,11 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
 }
 
 void DXVA2Renderer::renderFrame(AVFrame* frame)
+{
+    m_Pacer.submitFrame(frame);
+}
+
+void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
     HRESULT hr;
@@ -632,7 +644,6 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL_RenderClear() failed: %s",
                     SDL_GetError());
-        av_frame_free(&frame);
 
         // We're going to cheat a little bit here. It seems SDL's
         // renderer may flake out in scenarios like moving the window
@@ -646,8 +657,6 @@ void DXVA2Renderer::renderFrame(AVFrame* frame)
     }
 
     hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
-    av_frame_free(&frame);
-
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VideoProcessBlt() failed: %x",

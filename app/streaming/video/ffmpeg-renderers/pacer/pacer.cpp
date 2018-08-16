@@ -4,6 +4,10 @@
 #include "displaylinkvsyncsource.h"
 #endif
 
+#ifdef Q_OS_WIN32
+#include "dxvsyncsource.h"
+#endif
+
 #define FRAME_HISTORY_ENTRIES 8
 
 Pacer::Pacer(IVsyncRenderer* renderer) :
@@ -18,9 +22,6 @@ Pacer::Pacer(IVsyncRenderer* renderer) :
 
 Pacer::~Pacer()
 {
-    // Stop V-sync callbacks
-    delete m_VsyncSource;
-
     drain();
 }
 
@@ -105,8 +106,10 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps)
                 "Frame pacing: target %d Hz with %d FPS stream",
                 m_DisplayFps, m_MaxVideoFps);
 
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_DARWIN)
     m_VsyncSource = new DisplayLinkVsyncSource(this);
+#elif defined(Q_OS_WIN32)
+    m_VsyncSource = new DxVsyncSource(this);
 #else
     SDL_assert(false);
 #endif
@@ -126,6 +129,10 @@ void Pacer::submitFrame(AVFrame* frame)
 
 void Pacer::drain()
 {
+    // Stop V-sync callbacks
+    delete m_VsyncSource;
+    m_VsyncSource = nullptr;
+
     while (!m_FrameQueue.isEmpty()) {
         AVFrame* frame = m_FrameQueue.dequeue();
         av_frame_free(&frame);

@@ -34,7 +34,7 @@ win32 {
         LIBS += -L$$PWD/../libs/windows/lib/x64
     }
 
-    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib
+    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib dwmapi.lib
 }
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include $$PWD/../libs/mac/Frameworks/SDL2.framework/Versions/A/Headers
@@ -159,8 +159,13 @@ config_SLVideo {
 win32 {
     message(DXVA2 renderer selected)
 
-    SOURCES += streaming/video/ffmpeg-renderers/dxva2.cpp
-    HEADERS += streaming/video/ffmpeg-renderers/dxva2.h
+    SOURCES += \
+        streaming/video/ffmpeg-renderers/dxva2.cpp \
+        streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.cpp
+
+    HEADERS += \
+        streaming/video/ffmpeg-renderers/dxva2.h \
+        streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h
 }
 macx {
     message(VideoToolbox renderer selected)
