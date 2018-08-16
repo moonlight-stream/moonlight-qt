@@ -131,9 +131,11 @@ public:
                             int videoFormat,
                             int,
                             int,
-                            int) override
+                            int maxFps) override
     {
         int err;
+
+        m_Pacer.initialize(window, maxFps);
 
         if (videoFormat & VIDEO_FORMAT_MASK_H264) {
             // Prior to 10.13, we'll just assume everything has
