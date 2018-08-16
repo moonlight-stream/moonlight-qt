@@ -114,12 +114,12 @@ ffmpeg {
     SOURCES += \
         streaming/video/ffmpeg.cpp \
         streaming/video/ffmpeg-renderers/sdl.cpp \
-        streaming/video/ffmpeg-renderers/pacer.cpp
+        streaming/video/ffmpeg-renderers/pacer/pacer.cpp
 
     HEADERS += \
         streaming/video/ffmpeg.h \
         streaming/video/ffmpeg-renderers/renderer.h \
-        streaming/video/ffmpeg-renderers/pacer.h
+        streaming/video/ffmpeg-renderers/pacer/pacer.h
 }
 libva {
     message(VAAPI renderer selected)
@@ -165,8 +165,13 @@ win32 {
 macx {
     message(VideoToolbox renderer selected)
 
-    SOURCES += streaming/video/ffmpeg-renderers/vt.mm
-    HEADERS += streaming/video/ffmpeg-renderers/vt.h
+    SOURCES += \
+        streaming/video/ffmpeg-renderers/vt.mm \
+        streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.cpp
+
+    HEADERS += \
+        streaming/video/ffmpeg-renderers/vt.h \
+        streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.h
 }
 
 RESOURCES += \
