@@ -53,7 +53,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
       m_DecodeBuffer(1024 * 1024, 0),
       m_HwDecodeCfg(nullptr),
       m_Renderer(nullptr),
-      m_ConsecutiveFailedDecodes(0)
+      m_ConsecutiveFailedDecodes(0),
+      m_Pacer(nullptr)
 {
     av_init_packet(&m_Pkt);
     SDL_AtomicSet(&m_QueuedFrames, 0);
@@ -91,10 +92,13 @@ void FFmpegVideoDecoder::reset()
             dropFrame(&event.user);
         }
         else {
-            SDL_Delay(100);
+            SDL_Delay(10);
             SDL_PumpEvents();
         }
     }
+
+    delete m_Pacer;
+    m_Pacer = nullptr;
 
     delete m_Renderer;
     m_Renderer = nullptr;
@@ -102,8 +106,15 @@ void FFmpegVideoDecoder::reset()
     avcodec_free_context(&m_VideoDecoderCtx);
 }
 
-bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, int videoFormat, int width, int height, bool testOnly)
+bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* window,
+                                                int videoFormat, int width, int height,
+                                                int maxFps, bool testOnly)
 {
+    m_Pacer = new Pacer(m_Renderer);
+    if (!m_Pacer->initialize(window, maxFps)) {
+        return false;
+    }
+
     m_VideoDecoderCtx = avcodec_alloc_context3(decoder);
     if (!m_VideoDecoderCtx) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -254,7 +265,7 @@ bool FFmpegVideoDecoder::initialize(
             m_Renderer = new SdlRenderer();
             if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
                     m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                    completeInitialization(decoder, videoFormat, width, height, false)) {
+                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, false)) {
                 return true;
             }
             else {
@@ -271,12 +282,12 @@ bool FFmpegVideoDecoder::initialize(
         m_HwDecodeCfg = config;
         // Submit test frame to ensure this codec really works
         if (m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                completeInitialization(decoder, videoFormat, width, height, true)) {
+                completeInitialization(decoder, window, videoFormat, width, height, maxFps, true)) {
             // OK, it worked, so now let's initialize it for real
             reset();
             if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
                     m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                    completeInitialization(decoder, videoFormat, width, height, false)) {
+                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, false)) {
                 return true;
             }
             else {
@@ -380,7 +391,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 void FFmpegVideoDecoder::renderFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
-    m_Renderer->renderFrame(frame);
+    m_Pacer->submitFrame(frame);
     SDL_AtomicDecRef(&m_QueuedFrames);
 }
 
@@ -388,6 +399,9 @@ void FFmpegVideoDecoder::renderFrame(SDL_UserEvent* event)
 void FFmpegVideoDecoder::dropFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
+    // We should really call Pacer::submitFrame() here and let it
+    // take care of it, but that will regress frame dropping for
+    // clients without an IVsyncSource implementation.
     av_frame_free(&frame);
     SDL_AtomicDecRef(&m_QueuedFrames);
 }

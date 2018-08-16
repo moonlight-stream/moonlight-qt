@@ -223,7 +223,7 @@ bool VDPAURenderer::prepareDecoderContext(AVCodecContext* context)
     return true;
 }
 
-void VDPAURenderer::renderFrame(AVFrame* frame)
+void VDPAURenderer::renderFrameAtVsync(AVFrame* frame)
 {
     VdpStatus status;
     VdpVideoSurface videoSurface = (VdpVideoSurface)(uintptr_t)frame->data[3];
@@ -243,7 +243,6 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VdpVideoSurfaceGetParameters() failed: %s",
                          m_VdpGetErrorString(status));
-            av_frame_free(&frame);
             return;
         }
 
@@ -270,7 +269,6 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VdpVideoMixerCreate() failed: %s",
                          m_VdpGetErrorString(status));
-            av_frame_free(&frame);
             return;
         }
     }
@@ -313,10 +311,6 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
                                    nullptr,
                                    0,
                                    nullptr);
-
-    // The decoder can have this surface back now
-    av_frame_free(&frame);
-
     if (status != VDP_STATUS_OK) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VdpVideoMixerRender() failed: %s",

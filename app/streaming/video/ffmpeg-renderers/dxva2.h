@@ -10,7 +10,7 @@ extern "C" {
 #include <libavcodec/dxva2.h>
 }
 
-class DXVA2Renderer : public IFFmpegRenderer, public IVsyncRenderer
+class DXVA2Renderer : public IFFmpegRenderer
 {
 public:
     DXVA2Renderer();
@@ -21,7 +21,6 @@ public:
                             int height,
                             int maxFps);
     virtual bool prepareDecoderContext(AVCodecContext* context);
-    virtual void renderFrame(AVFrame* frame);
     virtual void renderFrameAtVsync(AVFrame* frame);
 
 private:
@@ -46,7 +45,6 @@ private:
     int m_DisplayHeight;
 
     SDL_Renderer* m_SdlRenderer;
-    Pacer m_Pacer;
 
     struct dxva_context m_DXVAContext;
     IDirect3DSurface9* m_DecSurfaces[19];

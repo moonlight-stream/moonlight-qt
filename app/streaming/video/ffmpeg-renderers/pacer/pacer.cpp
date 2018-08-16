@@ -10,7 +10,7 @@
 
 #define FRAME_HISTORY_ENTRIES 8
 
-Pacer::Pacer(IVsyncRenderer* renderer) :
+Pacer::Pacer(IFFmpegRenderer* renderer) :
     m_FrameQueueLock(0),
     m_VsyncSource(nullptr),
     m_VsyncRenderer(renderer),
@@ -111,10 +111,15 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps)
 #elif defined(Q_OS_WIN32)
     m_VsyncSource = new DxVsyncSource(this);
 #else
-    SDL_assert(false);
+    // Platforms without a VsyncSource will just render frames
+    // immediately like they used to.
 #endif
 
-    return m_VsyncSource->initialize(window);
+    if (m_VsyncSource != nullptr && !m_VsyncSource->initialize(window)) {
+        return false;
+    }
+
+    return true;
 }
 
 void Pacer::submitFrame(AVFrame* frame)
@@ -122,9 +127,18 @@ void Pacer::submitFrame(AVFrame* frame)
     // Make sure initialize() has been called
     SDL_assert(m_MaxVideoFps != 0);
 
-    SDL_AtomicLock(&m_FrameQueueLock);
-    m_FrameQueue.enqueue(frame);
-    SDL_AtomicUnlock(&m_FrameQueueLock);
+    // Queue the frame until the V-sync callback if
+    // we have a V-sync source, otherwise deliver it
+    // immediately and hope for the best.
+    if (m_VsyncSource != nullptr) {
+        SDL_AtomicLock(&m_FrameQueueLock);
+        m_FrameQueue.enqueue(frame);
+        SDL_AtomicUnlock(&m_FrameQueueLock);
+    }
+    else {
+        m_VsyncRenderer->renderFrameAtVsync(frame);
+        av_frame_free(&frame);
+    }
 }
 
 void Pacer::drain()

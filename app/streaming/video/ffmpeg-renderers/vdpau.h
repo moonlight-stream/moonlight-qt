@@ -19,7 +19,7 @@ public:
                             int height,
                             int maxFps);
     virtual bool prepareDecoderContext(AVCodecContext* context);
-    virtual void renderFrame(AVFrame* frame);
+    virtual void renderFrameAtVsync(AVFrame* frame);
 
 private:
     uint32_t m_VideoWidth, m_VideoHeight;

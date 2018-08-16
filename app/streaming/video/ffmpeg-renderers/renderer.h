@@ -15,7 +15,7 @@ public:
                             int height,
                             int maxFps) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context) = 0;
-    virtual void renderFrame(AVFrame* frame) = 0;
+    virtual void renderFrameAtVsync(AVFrame* frame) = 0;
 };
 
 class SdlRenderer : public IFFmpegRenderer {
@@ -28,7 +28,7 @@ public:
                             int height,
                             int maxFps);
     virtual bool prepareDecoderContext(AVCodecContext* context);
-    virtual void renderFrame(AVFrame* frame);
+    virtual void renderFrameAtVsync(AVFrame* frame);
 
 private:
     SDL_Renderer* m_Renderer;

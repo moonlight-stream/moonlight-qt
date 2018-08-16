@@ -68,7 +68,7 @@ bool SdlRenderer::initialize(SDL_Window* window,
     return true;
 }
 
-void SdlRenderer::renderFrame(AVFrame* frame)
+void SdlRenderer::renderFrameAtVsync(AVFrame* frame)
 {
     SDL_UpdateYUVTexture(m_Texture, nullptr,
                          frame->data[0],
@@ -77,9 +77,6 @@ void SdlRenderer::renderFrame(AVFrame* frame)
                          frame->linesize[1],
                          frame->data[2],
                          frame->linesize[2]);
-
-    // Done with the frame now
-    av_frame_free(&frame);
 
     SDL_RenderClear(m_Renderer);
     SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);

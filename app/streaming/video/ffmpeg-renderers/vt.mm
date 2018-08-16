@@ -13,22 +13,19 @@
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 
-class VTRenderer : public IFFmpegRenderer, public IVsyncRenderer
+class VTRenderer : public IFFmpegRenderer
 {
 public:
     VTRenderer()
         : m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
-          m_View(nullptr),
-          m_Pacer(this)
+          m_View(nullptr)
     {
     }
 
     virtual ~VTRenderer()
     {
-        m_Pacer.drain();
-
         if (m_HwContext != nullptr) {
             av_buffer_unref(&m_HwContext);
         }
@@ -47,6 +44,13 @@ public:
     {
         OSStatus status;
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
+
+        // FIXME: Only on main thread
+        if (m_DisplayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Resetting failed AVSampleBufferDisplay layer");
+            setupDisplayLayer();
+        }
 
         // If the format has changed or doesn't exist yet, construct it with the
         // pixel buffer data
@@ -96,10 +100,6 @@ public:
                             int maxFps) override
     {
         int err;
-
-        if (!m_Pacer.initialize(window, maxFps)) {
-            return false;
-        }
 
         if (videoFormat & VIDEO_FORMAT_MASK_H264) {
             // Prior to 10.13, we'll just assume everything has
@@ -185,17 +185,6 @@ public:
         return true;
     }
 
-    virtual void renderFrame(AVFrame* frame) override
-    {
-        if (m_DisplayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Resetting failed AVSampleBufferDisplay layer");
-            setupDisplayLayer();
-        }
-
-        m_Pacer.submitFrame(frame);
-    }
-
 private:
     void setupDisplayLayer()
     {
@@ -219,7 +208,6 @@ private:
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
     NSView* m_View;
-    Pacer m_Pacer;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {

@@ -4,14 +4,6 @@
 
 #include <QQueue>
 
-class Pacer;
-
-class IVsyncRenderer {
-public:
-    virtual ~IVsyncRenderer() {}
-    virtual void renderFrameAtVsync(AVFrame* frame) = 0;
-};
-
 class IVsyncSource {
 public:
     virtual ~IVsyncSource() {}
@@ -21,7 +13,7 @@ public:
 class Pacer
 {
 public:
-    Pacer(IVsyncRenderer* renderer);
+    Pacer(IFFmpegRenderer* renderer);
 
     ~Pacer();
 
@@ -39,7 +31,7 @@ private:
     SDL_SpinLock m_FrameQueueLock;
 
     IVsyncSource* m_VsyncSource;
-    IVsyncRenderer* m_VsyncRenderer;
+    IFFmpegRenderer* m_VsyncRenderer;
     int m_MaxVideoFps;
     int m_DisplayFps;
 };

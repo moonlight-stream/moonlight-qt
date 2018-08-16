@@ -11,7 +11,6 @@ DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0x
 
 DXVA2Renderer::DXVA2Renderer() :
     m_SdlRenderer(nullptr),
-    m_Pacer(this),
     m_DecService(nullptr),
     m_Decoder(nullptr),
     m_SurfacesUsed(0),
@@ -28,8 +27,6 @@ DXVA2Renderer::DXVA2Renderer() :
 
 DXVA2Renderer::~DXVA2Renderer()
 {
-    m_Pacer.drain();
-
     SAFE_COM_RELEASE(m_DecService);
     SAFE_COM_RELEASE(m_Decoder);
     SAFE_COM_RELEASE(m_Device);
@@ -497,11 +494,6 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     }
 
     return true;
-}
-
-void DXVA2Renderer::renderFrame(AVFrame* frame)
-{
-    m_Pacer.submitFrame(frame);
 }
 
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)

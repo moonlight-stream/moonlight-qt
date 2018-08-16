@@ -142,7 +142,7 @@ VAAPIRenderer::prepareDecoderContext(AVCodecContext* context)
 }
 
 void
-VAAPIRenderer::renderFrame(AVFrame* frame)
+VAAPIRenderer::renderFrameAtVsync(AVFrame* frame)
 {
     VASurfaceID surface = (VASurfaceID)(uintptr_t)frame->data[3];
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
@@ -197,6 +197,4 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
         // We don't accept anything else in initialize().
         SDL_assert(false);
     }
-
-    av_frame_free(&frame);
 }

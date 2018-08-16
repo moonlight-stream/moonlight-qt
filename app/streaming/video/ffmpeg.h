@@ -2,6 +2,7 @@
 
 #include "decoder.h"
 #include "ffmpeg-renderers/renderer.h"
+#include "ffmpeg-renderers/pacer/pacer.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -25,8 +26,9 @@ public:
     virtual IFFmpegRenderer* getRenderer();
 
 private:
-    bool completeInitialization(AVCodec* decoder, int videoFormat,
-                                int width, int height, bool testOnly);
+    bool completeInitialization(AVCodec* decoder, SDL_Window* window,
+                                int videoFormat, int width, int height,
+                                int maxFps, bool testOnly);
 
     IFFmpegRenderer* createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg);
 
@@ -43,6 +45,7 @@ private:
     IFFmpegRenderer* m_Renderer;
     SDL_atomic_t m_QueuedFrames;
     int m_ConsecutiveFailedDecodes;
+    Pacer* m_Pacer;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCTestFrame[];
