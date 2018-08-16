@@ -97,7 +97,7 @@ public:
                             int videoFormat,
                             int,
                             int,
-                            int maxFps) override
+                            int) override
     {
         int err;
 

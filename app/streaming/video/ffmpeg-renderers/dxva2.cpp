@@ -430,15 +430,11 @@ bool DXVA2Renderer::isDecoderBlacklisted()
     return result;
 }
 
-bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int maxFps)
+bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int)
 {
     m_VideoFormat = videoFormat;
     m_VideoWidth = width;
     m_VideoHeight = height;
-
-    if (!m_Pacer.initialize(window, maxFps)) {
-        return false;
-    }
 
     // FFmpeg will be decoding on different threads than the main thread that we're
     // currently running on right now. We must set this hint so SDL will pass
