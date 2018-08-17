@@ -11,6 +11,7 @@ public:
 
     static void initialize(bool portable);
 
+private:
     static QString s_LogDir;
     static QString s_BoxArtCacheDir;
 };

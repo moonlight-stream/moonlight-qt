@@ -45,11 +45,15 @@ public:
         OSStatus status;
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 
-        // FIXME: Only on main thread
         if (m_DisplayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Resetting failed AVSampleBufferDisplay layer");
-            setupDisplayLayer();
+
+            // Trigger the main thread to recreate the decoder
+            SDL_Event event;
+            event.type = SDL_RENDER_TARGETS_RESET;
+            SDL_PushEvent(&event);
+            return;
         }
 
         // If the format has changed or doesn't exist yet, construct it with the
