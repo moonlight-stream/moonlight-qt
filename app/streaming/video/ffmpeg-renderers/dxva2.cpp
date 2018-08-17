@@ -441,8 +441,6 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     // D3DCREATE_MULTITHREADED to IDirect3D9::CreateDevice().
     SDL_SetHint(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1");
 
-    // We require full-screen desktop mode to avoid having to enable V-sync
-    // to synchronize frame delivery (which has a much higher latency penalty).
     m_SdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
     if (!m_SdlRenderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -452,6 +450,12 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     }
 
     m_Device = SDL_RenderGetD3D9Device(m_SdlRenderer);
+    if (m_Device == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_RenderGetD3D9Device() failed: %s",
+                     SDL_GetError());
+        return false;
+    }
 
     // Draw a black frame until the video stream starts rendering
     SDL_SetRenderDrawColor(m_SdlRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);

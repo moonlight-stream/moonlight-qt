@@ -471,10 +471,14 @@ void Session::getWindowDimensions(bool fullScreen,
 {
     int displayIndex = 0;
 
+    if (m_Window != nullptr) {
+        displayIndex = SDL_GetWindowDisplayIndex(m_Window);
+        SDL_assert(displayIndex >= 0);
+    }
     // If there's a display matching this exact resolution, pick that
     // one (for native full-screen streaming). Otherwise, assume
     // display 0 for now. TODO: Default to the screen that the Qt window is on
-    if (fullScreen) {
+    else if (fullScreen) {
         for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
             SDL_DisplayMode mode;
             if (SDL_GetCurrentDisplayMode(i, &mode) == 0 &&
@@ -489,79 +493,44 @@ void Session::getWindowDimensions(bool fullScreen,
         }
     }
 
-    if (m_Window != nullptr) {
-        displayIndex = SDL_GetWindowDisplayIndex(m_Window);
-        if (displayIndex < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetWindowDisplayIndex() failed: %s",
-                         SDL_GetError());
+    SDL_Rect usableBounds;
+    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+        width = usableBounds.w;
+        height = usableBounds.h;
+        x = usableBounds.x;
+        y = usableBounds.y;
 
-            // Assume display 0
-            displayIndex = 0;
-        }
-    }
+        if (m_Window != nullptr) {
+            int top, left, bottom, right;
 
-    if (fullScreen) {
-        SDL_DisplayMode currentMode;
+            if (SDL_GetWindowBordersSize(m_Window, &top, &left, &bottom, &right) < 0) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Unable to get window border size");
+                return;
+            }
 
-        if (SDL_GetCurrentDisplayMode(displayIndex, &currentMode) == 0) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using current display mode: %dx%dx%d",
-                        currentMode.w, currentMode.h, currentMode.refresh_rate);
-            width = currentMode.w;
-            height = currentMode.h;
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Unable to get current display mode: %s",
-                         SDL_GetError());
-            width = m_StreamConfig.width;
-            height = m_StreamConfig.height;
-        }
+            x += left;
+            y += top;
 
-        // Full-screen modes always start at the origin
-        x = y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
-    }
-    else {
-        SDL_Rect usableBounds;
-        if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
-            width = usableBounds.w;
-            height = usableBounds.h;
-            x = usableBounds.x;
-            y = usableBounds.y;
+            width -= left + right;
+            height -= top + bottom;
 
-            if (m_Window != nullptr) {
-                int top, left, bottom, right;
-
-                if (SDL_GetWindowBordersSize(m_Window, &top, &left, &bottom, &right) < 0) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unable to get window border size");
-                    return;
-                }
-
-                x += left;
-                y += top;
-
-                width -= left + right;
-                height -= top + bottom;
-
-                // If the stream window can fit within the usable drawing area with 1:1
-                // scaling, do that rather than filling the screen.
-                if (m_StreamConfig.width < width && m_StreamConfig.height < height) {
-                    width = m_StreamConfig.width;
-                    height = m_StreamConfig.height;
-                }
+            // If the stream window can fit within the usable drawing area with 1:1
+            // scaling, do that rather than filling the screen.
+            if (m_StreamConfig.width < width && m_StreamConfig.height < height) {
+                width = m_StreamConfig.width;
+                height = m_StreamConfig.height;
             }
         }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetDisplayUsableBounds() failed: %s",
-                         SDL_GetError());
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetDisplayUsableBounds() failed: %s",
+                     SDL_GetError());
 
-            width = m_StreamConfig.width;
-            height = m_StreamConfig.height;
-            x = y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
-        }
+        width = m_StreamConfig.width;
+        height = m_StreamConfig.height;
+        x = y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
     }
 }
 
@@ -694,8 +663,7 @@ void Session::exec()
                                 y,
                                 width,
                                 height,
-                                m_Preferences.fullScreen ?
-                                    SDL_OS_FULLSCREEN_FLAG : 0);
+                                0);
     if (!m_Window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateWindow() failed: %s",
@@ -717,6 +685,16 @@ void Session::exec()
         // Passing SDL_WINDOW_RESIZABLE to set this during window
         // creation causes our window to be full screen for some reason
         SDL_SetWindowResizable(m_Window, SDL_TRUE);
+    }
+    else {
+        // Update the window display mode based on our current monitor
+        SDL_DisplayMode mode;
+        if (SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_Window), &mode) == 0) {
+            SDL_SetWindowDisplayMode(m_Window, &mode);
+        }
+
+        // Enter full screen
+        SDL_SetWindowFullscreen(m_Window, SDL_OS_FULLSCREEN_FLAG);
     }
 
     QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
@@ -816,6 +794,13 @@ void Session::exec()
             // Fall through
         case SDL_RENDER_DEVICE_RESET:
         case SDL_RENDER_TARGETS_RESET:
+
+            // Update the window display mode based on our current monitor
+            SDL_DisplayMode mode;
+            if (SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_Window), &mode) == 0) {
+                SDL_SetWindowDisplayMode(m_Window, &mode);
+            }
+
             SDL_AtomicLock(&m_DecoderLock);
 
             // Destroy the old decoder
