@@ -154,9 +154,7 @@ GridView {
                         if (model.paired) {
                             // go to game view
                             var component = Qt.createComponent("AppView.qml")
-                            var appView = component.createObject(stackView)
-                            appView.computerIndex = index
-                            appView.objectName = model.name
+                            var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
                             stackView.push(appView)
                         }
                         else {

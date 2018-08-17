@@ -100,9 +100,7 @@ GridView {
             }
 
             var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView)
-            segue.appName = model.name
-            segue.session = appModel.createSessionForApp(index)
+            var segue = component.createObject(stackView, {"appName": model.name, "session": appModel.createSessionForApp(index)})
             stackView.push(segue)
         }
 
@@ -115,20 +113,19 @@ GridView {
             standardButtons: StandardButton.Yes | StandardButton.No
             onYes: {
                 var component = Qt.createComponent("QuitSegue.qml")
-                var segue = component.createObject(stackView)
-                segue.appName = appName
+                var params = {"appName": appName}
                 if (segueToStream) {
                     // Store the session and app name if we're going to stream after
                     // successfully quitting the old app.
-                    segue.nextAppName = model.name
-                    segue.nextSession = appModel.createSessionForApp(index)
+                    params.nextAppName = model.name
+                    params.nextSession = appModel.createSessionForApp(index)
                 }
                 else {
-                    segue.nextAppName = null
-                    segue.nextSession = null
+                    params.nextAppName = null
+                    params.nextSession = null
                 }
 
-                stackView.push(segue)
+                stackView.push(component.createObject(stackView, params))
 
                 // Trigger the quit after pushing the quit segue on screen
                 appModel.quitRunningApp()

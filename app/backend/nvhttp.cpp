@@ -16,6 +16,8 @@
 NvHTTP::NvHTTP(QString address) :
     m_Address(address)
 {
+    Q_ASSERT(!address.isEmpty());
+
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
     m_BaseUrlHttp.setHost(address);
