@@ -23,6 +23,8 @@ public:
 
     void vsyncCallback();
 
+    bool isUsingFrameQueue();
+
 private:
     QQueue<AVFrame*> m_FrameQueue;
     QQueue<int> m_FrameQueueHistory;

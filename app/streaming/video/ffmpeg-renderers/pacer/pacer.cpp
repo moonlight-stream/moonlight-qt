@@ -137,7 +137,7 @@ void Pacer::submitFrame(AVFrame* frame)
     // Queue the frame until the V-sync callback if
     // we have a V-sync source, otherwise deliver it
     // immediately and hope for the best.
-    if (m_VsyncSource != nullptr) {
+    if (isUsingFrameQueue()) {
         SDL_AtomicLock(&m_FrameQueueLock);
         m_FrameQueue.enqueue(frame);
         SDL_AtomicUnlock(&m_FrameQueueLock);
@@ -146,4 +146,9 @@ void Pacer::submitFrame(AVFrame* frame)
         m_VsyncRenderer->renderFrameAtVsync(frame);
         av_frame_free(&frame);
     }
+}
+
+bool Pacer::isUsingFrameQueue()
+{
+    return m_VsyncSource != nullptr;
 }

@@ -399,9 +399,15 @@ void FFmpegVideoDecoder::renderFrame(SDL_UserEvent* event)
 void FFmpegVideoDecoder::dropFrame(SDL_UserEvent* event)
 {
     AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
-    // We should really call Pacer::submitFrame() here and let it
-    // take care of it, but that will regress frame dropping for
-    // clients without an IVsyncSource implementation.
-    av_frame_free(&frame);
+    // If Pacer is using a frame queue, we can just queue the
+    // frame and let it decide whether to drop or not. If Pacer
+    // is submitting directly for rendering, we drop the frame
+    // ourselves.
+    if (m_Pacer->isUsingFrameQueue()) {
+        m_Pacer->submitFrame(frame);
+    }
+    else {
+        av_frame_free(&frame);
+    }
     SDL_AtomicDecRef(&m_QueuedFrames);
 }
