@@ -1,13 +1,12 @@
 #include "boxartmanager.h"
+#include "../path.h"
 
-#include <QStandardPaths>
 #include <QImageReader>
 #include <QImageWriter>
 
 BoxArtManager::BoxArtManager(QObject *parent) :
     QObject(parent),
-    m_BoxArtDir(
-        QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/boxart")
+    m_BoxArtDir(Path::getBoxArtCacheDir())
 {
     if (!m_BoxArtDir.exists()) {
         m_BoxArtDir.mkpath(".");

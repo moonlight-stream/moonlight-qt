@@ -11,6 +11,7 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
+#include "path.h"
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
@@ -130,15 +131,23 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
 
 int main(int argc, char *argv[])
 {
+    if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
+        qInfo() << "Running in portable mode from:" << QDir::currentPath();
+        QSettings::setDefaultFormat(QSettings::IniFormat);
+        QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::currentPath());
+        QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QDir::currentPath());
+
+        // Initialize paths for portable mode
+        Path::initialize(true);
+    }
+    else {
+        // Initialize paths for standard installation
+        Path::initialize(false);
+    }
+
 #ifdef USE_CUSTOM_LOGGER
 #ifdef LOG_TO_FILE
-#ifdef Q_OS_DARWIN
-    // On macOS, $TMPDIR is some random folder under /var/folders/ that nobody can
-    // easily find, so use the system's global tmp directory instead.
-    QDir tempDir("/tmp");
-#else
-    QDir tempDir(QDir::tempPath());
-#endif
+    QDir tempDir(Path::getLogDir());
     s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
     if (s_LoggerFile->open(QIODevice::WriteOnly)) {
         qInfo() << "Redirecting log output to " << s_LoggerFile->fileName();

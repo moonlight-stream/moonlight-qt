@@ -120,6 +120,8 @@ echo Building portable package
 rem This must be done after WiX harvesting and signing, since the VCRT dlls are MS signed
 rem and should not be harvested for inclusion in the full installer
 copy "%VCREDIST_PATH%\%ARCH%\Microsoft.VC141.CRT\*.dll" %DEPLOY_FOLDER%
+rem This file tells Moonlight that it's a portable installation
+echo. > %DEPLOY_FOLDER%\portable.dat
 if !ERRORLEVEL! NEQ 0 goto Error
 7z a %INSTALLER_FOLDER%\MoonlightPortable.zip %DEPLOY_FOLDER%\*
 if !ERRORLEVEL! NEQ 0 goto Error
