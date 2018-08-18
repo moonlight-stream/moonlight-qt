@@ -8,7 +8,8 @@
 <?define InstallFolder = "Moonlight Game Streaming" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
-     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension">
+     xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension"
+     xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <Product Id="*"
            Name="$(var.FullName)"
@@ -38,6 +39,8 @@
       </Directory>
     </Directory>
 
+    <Property Id="APPDATAFOLDER">%LOCALAPPDATA%\Moonlight Game Streaming</Property>
+
     <!-- There's no way to delete a registry key on uninstall but not major upgrade, so
         we have to roll our own deletion via custom action -->
     <CustomAction Id="DeleteRegistryKey"
@@ -65,6 +68,7 @@
                 WorkingDirectory="INSTALLFOLDER" />
       <RemoveFolder Id="CleanupStartMenuShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
       <RemoveFolder Id="CleanupDesktopShortcut" Directory="DesktopFolder" On="uninstall" />
+      <util:RemoveFolderEx Id="CleanupAppDataFolder" On="uninstall" Property="APPDATAFOLDER" />
       <RegistryValue Root="HKCU" Key="Software\Moonlight Game Streaming Project" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
     </Component>
 
