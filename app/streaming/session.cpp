@@ -795,16 +795,28 @@ void Session::exec()
         case SDL_RENDER_DEVICE_RESET:
         case SDL_RENDER_TARGETS_RESET:
 
+            SDL_AtomicLock(&m_DecoderLock);
+
+            // Destroy the old decoder
+            delete m_VideoDecoder;
+
+            // Flush any other pending window events that could
+            // send us back here immediately
+            SDL_PumpEvents();
+            SDL_FlushEvent(SDL_WINDOWEVENT);
+
             // Update the window display mode based on our current monitor
             SDL_DisplayMode mode;
             if (SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_Window), &mode) == 0) {
                 SDL_SetWindowDisplayMode(m_Window, &mode);
             }
 
-            SDL_AtomicLock(&m_DecoderLock);
-
-            // Destroy the old decoder
-            delete m_VideoDecoder;
+            // Now that the old decoder is dead, flush any events it may
+            // have queued to reset itself (if this reset was the result
+            // of state loss).
+            SDL_PumpEvents();
+            SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
+            SDL_FlushEvent(SDL_RENDER_TARGETS_RESET);
 
             // Choose a new decoder (hopefully the same one, but possibly
             // not if a GPU was removed or something).
