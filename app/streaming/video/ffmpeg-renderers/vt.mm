@@ -189,6 +189,12 @@ public:
         return true;
     }
 
+    virtual bool needsTestFrame() override
+    {
+        // We query VT to determine whether the codec is supported
+        return false;
+    }
+
 private:
     void setupDisplayLayer()
     {

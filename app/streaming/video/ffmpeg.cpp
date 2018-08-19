@@ -280,20 +280,26 @@ bool FFmpegVideoDecoder::initialize(
         }
 
         m_HwDecodeCfg = config;
-        // Submit test frame to ensure this codec really works
+        // Initialize the hardware codec and submit a test frame if the renderer needs it
         if (m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                completeInitialization(decoder, window, videoFormat, width, height, maxFps, true)) {
-            // OK, it worked, so now let's initialize it for real
-            reset();
-            if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
-                    m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, false)) {
-                return true;
+                completeInitialization(decoder, window, videoFormat, width, height, maxFps, m_Renderer->needsTestFrame())) {
+            if (m_Renderer->needsTestFrame()) {
+                // The test worked, so now let's initialize it for real
+                reset();
+                if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
+                        m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
+                        completeInitialization(decoder, window, videoFormat, width, height, maxFps, false)) {
+                    return true;
+                }
+                else {
+                    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Decoder failed to initialize after successful test");
+                    reset();
+                }
             }
             else {
-                SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                                "Decoder failed to initialize after successful test");
-                reset();
+                // No test required. Good to go now.
+                return true;
             }
         }
         else {

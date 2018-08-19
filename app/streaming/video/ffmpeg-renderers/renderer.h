@@ -16,6 +16,7 @@ public:
                             int maxFps) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context) = 0;
     virtual void renderFrameAtVsync(AVFrame* frame) = 0;
+    virtual bool needsTestFrame() = 0;
 };
 
 class SdlRenderer : public IFFmpegRenderer {
@@ -29,6 +30,7 @@ public:
                             int maxFps);
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrameAtVsync(AVFrame* frame);
+    virtual bool needsTestFrame();
 
 private:
     SDL_Renderer* m_Renderer;

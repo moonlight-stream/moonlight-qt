@@ -141,6 +141,14 @@ VAAPIRenderer::prepareDecoderContext(AVCodecContext* context)
     return true;
 }
 
+bool
+VAAPIRenderer::needsTestFrame()
+{
+    // We need a test frame to see if this VAAPI driver
+    // supports the profile used for streaming
+    return true;
+}
+
 void
 VAAPIRenderer::renderFrameAtVsync(AVFrame* frame)
 {

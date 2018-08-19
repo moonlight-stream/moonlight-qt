@@ -223,6 +223,13 @@ bool VDPAURenderer::prepareDecoderContext(AVCodecContext* context)
     return true;
 }
 
+bool VDPAURenderer::needsTestFrame()
+{
+    // We need a test frame to see if this VDPAU driver
+    // supports the profile used for streaming
+    return true;
+}
+
 void VDPAURenderer::renderFrameAtVsync(AVFrame* frame)
 {
     VdpStatus status;

@@ -496,6 +496,13 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     return true;
 }
 
+bool DXVA2Renderer::needsTestFrame()
+{
+    // We validate the DXVA2 profiles are supported
+    // in initialize() so no test frame is required
+    return false;
+}
+
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);

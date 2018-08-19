@@ -22,6 +22,7 @@ public:
                             int maxFps);
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrameAtVsync(AVFrame* frame);
+    virtual bool needsTestFrame();
 
 private:
     bool initializeDecoder();

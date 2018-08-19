@@ -30,6 +30,12 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
     return true;
 }
 
+bool SdlRenderer::needsTestFrame()
+{
+    // This renderer should always work
+    return false;
+}
+
 bool SdlRenderer::initialize(SDL_Window* window,
                              int,
                              int width,
