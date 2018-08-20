@@ -27,6 +27,7 @@ public:
 private:
     bool initializeDecoder();
     bool initializeRenderer();
+    bool initializeDevice(SDL_Window* window);
     bool isDecoderBlacklisted();
 
     static
@@ -45,8 +46,6 @@ private:
     int m_DisplayWidth;
     int m_DisplayHeight;
 
-    SDL_Renderer* m_SdlRenderer;
-
     struct dxva_context m_DXVAContext;
     IDirect3DSurface9* m_DecSurfaces[19];
     DXVA2_ConfigPictureDecode m_Config;
@@ -55,7 +54,7 @@ private:
     int m_SurfacesUsed;
     AVBufferPool* m_Pool;
 
-    IDirect3DDevice9* m_Device;
+    IDirect3DDevice9Ex* m_Device;
     IDirect3DSurface9* m_RenderTarget;
     IDirectXVideoProcessorService* m_ProcService;
     IDirectXVideoProcessor* m_Processor;

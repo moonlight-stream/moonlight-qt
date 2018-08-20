@@ -144,6 +144,8 @@ int DxVsyncSource::vsyncThread(void* context)
         waitForVblankEventParams.hDevice = 0;
         waitForVblankEventParams.VidPnSourceId = openAdapterParams.VidPnSourceId;
 
+        me->m_Pacer->vsyncCallback();
+
         status = me->m_D3DKMTWaitForVerticalBlankEvent(&waitForVblankEventParams);
         if (status != STATUS_SUCCESS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -152,12 +154,6 @@ int DxVsyncSource::vsyncThread(void* context)
             SDL_Delay(10);
             continue;
         }
-
-        // Try to delay to the middle of the V-sync period to give the frame
-        // from the host time to arrive.
-        SDL_Delay(500 / monitorMode.dmDisplayFrequency);
-
-        me->m_Pacer->vsyncCallback();
     }
 
     if (openAdapterParams.hAdapter != 0) {

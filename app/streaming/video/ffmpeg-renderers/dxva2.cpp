@@ -3,6 +3,9 @@
 #include "../ffmpeg.h"
 #include <streaming/streamutils.h>
 
+#include <SDL_syswm.h>
+#include <dwmapi.h>
+
 #include <Limelight.h>
 
 DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0xD2,0x5C,0x15,0xB3,0xD6);
@@ -10,7 +13,6 @@ DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0x
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
 DXVA2Renderer::DXVA2Renderer() :
-    m_SdlRenderer(nullptr),
     m_DecService(nullptr),
     m_Decoder(nullptr),
     m_SurfacesUsed(0),
@@ -40,10 +42,6 @@ DXVA2Renderer::~DXVA2Renderer()
 
     if (m_Pool != nullptr) {
         av_buffer_pool_uninit(&m_Pool);
-    }
-
-    if (m_SdlRenderer != nullptr) {
-        SDL_DestroyRenderer(m_SdlRenderer);
     }
 }
 
@@ -430,37 +428,107 @@ bool DXVA2Renderer::isDecoderBlacklisted()
     return result;
 }
 
+bool DXVA2Renderer::initializeDevice(SDL_Window* window)
+{
+    SDL_SysWMinfo info;
+
+    SDL_VERSION(&info.version);
+    SDL_GetWindowWMInfo(window, &info);
+
+    IDirect3D9Ex* d3d9ex;
+    HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9ex);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Direct3DCreate9Ex() failed: %x",
+                     hr);
+        return false;
+    }
+
+    int adapterIndex = SDL_Direct3D9GetAdapterIndex(SDL_GetWindowDisplayIndex(window));
+    Uint32 windowFlags = SDL_GetWindowFlags(window);
+
+    D3DDISPLAYMODEEX currentMode;
+    currentMode.Size = sizeof(currentMode);
+    d3d9ex->GetAdapterDisplayModeEx(adapterIndex, &currentMode, nullptr);
+
+    D3DPRESENT_PARAMETERS d3dpp = {};
+    d3dpp.hDeviceWindow = info.info.win.window;
+    d3dpp.BackBufferCount = 1;
+    d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
+    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+
+    if ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        d3dpp.Windowed = false;
+        d3dpp.BackBufferWidth = currentMode.Width;
+        d3dpp.BackBufferHeight = currentMode.Height;
+        d3dpp.FullScreen_RefreshRateInHz = currentMode.RefreshRate;
+        d3dpp.BackBufferFormat = currentMode.Format;
+    }
+    else {
+        d3dpp.Windowed = true;
+        d3dpp.BackBufferFormat = D3DFMT_UNKNOWN;
+
+        SDL_GetWindowSize(window, (int*)&d3dpp.BackBufferWidth, (int*)&d3dpp.BackBufferHeight);
+    }
+
+    BOOL dwmEnabled;
+    DwmIsCompositionEnabled(&dwmEnabled);
+    if (d3dpp.Windowed && dwmEnabled) {
+        // If composition enabled, disable v-sync and let DWM manage things
+        // to reduce latency by avoiding double v-syncing.
+        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+
+        // Use FlipEx mode if DWM is running to increase efficiency
+        d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Windowed mode with DWM running");
+    }
+    else {
+        // Uncomposited desktop or full-screen exclusive mode
+        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "V-Sync enabled");
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Windowed: %d | Present Interval: %d",
+                d3dpp.Windowed, d3dpp.PresentationInterval);
+
+    hr = d3d9ex->CreateDeviceEx(adapterIndex,
+                                D3DDEVTYPE_HAL,
+                                d3dpp.hDeviceWindow,
+                                D3DCREATE_MULTITHREADED | D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+                                &d3dpp,
+                                d3dpp.Windowed ? nullptr : &currentMode,
+                                &m_Device);
+
+    d3d9ex->Release();
+
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "CreateDeviceEx() failed: %x",
+                     hr);
+        return false;
+    }
+
+    hr = m_Device->SetMaximumFrameLatency(1);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SetMaximumFrameLatency() failed: %x",
+                     hr);
+        return false;
+    }
+
+    return true;
+}
+
 bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int)
 {
     m_VideoFormat = videoFormat;
     m_VideoWidth = width;
     m_VideoHeight = height;
-
-    // FFmpeg will be decoding on different threads than the main thread that we're
-    // currently running on right now. We must set this hint so SDL will pass
-    // D3DCREATE_MULTITHREADED to IDirect3D9::CreateDevice().
-    SDL_SetHint(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1");
-
-    m_SdlRenderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
-    if (!m_SdlRenderer) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRenderer() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    m_Device = SDL_RenderGetD3D9Device(m_SdlRenderer);
-    if (m_Device == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_RenderGetD3D9Device() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    // Draw a black frame until the video stream starts rendering
-    SDL_SetRenderDrawColor(m_SdlRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(m_SdlRenderer);
-    SDL_RenderPresent(m_SdlRenderer);
 
     RtlZeroMemory(&m_Desc, sizeof(m_Desc));
 
@@ -484,6 +552,10 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
     m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
+
+    if (!initializeDevice(window)) {
+        return false;
+    }
 
     if (!initializeDecoder()) {
         return false;
@@ -639,30 +711,27 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
 
     bltParams.Alpha = DXVA2_Fixed32OpaqueAlpha();
 
-    if (SDL_RenderClear(m_SdlRenderer) != 0) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "SDL_RenderClear() failed: %s",
-                    SDL_GetError());
-
-        // We're going to cheat a little bit here. It seems SDL's
-        // renderer may flake out in scenarios like moving the window
-        // between monitors, so generate a synthetic reset event for
-        // the main loop to consume.
-        SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
-        SDL_PushEvent(&event);
-
-        return;
-    }
+    m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0f, 0);
 
     hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VideoProcessBlt() failed: %x",
                      hr);
+        SDL_Event event;
+        event.type = SDL_RENDER_TARGETS_RESET;
+        SDL_PushEvent(&event);
+        return;
     }
 
-    // We must try to present to trigger SDL's logic to recover the render target,
-    // even if VideoProcessBlt() fails.
-    SDL_RenderPresent(m_SdlRenderer);
+    hr = m_Device->PresentEx(nullptr, nullptr, nullptr, nullptr, 0);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "PresentEx() failed: %x",
+                     hr);
+        SDL_Event event;
+        event.type = SDL_RENDER_TARGETS_RESET;
+        SDL_PushEvent(&event);
+        return;
+    }
 }
