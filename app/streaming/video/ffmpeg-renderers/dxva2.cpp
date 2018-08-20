@@ -447,6 +447,9 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window)
     int adapterIndex = SDL_Direct3D9GetAdapterIndex(SDL_GetWindowDisplayIndex(window));
     Uint32 windowFlags = SDL_GetWindowFlags(window);
 
+    D3DCAPS9 deviceCaps;
+    d3d9ex->GetDeviceCaps(adapterIndex, D3DDEVTYPE_HAL, &deviceCaps);
+
     D3DDISPLAYMODEEX currentMode;
     currentMode.Size = sizeof(currentMode);
     d3d9ex->GetAdapterDisplayModeEx(adapterIndex, &currentMode, nullptr);
@@ -493,13 +496,26 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window)
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Windowed: %d | Present Interval: %d",
+                "Windowed: %d | Present Interval: %x",
                 d3dpp.Windowed, d3dpp.PresentationInterval);
+
+    // FFmpeg requires this attribute for doing asynchronous decoding
+    // in a separate thread with this device.
+    int deviceFlags = D3DCREATE_MULTITHREADED;
+
+    if (deviceCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
+        deviceFlags |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
+    }
+    else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "No hardware vertex processing support!");
+        deviceFlags |= D3DCREATE_SOFTWARE_VERTEXPROCESSING;
+    }
 
     hr = d3d9ex->CreateDeviceEx(adapterIndex,
                                 D3DDEVTYPE_HAL,
                                 d3dpp.hDeviceWindow,
-                                D3DCREATE_MULTITHREADED | D3DCREATE_SOFTWARE_VERTEXPROCESSING,
+                                deviceFlags,
                                 &d3dpp,
                                 d3dpp.Windowed ? nullptr : &currentMode,
                                 &m_Device);
