@@ -15,8 +15,9 @@ NullThreadedVsyncSource::~NullThreadedVsyncSource()
     }
 }
 
-bool NullThreadedVsyncSource::initialize(SDL_Window*)
+bool NullThreadedVsyncSource::initialize(SDL_Window*, int displayFps)
 {
+    m_DisplayFps = displayFps;
     m_Thread = SDL_CreateThread(vsyncThread, "Null Vsync Thread", this);
     if (m_Thread == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -35,7 +36,7 @@ int NullThreadedVsyncSource::vsyncThread(void* context)
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
 
     while (SDL_AtomicGet(&me->m_Stopping) == 0) {
-        me->m_Pacer->vsyncCallback();
+        me->m_Pacer->vsyncCallback(1000 / me->m_DisplayFps);
     }
 
     return 0;

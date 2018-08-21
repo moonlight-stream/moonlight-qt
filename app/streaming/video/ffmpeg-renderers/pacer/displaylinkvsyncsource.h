@@ -11,7 +11,7 @@ public:
 
     virtual ~DisplayLinkVsyncSource();
 
-    virtual bool initialize(SDL_Window* window);
+    virtual bool initialize(SDL_Window* window, int displayFps);
 
 private:
     static
@@ -26,5 +26,6 @@ private:
 
     Pacer* m_Pacer;
     CVDisplayLinkRef m_DisplayLink;
+    int m_DisplayFps;
 };
 

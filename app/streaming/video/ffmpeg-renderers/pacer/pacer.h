@@ -7,7 +7,7 @@
 class IVsyncSource {
 public:
     virtual ~IVsyncSource() {}
-    virtual bool initialize(SDL_Window* window) = 0;
+    virtual bool initialize(SDL_Window* window, int displayFps) = 0;
 };
 
 class Pacer
@@ -21,7 +21,7 @@ public:
 
     bool initialize(SDL_Window* window, int maxVideoFps);
 
-    void vsyncCallback();
+    void vsyncCallback(int timeUntilNextVsyncMillis);
 
     bool isUsingFrameQueue();
 

@@ -9,7 +9,7 @@ public:
 
     virtual ~NullThreadedVsyncSource();
 
-    virtual bool initialize(SDL_Window* window);
+    virtual bool initialize(SDL_Window* window, int displayFps);
 
 private:
     static int vsyncThread(void* context);
@@ -17,4 +17,5 @@ private:
     Pacer* m_Pacer;
     SDL_Thread* m_Thread;
     SDL_atomic_t m_Stopping;
+    int m_DisplayFps;
 };

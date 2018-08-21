@@ -34,13 +34,15 @@ DisplayLinkVsyncSource::displayLinkOutputCallback(
     // interval, even if many ms prior, we can safely use the current host time
     // and get a consistent callback for each v-sync. This reduces video latency
     // by at least 1 frame vs. rendering with the actual vsyncTime.
-    me->m_Pacer->vsyncCallback();
+    me->m_Pacer->vsyncCallback(500 / m_DisplayFps);
 
     return kCVReturnSuccess;
 }
 
-bool DisplayLinkVsyncSource::initialize(SDL_Window*)
+bool DisplayLinkVsyncSource::initialize(SDL_Window*, int displayFps)
 {
+    m_DisplayFps = displayFps;
+
     CVDisplayLinkCreateWithActiveCGDisplays(&m_DisplayLink);
     CVDisplayLinkSetOutputCallback(m_DisplayLink, displayLinkOutputCallback, this);
     CVDisplayLinkStart(m_DisplayLink);

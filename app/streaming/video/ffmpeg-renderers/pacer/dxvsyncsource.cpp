@@ -24,8 +24,10 @@ DxVsyncSource::~DxVsyncSource()
     }
 }
 
-bool DxVsyncSource::initialize(SDL_Window* window)
+bool DxVsyncSource::initialize(SDL_Window* window, int displayFps)
 {
+    m_DisplayFps = displayFps;
+
     m_Gdi32Handle = LoadLibraryA("gdi32.dll");
     if (m_Gdi32Handle == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -144,8 +146,6 @@ int DxVsyncSource::vsyncThread(void* context)
         waitForVblankEventParams.hDevice = 0;
         waitForVblankEventParams.VidPnSourceId = openAdapterParams.VidPnSourceId;
 
-        me->m_Pacer->vsyncCallback();
-
         status = me->m_D3DKMTWaitForVerticalBlankEvent(&waitForVblankEventParams);
         if (status != STATUS_SUCCESS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -154,6 +154,8 @@ int DxVsyncSource::vsyncThread(void* context)
             SDL_Delay(10);
             continue;
         }
+
+        me->m_Pacer->vsyncCallback(1000 / me->m_DisplayFps);
     }
 
     if (openAdapterParams.hAdapter != 0) {

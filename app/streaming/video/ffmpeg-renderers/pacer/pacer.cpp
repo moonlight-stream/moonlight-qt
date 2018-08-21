@@ -1,5 +1,7 @@
 #include "pacer.h"
 
+#include "nullthreadedvsyncsource.h"
+
 #ifdef Q_OS_DARWIN
 #include "displaylinkvsyncsource.h"
 #endif
@@ -9,6 +11,13 @@
 #endif
 
 #define FRAME_HISTORY_ENTRIES 8
+
+// We may be woken up slightly late so don't go all the way
+// up to the next V-sync since we may accidentally step into
+// the next V-sync period. It also takes some amount of time
+// to do the render itself, so we can't render right before
+// V-sync happens.
+#define TIMER_SLACK_MS 3
 
 Pacer::Pacer(IFFmpegRenderer* renderer) :
     m_FrameQueueLock(0),
@@ -34,10 +43,14 @@ Pacer::~Pacer()
 
 // Called in an arbitrary thread by the IVsyncSource on V-sync
 // or an event synchronized with V-sync
-void Pacer::vsyncCallback()
+void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
 {
     // Make sure initialize() has been called
     SDL_assert(m_MaxVideoFps != 0);
+
+    SDL_assert(timeUntilNextVsyncMillis >= TIMER_SLACK_MS);
+
+    Uint32 vsyncCallbackStartTime = SDL_GetTicks();
 
     SDL_AtomicLock(&m_FrameQueueLock);
 
@@ -71,13 +84,27 @@ void Pacer::vsyncCallback()
         av_frame_free(&frame);
     }
 
+
     if (m_FrameQueue.isEmpty()) {
         SDL_AtomicUnlock(&m_FrameQueueLock);
+
+        while (!SDL_TICKS_PASSED(SDL_GetTicks(),
+                                 vsyncCallbackStartTime + timeUntilNextVsyncMillis - TIMER_SLACK_MS)) {
+            SDL_Delay(1);
+
+            SDL_AtomicLock(&m_FrameQueueLock);
+            if (!m_FrameQueue.isEmpty()) {
+                // Don't release the lock
+                goto RenderNextFrame;
+            }
+            SDL_AtomicUnlock(&m_FrameQueueLock);
+        }
 
         // Nothing to render at this time
         return;
     }
 
+RenderNextFrame:
     // Grab the first frame
     AVFrame* frame = m_FrameQueue.dequeue();
     SDL_AtomicUnlock(&m_FrameQueueLock);
@@ -122,7 +149,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps)
     // immediately like they used to.
 #endif
 
-    if (m_VsyncSource != nullptr && !m_VsyncSource->initialize(window)) {
+    if (m_VsyncSource != nullptr && !m_VsyncSource->initialize(window, m_DisplayFps)) {
         return false;
     }
 
