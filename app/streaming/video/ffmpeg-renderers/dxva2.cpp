@@ -460,7 +460,6 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 
     D3DPRESENT_PARAMETERS d3dpp = {};
     d3dpp.hDeviceWindow = info.info.win.window;
-    d3dpp.BackBufferCount = 1;
     d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
     d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
@@ -485,22 +484,10 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // to reduce latency by avoiding double v-syncing.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
-        // On Windows 7, DWM seems to have a nasty bug where using
-        // FlipEx causes rendering to be locked to 30 FPS. I'm not
-        // sure if Windows 8 is affected, but I confirmed Windows 8.1
-        // is not. I'm erring on the side of caution and assuming
-        // Windows 8 is affected.
-        if (IsWindows8Point1OrGreater()) {
-            // Use FlipEx mode if DWM is running to increase efficiency
-            d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using FlipEx swapping with DWM");
-        }
-        else {
-            d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using discard swapping with DWM");
-        }
+        // D3DSWAPEFFECT_FLIPEX requires at least 2 back buffers to allow us to
+        // continue while DWM is waiting to render the surface to the display.
+        d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
+        d3dpp.BackBufferCount = 2;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Windowed mode with DWM running");
@@ -509,6 +496,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // Uncomposited desktop or full-screen exclusive mode with V-sync enabled
         // We will enable V-sync in this scenario to avoid tearing.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+        d3dpp.BackBufferCount = 1;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "V-Sync enabled");
@@ -517,6 +505,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // Uncomposited desktop or full-screen exclusive mode with V-sync disabled
         // We will allowing tearing for lowest latency.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+        d3dpp.BackBufferCount = 1;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "V-Sync disabled in tearing mode");
