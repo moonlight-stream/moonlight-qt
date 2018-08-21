@@ -33,6 +33,15 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.3.0" date="2018-08-21">
+			<description>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Reduced power consumption when the app is minimized</li>
+					<li>Fixed malformed asset requests being sent when the first host in the grid is offline</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.2.0" date="2018-08-12">
 			<description>
 				<p>Bugfixes:</p>
