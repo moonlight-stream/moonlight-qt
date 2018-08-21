@@ -55,6 +55,7 @@ public:
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
     Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
     Q_PROPERTY(bool fullScreen MEMBER fullScreen NOTIFY fullScreenChanged)
+    Q_PROPERTY(bool enableVsync MEMBER enableVsync NOTIFY enableVsyncChanged)
     Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
     Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
     Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
@@ -68,6 +69,7 @@ public:
     int fps;
     int bitrateKbps;
     bool fullScreen;
+    bool enableVsync;
     bool gameOptimizations;
     bool playAudioOnHost;
     bool multiController;
@@ -79,6 +81,7 @@ signals:
     void displayModeChanged();
     void bitrateChanged();
     void fullScreenChanged();
+    void enableVsyncChanged();
     void gameOptimizationsChanged();
     void playAudioOnHostChanged();
     void multiControllerChanged();

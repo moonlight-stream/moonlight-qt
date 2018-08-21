@@ -230,13 +230,26 @@ ScrollView {
                     }
                 }
 
-                CheckBox {
-                    id: fullScreenCheck
-                    text: "<font color=\"white\">Full-screen</font>"
-                    font.pointSize:  12
-                    checked: prefs.fullScreen
-                    onCheckedChanged: {
-                        prefs.fullScreen = checked
+                Row {
+                    CheckBox {
+                        id: fullScreenCheck
+                        text: "<font color=\"white\">Full-screen</font>"
+                        font.pointSize:  12
+                        checked: prefs.fullScreen
+                        onCheckedChanged: {
+                            prefs.fullScreen = checked
+                        }
+                    }
+
+                    CheckBox {
+                        id: vsyncCheck
+                        text: "<font color=\"white\">Enable V-Sync</font>"
+                        font.pointSize:  12
+                        visible: fullScreenCheck.checked
+                        checked: prefs.enableVsync
+                        onCheckedChanged: {
+                            prefs.enableVsync = checked
+                        }
                     }
                 }
             }

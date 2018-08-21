@@ -834,7 +834,7 @@ void Session::exec()
             if (!chooseDecoder(m_Preferences.videoDecoderSelection,
                                m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
                                m_ActiveVideoHeight, m_ActiveVideoFrameRate,
-                               true, // TODO: User configuration for V-sync
+                               m_Preferences.enableVsync,
                                s_ActiveSession->m_VideoDecoder)) {
                 SDL_AtomicUnlock(&m_DecoderLock);
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
