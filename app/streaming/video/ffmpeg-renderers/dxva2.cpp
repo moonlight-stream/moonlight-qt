@@ -4,6 +4,10 @@
 #include <streaming/streamutils.h>
 
 #include <SDL_syswm.h>
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <VersionHelpers.h>
 #include <dwmapi.h>
 
 #include <Limelight.h>
@@ -481,8 +485,22 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // to reduce latency by avoiding double v-syncing.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
-        // Use FlipEx mode if DWM is running to increase efficiency
-        d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
+        // On Windows 7, DWM seems to have a nasty bug where using
+        // FlipEx causes rendering to be locked to 30 FPS. I'm not
+        // sure if Windows 8 is affected, but I confirmed Windows 8.1
+        // is not. I'm erring on the side of caution and assuming
+        // Windows 8 is affected.
+        if (IsWindows8Point1OrGreater()) {
+            // Use FlipEx mode if DWM is running to increase efficiency
+            d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using FlipEx swapping with DWM");
+        }
+        else {
+            d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using discard swapping with DWM");
+        }
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Windowed mode with DWM running");
