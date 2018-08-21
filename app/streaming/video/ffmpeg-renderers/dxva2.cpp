@@ -29,10 +29,15 @@ DXVA2Renderer::DXVA2Renderer() :
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
+
+    // Use MMCSS scheduling for lower scheduling latency while we're streaming
+    DwmEnableMMCSS(TRUE);
 }
 
 DXVA2Renderer::~DXVA2Renderer()
 {
+    DwmEnableMMCSS(FALSE);
+
     SAFE_COM_RELEASE(m_DecService);
     SAFE_COM_RELEASE(m_Decoder);
     SAFE_COM_RELEASE(m_Device);
