@@ -231,6 +231,8 @@ unix:!macx: {
 }
 win32 {
     RC_ICONS = moonlight.ico
+    CONFIG -= embed_manifest_exe
+    QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
 }
 macx {
     QMAKE_INFO_PLIST = $$PWD/Info.plist
