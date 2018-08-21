@@ -17,7 +17,8 @@ public:
                             int videoFormat,
                             int width,
                             int height,
-                            int maxFps);
+                            int maxFps,
+                            bool enableVsync);
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();

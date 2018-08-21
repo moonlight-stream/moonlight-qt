@@ -116,9 +116,10 @@ RenderNextFrame:
     av_frame_free(&frame);
 }
 
-bool Pacer::initialize(SDL_Window* window, int maxVideoFps)
+bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enableVsync)
 {
     m_MaxVideoFps = maxVideoFps;
+    m_EnableVsync = enableVsync;
 
     int displayIndex = SDL_GetWindowDisplayIndex(window);
     if (displayIndex < 0) {
@@ -136,21 +137,28 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps)
         m_DisplayFps = mode.refresh_rate;
     }
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Frame pacing: target %d Hz with %d FPS stream",
-                m_DisplayFps, m_MaxVideoFps);
+    if (m_EnableVsync) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Frame pacing in tear-free mode: target %d Hz with %d FPS stream",
+                    m_DisplayFps, m_MaxVideoFps);
 
-#if defined(Q_OS_DARWIN)
-    m_VsyncSource = new DisplayLinkVsyncSource(this);
-#elif defined(Q_OS_WIN32)
-    m_VsyncSource = new DxVsyncSource(this);
-#else
-    // Platforms without a VsyncSource will just render frames
-    // immediately like they used to.
-#endif
+    #if defined(Q_OS_DARWIN)
+        m_VsyncSource = new DisplayLinkVsyncSource(this);
+    #elif defined(Q_OS_WIN32)
+        m_VsyncSource = new DxVsyncSource(this);
+    #else
+        // Platforms without a VsyncSource will just render frames
+        // immediately like they used to.
+    #endif
 
-    if (m_VsyncSource != nullptr && !m_VsyncSource->initialize(window, m_DisplayFps)) {
-        return false;
+        if (m_VsyncSource != nullptr && !m_VsyncSource->initialize(window, m_DisplayFps)) {
+            return false;
+        }
+    }
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Minimal latency tearing mode: target %d Hz with %d FPS stream",
+                    m_DisplayFps, m_MaxVideoFps);
     }
 
     return true;

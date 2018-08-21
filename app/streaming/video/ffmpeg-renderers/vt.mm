@@ -101,7 +101,8 @@ public:
                             int videoFormat,
                             int,
                             int,
-                            int) override
+                            int,
+                            bool) override
     {
         int err;
 

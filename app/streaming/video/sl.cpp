@@ -28,7 +28,7 @@ SLVideoDecoder::isHardwareAccelerated()
 bool
 SLVideoDecoder::initialize(StreamingPreferences::VideoDecoderSelection vds,
                            SDL_Window*,
-                           int videoFormat, int, int, int frameRate)
+                           int videoFormat, int, int, int frameRate, bool)
 {
     // SLVideo only supports hardware decoding
     if (vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {

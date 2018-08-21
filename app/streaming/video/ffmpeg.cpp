@@ -108,10 +108,10 @@ void FFmpegVideoDecoder::reset()
 
 bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* window,
                                                 int videoFormat, int width, int height,
-                                                int maxFps, bool testOnly)
+                                                int maxFps, bool enableVsync, bool testOnly)
 {
     m_Pacer = new Pacer(m_Renderer);
-    if (!m_Pacer->initialize(window, maxFps)) {
+    if (!m_Pacer->initialize(window, maxFps, enableVsync)) {
         return false;
     }
 
@@ -229,7 +229,8 @@ bool FFmpegVideoDecoder::initialize(
         int videoFormat,
         int width,
         int height,
-        int maxFps)
+        int maxFps,
+        bool enableVsync)
 {
     AVCodec* decoder;
 
@@ -264,8 +265,8 @@ bool FFmpegVideoDecoder::initialize(
             m_HwDecodeCfg = nullptr;
             m_Renderer = new SdlRenderer();
             if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
-                    m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, false)) {
+                    m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
+                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableVsync, false)) {
                 return true;
             }
             else {
@@ -281,14 +282,14 @@ bool FFmpegVideoDecoder::initialize(
 
         m_HwDecodeCfg = config;
         // Initialize the hardware codec and submit a test frame if the renderer needs it
-        if (m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                completeInitialization(decoder, window, videoFormat, width, height, maxFps, m_Renderer->needsTestFrame())) {
+        if (m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
+                completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableVsync, m_Renderer->needsTestFrame())) {
             if (m_Renderer->needsTestFrame()) {
                 // The test worked, so now let's initialize it for real
                 reset();
                 if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
-                        m_Renderer->initialize(window, videoFormat, width, height, maxFps) &&
-                        completeInitialization(decoder, window, videoFormat, width, height, maxFps, false)) {
+                        m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
+                        completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableVsync, false)) {
                     return true;
                 }
                 else {

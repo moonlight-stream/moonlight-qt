@@ -17,7 +17,8 @@ public:
                             int videoFormat,
                             int width,
                             int height,
-                            int maxFps) override;
+                            int maxFps,
+                            bool enableVsync) override;
     virtual bool isHardwareAccelerated() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
     virtual void renderFrame(SDL_UserEvent* event) override;
@@ -28,7 +29,7 @@ public:
 private:
     bool completeInitialization(AVCodec* decoder, SDL_Window* window,
                                 int videoFormat, int width, int height,
-                                int maxFps, bool testOnly);
+                                int maxFps, bool enableVsync, bool testOnly);
 
     IFFmpegRenderer* createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg);
 

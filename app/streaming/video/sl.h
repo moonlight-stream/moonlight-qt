@@ -14,7 +14,8 @@ public:
                             int videoFormat,
                             int width,
                             int height,
-                            int frameRate);
+                            int frameRate,
+                            bool enableVsync);
     virtual bool isHardwareAccelerated();
     virtual int submitDecodeUnit(PDECODE_UNIT du);
 

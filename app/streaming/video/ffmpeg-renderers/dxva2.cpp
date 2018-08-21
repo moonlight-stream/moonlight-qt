@@ -428,7 +428,7 @@ bool DXVA2Renderer::isDecoderBlacklisted()
     return result;
 }
 
-bool DXVA2Renderer::initializeDevice(SDL_Window* window)
+bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 {
     SDL_SysWMinfo info;
 
@@ -487,12 +487,21 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Windowed mode with DWM running");
     }
-    else {
-        // Uncomposited desktop or full-screen exclusive mode
+    else if (enableVsync) {
+        // Uncomposited desktop or full-screen exclusive mode with V-sync enabled
+        // We will enable V-sync in this scenario to avoid tearing.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "V-Sync enabled");
+    }
+    else {
+        // Uncomposited desktop or full-screen exclusive mode with V-sync disabled
+        // We will allowing tearing for lowest latency.
+        d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "V-Sync disabled in tearing mode");
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -540,7 +549,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window)
     return true;
 }
 
-bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int)
+bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int, bool enableVsync)
 {
     m_VideoFormat = videoFormat;
     m_VideoWidth = width;
@@ -569,7 +578,7 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
     m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
 
-    if (!initializeDevice(window)) {
+    if (!initializeDevice(window, enableVsync)) {
         return false;
     }
 

@@ -40,9 +40,21 @@ bool SdlRenderer::initialize(SDL_Window* window,
                              int,
                              int width,
                              int height,
-                             int)
+                             int,
+                             bool enableVsync)
 {
-    m_Renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
+
+    if ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        // In full-screen exclusive mode, we enable V-sync if requested. For other modes, Windows and Mac
+        // have compositors that make rendering tear-free. Linux compositor varies by distro and user
+        // configuration but doesn't seem feasible to detect here.
+        if (enableVsync) {
+            rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
+        }
+    }
+
+    m_Renderer = SDL_CreateRenderer(window, -1, rendererFlags);
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",

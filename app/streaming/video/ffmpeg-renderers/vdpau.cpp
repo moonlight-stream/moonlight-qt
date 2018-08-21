@@ -54,7 +54,7 @@ VDPAURenderer::~VDPAURenderer()
     }
 }
 
-bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height, int)
+bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height, int, bool)
 {
     int err;
     VdpStatus status;

@@ -16,7 +16,8 @@ public:
                             int videoFormat,
                             int width,
                             int height,
-                            int frameRate) = 0;
+                            int frameRate,
+                            bool enableVsync) = 0;
     virtual bool isHardwareAccelerated() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual void renderFrame(SDL_UserEvent* event) = 0;

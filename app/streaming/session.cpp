@@ -106,7 +106,7 @@ void Session::clLogMessage(const char* format, ...)
 
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
-                            int frameRate, IVideoDecoder*& chosenDecoder)
+                            int frameRate, bool enableVsync, IVideoDecoder*& chosenDecoder)
 {
 #ifdef HAVE_SLVIDEO
     chosenDecoder = new SLVideoDecoder();
@@ -125,7 +125,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 
 #ifdef HAVE_FFMPEG
     chosenDecoder = new FFmpegVideoDecoder();
-    if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate)) {
+    if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "FFmpeg-based video decoder chosen");
         return true;
@@ -212,7 +212,7 @@ bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelect
         return false;
     }
 
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, decoder)) {
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, decoder)) {
         SDL_DestroyWindow(window);
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
@@ -823,6 +823,7 @@ void Session::exec()
             if (!chooseDecoder(m_Preferences.videoDecoderSelection,
                                m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
                                m_ActiveVideoHeight, m_ActiveVideoFrameRate,
+                               true, // TODO: User configuration for V-sync
                                s_ActiveSession->m_VideoDecoder)) {
                 SDL_AtomicUnlock(&m_DecoderLock);
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

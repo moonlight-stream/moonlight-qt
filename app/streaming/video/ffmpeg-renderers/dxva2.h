@@ -19,7 +19,8 @@ public:
                             int videoFormat,
                             int width,
                             int height,
-                            int maxFps);
+                            int maxFps,
+                            bool enableVsync);
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();
@@ -27,7 +28,7 @@ public:
 private:
     bool initializeDecoder();
     bool initializeRenderer();
-    bool initializeDevice(SDL_Window* window);
+    bool initializeDevice(SDL_Window* window, bool enableVsync);
     bool isDecoderBlacklisted();
 
     static
