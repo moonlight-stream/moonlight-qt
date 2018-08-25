@@ -160,12 +160,17 @@ int main(int argc, char *argv[])
     SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
 #endif
 
-    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", QByteArray("1"));
+
+#ifdef Q_OS_WIN32
+    // On Windows, use ANGLE so we don't have to load both DX and OGL
+    // user-mode drivers into our app.
+    qputenv("QT_OPENGL", "angle");
+#endif
 
     // Set these here to allow us to use the default QSettings constructor
     QCoreApplication::setOrganizationName("Moonlight Game Streaming Project");
