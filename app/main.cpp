@@ -160,6 +160,7 @@ int main(int argc, char *argv[])
     SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
 #endif
 
+    QCoreApplication::setAttribute(Qt::AA_UseOpenGLES);
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     // This avoids using the default keychain for SSL, which may cause
