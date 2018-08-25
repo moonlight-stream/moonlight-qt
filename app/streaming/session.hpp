@@ -25,6 +25,10 @@ public:
     bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
                                    int videoFormat, int width, int height, int frameRate);
 
+    static
+    int getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
+                               int videoFormat, int width, int height, int frameRate);
+
 signals:
     void stageStarting(QString stage);
 

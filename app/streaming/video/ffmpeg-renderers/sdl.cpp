@@ -38,8 +38,9 @@ bool SdlRenderer::needsTestFrame()
 
 int SdlRenderer::getDecoderCapabilities()
 {
-    // The FFmpeg CPU decoder can handle reference frame invalidation
-    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC | CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+    // The FFmpeg CPU decoder can handle reference frame invalidation,
+    // but only for H.264.
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
 }
 
 bool SdlRenderer::initialize(SDL_Window* window,

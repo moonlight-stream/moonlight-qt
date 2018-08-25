@@ -232,6 +232,43 @@ bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelect
     return ret;
 }
 
+int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
+                                    int videoFormat, int width, int height, int frameRate)
+{
+    IVideoDecoder* decoder;
+
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
+    SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
+    if (!window) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create window for hardware decode test: %s",
+                     SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
+    }
+
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, decoder)) {
+        SDL_DestroyWindow(window);
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
+    }
+
+    SDL_DestroyWindow(window);
+
+    int caps = decoder->getDecoderCapabilities();
+
+    delete decoder;
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+    return caps;
+}
+
 Session::Session(NvComputer* computer, NvApp& app)
     : m_Computer(computer),
       m_App(app),
@@ -451,6 +488,13 @@ bool Session::validateLaunch()
         // Fail the launch, because we won't manage to get a decoder for the actual stream
         return false;
     }
+
+    // Add the capability flags from the chosen decoder/renderer
+    m_VideoCallbacks.capabilities |= getDecoderCapabilities(m_Preferences.videoDecoderSelection,
+                                                            m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
+                                                            m_StreamConfig.width,
+                                                            m_StreamConfig.height,
+                                                            m_StreamConfig.fps);
 
     return true;
 }
