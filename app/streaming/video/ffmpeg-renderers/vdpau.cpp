@@ -230,6 +230,11 @@ bool VDPAURenderer::needsTestFrame()
     return true;
 }
 
+int VDPAURenderer::getDecoderCapabilities()
+{
+    return 0;
+}
+
 void VDPAURenderer::renderFrameAtVsync(AVFrame* frame)
 {
     VdpStatus status;

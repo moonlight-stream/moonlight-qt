@@ -196,6 +196,11 @@ public:
         return false;
     }
 
+    virtual int getDecoderCapabilities() override
+    {
+        return 0;
+    }
+
 private:
     void setupDisplayLayer()
     {

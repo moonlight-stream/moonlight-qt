@@ -18,6 +18,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context) = 0;
     virtual void renderFrameAtVsync(AVFrame* frame) = 0;
     virtual bool needsTestFrame() = 0;
+    virtual int getDecoderCapabilities() = 0;
 };
 
 class SdlRenderer : public IFFmpegRenderer {
@@ -33,6 +34,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();
+    virtual int getDecoderCapabilities();
 
 private:
     SDL_Renderer* m_Renderer;

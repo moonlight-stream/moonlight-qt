@@ -36,6 +36,12 @@ bool SdlRenderer::needsTestFrame()
     return false;
 }
 
+int SdlRenderer::getDecoderCapabilities()
+{
+    // The FFmpeg CPU decoder can handle reference frame invalidation
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC | CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+}
+
 bool SdlRenderer::initialize(SDL_Window* window,
                              int,
                              int width,

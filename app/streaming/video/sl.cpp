@@ -25,6 +25,12 @@ SLVideoDecoder::isHardwareAccelerated()
     return true;
 }
 
+int
+SLVideoDecoder::getDecoderCapabilities()
+{
+    return 0;
+}
+
 bool
 SLVideoDecoder::initialize(StreamingPreferences::VideoDecoderSelection vds,
                            SDL_Window*,

@@ -17,6 +17,7 @@ public:
                             int frameRate,
                             bool enableVsync);
     virtual bool isHardwareAccelerated();
+    virtual int getDecoderCapabilities();
     virtual int submitDecodeUnit(PDECODE_UNIT du);
 
     // Unused since rendering is done directly from the decode thread

@@ -619,6 +619,11 @@ bool DXVA2Renderer::needsTestFrame()
     return false;
 }
 
+int DXVA2Renderer::getDecoderCapabilities()
+{
+    return 0;
+}
+
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);

@@ -24,6 +24,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();
+    virtual int getDecoderCapabilities();
 
 private:
     bool initializeDecoder();

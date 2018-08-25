@@ -19,6 +19,7 @@ public:
                             int frameRate,
                             bool enableVsync) = 0;
     virtual bool isHardwareAccelerated() = 0;
+    virtual int getDecoderCapabilities() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual void renderFrame(SDL_UserEvent* event) = 0;
     virtual void dropFrame(SDL_UserEvent* event) = 0;

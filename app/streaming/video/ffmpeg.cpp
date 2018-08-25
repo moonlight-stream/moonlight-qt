@@ -27,6 +27,11 @@ bool FFmpegVideoDecoder::isHardwareAccelerated()
     return m_HwDecodeCfg != nullptr;
 }
 
+int FFmpegVideoDecoder::getDecoderCapabilities()
+{
+    return m_Renderer->getDecoderCapabilities();
+}
+
 enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
                                                    const enum AVPixelFormat* pixFmts)
 {

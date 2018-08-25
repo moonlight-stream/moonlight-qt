@@ -149,6 +149,12 @@ VAAPIRenderer::needsTestFrame()
     return true;
 }
 
+int
+VAAPIRenderer::getDecoderCapabilities()
+{
+    return 0;
+}
+
 void
 VAAPIRenderer::renderFrameAtVsync(AVFrame* frame)
 {
