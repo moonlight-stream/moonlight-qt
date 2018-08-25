@@ -100,10 +100,15 @@ void FFmpegVideoDecoder::reset()
     delete m_Pacer;
     m_Pacer = nullptr;
 
+    // This must be called after deleting Pacer because it
+    // may be holding AVFrames to free in its destructor.
+    // However, it must be called before deleting the IFFmpegRenderer
+    // since the codec context may be referencing objects that we
+    // need to delete in the renderer destructor.
+    avcodec_free_context(&m_VideoDecoderCtx);
+
     delete m_Renderer;
     m_Renderer = nullptr;
-
-    avcodec_free_context(&m_VideoDecoderCtx);
 }
 
 bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* window,
