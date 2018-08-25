@@ -11,12 +11,14 @@
 #import "OnScreenControls.h"
 #import "DataManager.h"
 #import "ControllerSupport.h"
+#import "KeyboardSupport.h"
 
 @implementation StreamView {
     CGPoint touchLocation, originalLocation;
     BOOL touchMoved;
     OnScreenControls* onScreenControls;
     
+    BOOL isInputingText;
     BOOL isDragging;
     NSTimer* dragTimer;
     
@@ -129,9 +131,22 @@
         if (isDragging) {
             isDragging = false;
             LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
-        }
-        else if (!touchMoved) {
-            if ([[event allTouches] count]  == 2) {
+        } else if (!touchMoved) {
+            if ([[event allTouches] count] == 3) {
+                if (isInputingText) {
+                    Log(LOG_D, @"Closing the keyboard");
+                    [_keyInputField resignFirstResponder];
+                    isInputingText = false;
+                } else {
+                    Log(LOG_D, @"Opening the keyboard");
+                    // Prepare the textbox used to capture keyboard events.
+                    _keyInputField.delegate = self;
+                    _keyInputField.text = @"0";
+                    [_keyInputField becomeFirstResponder];
+                    [_keyInputField addTarget:self action:@selector(onKeyboardPressed:) forControlEvents:UIControlEventEditingChanged];
+                    isInputingText = true;
+                }
+            } else if ([[event allTouches] count]  == 2) {
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     Log(LOG_D, @"Sending right mouse button press");
                     
@@ -142,7 +157,7 @@
                     
                     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
                 });
-            } else {
+            } else if ([[event allTouches] count]  == 1) {
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
                     if (!self->isDragging){
                         Log(LOG_D, @"Sending left mouse button press");
@@ -177,5 +192,45 @@
 - (void)touchesCancelled:(NSSet *)touches withEvent:(UIEvent *)event {
 }
 
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    // This method is called when the "Return" key is pressed.
+    LiSendKeyboardEvent(0x0d, KEY_ACTION_DOWN, 0);
+    usleep(50 * 1000);
+    LiSendKeyboardEvent(0x0d, KEY_ACTION_UP, 0);
+    return NO;
+}
+
+- (void)onKeyboardPressed:(UITextField *)textField {
+    NSString* inputText = textField.text;
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        // If the text became empty, we know the user pressed the backspace key.
+        if ([inputText isEqual:@""]) {
+            LiSendKeyboardEvent(0x08, KEY_ACTION_DOWN, 0);
+            usleep(50 * 1000);
+            LiSendKeyboardEvent(0x08, KEY_ACTION_UP, 0);
+        } else {
+            struct KeyEvent event = [KeyboardSupport translateKeyEvent:[inputText characterAtIndex:1]];
+            if (event.keycode == 0) {
+                // If we don't know the code, don't send anything.
+                Log(LOG_W, @"Unknown key code: [%c]", [inputText characterAtIndex:1]);
+                return;
+            }
+            
+            // When we want to send a modified key (like uppercase letters) we need to send the
+            // modifier ("shift") seperately from the key itself.
+            if (event.modifier != 0) {
+                LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_DOWN, event.modifier);
+                usleep(50 * 1000);
+            }
+            LiSendKeyboardEvent(event.keycode, KEY_ACTION_DOWN, event.modifier);
+            usleep(50 * 1000);
+            LiSendKeyboardEvent(event.keycode, KEY_ACTION_UP, event.modifier);
+            if (event.modifier != 0) {
+                LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_UP, event.modifier);
+            }
+        }
+    });
+    textField.text = @"0";
+}
 
 @end
