@@ -23,6 +23,48 @@
 		D4746EEC1CBC740C006FB401 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4746EEB1CBC740C006FB401 /* Controller.swift */; };
 		DC1F5A07206436B20037755F /* ConnectionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1F5A06206436B20037755F /* ConnectionHelper.m */; };
 		FB1A674D2131E65900507771 /* KeyboardSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A674C2131E65900507771 /* KeyboardSupport.m */; };
+		FB1A67602132419700507771 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB1A675E2132419700507771 /* Main.storyboard */; };
+		FB1A67622132419A00507771 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB1A67612132419A00507771 /* Assets.xcassets */; };
+		FB1A679E2132457D00507771 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A67562132419700507771 /* AppDelegate.m */; };
+		FB1A67A02132457D00507771 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A67592132419700507771 /* ViewController.m */; };
+		FB1A67A12132458C00507771 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A67642132419A00507771 /* main.m */; };
+		FB1A67A3213245BD00507771 /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461719F646E200339C8A /* Connection.m */; };
+		FB1A67A5213245BD00507771 /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461919F646E200339C8A /* StreamConfiguration.m */; };
+		FB1A67A7213245BD00507771 /* StreamManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461B19F646E200339C8A /* StreamManager.m */; };
+		FB1A67A9213245BD00507771 /* VideoDecoderRenderer.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461D19F646E200339C8A /* VideoDecoderRenderer.m */; };
+		FB1A67AB213245C500507771 /* CryptoManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460619F646E200339C8A /* CryptoManager.m */; };
+		FB1A67AF213245C500507771 /* IdManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB53E1421BE5DC4400CD6ECE /* IdManager.m */; };
+		FB1A67B1213245D500507771 /* HttpManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461019F646E200339C8A /* HttpManager.m */; };
+		FB1A67B3213245D500507771 /* HttpRequest.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD361A7E02DB00872C98 /* HttpRequest.m */; };
+		FB1A67B5213245D500507771 /* HttpResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD271A7C84ED00872C98 /* HttpResponse.m */; };
+		FB1A67B7213245D500507771 /* ServerInfoResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD391A7E05CE00872C98 /* ServerInfoResponse.m */; };
+		FB1A67B9213245D500507771 /* AppAssetResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD3C1A7E111600872C98 /* AppAssetResponse.m */; };
+		FB1A67BB213245D500507771 /* AppListResponse.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD3F1A7E127D00872C98 /* AppListResponse.m */; };
+		FB1A67BD213245E000507771 /* DiscoveryManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678F91A55FFAD00377732 /* DiscoveryManager.m */; };
+		FB1A67BF213245E000507771 /* DiscoveryWorker.m in Sources */ = {isa = PBXBuildFile; fileRef = FB6549551A57907E001C8F39 /* DiscoveryWorker.m */; };
+		FB1A67C1213245E000507771 /* MDNSManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461219F646E200339C8A /* MDNSManager.m */; };
+		FB1A67C3213245EA00507771 /* AppAssetManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD3494219FC9C04002D2A60 /* AppAssetManager.m */; };
+		FB1A67C5213245EA00507771 /* AppAssetRetriever.m in Sources */ = {isa = PBXBuildFile; fileRef = FB9AFD311A7D867C00872C98 /* AppAssetRetriever.m */; };
+		FB1A67C7213245EA00507771 /* PairManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461419F646E200339C8A /* PairManager.m */; };
+		FB1A67C9213245EA00507771 /* WakeOnLanManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678FE1A565DAC00377732 /* WakeOnLanManager.m */; };
+		FB1A67CB213245EA00507771 /* ConnectionHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = DC1F5A06206436B20037755F /* ConnectionHelper.m */; };
+		FB1A67CD213245F800507771 /* DataManager.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD349611A0089F6002D2A60 /* DataManager.m */; };
+		FB1A67CF213245F800507771 /* TemporaryApp.m in Sources */ = {isa = PBXBuildFile; fileRef = 9832D1351BBCD5C50036EF48 /* TemporaryApp.m */; };
+		FB1A67D1213245F800507771 /* TemporaryHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 98D5856C1C0EA79600F6CC00 /* TemporaryHost.m */; };
+		FB1A67D3213245F800507771 /* TemporarySettings.m in Sources */ = {isa = PBXBuildFile; fileRef = 98D5856F1C0ED0E800F6CC00 /* TemporarySettings.m */; };
+		FB1A67D52132460400507771 /* ControllerSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460B19F646E200339C8A /* ControllerSupport.m */; };
+		FB1A67D62132460400507771 /* Controller.swift in Sources */ = {isa = PBXBuildFile; fileRef = D4746EEB1CBC740C006FB401 /* Controller.swift */; };
+		FB1A67D82132460400507771 /* StreamView.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89460D19F646E200339C8A /* StreamView.m */; };
+		FB1A67DA2132460400507771 /* OnScreenControls.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4678EC1A50C40900377732 /* OnScreenControls.m */; };
+		FB1A67DC2132460400507771 /* KeyboardSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A674C2131E65900507771 /* KeyboardSupport.m */; };
+		FB1A67DE2132460A00507771 /* Utils.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89462219F646E200339C8A /* Utils.m */; };
+		FB1A67E02132460A00507771 /* Logger.m in Sources */ = {isa = PBXBuildFile; fileRef = FBD1C8E11A8AD71400C6703C /* Logger.m */; };
+		FB1A67E32132498A00507771 /* Limelight.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */; };
+		FB1A67E521324A1F00507771 /* CoreData.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB1A67E421324A1F00507771 /* CoreData.framework */; };
+		FB1A67E621324DD600507771 /* libcrypto.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB8946E019F6AFB800339C8A /* libcrypto.a */; };
+		FB1A67E721324DD600507771 /* libssl.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB8946E119F6AFB800339C8A /* libssl.a */; };
+		FB1A67E821324DE300507771 /* libopus.a in Frameworks */ = {isa = PBXBuildFile; fileRef = FB8946EA19F6AFB800339C8A /* libopus.a */; };
+		FB1A67EA21324DF300507771 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = FB1A67E921324DF300507771 /* libxml2.tbd */; };
 		FB1D59971BBCCB6400F482CA /* ComputerScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1D59961BBCCB6400F482CA /* ComputerScrollView.m */; };
 		FB1D599A1BBCCD7E00F482CA /* AppCollectionView.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1D59991BBCCD7E00F482CA /* AppCollectionView.m */; };
 		FB290CF219B2C406004C83CF /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = FB290CF119B2C406004C83CF /* Foundation.framework */; };
@@ -98,6 +140,20 @@
 			remoteGlobalIDString = FB290CED19B2C406004C83CF;
 			remoteInfo = Moonlight;
 		};
+		FB1A68142132509400507771 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = FB1A67EF21324EE300507771;
+			remoteInfo = "moonlight-common-tv";
+		};
+		FB1A68162132509800507771 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = FB1A67EE21324EE300507771;
+			remoteInfo = "moonlight-common-tv";
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -128,6 +184,18 @@
 		DC1F5A06206436B20037755F /* ConnectionHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ConnectionHelper.m; sourceTree = "<group>"; };
 		FB1A674B2131E65900507771 /* KeyboardSupport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardSupport.h; sourceTree = "<group>"; };
 		FB1A674C2131E65900507771 /* KeyboardSupport.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardSupport.m; sourceTree = "<group>"; };
+		FB1A67532132419700507771 /* Moonlight TV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Moonlight TV.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB1A67552132419700507771 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
+		FB1A67562132419700507771 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
+		FB1A67582132419700507771 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
+		FB1A67592132419700507771 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
+		FB1A675C2132419700507771 /* Moonlight_TV.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Moonlight_TV.xcdatamodel; sourceTree = "<group>"; };
+		FB1A675F2132419700507771 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		FB1A67612132419A00507771 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		FB1A67632132419A00507771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		FB1A67642132419A00507771 /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
+		FB1A67E421324A1F00507771 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS11.4.sdk/System/Library/Frameworks/CoreData.framework; sourceTree = DEVELOPER_DIR; };
+		FB1A67E921324DF300507771 /* libxml2.tbd */ = {isa = PBXFileReference; lastKnownFileType = "sourcecode.text-based-dylib-definition"; name = libxml2.tbd; path = Platforms/AppleTVOS.platform/Developer/SDKs/AppleTVOS11.4.sdk/usr/lib/libxml2.tbd; sourceTree = DEVELOPER_DIR; };
 		FB1D59951BBCCB6400F482CA /* ComputerScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ComputerScrollView.h; sourceTree = "<group>"; };
 		FB1D59961BBCCB6400F482CA /* ComputerScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = ComputerScrollView.m; sourceTree = "<group>"; };
 		FB1D59981BBCCD7E00F482CA /* AppCollectionView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = AppCollectionView.h; sourceTree = "<group>"; };
@@ -311,6 +379,18 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		FB1A67502132419700507771 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB1A67EA21324DF300507771 /* libxml2.tbd in Frameworks */,
+				FB1A67E821324DE300507771 /* libopus.a in Frameworks */,
+				FB1A67E621324DD600507771 /* libcrypto.a in Frameworks */,
+				FB1A67E721324DD600507771 /* libssl.a in Frameworks */,
+				FB1A67E521324A1F00507771 /* CoreData.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB290CEB19B2C406004C83CF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -335,6 +415,7 @@
 			isa = PBXGroup;
 			children = (
 				98AB2E841CAD46840089BB98 /* libmoonlight-common.a */,
+				FB1A68152132509400507771 /* libmoonlight-common-tv.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -379,12 +460,29 @@
 			name = Input;
 			sourceTree = "<group>";
 		};
+		FB1A67542132419700507771 /* Moonlight TV */ = {
+			isa = PBXGroup;
+			children = (
+				FB1A67552132419700507771 /* AppDelegate.h */,
+				FB1A67562132419700507771 /* AppDelegate.m */,
+				FB1A67582132419700507771 /* ViewController.h */,
+				FB1A67592132419700507771 /* ViewController.m */,
+				FB1A675E2132419700507771 /* Main.storyboard */,
+				FB1A67612132419A00507771 /* Assets.xcassets */,
+				FB1A67632132419A00507771 /* Info.plist */,
+				FB1A67642132419A00507771 /* main.m */,
+				FB1A675B2132419700507771 /* Moonlight_TV.xcdatamodeld */,
+			);
+			path = "Moonlight TV";
+			sourceTree = "<group>";
+		};
 		FB290CE519B2C406004C83CF = {
 			isa = PBXGroup;
 			children = (
 				98AB2E7F1CAD46830089BB98 /* moonlight-common.xcodeproj */,
 				FB290CF919B2C406004C83CF /* Moonlight */,
 				D46A73A11CBC7CB60039F1EE /* MoonlightUnitTests */,
+				FB1A67542132419700507771 /* Moonlight TV */,
 				FB290CF019B2C406004C83CF /* Frameworks */,
 				FB290CEF19B2C406004C83CF /* Products */,
 			);
@@ -395,6 +493,7 @@
 			children = (
 				FB290CEE19B2C406004C83CF /* Moonlight.app */,
 				D46A73A01CBC7CB60039F1EE /* MoonlightUnitTests.xctest */,
+				FB1A67532132419700507771 /* Moonlight TV.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -402,6 +501,8 @@
 		FB290CF019B2C406004C83CF /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				FB1A67E921324DF300507771 /* libxml2.tbd */,
+				FB1A67E421324A1F00507771 /* CoreData.framework */,
 				9890CF6A203B7EE1006C4B06 /* libxml2.tbd */,
 				FB4679001A57048000377732 /* CoreFoundation.framework */,
 				FB89468F19F6AFB800339C8A /* libs */,
@@ -778,6 +879,24 @@
 			productReference = D46A73A01CBC7CB60039F1EE /* MoonlightUnitTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
+		FB1A67522132419700507771 /* Moonlight TV */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB1A67682132419A00507771 /* Build configuration list for PBXNativeTarget "Moonlight TV" */;
+			buildPhases = (
+				FB1A674F2132419700507771 /* Sources */,
+				FB1A67502132419700507771 /* Frameworks */,
+				FB1A67512132419700507771 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				FB1A68172132509800507771 /* PBXTargetDependency */,
+			);
+			name = "Moonlight TV";
+			productName = "Moonlight TV";
+			productReference = FB1A67532132419700507771 /* Moonlight TV.app */;
+			productType = "com.apple.product-type.application";
+		};
 		FB290CED19B2C406004C83CF /* Moonlight */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FB290D2019B2C406004C83CF /* Build configuration list for PBXNativeTarget "Moonlight" */;
@@ -811,6 +930,10 @@
 						LastSwiftMigration = 0920;
 						TestTargetID = FB290CED19B2C406004C83CF;
 					};
+					FB1A67522132419700507771 = {
+						CreatedOnToolsVersion = 9.4.1;
+						ProvisioningStyle = Automatic;
+					};
 					FB290CED19B2C406004C83CF = {
 						DevelopmentTeam = DM46QST4M7;
 						LastSwiftMigration = 0920;
@@ -823,6 +946,7 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = FB290CE519B2C406004C83CF;
 			productRefGroup = FB290CEF19B2C406004C83CF /* Products */;
@@ -837,6 +961,7 @@
 			targets = (
 				FB290CED19B2C406004C83CF /* Moonlight */,
 				D46A739F1CBC7CB60039F1EE /* MoonlightUnitTests */,
+				FB1A67522132419700507771 /* Moonlight TV */,
 			);
 		};
 /* End PBXProject section */
@@ -849,6 +974,13 @@
 			remoteRef = 98AB2E831CAD46840089BB98 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		FB1A68152132509400507771 /* libmoonlight-common-tv.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libmoonlight-common-tv.a";
+			remoteRef = FB1A68142132509400507771 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 /* End PBXReferenceProxy section */
 
 /* Begin PBXResourcesBuildPhase section */
@@ -856,6 +988,15 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB1A67512132419700507771 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB1A67622132419A00507771 /* Assets.xcassets in Resources */,
+				FB1A67602132419700507771 /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -886,6 +1027,48 @@
 			buildActionMask = 2147483647;
 			files = (
 				D46A73AD1CBC7D090039F1EE /* ControllerUnitTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		FB1A674F2132419700507771 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB1A67E32132498A00507771 /* Limelight.xcdatamodeld in Sources */,
+				FB1A67DE2132460A00507771 /* Utils.m in Sources */,
+				FB1A67E02132460A00507771 /* Logger.m in Sources */,
+				FB1A67D52132460400507771 /* ControllerSupport.m in Sources */,
+				FB1A67D62132460400507771 /* Controller.swift in Sources */,
+				FB1A67D82132460400507771 /* StreamView.m in Sources */,
+				FB1A67DA2132460400507771 /* OnScreenControls.m in Sources */,
+				FB1A67DC2132460400507771 /* KeyboardSupport.m in Sources */,
+				FB1A67CD213245F800507771 /* DataManager.m in Sources */,
+				FB1A67CF213245F800507771 /* TemporaryApp.m in Sources */,
+				FB1A67D1213245F800507771 /* TemporaryHost.m in Sources */,
+				FB1A67D3213245F800507771 /* TemporarySettings.m in Sources */,
+				FB1A67C3213245EA00507771 /* AppAssetManager.m in Sources */,
+				FB1A67C5213245EA00507771 /* AppAssetRetriever.m in Sources */,
+				FB1A67C7213245EA00507771 /* PairManager.m in Sources */,
+				FB1A67C9213245EA00507771 /* WakeOnLanManager.m in Sources */,
+				FB1A67CB213245EA00507771 /* ConnectionHelper.m in Sources */,
+				FB1A67BD213245E000507771 /* DiscoveryManager.m in Sources */,
+				FB1A67BF213245E000507771 /* DiscoveryWorker.m in Sources */,
+				FB1A67C1213245E000507771 /* MDNSManager.m in Sources */,
+				FB1A67B1213245D500507771 /* HttpManager.m in Sources */,
+				FB1A67B3213245D500507771 /* HttpRequest.m in Sources */,
+				FB1A67B5213245D500507771 /* HttpResponse.m in Sources */,
+				FB1A67B7213245D500507771 /* ServerInfoResponse.m in Sources */,
+				FB1A67B9213245D500507771 /* AppAssetResponse.m in Sources */,
+				FB1A67BB213245D500507771 /* AppListResponse.m in Sources */,
+				FB1A67AB213245C500507771 /* CryptoManager.m in Sources */,
+				FB1A67AF213245C500507771 /* IdManager.m in Sources */,
+				FB1A67A3213245BD00507771 /* Connection.m in Sources */,
+				FB1A67A5213245BD00507771 /* StreamConfiguration.m in Sources */,
+				FB1A67A7213245BD00507771 /* StreamManager.m in Sources */,
+				FB1A67A9213245BD00507771 /* VideoDecoderRenderer.m in Sources */,
+				FB1A67A12132458C00507771 /* main.m in Sources */,
+				FB1A679E2132457D00507771 /* AppDelegate.m in Sources */,
+				FB1A67A02132457D00507771 /* ViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -953,9 +1136,22 @@
 			target = FB290CED19B2C406004C83CF /* Moonlight */;
 			targetProxy = D46A73A51CBC7CB60039F1EE /* PBXContainerItemProxy */;
 		};
+		FB1A68172132509800507771 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = "moonlight-common-tv";
+			targetProxy = FB1A68162132509800507771 /* PBXContainerItemProxy */;
+		};
 /* End PBXTargetDependency section */
 
 /* Begin PBXVariantGroup section */
+		FB1A675E2132419700507771 /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				FB1A675F2132419700507771 /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
 		FB290CFC19B2C406004C83CF /* InfoPlist.strings */ = {
 			isa = PBXVariantGroup;
 			children = (
@@ -1017,6 +1213,94 @@
 			};
 			name = Release;
 		};
+		FB1A67662132419A00507771 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Launch Image";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = DM46QST4M7;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/moonlight-common/moonlight-common-c/src",
+					"$(SDKROOT)/usr/include/libxml2/**",
+					"$(PROJECT_DIR)/libs/**",
+				);
+				INFOPLIST_FILE = "Moonlight TV/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libs/openssl/lib",
+					"$(PROJECT_DIR)/libs/opus/lib",
+				);
+				MTL_ENABLE_DEBUG_INFO = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight-TV";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "Limelight/Input/Moonlight-Bridging-Header.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Debug;
+		};
+		FB1A67672132419A00507771 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = "Launch Image";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = DM46QST4M7;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_INCREASE_PRECOMPILED_HEADER_SHARING = NO;
+				GCC_PRECOMPILE_PREFIX_HEADER = YES;
+				GCC_PREFIX_HEADER = "Limelight/Limelight-Prefix.pch";
+				HEADER_SEARCH_PATHS = (
+					"$(PROJECT_DIR)/moonlight-common/moonlight-common-c/src",
+					"$(SDKROOT)/usr/include/libxml2/**",
+					"$(PROJECT_DIR)/libs/**",
+				);
+				INFOPLIST_FILE = "Moonlight TV/Info.plist";
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(PROJECT_DIR)/libs/openssl/lib",
+					"$(PROJECT_DIR)/libs/opus/lib",
+				);
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.moonlight-stream.Moonlight-TV";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OBJC_BRIDGING_HEADER = "Limelight/Input/Moonlight-Bridging-Header.h";
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "Moonlight-Swift.h";
+				SWIFT_VERSION = 4.0;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 11.4;
+			};
+			name = Release;
+		};
 		FB290D1E19B2C406004C83CF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1067,6 +1351,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "";
+				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
@@ -1114,6 +1400,8 @@
 				IPHONEOS_DEPLOYMENT_TARGET = 8.0;
 				PROVISIONING_PROFILE = "";
 				SDKROOT = iphoneos;
+				SWIFT_OBJC_INTERFACE_HEADER_NAME = "";
+				SWIFT_VERSION = 4.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 				VALIDATE_PRODUCT = YES;
 			};
@@ -1203,6 +1491,15 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		FB1A67682132419A00507771 /* Build configuration list for PBXNativeTarget "Moonlight TV" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB1A67662132419A00507771 /* Debug */,
+				FB1A67672132419A00507771 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FB290CE919B2C406004C83CF /* Build configuration list for PBXProject "Moonlight" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -1224,6 +1521,16 @@
 /* End XCConfigurationList section */
 
 /* Begin XCVersionGroup section */
+		FB1A675B2132419700507771 /* Moonlight_TV.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				FB1A675C2132419700507771 /* Moonlight_TV.xcdatamodel */,
+			);
+			currentVersion = FB1A675C2132419700507771 /* Moonlight_TV.xcdatamodel */;
+			path = Moonlight_TV.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
 		FB290D0519B2C406004C83CF /* Limelight.xcdatamodeld */ = {
 			isa = XCVersionGroup;
 			children = (

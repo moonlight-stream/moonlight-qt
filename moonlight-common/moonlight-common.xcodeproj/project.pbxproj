@@ -34,7 +34,46 @@
 		98AB2E561CAD427A0089BB98 /* protocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E151CAD422B0089BB98 /* protocol.c */; };
 		98AB2E571CAD427A0089BB98 /* unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E171CAD422B0089BB98 /* unix.c */; };
 		98AB2E581CAD427A0089BB98 /* win32.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E181CAD422B0089BB98 /* win32.c */; };
+		FB1A67F821324F4900507771 /* rs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9857AEEE1EBE85E10084F99E /* rs.c */; };
+		FB1A67F921324F4900507771 /* RtpFecQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 9857AEE91EBE85A20084F99E /* RtpFecQueue.c */; };
+		FB1A67FA21324F4900507771 /* AudioStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1A1CAD423B0089BB98 /* AudioStream.c */; };
+		FB1A67FB21324F4900507771 /* ByteBuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1B1CAD423B0089BB98 /* ByteBuffer.c */; };
+		FB1A67FC21324F4900507771 /* Connection.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1D1CAD423B0089BB98 /* Connection.c */; };
+		FB1A67FD21324F4900507771 /* ControlStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1E1CAD423B0089BB98 /* ControlStream.c */; };
+		FB1A67FE21324F4900507771 /* FakeCallbacks.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1F1CAD423B0089BB98 /* FakeCallbacks.c */; };
+		FB1A67FF21324F4900507771 /* InputStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E211CAD423B0089BB98 /* InputStream.c */; };
+		FB1A680021324F4900507771 /* LinkedBlockingQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E241CAD423B0089BB98 /* LinkedBlockingQueue.c */; };
+		FB1A680121324F4900507771 /* Misc.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E261CAD423B0089BB98 /* Misc.c */; };
+		FB1A680221324F4900507771 /* Platform.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E311CAD423B0089BB98 /* Platform.c */; };
+		FB1A680321324F4900507771 /* PlatformSockets.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E331CAD423B0089BB98 /* PlatformSockets.c */; };
+		FB1A680421324F4900507771 /* RtpReorderQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E361CAD423B0089BB98 /* RtpReorderQueue.c */; };
+		FB1A680521324F4900507771 /* RtspConnection.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E391CAD423B0089BB98 /* RtspConnection.c */; };
+		FB1A680621324F4900507771 /* RtspParser.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3A1CAD423B0089BB98 /* RtspParser.c */; };
+		FB1A680721324F4900507771 /* SdpGenerator.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3B1CAD423B0089BB98 /* SdpGenerator.c */; };
+		FB1A680821324F4900507771 /* VideoDepacketizer.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3D1CAD423B0089BB98 /* VideoDepacketizer.c */; };
+		FB1A680921324F4900507771 /* VideoStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E3E1CAD423B0089BB98 /* VideoStream.c */; };
+		FB1A680A21324F4900507771 /* callbacks.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2DF01CAD422B0089BB98 /* callbacks.c */; };
+		FB1A680B21324F4900507771 /* compress.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2DF31CAD422B0089BB98 /* compress.c */; };
+		FB1A680C21324F4900507771 /* host.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E001CAD422B0089BB98 /* host.c */; };
+		FB1A680D21324F4900507771 /* list.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E0E1CAD422B0089BB98 /* list.c */; };
+		FB1A680E21324F4900507771 /* packet.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E121CAD422B0089BB98 /* packet.c */; };
+		FB1A680F21324F4900507771 /* peer.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E131CAD422B0089BB98 /* peer.c */; };
+		FB1A681021324F4900507771 /* protocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E151CAD422B0089BB98 /* protocol.c */; };
+		FB1A681121324F4900507771 /* unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E171CAD422B0089BB98 /* unix.c */; };
+		FB1A681221324F4900507771 /* win32.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E181CAD422B0089BB98 /* win32.c */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		FB1A67ED21324EE300507771 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "include/$(PRODUCT_NAME)";
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		9857AEE91EBE85A20084F99E /* RtpFecQueue.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = RtpFecQueue.c; sourceTree = "<group>"; };
@@ -105,10 +144,20 @@
 		98AB2E3C1CAD423B0089BB98 /* Video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Video.h; sourceTree = "<group>"; };
 		98AB2E3D1CAD423B0089BB98 /* VideoDepacketizer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VideoDepacketizer.c; sourceTree = "<group>"; };
 		98AB2E3E1CAD423B0089BB98 /* VideoStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VideoStream.c; sourceTree = "<group>"; };
+		FB1A67EF21324EE300507771 /* libmoonlight-common-tv.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libmoonlight-common-tv.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		FB1A67F121324EE300507771 /* moonlight_common_tv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = moonlight_common_tv.h; sourceTree = "<group>"; };
+		FB1A67F221324EE300507771 /* moonlight_common_tv.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = moonlight_common_tv.m; sourceTree = "<group>"; };
 		FB290E2E19B37A4E004C83CF /* libmoonlight-common.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libmoonlight-common.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		FB1A67EC21324EE300507771 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB290E2B19B37A4E004C83CF /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -242,12 +291,22 @@
 			path = "moonlight-common-c/src";
 			sourceTree = "<group>";
 		};
+		FB1A67F021324EE300507771 /* moonlight-common-tv */ = {
+			isa = PBXGroup;
+			children = (
+				FB1A67F121324EE300507771 /* moonlight_common_tv.h */,
+				FB1A67F221324EE300507771 /* moonlight_common_tv.m */,
+			);
+			path = "moonlight-common-tv";
+			sourceTree = "<group>";
+		};
 		FB290E2519B37A4E004C83CF = {
 			isa = PBXGroup;
 			children = (
 				9857AEED1EBE85D50084F99E /* reedsolomon */,
 				98AB2E191CAD423B0089BB98 /* src */,
 				98AB2DEF1CAD422B0089BB98 /* enet */,
+				FB1A67F021324EE300507771 /* moonlight-common-tv */,
 				FB290E2F19B37A4E004C83CF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -256,6 +315,7 @@
 			isa = PBXGroup;
 			children = (
 				FB290E2E19B37A4E004C83CF /* libmoonlight-common.a */,
+				FB1A67EF21324EE300507771 /* libmoonlight-common-tv.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -263,6 +323,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		FB1A67EE21324EE300507771 /* moonlight-common-tv */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FB1A67F721324EE300507771 /* Build configuration list for PBXNativeTarget "moonlight-common-tv" */;
+			buildPhases = (
+				FB1A67EB21324EE300507771 /* Sources */,
+				FB1A67EC21324EE300507771 /* Frameworks */,
+				FB1A67ED21324EE300507771 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "moonlight-common-tv";
+			productName = "moonlight-common-tv";
+			productReference = FB1A67EF21324EE300507771 /* libmoonlight-common-tv.a */;
+			productType = "com.apple.product-type.library.static";
+		};
 		FB290E2D19B37A4E004C83CF /* moonlight-common */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = FB290E3219B37A4E004C83CF /* Build configuration list for PBXNativeTarget "moonlight-common" */;
@@ -287,6 +364,12 @@
 			attributes = {
 				LastUpgradeCheck = 0930;
 				ORGANIZATIONNAME = "Moonlight Stream";
+				TargetAttributes = {
+					FB1A67EE21324EE300507771 = {
+						CreatedOnToolsVersion = 9.4.1;
+						ProvisioningStyle = Automatic;
+					};
+				};
 			};
 			buildConfigurationList = FB290E2919B37A4E004C83CF /* Build configuration list for PBXProject "moonlight-common" */;
 			compatibilityVersion = "Xcode 8.0";
@@ -301,11 +384,46 @@
 			projectRoot = "";
 			targets = (
 				FB290E2D19B37A4E004C83CF /* moonlight-common */,
+				FB1A67EE21324EE300507771 /* moonlight-common-tv */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXSourcesBuildPhase section */
+		FB1A67EB21324EE300507771 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				FB1A67F821324F4900507771 /* rs.c in Sources */,
+				FB1A67F921324F4900507771 /* RtpFecQueue.c in Sources */,
+				FB1A67FA21324F4900507771 /* AudioStream.c in Sources */,
+				FB1A67FB21324F4900507771 /* ByteBuffer.c in Sources */,
+				FB1A67FC21324F4900507771 /* Connection.c in Sources */,
+				FB1A67FD21324F4900507771 /* ControlStream.c in Sources */,
+				FB1A67FE21324F4900507771 /* FakeCallbacks.c in Sources */,
+				FB1A67FF21324F4900507771 /* InputStream.c in Sources */,
+				FB1A680021324F4900507771 /* LinkedBlockingQueue.c in Sources */,
+				FB1A680121324F4900507771 /* Misc.c in Sources */,
+				FB1A680221324F4900507771 /* Platform.c in Sources */,
+				FB1A680321324F4900507771 /* PlatformSockets.c in Sources */,
+				FB1A680421324F4900507771 /* RtpReorderQueue.c in Sources */,
+				FB1A680521324F4900507771 /* RtspConnection.c in Sources */,
+				FB1A680621324F4900507771 /* RtspParser.c in Sources */,
+				FB1A680721324F4900507771 /* SdpGenerator.c in Sources */,
+				FB1A680821324F4900507771 /* VideoDepacketizer.c in Sources */,
+				FB1A680921324F4900507771 /* VideoStream.c in Sources */,
+				FB1A680A21324F4900507771 /* callbacks.c in Sources */,
+				FB1A680B21324F4900507771 /* compress.c in Sources */,
+				FB1A680C21324F4900507771 /* host.c in Sources */,
+				FB1A680D21324F4900507771 /* list.c in Sources */,
+				FB1A680E21324F4900507771 /* packet.c in Sources */,
+				FB1A680F21324F4900507771 /* peer.c in Sources */,
+				FB1A681021324F4900507771 /* protocol.c in Sources */,
+				FB1A681121324F4900507771 /* unix.c in Sources */,
+				FB1A681221324F4900507771 /* win32.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		FB290E2A19B37A4E004C83CF /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -343,6 +461,69 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin XCBuildConfiguration section */
+		FB1A67F521324EE300507771 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = DM46QST4M7;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				HEADER_SEARCH_PATHS = (
+					"moonlight-common-c/enet/include",
+					"../libs/**",
+				);
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 11.4;
+				VALIDATE_PRODUCT = NO;
+			};
+			name = Debug;
+		};
+		FB1A67F621324EE300507771 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = YES;
+				DEVELOPMENT_TEAM = DM46QST4M7;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				HEADER_SEARCH_PATHS = (
+					"moonlight-common-c/enet/include",
+					"../libs/**",
+				);
+				MTL_ENABLE_DEBUG_INFO = NO;
+				ONLY_ACTIVE_ARCH = NO;
+				OTHER_LDFLAGS = "-ObjC";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 11.4;
+				VALIDATE_PRODUCT = NO;
+			};
+			name = Release;
+		};
 		FB290E3019B37A4E004C83CF /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -485,6 +666,15 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		FB1A67F721324EE300507771 /* Build configuration list for PBXNativeTarget "moonlight-common-tv" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				FB1A67F521324EE300507771 /* Debug */,
+				FB1A67F621324EE300507771 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		FB290E2919B37A4E004C83CF /* Build configuration list for PBXProject "moonlight-common" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
