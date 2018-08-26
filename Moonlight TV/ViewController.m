@@ -694,7 +694,10 @@ static NSMutableSet* hostList;
     // this view via an error dialog from the stream
     // view, so we won't get a return to active notification
     // for that which would normally fire beginForegroundRefresh.
-    [self beginForegroundRefresh];
+    
+    // HACK tvOS: When this is enabled, it causes us to endlessly
+    // refresh the UI if you go to the homescreen and back from the app grid.
+    //[self beginForegroundRefresh];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
