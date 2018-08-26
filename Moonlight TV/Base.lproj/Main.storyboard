@@ -26,10 +26,10 @@
             </objects>
             <point key="canvasLocation" x="-4555" y="-1581"/>
         </scene>
-        <!--View Controller-->
+        <!--Main Frame View Controller-->
         <scene sceneID="duv-ef-Eeh">
             <objects>
-                <collectionViewController id="vKn-MI-uG7" customClass="ViewController" sceneMemberID="viewController">
+                <collectionViewController id="vKn-MI-uG7" customClass="MainFrameViewController" sceneMemberID="viewController">
                     <collectionView key="view" clipsSubviews="YES" multipleTouchEnabled="YES" contentMode="scaleToFill" dataMode="prototypes" prefetchingEnabled="YES" id="8P0-wP-bDe">
                         <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>

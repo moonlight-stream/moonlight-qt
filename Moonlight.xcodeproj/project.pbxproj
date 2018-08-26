@@ -14,6 +14,7 @@
 		9865DC37213287FE0005B9B9 /* StreamFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89462719F646E200339C8A /* StreamFrameViewController.m */; };
 		9865DC38213287FE0005B9B9 /* LoadingFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB4A23B71A9D3637004D2EF2 /* LoadingFrameViewController.m */; };
 		9865DC3C2132922E0005B9B9 /* GameController.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9865DC3B2132922E0005B9B9 /* GameController.framework */; };
+		9865DC3E21332D660005B9B9 /* MainFrameViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89462519F646E200339C8A /* MainFrameViewController.m */; };
 		9890CF6B203B7EE1006C4B06 /* libxml2.tbd in Frameworks */ = {isa = PBXBuildFile; fileRef = 9890CF6A203B7EE1006C4B06 /* libxml2.tbd */; };
 		98CFB82F1CAD481B0048EF74 /* libmoonlight-common.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 98AB2E841CAD46840089BB98 /* libmoonlight-common.a */; };
 		98D5856D1C0EA79600F6CC00 /* TemporaryHost.m in Sources */ = {isa = PBXBuildFile; fileRef = 98D5856C1C0EA79600F6CC00 /* TemporaryHost.m */; };
@@ -24,7 +25,6 @@
 		FB1A674D2131E65900507771 /* KeyboardSupport.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A674C2131E65900507771 /* KeyboardSupport.m */; };
 		FB1A67602132419700507771 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = FB1A675E2132419700507771 /* Main.storyboard */; };
 		FB1A67622132419A00507771 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FB1A67612132419A00507771 /* Assets.xcassets */; };
-		FB1A67A02132457D00507771 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A67592132419700507771 /* ViewController.m */; };
 		FB1A67A12132458C00507771 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FB1A67642132419A00507771 /* main.m */; };
 		FB1A67A3213245BD00507771 /* Connection.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461719F646E200339C8A /* Connection.m */; };
 		FB1A67A5213245BD00507771 /* StreamConfiguration.m in Sources */ = {isa = PBXBuildFile; fileRef = FB89461919F646E200339C8A /* StreamConfiguration.m */; };
@@ -182,8 +182,6 @@
 		FB1A674B2131E65900507771 /* KeyboardSupport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = KeyboardSupport.h; sourceTree = "<group>"; };
 		FB1A674C2131E65900507771 /* KeyboardSupport.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = KeyboardSupport.m; sourceTree = "<group>"; };
 		FB1A67532132419700507771 /* Moonlight TV.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Moonlight TV.app"; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB1A67582132419700507771 /* ViewController.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ViewController.h; sourceTree = "<group>"; };
-		FB1A67592132419700507771 /* ViewController.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = ViewController.m; sourceTree = "<group>"; };
 		FB1A675F2132419700507771 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		FB1A67612132419A00507771 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		FB1A67632132419A00507771 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -437,8 +435,6 @@
 		FB1A67542132419700507771 /* Moonlight TV */ = {
 			isa = PBXGroup;
 			children = (
-				FB1A67582132419700507771 /* ViewController.h */,
-				FB1A67592132419700507771 /* ViewController.m */,
 				FB1A675E2132419700507771 /* Main.storyboard */,
 				FB1A67612132419A00507771 /* Assets.xcassets */,
 				FB1A67632132419A00507771 /* Info.plist */,
@@ -1004,6 +1000,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9865DC3E21332D660005B9B9 /* MainFrameViewController.m in Sources */,
 				9865DC36213287F30005B9B9 /* AppDelegate.m in Sources */,
 				FB1A6819213284FB00507771 /* UIComputerView.m in Sources */,
 				FB1A681A213284FB00507771 /* UIAppView.m in Sources */,
@@ -1045,7 +1042,6 @@
 				FB1A67A7213245BD00507771 /* StreamManager.m in Sources */,
 				FB1A67A9213245BD00507771 /* VideoDecoderRenderer.m in Sources */,
 				FB1A67A12132458C00507771 /* main.m in Sources */,
-				FB1A67A02132457D00507771 /* ViewController.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

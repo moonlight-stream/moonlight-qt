@@ -15,7 +15,6 @@
 #import "Utils.h"
 #import "UIComputerView.h"
 #import "UIAppView.h"
-#import "SettingsViewController.h"
 #import "DataManager.h"
 #import "TemporarySettings.h"
 #import "WakeOnLanManager.h"
@@ -28,6 +27,10 @@
 #import "IdManager.h"
 #import "ConnectionHelper.h"
 
+#if !TARGET_OS_TV
+#import "SettingsViewController.h"
+#endif
+
 #import <VideoToolbox/VideoToolbox.h>
 
 @implementation MainFrameViewController {
@@ -39,38 +42,41 @@
     AppAssetManager* _appManager;
     StreamConfiguration* _streamConfig;
     UIAlertController* _pairAlert;
+    LoadingFrameViewController* _loadingFrame;
     UIScrollView* hostScrollView;
     int currentPosition;
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
-    UIButton* _pullArrow;
     bool _background;
+#if !TARGET_OS_TV
+    UIButton* _pullArrow;
+#endif
 }
 static NSMutableSet* hostList;
 
 - (void)showPIN:(NSString *)PIN {
     dispatch_async(dispatch_get_main_queue(), ^{
         self->_pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
-                                                         message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
-                                                  preferredStyle:UIAlertControllerStyleAlert];
+                                                               message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
+                                                        preferredStyle:UIAlertControllerStyleAlert];
         [self->_pairAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
             self->_pairAlert = nil;
             [self->_discMan startDiscovery];
             [self hideLoadingFrame];
         }]];
-        [self presentViewController:self->_pairAlert animated:YES completion:nil];
+        [[self activeViewController] presentViewController:self->_pairAlert animated:YES completion:nil];
     });
 }
 
 - (void)displayFailureDialog:(NSString *)message {
     UIAlertController* failedDialog = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
-                                                     message:message
-                                              preferredStyle:UIAlertControllerStyleAlert];
+                                                                          message:message
+                                                                   preferredStyle:UIAlertControllerStyleAlert];
     [failedDialog addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
     }]];
     [failedDialog addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-    [self presentViewController:failedDialog animated:YES completion:nil];
+    [[self activeViewController] presentViewController:failedDialog animated:YES completion:nil];
     
     [_discMan startDiscovery];
     [self hideLoadingFrame];
@@ -146,7 +152,7 @@ static NSMutableSet* hostList;
                     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
                 }]];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                [self presentViewController:applistAlert animated:YES completion:nil];
+                [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
                 host.online = NO;
                 [self showHostSelectionView];
             });
@@ -251,7 +257,7 @@ static NSMutableSet* hostList;
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
     }]];
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-    [self presentViewController:alert animated:YES completion:nil];
+    [[self activeViewController] presentViewController:alert animated:YES completion:nil];
 }
 
 - (void) hostClicked:(TemporaryHost *)host view:(UIView *)view {
@@ -286,7 +292,7 @@ static NSMutableSet* hostList;
         // Exempt this host from discovery while handling the serverinfo request
         [self->_discMan removeHostFromDiscovery:host];
         [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
-                                           fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
+                                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
         [self->_discMan addHostToDiscovery:host];
         
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
@@ -309,7 +315,7 @@ static NSMutableSet* hostList;
                 if (view != nil) {
                     // Only display an alert if this was the result of a real
                     // user action, not just passively entering the foreground again
-                    [self presentViewController:applistAlert animated:YES completion:nil];
+                    [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
                 }
                 
                 host.online = NO;
@@ -340,6 +346,16 @@ static NSMutableSet* hostList;
     });
 }
 
+- (UIViewController*) activeViewController {
+    UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
+
+    while (topController.presentedViewController) {
+        topController = topController.presentedViewController;
+    }
+
+    return topController;
+}
+
 - (void)hostLongClicked:(TemporaryHost *)host view:(UIView *)view {
     Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
@@ -357,7 +373,7 @@ static NSMutableSet* hostList;
                 });
                 wolAlert.message = @"Sent WOL Packet";
             }
-            [self presentViewController:wolAlert animated:YES completion:nil];
+            [[self activeViewController] presentViewController:wolAlert animated:YES completion:nil];
         }]];
         
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Connection Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
@@ -380,7 +396,7 @@ static NSMutableSet* hostList;
     longClickAlert.popoverPresentationController.sourceView = view;
     
     longClickAlert.popoverPresentationController.sourceRect = CGRectMake(view.bounds.size.width / 2.0, view.bounds.size.height / 2.0, 1.0, 1.0); // center of the view
-    [self presentViewController:longClickAlert animated:YES completion:^{
+    [[self activeViewController] presentViewController:longClickAlert animated:YES completion:^{
         [self updateHosts];
     }];
 }
@@ -408,14 +424,14 @@ static NSMutableSet* hostList;
                     }]];
                     [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                     dispatch_async(dispatch_get_main_queue(), ^{
-                        [self presentViewController:hostNotFoundAlert animated:YES completion:nil];
+                        [[self activeViewController] presentViewController:hostNotFoundAlert animated:YES completion:nil];
                     });
                 }
             }];});
     }]];
     [alertController addTextFieldWithConfigurationHandler:nil];
     [self hideLoadingFrame];
-    [self presentViewController:alertController animated:YES completion:nil];
+    [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void) prepareToStreamApp:(TemporaryApp *)app {
@@ -465,9 +481,11 @@ static NSMutableSet* hostList;
     
     [_appManager stopRetrieving];
     
+#if !TARGET_OS_TV
     if (currentPosition != FrontViewPositionLeft) {
         [[self revealViewController] revealToggle:self];
     }
+#endif
     
     TemporaryApp* currentApp = [self findRunningApp:app.host];
     if (currentApp != nil) {
@@ -495,7 +513,7 @@ static NSMutableSet* hostList;
                                             if (quitResponse.statusCode == 200) {
                                                 ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
                                                 [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
-                                                                                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
+                                                                                                    fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
                                                 if (![serverInfoResp isStatusOk] || [[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"]) {
                                                     // On newer GFE versions, the quit request succeeds even though the app doesn't
                                                     // really quit if another client tries to kill your app. We'll patch the response
@@ -509,10 +527,10 @@ static NSMutableSet* hostList;
                                             
                                             // If it fails, display an error and stop the current operation
                                             if (quitResponse.statusCode != 200) {
-                                               alert = [UIAlertController alertControllerWithTitle:@"Quitting App Failed"
-                                                                                      message:@"Failed to quit app. If this app was started by "
-                                                        "another device, you'll need to quit from that device."
-                                                                               preferredStyle:UIAlertControllerStyleAlert];
+                                                alert = [UIAlertController alertControllerWithTitle:@"Quitting App Failed"
+                                                                                            message:@"Failed to quit app. If this app was started by "
+                                                         "another device, you'll need to quit from that device."
+                                                                                     preferredStyle:UIAlertControllerStyleAlert];
                                             }
                                             // If it succeeds and we're to start streaming, segue to the stream and return
                                             else if (![app.id isEqualToString:currentApp.id]) {
@@ -540,12 +558,12 @@ static NSMutableSet* hostList;
                                             dispatch_async(dispatch_get_main_queue(), ^{
                                                 [self updateAppsForHost:app.host];
                                                 [self hideLoadingFrame];
-                                                [self presentViewController:alert animated:YES completion:nil];
+                                                [[self activeViewController] presentViewController:alert animated:YES completion:nil];
                                             });
                                         });
                                     }]];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-        [self presentViewController:alertController animated:YES completion:nil];
+        [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
     } else {
         [self prepareToStreamApp:app];
         [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
@@ -561,6 +579,7 @@ static NSMutableSet* hostList;
     return nil;
 }
 
+#if !TARGET_OS_TV
 - (void)revealController:(SWRevealViewController *)revealController didMoveToPosition:(FrontViewPosition)position {
     // If we moved back to the center position, we should save the settings
     if (position == FrontViewPositionLeft) {
@@ -593,6 +612,13 @@ static NSMutableSet* hostList;
     
     currentPosition = position;
 }
+#endif
+
+#if TARGET_OS_TV
+- (void)collectionView:(UICollectionView *)collectionView didSelectItemAtIndexPath:(NSIndexPath *)indexPath {
+    [self appClicked:_sortedAppList[indexPath.row]];
+}
+#endif
 
 - (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
     if ([segue.destinationViewController isKindOfClass:[StreamFrameViewController class]]) {
@@ -602,17 +628,17 @@ static NSMutableSet* hostList;
 }
 
 - (void) showLoadingFrame {
-    LoadingFrameViewController* loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
+    _loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
     
     // Avoid animating this as it significantly prolongs the loading frame's
     // time on screen and can lead to warnings about dismissing while it's
     // still animating.
-    [self.navigationController presentViewController:loadingFrame animated:NO completion:nil];
+    [[self activeViewController] presentViewController:_loadingFrame animated:NO completion:nil];
 }
 
 - (void) hideLoadingFrame {
     // See comment above in showLoadingFrame about why we don't animate this
-    [self dismissViewControllerAnimated:NO completion:nil];
+    [_loadingFrame dismissViewControllerAnimated:NO completion:nil];
     [self enableNavigation];
 }
 
@@ -620,6 +646,7 @@ static NSMutableSet* hostList;
 {
     [super viewDidLoad];
     
+#if !TARGET_OS_TV
     // Set the side bar button action. When it's tapped, it'll show the sidebar.
     [_limelightLogoButton addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
     
@@ -632,6 +659,7 @@ static NSMutableSet* hostList;
     
     // Get callbacks associated with the viewController
     [self.revealViewController setDelegate:self];
+#endif
     
     // Set the current position to the center
     currentPosition = FrontViewPositionLeft;
@@ -658,6 +686,7 @@ static NSMutableSet* hostList;
     [hostScrollView setShowsHorizontalScrollIndicator:NO];
     hostScrollView.delaysContentTouches = NO;
     
+#if !TARGET_OS_TV
     _pullArrow = [[UIButton alloc] init];
     [_pullArrow addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
     [_pullArrow setImage:[UIImage imageNamed:@"PullArrow"] forState:UIControlStateNormal];
@@ -666,16 +695,21 @@ static NSMutableSet* hostList;
                                   self.collectionView.frame.size.height / 6 - _pullArrow.frame.size.height / 2 - self.navigationController.navigationBar.frame.size.height,
                                   _pullArrow.frame.size.width,
                                   _pullArrow.frame.size.height);
+#endif
     
     self.collectionView.delaysContentTouches = NO;
     self.collectionView.allowsMultipleSelection = NO;
+#if !TARGET_OS_TV
     self.collectionView.multipleTouchEnabled = NO;
+#endif
     
     [self retrieveSavedHosts];
     _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
     
     [self.view addSubview:hostScrollView];
+#if !TARGET_OS_TV
     [self.view addSubview:_pullArrow];
+#endif
 }
 
 -(void)beginForegroundRefresh
@@ -711,7 +745,9 @@ static NSMutableSet* hostList;
 {
     [super viewDidAppear:animated];
     
+#if !TARGET_OS_TV
     [[self revealViewController] setPrimaryViewController:self];
+#endif
     
     [self.navigationController setNavigationBarHidden:NO animated:YES];
     
@@ -911,9 +947,12 @@ static NSMutableSet* hostList;
     cell.layer.shadowOpacity = 0.5f;
     cell.layer.shadowPath = shadowPath.CGPath;
     
-    cell.layer.borderColor = [[UIColor colorWithRed:0 green:0 blue:0 alpha:0.3f] CGColor];
     cell.layer.borderWidth = 1;
+    
+#if !TARGET_OS_TV
+    cell.layer.borderColor = [[UIColor colorWithRed:0 green:0 blue:0 alpha:0.3f] CGColor];
     cell.exclusiveTouch = YES;
+#endif
 
     return cell;
 }
@@ -946,9 +985,11 @@ static NSMutableSet* hostList;
     return YES;
 }
 
+#if !TARGET_OS_TV
 - (BOOL)shouldAutorotate {
     return YES;
 }
+#endif
 
 - (void) disableNavigation {
     self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = NO;
@@ -956,6 +997,14 @@ static NSMutableSet* hostList;
 
 - (void) enableNavigation {
     self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = YES;
+}
+
+- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
+    
+    if (context.nextFocusedView != nil) {
+        [context.nextFocusedView setAlpha:0.8];
+    }
+    [context.previouslyFocusedView setAlpha:1.0];
 }
 
 @end

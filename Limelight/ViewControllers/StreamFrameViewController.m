@@ -69,6 +69,9 @@
 }
 
 - (void)viewDidDisappear:(BOOL)animated {
+    [_controllerSupport cleanup];
+    [UIApplication sharedApplication].idleTimerDisabled = NO;
+    [_streamMan stopStream];
     if (_inactivityTimer != nil) {
         [_inactivityTimer invalidate];
         _inactivityTimer = nil;
@@ -77,8 +80,6 @@
 }
 
 - (void) returnToMainFrame {
-    [_controllerSupport cleanup];
-    [UIApplication sharedApplication].idleTimerDisabled = NO;
     [self.navigationController popToRootViewControllerAnimated:YES];
 }
 
@@ -100,7 +101,6 @@
 - (void)inactiveTimerExpired:(NSTimer*)timer {
     Log(LOG_I, @"Terminating stream after inactivity");
 
-    [_streamMan stopStream];
     [self returnToMainFrame];
     
     _inactivityTimer = nil;
@@ -124,14 +124,12 @@
         _inactivityTimer = nil;
     }
     
-    [_streamMan stopStream];
     [self returnToMainFrame];
 }
 
 - (void)edgeSwiped {
     Log(LOG_I, @"User swiped to end stream");
     
-    [_streamMan stopStream];
     [self returnToMainFrame];
 }
 
