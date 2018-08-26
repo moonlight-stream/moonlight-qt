@@ -145,8 +145,6 @@
 		98AB2E3D1CAD423B0089BB98 /* VideoDepacketizer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VideoDepacketizer.c; sourceTree = "<group>"; };
 		98AB2E3E1CAD423B0089BB98 /* VideoStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VideoStream.c; sourceTree = "<group>"; };
 		FB1A67EF21324EE300507771 /* libmoonlight-common-tv.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libmoonlight-common-tv.a"; sourceTree = BUILT_PRODUCTS_DIR; };
-		FB1A67F121324EE300507771 /* moonlight_common_tv.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = moonlight_common_tv.h; sourceTree = "<group>"; };
-		FB1A67F221324EE300507771 /* moonlight_common_tv.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = moonlight_common_tv.m; sourceTree = "<group>"; };
 		FB290E2E19B37A4E004C83CF /* libmoonlight-common.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libmoonlight-common.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -291,22 +289,12 @@
 			path = "moonlight-common-c/src";
 			sourceTree = "<group>";
 		};
-		FB1A67F021324EE300507771 /* moonlight-common-tv */ = {
-			isa = PBXGroup;
-			children = (
-				FB1A67F121324EE300507771 /* moonlight_common_tv.h */,
-				FB1A67F221324EE300507771 /* moonlight_common_tv.m */,
-			);
-			path = "moonlight-common-tv";
-			sourceTree = "<group>";
-		};
 		FB290E2519B37A4E004C83CF = {
 			isa = PBXGroup;
 			children = (
 				9857AEED1EBE85D50084F99E /* reedsolomon */,
 				98AB2E191CAD423B0089BB98 /* src */,
 				98AB2DEF1CAD422B0089BB98 /* enet */,
-				FB1A67F021324EE300507771 /* moonlight-common-tv */,
 				FB290E2F19B37A4E004C83CF /* Products */,
 			);
 			sourceTree = "<group>";
@@ -554,6 +542,7 @@
 				CODE_SIGN_IDENTITY = "Mac Developer";
 				COPY_PHASE_STRIP = NO;
 				DEFINES_MODULE = YES;
+				ENABLE_BITCODE = YES;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -611,6 +600,7 @@
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEFINES_MODULE = YES;
+				ENABLE_BITCODE = YES;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
