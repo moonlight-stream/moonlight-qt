@@ -1,32 +1,33 @@
+//  MainFrameViewController.m
+//  Moonlight
 //
-//  ViewController.m
-//  Moonlight TV
-//
-//  Created by Diego Waxemberg on 8/25/18.
-//  Copyright © 2018 Moonlight Game Streaming Project. All rights reserved.
+//  Created by Diego Waxemberg on 1/17/14.
+//  Copyright (c) 2014 Moonlight Stream. All rights reserved.
 //
 
+@import ImageIO;
+
 #import "ViewController.h"
-#import "LoadingFrameViewController.h"
-#import "Connection.h"
-#import "AppListResponse.h"
-#import "ConnectionHelper.h"
 #import "CryptoManager.h"
 #import "HttpManager.h"
+#import "Connection.h"
+#import "StreamManager.h"
+#import "Utils.h"
 #import "UIComputerView.h"
 #import "UIAppView.h"
 #import "DataManager.h"
-#import "ServerInfoResponse.h"
+#import "TemporarySettings.h"
 #import "WakeOnLanManager.h"
-#import "ControllerSupport.h"
+#import "AppListResponse.h"
+#import "ServerInfoResponse.h"
+#import "StreamFrameViewController.h"
+#import "LoadingFrameViewController.h"
 #import "ComputerScrollView.h"
+#import "TemporaryApp.h"
 #import "IdManager.h"
+#import "ConnectionHelper.h"
 
 #import <VideoToolbox/VideoToolbox.h>
-
-@interface ViewController ()
-
-@end
 
 @implementation ViewController {
     NSOperationQueue* _opQueue;
@@ -37,203 +38,66 @@
     AppAssetManager* _appManager;
     StreamConfiguration* _streamConfig;
     UIAlertController* _pairAlert;
+    LoadingFrameViewController* _loadingFrame;
     UIScrollView* hostScrollView;
     int currentPosition;
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
+    UIButton* _pullArrow;
     bool _background;
 }
 static NSMutableSet* hostList;
 
-- (void)viewDidLoad {
-    
-//    // Set the side bar button action. When it's tapped, it'll show the sidebar.
-//    [_limelightLogoButton addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
-//
-//    // Set the host name button action. When it's tapped, it'll show the host selection view.
-//    [_computerNameButton setTarget:self];
-//    [_computerNameButton setAction:@selector(showHostSelectionView)];
-//
-//    // Set the gesture
-//    [self.view addGestureRecognizer:self.revealViewController.panGestureRecognizer];
-//
-//    // Get callbacks associated with the viewController
-//    [self.revealViewController setDelegate:self];
-//
-//    // Set the current position to the center
-//    currentPosition = FrontViewPositionLeft;
-//
-    // Set up crypto
-    [CryptoManager generateKeyPairUsingSSl];
-    _uniqueId = [IdManager getUniqueId];
-    _cert = [CryptoManager readCertFromFile];
-    
-    _appManager = [[AppAssetManager alloc] initWithCallback:self];
-    _opQueue = [[NSOperationQueue alloc] init];
-    
-    // Only initialize the host picker list once
-    if (hostList == nil) {
-        hostList = [[NSMutableSet alloc] init];
-    }
-    
-    _boxArtCache = [[NSCache alloc] init];
-    
-    [self setAutomaticallyAdjustsScrollViewInsets:NO];
-    
-    hostScrollView = [[ComputerScrollView alloc] init];
-    hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
-    [hostScrollView setShowsHorizontalScrollIndicator:NO];
-    hostScrollView.delaysContentTouches = NO;
-    
-//    _pullArrow = [[UIButton alloc] init];
-//    [_pullArrow addTarget:self.revealViewController action:@selector(revealToggle:) forControlEvents:UIControlEventTouchDown];
-//    [_pullArrow setImage:[UIImage imageNamed:@"PullArrow"] forState:UIControlStateNormal];
-//    [_pullArrow sizeToFit];
-//    _pullArrow.frame = CGRectMake(0,
-//                                  self.collectionView.frame.size.height / 6 - _pullArrow.frame.size.height / 2 - self.navigationController.navigationBar.frame.size.height,
-//                                  _pullArrow.frame.size.width,
-//                                  _pullArrow.frame.size.height);
-    
-    self.collectionView.delaysContentTouches = NO;
-    self.collectionView.allowsMultipleSelection = NO;
-    
-    [self retrieveSavedHosts];
-    _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
-    
-    [self.view addSubview:hostScrollView];
-}
-
-- (void) showLoadingFrame {
-    LoadingFrameViewController* loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
-    
-    // Avoid animating this as it significantly prolongs the loading frame's
-    // time on screen and can lead to warnings about dismissing while it's
-    // still animating.
-    [self.navigationController presentViewController:loadingFrame animated:NO completion:nil];
-}
-
-- (void) hideLoadingFrame {
-    // See comment above in showLoadingFrame about why we don't animate this
-    [self dismissViewControllerAnimated:NO completion:nil];
-    
-//TODO: is this needed?    [self enableNavigation];
-}
-
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
-}
-
-- (void) retrieveSavedHosts {
-    DataManager* dataMan = [[DataManager alloc] init];
-    NSArray* hosts = [dataMan getHosts];
-    @synchronized(hostList) {
-        [hostList addObjectsFromArray:hosts];
-        
-        // Initialize the non-persistent host state
-        for (TemporaryHost* host in hostList) {
-            if (host.activeAddress == nil) {
-                host.activeAddress = host.localAddress;
-            }
-            if (host.activeAddress == nil) {
-                host.activeAddress = host.externalAddress;
-            }
-            if (host.activeAddress == nil) {
-                host.activeAddress = host.address;
-            }
-        }
-    }
-}
-
-- (void)updateAllHosts:(NSArray *)hosts {
+- (void)showPIN:(NSString *)PIN {
     dispatch_async(dispatch_get_main_queue(), ^{
-        Log(LOG_D, @"New host list:");
-        for (TemporaryHost* host in hosts) {
-            Log(LOG_D, @"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n\t activeAddress:%@ \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online, host.activeAddress);
-        }
-        @synchronized(hostList) {
-            [hostList removeAllObjects];
-            [hostList addObjectsFromArray:hosts];
-        }
-        [self updateHosts];
+        self->_pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
+                                                               message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
+                                                        preferredStyle:UIAlertControllerStyleAlert];
+        [self->_pairAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
+            self->_pairAlert = nil;
+            [self->_discMan startDiscovery];
+            [self hideLoadingFrame];
+        }]];
+        [[self activeViewController] presentViewController:self->_pairAlert animated:YES completion:nil];
     });
 }
 
-- (void)updateHosts {
-    Log(LOG_I, @"Updating hosts...");
-    [[hostScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
-    UIComputerView* addComp = [[UIComputerView alloc] initForAddWithCallback:self];
-    UIComputerView* compView;
-    float prevEdge = -1;
-    @synchronized (hostList) {
-        // Sort the host list in alphabetical order
-        NSArray* sortedHostList = [[hostList allObjects] sortedArrayUsingSelector:@selector(compareName:)];
-        for (TemporaryHost* comp in sortedHostList) {
-            compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
-            compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
-            prevEdge = compView.frame.origin.x + compView.frame.size.width;
-            [hostScrollView addSubview:compView];
-            
-            // Start jobs to decode the box art in advance
-            for (TemporaryApp* app in comp.appList) {
-                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
-                    [self updateBoxArtCacheForApp:app];
-                });
-            }
+- (void)displayFailureDialog:(NSString *)message {
+    UIAlertController* failedDialog = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
+                                                                          message:message
+                                                                   preferredStyle:UIAlertControllerStyleAlert];
+    [failedDialog addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
+    }]];
+    [failedDialog addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [[self activeViewController] presentViewController:failedDialog animated:YES completion:nil];
+    
+    [_discMan startDiscovery];
+    [self hideLoadingFrame];
+}
+
+- (void)pairFailed:(NSString *)message {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        if (self->_pairAlert != nil) {
+            [self->_pairAlert dismissViewControllerAnimated:YES completion:^{
+                [self displayFailureDialog:message];
+            }];
+            self->_pairAlert = nil;
         }
-    }
-    
-    prevEdge = [self getCompViewX:addComp addComp:addComp prevEdge:prevEdge];
-    addComp.center = CGPointMake(prevEdge, hostScrollView.frame.size.height / 2);
-    
-    [hostScrollView addSubview:addComp];
-    [hostScrollView setContentSize:CGSizeMake(prevEdge + addComp.frame.size.width, hostScrollView.frame.size.height)];
+        else {
+            [self displayFailureDialog:message];
+        }
+    });
 }
 
-- (float) getCompViewX:(UIComputerView*)comp addComp:(UIComputerView*)addComp prevEdge:(float)prevEdge {
-    if (prevEdge == -1) {
-        return hostScrollView.frame.origin.x + comp.frame.size.width / 2 + addComp.frame.size.width / 2;
-    } else {
-        return prevEdge + addComp.frame.size.width / 2  + comp.frame.size.width / 2;
-    }
-}
-
-- (void) updateBoxArtCacheForApp:(TemporaryApp*)app {
-    if (app.image == nil) {
-        [_boxArtCache removeObjectForKey:app];
-    }
-    else if ([_boxArtCache objectForKey:app] == nil) {
-        [_boxArtCache setObject:[ViewController loadBoxArtForCaching:app] forKey:app];
-    }
-}
-
-+ (UIImage*) loadBoxArtForCaching:(TemporaryApp*)app {
-    UIImage* boxArt;
-    
-    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)app.image, NULL);
-    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil);
-    
-    size_t width = CGImageGetWidth(cgImage);
-    size_t height = CGImageGetHeight(cgImage);
-    
-    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-    CGContextRef imageContext =  CGBitmapContextCreate(NULL, width, height, 8, width * 4, colorSpace,
-                                                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
-    CGColorSpaceRelease(colorSpace);
-    
-    CGContextDrawImage(imageContext, CGRectMake(0, 0, width, height), cgImage);
-    
-    CGImageRef outputImage = CGBitmapContextCreateImage(imageContext);
-    
-    boxArt = [UIImage imageWithCGImage:outputImage];
-    
-    CGImageRelease(outputImage);
-    CGContextRelease(imageContext);
-    
-    CGImageRelease(cgImage);
-    CFRelease(source);
-    
-    return boxArt;
+- (void)pairSuccessful {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self->_pairAlert dismissViewControllerAnimated:YES completion:nil];
+        self->_pairAlert = nil;
+        
+        [self->_discMan startDiscovery];
+        [self alreadyPaired];
+    });
 }
 
 - (void)alreadyPaired {
@@ -250,7 +114,7 @@ static NSMutableSet* hostList;
                 return;
             }
             
-//            self->_computerNameButton.title = host.name;
+            // TODO: self->_computerNameButton.title = host.name;
             [self.navigationController.navigationBar setNeedsLayout];
             
             [self updateAppsForHost:host];
@@ -282,7 +146,7 @@ static NSMutableSet* hostList;
                     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
                 }]];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                [self presentViewController:applistAlert animated:YES completion:nil];
+                [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
                 host.online = NO;
                 [self showHostSelectionView];
             });
@@ -294,7 +158,7 @@ static NSMutableSet* hostList;
                     return;
                 }
                 
-//                self->_computerNameButton.title = host.name;
+                // TODO: self->_computerNameButton.title = host.name;
                 [self.navigationController.navigationBar setNeedsLayout];
                 
                 [self updateAppsForHost:host];
@@ -358,114 +222,39 @@ static NSMutableSet* hostList;
     [database updateAppsForExistingHost:host];
 }
 
-
-- (void) updateAppsForHost:(TemporaryHost*)host {
-    if (host != _selectedHost) {
-        Log(LOG_W, @"Mismatched host during app update");
-        return;
-    }
-    
-    _sortedAppList = [host.appList allObjects];
-    _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
-    
-    [hostScrollView removeFromSuperview];
-    [self.collectionView reloadData];
-}
-
 - (void)showHostSelectionView {
     [_appManager stopRetrieving];
     _selectedHost = nil;
-//    _computerNameButton.title = @"No Host Selected";
+    // TODO: _computerNameButton.title = @"No Host Selected";
     [self.collectionView reloadData];
     [self.view addSubview:hostScrollView];
 }
 
-- (void)displayFailureDialog:(NSString *)message {
-    UIAlertController* failedDialog = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
-                                                                          message:message
-                                                                   preferredStyle:UIAlertControllerStyleAlert];
-    [failedDialog addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+- (void) receivedAssetForApp:(TemporaryApp*)app {
+    // Update the box art cache now so we don't have to do it
+    // on the main thread
+    [self updateBoxArtCacheForApp:app];
+    
+    DataManager* dataManager = [[DataManager alloc] init];
+    [dataManager updateIconForExistingApp: app];
+    
+    dispatch_async(dispatch_get_main_queue(), ^{
+        [self.collectionView reloadData];
+    });
+}
+
+- (void)displayDnsFailedDialog {
+    UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Network Error"
+                                                                   message:@"Failed to resolve host."
+                                                            preferredStyle:UIAlertControllerStyleAlert];
+    [alert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
     }]];
-    [failedDialog addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-    [self presentViewController:failedDialog animated:YES completion:nil];
-    
-    [_discMan startDiscovery];
-    [self hideLoadingFrame];
+    [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+    [[self activeViewController] presentViewController:alert animated:YES completion:nil];
 }
 
-- (void)pairFailed:(NSString *)message {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        if (self->_pairAlert != nil) {
-            [self->_pairAlert dismissViewControllerAnimated:YES completion:^{
-                [self displayFailureDialog:message];
-            }];
-            self->_pairAlert = nil;
-        }
-        else {
-            [self displayFailureDialog:message];
-        }
-    });
-}
-
-- (void)pairSuccessful {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self->_pairAlert dismissViewControllerAnimated:YES completion:nil];
-        self->_pairAlert = nil;
-        
-        [self->_discMan startDiscovery];
-        [self alreadyPaired];
-    });
-}
-
-- (void)showPIN:(NSString *)PIN {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        self->_pairAlert = [UIAlertController alertControllerWithTitle:@"Pairing"
-                                                               message:[NSString stringWithFormat:@"Enter the following PIN on the host machine: %@", PIN]
-                                                        preferredStyle:UIAlertControllerStyleAlert];
-        [self->_pairAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
-            self->_pairAlert = nil;
-            [self->_discMan startDiscovery];
-            [self hideLoadingFrame];
-        }]];
-        [self presentViewController:self->_pairAlert animated:YES completion:nil];
-    });
-}
-
-- (void)addHostClicked {
-    Log(LOG_D, @"Clicked add host");
-    [self showLoadingFrame];
-    UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-        NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [self->_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
-                if (host != nil) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        @synchronized(hostList) {
-                            [hostList addObject:host];
-                        }
-                        [self updateHosts];
-                    });
-                } else {
-                    UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
-                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-                        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-                    }]];
-                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [self presentViewController:hostNotFoundAlert animated:YES completion:nil];
-                    });
-                }
-            }];});
-    }]];
-    [alertController addTextFieldWithConfigurationHandler:nil];
-    [self hideLoadingFrame];
-    [self presentViewController:alertController animated:YES completion:nil];
-}
-
-- (void)hostClicked:(TemporaryHost *)host view:(UIView *)view {
+- (void) hostClicked:(TemporaryHost *)host view:(UIView *)view {
     // Treat clicks on offline hosts to be long clicks
     // This shows the context menu with wake, delete, etc. rather
     // than just hanging for a while and failing as we would in this
@@ -477,7 +266,7 @@ static NSMutableSet* hostList;
     
     Log(LOG_D, @"Clicked host: %@", host.name);
     _selectedHost = host;
-//    [self disableNavigation];
+    [self disableNavigation];
     
     // If we are online, paired, and have a cached app list, skip straight
     // to the app grid without a loading frame. This is the fast path that users
@@ -520,7 +309,7 @@ static NSMutableSet* hostList;
                 if (view != nil) {
                     // Only display an alert if this was the result of a real
                     // user action, not just passively entering the foreground again
-                    [self presentViewController:applistAlert animated:YES completion:nil];
+                    [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
                 }
                 
                 host.online = NO;
@@ -551,6 +340,16 @@ static NSMutableSet* hostList;
     });
 }
 
+- (UIViewController*) activeViewController {
+    UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
+
+    while (topController.presentedViewController) {
+        topController = topController.presentedViewController;
+    }
+
+    return topController;
+}
+
 - (void)hostLongClicked:(TemporaryHost *)host view:(UIView *)view {
     Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
@@ -568,7 +367,7 @@ static NSMutableSet* hostList;
                 });
                 wolAlert.message = @"Sent WOL Packet";
             }
-            [self presentViewController:wolAlert animated:YES completion:nil];
+            [[self activeViewController] presentViewController:wolAlert animated:YES completion:nil];
         }]];
         
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Connection Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
@@ -591,12 +390,87 @@ static NSMutableSet* hostList;
     longClickAlert.popoverPresentationController.sourceView = view;
     
     longClickAlert.popoverPresentationController.sourceRect = CGRectMake(view.bounds.size.width / 2.0, view.bounds.size.height / 2.0, 1.0, 1.0); // center of the view
-    [self presentViewController:longClickAlert animated:YES completion:^{
+    [[self activeViewController] presentViewController:longClickAlert animated:YES completion:^{
         [self updateHosts];
     }];
 }
 
-- (void)appClicked:(TemporaryApp *)app {
+- (void) addHostClicked {
+    Log(LOG_D, @"Clicked add host");
+    [self showLoadingFrame];
+    UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            [self->_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
+                if (host != nil) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        @synchronized(hostList) {
+                            [hostList addObject:host];
+                        }
+                        [self updateHosts];
+                    });
+                } else {
+                    UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
+                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
+                    }]];
+                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [[self activeViewController] presentViewController:hostNotFoundAlert animated:YES completion:nil];
+                    });
+                }
+            }];});
+    }]];
+    [alertController addTextFieldWithConfigurationHandler:nil];
+    [self hideLoadingFrame];
+    [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
+}
+
+- (void) prepareToStreamApp:(TemporaryApp *)app {
+    _streamConfig = [[StreamConfiguration alloc] init];
+    _streamConfig.host = app.host.activeAddress;
+    _streamConfig.appID = app.id;
+    _streamConfig.appName = app.name;
+    
+    DataManager* dataMan = [[DataManager alloc] init];
+    TemporarySettings* streamSettings = [dataMan getSettings];
+    
+    _streamConfig.frameRate = [streamSettings.framerate intValue];
+    _streamConfig.bitRate = [streamSettings.bitrate intValue];
+    _streamConfig.height = [streamSettings.height intValue];
+    _streamConfig.width = [streamSettings.width intValue];
+    _streamConfig.streamingRemotely = streamSettings.streamingRemotely;
+    _streamConfig.optimizeGameSettings = streamSettings.optimizeGames;
+    _streamConfig.playAudioOnPC = streamSettings.playAudioOnPC;
+    _streamConfig.allowHevc = streamSettings.useHevc;
+    
+    // multiController must be set before calling getConnectedGamepadMask
+    _streamConfig.multiController = streamSettings.multiController;
+    _streamConfig.gamepadMask = [ControllerSupport getConnectedGamepadMask:_streamConfig];
+    
+    // TODO: Detect attached surround sound system then address 5.1 TODOs
+    // in Connection.m
+    _streamConfig.audioChannelCount = 2;
+    _streamConfig.audioChannelMask = 0x3;
+    
+    // HDR requires HDR10 game, HDR10 display, and HEVC Main10 decoder on the client.
+    // It additionally requires an HEVC Main10 encoder on the server (GTX 1000+).
+    //
+    // It should also be a user preference, since some games may require higher peak
+    // brightness than the iOS device can support to look correct in HDR mode.
+    if (@available(iOS 11.3, *)) {
+        _streamConfig.enableHdr =
+        app.hdrSupported && // App supported
+        (app.host.serverCodecModeSupport & 0x200) != 0 && // HEVC Main10 encoding on host PC GPU
+        VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) && // Decoder supported
+        (AVPlayer.availableHDRModes & AVPlayerHDRModeHDR10) != 0 && // Display supported
+        streamSettings.enableHdr; // User wants it enabled
+    }
+}
+
+- (void) appClicked:(TemporaryApp *)app {
     Log(LOG_D, @"Clicked app: %@", app.name);
     
     [_appManager stopRetrieving];
@@ -672,113 +546,15 @@ static NSMutableSet* hostList;
                                             dispatch_async(dispatch_get_main_queue(), ^{
                                                 [self updateAppsForHost:app.host];
                                                 [self hideLoadingFrame];
-                                                [self presentViewController:alert animated:YES completion:nil];
+                                                [[self activeViewController] presentViewController:alert animated:YES completion:nil];
                                             });
                                         });
                                     }]];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-        [self presentViewController:alertController animated:YES completion:nil];
+        [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
     } else {
         [self prepareToStreamApp:app];
         [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
-    }
-}
-
-- (void)receivedAssetForApp:(TemporaryApp *)app {
-    // Update the box art cache now so we don't have to do it
-    // on the main thread
-    [self updateBoxArtCacheForApp:app];
-    
-    DataManager* dataManager = [[DataManager alloc] init];
-    [dataManager updateIconForExistingApp: app];
-    
-    dispatch_async(dispatch_get_main_queue(), ^{
-        [self.collectionView reloadData];
-    });
-}
-
-- (nonnull __kindof UICollectionViewCell *)collectionView:(nonnull UICollectionView *)collectionView cellForItemAtIndexPath:(nonnull NSIndexPath *)indexPath {
-    UICollectionViewCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AppCell" forIndexPath:indexPath];
-    
-    TemporaryApp* app = _sortedAppList[indexPath.row];
-    UIAppView* appView = [[UIAppView alloc] initWithApp:app cache:_boxArtCache andCallback:self];
-    [appView updateAppImage];
-    
-    if (appView.bounds.size.width > 10.0) {
-        CGFloat scale = cell.bounds.size.width / appView.bounds.size.width;
-        [appView setCenter:CGPointMake(appView.bounds.size.width / 2 * scale, appView.bounds.size.height / 2 * scale)];
-        appView.transform = CGAffineTransformMakeScale(scale, scale);
-    }
-    
-    [cell.subviews.firstObject removeFromSuperview]; // Remove a view that was previously added
-    [cell addSubview:appView];
-    
-    
-    UIBezierPath *shadowPath = [UIBezierPath bezierPathWithRect:cell.bounds];
-    cell.layer.masksToBounds = NO;
-    cell.layer.shadowColor = [UIColor blackColor].CGColor;
-    cell.layer.shadowOffset = CGSizeMake(1.0f, 5.0f);
-    cell.layer.shadowOpacity = 0.5f;
-    cell.layer.shadowPath = shadowPath.CGPath;
-    
-    cell.layer.borderColor = [[UIColor colorWithRed:0 green:0 blue:0 alpha:0.3f] CGColor];
-    cell.layer.borderWidth = 1;
-    
-    return cell;
-}
-
-- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
-    return 1; // App collection only
-}
-
-- (NSInteger)collectionView:(nonnull UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
-    if (_selectedHost != nil) {
-        return _selectedHost.appList.count;
-    }
-    else {
-        return 0;
-    }
-}
-
-- (void) prepareToStreamApp:(TemporaryApp *)app {
-    _streamConfig = [[StreamConfiguration alloc] init];
-    _streamConfig.host = app.host.activeAddress;
-    _streamConfig.appID = app.id;
-    _streamConfig.appName = app.name;
-    
-    DataManager* dataMan = [[DataManager alloc] init];
-    TemporarySettings* streamSettings = [dataMan getSettings];
-    
-    _streamConfig.frameRate = [streamSettings.framerate intValue];
-    _streamConfig.bitRate = [streamSettings.bitrate intValue];
-    _streamConfig.height = [streamSettings.height intValue];
-    _streamConfig.width = [streamSettings.width intValue];
-    _streamConfig.streamingRemotely = streamSettings.streamingRemotely;
-    _streamConfig.optimizeGameSettings = streamSettings.optimizeGames;
-    _streamConfig.playAudioOnPC = streamSettings.playAudioOnPC;
-    _streamConfig.allowHevc = streamSettings.useHevc;
-    
-    // multiController must be set before calling getConnectedGamepadMask
-    _streamConfig.multiController = streamSettings.multiController;
-    _streamConfig.gamepadMask = [ControllerSupport getConnectedGamepadMask:_streamConfig];
-    
-    // TODO: Detect attached surround sound system then address 5.1 TODOs
-    // in Connection.m
-    _streamConfig.audioChannelCount = 2;
-    _streamConfig.audioChannelMask = 0x3;
-    
-    // HDR requires HDR10 game, HDR10 display, and HEVC Main10 decoder on the client.
-    // It additionally requires an HEVC Main10 encoder on the server (GTX 1000+).
-    //
-    // It should also be a user preference, since some games may require higher peak
-    // brightness than the iOS device can support to look correct in HDR mode.
-    if (@available(iOS 11.3, *)) {
-        _streamConfig.enableHdr =
-        app.hdrSupported && // App supported
-        (app.host.serverCodecModeSupport & 0x200) != 0 && // HEVC Main10 encoding on host PC GPU
-        VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC) && // Decoder supported
-        (AVPlayer.availableHDRModes & AVPlayerHDRModeHDR10) != 0 && // Display supported
-        streamSettings.enableHdr; // User wants it enabled
     }
 }
 
@@ -789,6 +565,72 @@ static NSMutableSet* hostList;
         }
     }
     return nil;
+}
+
+- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
+    if ([segue.destinationViewController isKindOfClass:[StreamFrameViewController class]]) {
+        StreamFrameViewController* streamFrame = segue.destinationViewController;
+        streamFrame.streamConfig = _streamConfig;
+    }
+}
+
+- (void) showLoadingFrame {
+    _loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
+    
+    // Avoid animating this as it significantly prolongs the loading frame's
+    // time on screen and can lead to warnings about dismissing while it's
+    // still animating.
+    [[self activeViewController] presentViewController:_loadingFrame animated:NO completion:nil];
+}
+
+- (void) hideLoadingFrame {
+    // See comment above in showLoadingFrame about why we don't animate this
+    [_loadingFrame dismissViewControllerAnimated:NO completion:nil];
+    [self enableNavigation];
+}
+
+- (void)viewDidLoad
+{
+    [super viewDidLoad];
+    
+    // Set up crypto
+    [CryptoManager generateKeyPairUsingSSl];
+    _uniqueId = [IdManager getUniqueId];
+    _cert = [CryptoManager readCertFromFile];
+    
+    _appManager = [[AppAssetManager alloc] initWithCallback:self];
+    _opQueue = [[NSOperationQueue alloc] init];
+    
+    // Only initialize the host picker list once
+    if (hostList == nil) {
+        hostList = [[NSMutableSet alloc] init];
+    }
+    
+    _boxArtCache = [[NSCache alloc] init];
+    
+    [self setAutomaticallyAdjustsScrollViewInsets:NO];
+    
+    hostScrollView = [[ComputerScrollView alloc] init];
+    hostScrollView.frame = CGRectMake(0, self.navigationController.navigationBar.frame.origin.y + self.navigationController.navigationBar.frame.size.height, self.view.frame.size.width, self.view.frame.size.height / 2);
+    [hostScrollView setShowsHorizontalScrollIndicator:NO];
+    hostScrollView.delaysContentTouches = NO;
+    
+    _pullArrow = [[UIButton alloc] init];
+    [_pullArrow setImage:[UIImage imageNamed:@"PullArrow"] forState:UIControlStateNormal];
+    [_pullArrow sizeToFit];
+    _pullArrow.frame = CGRectMake(0,
+                                  self.collectionView.frame.size.height / 6 - _pullArrow.frame.size.height / 2 - self.navigationController.navigationBar.frame.size.height,
+                                  _pullArrow.frame.size.width,
+                                  _pullArrow.frame.size.height);
+    
+    self.collectionView.delaysContentTouches = NO;
+    self.collectionView.allowsMultipleSelection = NO;
+    
+    [self retrieveSavedHosts];
+    _discMan = [[DiscoveryManager alloc] initWithHosts:[hostList allObjects] andCallback:self];
+    
+    [self.view addSubview:hostScrollView];
+    [self.view addSubview:_pullArrow];
 }
 
 -(void)beginForegroundRefresh
@@ -824,7 +666,7 @@ static NSMutableSet* hostList;
 {
     [super viewDidAppear:animated];
     
-    //[self.navigationController setNavigationBarHidden:NO animated:YES];
+    [self.navigationController setNavigationBarHidden:NO animated:YES];
     
     // Hide 1px border line
     UIImage* fakeImage = [[UIImage alloc] init];
@@ -853,6 +695,215 @@ static NSMutableSet* hostList;
     // view, so we won't get a return to active notification
     // for that which would normally fire beginForegroundRefresh.
     [self beginForegroundRefresh];
+}
+
+- (void)viewDidDisappear:(BOOL)animated
+{
+    [super viewDidDisappear:animated];
+    
+    // when discovery stops, we must create a new instance because
+    // you cannot restart an NSOperation when it is finished
+    [_discMan stopDiscovery];
+    
+    // Purge the box art cache
+    [_boxArtCache removeAllObjects];
+    
+    // Remove our lifetime observers to avoid triggering them
+    // while streaming
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+}
+
+- (void) retrieveSavedHosts {
+    DataManager* dataMan = [[DataManager alloc] init];
+    NSArray* hosts = [dataMan getHosts];
+    @synchronized(hostList) {
+        [hostList addObjectsFromArray:hosts];
+        
+        // Initialize the non-persistent host state
+        for (TemporaryHost* host in hostList) {
+            if (host.activeAddress == nil) {
+                host.activeAddress = host.localAddress;
+            }
+            if (host.activeAddress == nil) {
+                host.activeAddress = host.externalAddress;
+            }
+            if (host.activeAddress == nil) {
+                host.activeAddress = host.address;
+            }
+        }
+    }
+}
+
+- (void) updateAllHosts:(NSArray *)hosts {
+    dispatch_async(dispatch_get_main_queue(), ^{
+        Log(LOG_D, @"New host list:");
+        for (TemporaryHost* host in hosts) {
+            Log(LOG_D, @"Host: \n{\n\t name:%@ \n\t address:%@ \n\t localAddress:%@ \n\t externalAddress:%@ \n\t uuid:%@ \n\t mac:%@ \n\t pairState:%d \n\t online:%d \n\t activeAddress:%@ \n}", host.name, host.address, host.localAddress, host.externalAddress, host.uuid, host.mac, host.pairState, host.online, host.activeAddress);
+        }
+        @synchronized(hostList) {
+            [hostList removeAllObjects];
+            [hostList addObjectsFromArray:hosts];
+        }
+        [self updateHosts];
+    });
+}
+
+- (void)updateHosts {
+    Log(LOG_I, @"Updating hosts...");
+    [[hostScrollView subviews] makeObjectsPerformSelector:@selector(removeFromSuperview)];
+    UIComputerView* addComp = [[UIComputerView alloc] initForAddWithCallback:self];
+    UIComputerView* compView;
+    float prevEdge = -1;
+    @synchronized (hostList) {
+        // Sort the host list in alphabetical order
+        NSArray* sortedHostList = [[hostList allObjects] sortedArrayUsingSelector:@selector(compareName:)];
+        for (TemporaryHost* comp in sortedHostList) {
+            compView = [[UIComputerView alloc] initWithComputer:comp andCallback:self];
+            compView.center = CGPointMake([self getCompViewX:compView addComp:addComp prevEdge:prevEdge], hostScrollView.frame.size.height / 2);
+            prevEdge = compView.frame.origin.x + compView.frame.size.width;
+            [hostScrollView addSubview:compView];
+            
+            // Start jobs to decode the box art in advance
+            for (TemporaryApp* app in comp.appList) {
+                dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0), ^{
+                    [self updateBoxArtCacheForApp:app];
+                });
+            }
+        }
+    }
+    
+    prevEdge = [self getCompViewX:addComp addComp:addComp prevEdge:prevEdge];
+    addComp.center = CGPointMake(prevEdge, hostScrollView.frame.size.height / 2);
+    
+    [hostScrollView addSubview:addComp];
+    [hostScrollView setContentSize:CGSizeMake(prevEdge + addComp.frame.size.width, hostScrollView.frame.size.height)];
+}
+
+- (float) getCompViewX:(UIComputerView*)comp addComp:(UIComputerView*)addComp prevEdge:(float)prevEdge {
+    if (prevEdge == -1) {
+        return hostScrollView.frame.origin.x + comp.frame.size.width / 2 + addComp.frame.size.width / 2;
+    } else {
+        return prevEdge + addComp.frame.size.width / 2  + comp.frame.size.width / 2;
+    }
+}
+
+// This function forces immediate decoding of the UIImage, rather
+// than the default lazy decoding that results in janky scrolling.
++ (UIImage*) loadBoxArtForCaching:(TemporaryApp*)app {
+    UIImage* boxArt;
+    
+    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)app.image, NULL);
+    CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil);
+    
+    size_t width = CGImageGetWidth(cgImage);
+    size_t height = CGImageGetHeight(cgImage);
+    
+    CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+    CGContextRef imageContext =  CGBitmapContextCreate(NULL, width, height, 8, width * 4, colorSpace,
+                                                       kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little);
+    CGColorSpaceRelease(colorSpace);
+    
+    CGContextDrawImage(imageContext, CGRectMake(0, 0, width, height), cgImage);
+    
+    CGImageRef outputImage = CGBitmapContextCreateImage(imageContext);
+    
+    boxArt = [UIImage imageWithCGImage:outputImage];
+    
+    CGImageRelease(outputImage);
+    CGContextRelease(imageContext);
+    
+    CGImageRelease(cgImage);
+    CFRelease(source);
+    
+    return boxArt;
+}
+
+- (void) updateBoxArtCacheForApp:(TemporaryApp*)app {
+    if (app.image == nil) {
+        [_boxArtCache removeObjectForKey:app];
+    }
+    else if ([_boxArtCache objectForKey:app] == nil) {
+        [_boxArtCache setObject:[ViewController loadBoxArtForCaching:app] forKey:app];
+    }
+}
+
+- (void) updateAppsForHost:(TemporaryHost*)host {
+    if (host != _selectedHost) {
+        Log(LOG_W, @"Mismatched host during app update");
+        return;
+    }
+    
+    _sortedAppList = [host.appList allObjects];
+    _sortedAppList = [_sortedAppList sortedArrayUsingSelector:@selector(compareName:)];
+    
+    [hostScrollView removeFromSuperview];
+    [self.collectionView reloadData];
+}
+
+- (UICollectionViewCell *)collectionView:(UICollectionView *)collectionView cellForItemAtIndexPath:(NSIndexPath *)indexPath {
+    UICollectionViewCell* cell = [collectionView dequeueReusableCellWithReuseIdentifier:@"AppCell" forIndexPath:indexPath];
+    
+    TemporaryApp* app = _sortedAppList[indexPath.row];
+    UIAppView* appView = [[UIAppView alloc] initWithApp:app cache:_boxArtCache andCallback:self];
+    [appView updateAppImage];
+    
+    if (appView.bounds.size.width > 10.0) {
+        CGFloat scale = cell.bounds.size.width / appView.bounds.size.width;
+        [appView setCenter:CGPointMake(appView.bounds.size.width / 2 * scale, appView.bounds.size.height / 2 * scale)];
+        appView.transform = CGAffineTransformMakeScale(scale, scale);
+    }
+    
+    [cell.subviews.firstObject removeFromSuperview]; // Remove a view that was previously added
+    [cell addSubview:appView];
+    
+    
+    UIBezierPath *shadowPath = [UIBezierPath bezierPathWithRect:cell.bounds];
+    cell.layer.masksToBounds = NO;
+    cell.layer.shadowColor = [UIColor blackColor].CGColor;
+    cell.layer.shadowOffset = CGSizeMake(1.0f, 5.0f);
+    cell.layer.shadowOpacity = 0.5f;
+    cell.layer.shadowPath = shadowPath.CGPath;
+    
+    cell.layer.borderColor = [[UIColor colorWithRed:0 green:0 blue:0 alpha:0.3f] CGColor];
+    cell.layer.borderWidth = 1;
+    
+    return cell;
+}
+
+- (NSInteger)numberOfSectionsInCollectionView:(UICollectionView *)collectionView {
+    return 1; // App collection only
+}
+
+- (NSInteger)collectionView:(UICollectionView *)collectionView numberOfItemsInSection:(NSInteger)section {
+    if (_selectedHost != nil) {
+        return _selectedHost.appList.count;
+    }
+    else {
+        return 0;
+    }
+}
+
+- (void)didReceiveMemoryWarning
+{
+    [super didReceiveMemoryWarning];
+    // Dispose of any resources that can be recreated.
+}
+
+- (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
+    [self.view endEditing:YES];
+}
+
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+    [textField resignFirstResponder];
+    return YES;
+}
+
+- (void) disableNavigation {
+    self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = NO;
+}
+
+- (void) enableNavigation {
+    self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = YES;
 }
 
 - (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
