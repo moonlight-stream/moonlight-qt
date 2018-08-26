@@ -35,7 +35,7 @@ static UIImage* noImage;
     [_appButton setBackgroundImage:noImage forState:UIControlStateNormal];
     [_appButton setContentEdgeInsets:UIEdgeInsetsMake(0, 4, 0, 4)];
     [_appButton sizeToFit];
-    [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventTouchUpInside];
+    [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
     
     [self addSubview:_appButton];
     [self sizeToFit];
@@ -108,7 +108,6 @@ static UIImage* noImage;
         CGFloat padding = 4.f;
         [_appLabel setFrame: CGRectMake(padding, padding, _appButton.frame.size.width - 2 * padding, _appButton.frame.size.height - 2 * padding)];
         [_appLabel setTextColor:[UIColor whiteColor]];
-        [_appLabel setFont:[UIFont fontWithName:@"Roboto-Regular" size:10.f]];
         [_appLabel setBaselineAdjustment:UIBaselineAdjustmentAlignCenters];
         [_appLabel setTextAlignment:NSTextAlignmentCenter];
         [_appLabel setLineBreakMode:NSLineBreakByWordWrapping];

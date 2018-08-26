@@ -77,7 +77,7 @@ static const int LABEL_DY = 20;
     
     UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(hostLongClicked)];
     [_hostButton addGestureRecognizer:longPressRecognizer];
-    [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventTouchUpInside];
+    [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
     
     [self updateContentsForHost:host];
     [self updateBounds];
