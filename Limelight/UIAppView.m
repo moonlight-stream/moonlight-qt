@@ -112,6 +112,9 @@ static UIImage* noImage;
         [_appLabel setTextAlignment:NSTextAlignmentCenter];
         [_appLabel setLineBreakMode:NSLineBreakByWordWrapping];
         [_appLabel setNumberOfLines:0];
+#if TARGET_OS_TV
+        [_appLabel setFont:[UIFont systemFontOfSize:16]];
+#endif
         [_appLabel setText:_app.name];
         [_appButton addSubview:_appLabel];
     }

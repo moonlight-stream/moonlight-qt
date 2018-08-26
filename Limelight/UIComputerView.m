@@ -18,7 +18,12 @@
     CGSize _labelSize;
 }
 static const float REFRESH_CYCLE = 2.0f;
+
+#if TARGET_OS_TV
+static const int LABEL_DY = 40;
+#else
 static const int LABEL_DY = 20;
+#endif
 
 - (id) init {
     self = [super init];
