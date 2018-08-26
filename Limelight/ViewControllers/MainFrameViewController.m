@@ -48,7 +48,9 @@
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
     bool _background;
-#if !TARGET_OS_TV
+#if TARGET_OS_TV
+    UITapGestureRecognizer* _menuRecognizer;
+#else
     UIButton* _pullArrow;
 #endif
 }
@@ -231,6 +233,12 @@ static NSMutableSet* hostList;
 }
 
 - (void)showHostSelectionView {
+#if TARGET_OS_TV
+    // Remove the menu button intercept to allow the app to exit
+    // when at the host selection view.
+    [self.view removeGestureRecognizer:_menuRecognizer];
+#endif
+    
     [_appManager stopRetrieving];
     _selectedHost = nil;
     _computerNameButton.title = @"No Host Selected";
@@ -275,6 +283,11 @@ static NSMutableSet* hostList;
     Log(LOG_D, @"Clicked host: %@", host.name);
     _selectedHost = host;
     [self disableNavigation];
+    
+#if TARGET_OS_TV
+    // Intercept the menu key to go back to the host page
+    [self.view addGestureRecognizer:_menuRecognizer];
+#endif
     
     // If we are online, paired, and have a cached app list, skip straight
     // to the app grid without a loading frame. This is the fast path that users
@@ -663,6 +676,10 @@ static NSMutableSet* hostList;
     
     // Get callbacks associated with the viewController
     [self.revealViewController setDelegate:self];
+#else
+    _menuRecognizer = [[UITapGestureRecognizer alloc] init];
+    [_menuRecognizer addTarget:self action: @selector(showHostSelectionView)];
+    _menuRecognizer.allowedPressTypes = [[NSArray alloc] initWithObjects:[NSNumber numberWithLong:UIPressTypeMenu], nil];
 #endif
     
     _loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
