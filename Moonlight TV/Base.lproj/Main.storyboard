@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder.AppleTV.Storyboard" version="3.0" toolsVersion="14113" targetRuntime="AppleTV" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="BYZ-38-t0r">
+<document type="com.apple.InterfaceBuilder.AppleTV.Storyboard" version="3.0" toolsVersion="14113" targetRuntime="AppleTV" propertyAccessControl="none" useAutolayout="YES" useTraitCollections="YES" useSafeAreas="YES" colorMatched="YES" initialViewController="Ap5-6u-5Wo">
     <device id="appleTV" orientation="landscape">
         <adaptation id="light"/>
     </device>
@@ -27,6 +27,68 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="dkx-z0-nzr" sceneMemberID="firstResponder"/>
             </objects>
+        </scene>
+        <!--Loading Frame View Controller-->
+        <scene sceneID="lqn-qp-p7w">
+            <objects>
+                <viewController id="Ap5-6u-5Wo" customClass="LoadingFrameViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="AfI-ck-OwD"/>
+                        <viewControllerLayoutGuide type="bottom" id="DNo-dy-ucM"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="TIa-HJ-DIv">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" animating="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="WZH-wo-LWE" userLabel="Loading Spinner">
+                                <rect key="frame" x="950" y="530" width="20" height="20"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </activityIndicatorView>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="3xZ-qb-ZmB"/>
+                    </view>
+                    <connections>
+                        <outlet property="loadingSpinner" destination="WZH-wo-LWE" id="eu5-eD-K5c"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="ArN-ya-eNp" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="-1316" y="1195"/>
+        </scene>
+        <!--Stream Frame View Controller-->
+        <scene sceneID="Y8V-Ah-t3m">
+            <objects>
+                <viewController id="YUB-6u-B7f" customClass="StreamFrameViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="a9G-T3-mGR"/>
+                        <viewControllerLayoutGuide type="bottom" id="6Xc-C7-Or1"/>
+                    </layoutGuides>
+                    <view key="view" contentMode="scaleToFill" id="CAm-nS-IFz" userLabel="RenderView">
+                        <rect key="frame" x="0.0" y="0.0" width="1920" height="1080"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <activityIndicatorView opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" fixedFrame="YES" style="gray" translatesAutoresizingMaskIntoConstraints="NO" id="0eJ-kd-ugl" userLabel="Spinner">
+                                <rect key="frame" x="950" y="530" width="20" height="20"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                            </activityIndicatorView>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="BUJ-Dh-gl5" userLabel="Stage Label">
+                                <rect key="frame" x="914" y="558" width="93" height="46"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
+                        <viewLayoutGuide key="safeArea" id="Vnr-7v-hDb"/>
+                    </view>
+                    <connections>
+                        <outlet property="spinner" destination="0eJ-kd-ugl" id="KfF-3I-6hN"/>
+                        <outlet property="stageLabel" destination="BUJ-Dh-gl5" id="tEa-k3-sU2"/>
+                    </connections>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="IJO-zp-f3d" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="650" y="1654"/>
         </scene>
     </scenes>
 </document>
