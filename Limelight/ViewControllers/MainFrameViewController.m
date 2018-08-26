@@ -62,7 +62,7 @@ static NSMutableSet* hostList;
         [self->_pairAlert addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
             self->_pairAlert = nil;
             [self->_discMan startDiscovery];
-            [self hideLoadingFrame];
+            [self hideLoadingFrame: nil];
         }]];
         [[self activeViewController] presentViewController:self->_pairAlert animated:YES completion:nil];
     });
@@ -76,10 +76,12 @@ static NSMutableSet* hostList;
         [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
     }]];
     [failedDialog addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-    [[self activeViewController] presentViewController:failedDialog animated:YES completion:nil];
+    
+    [self hideLoadingFrame: ^{
+        [[self activeViewController] presentViewController:failedDialog animated:YES completion:nil];
+    }];
     
     [_discMan startDiscovery];
-    [self hideLoadingFrame];
 }
 
 - (void)pairFailed:(NSString *)message {
@@ -124,7 +126,7 @@ static NSMutableSet* hostList;
             [self.navigationController.navigationBar setNeedsLayout];
             
             [self updateAppsForHost:host];
-            [self hideLoadingFrame];
+            [self hideLoadingFrame: nil];
         });
     }
     Log(LOG_I, @"Using cached app list: %d", usingCachedAppList);
@@ -139,8 +141,6 @@ static NSMutableSet* hostList;
         if (appListResp == nil || ![appListResp isStatusOk] || [appListResp getAppList] == nil) {
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self hideLoadingFrame];
-                
                 if (host != self->_selectedHost) {
                     return;
                 }
@@ -152,7 +152,9 @@ static NSMutableSet* hostList;
                     [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
                 }]];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
+                [self hideLoadingFrame: ^{
+                    [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
+                }];
                 host.online = NO;
                 [self showHostSelectionView];
             });
@@ -170,7 +172,7 @@ static NSMutableSet* hostList;
                 [self updateAppsForHost:host];
                 [self->_appManager stopRetrieving];
                 [self->_appManager retrieveAssetsFromHost:host];
-                [self hideLoadingFrame];
+                [self hideLoadingFrame: nil];
             });
         }
     });
@@ -298,8 +300,6 @@ static NSMutableSet* hostList;
         if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
             Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
-                [self hideLoadingFrame];
-                
                 if (host != self->_selectedHost) {
                     return;
                 }
@@ -315,7 +315,9 @@ static NSMutableSet* hostList;
                 if (view != nil) {
                     // Only display an alert if this was the result of a real
                     // user action, not just passively entering the foreground again
-                    [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
+                    [self hideLoadingFrame: ^{
+                        [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
+                    }];
                 }
                 
                 host.online = NO;
@@ -338,8 +340,9 @@ static NSMutableSet* hostList;
             else {
                 // Not user action, so just return to host screen
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self hideLoadingFrame];
-                    [self showHostSelectionView];
+                    [self hideLoadingFrame:^{
+                        [self showHostSelectionView];
+                    }];
                 });
             }
         }
@@ -430,8 +433,9 @@ static NSMutableSet* hostList;
             }];});
     }]];
     [alertController addTextFieldWithConfigurationHandler:nil];
-    [self hideLoadingFrame];
-    [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
+    [self hideLoadingFrame: ^{
+        [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
+    }];
 }
 
 - (void) prepareToStreamApp:(TemporaryApp *)app {
@@ -538,9 +542,10 @@ static NSMutableSet* hostList;
                                                 
                                                 dispatch_async(dispatch_get_main_queue(), ^{
                                                     [self updateAppsForHost:app.host];
-                                                    [self hideLoadingFrame];
                                                     [self prepareToStreamApp:app];
-                                                    [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                                    [self hideLoadingFrame: ^{
+                                                        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                                    }];
                                                 });
                                                 
                                                 return;
@@ -557,8 +562,9 @@ static NSMutableSet* hostList;
                                             [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                                             dispatch_async(dispatch_get_main_queue(), ^{
                                                 [self updateAppsForHost:app.host];
-                                                [self hideLoadingFrame];
-                                                [[self activeViewController] presentViewController:alert animated:YES completion:nil];
+                                                [self hideLoadingFrame: ^{
+                                                    [[self activeViewController] presentViewController:alert animated:YES completion:nil];
+                                                }];
                                             });
                                         });
                                     }]];
@@ -628,17 +634,15 @@ static NSMutableSet* hostList;
 }
 
 - (void) showLoadingFrame {
-    _loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
-    
     // Avoid animating this as it significantly prolongs the loading frame's
     // time on screen and can lead to warnings about dismissing while it's
     // still animating.
     [[self activeViewController] presentViewController:_loadingFrame animated:NO completion:nil];
 }
 
-- (void) hideLoadingFrame {
+- (void) hideLoadingFrame:(void (^)(void))completion {
     // See comment above in showLoadingFrame about why we don't animate this
-    [_loadingFrame dismissViewControllerAnimated:NO completion:nil];
+    [_loadingFrame dismissViewControllerAnimated:NO completion:completion];
     [self enableNavigation];
 }
 
@@ -660,6 +664,8 @@ static NSMutableSet* hostList;
     // Get callbacks associated with the viewController
     [self.revealViewController setDelegate:self];
 #endif
+    
+    _loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
     
     // Set the current position to the center
     currentPosition = FrontViewPositionLeft;
@@ -765,6 +771,11 @@ static NSMutableSet* hostList;
                                              selector: @selector(handleEnterBackground)
                                                  name: UIApplicationWillResignActiveNotification
                                                object: nil];
+}
+
+- (void)viewWillAppear:(BOOL)animated
+{
+    [super viewWillAppear:animated];
     
     // We can get here on home press while streaming
     // since the stream view segues to us just before
@@ -777,7 +788,14 @@ static NSMutableSet* hostList;
     // this view via an error dialog from the stream
     // view, so we won't get a return to active notification
     // for that which would normally fire beginForegroundRefresh.
-    [self beginForegroundRefresh];
+    //
+    // On tvOS, we'll get a viewWillAppear when returning from the
+    // loading frame which will cause an infinite loop by starting
+    // another loading frame. To avoid this, just don't refresh
+    // if we're coming back from a loading frame view.
+    if (![[self activeViewController] isKindOfClass:[LoadingFrameViewController class]]) {
+        [self beginForegroundRefresh];
+    }
 }
 
 - (void)viewDidDisappear:(BOOL)animated
