@@ -26,7 +26,9 @@
 {
     [super viewDidAppear:animated];
     
+#if !TARGET_OS_TV
     [[self revealViewController] setPrimaryViewController:self];
+#endif
 }
 
 - (void)viewDidLoad
@@ -139,7 +141,9 @@
         // Leave the spinner spinning until it's obscured by
         // the first frame of video.
         self.stageLabel.hidden = YES;
+#if !TARGET_OS_TV
         [(StreamView*)self.view setupOnScreenControls: self->_controllerSupport swipeDelegate:self];
+#endif
     });
 }
 
@@ -231,6 +235,7 @@
     // Dispose of any resources that can be recreated.
 }
 
+#if !TARGET_OS_TV
 // Require a confirmation when streaming to activate a system gesture
 - (UIRectEdge)preferredScreenEdgesDeferringSystemGestures {
     return UIRectEdgeAll;
@@ -239,4 +244,6 @@
 - (BOOL)shouldAutorotate {
     return YES;
 }
+#endif
+
 @end
