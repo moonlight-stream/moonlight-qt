@@ -855,4 +855,12 @@ static NSMutableSet* hostList;
     [self beginForegroundRefresh];
 }
 
+- (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
+    
+    if (context.nextFocusedView != nil) {
+        [context.nextFocusedView setAlpha:0.8];
+    }
+    [context.previouslyFocusedView setAlpha:1.0];
+}
+
 @end
