@@ -791,4 +791,68 @@ static NSMutableSet* hostList;
     return nil;
 }
 
+-(void)beginForegroundRefresh
+{
+    if (!_background) {
+        // This will kick off box art caching
+        [self updateHosts];
+        
+        [_discMan startDiscovery];
+        
+        // This will refresh the applist when a paired host is selected
+        if (_selectedHost != nil && _selectedHost.pairState == PairStatePaired) {
+            [self hostClicked:_selectedHost view:nil];
+        }
+    }
+}
+
+-(void)handleReturnToForeground
+{
+    _background = NO;
+    
+    [self beginForegroundRefresh];
+}
+
+-(void)handleEnterBackground
+{
+    _background = YES;
+    
+    [_discMan stopDiscovery];
+}
+
+- (void)viewDidAppear:(BOOL)animated
+{
+    [super viewDidAppear:animated];
+    
+    //[self.navigationController setNavigationBarHidden:NO animated:YES];
+    
+    // Hide 1px border line
+    UIImage* fakeImage = [[UIImage alloc] init];
+    [self.navigationController.navigationBar setShadowImage:fakeImage];
+    [self.navigationController.navigationBar setBackgroundImage:fakeImage forBarPosition:UIBarPositionAny barMetrics:UIBarMetricsDefault];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(handleReturnToForeground)
+                                                 name: UIApplicationDidBecomeActiveNotification
+                                               object: nil];
+    
+    [[NSNotificationCenter defaultCenter] addObserver: self
+                                             selector: @selector(handleEnterBackground)
+                                                 name: UIApplicationWillResignActiveNotification
+                                               object: nil];
+    
+    // We can get here on home press while streaming
+    // since the stream view segues to us just before
+    // entering the background. We can't check the app
+    // state here (since it's in transition), so we have
+    // to use this function that will use our internal
+    // state here to determine whether we're foreground.
+    //
+    // Note that this is neccessary here as we may enter
+    // this view via an error dialog from the stream
+    // view, so we won't get a return to active notification
+    // for that which would normally fire beginForegroundRefresh.
+    [self beginForegroundRefresh];
+}
+
 @end
