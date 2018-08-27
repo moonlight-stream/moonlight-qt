@@ -124,7 +124,11 @@ static NSMutableSet* hostList;
                 return;
             }
             
+#if TARGET_OS_TV
+            self.title = host.name;
+#else
             self->_computerNameButton.title = host.name;
+#endif
             [self.navigationController.navigationBar setNeedsLayout];
             
             [self updateAppsForHost:host];
@@ -168,7 +172,11 @@ static NSMutableSet* hostList;
                     return;
                 }
                 
+#if TARGET_OS_TV
+                self.title = host.name;
+#else
                 self->_computerNameButton.title = host.name;
+#endif
                 [self.navigationController.navigationBar setNeedsLayout];
                 
                 [self updateAppsForHost:host];
@@ -241,7 +249,11 @@ static NSMutableSet* hostList;
     
     [_appManager stopRetrieving];
     _selectedHost = nil;
+#if TARGET_OS_TV
+    self.title = @"";
+#else
     _computerNameButton.title = @"No Host Selected";
+#endif
     [self.collectionView reloadData];
     [self.view addSubview:hostScrollView];
 }
