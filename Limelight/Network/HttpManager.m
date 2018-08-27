@@ -108,8 +108,8 @@ static const NSString* HTTPS_PORT = @"47984";
     NSURL* url = [[NSURL alloc] initWithString:urlString];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     if (normalTimeout) {
-        // Timeout the request after 7 seconds
-        [request setTimeoutInterval:7];
+        // Timeout the request after 4 seconds
+        [request setTimeoutInterval:4];
     }
     else {
         // Timeout the request after 60 seconds
