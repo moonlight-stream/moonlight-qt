@@ -8,7 +8,7 @@
 
 @interface CryptoManager : NSObject
 
-+ (void) generateKeyPairUsingSSl;
++ (void) generateKeyPairUsingSSL;
 + (NSData*) readCertFromFile;
 + (NSData*) readKeyFromFile;
 + (NSData*) readP12FromFile;

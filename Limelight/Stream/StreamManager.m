@@ -36,7 +36,7 @@
 }
 
 - (void)main {
-    [CryptoManager generateKeyPairUsingSSl];
+    [CryptoManager generateKeyPairUsingSSL];
     NSString* uniqueId = [IdManager getUniqueId];
     NSData* cert = [CryptoManager readCertFromFile];
     

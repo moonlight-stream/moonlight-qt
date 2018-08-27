@@ -41,7 +41,7 @@
     
     _opQueue = [[NSOperationQueue alloc] init];
     _mdnsMan = [[MDNSManager alloc] initWithCallback:self];
-    [CryptoManager generateKeyPairUsingSSl];
+    [CryptoManager generateKeyPairUsingSSL];
     _uniqueId = [IdManager getUniqueId];
     _cert = [CryptoManager readCertFromFile];
     return self;

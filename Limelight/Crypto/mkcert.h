@@ -20,6 +20,5 @@ typedef struct CertKeyPair {
 
 struct CertKeyPair generateCertKeyPair(void);
 void freeCertKeyPair(CertKeyPair);
-void saveCertKeyPair(const char* certFile, const char* p12File, const char* keyPairFile, CertKeyPair certKeyPair);
 #endif
 

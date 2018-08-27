@@ -159,47 +159,53 @@ static NSData* p12 = nil;
     return signedData;
 }
 
-// TODO: these three methods are almost identical, fix the copy-pasta
++ (NSData*) readCryptoObject:(NSString*)item {
+#if TARGET_OS_TV
+    return [[NSUserDefaults standardUserDefaults] dataForKey:item];
+#else
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *file = [documentsDirectory stringByAppendingPathComponent:item];
+    return [NSData dataWithContentsOfFile:file];
+#endif
+}
+
++ (void) writeCryptoObject:(NSString*)item data:(NSData*)data {
+#if TARGET_OS_TV
+    [[NSUserDefaults standardUserDefaults] setObject:data forKey:item];
+#else
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSString *documentsDirectory = [paths objectAtIndex:0];
+    NSString *file = [documentsDirectory stringByAppendingPathComponent:item];
+    [data writeToFile:file atomically:NO];
+#endif
+}
+
 + (NSData*) readCertFromFile {
     if (cert == nil) {
-        NSArray *paths = [CryptoManager getPaths];
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
-        cert = [NSData dataWithContentsOfFile:certFile];
+        cert = [CryptoManager readCryptoObject:@"client.crt"];
     }
     return cert;
 }
 
 + (NSData*) readP12FromFile {
     if (p12 == nil) {
-        NSArray *paths = [CryptoManager getPaths];
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
-        p12 = [NSData dataWithContentsOfFile:p12File];
+        p12 = [CryptoManager readCryptoObject:@"client.p12"];
     }
     return p12;
 }
 
 + (NSData*) readKeyFromFile {
     if (key == nil) {
-        NSArray *paths = [CryptoManager getPaths];
-        NSString *documentsDirectory = [paths objectAtIndex:0];
-        NSString *keyFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
-        key = [NSData dataWithContentsOfFile:keyFile];
+        key = [CryptoManager readCryptoObject:@"client.key"];
     }
     return key;
 }
 
 + (bool) keyPairExists {
-    NSArray *paths = [CryptoManager getPaths];
-    NSString *documentsDirectory = [paths objectAtIndex:0];
-    NSString *keyFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
-    NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
-    NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
-    
-    bool keyFileExists = [[NSFileManager defaultManager] fileExistsAtPath:keyFile];
-    bool p12FileExists = [[NSFileManager defaultManager] fileExistsAtPath:p12File];
-    bool certFileExists = [[NSFileManager defaultManager] fileExistsAtPath:certFile];
+    bool keyFileExists = [CryptoManager readCryptoObject:@"client.key"] != nil;
+    bool p12FileExists = [CryptoManager readCryptoObject:@"client.p12"] != nil;
+    bool certFileExists = [CryptoManager readCryptoObject:@"client.crt"] != nil;
     
     return keyFileExists && p12FileExists && certFileExists;
 }
@@ -218,34 +224,62 @@ static NSData* p12 = nil;
     return [NSData dataWithBytes:x509->signature->data length:x509->signature->length];
 }
 
-+ (void) generateKeyPairUsingSSl {
++ (NSData*)getKeyFromCertKeyPair:(CertKeyPair*)certKeyPair {
+    BIO* bio = BIO_new(BIO_s_mem());
+    
+    PEM_write_bio_PrivateKey(bio, certKeyPair->pkey, NULL, NULL, 0, NULL, NULL);
+    
+    BUF_MEM* mem;
+    BIO_get_mem_ptr(bio, &mem);
+    NSData* data = [NSData dataWithBytes:mem->data length:mem->length];
+    BIO_free(bio);
+    return data;
+}
+
++ (NSData*)getP12FromCertKeyPair:(CertKeyPair*)certKeyPair {
+    BIO* bio = BIO_new(BIO_s_mem());
+    
+    i2d_PKCS12_bio(bio, certKeyPair->p12);
+    
+    BUF_MEM* mem;
+    BIO_get_mem_ptr(bio, &mem);
+    NSData* data = [NSData dataWithBytes:mem->data length:mem->length];
+    BIO_free(bio);
+    return data;
+}
+
++ (NSData*)getCertFromCertKeyPair:(CertKeyPair*)certKeyPair {
+    BIO* bio = BIO_new(BIO_s_mem());
+    
+    PEM_write_bio_X509(bio, certKeyPair->x509);
+    
+    BUF_MEM* mem;
+    BIO_get_mem_ptr(bio, &mem);
+    NSData* data = [NSData dataWithBytes:mem->data length:mem->length];
+    BIO_free(bio);
+    return data;
+}
+
++ (void) generateKeyPairUsingSSL {
     static dispatch_once_t pred;
     dispatch_once(&pred, ^{
         if (![CryptoManager keyPairExists]) {
-            
             Log(LOG_I, @"Generating Certificate... ");
             CertKeyPair certKeyPair = generateCertKeyPair();
             
-            NSArray* paths = [CryptoManager getPaths];
-            NSString* documentsDirectory = [paths objectAtIndex:0];
-            NSString* certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
-            NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
-            NSString* p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
+            NSData* certData = [CryptoManager getCertFromCertKeyPair:&certKeyPair];
+            NSData* p12Data = [CryptoManager getP12FromCertKeyPair:&certKeyPair];
+            NSData* keyData = [CryptoManager getKeyFromCertKeyPair:&certKeyPair];
             
-            //Log(LOG_D, @"Writing cert and key to: \n%@\n%@", certFile, keyPairFile);
-            saveCertKeyPair([certFile UTF8String], [p12File UTF8String], [keyPairFile UTF8String], certKeyPair);
             freeCertKeyPair(certKeyPair);
+            
+            [CryptoManager writeCryptoObject:@"client.crt" data:certData];
+            [CryptoManager writeCryptoObject:@"client.p12" data:p12Data];
+            [CryptoManager writeCryptoObject:@"client.key" data:keyData];
+            
             Log(LOG_I, @"Certificate created");
         }
     });
-}
-
-+ (NSArray*) getPaths {
-#if TARGET_OS_TV
-    return NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
-#else
-    return NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
-#endif
 }
 
 @end

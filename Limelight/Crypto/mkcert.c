@@ -62,21 +62,6 @@ void freeCertKeyPair(struct CertKeyPair certKeyPair) {
     PKCS12_free(certKeyPair.p12);
 }
 
-void saveCertKeyPair(const char* certFile, const char* p12File, const char* keyPairFile, CertKeyPair certKeyPair) {
-    FILE* certFilePtr = fopen(certFile, "w");
-    FILE* keyPairFilePtr = fopen(keyPairFile, "w");
-    FILE* p12FilePtr = fopen(p12File, "wb");
-    
-    //TODO: error check
-    PEM_write_PrivateKey(keyPairFilePtr, certKeyPair.pkey, NULL, NULL, 0, NULL, NULL);
-    PEM_write_X509(certFilePtr, certKeyPair.x509);
-    i2d_PKCS12_fp(p12FilePtr, certKeyPair.p12);
-    
-    fclose(p12FilePtr);
-    fclose(certFilePtr);
-    fclose(keyPairFilePtr);
-}
-
 int mkcert(X509 **x509p, EVP_PKEY **pkeyp, int bits, int serial, int years) {
     X509 *x;
     EVP_PKEY *pk;

@@ -704,7 +704,7 @@ static NSMutableSet* hostList;
     currentPosition = FrontViewPositionLeft;
     
     // Set up crypto
-    [CryptoManager generateKeyPairUsingSSl];
+    [CryptoManager generateKeyPairUsingSSL];
     _uniqueId = [IdManager getUniqueId];
     _cert = [CryptoManager readCertFromFile];
 
