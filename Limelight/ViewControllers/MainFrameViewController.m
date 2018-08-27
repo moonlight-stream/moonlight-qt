@@ -250,7 +250,7 @@ static NSMutableSet* hostList;
     [_appManager stopRetrieving];
     _selectedHost = nil;
 #if TARGET_OS_TV
-    self.title = @"";
+    self.title = @"Select Host";
 #else
     _computerNameButton.title = @"No Host Selected";
 #endif
@@ -692,6 +692,10 @@ static NSMutableSet* hostList;
     _menuRecognizer = [[UITapGestureRecognizer alloc] init];
     [_menuRecognizer addTarget:self action: @selector(showHostSelectionView)];
     _menuRecognizer.allowedPressTypes = [[NSArray alloc] initWithObjects:[NSNumber numberWithLong:UIPressTypeMenu], nil];
+    
+    self.navigationController.navigationBar.titleTextAttributes = [NSDictionary dictionaryWithObject:[UIColor whiteColor] forKey:NSForegroundColorAttributeName];
+    
+    self.title = @"Select Host";
 #endif
     
     _loadingFrame = [self.storyboard instantiateViewControllerWithIdentifier:@"loadingFrame"];
