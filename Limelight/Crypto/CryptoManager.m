@@ -162,7 +162,7 @@ static NSData* p12 = nil;
 // TODO: these three methods are almost identical, fix the copy-pasta
 + (NSData*) readCertFromFile {
     if (cert == nil) {
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSArray *paths = [CryptoManager getPaths];
         NSString *documentsDirectory = [paths objectAtIndex:0];
         NSString *certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
         cert = [NSData dataWithContentsOfFile:certFile];
@@ -172,7 +172,7 @@ static NSData* p12 = nil;
 
 + (NSData*) readP12FromFile {
     if (p12 == nil) {
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSArray *paths = [CryptoManager getPaths];
         NSString *documentsDirectory = [paths objectAtIndex:0];
         NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
         p12 = [NSData dataWithContentsOfFile:p12File];
@@ -182,7 +182,7 @@ static NSData* p12 = nil;
 
 + (NSData*) readKeyFromFile {
     if (key == nil) {
-        NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+        NSArray *paths = [CryptoManager getPaths];
         NSString *documentsDirectory = [paths objectAtIndex:0];
         NSString *keyFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
         key = [NSData dataWithContentsOfFile:keyFile];
@@ -191,7 +191,7 @@ static NSData* p12 = nil;
 }
 
 + (bool) keyPairExists {
-    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+    NSArray *paths = [CryptoManager getPaths];
     NSString *documentsDirectory = [paths objectAtIndex:0];
     NSString *keyFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
     NSString *p12File = [documentsDirectory stringByAppendingPathComponent:@"client.p12"];
@@ -226,7 +226,7 @@ static NSData* p12 = nil;
             Log(LOG_I, @"Generating Certificate... ");
             CertKeyPair certKeyPair = generateCertKeyPair();
             
-            NSArray* paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+            NSArray* paths = [CryptoManager getPaths];
             NSString* documentsDirectory = [paths objectAtIndex:0];
             NSString* certFile = [documentsDirectory stringByAppendingPathComponent:@"client.crt"];
             NSString* keyPairFile = [documentsDirectory stringByAppendingPathComponent:@"client.key"];
@@ -238,6 +238,14 @@ static NSData* p12 = nil;
             Log(LOG_I, @"Certificate created");
         }
     });
+}
+
++ (NSArray*) getPaths {
+#if TARGET_OS_TV
+    return NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+#else
+    return NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
+#endif
 }
 
 @end

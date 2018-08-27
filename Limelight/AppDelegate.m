@@ -142,7 +142,9 @@ static NSOperationQueue* mainQueue;
 }
 
 - (NSURL*) getStoreURL {
-#if TARGET_OS_IPHONE
+#if TARGET_OS_TV
+    return [[[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject] URLByAppendingPathComponent:@"Moonlight_tvOS.sqlite"];
+#elif TARGET_OS_IPHONE
     return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Limelight_iOS.sqlite"];
 #else
     return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"moonlight_mac.sqlite"];
