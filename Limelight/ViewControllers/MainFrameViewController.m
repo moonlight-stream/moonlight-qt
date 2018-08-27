@@ -263,9 +263,6 @@ static NSMutableSet* hostList;
     // on the main thread
     [self updateBoxArtCacheForApp:app];
     
-    DataManager* dataManager = [[DataManager alloc] init];
-    [dataManager updateIconForExistingApp: app];
-    
     dispatch_async(dispatch_get_main_queue(), ^{
         [self.collectionView reloadData];
     });
@@ -926,7 +923,13 @@ static NSMutableSet* hostList;
 + (UIImage*) loadBoxArtForCaching:(TemporaryApp*)app {
     UIImage* boxArt;
     
-    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)app.image, NULL);
+    NSData* imageData = [NSData dataWithContentsOfFile:[AppAssetManager boxArtPathForApp:app]];
+    if (imageData == nil) {
+        // No box art on disk
+        return nil;
+    }
+    
+    CGImageSourceRef source = CGImageSourceCreateWithData((__bridge CFDataRef)imageData, NULL);
     CGImageRef cgImage = CGImageSourceCreateImageAtIndex(source, 0, nil);
     
     size_t width = CGImageGetWidth(cgImage);
@@ -953,11 +956,12 @@ static NSMutableSet* hostList;
 }
 
 - (void) updateBoxArtCacheForApp:(TemporaryApp*)app {
-    if (app.image == nil) {
-        [_boxArtCache removeObjectForKey:app];
-    }
-    else if ([_boxArtCache objectForKey:app] == nil) {
-        [_boxArtCache setObject:[MainFrameViewController loadBoxArtForCaching:app] forKey:app];
+    if ([_boxArtCache objectForKey:app] == nil) {
+        UIImage* image = [MainFrameViewController loadBoxArtForCaching:app];
+        if (image != nil) {
+            // Add the image to our cache if it was present
+            [_boxArtCache setObject:image forKey:app];
+        }
     }
 }
 

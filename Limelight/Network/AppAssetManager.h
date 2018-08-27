@@ -21,5 +21,6 @@
 - (id) initWithCallback:(id<AppAssetCallback>)callback;
 - (void) retrieveAssetsFromHost:(TemporaryHost*)host;
 - (void) stopRetrieving;
++ (NSString*) boxArtPathForApp:(TemporaryApp*)app;
 
 @end

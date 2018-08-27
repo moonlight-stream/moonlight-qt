@@ -128,20 +128,6 @@
     }];
 }
 
-- (void) updateIconForExistingApp:(TemporaryApp*)app {
-    [_managedObjectContext performBlockAndWait:^{
-        App* parentApp = [self getAppForTemporaryApp:app withAppRecords:[self fetchRecords:@"App"]];
-        if (parentApp == nil) {
-            // The app must exist to be updated
-            return;
-        }
-        
-        parentApp.image = app.image;
-        
-        [self saveData];
-    }];
-}
-
 - (TemporarySettings*) getSettings {
     __block TemporarySettings *tempSettings;
     

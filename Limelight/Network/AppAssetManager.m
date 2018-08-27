@@ -19,6 +19,22 @@
 
 static const int MAX_REQUEST_COUNT = 4;
 
++ (NSString*) boxArtPathForApp:(TemporaryApp*)app {
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *filePath = [paths objectAtIndex:0];
+    
+    // Keep app assets separate by host UUID
+    filePath = [filePath stringByAppendingPathComponent:app.host.uuid];
+    
+    // Use the app ID as the file name
+    filePath = [filePath stringByAppendingPathComponent:app.id];
+    
+    // Add a png extension
+    filePath = [filePath stringByAppendingPathExtension:@"png"];
+    
+    return filePath;
+}
+
 - (id) initWithCallback:(id<AppAssetCallback>)callback {
     self = [super init];
     _callback = callback;
@@ -30,7 +46,7 @@ static const int MAX_REQUEST_COUNT = 4;
 
 - (void) retrieveAssetsFromHost:(TemporaryHost*)host {
     for (TemporaryApp* app in host.appList) {
-        if (app.image == nil) {
+        if (![[NSFileManager defaultManager] fileExistsAtPath:[AppAssetManager boxArtPathForApp:app]]) {
             AppAssetRetriever* retriever = [[AppAssetRetriever alloc] init];
             retriever.app = app;
             retriever.host = host;

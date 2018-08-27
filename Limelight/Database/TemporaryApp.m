@@ -14,7 +14,6 @@
     self = [self init];
     
     self.id = app.id;
-    self.image = app.image;
     self.name = app.name;
     self.hdrSupported = app.hdrSupported;
     self.host = tempHost;

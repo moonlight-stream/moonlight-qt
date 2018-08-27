@@ -7,6 +7,7 @@
 //
 
 #import "UIAppView.h"
+#import "AppAssetManager.h"
 
 @implementation UIAppView {
     TemporaryApp* _app;
@@ -74,19 +75,20 @@ static UIImage* noImage;
         [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
     }
     
-    // TODO: Improve no-app image detection
     BOOL noAppImage = false;
     
-    if (_app.image != nil) {
-        // Load the decoded image from the cache
-        UIImage* appImage = [_artCache objectForKey:_app];
-        if (appImage == nil) {
-            // Not cached; we have to decode this now
-            appImage = [UIImage imageWithData:_app.image];
+    // First check the memory cache
+    UIImage* appImage = [_artCache objectForKey:_app];
+    if (appImage == nil) {
+        // Next try to load from the on disk cache
+        appImage = [UIImage imageWithContentsOfFile:[AppAssetManager boxArtPathForApp:_app]];
+        if (appImage != nil) {
             [_artCache setObject:appImage forKey:_app];
         }
-        
+    }
+    if (appImage != nil) {
         // This size of image might be blank image received from GameStream.
+        // TODO: Improve no-app image detection
         if (!(appImage.size.width == 130.f && appImage.size.height == 180.f) && // GFE 2.0
             !(appImage.size.width == 628.f && appImage.size.height == 888.f)) { // GFE 3.0
             _appButton.frame = CGRectMake(0, 0, appImage.size.width / 2, appImage.size.height / 2);
