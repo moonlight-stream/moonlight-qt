@@ -144,6 +144,10 @@
                     _keyInputField.text = @"0";
                     [_keyInputField becomeFirstResponder];
                     [_keyInputField addTarget:self action:@selector(onKeyboardPressed:) forControlEvents:UIControlEventEditingChanged];
+                    
+                    // Undo causes issues for our state management, so turn it off
+                    [_keyInputField.undoManager disableUndoRegistration];
+                    
                     isInputingText = true;
                 }
             } else if ([[event allTouches] count]  == 2) {
@@ -209,28 +213,37 @@
             usleep(50 * 1000);
             LiSendKeyboardEvent(0x08, KEY_ACTION_UP, 0);
         } else {
-            struct KeyEvent event = [KeyboardSupport translateKeyEvent:[inputText characterAtIndex:1]];
-            if (event.keycode == 0) {
-                // If we don't know the code, don't send anything.
-                Log(LOG_W, @"Unknown key code: [%c]", [inputText characterAtIndex:1]);
-                return;
-            }
-            
-            // When we want to send a modified key (like uppercase letters) we need to send the
-            // modifier ("shift") seperately from the key itself.
-            if (event.modifier != 0) {
-                LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_DOWN, event.modifier);
+            // Character 0 will be our known sentinel value
+            for (int i = 1; i < [inputText length]; i++) {
+                struct KeyEvent event = [KeyboardSupport translateKeyEvent:[inputText characterAtIndex:i]];
+                if (event.keycode == 0) {
+                    // If we don't know the code, don't send anything.
+                    Log(LOG_W, @"Unknown key code: [%c]", [inputText characterAtIndex:i]);
+                    continue;
+                }
+                
+                // When we want to send a modified key (like uppercase letters) we need to send the
+                // modifier ("shift") seperately from the key itself.
+                if (event.modifier != 0) {
+                    LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_DOWN, event.modifier);
+                    usleep(50 * 1000);
+                }
+                LiSendKeyboardEvent(event.keycode, KEY_ACTION_DOWN, event.modifier);
                 usleep(50 * 1000);
-            }
-            LiSendKeyboardEvent(event.keycode, KEY_ACTION_DOWN, event.modifier);
-            usleep(50 * 1000);
-            LiSendKeyboardEvent(event.keycode, KEY_ACTION_UP, event.modifier);
-            if (event.modifier != 0) {
-                LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_UP, event.modifier);
+                LiSendKeyboardEvent(event.keycode, KEY_ACTION_UP, event.modifier);
+                if (event.modifier != 0) {
+                    LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_UP, event.modifier);
+                }
             }
         }
     });
+    
+    // Reset text field back to known state
     textField.text = @"0";
+    
+    // Move the insertion point back to the end of the text box
+    UITextRange *textRange = [textField textRangeFromPosition:textField.endOfDocument toPosition:textField.endOfDocument];
+    [textField setSelectedTextRange:textRange];
 }
 
 @end
