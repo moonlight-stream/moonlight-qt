@@ -748,7 +748,7 @@ static NSMutableSet* hostList;
 #endif
 }
 
--(void)beginForegroundRefresh
+-(void)beginForegroundRefresh:(bool)refreshAppList
 {
     if (!_background) {
         // This will kick off box art caching
@@ -757,7 +757,7 @@ static NSMutableSet* hostList;
         [_discMan startDiscovery];
         
         // This will refresh the applist when a paired host is selected
-        if (_selectedHost != nil && _selectedHost.pairState == PairStatePaired) {
+        if (refreshAppList && _selectedHost != nil && _selectedHost.pairState == PairStatePaired) {
             [self hostClicked:_selectedHost view:nil];
         }
     }
@@ -767,7 +767,7 @@ static NSMutableSet* hostList;
 {
     _background = NO;
     
-    [self beginForegroundRefresh];
+    [self beginForegroundRefresh: YES];
 }
 
 -(void)handleEnterBackground
@@ -823,9 +823,7 @@ static NSMutableSet* hostList;
     // loading frame which will cause an infinite loop by starting
     // another loading frame. To avoid this, just don't refresh
     // if we're coming back from a loading frame view.
-    if (![[self activeViewController] isKindOfClass:[LoadingFrameViewController class]]) {
-        [self beginForegroundRefresh];
-    }
+    [self beginForegroundRefresh: ![[self activeViewController] isKindOfClass:[LoadingFrameViewController class]]];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
