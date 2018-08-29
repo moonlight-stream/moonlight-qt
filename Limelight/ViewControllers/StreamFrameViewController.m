@@ -68,7 +68,7 @@
                                                object: nil];
 }
 
-- (void)viewDidDisappear:(BOOL)animated {
+- (void)willMoveToParentViewController:(UIViewController *)parent {
     [_controllerSupport cleanup];
     [UIApplication sharedApplication].idleTimerDisabled = NO;
     [_streamMan stopStream];
