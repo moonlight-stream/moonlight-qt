@@ -1026,7 +1026,9 @@ static NSMutableSet* hostList;
 - (void)didReceiveMemoryWarning
 {
     [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+    
+    // Purge the box art cache on low memory
+    [_boxArtCache removeAllObjects];
 }
 
 - (void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
