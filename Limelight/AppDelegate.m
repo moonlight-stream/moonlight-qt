@@ -16,6 +16,14 @@
 
 static NSOperationQueue* mainQueue;
 
+#if TARGET_OS_TV
+static NSString* DB_NAME = @"Moonlight_tvOS.bin";
+#elif TARGET_OS_IPHONE
+static NSString* DB_NAME = @"Limelight_iOS.sqlite";
+#else
+static NSString* DB_NAME = @"moonlight_mac.sqlite";
+#endif
+
 #if TARGET_OS_IPHONE
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
@@ -67,10 +75,18 @@ static NSOperationQueue* mainQueue;
     NSManagedObjectContext *managedObjectContext = [self managedObjectContext];
     if (managedObjectContext != nil) {
         [managedObjectContext performBlock:^{
+            if (![managedObjectContext hasChanges]) {
+                return;
+            }
             NSError *error = nil;
-            if ([managedObjectContext hasChanges] && ![managedObjectContext save:&error]) {
+            if (![managedObjectContext save:&error]) {
                 Log(LOG_E, @"Critical database error: %@, %@", error, [error userInfo]);
             }
+            
+#if TARGET_OS_TV
+            NSData* dbData = [NSData dataWithContentsOfURL:[[[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject] URLByAppendingPathComponent:DB_NAME]];
+            [[NSUserDefaults standardUserDefaults] setObject:dbData forKey:DB_NAME];
+#endif
         }];
     }
 }
@@ -112,19 +128,30 @@ static NSOperationQueue* mainQueue;
         return _persistentStoreCoordinator;
     }
     
-    NSURL *storeURL = [self getStoreURL];
-    
     NSError *error = nil;
     _persistentStoreCoordinator = [[NSPersistentStoreCoordinator alloc] initWithManagedObjectModel:[self managedObjectModel]];
     NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
                              [NSNumber numberWithBool:YES], NSMigratePersistentStoresAutomaticallyOption,
                              [NSNumber numberWithBool:YES], NSInferMappingModelAutomaticallyOption, nil];
-    if (![_persistentStoreCoordinator addPersistentStoreWithType:NSSQLiteStoreType configuration:nil URL:storeURL options:options error:&error]) {
+    NSString* storeType;
+    
+#if TARGET_OS_TV
+    // Use a binary store for tvOS since we will need exclusive access to the file
+    // to serialize into NSUserDefaults.
+    storeType = NSBinaryStoreType;
+#else
+    storeType = NSSQLiteStoreType;
+#endif
+    
+    // We must ensure the persistent store is ready to opened
+    [self preparePersistentStore];
+    
+    if (![_persistentStoreCoordinator addPersistentStoreWithType:storeType configuration:nil URL:[self getStoreURL] options:options error:&error]) {
         // Log the error
         Log(LOG_E, @"Critical database error: %@, %@", error, [error userInfo]);
         
         // Drop the database
-        [[NSFileManager defaultManager] removeItemAtURL:storeURL error:nil];
+        [self dropDatabase];
         
         // Try again
         return [self persistentStoreCoordinator];
@@ -141,13 +168,49 @@ static NSOperationQueue* mainQueue;
     return [[[NSFileManager defaultManager] URLsForDirectory:NSDocumentDirectory inDomains:NSUserDomainMask] lastObject];
 }
 
+- (void) dropDatabase
+{
+    // Delete the file on disk
+    [[NSFileManager defaultManager] removeItemAtURL:[self getStoreURL] error:nil];
+    
+#if TARGET_OS_TV
+    // Also delete the copy in the NSUserDefaults on tvOS
+    [[NSUserDefaults standardUserDefaults] removeObjectForKey:DB_NAME];
+#endif
+}
+
+- (void) preparePersistentStore
+{
+#if TARGET_OS_TV
+    // On tvOS, we may need to inflate the DB from NSUserDefaults
+    NSArray *paths = NSSearchPathForDirectoriesInDomains(NSCachesDirectory, NSUserDomainMask, YES);
+    NSString *cacheDirectory = [paths objectAtIndex:0];
+    NSString *dbPath = [cacheDirectory stringByAppendingPathComponent:DB_NAME];
+    
+    // Always prefer the on disk version
+    if (![[NSFileManager defaultManager] fileExistsAtPath:dbPath]) {
+        // If that is unavailable, inflate it from NSUserDefaults
+        NSData* data = [[NSUserDefaults standardUserDefaults] dataForKey:DB_NAME];
+        if (data != nil) {
+            Log(LOG_I, @"Inflating database from NSUserDefaults");
+            [data writeToFile:dbPath atomically:YES];
+        }
+        else {
+            Log(LOG_I, @"No database on disk or in NSUserDefaults");
+        }
+    }
+    else {
+        Log(LOG_I, @"Using cached database");
+    }
+#endif
+}
+
 - (NSURL*) getStoreURL {
 #if TARGET_OS_TV
-    return [[[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject] URLByAppendingPathComponent:@"Moonlight_tvOS.sqlite"];
-#elif TARGET_OS_IPHONE
-    return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"Limelight_iOS.sqlite"];
+    // We use the cache folder to store our database on tvOS
+    return [[[[NSFileManager defaultManager] URLsForDirectory:NSCachesDirectory inDomains:NSUserDomainMask] lastObject] URLByAppendingPathComponent:DB_NAME];
 #else
-    return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:@"moonlight_mac.sqlite"];
+    return [[self applicationDocumentsDirectory] URLByAppendingPathComponent:DB_NAME];
 #endif
 }
 
