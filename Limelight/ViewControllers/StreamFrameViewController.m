@@ -187,9 +187,7 @@
                                                                        message:[NSString stringWithFormat:@"%s failed with error %ld",
                                                                                 stageName, errorCode]
                                                                 preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-        }]];
+        [Utils addHelpOptionToDialog:alert];
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             [self returnToMainFrame];
         }]];
@@ -209,9 +207,7 @@
         UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Connection Failed"
                                                                        message:message
                                                                 preferredStyle:UIAlertControllerStyleAlert];
-        [alert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-            [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-        }]];
+        [Utils addHelpOptionToDialog:alert];
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             [self returnToMainFrame];
         }]];

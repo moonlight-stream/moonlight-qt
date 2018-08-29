@@ -20,6 +20,7 @@ FOUNDATION_EXPORT NSString *const deviceName;
 + (NSString*) bytesToHex:(NSData*)data;
 + (NSData*) hexToBytes:(NSString*) hex;
 + (int) resolveHost:(NSString*)host;
++ (void) addHelpOptionToDialog:(UIAlertController*)dialog;
 
 @end
 

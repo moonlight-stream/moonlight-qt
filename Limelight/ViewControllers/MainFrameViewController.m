@@ -74,9 +74,7 @@ static NSMutableSet* hostList;
     UIAlertController* failedDialog = [UIAlertController alertControllerWithTitle:@"Pairing Failed"
                                                                           message:message
                                                                    preferredStyle:UIAlertControllerStyleAlert];
-    [failedDialog addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-    }]];
+    [Utils addHelpOptionToDialog:failedDialog];
     [failedDialog addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
     
     [self hideLoadingFrame: ^{
@@ -154,9 +152,7 @@ static NSMutableSet* hostList;
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching App List Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
-                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-                }]];
+                [Utils addHelpOptionToDialog:applistAlert];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                 [self hideLoadingFrame: ^{
                     [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
@@ -272,9 +268,7 @@ static NSMutableSet* hostList;
     UIAlertController* alert = [UIAlertController alertControllerWithTitle:@"Network Error"
                                                                    message:@"Failed to resolve host."
                                                             preferredStyle:UIAlertControllerStyleAlert];
-    [alert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-    }]];
+    [Utils addHelpOptionToDialog:alert];
     [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
     [[self activeViewController] presentViewController:alert animated:YES completion:nil];
 }
@@ -329,9 +323,7 @@ static NSMutableSet* hostList;
                 UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching Server Info Failed"
                                                                                       message:@"The connection to the PC was interrupted."
                                                                                preferredStyle:UIAlertControllerStyleAlert];
-                [applistAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-                    [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-                }]];
+                [Utils addHelpOptionToDialog:applistAlert];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                 
                 if (view != nil) {
@@ -401,9 +393,11 @@ static NSMutableSet* hostList;
             [[self activeViewController] presentViewController:wolAlert animated:YES completion:nil];
         }]];
         
+#if !TARGET_OS_TV
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Connection Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
         }]];
+#endif
     }
     [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Remove Host" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action) {
         [self->_discMan removeHostFromDiscovery:host];
@@ -444,9 +438,7 @@ static NSMutableSet* hostList;
                     });
                 } else {
                     UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
-                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"Help" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-                        [[UIApplication sharedApplication] openURL:[NSURL URLWithString:@"https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"]];
-                    }]];
+                    [Utils addHelpOptionToDialog:hostNotFoundAlert];
                     [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                     dispatch_async(dispatch_get_main_queue(), ^{
                         [[self activeViewController] presentViewController:hostNotFoundAlert animated:YES completion:nil];
