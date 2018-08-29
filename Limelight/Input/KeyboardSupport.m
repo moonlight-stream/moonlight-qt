@@ -11,12 +11,27 @@
 
 @implementation KeyboardSupport
 
-+ (struct KeyEvent)translateKeyEvent:(unichar)inputChar {
++ (struct KeyEvent)translateKeyEvent:(unichar)inputChar withModifierFlags:(UIKeyModifierFlags)modifierFlags {
     struct KeyEvent event;
     event.keycode = 0;
     event.modifier = 0;
     event.modifierKeycode = 0;
     
+    switch (modifierFlags) {
+        case UIKeyModifierAlphaShift:
+        case UIKeyModifierShift:
+            [KeyboardSupport addShiftModifier:&event];
+            break;
+        case UIKeyModifierControl:
+            [KeyboardSupport addControlModifier:&event];
+            break;
+        case UIKeyModifierAlternate:
+            [KeyboardSupport addAltModifier:&event];
+            break;
+        case UIKeyModifierCommand:
+        case UIKeyModifierNumericPad:
+            break;
+    }
     if (inputChar >= 0x30 && inputChar <= 0x39) {
         // Numbers 0-9
         event.keycode = inputChar;
@@ -161,6 +176,16 @@
 + (void) addShiftModifier:(struct KeyEvent*)event {
     event->modifier = MODIFIER_SHIFT;
     event->modifierKeycode = 0x10;
+}
+
++ (void) addControlModifier:(struct KeyEvent*)event {
+    event->modifier = MODIFIER_CTRL;
+    event->modifierKeycode = 0x11;
+}
+
++ (void) addAltModifier:(struct KeyEvent*)event {
+    event->modifier = MODIFIER_ALT;
+    event->modifierKeycode = 0x12;
 }
 
 @end
