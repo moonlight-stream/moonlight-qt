@@ -49,7 +49,7 @@ GridView {
         pairDialog.close()
 
         // Display a failed dialog if we got an error
-        if (error !== null) {
+        if (error !== undefined) {
             errorDialog.text = error
             errorDialog.open()
         }
