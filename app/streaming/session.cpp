@@ -108,13 +108,15 @@ void Session::clLogMessage(const char* format, ...)
     va_end(ap);
 }
 
+#define CALL_INITIALIZE(dec) (dec)->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync)
+
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
                             int frameRate, bool enableVsync, IVideoDecoder*& chosenDecoder)
 {
 #ifdef HAVE_SLVIDEO
     chosenDecoder = new SLVideoDecoder();
-    if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate)) {
+    if (CALL_INITIALIZE(chosenDecoder)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SLVideo video decoder chosen");
         return true;
@@ -129,7 +131,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 
 #ifdef HAVE_FFMPEG
     chosenDecoder = new FFmpegVideoDecoder();
-    if (chosenDecoder->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync)) {
+    if (CALL_INITIALIZE(chosenDecoder)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "FFmpeg-based video decoder chosen");
         return true;
