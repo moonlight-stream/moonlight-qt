@@ -80,6 +80,12 @@ private:
 class NvHTTP
 {
 public:
+    enum NvLogLevel {
+        NONE,
+        ERROR,
+        VERBOSE
+    };
+
     explicit NvHTTP(QString address);
 
     static
@@ -87,7 +93,7 @@ public:
     getCurrentGame(QString serverInfo);
 
     QString
-    getServerInfo();
+    getServerInfo(NvLogLevel logLevel);
 
     static
     void
@@ -108,7 +114,7 @@ public:
                            QString command,
                            QString arguments,
                            bool enableTimeout,
-                           bool suppressLogging = false);
+                           NvLogLevel logLevel = NvLogLevel::VERBOSE);
 
     static
     QVector<int>
@@ -145,7 +151,7 @@ private:
                    QString command,
                    QString arguments,
                    bool enableTimeout,
-                   bool suppressLogging = false);
+                   NvLogLevel logLevel);
 
     QString m_Address;
     QNetworkAccessManager m_Nam;

@@ -58,7 +58,7 @@ NvHTTP::getCurrentGame(QString serverInfo)
 }
 
 QString
-NvHTTP::getServerInfo()
+NvHTTP::getServerInfo(NvLogLevel logLevel)
 {
     QString serverInfo;
 
@@ -70,7 +70,7 @@ NvHTTP::getServerInfo()
                                             "serverinfo",
                                             nullptr,
                                             true,
-                                            true);
+                                            logLevel);
         // Throws if the request failed
         verifyResponseStatus(serverInfo);
     }
@@ -83,7 +83,7 @@ NvHTTP::getServerInfo()
                                                 "serverinfo",
                                                 nullptr,
                                                 true,
-                                                true);
+                                                logLevel);
             verifyResponseStatus(serverInfo);
         }
         else
@@ -189,7 +189,7 @@ NvHTTP::quitApp()
 
     // Newer GFE versions will just return success even if quitting fails
     // if we're not the original requestor.
-    if (getCurrentGame(getServerInfo()) != 0) {
+    if (getCurrentGame(getServerInfo(NvHTTP::ERROR)) != 0) {
         // Generate a synthetic GfeResponseException letting the caller know
         // that they can't kill someone else's stream.
         throw GfeHttpResponseException(599, "");
@@ -230,7 +230,7 @@ NvHTTP::getAppList()
                                             "applist",
                                             nullptr,
                                             true,
-                                            true);
+                                            NvLogLevel::ERROR);
     verifyResponseStatus(appxml);
 
     QXmlStreamReader xmlReader(appxml);
@@ -297,7 +297,8 @@ NvHTTP::getBoxArt(int appId)
                                           "appasset",
                                           "appid="+QString::number(appId)+
                                           "&AssetType=2&AssetIdx=0",
-                                          true);
+                                          true,
+                                          NvLogLevel::VERBOSE);
     QImage image = QImageReader(reply).read();
     delete reply;
 
@@ -344,9 +345,9 @@ NvHTTP::openConnectionToString(QUrl baseUrl,
                                QString command,
                                QString arguments,
                                bool enableTimeout,
-                               bool suppressLogging)
+                               NvLogLevel logLevel)
 {
-    QNetworkReply* reply = openConnection(baseUrl, command, arguments, enableTimeout, suppressLogging);
+    QNetworkReply* reply = openConnection(baseUrl, command, arguments, enableTimeout, logLevel);
     QString ret;
 
     QTextStream stream(reply);
@@ -362,7 +363,7 @@ NvHTTP::openConnection(QUrl baseUrl,
                        QString command,
                        QString arguments,
                        bool enableTimeout,
-                       bool suppressLogging)
+                       NvLogLevel logLevel)
 {
     // Build a URL for the request
     QUrl url(baseUrl);
@@ -388,7 +389,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     {
         QTimer::singleShot(REQUEST_TIMEOUT_MS, &loop, SLOT(quit()));
     }
-    if (!suppressLogging) {
+    if (logLevel >= NvLogLevel::VERBOSE) {
         qInfo() << "Executing request:" << url.toString();
     }
     loop.exec(QEventLoop::ExcludeUserInputEvents);
@@ -396,7 +397,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Abort the request if it timed out
     if (!reply->isFinished())
     {
-        if (!suppressLogging) {
+        if (logLevel >= NvLogLevel::ERROR) {
             qWarning() << "Aborting timed out request for" << url.toString();
         }
         reply->abort();
@@ -409,7 +410,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Handle error
     if (reply->error() != QNetworkReply::NoError)
     {
-        if (!suppressLogging) {
+        if (logLevel >= NvLogLevel::ERROR) {
             qWarning() << command << " request failed with error " << reply->error();
         }
         GfeHttpResponseException exception(reply->error(), reply->errorString());

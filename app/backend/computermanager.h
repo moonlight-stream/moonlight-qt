@@ -103,7 +103,7 @@ private:
 
         QString serverInfo;
         try {
-            serverInfo = http.getServerInfo();
+            serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::NONE);
         } catch (...) {
             return false;
         }
@@ -154,6 +154,7 @@ private:
         while (!isInterruptionRequested()) {
             bool stateChanged = false;
             bool online = false;
+            bool wasOnline = m_Computer->state == NvComputer::CS_ONLINE;
             for (int i = 0; i < TRIES_BEFORE_OFFLINING && !online; i++) {
                 for (auto& address : m_Computer->uniqueAddresses()) {
                     if (isInterruptionRequested()) {
@@ -161,6 +162,9 @@ private:
                     }
 
                     if (tryPollComputer(address, stateChanged)) {
+                        if (!wasOnline) {
+                            qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress;
+                        }
                         online = true;
                         break;
                     }
@@ -171,6 +175,7 @@ private:
             // Note: we don't need to acquire the read lock here,
             // because we're on the writing thread.
             if (!online && m_Computer->state != NvComputer::CS_OFFLINE) {
+                qInfo() << m_Computer->name << "is now offline";
                 m_Computer->state = NvComputer::CS_OFFLINE;
                 stateChanged = true;
             }
@@ -411,9 +416,11 @@ private:
     {
         NvHTTP http(m_Address);
 
+        qInfo() << "Processing new PC at" << m_Address << "from" << (m_Mdns ? "mDNS" : "user");
+
         QString serverInfo;
         try {
-            serverInfo = http.getServerInfo();
+            serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::VERBOSE);
         } catch (...) {
             if (!m_Mdns) {
                 emit computerAddCompleted(false);
@@ -449,6 +456,7 @@ private:
 
             // Tell our client if something changed
             if (changed) {
+                qInfo() << existingComputer->name << "is now at" << existingComputer->activeAddress;
                 emit computerStateChanged(existingComputer);
             }
         }
