@@ -61,6 +61,8 @@ ApplicationWindow {
 
     header: ToolBar {
         id: toolBar
+        anchors.topMargin: 5
+        anchors.bottomMargin: 5
 
         RowLayout {
             spacing: 20
@@ -70,7 +72,18 @@ ApplicationWindow {
                 // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1
 
-                icon.source: "qrc:/res/arrow_left.svg"
+                // FIXME: We're using an Image here rather than icon.source because
+                // icons don't work on Qt 5.9 LTS.
+                Image {
+                    source: "qrc:/res/arrow_left.svg"
+                    anchors.centerIn: parent
+                    sourceSize {
+                        // The icon should be square so use the height as the width too
+                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                    }
+                }
+
                 onClicked: stackView.pop()
 
                 Menu {
@@ -94,8 +107,15 @@ ApplicationWindow {
                 property string browserUrl: ""
 
                 id: updateButton
-                icon.source: "qrc:/res/update.svg"
-                icon.color: "#0BF200"
+
+                Image {
+                    source: "qrc:/res/update.svg"
+                    anchors.centerIn: parent
+                    sourceSize {
+                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                    }
+                }
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -127,7 +147,14 @@ ApplicationWindow {
             }
 
             ToolButton {
-                icon.source: "qrc:/res/question_mark.svg"
+                Image {
+                    source: "qrc:/res/question_mark.svg"
+                    anchors.centerIn: parent
+                    sourceSize {
+                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                    }
+                }
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -152,7 +179,15 @@ ApplicationWindow {
                 ToolTip.visible: hovered
                 ToolTip.text: "Gamepad Mapper"
 
-                icon.source: "qrc:/res/ic_videogame_asset_white_48px.svg"
+                Image {
+                    source: "qrc:/res/ic_videogame_asset_white_48px.svg"
+                    anchors.centerIn: parent
+                    sourceSize {
+                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                    }
+                }
+
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
 
                 Menu {
@@ -162,7 +197,15 @@ ApplicationWindow {
             }
 
             ToolButton {
-                icon.source: "qrc:/res/settings.svg"
+                Image {
+                    source: "qrc:/res/settings.svg"
+                    anchors.centerIn: parent
+                    sourceSize {
+                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                    }
+                }
+
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
 
                 ToolTip.delay: 1000
