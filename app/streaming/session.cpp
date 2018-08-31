@@ -275,7 +275,8 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_Window(nullptr),
       m_VideoDecoder(nullptr),
       m_DecoderLock(0),
-      m_NeedsIdr(false)
+      m_NeedsIdr(false),
+      m_AudioDisabled(false)
 {
     qDebug() << "Server GPU:" << m_Computer->gpuModel;
 
@@ -470,6 +471,12 @@ bool Session::validateLaunch()
             m_StreamConfig.width = 1920;
             m_StreamConfig.height = 1080;
         }
+    }
+
+    // Test that audio hardware is functional
+    m_AudioDisabled = !testAudio(m_StreamConfig.audioConfiguration);
+    if (m_AudioDisabled) {
+        emitLaunchWarning("Failed to open audio device. Audio will be unavailable during this session.");
     }
 
     if (m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
@@ -688,7 +695,8 @@ void Session::exec()
     }
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
-                                &m_VideoCallbacks, &k_AudioCallbacks,
+                                &m_VideoCallbacks,
+                                m_AudioDisabled ? nullptr : &k_AudioCallbacks,
                                 NULL, 0, NULL, 0);
     if (err != 0) {
         // We already displayed an error dialog in the stage failure

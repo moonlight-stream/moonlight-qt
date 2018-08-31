@@ -70,6 +70,60 @@ Exit:
     return ret;
 }
 
+bool Session::testAudio(int audioConfiguration)
+{
+    SDL_AudioSpec want, have;
+    SDL_AudioDeviceID dev;
+    bool ret;
+
+    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Audio test - SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
+    SDL_zero(want);
+    want.freq = 48000;
+    want.format = AUDIO_S16;
+    want.samples = SAMPLES_PER_FRAME;
+
+    switch (audioConfiguration) {
+    case AUDIO_CONFIGURATION_STEREO:
+        want.channels = 2;
+        break;
+    case AUDIO_CONFIGURATION_51_SURROUND:
+        want.channels = 6;
+        break;
+    default:
+        SDL_assert(false);
+        ret = false;
+        goto Exit;
+    }
+
+    // Test audio device for functionality
+    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
+    if (dev == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Audio test - Failed to open audio device: %s",
+                     SDL_GetError());
+        ret = false;
+        goto Exit;
+    }
+
+    SDL_CloseAudioDevice(dev);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio test - Successful with %d channels",
+                want.channels);
+
+    ret = true;
+
+Exit:
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+    return ret;
+}
+
 int Session::sdlAudioInit(int /* audioConfiguration */,
                           POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                           void* /* arContext */, int /* arFlags */)
@@ -82,7 +136,7 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
                      SDL_GetError());
-        return AUDIO_CONFIGURATION_STEREO;
+        return -1;
     }
 
     SDL_zero(want);

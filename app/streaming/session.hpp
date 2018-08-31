@@ -49,6 +49,8 @@ private:
 
     int sdlDetermineAudioConfiguration();
 
+    bool testAudio(int audioConfiguration);
+
     void getWindowDimensions(bool fullScreen,
                              int& x, int& y,
                              int& width, int& height);
@@ -107,6 +109,7 @@ private:
     IVideoDecoder* m_VideoDecoder;
     SDL_SpinLock m_DecoderLock;
     bool m_NeedsIdr;
+    bool m_AudioDisabled;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;
