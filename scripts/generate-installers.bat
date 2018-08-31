@@ -31,7 +31,6 @@ if /I "%ARCH%" NEQ "x86" (
 )
 
 set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community
-set VCREDIST_PATH=%VS_PATH%\VC\Redist\MSVC\14.14.26405
 set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 1B3C676E831A94EC0327C3347EB32C68C26B3A67 /v
 
 call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
@@ -99,7 +98,7 @@ if "%SIGN%"=="1" (
 )
 
 echo Building bundle
-set VCREDIST_INSTALLER=%VCREDIST_PATH%\vcredist_%ARCH%.exe
+set VCREDIST_INSTALLER=%VCToolsRedistDir%vcredist_%ARCH%.exe
 rem Bundles are always x86 binaries
 msbuild %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86
 if !ERRORLEVEL! NEQ 0 goto Error
@@ -119,7 +118,7 @@ if "%SIGN%"=="1" (
 echo Building portable package
 rem This must be done after WiX harvesting and signing, since the VCRT dlls are MS signed
 rem and should not be harvested for inclusion in the full installer
-copy "%VCREDIST_PATH%\%ARCH%\Microsoft.VC141.CRT\*.dll" %DEPLOY_FOLDER%
+copy "%VCToolsRedistDir%%ARCH%\Microsoft.VC141.CRT\*.dll" %DEPLOY_FOLDER%
 rem This file tells Moonlight that it's a portable installation
 echo. > %DEPLOY_FOLDER%\portable.dat
 if !ERRORLEVEL! NEQ 0 goto Error
