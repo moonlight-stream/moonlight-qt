@@ -849,6 +849,12 @@ void Session::exec()
         }
 
         case SDL_WINDOWEVENT:
+            // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
+            // This lets user to interact with our window's title bar and with the buttons in it.
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+                SDL_SetRelativeMouseMode(SDL_FALSE);
+            }
+
             // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
             // We use SDL_WINDOWEVENT_SIZE_CHANGED rather than SDL_WINDOWEVENT_RESIZED because the latter doesn't
             // seem to fire when switching from windowed to full-screen on X11.
