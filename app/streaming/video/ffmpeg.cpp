@@ -135,6 +135,10 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
     // Always request low delay decoding
     m_VideoDecoderCtx->flags |= AV_CODEC_FLAG_LOW_DELAY;
 
+    // Allow display of corrupt frames and frames missing references
+    m_VideoDecoderCtx->flags |= AV_CODEC_FLAG_OUTPUT_CORRUPT;
+    m_VideoDecoderCtx->flags2 |= AV_CODEC_FLAG2_SHOW_ALL;
+
     // Enable slice multi-threading for software decoding
     if (!m_HwDecodeCfg) {
         m_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
