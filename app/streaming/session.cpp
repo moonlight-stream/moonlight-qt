@@ -85,6 +85,8 @@ void Session::clStageFailed(int stage, long errorCode)
 
 void Session::clConnectionTerminated(long errorCode)
 {
+    emit s_ActiveSession->displayLaunchError("Connection terminated");
+
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                  "Connection terminated: %ld",
                  errorCode);
