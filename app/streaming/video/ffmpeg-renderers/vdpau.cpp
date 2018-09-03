@@ -217,6 +217,9 @@ bool VDPAURenderer::prepareDecoderContext(AVCodecContext* context)
     // https://github.com/FFmpeg/FFmpeg/commit/64ecb78b7179cab2dbdf835463104679dbb7c895
     context->hwaccel_flags |= AV_HWACCEL_FLAG_ALLOW_PROFILE_MISMATCH;
 
+    // This flag is recommended due to hardware underreporting supported levels
+    context->hwaccel_flags |= AV_HWACCEL_FLAG_IGNORE_LEVEL;
+
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using VDPAU accelerated renderer");
 
