@@ -51,13 +51,32 @@
       <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]Moonlight Game Streaming" />
     <?endif ?>
 
+    <!-- Define "Add desktop shortcut" -checkbox's state by defining a variable
+         which has same name as the checkbox has. Value 1 means that checkbox
+         is checked, 0 means that is unchecked-->
+    <!-- Set checkbox's state as checked by default -->
+    <Variable Name="AddDesktopShortcutCheckbox" Type="numeric" Value="1" />
+    <!-- Get checkbox's state from registry if present. The registry value
+         "DesktopShortcutInstallState" is set in Product.wxs. -->
+    <util:RegistrySearch Variable="HasDesktopShortcutInstallStateRegKey"
+                         Root="HKCU"
+                         Key="Software\Moonlight Game Streaming Project"
+                         Value="DesktopShortcutInstallState"
+                         Result="exists" />
+    <util:RegistrySearch Variable="AddDesktopShortcutCheckbox"
+                         Root="HKCU"
+                         Key="Software\Moonlight Game Streaming Project"
+                         Value="DesktopShortcutInstallState"
+                         Condition="HasDesktopShortcutInstallStateRegKey" />
+
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication
         ShowVersion="yes"
         LicenseFile="license.rtf"
         LogoFile="..\..\app\moonlight_wix.png"
         ShowFilesInUse="yes"
-        LaunchTarget="[InstallFolder]\Moonlight.exe" />
+        LaunchTarget="[InstallFolder]\Moonlight.exe"
+        ThemeFile="RtfTheme.xml" />
     </BootstrapperApplicationRef>
 
     <Chain>
@@ -75,6 +94,7 @@
       <MsiPackage Id="Moonlight" SourceFile="$(var.Moonlight.TargetPath)" Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
+        <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
       </MsiPackage>
     </Chain>
 

@@ -60,16 +60,38 @@
                 Target="[#MoonlightExe]"
                 Directory="ApplicationProgramsFolder"
                 WorkingDirectory="INSTALLFOLDER" />
+      <RemoveFolder Id="CleanupStartMenuShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
+      <util:RemoveFolderEx Id="CleanupAppDataFolder" On="uninstall" Property="APPDATAFOLDER" />
+      <RegistryValue Root="HKCU" Key="Software\Moonlight Game Streaming Project" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+    </Component>
+
+    <Component Id="MoonlightDesktopShortcut" Guid="*" Directory="INSTALLFOLDER">
       <Shortcut Id="DesktopShortcut"
                 Name="$(var.ShortcutName)"
                 Description="$(var.ShortcutDesc)"
                 Target="[#MoonlightExe]"
                 Directory="DesktopFolder"
                 WorkingDirectory="INSTALLFOLDER" />
-      <RemoveFolder Id="CleanupStartMenuShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
       <RemoveFolder Id="CleanupDesktopShortcut" Directory="DesktopFolder" On="uninstall" />
-      <util:RemoveFolderEx Id="CleanupAppDataFolder" On="uninstall" Property="APPDATAFOLDER" />
-      <RegistryValue Root="HKCU" Key="Software\Moonlight Game Streaming Project" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKCU"
+                     Key="Software\Moonlight Game Streaming Project"
+                     Name="DesktopShortcutInstalled"
+                     Type="integer"
+                     Value="1"
+                     KeyPath="yes" />
+      <Condition>ADDDESKTOPSHORTCUT=1</Condition>
+    </Component>
+
+    <!-- Persist desktop shortcut's installed state to let Bundle.wxs know if
+         the desktop shortcut should installed by default when upgrading the
+         product -->
+    <Component Id="MoonlightDesktopShortcutState" Guid="*" Directory="INSTALLFOLDER">
+      <RegistryValue Root="HKCU"
+                     Key="Software\Moonlight Game Streaming Project"
+                     Name="DesktopShortcutInstallState"
+                     Type="integer"
+                     Value="[ADDDESKTOPSHORTCUT]"
+                     KeyPath="yes" />
     </Component>
 
     <DirectoryRef Id="INSTALLFOLDER">
@@ -85,6 +107,8 @@
     <Feature Id="ProductFeature" Title="Moonlight" Level="1" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentRef Id="Moonlight" />
       <ComponentRef Id="MoonlightShortcuts" />
+      <ComponentRef Id="MoonlightDesktopShortcutState" />
+      <ComponentRef Id="MoonlightDesktopShortcut" />
       <ComponentGroupRef Id="MoonlightDependencies" />
     </Feature>
   </Product>
