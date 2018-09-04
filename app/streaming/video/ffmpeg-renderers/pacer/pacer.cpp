@@ -143,7 +143,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enableVsync)
                     m_DisplayFps, m_MaxVideoFps);
 
     #if defined(Q_OS_DARWIN)
-        m_VsyncSource = new DisplayLinkVsyncSource(this);
+        m_VsyncSource = DisplayLinkVsyncSourceFactory::createVsyncSource(this);
     #elif defined(Q_OS_WIN32)
         m_VsyncSource = new DxVsyncSource(this);
     #else

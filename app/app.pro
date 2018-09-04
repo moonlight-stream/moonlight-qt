@@ -177,7 +177,7 @@ macx {
 
     SOURCES += \
         streaming/video/ffmpeg-renderers/vt.mm \
-        streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.cpp
+        streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.mm
 
     HEADERS += \
         streaming/video/ffmpeg-renderers/vt.h \
