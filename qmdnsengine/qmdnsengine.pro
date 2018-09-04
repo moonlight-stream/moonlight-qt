@@ -7,6 +7,9 @@ TEMPLATE = lib
 # Support debug and release builds from command line for CI
 CONFIG += debug_and_release
 
+# Ensure symbols are always generated
+CONFIG += force_debug_info
+
 QMDNSE_DIR = $$PWD/qmdnsengine/src
 DEFINES += \
     QT_NO_SIGNALS_SLOTS_KEYWORDS
