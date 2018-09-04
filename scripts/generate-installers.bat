@@ -16,6 +16,7 @@ if /I "%BUILD_CONFIG%"=="debug" (
         if /I "%BUILD_CONFIG%"=="signed-release" (
             set BUILD_CONFIG=release
             set SIGN=1
+            set MUST_DEPLOY_SYMBOLS=1
         ) else (
             echo Invalid build configuration
             exit /b 1
@@ -41,15 +42,18 @@ set SOURCE_ROOT=%cd%
 set BUILD_FOLDER=%BUILD_ROOT%\build-%ARCH%-%BUILD_CONFIG%
 set DEPLOY_FOLDER=%BUILD_ROOT%\deploy-%ARCH%-%BUILD_CONFIG%
 set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%ARCH%-%BUILD_CONFIG%
+set SYMBOLS_FOLDER=%BUILD_ROOT%\symbols-%ARCH%-%BUILD_CONFIG%
 
 echo Cleaning output directories
 rmdir /s /q %DEPLOY_FOLDER%
 rmdir /s /q %BUILD_FOLDER%
 rmdir /s /q %INSTALLER_FOLDER%
+rmdir /s /q %SYMBOLS_FOLDER%
 mkdir %BUILD_ROOT%
 mkdir %DEPLOY_FOLDER%
 mkdir %BUILD_FOLDER%
 mkdir %INSTALLER_FOLDER%
+mkdir %SYMBOLS_FOLDER%
 
 echo Configuring the project
 pushd %BUILD_FOLDER%
@@ -62,6 +66,25 @@ pushd %BUILD_FOLDER%
 nmake %BUILD_CONFIG%
 if !ERRORLEVEL! NEQ 0 goto Error
 popd
+
+echo Saving PDBs
+for /r "%BUILD_FOLDER%" %%f in (*.pdb) do (
+    copy "%%f" "%SYMBOLS_FOLDER%\"
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
+7z a %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols.zip %SYMBOLS_FOLDER%\*.pdb
+if !ERRORLEVEL! NEQ 0 goto Error
+
+if "%ML_SYMBOL_STORE%" NEQ "" (
+    echo Publishing PDBs to symbol store: %ML_SYMBOL_STORE%
+    symstore add /f %SYMBOLS_FOLDER%\*.pdb /s %ML_SYMBOL_STORE% /t Moonlight
+    if !ERRORLEVEL! NEQ 0 goto Error
+) else (
+    if "%MUST_DEPLOY_SYMBOLS%"=="1" (
+        echo "A symbol server must be specified in ML_SYMBOL_STORE for signed release builds"
+        exit /b 1
+    )
+)
 
 echo Copying DLL dependencies
 copy %SOURCE_ROOT%\libs\windows\lib\%ARCH%\*.dll %DEPLOY_FOLDER%
@@ -131,6 +154,7 @@ if /i "%APPVEYOR%"=="true" (
     if !ERRORLEVEL! NEQ 0 goto Error
     appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightPortable.zip -FileName MoonlightPortable-%ARCH%-%BUILD_CONFIG%.zip
     if !ERRORLEVEL! NEQ 0 goto Error
+    appveyor PushArtifact %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols.zip -FileName %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols-%ARCH%-%BUILD_CONFIG%.zip
 )
 
 echo Build successful!
