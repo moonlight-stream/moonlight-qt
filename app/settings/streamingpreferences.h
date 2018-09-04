@@ -50,11 +50,18 @@ public:
     };
     Q_ENUM(VideoDecoderSelection)
 
+    enum WindowMode
+    {
+        WM_FULLSCREEN,
+        WM_FULLSCREEN_DESKTOP,
+        WM_WINDOWED
+    };
+    Q_ENUM(WindowMode);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
     Q_PROPERTY(int bitrateKbps MEMBER bitrateKbps NOTIFY bitrateChanged)
-    Q_PROPERTY(bool fullScreen MEMBER fullScreen NOTIFY fullScreenChanged)
     Q_PROPERTY(bool enableVsync MEMBER enableVsync NOTIFY enableVsyncChanged)
     Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
     Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
@@ -62,13 +69,13 @@ public:
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
+    Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
 
     // Directly accessible members for preferences
     int width;
     int height;
     int fps;
     int bitrateKbps;
-    bool fullScreen;
     bool enableVsync;
     bool gameOptimizations;
     bool playAudioOnHost;
@@ -76,11 +83,11 @@ public:
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
     VideoDecoderSelection videoDecoderSelection;
+    WindowMode windowMode;
 
 signals:
     void displayModeChanged();
     void bitrateChanged();
-    void fullScreenChanged();
     void enableVsyncChanged();
     void gameOptimizationsChanged();
     void playAudioOnHostChanged();
@@ -88,5 +95,6 @@ signals:
     void audioConfigChanged();
     void videoCodecConfigChanged();
     void videoDecoderSelectionChanged();
+    void windowModeChanged();
 };
 

@@ -16,6 +16,7 @@
 #define SER_AUDIOCFG "audiocfg"
 #define SER_VIDEOCFG "videocfg"
 #define SER_VIDEODEC "videodec"
+#define SER_WINDOWMODE "windowmode"
 
 StreamingPreferences::StreamingPreferences()
 {
@@ -30,7 +31,6 @@ void StreamingPreferences::reload()
     height = settings.value(SER_HEIGHT, 720).toInt();
     fps = settings.value(SER_FPS, 60).toInt();
     bitrateKbps = settings.value(SER_BITRATE, getDefaultBitrate(width, height, fps)).toInt();
-    fullScreen = settings.value(SER_FULLSCREEN, true).toBool();
     enableVsync = settings.value(SER_VSYNC, true).toBool();
     gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
     playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
@@ -41,6 +41,10 @@ void StreamingPreferences::reload()
                                                   static_cast<int>(VideoCodecConfig::VCC_AUTO)).toInt());
     videoDecoderSelection = static_cast<VideoDecoderSelection>(settings.value(SER_VIDEODEC,
                                                   static_cast<int>(VideoDecoderSelection::VDS_AUTO)).toInt());
+    windowMode = static_cast<WindowMode>(settings.value(SER_WINDOWMODE,
+                                                        // Try to load from the old preference value too
+                                                        static_cast<int>(settings.value(SER_FULLSCREEN, true).toBool() ?
+                                                                             WindowMode::WM_FULLSCREEN : WindowMode::WM_WINDOWED)).toInt());
 }
 
 void StreamingPreferences::save()
@@ -51,7 +55,6 @@ void StreamingPreferences::save()
     settings.setValue(SER_HEIGHT, height);
     settings.setValue(SER_FPS, fps);
     settings.setValue(SER_BITRATE, bitrateKbps);
-    settings.setValue(SER_FULLSCREEN, fullScreen);
     settings.setValue(SER_VSYNC, enableVsync);
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);
@@ -59,6 +62,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
+    settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
 }
 
 bool StreamingPreferences::hasAnyHardwareAcceleration()

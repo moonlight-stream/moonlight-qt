@@ -230,26 +230,59 @@ ScrollView {
                     }
                 }
 
-                Row {
-                    CheckBox {
-                        id: fullScreenCheck
-                        text: "<font color=\"white\">Full-screen</font>"
-                        font.pointSize:  12
-                        checked: prefs.fullScreen
-                        onCheckedChanged: {
-                            prefs.fullScreen = checked
+                Label {
+                    width: parent.width
+                    id: windowModeTitle
+                    text: qsTr("Display mode")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    color: "white"
+                }
+
+                ComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var savedWm = prefs.windowMode
+                        currentIndex = 0
+                        for (var i = 0; i < windowModeListModel.count; i++) {
+                             var thisWm = windowModeListModel.get(i).val;
+                             if (savedWm === thisWm) {
+                                 currentIndex = i
+                             }
                         }
                     }
 
-                    CheckBox {
-                        id: vsyncCheck
-                        text: "<font color=\"white\">Enable V-Sync</font>"
-                        font.pointSize:  12
-                        visible: fullScreenCheck.checked
-                        checked: prefs.enableVsync
-                        onCheckedChanged: {
-                            prefs.enableVsync = checked
+                    id: windowModeComboBox
+                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
+                    textRole: "text"
+                    model: ListModel {
+                        id: windowModeListModel
+                        ListElement {
+                            text: "Full-screen"
+                            val: StreamingPreferences.WM_FULLSCREEN
                         }
+                        ListElement {
+                            text: "Borderless windowed"
+                            val: StreamingPreferences.WM_FULLSCREEN_DESKTOP
+                        }
+                        ListElement {
+                            text: "Windowed"
+                            val: StreamingPreferences.WM_WINDOWED
+                        }
+                    }
+                    onActivated: {
+                        prefs.windowMode = windowModeListModel.get(currentIndex).val
+                    }
+                }
+
+                CheckBox {
+                    id: vsyncCheck
+                    text: "<font color=\"white\">Enable V-Sync</font>"
+                    font.pointSize:  12
+                    visible: prefs.windowMode === StreamingPreferences.WM_FULLSCREEN
+                    checked: prefs.enableVsync
+                    onCheckedChanged: {
+                        prefs.enableVsync = checked
                     }
                 }
             }

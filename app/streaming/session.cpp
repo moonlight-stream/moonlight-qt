@@ -19,13 +19,6 @@
 #include "video/sl.h"
 #endif
 
-#if defined(Q_OS_DARWIN)
-// Using full-screen desktop allows allows Spaces to work on macOS.
-#define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN_DESKTOP
-#else
-#define SDL_OS_FULLSCREEN_FLAG SDL_WINDOW_FULLSCREEN
-#endif
-
 #ifdef Q_OS_WIN32
 // Scaling the icon down on Win32 looks dreadful, so render at lower res
 #define ICON_SIZE 32
@@ -372,6 +365,17 @@ Session::Session(NvComputer* computer, NvApp& app)
     else {
         m_StreamConfig.packetSize = 1024;
     }
+
+    switch (m_Preferences.windowMode)
+    {
+    case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
+        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+        break;
+    case StreamingPreferences::WM_FULLSCREEN:
+    default:
+        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
+        break;
+    }
 }
 
 void Session::emitLaunchWarning(QString text)
@@ -595,7 +599,7 @@ void Session::getWindowDimensions(bool fullScreen,
 
 void Session::toggleFullscreen()
 {
-    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & SDL_OS_FULLSCREEN_FLAG);
+    bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
 
     int x, y, width, height;
 
@@ -613,7 +617,7 @@ void Session::toggleFullscreen()
 
     if (fullScreen) {
         SDL_SetWindowResizable(m_Window, SDL_FALSE);
-        SDL_SetWindowFullscreen(m_Window, SDL_OS_FULLSCREEN_FLAG);
+        SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 }
 
@@ -715,7 +719,7 @@ void Session::exec()
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     int x, y, width, height;
-    getWindowDimensions(m_Preferences.fullScreen,
+    getWindowDimensions(m_Preferences.windowMode != StreamingPreferences::WM_WINDOWED,
                         x, y, width, height);
 
     m_Window = SDL_CreateWindow("Moonlight",
@@ -736,7 +740,7 @@ void Session::exec()
     // For non-full screen windows, call getWindowDimensions()
     // again after creating a window to allow it to account
     // for window chrome size.
-    if (!m_Preferences.fullScreen) {
+    if (m_Preferences.windowMode == StreamingPreferences::WM_WINDOWED) {
         getWindowDimensions(false, x, y, width, height);
 
         SDL_SetWindowPosition(m_Window, x, y);
@@ -754,7 +758,7 @@ void Session::exec()
         }
 
         // Enter full screen
-        SDL_SetWindowFullscreen(m_Window, SDL_OS_FULLSCREEN_FLAG);
+        SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 
     QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));

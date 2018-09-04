@@ -110,6 +110,7 @@ private:
     SDL_SpinLock m_DecoderLock;
     bool m_NeedsIdr;
     bool m_AudioDisabled;
+    Uint32 m_FullScreenFlag;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;
