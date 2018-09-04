@@ -1,5 +1,6 @@
 #include "session.hpp"
 #include "settings/streamingpreferences.h"
+#include "streaming/streamutils.h"
 
 #include <Limelight.h>
 #include <SDL.h>
@@ -544,7 +545,7 @@ void Session::getWindowDimensions(bool fullScreen,
     else if (fullScreen) {
         for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
             SDL_DisplayMode mode;
-            if (SDL_GetDesktopDisplayMode(i, &mode) == 0 &&
+            if (StreamUtils::getRealDesktopMode(i, &mode) &&
                     m_ActiveVideoWidth == mode.w &&
                     m_ActiveVideoHeight == mode.h) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -603,7 +604,7 @@ void Session::updateOptimalWindowDisplayMode()
     int displayIndex = SDL_GetWindowDisplayIndex(m_Window);
 
     // Get the native desktop resolution
-    if (SDL_GetDesktopDisplayMode(displayIndex, &desktopMode) == 0) {
+    if (StreamUtils::getRealDesktopMode(displayIndex, &desktopMode)) {
         // Start with the native desktop resolution and try to find
         // the highest refresh rate that our stream FPS evenly divides.
         bestMode = desktopMode;
@@ -757,7 +758,7 @@ void Session::exec()
                                 y,
                                 width,
                                 height,
-                                0);
+                                SDL_WINDOW_ALLOW_HIGHDPI);
     if (!m_Window) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateWindow() failed: %s",

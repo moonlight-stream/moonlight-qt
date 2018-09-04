@@ -1,4 +1,5 @@
 #include "pacer.h"
+#include "streaming/streamutils.h"
 
 #include "nullthreadedvsyncsource.h"
 
@@ -143,10 +144,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enableVsync)
     }
     else {
         // Use the current display mode for windowed and borderless
-        if (SDL_GetCurrentDisplayMode(displayIndex, &mode) != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetCurrentDisplayMode() failed: %s",
-                         SDL_GetError());
+        if (!StreamUtils::getRealDesktopMode(displayIndex, &mode)) {
             return false;
         }
     }

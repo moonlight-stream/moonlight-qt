@@ -21,7 +21,9 @@ public:
 
     Q_INVOKABLE static int getMaximumStreamingFrameRate();
 
-    Q_INVOKABLE QRect getDisplayResolution(int displayIndex);
+    Q_INVOKABLE QRect getDesktopResolution(int displayIndex);
+
+    Q_INVOKABLE QRect getNativeResolution(int displayIndex);
 
     void reload();
 
@@ -56,7 +58,7 @@ public:
         WM_FULLSCREEN_DESKTOP,
         WM_WINDOWED
     };
-    Q_ENUM(WindowMode);
+    Q_ENUM(WindowMode)
 
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)

@@ -56,37 +56,51 @@ ScrollView {
                         // ignore setting the index at first, and actually set it when the component is loaded
                         Component.onCompleted: {
                             // Add native resolutions for all attached displays
-                            for (var displayIndex = 0;; displayIndex++) {
-                                var screenRect = prefs.getDisplayResolution(displayIndex)
-                                if (screenRect.width === 0) {
-                                    // Exceeded max count of displays
-                                    break
-                                }
+                            var done = false
+                            for (var displayIndex = 0; !done; displayIndex++) {
+                                for (var displayResIndex = 0; displayResIndex < 2; displayResIndex++) {
+                                    var screenRect;
 
-                                var indexToAdd = 0
-                                for (var j = 0; j < resolutionComboBox.count; j++) {
-                                    var existing_width = parseInt(resolutionListModel.get(j).video_width);
-                                    var existing_height = parseInt(resolutionListModel.get(j).video_height);
+                                    // Some platforms have different desktop resolutions
+                                    // and native resolutions (like macOS with Retina displays)
+                                    if (displayResIndex == 0) {
+                                        screenRect = prefs.getDesktopResolution(displayIndex)
+                                    }
+                                    else {
+                                        screenRect = prefs.getNativeResolution(displayIndex)
+                                    }
 
-                                    if (screenRect.width === existing_width && screenRect.height === existing_height) {
-                                        // Duplicate entry, skip
-                                        indexToAdd = -1
+                                    if (screenRect.width === 0) {
+                                        // Exceeded max count of displays
+                                        done = true
                                         break
                                     }
-                                    else if (screenRect.width * screenRect.height > existing_width * existing_height) {
-                                        // Candidate entrypoint after this entry
-                                        indexToAdd = j + 1
-                                    }
-                                }
 
-                                // Insert this display's resolution if it's not a duplicate
-                                if (indexToAdd >= 0) {
-                                    resolutionListModel.insert(indexToAdd,
-                                                               {
-                                                                   "text": "Native ("+screenRect.width+"x"+screenRect.height+")",
-                                                                   "video_width": ""+screenRect.width,
-                                                                   "video_height": ""+screenRect.height
-                                                               })
+                                    var indexToAdd = 0
+                                    for (var j = 0; j < resolutionComboBox.count; j++) {
+                                        var existing_width = parseInt(resolutionListModel.get(j).video_width);
+                                        var existing_height = parseInt(resolutionListModel.get(j).video_height);
+
+                                        if (screenRect.width === existing_width && screenRect.height === existing_height) {
+                                            // Duplicate entry, skip
+                                            indexToAdd = -1
+                                            break
+                                        }
+                                        else if (screenRect.width * screenRect.height > existing_width * existing_height) {
+                                            // Candidate entrypoint after this entry
+                                            indexToAdd = j + 1
+                                        }
+                                    }
+
+                                    // Insert this display's resolution if it's not a duplicate
+                                    if (indexToAdd >= 0) {
+                                        resolutionListModel.insert(indexToAdd,
+                                                                   {
+                                                                       "text": "Native ("+screenRect.width+"x"+screenRect.height+")",
+                                                                       "video_width": ""+screenRect.width,
+                                                                       "video_height": ""+screenRect.height
+                                                                   })
+                                    }
                                 }
                             }
 

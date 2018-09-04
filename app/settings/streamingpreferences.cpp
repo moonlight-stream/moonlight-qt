@@ -1,5 +1,6 @@
 #include "streamingpreferences.h"
 #include "streaming/session.hpp"
+#include "streaming/streamutils.h"
 
 #include <QSettings>
 
@@ -94,7 +95,7 @@ int StreamingPreferences::getMaximumStreamingFrameRate()
     SDL_DisplayMode mode, bestMode, desktopMode;
     for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
         // Get the native desktop resolution
-        if (SDL_GetDesktopDisplayMode(displayIndex, &desktopMode) == 0) {
+        if (StreamUtils::getRealDesktopMode(displayIndex, &desktopMode)) {
 
             // Start at desktop mode and work our way up
             bestMode = desktopMode;
@@ -119,7 +120,7 @@ int StreamingPreferences::getMaximumStreamingFrameRate()
     return maxFrameRate;
 }
 
-QRect StreamingPreferences::getDisplayResolution(int displayIndex)
+QRect StreamingPreferences::getDesktopResolution(int displayIndex)
 {
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -134,7 +135,7 @@ QRect StreamingPreferences::getDisplayResolution(int displayIndex)
     }
 
     SDL_DisplayMode mode;
-    int err = SDL_GetCurrentDisplayMode(displayIndex, &mode);
+    int err = SDL_GetDesktopDisplayMode(displayIndex, &mode);
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
     if (err == 0) {
@@ -142,8 +143,34 @@ QRect StreamingPreferences::getDisplayResolution(int displayIndex)
     }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetCurrentDisplayMode() failed: %s",
+                     "SDL_GetDesktopDisplayMode() failed: %s",
                      SDL_GetError());
+        return QRect();
+    }
+}
+
+QRect StreamingPreferences::getNativeResolution(int displayIndex)
+{
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return QRect();
+    }
+
+    if (displayIndex >= SDL_GetNumVideoDisplays()) {
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return QRect();
+    }
+
+    SDL_DisplayMode mode;
+    bool success = StreamUtils::getRealDesktopMode(displayIndex, &mode);
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+
+    if (success) {
+        return QRect(0, 0, mode.w, mode.h);
+    }
+    else {
         return QRect();
     }
 }
