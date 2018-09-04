@@ -544,7 +544,7 @@ void Session::getWindowDimensions(bool fullScreen,
     else if (fullScreen) {
         for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
             SDL_DisplayMode mode;
-            if (SDL_GetCurrentDisplayMode(i, &mode) == 0 &&
+            if (SDL_GetDesktopDisplayMode(i, &mode) == 0 &&
                     m_ActiveVideoWidth == mode.w &&
                     m_ActiveVideoHeight == mode.h) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -594,6 +594,36 @@ void Session::getWindowDimensions(bool fullScreen,
         width = m_StreamConfig.width;
         height = m_StreamConfig.height;
         x = y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
+    }
+}
+
+void Session::updateOptimalWindowDisplayMode()
+{
+    SDL_DisplayMode desktopMode, bestMode, mode;
+    int displayIndex = SDL_GetWindowDisplayIndex(m_Window);
+
+    // Get the native desktop resolution
+    if (SDL_GetDesktopDisplayMode(displayIndex, &desktopMode) == 0) {
+        // Start with the native desktop resolution and try to find
+        // the highest refresh rate that our stream FPS evenly divides.
+        bestMode = desktopMode;
+        bestMode.refresh_rate = 0;
+        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+            if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
+                if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
+                        mode.refresh_rate % m_StreamConfig.fps == 0) {
+                    if (mode.refresh_rate > bestMode.refresh_rate) {
+                        bestMode = mode;
+                    }
+                }
+            }
+        }
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Chosen best display mode: %dx%dx%d",
+                    bestMode.w, bestMode.h, bestMode.refresh_rate);
+
+        SDL_SetWindowDisplayMode(m_Window, &bestMode);
     }
 }
 
@@ -752,10 +782,7 @@ void Session::exec()
     }
     else {
         // Update the window display mode based on our current monitor
-        SDL_DisplayMode mode;
-        if (SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_Window), &mode) == 0) {
-            SDL_SetWindowDisplayMode(m_Window, &mode);
-        }
+        updateOptimalWindowDisplayMode();
 
         // Enter full screen
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
@@ -883,10 +910,7 @@ void Session::exec()
             SDL_FlushEvent(SDL_WINDOWEVENT);
 
             // Update the window display mode based on our current monitor
-            SDL_DisplayMode mode;
-            if (SDL_GetDesktopDisplayMode(SDL_GetWindowDisplayIndex(m_Window), &mode) == 0) {
-                SDL_SetWindowDisplayMode(m_Window, &mode);
-            }
+            updateOptimalWindowDisplayMode();
 
             // Now that the old decoder is dead, flush any events it may
             // have queued to reset itself (if this reset was the result

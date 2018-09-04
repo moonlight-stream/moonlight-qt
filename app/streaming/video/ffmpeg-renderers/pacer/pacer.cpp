@@ -132,10 +132,27 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enableVsync)
     }
 
     SDL_DisplayMode mode;
-    if (SDL_GetCurrentDisplayMode(displayIndex, &mode) == 0) {
-        // May be zero if undefined
-        m_DisplayFps = mode.refresh_rate;
+    if ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        // Use the window display mode for full-screen exclusive mode
+        if (SDL_GetWindowDisplayMode(window, &mode) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetWindowDisplayMode() failed: %s",
+                         SDL_GetError());
+            return false;
+        }
     }
+    else {
+        // Use the current display mode for windowed and borderless
+        if (SDL_GetCurrentDisplayMode(displayIndex, &mode) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetCurrentDisplayMode() failed: %s",
+                         SDL_GetError());
+            return false;
+        }
+    }
+
+    // May be zero if undefined
+    m_DisplayFps = mode.refresh_rate;
 
     if (m_EnableVsync) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,

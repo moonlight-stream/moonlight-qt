@@ -57,6 +57,8 @@ private:
 
     void toggleFullscreen();
 
+    void updateOptimalWindowDisplayMode();
+
     static
     bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                        SDL_Window* window, int videoFormat, int width, int height,

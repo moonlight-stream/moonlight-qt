@@ -91,12 +91,26 @@ int StreamingPreferences::getMaximumStreamingFrameRate()
         return maxFrameRate;
     }
 
-    for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
-        SDL_DisplayMode mode;
-        if (SDL_GetCurrentDisplayMode(i, &mode) == 0) {
+    SDL_DisplayMode mode, bestMode, desktopMode;
+    for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
+        // Get the native desktop resolution
+        if (SDL_GetDesktopDisplayMode(displayIndex, &desktopMode) == 0) {
+
+            // Start at desktop mode and work our way up
+            bestMode = desktopMode;
+            for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+                if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
+                    if (mode.w == desktopMode.w && mode.h == desktopMode.h) {
+                        if (mode.refresh_rate > bestMode.refresh_rate) {
+                            bestMode = mode;
+                        }
+                    }
+                }
+            }
+
             // Cap the frame rate at 120 FPS. Past this, the encoders start
             // to max out and drop frames.
-            maxFrameRate = qMax(maxFrameRate, qMin(120, mode.refresh_rate));
+            maxFrameRate = qMax(maxFrameRate, qMin(120, bestMode.refresh_rate));
         }
     }
 
