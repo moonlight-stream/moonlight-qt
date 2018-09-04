@@ -17,6 +17,7 @@ DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0x
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
 DXVA2Renderer::DXVA2Renderer() :
+    m_ForceVsyncOn(false),
     m_DecService(nullptr),
     m_Decoder(nullptr),
     m_SurfacesUsed(0),
@@ -494,6 +495,10 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
         d3dpp.BackBufferCount = 2;
 
+        // We need our V-sync source enabled to synchronize with DWM composition
+        // and avoid micro-stuttering.
+        m_ForceVsyncOn = true;
+
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Windowed mode with DWM running");
     }
@@ -626,7 +631,7 @@ int DXVA2Renderer::getDecoderCapabilities()
 
 IFFmpegRenderer::VSyncConstraint DXVA2Renderer::getVsyncConstraint()
 {
-    return VSYNC_ANY;
+    return m_ForceVsyncOn ? VSYNC_FORCE_ON : VSYNC_ANY;
 }
 
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)

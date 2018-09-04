@@ -45,6 +45,7 @@ private:
     int m_VideoFormat;
     int m_VideoWidth;
     int m_VideoHeight;
+    bool m_ForceVsyncOn;
 
     int m_DisplayWidth;
     int m_DisplayHeight;
