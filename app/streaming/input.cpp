@@ -23,7 +23,8 @@ const int SdlInputHandler::k_ButtonMap[] = {
 };
 
 SdlInputHandler::SdlInputHandler(bool multiController)
-    : m_MultiController(multiController)
+    : m_LastMouseMotionTime(0),
+      m_MultiController(multiController)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -391,11 +392,19 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
     short xdelta = (short)event->xrel;
     short ydelta = (short)event->yrel;
 
-    // Delay for 1 ms to allow batching of mouse move
-    // events from high DPI mice.
-    SDL_Delay(1);
+    // If we're sending more than one motion event per millisecond,
+    // delay for 1 ms to allow batching of mouse move events.
+    Uint32 currentTime = SDL_GetTicks();
+    if (!SDL_TICKS_PASSED(currentTime, m_LastMouseMotionTime + 1)) {
+        SDL_Delay(1);
+        currentTime = SDL_GetTicks();
+    }
+    m_LastMouseMotionTime = currentTime;
+
+    // Pump even if we didn't delay since we might get some extra events
     SDL_PumpEvents();
 
+    // Batch all of the pending mouse motion events
     SDL_Event nextEvent;
     while (SDL_PeepEvents(&nextEvent,
                           1,

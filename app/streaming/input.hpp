@@ -44,6 +44,7 @@ private:
 
     void sendGamepadState(GamepadState* state);
 
+    Uint32 m_LastMouseMotionTime;
     bool m_MultiController;
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
