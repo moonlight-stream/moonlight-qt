@@ -388,10 +388,29 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         // Not capturing
         return;
     }
+    short xdelta = (short)event->xrel;
+    short ydelta = (short)event->yrel;
 
-    if (event->xrel != 0 || event->yrel != 0) {
-        LiSendMouseMoveEvent((short)event->xrel,
-                             (short)event->yrel);
+    // Delay for 1 ms to allow batching of mouse move
+    // events from high DPI mice.
+    SDL_Delay(1);
+    SDL_PumpEvents();
+
+    SDL_Event nextEvent;
+    while (SDL_PeepEvents(&nextEvent,
+                          1,
+                          SDL_GETEVENT,
+                          SDL_MOUSEMOTION,
+                          SDL_MOUSEMOTION) == 1) {
+        // In theory, these can overflow but in practice
+        // it should be highly unlikely since it would require
+        // moving 64K pixels in 1 ms.
+        xdelta += nextEvent.motion.xrel;
+        ydelta += nextEvent.motion.yrel;
+    }
+
+    if (xdelta != 0 || ydelta != 0) {
+        LiSendMouseMoveEvent(xdelta, ydelta);
     }
 }
 
