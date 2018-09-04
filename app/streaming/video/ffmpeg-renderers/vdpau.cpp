@@ -238,6 +238,11 @@ int VDPAURenderer::getDecoderCapabilities()
     return 0;
 }
 
+IFFmpegRenderer::VSyncConstraint VDPAURenderer::getVsyncConstraint()
+{
+    return VSYNC_ANY;
+}
+
 void VDPAURenderer::renderFrameAtVsync(AVFrame* frame)
 {
     VdpStatus status;

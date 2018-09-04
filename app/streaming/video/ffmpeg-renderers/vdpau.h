@@ -23,6 +23,7 @@ public:
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();
     virtual int getDecoderCapabilities();
+    virtual VSyncConstraint getVsyncConstraint();
 
 private:
     uint32_t m_VideoWidth, m_VideoHeight;

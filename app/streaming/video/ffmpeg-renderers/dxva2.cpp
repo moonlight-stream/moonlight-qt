@@ -624,6 +624,11 @@ int DXVA2Renderer::getDecoderCapabilities()
     return 0;
 }
 
+IFFmpegRenderer::VSyncConstraint DXVA2Renderer::getVsyncConstraint()
+{
+    return VSYNC_ANY;
+}
+
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);

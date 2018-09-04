@@ -43,6 +43,11 @@ int SdlRenderer::getDecoderCapabilities()
     return CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
 }
 
+IFFmpegRenderer::VSyncConstraint SdlRenderer::getVsyncConstraint()
+{
+    return VSYNC_ANY;
+}
+
 bool SdlRenderer::initialize(SDL_Window* window,
                              int,
                              int width,

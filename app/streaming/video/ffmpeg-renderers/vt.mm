@@ -201,6 +201,14 @@ public:
         return 0;
     }
 
+    virtual IFFmpegRenderer::VSyncConstraint getVsyncConstraint() override
+    {
+        // This renderer is inherently tied to V-sync due how we're
+        // rendering with AVSampleBufferDisplay layer. Running without
+        // the V-Sync source leads to massive stuttering.
+        return VSYNC_FORCE_ON;
+    }
+
 private:
     void setupDisplayLayer()
     {

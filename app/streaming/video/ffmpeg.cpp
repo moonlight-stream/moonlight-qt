@@ -120,6 +120,18 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
                                                 int videoFormat, int width, int height,
                                                 int maxFps, bool enableVsync, bool testOnly)
 {
+    auto vsyncConstraint = m_Renderer->getVsyncConstraint();
+    if (vsyncConstraint == IFFmpegRenderer::VSYNC_FORCE_OFF && enableVsync) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "V-sync is forcefully disabled by the active renderer");
+        enableVsync = false;
+    }
+    else if (vsyncConstraint == IFFmpegRenderer::VSYNC_FORCE_ON && !enableVsync) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "V-sync is forcefully enabled by the active renderer");
+        enableVsync = true;
+    }
+
     m_Pacer = new Pacer(m_Renderer);
     if (!m_Pacer->initialize(window, maxFps, enableVsync)) {
         return false;

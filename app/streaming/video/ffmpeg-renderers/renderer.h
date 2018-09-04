@@ -8,6 +8,12 @@ extern "C" {
 
 class IFFmpegRenderer {
 public:
+    enum VSyncConstraint {
+        VSYNC_FORCE_OFF,
+        VSYNC_FORCE_ON,
+        VSYNC_ANY
+    };
+
     virtual ~IFFmpegRenderer() {}
     virtual bool initialize(SDL_Window* window,
                             int videoFormat,
@@ -19,6 +25,7 @@ public:
     virtual void renderFrameAtVsync(AVFrame* frame) = 0;
     virtual bool needsTestFrame() = 0;
     virtual int getDecoderCapabilities() = 0;
+    virtual VSyncConstraint getVsyncConstraint() = 0;
 };
 
 class SdlRenderer : public IFFmpegRenderer {
@@ -35,6 +42,7 @@ public:
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();
     virtual int getDecoderCapabilities();
+    virtual VSyncConstraint getVsyncConstraint();
 
 private:
     SDL_Renderer* m_Renderer;

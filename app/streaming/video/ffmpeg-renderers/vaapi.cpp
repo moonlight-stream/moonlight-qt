@@ -155,6 +155,11 @@ VAAPIRenderer::getDecoderCapabilities()
     return 0;
 }
 
+IFFmpegRenderer::VSyncConstraint VAAPIRenderer::getVsyncConstraint()
+{
+    return VSYNC_ANY;
+}
+
 void
 VAAPIRenderer::renderFrameAtVsync(AVFrame* frame)
 {
