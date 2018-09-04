@@ -33,6 +33,12 @@ pushd $BUILD_FOLDER
 make $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
 popd
 
+echo Saving dSYM file
+pushd $BUILD_FOLDER
+dsymutil app/Moonlight.app/Contents/MacOS/Moonlight -o Moonlight.dsym || fail "dSYM creation failed!"
+cp -R Moonlight.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
+popd
+
 echo Copying dylib dependencies
 mkdir $BUILD_FOLDER/app/Moonlight.app/Contents/lib
 cp $SOURCE_ROOT/libs/mac/lib/*.dylib $BUILD_FOLDER/app/Moonlight.app/Contents/lib/ || fail "Dylib copy failed!"
