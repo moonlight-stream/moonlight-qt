@@ -154,7 +154,7 @@ if /i "%APPVEYOR%"=="true" (
     if !ERRORLEVEL! NEQ 0 goto Error
     appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightPortable.zip -FileName MoonlightPortable-%ARCH%-%BUILD_CONFIG%.zip
     if !ERRORLEVEL! NEQ 0 goto Error
-    appveyor PushArtifact %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols.zip -FileName %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols-%ARCH%-%BUILD_CONFIG%.zip
+    appveyor PushArtifact %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols.zip -FileName MoonlightDebuggingSymbols-%ARCH%-%BUILD_CONFIG%.zip
 )
 
 echo Build successful!
