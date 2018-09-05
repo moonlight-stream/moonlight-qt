@@ -51,8 +51,7 @@ private:
 
     bool testAudio(int audioConfiguration);
 
-    void getWindowDimensions(bool fullScreen,
-                             int& x, int& y,
+    void getWindowDimensions(int& x, int& y,
                              int& width, int& height);
 
     void toggleFullscreen();

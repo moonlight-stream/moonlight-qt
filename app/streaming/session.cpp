@@ -531,8 +531,7 @@ class DeferredSessionCleanupTask : public QRunnable
     }
 };
 
-void Session::getWindowDimensions(bool fullScreen,
-                                  int& x, int& y,
+void Session::getWindowDimensions(int& x, int& y,
                                   int& width, int& height)
 {
     int displayIndex = 0;
@@ -653,7 +652,7 @@ void Session::toggleFullscreen()
         SDL_SetWindowResizable(m_Window, SDL_TRUE);
     }
 
-    getWindowDimensions(fullScreen, x, y, width, height);
+    getWindowDimensions(x, y, width, height);
 
     SDL_SetWindowPosition(m_Window, x, y);
     SDL_SetWindowSize(m_Window, width, height);
@@ -765,8 +764,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     int x, y, width, height;
-    getWindowDimensions(m_Preferences.windowMode != StreamingPreferences::WM_WINDOWED,
-                        x, y, width, height);
+    getWindowDimensions(x, y, width, height);
 
     m_Window = SDL_CreateWindow("Moonlight",
                                 x,
@@ -787,7 +785,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // again after creating a window to allow it to account
     // for window chrome size.
     if (m_Preferences.windowMode == StreamingPreferences::WM_WINDOWED) {
-        getWindowDimensions(false, x, y, width, height);
+        getWindowDimensions(x, y, width, height);
 
         SDL_SetWindowPosition(m_Window, x, y);
         SDL_SetWindowSize(m_Window, width, height);
