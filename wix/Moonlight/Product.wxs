@@ -39,7 +39,7 @@
       </Directory>
     </Directory>
 
-    <Property Id="APPDATAFOLDER">%LOCALAPPDATA%\Moonlight Game Streaming</Property>
+    <Property Id="APPDATAFOLDER">%LOCALAPPDATA%\Moonlight Game Streaming Project</Property>
 
     <!-- There's no way to delete a registry key on uninstall but not major upgrade, so
         we have to roll our own deletion via custom action -->

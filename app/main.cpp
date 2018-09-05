@@ -131,6 +131,13 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
 
 int main(int argc, char *argv[])
 {
+    // Set these here to allow us to use the default QSettings constructor.
+    // These also ensure that our cache directory is named correctly. As such,
+    // it is critical that these be called before Path::initialize().
+    QCoreApplication::setOrganizationName("Moonlight Game Streaming Project");
+    QCoreApplication::setOrganizationDomain("moonlight-stream.com");
+    QCoreApplication::setApplicationName("Moonlight");
+
     if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
         qInfo() << "Running in portable mode from:" << QDir::currentPath();
         QSettings::setDefaultFormat(QSettings::IniFormat);
@@ -171,11 +178,6 @@ int main(int argc, char *argv[])
     // user-mode drivers into our app.
     qputenv("QT_OPENGL", "angle");
 #endif
-
-    // Set these here to allow us to use the default QSettings constructor
-    QCoreApplication::setOrganizationName("Moonlight Game Streaming Project");
-    QCoreApplication::setOrganizationDomain("moonlight-stream.com");
-    QCoreApplication::setApplicationName("Moonlight");
 
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
