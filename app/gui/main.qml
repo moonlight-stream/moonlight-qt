@@ -85,12 +85,6 @@ ApplicationWindow {
                 }
 
                 onClicked: stackView.pop()
-
-                Menu {
-                    id: backButton
-                    x: parent.width - width
-                    transformOrigin: Menu.TopRight
-                }
             }
 
             Label {
@@ -128,11 +122,6 @@ ApplicationWindow {
 
                 onClicked: Qt.openUrlExternally(browserUrl);
 
-                Menu {
-                    x: parent.width
-                    transformOrigin: Menu.TopRight
-                }
-
 
                 function updateAvailable(url)
                 {
@@ -163,11 +152,6 @@ ApplicationWindow {
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
-
-                Menu {
-                    x: parent.width
-                    transformOrigin: Menu.TopRight
-                }
             }
 
             ToolButton {
@@ -189,11 +173,6 @@ ApplicationWindow {
                 }
 
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
-
-                Menu {
-                    x: parent.width
-                    transformOrigin: Menu.TopRight
-                }
             }
 
             ToolButton {
@@ -212,11 +191,6 @@ ApplicationWindow {
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
                 ToolTip.text: "Settings"
-
-                Menu {
-                    x: parent.width
-                    transformOrigin: Menu.TopRight
-                }
             }
         }
     }
