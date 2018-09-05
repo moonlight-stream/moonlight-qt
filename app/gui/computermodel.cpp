@@ -1,5 +1,7 @@
 #include "computermodel.h"
 
+#include <QThreadPool>
+
 ComputerModel::ComputerModel(QObject* object)
     : QAbstractListModel(object) {}
 
@@ -119,11 +121,27 @@ void ComputerModel::deleteComputer(int computerIndex)
     endRemoveRows();
 }
 
-bool ComputerModel::wakeComputer(int computerIndex)
+class DeferredWakeHostTask : public QRunnable
+{
+public:
+    DeferredWakeHostTask(NvComputer* computer)
+        : m_Computer(computer) {}
+
+    void run()
+    {
+        m_Computer->wake();
+    }
+
+private:
+    NvComputer* m_Computer;
+};
+
+void ComputerModel::wakeComputer(int computerIndex)
 {
     Q_ASSERT(computerIndex < m_Computers.count());
 
-    return m_Computers[computerIndex]->wake();
+    DeferredWakeHostTask* wakeTask = new DeferredWakeHostTask(m_Computers[computerIndex]);
+    QThreadPool::globalInstance()->start(wakeTask);
 }
 
 void ComputerModel::pairComputer(int computerIndex, QString pin)

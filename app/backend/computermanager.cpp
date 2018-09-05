@@ -177,6 +177,11 @@ bool NvComputer::wake()
     for (QString& addressString : addressList) {
         QHostInfo hostInfo = QHostInfo::fromName(addressString);
 
+        if (hostInfo.error() != QHostInfo::NoError) {
+            qWarning() << "Error resolving" << addressString << ":" << hostInfo.errorString();
+            continue;
+        }
+
         // Try all IP addresses that this string resolves to
         for (QHostAddress& address : hostInfo.addresses()) {
             QUdpSocket sock;

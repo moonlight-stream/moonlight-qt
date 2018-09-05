@@ -34,7 +34,7 @@ public:
 
     Q_INVOKABLE void pairComputer(int computerIndex, QString pin);
 
-    Q_INVOKABLE bool wakeComputer(int computerIndex);
+    Q_INVOKABLE void wakeComputer(int computerIndex);
 
     Q_INVOKABLE Session* createSessionForCurrentGame(int computerIndex);
 
