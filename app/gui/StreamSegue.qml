@@ -1,6 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
+import QtQuick.Window 2.2
 
 import Session 1.0
 
@@ -69,7 +70,7 @@ Item {
             session.displayLaunchWarning.connect(displayLaunchWarning)
 
             // Run the streaming session to completion
-            session.exec()
+            session.exec(Screen.virtualX, Screen.virtualY)
 
             // Show the Qt window again after streaming
             window.visible = true

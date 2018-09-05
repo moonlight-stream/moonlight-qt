@@ -19,7 +19,7 @@ class Session : public QObject
 public:
     explicit Session(NvComputer* computer, NvApp& app);
 
-    Q_INVOKABLE void exec();
+    Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);
 
     static
     bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
@@ -113,6 +113,8 @@ private:
     bool m_NeedsIdr;
     bool m_AudioDisabled;
     Uint32 m_FullScreenFlag;
+    int m_DisplayOriginX;
+    int m_DisplayOriginY;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;

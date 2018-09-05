@@ -274,7 +274,9 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_VideoDecoder(nullptr),
       m_DecoderLock(0),
       m_NeedsIdr(false),
-      m_AudioDisabled(false)
+      m_AudioDisabled(false),
+      m_DisplayOriginX(0),
+      m_DisplayOriginY(0)
 {
     qDebug() << "Server GPU:" << m_Computer->gpuModel;
 
@@ -539,20 +541,29 @@ void Session::getWindowDimensions(bool fullScreen,
         displayIndex = SDL_GetWindowDisplayIndex(m_Window);
         SDL_assert(displayIndex >= 0);
     }
-    // If there's a display matching this exact resolution, pick that
-    // one (for native full-screen streaming). Otherwise, assume
-    // display 0 for now. TODO: Default to the screen that the Qt window is on
-    else if (fullScreen) {
+    // Create our window on the same display that Qt's UI
+    // was being displayed on.
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Qt UI screen is at (%d,%d)",
+                    m_DisplayOriginX, m_DisplayOriginY);
         for (int i = 0; i < SDL_GetNumVideoDisplays(); i++) {
-            SDL_DisplayMode mode;
-            if (StreamUtils::getRealDesktopMode(i, &mode) &&
-                    m_ActiveVideoWidth == mode.w &&
-                    m_ActiveVideoHeight == mode.h) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Found exact resolution match on display: %d",
-                            i);
-                displayIndex = i;
-                break;
+            SDL_Rect displayBounds;
+
+            if (SDL_GetDisplayBounds(i, &displayBounds) == 0) {
+                if (displayBounds.x == m_DisplayOriginX &&
+                        displayBounds.y == m_DisplayOriginY) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "SDL found matching display %d",
+                                i);
+                    displayIndex = i;
+                    break;
+                }
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "SDL_GetDisplayBounds(%d) failed: %s",
+                            i, SDL_GetError());
             }
         }
     }
@@ -567,17 +578,18 @@ void Session::getWindowDimensions(bool fullScreen,
         if (m_Window != nullptr) {
             int top, left, bottom, right;
 
-            if (SDL_GetWindowBordersSize(m_Window, &top, &left, &bottom, &right) < 0) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Unable to get window border size");
-                return;
+            if (SDL_GetWindowBordersSize(m_Window, &top, &left, &bottom, &right) == 0) {
+                x += left;
+                y += top;
+
+                width -= left + right;
+                height -= top + bottom;
             }
-
-            x += left;
-            y += top;
-
-            width -= left + right;
-            height -= top + bottom;
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Unable to get window border size: %s",
+                            SDL_GetError());
+            }
 
             // If the stream window can fit within the usable drawing area with 1:1
             // scaling, do that rather than filling the screen.
@@ -652,8 +664,11 @@ void Session::toggleFullscreen()
     }
 }
 
-void Session::exec()
+void Session::exec(int displayOriginX, int displayOriginY)
 {
+    m_DisplayOriginX = displayOriginX;
+    m_DisplayOriginY = displayOriginY;
+
     // Check for validation errors/warnings and emit
     // signals for them, if appropriate
     if (!validateLaunch()) {
