@@ -19,7 +19,6 @@ GridView {
     anchors.rightMargin: 5
     anchors.bottomMargin: 5
     cellWidth: 350; cellHeight: 350;
-    focus: true
     objectName: "Computers"
 
     // The StackView will trigger a visibility change when
@@ -73,7 +72,7 @@ GridView {
 
     model: computerModel
 
-    delegate: Item {
+    delegate: ItemDelegate {
         width: 300; height: 300;
 
         Image {
@@ -142,47 +141,46 @@ GridView {
             }
         }
 
+        onClicked: {
+            if (model.addPc) {
+                addPcDialog.open()
+            }
+            else if (model.online) {
+                if (model.paired) {
+                    // go to game view
+                    var component = Qt.createComponent("AppView.qml")
+                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
+                    stackView.push(appView)
+                }
+                else {
+                    if (!model.busy) {
+                        var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
+
+                        // Kick off pairing in the background
+                        computerModel.pairComputer(index, pin)
+
+                        // Display the pairing dialog
+                        pairDialog.pin = pin
+                        pairDialog.open()
+                    }
+                    else {
+                        // cannot pair while something is streaming or attempting to pair
+                        errorDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
+                        errorDialog.open()
+                    }
+                }
+            } else if (!model.online) {
+                pcContextMenu.open()
+            }
+        }
+
         MouseArea {
             anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton;
+            acceptedButtons: Qt.RightButton;
             onClicked: {
-                if(mouse.button === Qt.LeftButton) {
-                    if (model.addPc) {
-                        addPcDialog.open()
-                    }
-                    else if (model.online) {
-                        if (model.paired) {
-                            // go to game view
-                            var component = Qt.createComponent("AppView.qml")
-                            var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
-                            stackView.push(appView)
-                        }
-                        else {
-                            if (!model.busy) {
-                                var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
-
-                                // Kick off pairing in the background
-                                computerModel.pairComputer(index, pin)
-
-                                // Display the pairing dialog
-                                pairDialog.pin = pin
-                                pairDialog.open()
-                            }
-                            else {
-                                // cannot pair while something is streaming or attempting to pair
-                                errorDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
-                                errorDialog.open()
-                            }
-                        }
-                    } else if(!model.online) {
-                        pcContextMenu.open()
-                    }
-
-                }
-                else { // right click
-                    if(!model.addPc) { // but only for actual PCs, not the add-pc option
-                        pcContextMenu.open()
-                    }
+                // right click
+                if (!model.addPc) { // but only for actual PCs, not the add-pc option
+                    pcContextMenu.open()
                 }
             }
         }

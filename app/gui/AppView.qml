@@ -16,8 +16,7 @@ GridView {
     anchors.topMargin: 20
     anchors.rightMargin: 5
     anchors.bottomMargin: 5
-    cellWidth: 225; cellHeight: 350;
-    focus: true
+    cellWidth: 225; cellHeight: 385;
 
     // Cache delegates for 1000px in both directions to improve
     // scrolling and resizing performance
@@ -52,12 +51,13 @@ GridView {
 
     model: appModel
 
-    delegate: Item {
-        width: 200; height: 300;
+    delegate: ItemDelegate {
+        width: 200; height: 335;
 
         Image {
             id: appIcon
             anchors.horizontalCenter: parent.horizontalCenter;
+            y: 20
             source: model.boxart
             sourceSize {
                 width: 150
@@ -132,18 +132,17 @@ GridView {
             }
         }
 
+        onClicked: {
+            // Nothing is running or this app is running
+            launchOrResumeSelectedApp()
+        }
+
         MouseArea {
             anchors.fill: parent
-            acceptedButtons: Qt.LeftButton | Qt.RightButton
+            acceptedButtons: Qt.RightButton
             onClicked: {
-                if (mouse.button === Qt.LeftButton) {
-                    // Nothing is running or this app is running
-                    launchOrResumeSelectedApp()
-                }
-                else {
-                    // Right click
-                    appContextMenu.open()
-                }
+                // Right click
+                appContextMenu.open()
             }
         }
 
