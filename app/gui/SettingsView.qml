@@ -272,7 +272,7 @@ ScrollView {
                     model: ListModel {
                         id: windowModeListModel
                         ListElement {
-                            text: "Full-screen"
+                            text: "Full-screen (Recommended)"
                             val: StreamingPreferences.WM_FULLSCREEN
                         }
                         ListElement {
