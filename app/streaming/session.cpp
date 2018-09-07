@@ -620,39 +620,54 @@ void Session::updateOptimalWindowDisplayMode()
     SDL_DisplayMode desktopMode, bestMode, mode;
     int displayIndex = SDL_GetWindowDisplayIndex(m_Window);
 
-    // Get the native desktop resolution
-    if (StreamUtils::getRealDesktopMode(displayIndex, &desktopMode)) {
-        // Start with the native desktop resolution and try to find
-        // the highest refresh rate that our stream FPS evenly divides.
-        bestMode = desktopMode;
-        bestMode.refresh_rate = 0;
-        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
-            if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
-                if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
-                        mode.refresh_rate % m_StreamConfig.fps == 0) {
-                    if (mode.refresh_rate > bestMode.refresh_rate) {
-                        bestMode = mode;
-                    }
+    // Try the current display mode first. On macOS, this will be the normal
+    // scaled desktop resolution setting.
+    if (SDL_GetDesktopDisplayMode(displayIndex, &desktopMode) == 0) {
+        // If this doesn't fit the selected resolution, use the native
+        // resolution of the panel (unscaled).
+        if (desktopMode.w < m_ActiveVideoWidth || desktopMode.h < m_ActiveVideoHeight) {
+            if (!StreamUtils::getRealDesktopMode(displayIndex, &desktopMode)) {
+                return;
+            }
+        }
+    }
+    else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL_GetDesktopDisplayMode() failed: %s",
+                    SDL_GetError());
+        return;
+    }
+
+    // Start with the native desktop resolution and try to find
+    // the highest refresh rate that our stream FPS evenly divides.
+    bestMode = desktopMode;
+    bestMode.refresh_rate = 0;
+    for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+        if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
+            if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
+                    mode.refresh_rate % m_StreamConfig.fps == 0) {
+                if (mode.refresh_rate > bestMode.refresh_rate) {
+                    bestMode = mode;
                 }
             }
         }
-
-        if (bestMode.refresh_rate == 0) {
-            // We may find no match if the user has moved a 120 FPS
-            // stream onto a 60 Hz monitor (since no refresh rate can
-            // divide our FPS setting). We'll stick to the default in
-            // this case.
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "No matching refresh rate found; using desktop mode");
-            bestMode = desktopMode;
-        }
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Chosen best display mode: %dx%dx%d",
-                    bestMode.w, bestMode.h, bestMode.refresh_rate);
-
-        SDL_SetWindowDisplayMode(m_Window, &bestMode);
     }
+
+    if (bestMode.refresh_rate == 0) {
+        // We may find no match if the user has moved a 120 FPS
+        // stream onto a 60 Hz monitor (since no refresh rate can
+        // divide our FPS setting). We'll stick to the default in
+        // this case.
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "No matching refresh rate found; using desktop mode");
+        bestMode = desktopMode;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Chosen best display mode: %dx%dx%d",
+                bestMode.w, bestMode.h, bestMode.refresh_rate);
+
+    SDL_SetWindowDisplayMode(m_Window, &bestMode);
 }
 
 void Session::toggleFullscreen()
