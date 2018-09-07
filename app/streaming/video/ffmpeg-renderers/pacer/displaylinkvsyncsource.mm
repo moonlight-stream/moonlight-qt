@@ -11,9 +11,7 @@ class DisplayLinkVsyncSource : public IVsyncSource
 public:
     DisplayLinkVsyncSource(Pacer* pacer)
         : m_Pacer(pacer),
-          m_Window(nullptr),
-          m_DisplayLink(nullptr),
-          m_DisplayId(UINT_MAX)
+          m_DisplayLink(nullptr)
     {
 
     }
@@ -48,19 +46,6 @@ public:
 
         SDL_assert(displayLink == me->m_DisplayLink);
 
-        NSScreen* screen = [me->m_Window screen];
-        if (screen != nullptr && getDisplayID(screen) != me->m_DisplayId) {
-            // CVDisplayLinkSetCurrentCGDisplay() will deadlock if called
-            // within a CVDisplayLink callback, so we just teardown the
-            // decoder (and pacer) to let it come back up on the new display.
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Streaming window display has changed; resetting decoder");
-            SDL_Event event;
-            event.type = SDL_RENDER_TARGETS_RESET;
-            SDL_PushEvent(&event);
-            return kCVReturnSuccess;
-        }
-
         // In my testing on macOS 10.13, this callback is invoked about 24 ms
         // prior to the specified v-sync time (now - vsyncTime). Since this is
         // greater than the standard v-sync interval (16 ms = 60 FPS), we will
@@ -89,10 +74,9 @@ public:
 
         SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
 
-        m_Window = info.info.cocoa.window;
         m_DisplayFps = displayFps;
 
-        NSScreen* screen = [m_Window screen];
+        NSScreen* screen = [info.info.cocoa.window screen];
         CVReturn status;
         if (screen == nullptr) {
             // Window not visible on any display, so use a
@@ -104,11 +88,12 @@ public:
             status = CVDisplayLinkCreateWithActiveCGDisplays(&m_DisplayLink);
         }
         else {
-            m_DisplayId = getDisplayID(screen);
+            CGDirectDisplayID displayId;
+            displayId = getDisplayID(screen);
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "NSWindow on display: %x",
-                        m_DisplayId);
-            status = CVDisplayLinkCreateWithCGDisplay(m_DisplayId, &m_DisplayLink);
+                        displayId);
+            status = CVDisplayLinkCreateWithCGDisplay(displayId, &m_DisplayLink);
         }
         if (status != kCVReturnSuccess) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -138,10 +123,8 @@ public:
 
 private:
     Pacer* m_Pacer;
-    NSWindow* m_Window;
     CVDisplayLinkRef m_DisplayLink;
     int m_DisplayFps;
-    CGDirectDisplayID m_DisplayId;
 };
 
 IVsyncSource* DisplayLinkVsyncSourceFactory::createVsyncSource(Pacer* pacer) {

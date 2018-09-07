@@ -874,6 +874,8 @@ void Session::exec(int displayOriginX, int displayOriginY)
                     SDL_GetError());
     }
 
+    int currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
@@ -922,7 +924,12 @@ void Session::exec(int displayOriginX, int displayOriginY)
             // We use SDL_WINDOWEVENT_SIZE_CHANGED rather than SDL_WINDOWEVENT_RESIZED because the latter doesn't
             // seem to fire when switching from windowed to full-screen on X11.
             if (event.window.event != SDL_WINDOWEVENT_SIZE_CHANGED && event.window.event != SDL_WINDOWEVENT_SHOWN) {
-                break;
+                // Check that the window display hasn't changed. If it has, we want
+                // to recreate the decoder to allow it to adapt to the new display.
+                // This will allow Pacer to pull the new display refresh rate.
+                if (SDL_GetWindowDisplayIndex(m_Window) == currentDisplayIndex) {
+                    break;
+                }
             }
 
             // Fall through
@@ -940,6 +947,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
             SDL_FlushEvent(SDL_WINDOWEVENT);
 
             // Update the window display mode based on our current monitor
+            currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
             updateOptimalWindowDisplayMode();
 
             // Now that the old decoder is dead, flush any events it may
