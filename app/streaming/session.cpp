@@ -581,16 +581,11 @@ void Session::getWindowDimensions(int& x, int& y,
     if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
         width = usableBounds.w;
         height = usableBounds.h;
-        x = usableBounds.x;
-        y = usableBounds.y;
 
         if (m_Window != nullptr) {
             int top, left, bottom, right;
 
             if (SDL_GetWindowBordersSize(m_Window, &top, &left, &bottom, &right) == 0) {
-                x += left;
-                y += top;
-
                 width -= left + right;
                 height -= top + bottom;
             }
@@ -615,8 +610,9 @@ void Session::getWindowDimensions(int& x, int& y,
 
         width = m_StreamConfig.width;
         height = m_StreamConfig.height;
-        x = y = SDL_WINDOWPOS_UNDEFINED_DISPLAY(displayIndex);
     }
+
+    x = y = SDL_WINDOWPOS_CENTERED_DISPLAY(displayIndex);
 }
 
 void Session::updateOptimalWindowDisplayMode()
