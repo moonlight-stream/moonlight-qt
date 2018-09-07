@@ -637,6 +637,16 @@ void Session::updateOptimalWindowDisplayMode()
             }
         }
 
+        if (bestMode.refresh_rate == 0) {
+            // We may find no match if the user has moved a 120 FPS
+            // stream onto a 60 Hz monitor (since no refresh rate can
+            // divide our FPS setting). We'll stick to the default in
+            // this case.
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "No matching refresh rate found; using desktop mode");
+            bestMode = desktopMode;
+        }
+
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Chosen best display mode: %dx%dx%d",
                     bestMode.w, bestMode.h, bestMode.refresh_rate);
