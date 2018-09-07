@@ -129,6 +129,55 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
 
 #endif
 
+#ifdef Q_OS_WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <DbgHelp.h>
+
+LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
+{
+    WCHAR dmpFileName[MAX_PATH];
+    swprintf_s(dmpFileName, L"%ls\\Moonlight-%I64u.dmp",
+               (PWCHAR)QDir::toNativeSeparators(Path::getLogDir()).utf16(), QDateTime::currentSecsSinceEpoch());
+    QString qDmpFileName = QString::fromUtf16((unsigned short*)dmpFileName);
+    HANDLE dumpHandle = CreateFileW(dmpFileName, GENERIC_WRITE, 0, nullptr, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+    if (dumpHandle != INVALID_HANDLE_VALUE) {
+        MINIDUMP_EXCEPTION_INFORMATION info;
+
+        info.ThreadId = GetCurrentThreadId();
+        info.ExceptionPointers = ExceptionInfo;
+        info.ClientPointers = FALSE;
+
+        DWORD typeFlags = MiniDumpWithIndirectlyReferencedMemory |
+                MiniDumpIgnoreInaccessibleMemory |
+                MiniDumpWithUnloadedModules |
+                MiniDumpWithThreadInfo;
+
+        if (MiniDumpWriteDump(GetCurrentProcess(),
+                               GetCurrentProcessId(),
+                               dumpHandle,
+                               (MINIDUMP_TYPE)typeFlags,
+                               &info,
+                               nullptr,
+                               nullptr)) {
+            qCritical() << "Unhandled exception! Minidump written to:" << qDmpFileName;
+        }
+        else {
+            qCritical() << "Unhandled exception! Failed to write dump:" << GetLastError();
+        }
+
+        CloseHandle(dumpHandle);
+    }
+    else {
+        qCritical() << "Unhandled exception! Failed to open dump file:" << qDmpFileName << "with error" << GetLastError();
+    }
+
+    // Let the program crash and WER collect a dump
+    return EXCEPTION_CONTINUE_SEARCH;
+}
+
+#endif
+
 int main(int argc, char *argv[])
 {
     // Set these here to allow us to use the default QSettings constructor.
@@ -165,6 +214,11 @@ int main(int argc, char *argv[])
     s_LoggerTime.start();
     qInstallMessageHandler(qtLogToDiskHandler);
     SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
+#endif
+
+#ifdef Q_OS_WIN32
+    // Create a crash dump when we crash on Windows
+    SetUnhandledExceptionFilter(UnhandledExceptionHandler);
 #endif
 
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);

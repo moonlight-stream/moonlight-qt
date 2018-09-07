@@ -37,7 +37,7 @@ win32 {
         LIBS += -L$$PWD/../libs/windows/lib/x64
     }
 
-    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib
+    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
 }
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include $$PWD/../libs/mac/Frameworks/SDL2.framework/Versions/A/Headers
