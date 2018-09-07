@@ -11,6 +11,10 @@
 #define SDL_MAIN_HANDLED
 #include <SDL.h>
 
+#ifdef HAVE_FFMPEG
+#include "streaming/video/ffmpeg.h"
+#endif
+
 #include "path.h"
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
@@ -62,7 +66,8 @@ void logToLoggerStream(QString& message)
     }
 #endif
 
-    s_LoggerStream << message << endl;
+    s_LoggerStream << message;
+    s_LoggerStream.flush();
 }
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
@@ -94,7 +99,7 @@ void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const ch
     }
 
     QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
-    QString txt = QString("%1 - SDL %2 (%3): %4").arg(logTime.toString()).arg(priorityTxt).arg(category).arg(message);
+    QString txt = QString("%1 - SDL %2 (%3): %4\n").arg(logTime.toString()).arg(priorityTxt).arg(category).arg(message);
 
     logToLoggerStream(txt);
 }
@@ -122,10 +127,31 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
     }
 
     QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
-    QString txt = QString("%1 - Qt %2: %3").arg(logTime.toString()).arg(typeTxt).arg(msg);
+    QString txt = QString("%1 - Qt %2: %3\n").arg(logTime.toString()).arg(typeTxt).arg(msg);
 
     logToLoggerStream(txt);
 }
+
+#ifdef HAVE_FFMPEG
+
+void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
+{
+    char lineBuffer[1024];
+    static int printPrefix = 1;
+
+    if ((level & 0xFF) > av_log_get_level()) {
+        return;
+    }
+
+    av_log_format_line(ptr, level, fmt, vl, lineBuffer, sizeof(lineBuffer), &printPrefix);
+
+    QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
+    QString txt = QString("%1 - FFmpeg: %2").arg(logTime.toString()).arg(lineBuffer);
+
+    logToLoggerStream(txt);
+}
+
+#endif
 
 #endif
 
@@ -221,6 +247,11 @@ int main(int argc, char *argv[])
     s_LoggerTime.start();
     qInstallMessageHandler(qtLogToDiskHandler);
     SDL_LogSetOutputFunction(sdlLogToDiskHandler, nullptr);
+
+#ifdef HAVE_FFMPEG
+    av_log_set_callback(ffmpegLogToDiskHandler);
+#endif
+
 #endif
 
 #ifdef Q_OS_WIN32
