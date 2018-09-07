@@ -134,8 +134,15 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
 #include <Windows.h>
 #include <DbgHelp.h>
 
+static UINT s_HitUnhandledException = 0;
+
 LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
 {
+    // Only write a dump for the first unhandled exception
+    if (InterlockedCompareExchange(&s_HitUnhandledException, 1, 0) != 0) {
+        return EXCEPTION_CONTINUE_SEARCH;
+    }
+
     WCHAR dmpFileName[MAX_PATH];
     swprintf_s(dmpFileName, L"%ls\\Moonlight-%I64u.dmp",
                (PWCHAR)QDir::toNativeSeparators(Path::getLogDir()).utf16(), QDateTime::currentSecsSinceEpoch());
