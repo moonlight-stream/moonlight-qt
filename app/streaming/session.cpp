@@ -929,6 +929,26 @@ void Session::exec(int displayOriginX, int displayOriginY)
         }
 
         case SDL_WINDOWEVENT:
+            // Capture mouse cursor when user actives the window by clicking on
+            // window's client area (borders and title bar excluded).
+            // Without this you would have to click the window twice (once to
+            // active it, second time to enable capture). With this you need to
+            // click it only once.
+            // By excluding window's borders and title bar out, lets user still
+            // interact with them without mouse capture kicking in.
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
+                int mouseX, mouseY;
+                Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
+                if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+                    int x, y, width, height;
+                    SDL_GetWindowPosition(m_Window, &x, &y);
+                    SDL_GetWindowSize(m_Window, &width, &height);
+                    if (mouseX > x && mouseX < x+width && mouseY > y && mouseY < y+height) {
+                        SDL_SetRelativeMouseMode(SDL_TRUE);
+                    }
+                }
+            }
+
             // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
             // This lets user to interact with our window's title bar and with the buttons in it.
             if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
