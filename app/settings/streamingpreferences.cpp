@@ -18,6 +18,7 @@
 #define SER_VIDEOCFG "videocfg"
 #define SER_VIDEODEC "videodec"
 #define SER_WINDOWMODE "windowmode"
+#define SER_UNSUPPORTEDFPS "unsupportedfps"
 
 StreamingPreferences::StreamingPreferences()
 {
@@ -36,6 +37,7 @@ void StreamingPreferences::reload()
     gameOptimizations = settings.value(SER_GAMEOPTS, true).toBool();
     playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
     multiController = settings.value(SER_MULTICONT, true).toBool();
+    unsupportedFps = settings.value(SER_UNSUPPORTEDFPS, false).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_FORCE_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -60,6 +62,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_GAMEOPTS, gameOptimizations);
     settings.setValue(SER_HOSTAUDIO, playAudioOnHost);
     settings.setValue(SER_MULTICONT, multiController);
+    settings.setValue(SER_UNSUPPORTEDFPS, unsupportedFps);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));

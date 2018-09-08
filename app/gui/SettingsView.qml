@@ -109,7 +109,7 @@ ScrollView {
                             var saved_width = prefs.width
                             var saved_height = prefs.height
                             currentIndex = 0
-                            for (var i = 0; i < resolutionComboBox.count; i++) {
+                            for (var i = 0; i < resolutionListModel.count; i++) {
                                 var el_width = parseInt(resolutionListModel.get(i).video_width);
                                 var el_height = parseInt(resolutionListModel.get(i).video_height);
 
@@ -168,10 +168,15 @@ ScrollView {
                     }
 
                     ComboBox {
-                        // ignore setting the index at first, and actually set it when the component is loaded
-                        Component.onCompleted: {
+                        function createModel() {
+                            var fpsListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
+
                             // Get the max supported FPS on this system
                             var max_fps = prefs.getMaximumStreamingFrameRate();
+
+                            // Default entries
+                            fpsListModel.append({"text": "30 FPS", "video_fps": "30"})
+                            fpsListModel.append({"text": "60 FPS", "video_fps": "60"})
 
                             // Use 64 as the cutoff for adding a separate option to
                             // handle wonky displays that report just over 60 Hz.
@@ -179,10 +184,25 @@ ScrollView {
                                 fpsListModel.append({"text": max_fps+" FPS", "video_fps": ""+max_fps})
                             }
 
+                            if (prefs.unsupportedFps) {
+                                if (max_fps !== 90) {
+                                    fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
+                                }
+                                if (max_fps !== 120) {
+                                    fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
+                                }
+                            }
+
+                            return fpsListModel
+                        }
+
+                        function reinitialize() {
+                            model = createModel()
+
                             var saved_fps = prefs.fps
                             currentIndex = 0
-                            for (var i = 0; i < fpsComboBox.count; i++) {
-                                var el_fps = parseInt(fpsListModel.get(i).video_fps);
+                            for (var i = 0; i < model.count; i++) {
+                                var el_fps = parseInt(model.get(i).video_fps);
 
                                 // Pick the highest value lesser or equal to the saved FPS
                                 if (saved_fps >= el_fps) {
@@ -194,24 +214,17 @@ ScrollView {
                             activated(currentIndex)
                         }
 
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            reinitialize()
+                        }
+
                         id: fpsComboBox
                         textRole: "text"
-                        model: ListModel {
-                            id: fpsListModel
-                            ListElement {
-                                text: "30 FPS"
-                                video_fps: "30"
-                            }
-                            ListElement {
-                                text: "60 FPS"
-                                video_fps: "60"
-                            }
-                            // A higher value may be added at runtime
-                            // based on the attached display refresh rate
-                        }
+                        width: 250
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
-                            var selectedFps = parseInt(fpsListModel.get(currentIndex).video_fps)
+                            var selectedFps = parseInt(model.get(currentIndex).video_fps)
 
                             // Only modify the bitrate if the values actually changed
                             if (prefs.fps !== selectedFps) {
@@ -565,6 +578,19 @@ ScrollView {
                     }
                 }
 
+                CheckBox {
+                    id: unlockUnsupportedFps
+                    text: "<font color=\"white\">Unlock unsupported FPS options</font>"
+                    font.pointSize: 12
+                    checked: prefs.unsupportedFps
+                    onCheckedChanged: {
+                        prefs.unsupportedFps = checked
+
+                        // The selectable FPS values depend on whether
+                        // this option is enabled or not
+                        fpsComboBox.reinitialize()
+                    }
+                }
             }
         }
     }

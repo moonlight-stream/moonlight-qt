@@ -415,6 +415,10 @@ bool Session::validateLaunch()
         emitLaunchWarning("Your settings selection to force software decoding may cause poor streaming performance.");
     }
 
+    if (m_Preferences.unsupportedFps && m_StreamConfig.fps > 60) {
+        emitLaunchWarning("Using unsupported FPS options may cause stuttering or lag.");
+    }
+
     if (m_StreamConfig.supportsHevc) {
         bool hevcForced = m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
                 m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;

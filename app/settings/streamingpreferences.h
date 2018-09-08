@@ -68,6 +68,7 @@ public:
     Q_PROPERTY(bool gameOptimizations MEMBER gameOptimizations NOTIFY gameOptimizationsChanged)
     Q_PROPERTY(bool playAudioOnHost MEMBER playAudioOnHost NOTIFY playAudioOnHostChanged)
     Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
+    Q_PROPERTY(bool unsupportedFps MEMBER unsupportedFps NOTIFY unsupportedFpsChanged)
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
@@ -82,6 +83,7 @@ public:
     bool gameOptimizations;
     bool playAudioOnHost;
     bool multiController;
+    bool unsupportedFps;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
     VideoDecoderSelection videoDecoderSelection;
@@ -94,6 +96,7 @@ signals:
     void gameOptimizationsChanged();
     void playAudioOnHostChanged();
     void multiControllerChanged();
+    void unsupportedFpsChanged();
     void audioConfigChanged();
     void videoCodecConfigChanged();
     void videoDecoderSelectionChanged();
