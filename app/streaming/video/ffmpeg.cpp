@@ -1,5 +1,6 @@
 #include <Limelight.h>
 #include "ffmpeg.h"
+#include "streaming/streamutils.h"
 
 #ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
@@ -127,9 +128,13 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
         enableVsync = false;
     }
     else if (vsyncConstraint == IFFmpegRenderer::VSYNC_FORCE_ON && !enableVsync) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "V-sync is forcefully enabled by the active renderer");
-        enableVsync = true;
+        // FIXME: This duplicates logic in Session.cpp
+        int displayHz = StreamUtils::getDisplayRefreshRate(window);
+        if (displayHz + 5 >= maxFps) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "V-sync is forcefully enabled by the active renderer");
+            enableVsync = true;
+        }
     }
 
     m_Pacer = new Pacer(m_Renderer);
