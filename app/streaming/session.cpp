@@ -276,7 +276,8 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_NeedsIdr(false),
       m_AudioDisabled(false),
       m_DisplayOriginX(0),
-      m_DisplayOriginY(0)
+      m_DisplayOriginY(0),
+      m_PendingWindowedTransition(false)
 {
     qDebug() << "Server GPU:" << m_Computer->gpuModel;
 
@@ -682,23 +683,16 @@ void Session::toggleFullscreen()
 {
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
 
-    int x, y, width, height;
-
-    // If we're leaving full screen, toggle out before setting our size and position
-    // that way we have accurate display size metrics (not the size our stream changed it to).
-    if (!fullScreen) {
-        SDL_SetWindowFullscreen(m_Window, 0);
-        SDL_SetWindowResizable(m_Window, SDL_TRUE);
-    }
-
-    getWindowDimensions(x, y, width, height);
-
-    SDL_SetWindowPosition(m_Window, x, y);
-    SDL_SetWindowSize(m_Window, width, height);
-
     if (fullScreen) {
         SDL_SetWindowResizable(m_Window, SDL_FALSE);
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
+    }
+    else {
+        SDL_SetWindowFullscreen(m_Window, 0);
+        SDL_SetWindowResizable(m_Window, SDL_TRUE);
+
+        // Reposition the window when the resize is complete
+        m_PendingWindowedTransition = true;
     }
 }
 
@@ -826,8 +820,10 @@ void Session::exec(int displayOriginX, int displayOriginY)
     if (m_Preferences.windowMode == StreamingPreferences::WM_WINDOWED) {
         getWindowDimensions(x, y, width, height);
 
-        SDL_SetWindowPosition(m_Window, x, y);
+        // We must set the size before the position because centering
+        // won't work unless it knows the final size of the window.
         SDL_SetWindowSize(m_Window, width, height);
+        SDL_SetWindowPosition(m_Window, x, y);
 
         // Passing SDL_WINDOW_RESIZABLE to set this during window
         // creation causes our window to be full screen for some reason
@@ -978,6 +974,20 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 if (SDL_GetWindowDisplayIndex(m_Window) == currentDisplayIndex) {
                     break;
                 }
+            }
+
+            // Complete any repositioning that was deferred until
+            // the resize from full-screen to windowed had completed.
+            // If we try to do this immediately, the resize won't take effect
+            // properly on Windows.
+            if (m_PendingWindowedTransition) {
+                m_PendingWindowedTransition = false;
+
+                int x, y, width, height;
+                getWindowDimensions(x, y, width, height);
+
+                SDL_SetWindowSize(m_Window, width, height);
+                SDL_SetWindowPosition(m_Window, x, y);
             }
 
             // Fall through

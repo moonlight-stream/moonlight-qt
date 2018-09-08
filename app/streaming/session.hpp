@@ -114,6 +114,7 @@ private:
     Uint32 m_FullScreenFlag;
     int m_DisplayOriginX;
     int m_DisplayOriginY;
+    bool m_PendingWindowedTransition;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;
