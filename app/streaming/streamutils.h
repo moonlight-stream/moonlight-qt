@@ -10,4 +10,7 @@ public:
 
     static
     bool getRealDesktopMode(int displayIndex, SDL_DisplayMode* mode);
+
+    static
+    int getDisplayRefreshRate(SDL_Window* window);
 };

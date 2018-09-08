@@ -178,17 +178,28 @@ ScrollView {
                             fpsListModel.append({"text": "30 FPS", "video_fps": "30"})
                             fpsListModel.append({"text": "60 FPS", "video_fps": "60"})
 
+                            // Add unsupported FPS values that come before the display max FPS
+                            if (prefs.unsupportedFps) {
+                                if (max_fps > 90) {
+                                    fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
+                                }
+                                if (max_fps > 120) {
+                                    fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
+                                }
+                            }
+
                             // Use 64 as the cutoff for adding a separate option to
                             // handle wonky displays that report just over 60 Hz.
                             if (max_fps > 64) {
                                 fpsListModel.append({"text": max_fps+" FPS", "video_fps": ""+max_fps})
                             }
 
+                            // Add unsupported FPS values that come after the display max FPS
                             if (prefs.unsupportedFps) {
-                                if (max_fps !== 90) {
+                                if (max_fps < 90) {
                                     fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
                                 }
-                                if (max_fps !== 120) {
+                                if (max_fps < 120) {
                                     fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
                                 }
                             }
@@ -325,7 +336,6 @@ ScrollView {
                     id: vsyncCheck
                     text: "<font color=\"white\">Enable V-Sync</font>"
                     font.pointSize:  12
-                    visible: prefs.windowMode === StreamingPreferences.WM_FULLSCREEN
                     checked: prefs.enableVsync
                     onCheckedChanged: {
                         prefs.enableVsync = checked

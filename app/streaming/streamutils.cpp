@@ -25,6 +25,52 @@ void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
     }
 }
 
+int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
+{
+    int displayIndex = SDL_GetWindowDisplayIndex(window);
+    if (displayIndex < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to get current display: %s",
+                     SDL_GetError());
+
+        // Assume display 0 if it fails
+        displayIndex = 0;
+    }
+
+    SDL_DisplayMode mode;
+    if ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        // Use the window display mode for full-screen exclusive mode
+        if (SDL_GetWindowDisplayMode(window, &mode) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetWindowDisplayMode() failed: %s",
+                         SDL_GetError());
+
+            // Assume 60 Hz
+            return 60;
+        }
+    }
+    else {
+        // Use the current display mode for windowed and borderless
+        if (SDL_GetCurrentDisplayMode(displayIndex, &mode) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetCurrentDisplayMode() failed: %s",
+                         SDL_GetError());
+
+            // Assume 60 Hz
+            return 60;
+        }
+    }
+
+    // May be zero if undefined
+    if (mode.refresh_rate == 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Refresh rate unknown; assuming 60 Hz");
+        mode.refresh_rate = 60;
+    }
+
+    return mode.refresh_rate;
+}
+
 bool StreamUtils::getRealDesktopMode(int displayIndex, SDL_DisplayMode* mode)
 {
 #ifdef Q_OS_DARWIN

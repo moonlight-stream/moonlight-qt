@@ -417,6 +417,10 @@ bool Session::validateLaunch()
 
     if (m_Preferences.unsupportedFps && m_StreamConfig.fps > 60) {
         emitLaunchWarning("Using unsupported FPS options may cause stuttering or lag.");
+
+        if (m_Preferences.enableVsync) {
+            emitLaunchWarning("V-sync will be disabled when streaming at a higher frame rate than the display.");
+        }
     }
 
     if (m_StreamConfig.supportsHevc) {
@@ -1001,18 +1005,31 @@ void Session::exec(int displayOriginX, int displayOriginY)
             SDL_FlushEvent(SDL_RENDER_DEVICE_RESET);
             SDL_FlushEvent(SDL_RENDER_TARGETS_RESET);
 
-            // Choose a new decoder (hopefully the same one, but possibly
-            // not if a GPU was removed or something).
-            if (!chooseDecoder(m_Preferences.videoDecoderSelection,
-                               m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
-                               m_ActiveVideoHeight, m_ActiveVideoFrameRate,
-                               m_Preferences.enableVsync,
-                               s_ActiveSession->m_VideoDecoder)) {
-                SDL_AtomicUnlock(&m_DecoderLock);
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to recreate decoder after reset");
-                emit displayLaunchError("Unable to initialize video decoder. Please check your streaming settings and try again.");
-                goto DispatchDeferredCleanup;
+            {
+                // If the stream exceeds the display refresh rate (plus some slack),
+                // forcefully disable V-sync to allow the stream to render faster
+                // than the display.
+                int displayHz = StreamUtils::getDisplayRefreshRate(m_Window);
+                bool enableVsync = m_Preferences.enableVsync;
+                if (displayHz + 5 < m_StreamConfig.fps) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Disabling V-sync because refresh rate limit exceeded");
+                    enableVsync = false;
+                }
+
+                // Choose a new decoder (hopefully the same one, but possibly
+                // not if a GPU was removed or something).
+                if (!chooseDecoder(m_Preferences.videoDecoderSelection,
+                                   m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
+                                   m_ActiveVideoHeight, m_ActiveVideoFrameRate,
+                                   enableVsync,
+                                   s_ActiveSession->m_VideoDecoder)) {
+                    SDL_AtomicUnlock(&m_DecoderLock);
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "Failed to recreate decoder after reset");
+                    emit displayLaunchError("Unable to initialize video decoder. Please check your streaming settings and try again.");
+                    goto DispatchDeferredCleanup;
+                }
             }
 
             // Request an IDR frame to complete the reset

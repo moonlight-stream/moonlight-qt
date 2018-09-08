@@ -17,7 +17,6 @@ DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0x
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
 DXVA2Renderer::DXVA2Renderer() :
-    m_ForceVsyncOn(false),
     m_DecService(nullptr),
     m_Decoder(nullptr),
     m_SurfacesUsed(0),
@@ -467,7 +466,6 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     D3DPRESENT_PARAMETERS d3dpp = {};
     d3dpp.hDeviceWindow = info.info.win.window;
     d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
-    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
 
     if ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
         d3dpp.Windowed = false;
@@ -490,14 +488,20 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // to reduce latency by avoiding double v-syncing.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
 
-        // D3DSWAPEFFECT_FLIPEX requires at least 2 back buffers to allow us to
-        // continue while DWM is waiting to render the surface to the display.
-        d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
-        d3dpp.BackBufferCount = 2;
-
-        // We need our V-sync source enabled to synchronize with DWM composition
-        // and avoid micro-stuttering.
-        m_ForceVsyncOn = true;
+        // If V-sync is enabled (not rendering faster than display),
+        // we can use FlipEx for more efficient swapping.
+        if (enableVsync) {
+            // D3DSWAPEFFECT_FLIPEX requires at least 2 back buffers to allow us to
+            // continue while DWM is waiting to render the surface to the display.
+            d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
+            d3dpp.BackBufferCount = 2;
+        }
+        else {
+            // With V-sync off, we won't use FlipEx because that will block while
+            // DWM is waiting to render our surface (effectively behaving like V-Sync).
+            d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+            d3dpp.BackBufferCount = 1;
+        }
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Windowed mode with DWM running");
@@ -506,6 +510,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // Uncomposited desktop or full-screen exclusive mode with V-sync enabled
         // We will enable V-sync in this scenario to avoid tearing.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
+        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferCount = 1;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -515,6 +520,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // Uncomposited desktop or full-screen exclusive mode with V-sync disabled
         // We will allowing tearing for lowest latency.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
+        d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferCount = 1;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -631,7 +637,7 @@ int DXVA2Renderer::getDecoderCapabilities()
 
 IFFmpegRenderer::VSyncConstraint DXVA2Renderer::getVsyncConstraint()
 {
-    return m_ForceVsyncOn ? VSYNC_FORCE_ON : VSYNC_ANY;
+    return VSYNC_ANY;
 }
 
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)

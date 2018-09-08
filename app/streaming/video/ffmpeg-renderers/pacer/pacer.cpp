@@ -1,4 +1,5 @@
 #include "pacer.h"
+#include "streaming/streamutils.h"
 
 #include "nullthreadedvsyncsource.h"
 
@@ -120,44 +121,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enableVsync)
 {
     m_MaxVideoFps = maxVideoFps;
     m_EnableVsync = enableVsync;
-
-    int displayIndex = SDL_GetWindowDisplayIndex(window);
-    if (displayIndex < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to get current display: %s",
-                     SDL_GetError());
-
-        // Assume display 0 if it fails
-        displayIndex = 0;
-    }
-
-    SDL_DisplayMode mode;
-    if ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
-        // Use the window display mode for full-screen exclusive mode
-        if (SDL_GetWindowDisplayMode(window, &mode) != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetWindowDisplayMode() failed: %s",
-                         SDL_GetError());
-            return false;
-        }
-    }
-    else {
-        // Use the current display mode for windowed and borderless
-        if (SDL_GetCurrentDisplayMode(displayIndex, &mode) != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetCurrentDisplayMode() failed: %s",
-                         SDL_GetError());
-            return false;
-        }
-    }
-
-    // May be zero if undefined
-    m_DisplayFps = mode.refresh_rate;
-    if (m_DisplayFps == 0) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Refresh rate unknown; assuming 60 Hz");
-        m_DisplayFps = 60;
-    }
+    m_DisplayFps = StreamUtils::getDisplayRefreshRate(window);
 
     if (m_EnableVsync) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
