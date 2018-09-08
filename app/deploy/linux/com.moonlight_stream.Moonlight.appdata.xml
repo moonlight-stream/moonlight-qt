@@ -33,6 +33,27 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.4.0" date="2018-09-08">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added option to enable (unsupported) 90/120 FPS streaming on 60 Hz monitors</li>
+					<li>Added refresh rate matching for better frame pacing on high refresh rate monitors</li>
+					<li>The streaming window now appears on the same monitor the UI was displayed on</li>
+					<li>The streaming window is now centered on the target monitor</li>
+					<li>Display a dialog when the connection is terminated by the remote PC</li>
+					<li>Added option to select between full-screen exclusive and borderless windowed mode</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed streaming with no audio device</li>
+					<li>Fixed mouse lag with some high polling rate mice</li>
+					<li>Improved UI performance on the app grid page</li>
+					<li>1440p and 4K 120 FPS performance is improved to avoid encoder bottlenecks</li>
+					<li>Autodetect audio configuration option removed because it was broken</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.3.0" date="2018-08-21">
 			<description>
 				<p>Bugfixes:</p>
