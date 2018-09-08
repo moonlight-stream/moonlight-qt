@@ -341,10 +341,14 @@ ScrollView {
                     textRole: "text"
                     model: ListModel {
                         id: audioListModel
-                        ListElement {
+                        // Detection of audio channels only works on Windows
+                        // and even so, it's still unreliable because audio devices
+                        // lie about how many channels they can support. Hide the
+                        // option to autodetect until this is resolved.
+                        /*ListElement {
                             text: "Autodetect"
                             val: StreamingPreferences.AC_AUTO
-                        }
+                        }*/
                         ListElement {
                             text: "Stereo"
                             val: StreamingPreferences.AC_FORCE_STEREO

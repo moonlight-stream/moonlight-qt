@@ -37,7 +37,7 @@ void StreamingPreferences::reload()
     playAudioOnHost = settings.value(SER_HOSTAUDIO, false).toBool();
     multiController = settings.value(SER_MULTICONT, true).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
-                                                  static_cast<int>(AudioConfig::AC_AUTO)).toInt());
+                                                  static_cast<int>(AudioConfig::AC_FORCE_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
                                                   static_cast<int>(VideoCodecConfig::VCC_AUTO)).toInt());
     videoDecoderSelection = static_cast<VideoDecoderSelection>(settings.value(SER_VIDEODEC,
