@@ -36,6 +36,7 @@ private:
     getFilePathForBoxArt(NvComputer* computer, int appId);
 
     QDir m_BoxArtDir;
+    QThreadPool m_ThreadPool;
 };
 
 class NetworkBoxArtLoadTask : public QObject, public QRunnable

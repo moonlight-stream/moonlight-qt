@@ -6,8 +6,10 @@
 
 BoxArtManager::BoxArtManager(QObject *parent) :
     QObject(parent),
-    m_BoxArtDir(Path::getBoxArtCacheDir())
+    m_BoxArtDir(Path::getBoxArtCacheDir()),
+    m_ThreadPool(this)
 {
+    m_ThreadPool.setMaxThreadCount(1);
     if (!m_BoxArtDir.exists()) {
         m_BoxArtDir.mkpath(".");
     }
@@ -41,7 +43,7 @@ QUrl BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
     // If we get here, we need to fetch asynchronously.
     // Kick off a worker on our thread pool to do just that.
     NetworkBoxArtLoadTask* netLoadTask = new NetworkBoxArtLoadTask(this, computer, app);
-    QThreadPool::globalInstance()->start(netLoadTask);
+    m_ThreadPool.start(netLoadTask);
 
     // Return the placeholder then we can notify the caller
     // later when the real image is ready.
