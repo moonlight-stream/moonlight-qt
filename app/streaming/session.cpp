@@ -932,10 +932,14 @@ void Session::exec(int displayOriginX, int displayOriginY)
             // Capture mouse cursor when user actives the window by clicking on
             // window's client area (borders and title bar excluded).
             // Without this you would have to click the window twice (once to
-            // active it, second time to enable capture). With this you need to
+            // activate it, second time to enable capture). With this you need to
             // click it only once.
+            // On Linux, the button press event is delivered after the focus gain
+            // so this is not neccessary (and leads to a click sent to the host
+            // when focusing the window by clicking).
             // By excluding window's borders and title bar out, lets user still
             // interact with them without mouse capture kicking in.
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
             if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
                 int mouseX, mouseY;
                 Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
@@ -948,6 +952,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                     }
                 }
             }
+#endif
 
             // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
             // This lets user to interact with our window's title bar and with the buttons in it.
