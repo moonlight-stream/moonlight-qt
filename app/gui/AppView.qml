@@ -18,10 +18,6 @@ GridView {
     anchors.bottomMargin: 5
     cellWidth: 225; cellHeight: 385;
 
-    // Cache delegates for 1000px in both directions to improve
-    // scrolling and resizing performance
-    cacheBuffer: 1000
-
     // The StackView will trigger a visibility change when
     // we're pushed onto it, causing our onVisibleChanged
     // routine to run, but only if we start as invisible
@@ -104,34 +100,6 @@ GridView {
             stackView.push(segue)
         }
 
-        MessageDialog {
-            id: quitAppDialog
-            modality:Qt.WindowModal
-            property string appName : "";
-            property bool segueToStream : false
-            text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
-            standardButtons: StandardButton.Yes | StandardButton.No
-            onYes: {
-                var component = Qt.createComponent("QuitSegue.qml")
-                var params = {"appName": appName}
-                if (segueToStream) {
-                    // Store the session and app name if we're going to stream after
-                    // successfully quitting the old app.
-                    params.nextAppName = model.name
-                    params.nextSession = appModel.createSessionForApp(index)
-                }
-                else {
-                    params.nextAppName = null
-                    params.nextSession = null
-                }
-
-                stackView.push(component.createObject(stackView, params))
-
-                // Trigger the quit after pushing the quit segue on screen
-                appModel.quitRunningApp()
-            }
-        }
-
         onClicked: {
             // Nothing is running or this app is running
             launchOrResumeSelectedApp()
@@ -166,6 +134,34 @@ GridView {
                 visible: model.running
                 height: visible ? implicitHeight : 0
             }
+        }
+    }
+
+    MessageDialog {
+        id: quitAppDialog
+        modality:Qt.WindowModal
+        property string appName : "";
+        property bool segueToStream : false
+        text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
+        standardButtons: StandardButton.Yes | StandardButton.No
+        onYes: {
+            var component = Qt.createComponent("QuitSegue.qml")
+            var params = {"appName": appName}
+            if (segueToStream) {
+                // Store the session and app name if we're going to stream after
+                // successfully quitting the old app.
+                params.nextAppName = model.name
+                params.nextSession = appModel.createSessionForApp(index)
+            }
+            else {
+                params.nextAppName = null
+                params.nextSession = null
+            }
+
+            stackView.push(component.createObject(stackView, params))
+
+            // Trigger the quit after pushing the quit segue on screen
+            appModel.quitRunningApp()
         }
     }
 
