@@ -9,7 +9,11 @@ BoxArtManager::BoxArtManager(QObject *parent) :
     m_BoxArtDir(Path::getBoxArtCacheDir()),
     m_ThreadPool(this)
 {
-    m_ThreadPool.setMaxThreadCount(1);
+    // 4 is a good balance between fast loading for large
+    // app grids and not crushing GFE with tons of requests
+    // and causing UI jank from constantly stalling to decode
+    // new images.
+    m_ThreadPool.setMaxThreadCount(4);
     if (!m_BoxArtDir.exists()) {
         m_BoxArtDir.mkpath(".");
     }
