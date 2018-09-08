@@ -118,6 +118,9 @@ ScrollView {
                                     currentIndex = i
                                 }
                             }
+
+                            // Persist the selected value
+                            activated(currentIndex)
                         }
 
                         id: resolutionComboBox
@@ -150,11 +153,17 @@ ScrollView {
                         }
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
-                            prefs.width = parseInt(resolutionListModel.get(currentIndex).video_width)
-                            prefs.height = parseInt(resolutionListModel.get(currentIndex).video_height)
+                            var selectedWidth = parseInt(resolutionListModel.get(currentIndex).video_width)
+                            var selectedHeight = parseInt(resolutionListModel.get(currentIndex).video_height)
 
-                            prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
-                            slider.value = prefs.bitrateKbps
+                            // Only modify the bitrate if the values actually changed
+                            if (prefs.width !== selectedWidth || prefs.height !== selectedHeight) {
+                                prefs.width = selectedWidth
+                                prefs.height = selectedHeight
+
+                                prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
+                                slider.value = prefs.bitrateKbps
+                            }
                         }
                     }
 
@@ -180,6 +189,9 @@ ScrollView {
                                     currentIndex = i
                                 }
                             }
+
+                            // Persist the selected value
+                            activated(currentIndex)
                         }
 
                         id: fpsComboBox
@@ -199,10 +211,15 @@ ScrollView {
                         }
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
-                            prefs.fps = parseInt(fpsListModel.get(currentIndex).video_fps)
+                            var selectedFps = parseInt(fpsListModel.get(currentIndex).video_fps)
 
-                            prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
-                            slider.value = prefs.bitrateKbps
+                            // Only modify the bitrate if the values actually changed
+                            if (prefs.fps !== selectedFps) {
+                                prefs.fps = selectedFps
+
+                                prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
+                                slider.value = prefs.bitrateKbps
+                            }
                         }
                     }
                 }
@@ -262,8 +279,10 @@ ScrollView {
                              var thisWm = windowModeListModel.get(i).val;
                              if (savedWm === thisWm) {
                                  currentIndex = i
+                                 break
                              }
                         }
+                        activated(currentIndex)
                     }
 
                     id: windowModeComboBox
@@ -328,12 +347,14 @@ ScrollView {
                     Component.onCompleted: {
                         var saved_audio = prefs.audioConfig
                         currentIndex = 0
-                        for(var i = 0; i < audioListModel.count; i++) {
-                            var el_audio= audioListModel.get(i).val;
-                          if(saved_audio === el_audio) {
-                              currentIndex = i
-                          }
+                        for (var i = 0; i < audioListModel.count; i++) {
+                            var el_audio = audioListModel.get(i).val;
+                            if (saved_audio === el_audio) {
+                                currentIndex = i
+                                break
+                            }
                         }
+                        activated(currentIndex)
                     }
 
                     id: audioComboBox
@@ -455,12 +476,14 @@ ScrollView {
                     Component.onCompleted: {
                         var saved_vds = prefs.videoDecoderSelection
                         currentIndex = 0
-                        for(var i = 0; i < decoderListModel.count; i++) {
+                        for (var i = 0; i < decoderListModel.count; i++) {
                             var el_vds = decoderListModel.get(i).val;
-                          if(saved_vds === el_vds) {
-                              currentIndex = i
-                          }
+                            if (saved_vds === el_vds) {
+                                currentIndex = i
+                                break
+                            }
                         }
+                        activated(currentIndex)
                     }
 
                     id: decoderComboBox
@@ -503,10 +526,12 @@ ScrollView {
                         currentIndex = 0
                         for(var i = 0; i < codecListModel.count; i++) {
                             var el_vcc = codecListModel.get(i).val;
-                          if(saved_vcc === el_vcc) {
-                              currentIndex = i
-                          }
+                            if (saved_vcc === el_vcc) {
+                                currentIndex = i
+                                break
+                            }
                         }
+                        activated(currentIndex)
                     }
 
                     id: codecComboBox
