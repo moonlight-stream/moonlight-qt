@@ -325,6 +325,9 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_APOSTROPHE:
                 keyCode = 0xDE;
                 break;
+            case SDL_SCANCODE_NONUSBACKSLASH:
+                keyCode = 0xE2;
+                break;
             default:
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Unhandled button event: %d",
