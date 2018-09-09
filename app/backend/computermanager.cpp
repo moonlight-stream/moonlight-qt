@@ -1,5 +1,6 @@
 #include "computermanager.h"
 #include "nvhttp.h"
+#include "settings/streamingpreferences.h"
 
 #include <QThread>
 #include <QUdpSocket>
@@ -368,17 +369,24 @@ void ComputerManager::startPolling()
         return;
     }
 
-    // Start an MDNS query for GameStream hosts
-    m_MdnsBrowser = new QMdnsEngine::Browser(&m_MdnsServer, "_nvstream._tcp.local.", &m_MdnsCache);
-    connect(m_MdnsBrowser, &QMdnsEngine::Browser::serviceAdded,
-            this, [this](const QMdnsEngine::Service& service) {
-        qInfo() << "Discovered mDNS host:" << service.hostname();
+    StreamingPreferences prefs;
 
-        MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, &m_MdnsCache, service);
-        connect(pendingComputer, SIGNAL(resolvedv4(MdnsPendingComputer*,QHostAddress)),
-                this, SLOT(handleMdnsServiceResolved(MdnsPendingComputer*,QHostAddress)));
-        m_PendingResolution.append(pendingComputer);
-    });
+    if (prefs.enableMdns) {
+        // Start an MDNS query for GameStream hosts
+        m_MdnsBrowser = new QMdnsEngine::Browser(&m_MdnsServer, "_nvstream._tcp.local.", &m_MdnsCache);
+        connect(m_MdnsBrowser, &QMdnsEngine::Browser::serviceAdded,
+                this, [this](const QMdnsEngine::Service& service) {
+            qInfo() << "Discovered mDNS host:" << service.hostname();
+
+            MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, &m_MdnsCache, service);
+            connect(pendingComputer, SIGNAL(resolvedv4(MdnsPendingComputer*,QHostAddress)),
+                    this, SLOT(handleMdnsServiceResolved(MdnsPendingComputer*,QHostAddress)));
+            m_PendingResolution.append(pendingComputer);
+        });
+    }
+    else {
+        qWarning() << "mDNS is disabled by user preference";
+    }
 
     // Start polling threads for each known host
     QMapIterator<QString, NvComputer*> i(m_KnownHosts);

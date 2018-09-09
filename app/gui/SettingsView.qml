@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 
 import StreamingPreferences 1.0
+import ComputerManager 1.0
 
 ScrollView {
     id: settingsPage
@@ -599,6 +600,26 @@ ScrollView {
                         // The selectable FPS values depend on whether
                         // this option is enabled or not
                         fpsComboBox.reinitialize()
+                    }
+                }
+
+                CheckBox {
+                    id: enableMdns
+                    text: "<font color=\"white\">Automatically find PCs on the local network (Recommended)</font>"
+                    font.pointSize: 12
+                    checked: prefs.enableMdns
+                    onCheckedChanged: {
+                        prefs.enableMdns = checked
+
+                        // We must save the updated preference to ensure
+                        // ComputerManager can observe the change internally.
+                        prefs.save()
+
+                        // Restart polling so the mDNS change takes effect
+                        if (window.pollingActive) {
+                            ComputerManager.stopPollingAsync()
+                            ComputerManager.startPolling()
+                        }
                     }
                 }
             }
