@@ -108,6 +108,9 @@ Item {
         id: errorDialog
         modality:Qt.WindowModal
         icon: StandardIcon.Critical
-        standardButtons: StandardButton.Ok
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        onHelp: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting");
+        }
     }
 }
