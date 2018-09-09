@@ -20,6 +20,7 @@
 #define SER_WINDOWMODE "windowmode"
 #define SER_UNSUPPORTEDFPS "unsupportedfps"
 #define SER_MDNS "mdns"
+#define SER_MOUSEACCELERATION "mouseacceleration"
 
 StreamingPreferences::StreamingPreferences()
 {
@@ -40,6 +41,7 @@ void StreamingPreferences::reload()
     multiController = settings.value(SER_MULTICONT, true).toBool();
     unsupportedFps = settings.value(SER_UNSUPPORTEDFPS, false).toBool();
     enableMdns = settings.value(SER_MDNS, true).toBool();
+    mouseAcceleration = settings.value(SER_MOUSEACCELERATION, false).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_FORCE_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -66,6 +68,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_MULTICONT, multiController);
     settings.setValue(SER_UNSUPPORTEDFPS, unsupportedFps);
     settings.setValue(SER_MDNS, enableMdns);
+    settings.setValue(SER_MOUSEACCELERATION, mouseAcceleration);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));

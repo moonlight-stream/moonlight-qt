@@ -1,5 +1,7 @@
 #pragma once
 
+#include "settings/streamingpreferences.h"
+
 #include <SDL.h>
 
 struct GamepadState {
@@ -18,7 +20,7 @@ struct GamepadState {
 class SdlInputHandler
 {
 public:
-    explicit SdlInputHandler(bool multiController);
+    explicit SdlInputHandler(StreamingPreferences& prefs);
 
     ~SdlInputHandler();
 

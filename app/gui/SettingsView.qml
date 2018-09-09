@@ -423,10 +423,10 @@ ScrollView {
             id: gamepadSettingsGroupBox
             width: (parent.width - parent.padding)
             padding: 12
-            title: "<font color=\"skyblue\">Gamepad Settings</font>"
+            title: "<font color=\"skyblue\">Input Settings</font>"
             font.pointSize: 12
 
-            Column {
+            Row {
                 anchors.fill: parent
                 spacing: 5
 
@@ -439,6 +439,16 @@ ScrollView {
                         prefs.multiController = checked
                     }
                 }
+
+                CheckBox {
+                    id: mouseAccelerationCheck
+                    text: "<font color=\"white\">Enable mouse acceleration</font>"
+                    font.pointSize:  12
+                    checked: prefs.mouseAcceleration
+                    onCheckedChanged: {
+                        prefs.mouseAcceleration = checked
+                    }
+                }
             }
         }
 
@@ -449,13 +459,15 @@ ScrollView {
             title: "<font color=\"skyblue\">Host Settings</font>"
             font.pointSize: 12
 
-            Column {
+            Row {
                 anchors.fill: parent
                 spacing: 5
 
                 CheckBox {
                     id: optimizeGameSettingsCheck
                     text: "<font color=\"white\">Optimize game settings</font>"
+                    // HACK: Match width of the other checkbox to make the UI not look bad
+                    width: multiControllerCheck.width
                     font.pointSize:  12
                     checked: prefs.gameOptimizations
                     onCheckedChanged: {

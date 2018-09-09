@@ -14,7 +14,7 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 700
+    height: 600
 
     Material.theme: Material.Dark
     Material.accent: Material.Purple

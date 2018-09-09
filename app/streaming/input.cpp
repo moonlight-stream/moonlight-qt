@@ -22,12 +22,19 @@ const int SdlInputHandler::k_ButtonMap[] = {
     UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG
 };
 
-SdlInputHandler::SdlInputHandler(bool multiController)
+SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs)
     : m_LastMouseMotionTime(0),
-      m_MultiController(multiController)
+      m_MultiController(prefs.multiController)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
+
+    // If mouse acceleration is enabled, use relative mode warp (which
+    // is via normal motion events that are influenced by mouse acceleration).
+    // Otherwise, we'll use raw input capture which is straight from the device
+    // without modification by the OS.
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
+                prefs.mouseAcceleration ? "1" : "0");
 
     // We need to reinit this each time, since you only get
     // an initial set of gamepad arrival events once per init.

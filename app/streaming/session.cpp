@@ -728,7 +728,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     // Initialize the gamepad code with our preferences
     StreamingPreferences prefs;
-    SdlInputHandler inputHandler(prefs.multiController);
+    SdlInputHandler inputHandler(prefs);
 
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
