@@ -57,7 +57,7 @@ GridView {
     function addComplete(success)
     {
         if (!success) {
-            errorDialog.text = "Unable to connect to the specified PC. Ensure GameStream is enabled in GeForce Experience."
+            errorDialog.text = "Unable to connect to the specified PC. Click the Help button for possible solutions."
             errorDialog.open()
         }
     }
@@ -191,7 +191,12 @@ GridView {
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
         icon: StandardIcon.Critical
-        standardButtons: StandardButton.Ok
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        onHelp: {
+            // Using Setup-Guide here instead of Troubleshooting because it's likely that users
+            // will arrive here by forgetting to enable GameStream or not forwarding ports.
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
+        }
     }
 
     MessageDialog {
