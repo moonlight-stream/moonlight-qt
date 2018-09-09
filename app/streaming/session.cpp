@@ -279,6 +279,11 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false)
 {
+
+}
+
+void Session::initialize()
+{
     qDebug() << "Server GPU:" << m_Computer->gpuModel;
 
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
@@ -366,14 +371,14 @@ Session::Session(NvComputer* computer, NvApp& app)
         break;
     }
 
-    if (computer->activeAddress == computer->remoteAddress) {
+    if (m_Computer->activeAddress == m_Computer->remoteAddress) {
         m_StreamConfig.streamingRemotely = 1;
     }
     else {
         m_StreamConfig.streamingRemotely = 0;
     }
 
-    if (computer->activeAddress == computer->localAddress) {
+    if (m_Computer->activeAddress == m_Computer->localAddress) {
         m_StreamConfig.packetSize = 1392;
     }
     else {
@@ -700,6 +705,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
 {
     m_DisplayOriginX = displayOriginX;
     m_DisplayOriginY = displayOriginY;
+
+    // Complete initialization in this deferred context to avoid
+    // calling expensive functions in the constructor (during the
+    // process of loading the StreamSegue).
+    initialize();
 
     // Check for validation errors/warnings and emit
     // signals for them, if appropriate

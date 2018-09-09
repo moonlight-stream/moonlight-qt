@@ -41,6 +41,8 @@ signals:
     void displayLaunchWarning(QString text);
 
 private:
+    void initialize();
+
     bool validateLaunch();
 
     void emitLaunchWarning(QString text);
