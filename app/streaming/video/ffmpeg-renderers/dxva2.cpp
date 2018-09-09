@@ -389,10 +389,18 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                 }
                 else if (id.VendorId == 0x10DE) {
                     // For NVIDIA, we wait to avoid those GPUs with Feature Set E
-                    // for HEVC decoding, since that's hybrid.
+                    // for HEVC decoding, since that's hybrid. It appears that Kepler GPUs
+                    // also had some hybrid decode support (per DXVA2 Checker) so we'll
+                    // blacklist those too.
                     // https://en.wikipedia.org/wiki/Nvidia_PureVideo
+                    // https://bluesky23.yukishigure.com/en/dxvac/deviceInfo/decoder.html
                     // http://envytools.readthedocs.io/en/latest/hw/pciid.html (missing GM200)
-                    if ((id.DeviceId >= 0x1340 && id.DeviceId <= 0x137F) || // GM108
+                    if ((id.DeviceId >= 0x1180 && id.DeviceId <= 0x11BF) || // GK104
+                            (id.DeviceId >= 0x11C0 && id.DeviceId <= 0x11FF) || // GK106
+                            (id.DeviceId >= 0x0FC0 && id.DeviceId <= 0x0FFF) || // GK107
+                            (id.DeviceId >= 0x1000 && id.DeviceId <= 0x103F) || // GK110/GK110B
+                            (id.DeviceId >= 0x1280 && id.DeviceId <= 0x12BF) || // GK208
+                            (id.DeviceId >= 0x1340 && id.DeviceId <= 0x137F) || // GM108
                             (id.DeviceId >= 0x1380 && id.DeviceId <= 0x13BF) || // GM107
                             (id.DeviceId >= 0x13C0 && id.DeviceId <= 0x13FF) || // GM204
                             (id.DeviceId >= 0x1617 && id.DeviceId <= 0x161A) || // GM204
