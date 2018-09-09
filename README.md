@@ -13,7 +13,7 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
- - Supports streaming at up to 120 FPS
+ - Supports streaming at up to 120 FPS (high refresh rate monitor recommended)
  - Supports streaming at 720p, 1080p, 1440p, 4K, and the client PC's native screen resolution
  - 5.1 surround sound audio
  - HEVC support for better image quality at reduced bandwidth

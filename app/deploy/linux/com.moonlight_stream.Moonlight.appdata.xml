@@ -11,7 +11,7 @@
 		<p>Features include:</p>
 		<ul>
 			<li>Streaming at up to 4K resolution</li>
-			<li>Support for up to 120 FPS streaming on high refresh rate monitors</li>
+			<li>Support for up to 120 FPS streaming (high refresh rate monitor recommended)</li>
 			<li>Hardware accelerated video decoding with VAAPI and VDPAU support</li>
 			<li>5.1 surround sound audio support</li>
 			<li>HEVC support for better video compression efficiency</li>
