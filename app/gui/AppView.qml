@@ -91,6 +91,8 @@ GridView {
             if (runningIndex >= 0 && runningIndex !== index) {
                 quitAppDialog.appName = appModel.getRunningAppName()
                 quitAppDialog.segueToStream = true
+                quitAppDialog.nextAppName = model.name
+                quitAppDialog.nextAppIndex = index
                 quitAppDialog.open()
                 return
             }
@@ -140,8 +142,10 @@ GridView {
     MessageDialog {
         id: quitAppDialog
         modality:Qt.WindowModal
-        property string appName : "";
+        property string appName : ""
         property bool segueToStream : false
+        property string nextAppName: ""
+        property int nextAppIndex: 0
         text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
         standardButtons: StandardButton.Yes | StandardButton.No
         onYes: {
@@ -150,8 +154,8 @@ GridView {
             if (segueToStream) {
                 // Store the session and app name if we're going to stream after
                 // successfully quitting the old app.
-                params.nextAppName = model.name
-                params.nextSession = appModel.createSessionForApp(index)
+                params.nextAppName = nextAppName
+                params.nextSession = appModel.createSessionForApp(nextAppIndex)
             }
             else {
                 params.nextAppName = null
