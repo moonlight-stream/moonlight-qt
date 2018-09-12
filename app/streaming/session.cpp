@@ -1124,7 +1124,9 @@ DispatchDeferredCleanup:
     // giving the cleanup time to finish. May occur when all process's windows
     // are closed at same time.
     connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, []() {
-        Session::s_ActiveSessionSemaphore.tryAcquire(1, 10000);
+        if (Session::s_ActiveSessionSemaphore.tryAcquire(1, 10000)) {
+            Session::s_ActiveSessionSemaphore.release();
+        }
     });
 
 }
