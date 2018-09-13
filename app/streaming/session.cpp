@@ -279,7 +279,8 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false),
       m_OpusDecoder(nullptr),
-      m_AudioRenderer(nullptr)
+      m_AudioRenderer(nullptr),
+      m_AudioRendererLock(0)
 {
 
 }
@@ -1109,6 +1110,9 @@ DispatchDeferredCleanup:
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
     SDL_AtomicUnlock(&m_DecoderLock);
+
+    // Destroy the audio renderer which must also be done on the main thread
+    cleanupAudioRendererOnMainThread();
 
     SDL_DestroyWindow(m_Window);
     if (iconSurface != nullptr) {

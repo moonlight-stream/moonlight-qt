@@ -3,6 +3,7 @@
 #include <Limelight.h>
 #include <SDL.h>
 
+#include <QAudioDeviceInfo>
 #include <QtGlobal>
 
 #define MIN_QUEUED_FRAMES 2
@@ -10,69 +11,31 @@
 #define STOP_THE_WORLD_LIMIT 20
 #define DROP_RATIO_DENOM 32
 
+// Detecting this with SDL is quite problematic, so we'll use Qt's
+// multimedia framework to do so. It appears to be actually
+// accurate on Linux and macOS, unlike using SDL and relying
+// on a channel change in the format received.
 int SdlAudioRenderer::detectAudioConfiguration()
 {
-    SDL_AudioSpec want, have;
-    SDL_AudioDeviceID dev;
-    int ret;
-
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
-                     SDL_GetError());
-        return AUDIO_CONFIGURATION_STEREO;
-    }
-
-    SDL_zero(want);
-    want.freq = 48000;
-    want.format = AUDIO_S16;
-    want.channels = 6;
-    want.samples = 1024;
-
-    // Try to open for 5.1 surround sound, but allow SDL to tell us that's
-    // not available.
-    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
-    if (dev == 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to open audio device");
-        // We'll probably have issues during audio stream init, but we'll
-        // try anyway
-        ret = AUDIO_CONFIGURATION_STEREO;
-        goto Exit;
-    }
-
-    SDL_CloseAudioDevice(dev);
+    int preferredChannelCount = QAudioDeviceInfo::defaultOutputDevice().preferredFormat().channelCount();
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio device has %d channels", have.channels);
+                "Audio output device prefers %d channel configuration",
+                preferredChannelCount);
 
-    if (have.channels > 2) {
-        // We don't support quadraphonic or 7.1 surround, but SDL
-        // should be able to downmix or upmix better from 5.1 than
-        // from stereo, so use 5.1 in non-stereo cases.
-        ret = AUDIO_CONFIGURATION_51_SURROUND;
+    // We can better downmix 5.1 to quad than we can upmix stereo
+    if (preferredChannelCount > 2) {
+        return AUDIO_CONFIGURATION_51_SURROUND;
     }
     else {
-        ret = AUDIO_CONFIGURATION_STEREO;
+        return AUDIO_CONFIGURATION_STEREO;
     }
-
-Exit:
-    SDL_QuitSubSystem(SDL_INIT_AUDIO);
-    return ret;
 }
 
 bool SdlAudioRenderer::testAudio(int audioConfiguration)
 {
     SDL_AudioSpec want, have;
     SDL_AudioDeviceID dev;
-    bool ret;
-
-    if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Audio test - SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
-                     SDL_GetError());
-        return false;
-    }
 
     SDL_zero(want);
     want.freq = 48000;
@@ -88,8 +51,7 @@ bool SdlAudioRenderer::testAudio(int audioConfiguration)
         break;
     default:
         SDL_assert(false);
-        ret = false;
-        goto Exit;
+        return false;
     }
 
     // Test audio device for functionality
@@ -98,8 +60,7 @@ bool SdlAudioRenderer::testAudio(int audioConfiguration)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Audio test - Failed to open audio device: %s",
                      SDL_GetError());
-        ret = false;
-        goto Exit;
+        return false;
     }
 
     SDL_CloseAudioDevice(dev);
@@ -107,12 +68,7 @@ bool SdlAudioRenderer::testAudio(int audioConfiguration)
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Audio test - Successful with %d channels",
                 want.channels);
-
-    ret = true;
-
-Exit:
-    SDL_QuitSubSystem(SDL_INIT_AUDIO);
-    return ret;
+    return true;
 }
 
 SdlAudioRenderer::SdlAudioRenderer()
@@ -123,20 +79,18 @@ SdlAudioRenderer::SdlAudioRenderer()
       m_SampleIndex(0),
       m_BaselinePendingData(0)
 {
-
-}
-
-bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig)
-{
-    SDL_AudioSpec want, have;
-
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
                      SDL_GetError());
-        return -1;
+        SDL_assert(SDL_WasInit(SDL_INIT_AUDIO));
     }
+}
+
+bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig)
+{
+    SDL_AudioSpec want, have;
 
     SDL_zero(want);
     want.freq = opusConfig->sampleRate;
@@ -155,7 +109,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                      "Failed to open audio device: %s",
                      SDL_GetError());
         SDL_QuitSubSystem(SDL_INIT_AUDIO);
-        return -1;
+        return false;
     }
 
     // SDL counts pending samples in the queued
@@ -182,14 +136,16 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     // Start playback
     SDL_PauseAudioDevice(m_AudioDevice, 0);
 
-    return 0;
+    return true;
 }
 
 SdlAudioRenderer::~SdlAudioRenderer()
 {
-    // Stop playback
-    SDL_PauseAudioDevice(m_AudioDevice, 1);
-    SDL_CloseAudioDevice(m_AudioDevice);
+    if (m_AudioDevice != 0) {
+        // Stop playback
+        SDL_PauseAudioDevice(m_AudioDevice, 1);
+        SDL_CloseAudioDevice(m_AudioDevice);
+    }
 
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));

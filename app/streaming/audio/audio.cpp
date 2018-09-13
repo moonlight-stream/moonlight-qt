@@ -70,8 +70,7 @@ int Session::arInit(int /* audioConfiguration */,
         return -2;
     }
 
-    s_ActiveSession->m_AudioRenderer->prepareForPlayback(opusConfig);
-    if (s_ActiveSession->m_AudioRenderer == nullptr) {
+    if (!s_ActiveSession->m_AudioRenderer->prepareForPlayback(opusConfig)) {
         delete s_ActiveSession->m_AudioRenderer;
         opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
         return -3;
@@ -86,10 +85,19 @@ int Session::arInit(int /* audioConfiguration */,
 
 void Session::arCleanup()
 {
-    delete s_ActiveSession->m_AudioRenderer;
+    // m_AudioRenderer is deleted in cleanupAudioRenderer()
 
     opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
     s_ActiveSession->m_OpusDecoder = nullptr;
+}
+
+// This is called on the main thread
+void Session::cleanupAudioRendererOnMainThread()
+{
+    SDL_AtomicLock(&m_AudioRendererLock);
+    delete m_AudioRenderer;
+    m_AudioRenderer = nullptr;
+    SDL_AtomicUnlock(&m_AudioRendererLock);
 }
 
 void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
@@ -103,9 +111,13 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
                                              SAMPLES_PER_FRAME,
                                              0);
     if (samplesDecoded > 0) {
-        s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
-                                                      static_cast<int>(sizeof(short) *
-                                                      samplesDecoded *
-                                                      s_ActiveSession->m_AudioConfig.channelCount));
+        SDL_AtomicLock(&s_ActiveSession->m_AudioRendererLock);
+        if (s_ActiveSession->m_AudioRenderer != nullptr) {
+            s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
+                                                          static_cast<int>(sizeof(short) *
+                                                            samplesDecoded *
+                                                            s_ActiveSession->m_AudioConfig.channelCount));
+        }
+        SDL_AtomicUnlock(&s_ActiveSession->m_AudioRendererLock);
     }
 }
