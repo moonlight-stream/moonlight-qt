@@ -48,11 +48,11 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
 };
 
 AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
-    Session::sdlAudioInit,
-    Session::sdlAudioStart,
-    Session::sdlAudioStop,
-    Session::sdlAudioCleanup,
-    Session::sdlAudioDecodeAndPlaySample,
+    Session::arInit,
+    nullptr,
+    nullptr,
+    Session::arCleanup,
+    Session::arDecodeAndPlaySample,
     CAPABILITY_DIRECT_SUBMIT
 };
 
@@ -277,7 +277,9 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_AudioDisabled(false),
       m_DisplayOriginX(0),
       m_DisplayOriginY(0),
-      m_PendingWindowedTransition(false)
+      m_PendingWindowedTransition(false),
+      m_OpusDecoder(nullptr),
+      m_AudioRenderer(nullptr)
 {
 
 }
@@ -321,7 +323,7 @@ void Session::initialize()
     {
     case StreamingPreferences::AC_AUTO:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Autodetecting audio configuration");
-        m_StreamConfig.audioConfiguration = sdlDetermineAudioConfiguration();
+        m_StreamConfig.audioConfiguration = detectAudioConfiguration();
         break;
     case StreamingPreferences::AC_FORCE_STEREO:
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;

@@ -1,25 +1,16 @@
-#include "session.hpp"
+#include "sdl.h"
 
 #include <Limelight.h>
 #include <SDL.h>
 
-#define MAX_CHANNELS 6
-#define SAMPLES_PER_FRAME 240
+#include <QtGlobal>
+
 #define MIN_QUEUED_FRAMES 2
 #define MAX_QUEUED_FRAMES 4
 #define STOP_THE_WORLD_LIMIT 20
 #define DROP_RATIO_DENOM 32
 
-SDL_AudioDeviceID Session::s_AudioDevice;
-OpusMSDecoder* Session::s_OpusDecoder;
-short Session::s_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
-int Session::s_ChannelCount;
-int Session::s_PendingDrops;
-int Session::s_PendingHardDrops;
-unsigned int Session::s_SampleIndex;
-Uint32 Session::s_BaselinePendingData;
-
-int Session::sdlDetermineAudioConfiguration()
+int SdlAudioRenderer::detectAudioConfiguration()
 {
     SDL_AudioSpec want, have;
     SDL_AudioDeviceID dev;
@@ -70,7 +61,7 @@ Exit:
     return ret;
 }
 
-bool Session::testAudio(int audioConfiguration)
+bool SdlAudioRenderer::testAudio(int audioConfiguration)
 {
     SDL_AudioSpec want, have;
     SDL_AudioDeviceID dev;
@@ -124,12 +115,20 @@ Exit:
     return ret;
 }
 
-int Session::sdlAudioInit(int /* audioConfiguration */,
-                          POPUS_MULTISTREAM_CONFIGURATION opusConfig,
-                          void* /* arContext */, int /* arFlags */)
+SdlAudioRenderer::SdlAudioRenderer()
+    : m_AudioDevice(0),
+      m_ChannelCount(0),
+      m_PendingDrops(0),
+      m_PendingHardDrops(0),
+      m_SampleIndex(0),
+      m_BaselinePendingData(0)
+{
+
+}
+
+bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig)
 {
     SDL_AudioSpec want, have;
-    int error;
 
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
@@ -150,8 +149,8 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
     // Specifying non-Po2 seems to work for our supported platforms.
     want.samples = SAMPLES_PER_FRAME;
 
-    s_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
-    if (s_AudioDevice == 0) {
+    m_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
+    if (m_AudioDevice == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to open audio device: %s",
                      SDL_GetError());
@@ -159,126 +158,83 @@ int Session::sdlAudioInit(int /* audioConfiguration */,
         return -1;
     }
 
-    s_OpusDecoder = opus_multistream_decoder_create(opusConfig->sampleRate,
-                                                    opusConfig->channelCount,
-                                                    opusConfig->streams,
-                                                    opusConfig->coupledStreams,
-                                                    opusConfig->mapping,
-                                                    &error);
-    if (s_OpusDecoder == NULL) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create decoder: %d",
-                     error);
-        SDL_CloseAudioDevice(s_AudioDevice);
-        s_AudioDevice = 0;
-        SDL_QuitSubSystem(SDL_INIT_AUDIO);
-        return -2;
-    }
-
     // SDL counts pending samples in the queued
     // audio size using the WASAPI backend. This
     // includes silence, which can throw off our
     // pending data count. Get a baseline so we
     // can exclude that data.
-    s_BaselinePendingData = 0;
+    m_BaselinePendingData = 0;
 #ifdef Q_OS_WIN32
     for (int i = 0; i < 100; i++) {
-        s_BaselinePendingData = qMax(s_BaselinePendingData, SDL_GetQueuedAudioSize(s_AudioDevice));
+        m_BaselinePendingData = qMax(m_BaselinePendingData, SDL_GetQueuedAudioSize(m_AudioDevice));
         SDL_Delay(10);
     }
 #endif
-    s_BaselinePendingData *= 2;
+    m_BaselinePendingData *= 2;
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Baseline pending audio data: %d bytes",
-                s_BaselinePendingData);
+                m_BaselinePendingData);
 
-    s_ChannelCount = opusConfig->channelCount;
-    s_SampleIndex = 0;
-    s_PendingDrops = s_PendingHardDrops = 0;
+    m_ChannelCount = opusConfig->channelCount;
+    m_SampleIndex = 0;
+    m_PendingDrops = m_PendingHardDrops = 0;
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio stream has %d channels",
-                opusConfig->channelCount);
+    // Start playback
+    SDL_PauseAudioDevice(m_AudioDevice, 0);
 
     return 0;
 }
 
-void Session::sdlAudioStart()
+SdlAudioRenderer::~SdlAudioRenderer()
 {
-    // Unpause the audio device
-    SDL_PauseAudioDevice(s_AudioDevice, 0);
-}
-
-void Session::sdlAudioStop()
-{
-    // Pause the audio device
-    SDL_PauseAudioDevice(s_AudioDevice, 1);
-}
-
-void Session::sdlAudioCleanup()
-{
-    SDL_CloseAudioDevice(s_AudioDevice);
-    s_AudioDevice = 0;
-
-    opus_multistream_decoder_destroy(s_OpusDecoder);
-    s_OpusDecoder = nullptr;
+    // Stop playback
+    SDL_PauseAudioDevice(m_AudioDevice, 1);
+    SDL_CloseAudioDevice(m_AudioDevice);
 
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 }
 
-void Session::sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength)
+void SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
 {
-    int samplesDecoded;
+    m_SampleIndex++;
 
-    s_SampleIndex++;
-
-    Uint32 queuedAudio = qMax((int)SDL_GetQueuedAudioSize(s_AudioDevice) - (int)s_BaselinePendingData, 0);
-    Uint32 framesQueued = queuedAudio / (SAMPLES_PER_FRAME * s_ChannelCount * sizeof(short));
+    Uint32 queuedAudio = qMax((int)SDL_GetQueuedAudioSize(m_AudioDevice) - (int)m_BaselinePendingData, 0);
+    Uint32 framesQueued = queuedAudio / (SAMPLES_PER_FRAME * m_ChannelCount * sizeof(short));
 
     // We must check this prior to the below checks to ensure we don't
-    // underflow if framesQueued - s_PendingHardDrops < 0.
+    // underflow if framesQueued - m_PendingHardDrops < 0.
     if (framesQueued <= MIN_QUEUED_FRAMES) {
-        s_PendingDrops = s_PendingHardDrops = 0;
+        m_PendingDrops = m_PendingHardDrops = 0;
     }
     // Pend enough drops to get us back to MIN_QUEUED_FRAMES
-    else if (framesQueued - s_PendingHardDrops > STOP_THE_WORLD_LIMIT) {
-        s_PendingHardDrops = framesQueued - MIN_QUEUED_FRAMES;
+    else if (framesQueued - m_PendingHardDrops > STOP_THE_WORLD_LIMIT) {
+        m_PendingHardDrops = framesQueued - MIN_QUEUED_FRAMES;
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Pending hard drop of %u audio frames",
-                    s_PendingHardDrops);
+                    m_PendingHardDrops);
     }
-    else if (framesQueued - s_PendingHardDrops - s_PendingDrops > MAX_QUEUED_FRAMES) {
-        s_PendingDrops = framesQueued - MIN_QUEUED_FRAMES;
+    else if (framesQueued - m_PendingHardDrops - m_PendingDrops > MAX_QUEUED_FRAMES) {
+        m_PendingDrops = framesQueued - MIN_QUEUED_FRAMES;
     }
 
     // Determine if this frame should be dropped
-    if (s_PendingHardDrops != 0) {
+    if (m_PendingHardDrops != 0) {
         // Hard drops happen all at once to forcefully
         // resync with the source.
-        s_PendingHardDrops--;
+        m_PendingHardDrops--;
         return;
     }
-    else if (s_PendingDrops != 0 && s_SampleIndex % DROP_RATIO_DENOM == 0) {
+    else if (m_PendingDrops != 0 && m_SampleIndex % DROP_RATIO_DENOM == 0) {
         // Normal drops are interspersed with the audio data
         // to hide the glitches.
-        s_PendingDrops--;
+        m_PendingDrops--;
         return;
     }
 
-    samplesDecoded = opus_multistream_decode(s_OpusDecoder,
-                                             (unsigned char*)sampleData,
-                                             sampleLength,
-                                             s_OpusDecodeBuffer,
-                                             SAMPLES_PER_FRAME,
-                                             0);
-    if (samplesDecoded > 0) {
-        if (SDL_QueueAudio(s_AudioDevice,
-                           s_OpusDecodeBuffer,
-                           sizeof(short) * samplesDecoded * s_ChannelCount) < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to queue audio sample: %s",
-                         SDL_GetError());
-        }
+    if (SDL_QueueAudio(m_AudioDevice, audioBuffer, audioSize) < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to queue audio sample: %s",
+                     SDL_GetError());
     }
 }

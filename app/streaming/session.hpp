@@ -8,6 +8,7 @@
 #include "settings/streamingpreferences.h"
 #include "input.hpp"
 #include "video/decoder.h"
+#include "audio/renderers/renderer.h"
 
 class Session : public QObject
 {
@@ -49,7 +50,9 @@ private:
 
     int getDecoderCapabilities();
 
-    int sdlDetermineAudioConfiguration();
+    IAudioRenderer* createAudioRenderer();
+
+    int detectAudioConfiguration();
 
     bool testAudio(int audioConfiguration);
 
@@ -78,6 +81,17 @@ private:
     void clLogMessage(const char* format, ...);
 
     static
+    int arInit(int audioConfiguration,
+               const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
+               void* arContext, int arFlags);
+
+    static
+    void arCleanup();
+
+    static
+    void arDecodeAndPlaySample(char* sampleData, int sampleLength);
+
+    static
     int drSetup(int videoFormat, int width, int height, int frameRate, void*, int);
 
     static
@@ -85,23 +99,6 @@ private:
 
     static
     int drSubmitDecodeUnit(PDECODE_UNIT du);
-
-    static
-    int sdlAudioInit(int audioConfiguration,
-                     POPUS_MULTISTREAM_CONFIGURATION opusConfig,
-                     void* arContext, int arFlags);
-
-    static
-    void sdlAudioStart();
-
-    static
-    void sdlAudioStop();
-
-    static
-    void sdlAudioCleanup();
-
-    static
-    void sdlAudioDecodeAndPlaySample(char* sampleData, int sampleLength);
 
     StreamingPreferences m_Preferences;
     STREAM_CONFIGURATION m_StreamConfig;
@@ -123,14 +120,10 @@ private:
     int m_ActiveVideoHeight;
     int m_ActiveVideoFrameRate;
 
-    static SDL_AudioDeviceID s_AudioDevice;
-    static OpusMSDecoder* s_OpusDecoder;
-    static short s_OpusDecodeBuffer[];
-    static int s_ChannelCount;
-    static int s_PendingDrops;
-    static int s_PendingHardDrops;
-    static unsigned int s_SampleIndex;
-    static Uint32 s_BaselinePendingData;
+    OpusMSDecoder* m_OpusDecoder;
+    short m_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
+    IAudioRenderer* m_AudioRenderer;
+    OPUS_MULTISTREAM_CONFIGURATION m_AudioConfig;
 
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
