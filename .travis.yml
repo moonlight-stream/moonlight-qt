@@ -20,6 +20,7 @@ matrix:
             - qt59base
             - qt59quickcontrols2
             - qt59svg
+            - qt59multimedia
             - libesd0-dev
             - libgl-dev
             - libegl1-mesa-dev
