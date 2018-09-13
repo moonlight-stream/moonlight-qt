@@ -57,26 +57,6 @@ Item {
         toast.visible = true
     }
 
-    // This timer delay allows the transition
-    // to this StreamSegue to complete before doing
-    // long operations in Session::exec(). It would
-    // be nice if we could find a way to avoid having
-    // to do this though.
-    Timer {
-        id: delayedStartTimer
-        interval: 250
-        onTriggered: {
-            // Run the streaming session to completion
-            session.exec(Screen.virtualX, Screen.virtualY)
-
-            // Show the Qt window again after streaming
-            window.visible = true
-
-            // Exit this view
-            stackView.pop()
-        }
-    }
-
     onVisibleChanged: {
         if (visible) {
             // Hide the toolbar before we start loading
@@ -89,8 +69,14 @@ Item {
             session.displayLaunchError.connect(displayLaunchError)
             session.displayLaunchWarning.connect(displayLaunchWarning)
 
-            // Kick off the delayed start
-            delayedStartTimer.running = true
+            // Run the streaming session to completion
+            session.exec(Screen.virtualX, Screen.virtualY)
+
+            // Show the Qt window again after streaming
+            window.visible = true
+
+            // Exit this view
+            stackView.pop()
         }
         else {
             // Show the toolbar again when we become hidden
