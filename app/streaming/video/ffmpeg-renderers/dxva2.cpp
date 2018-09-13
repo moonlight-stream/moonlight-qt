@@ -364,6 +364,13 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                             id.Description,
                             id.VendorId,
                             id.DeviceId);
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "GPU driver: %s %d.%d.%d.%d",
+                            id.Driver,
+                            HIWORD(id.DriverVersion.HighPart),
+                            LOWORD(id.DriverVersion.HighPart),
+                            HIWORD(id.DriverVersion.LowPart),
+                            LOWORD(id.DriverVersion.LowPart));
 
                 if (id.VendorId == 0x8086) {
                     // Intel seems to encode the series in the high byte of
