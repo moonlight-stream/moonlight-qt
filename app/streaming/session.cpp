@@ -908,13 +908,10 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     int currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
 
-    // Hijack this thread to be the SDL main thread, but also process
-    // Qt events in each iteration to allow us to use Qt classes.
+    // Hijack this thread to be the SDL main thread. We have to do this
+    // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
     for (;;) {
-        // Process Qt events
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-
         // We explicitly use SDL_PollEvent() and SDL_Delay() because
         // SDL_WaitEvent() has an internal SDL_Delay(10) inside which
         // blocks this thread too long for high polling rate mice and high
