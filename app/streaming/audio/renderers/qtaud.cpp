@@ -29,15 +29,17 @@ bool QtAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
 
     m_AudioOutput = new QAudioOutput(format);
 
-    m_AudioOutput->setBufferSize(SAMPLES_PER_FRAME * 2);
-
-    qInfo() << "Audio stream buffer:" << m_AudioOutput->bufferSize() << "bytes";
+    // Buffer 20 ms of audio data
+    m_AudioOutput->setBufferSize(format.bytesForDuration(20000));
 
     m_OutputDevice = m_AudioOutput->start();
     if (m_OutputDevice == nullptr) {
         qWarning() << "Audio start failed:" << m_AudioOutput->error();
         return false;
     }
+
+    // Check what buffer size was really used after starting
+    qInfo() << "Audio stream buffer:" << m_AudioOutput->bufferSize() << "bytes";
 
     return true;
 }
