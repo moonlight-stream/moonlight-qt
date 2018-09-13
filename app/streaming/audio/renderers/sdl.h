@@ -20,9 +20,9 @@ public:
 
 private:
     SDL_AudioDeviceID m_AudioDevice;
-    int m_ChannelCount;
-    int m_PendingDrops;
-    int m_PendingHardDrops;
-    unsigned int m_SampleIndex;
+    Uint32 m_ChannelCount;
+    Uint32 m_PendingDrops;
+    Uint32 m_PendingHardDrops;
+    Uint32 m_SampleIndex;
     Uint32 m_BaselinePendingData;
 };

@@ -155,7 +155,7 @@ void SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
 {
     m_SampleIndex++;
 
-    Uint32 queuedAudio = qMax((int)SDL_GetQueuedAudioSize(m_AudioDevice) - (int)m_BaselinePendingData, 0);
+    Uint32 queuedAudio = qMax(SDL_GetQueuedAudioSize(m_AudioDevice) - m_BaselinePendingData, 0U);
     Uint32 framesQueued = queuedAudio / (SAMPLES_PER_FRAME * m_ChannelCount * sizeof(short));
 
     // We must check this prior to the below checks to ensure we don't
@@ -163,14 +163,19 @@ void SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
     if (framesQueued <= MIN_QUEUED_FRAMES) {
         m_PendingDrops = m_PendingHardDrops = 0;
     }
-    // Pend enough drops to get us back to MIN_QUEUED_FRAMES
-    else if (framesQueued - m_PendingHardDrops > STOP_THE_WORLD_LIMIT) {
+    // Pend enough drops to get us back to MIN_QUEUED_FRAMES, checking first
+    // to ensure we don't underflow.
+    else if (framesQueued > m_PendingHardDrops &&
+             framesQueued - m_PendingHardDrops > STOP_THE_WORLD_LIMIT) {
         m_PendingHardDrops = framesQueued - MIN_QUEUED_FRAMES;
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Pending hard drop of %u audio frames",
                     m_PendingHardDrops);
     }
-    else if (framesQueued - m_PendingHardDrops - m_PendingDrops > MAX_QUEUED_FRAMES) {
+    // If we're under the stop the world limit, we can drop samples
+    // gracefully over the next little while.
+    else if (framesQueued > m_PendingHardDrops + m_PendingDrops &&
+             framesQueued - m_PendingHardDrops - m_PendingDrops > MAX_QUEUED_FRAMES) {
         m_PendingDrops = framesQueued - MIN_QUEUED_FRAMES;
     }
 
