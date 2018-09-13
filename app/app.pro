@@ -223,19 +223,25 @@ unix:!macx: {
     isEmpty(BINDIR) {
         BINDIR = bin
     }
+    isEmpty(DATADIR) {
+        DATADIR = share
+    }
 
     target.path = $$PREFIX/$$BINDIR/
 
     desktop.files = deploy/linux/com.moonlight_stream.Moonlight.desktop
-    desktop.path = $$PREFIX/share/applications/
+    desktop.path = $$PREFIX/$$DATADIR/applications/
 
     icons.files = res/moonlight.svg
-    icons.path = $$PREFIX/share/icons/hicolor/scalable/apps/
+    icons.path = $$PREFIX/$$DATADIR/icons/hicolor/scalable/apps/
 
-    appdata.files = deploy/linux/com.moonlight_stream.Moonlight.appdata.xml
-    appdata.path = $$PREFIX/share/metainfo/
+    appstream.files = deploy/linux/com.moonlight_stream.Moonlight.appdata.xml
+    appstream.path = $$PREFIX/$$DATADIR/metainfo/
 
-    INSTALLS += target desktop icons appdata
+    appdata.files = gamecontrollerdb.txt
+    appdata.path = "$$PREFIX/$$DATADIR/Moonlight Game Streaming Project/Moonlight/"
+
+    INSTALLS += target appdata desktop icons appstream
 }
 win32 {
     RC_ICONS = moonlight.ico
@@ -249,7 +255,7 @@ win32 {
 macx {
     QMAKE_INFO_PLIST = $$PWD/Info.plist
 
-    APP_BUNDLE_RESOURCES.files = moonlight.icns
+    APP_BUNDLE_RESOURCES.files = moonlight.icns gamecontrollerdb.txt
     APP_BUNDLE_RESOURCES.path = Contents/Resources
     QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES
 }

@@ -1,8 +1,10 @@
 #include <Limelight.h>
 #include <SDL.h>
 #include "streaming/session.hpp"
+#include "path.h"
 
 #include <QtGlobal>
+#include <QDir>
 
 #define VK_0 0x30
 #define VK_A 0x41
@@ -43,6 +45,31 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
                      SDL_GetError());
+    }
+
+    QString mappingFile = Path::getGamepadMappingFile();
+    if (!mappingFile.isEmpty()) {
+        std::string mappingFileNative = QDir::toNativeSeparators(mappingFile).toStdString();
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Loading gamepad mappings from: %s",
+                    mappingFileNative.c_str());
+
+        int newMappings = SDL_GameControllerAddMappingsFromFile(mappingFileNative.c_str());
+        if (newMappings < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Error loading gamepad mappings: %s",
+                         SDL_GetError());
+        }
+        else {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Loaded %d new gamepad mappings",
+                        newMappings);
+        }
+    }
+    else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "No gamepad mapping file found");
     }
 
     if (!m_MultiController) {
