@@ -1128,5 +1128,15 @@ DispatchDeferredCleanup:
     // When it is complete, it will release our s_ActiveSessionSemaphore
     // reference.
     QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask());
+
+    // Prevents calling of SDL_Quit() in main while cleanup is running by
+    // giving the cleanup time to finish. May occur when all process's windows
+    // are closed at same time.
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, []() {
+        if (Session::s_ActiveSessionSemaphore.tryAcquire(1, 10000)) {
+            Session::s_ActiveSessionSemaphore.release();
+        }
+    });
+
 }
 
