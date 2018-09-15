@@ -155,7 +155,14 @@ void SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
 {
     m_SampleIndex++;
 
-    Uint32 queuedAudio = qMax(SDL_GetQueuedAudioSize(m_AudioDevice) - m_BaselinePendingData, 0U);
+    Uint32 queuedAudio = SDL_GetQueuedAudioSize(m_AudioDevice);
+    if (queuedAudio > m_BaselinePendingData) {
+        queuedAudio -= m_BaselinePendingData;
+    }
+    else {
+        queuedAudio = 0;
+    }
+
     Uint32 framesQueued = queuedAudio / (SAMPLES_PER_FRAME * m_ChannelCount * sizeof(short));
 
     // We must check this prior to the below checks to ensure we don't
