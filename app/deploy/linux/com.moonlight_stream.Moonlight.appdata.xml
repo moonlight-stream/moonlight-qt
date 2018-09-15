@@ -33,6 +33,25 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.5.0" date="2018-09-15">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added option to enable mouse acceleration for remote desktop usage</li>
+					<li>Added option to disable automatic PC discovery</li>
+					<li>Added gamepad mappings from gabomdq's SDL_GameControllerDB</li>
+					<li>Added help links to error dialogs</li>
+					<li>Added quit shortcut tip to stream loading page</li>
+					<li>Restored the autodetect audio configuration option</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed quit app dialog starting the wrong app</li>
+					<li>Fixed very high input lag on GFE 3.14.0 and earlier</li>
+					<li>Fixed sending errant mouse click when capturing the mouse</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.4.0" date="2018-09-08">
 			<description>
 				<p>New features:</p>
