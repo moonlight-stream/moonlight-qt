@@ -4,7 +4,7 @@
 <?define FullName = "Moonlight Game Streaming Client" ?>
 
 <?define ShortcutName = "$(var.ShortName)" ?>
-<?define ShortcutDesc = "Stream games from an NVIDIA GameStream-compatible PC" ?>
+<?define ShortcutDesc = "Stream games from your NVIDIA GameStream-enabled PC" ?>
 <?define InstallFolder = "Moonlight Game Streaming" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
