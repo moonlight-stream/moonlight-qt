@@ -1,6 +1,7 @@
 #pragma once
 
 #include "settings/streamingpreferences.h"
+#include "backend/computermanager.h"
 
 #include <SDL.h>
 
@@ -20,7 +21,7 @@ struct GamepadState {
 class SdlInputHandler
 {
 public:
-    explicit SdlInputHandler(StreamingPreferences& prefs);
+    explicit SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer);
 
     ~SdlInputHandler();
 
@@ -48,6 +49,7 @@ private:
 
     Uint32 m_LastMouseMotionTime;
     bool m_MultiController;
+    bool m_NeedsInputDelay;
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
 

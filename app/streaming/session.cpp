@@ -287,7 +287,8 @@ Session::Session(NvComputer* computer, NvApp& app)
 
 void Session::initialize()
 {
-    qDebug() << "Server GPU:" << m_Computer->gpuModel;
+    qInfo() << "Server GPU:" << m_Computer->gpuModel;
+    qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
@@ -731,7 +732,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     // Initialize the gamepad code with our preferences
     StreamingPreferences prefs;
-    SdlInputHandler inputHandler(prefs);
+    SdlInputHandler inputHandler(prefs, m_Computer);
 
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.

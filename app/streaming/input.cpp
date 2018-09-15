@@ -24,9 +24,10 @@ const int SdlInputHandler::k_ButtonMap[] = {
     UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG
 };
 
-SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs)
+SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer)
     : m_LastMouseMotionTime(0),
-      m_MultiController(prefs.multiController)
+      m_MultiController(prefs.multiController),
+      m_NeedsInputDelay(false)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -79,6 +80,19 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs)
     else {
         // Otherwise, detect gamepads on the fly
         m_GamepadMask = 0;
+    }
+
+    // Prior to GFE 3.14.1, sending too many mouse motion events can cause
+    // GFE to choke and input latency to increase significantly. We will
+    // artificially throttle them to avoid this situation.
+    QVector<int> gfeVersion = NvHTTP::parseQuad(computer->gfeVersion);
+    if (gfeVersion.isEmpty() || // Very old versions don't have GfeVersion at all
+            gfeVersion[0] < 3 ||
+            (gfeVersion[0] == 3 && gfeVersion[1] < 14) ||
+            (gfeVersion[0] == 3 && gfeVersion[1] == 14 && gfeVersion[2] < 1)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "This older version of GFE requires input delay hack");
+        m_NeedsInputDelay = true;
     }
 
     SDL_zero(m_GamepadState);
@@ -430,9 +444,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
     short ydelta = (short)event->yrel;
 
     // If we're sending more than one motion event per millisecond,
-    // delay for 1 ms to allow batching of mouse move events.
+    // delay for 1 ms to allow batching of mouse move events. On older
+    // versions of GFE, we will unconditionally wait this 1 ms to
+    // work around an input processing issue that causes massive mouse latency.
     Uint32 currentTime = SDL_GetTicks();
-    if (!SDL_TICKS_PASSED(currentTime, m_LastMouseMotionTime + 1)) {
+    if (m_NeedsInputDelay || !SDL_TICKS_PASSED(currentTime, m_LastMouseMotionTime + 1)) {
         SDL_Delay(1);
         currentTime = SDL_GetTicks();
     }

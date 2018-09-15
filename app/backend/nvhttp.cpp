@@ -29,9 +29,15 @@ NvHTTP::NvHTTP(QString address) :
 QVector<int>
 NvHTTP::parseQuad(QString quad)
 {
-    QStringList parts = quad.split(".");
     QVector<int> ret;
 
+    // Return an empty vector for old GFE versions
+    // that were missing GfeVersion.
+    if (quad.isEmpty()) {
+        return ret;
+    }
+
+    QStringList parts = quad.split(".");
     for (int i = 0; i < 4; i++)
     {
         ret.append(parts.at(i).toInt());
