@@ -69,9 +69,11 @@ popd
 
 echo Saving PDBs
 for /r "%BUILD_FOLDER%" %%f in (*.pdb) do (
-    copy "%%f" "%SYMBOLS_FOLDER%\"
+    copy "%%f" %SYMBOLS_FOLDER%
     if !ERRORLEVEL! NEQ 0 goto Error
 )
+copy %SOURCE_ROOT%\libs\windows\lib\%ARCH%\*.pdb %SYMBOLS_FOLDER%
+if !ERRORLEVEL! NEQ 0 goto Error
 7z a %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols.zip %SYMBOLS_FOLDER%\*.pdb
 if !ERRORLEVEL! NEQ 0 goto Error
 
