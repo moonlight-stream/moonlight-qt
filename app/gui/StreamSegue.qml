@@ -104,6 +104,18 @@ Item {
         }
     }
 
+    Label {
+        text: "Tip: Press Ctrl+Alt+Shift+Q to disconnect your session"
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 50
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.pointSize: 18
+        verticalAlignment: Text.AlignVCenter
+
+        wrapMode: Text.Wrap
+        color: "white"
+    }
+
     MessageDialog {
         id: errorDialog
         modality:Qt.WindowModal

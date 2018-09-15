@@ -721,8 +721,14 @@ void Session::exec(int displayOriginX, int displayOriginY)
         return;
     }
 
-    // Manually pump the UI thread for the view
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    // Wait 1.5 seconds before connecting to let the user
+    // have time to read any messages present on the segue
+    uint32_t start = SDL_GetTicks();
+    while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 1500)) {
+        // Pump the UI loop while we wait
+        SDL_Delay(5);
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
 
     // Wait for any old session to finish cleanup
     s_ActiveSessionSemaphore.acquire();
