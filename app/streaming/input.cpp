@@ -394,9 +394,13 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 {
     int button;
 
-    // Capture the mouse again if clicked when unbound
+    // Capture the mouse again if clicked when unbound.
+    // We start capture on left button released instead of
+    // pressed to avoid sending an errant mouse button released
+    // event to the host when clicking into our window (since
+    // the pressed event was consumed by this code).
     if (event->button == SDL_BUTTON_LEFT &&
-            event->state == SDL_PRESSED &&
+            event->state == SDL_RELEASED &&
             !SDL_GetRelativeMouseMode()) {
         SDL_SetRelativeMouseMode(SDL_TRUE);
         return;
