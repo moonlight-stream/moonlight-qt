@@ -386,11 +386,25 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                     case 0x1600: // Broadwell
                     case 0x2200: // Cherry Trail and Braswell
                         // Blacklist these for HEVC to avoid hybrid decode
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "GPU blacklisted for HEVC due to hybrid decode");
                         result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
                         break;
                     default:
-                        // Everything else is fine with whatever it says it supports
-                        result = false;
+                        // Intel drivers from before late-2017 had a bug that caused some strange artifacts
+                        // when decoding HEVC. Avoid HEVC on drivers prior to build 4836 which I confirmed
+                        // is not affected on my Intel HD 515.
+                        // https://github.com/moonlight-stream/moonlight-qt/issues/32
+                        // https://www.intel.com/content/www/us/en/support/articles/000005654/graphics-drivers.html
+                        if (LOWORD(id.DriverVersion.LowPart) < 4836) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Intel driver version blacklisted for HEVC");
+                            result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
+                        }
+                        else {
+                            // Everything else is fine with whatever it says it supports
+                            result = false;
+                        }
                         break;
                     }
                 }
@@ -414,6 +428,8 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                             (id.DeviceId == 0x1667) || // GM204
                             (id.DeviceId >= 0x17C0 && id.DeviceId <= 0x17FF)) { // GM200
                         // Avoid HEVC on Feature Set E GPUs
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "GPU blacklisted for HEVC due to hybrid decode");
                         result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
                     }
                     else {
