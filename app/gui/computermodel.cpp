@@ -153,7 +153,7 @@ void ComputerModel::pairComputer(int computerIndex, QString pin)
 
 void ComputerModel::handlePairingCompleted(NvComputer*, QString error)
 {
-    emit pairingCompleted(error.isNull() ? QVariant() : error);
+    emit pairingCompleted(error.isEmpty() ? QVariant() : error);
 }
 
 void ComputerModel::handleComputerStateChanged(NvComputer* computer)

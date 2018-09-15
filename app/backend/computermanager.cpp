@@ -93,7 +93,7 @@ void NvComputer::sortAppList()
 NvComputer::NvComputer(QString address, QString serverInfo)
 {
     this->name = NvHTTP::getXmlString(serverInfo, "hostname");
-    if (this->name.isNull()) {
+    if (this->name.isEmpty()) {
         this->name = "UNKNOWN";
     }
 
@@ -107,7 +107,7 @@ NvComputer::NvComputer(QString address, QString serverInfo)
     }
 
     QString codecSupport = NvHTTP::getXmlString(serverInfo, "ServerCodecModeSupport");
-    if (!codecSupport.isNull()) {
+    if (!codecSupport.isEmpty()) {
         this->serverCodecModeSupport = codecSupport.toInt();
     }
     else {
@@ -115,7 +115,7 @@ NvComputer::NvComputer(QString address, QString serverInfo)
     }
 
     QString maxLumaPixelsHEVC = NvHTTP::getXmlString(serverInfo, "MaxLumaPixelsHEVC");
-    if (!maxLumaPixelsHEVC.isNull()) {
+    if (!maxLumaPixelsHEVC.isEmpty()) {
         this->maxLumaPixelsHEVC = maxLumaPixelsHEVC.toInt();
     }
     else {
@@ -149,7 +149,7 @@ bool NvComputer::wake()
         return true;
     }
 
-    if (macAddress.isNull()) {
+    if (macAddress.isEmpty()) {
         qWarning() << name << "has no MAC address stored";
         return false;
     }
@@ -217,7 +217,7 @@ QVector<QString> NvComputer::uniqueAddresses()
 
     // Prune duplicates (always giving precedence to the first)
     for (int i = 0; i < uniqueAddressList.count(); i++) {
-        if (uniqueAddressList[i].isEmpty() || uniqueAddressList[i].isNull()) {
+        if (uniqueAddressList[i].isEmpty()) {
             uniqueAddressList.remove(i);
             i--;
             continue;

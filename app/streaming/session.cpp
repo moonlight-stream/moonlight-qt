@@ -495,7 +495,7 @@ bool Session::validateLaunch()
 
     if (m_StreamConfig.width >= 3840) {
         // Only allow 4K on GFE 3.x+
-        if (m_Computer->gfeVersion.isNull() || m_Computer->gfeVersion.startsWith("2.")) {
+        if (m_Computer->gfeVersion.isEmpty() || m_Computer->gfeVersion.startsWith("2.")) {
             emitLaunchWarning("GeForce Experience 3.0 or higher is required for 4K streaming.");
 
             m_StreamConfig.width = 1920;
@@ -787,10 +787,10 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     // Older GFE versions didn't have this field
     QByteArray siGfeVersion;
-    if (!m_Computer->gfeVersion.isNull()) {
+    if (!m_Computer->gfeVersion.isEmpty()) {
         siGfeVersion = m_Computer->gfeVersion.toLatin1();
     }
-    if (!siGfeVersion.isNull()) {
+    if (!siGfeVersion.isEmpty()) {
         hostInfo.serverInfoGfeVersion = siGfeVersion.data();
     }
 

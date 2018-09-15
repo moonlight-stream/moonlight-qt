@@ -185,12 +185,12 @@ IdentityManager::getSslConfig()
 QString
 IdentityManager::getUniqueId()
 {
-    if (m_CachedUniqueId.isNull()) {
+    if (m_CachedUniqueId.isEmpty()) {
         QSettings settings;
 
         // Load the unique ID from settings
         m_CachedUniqueId = settings.value(SER_UNIQUEID).toString();
-        if (!m_CachedUniqueId.isEmpty() && !m_CachedUniqueId.isNull()) {
+        if (!m_CachedUniqueId.isEmpty()) {
             qInfo() << "Loaded unique ID from settings:" << m_CachedUniqueId;
         }
         else {

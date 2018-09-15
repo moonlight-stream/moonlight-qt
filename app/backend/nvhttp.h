@@ -17,7 +17,7 @@ public:
 
     bool isInitialized()
     {
-        return id != 0 && !name.isNull();
+        return id != 0 && !name.isEmpty();
     }
 
     int id;
