@@ -112,6 +112,16 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
         return false;
     }
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Desired audio buffer: %d samples (%d bytes)",
+                want.samples,
+                want.samples * sizeof(short) * want.channels);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Obtained audio buffer: %d samples (%d bytes)",
+                have.samples,
+                have.samples * sizeof(short) * have.channels);
+
     // SDL counts pending samples in the queued
     // audio size using the WASAPI backend. This
     // includes silence, which can throw off our
