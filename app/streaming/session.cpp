@@ -980,7 +980,10 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
             // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
             // This lets user to interact with our window's title bar and with the buttons in it.
-            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+            // Doing this while the window is full-screen breaks the transition out of FS
+            // (desktop and exclusive), so we must check for that before releasing mouse capture.
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST &&
+                    !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) {
                 SDL_SetRelativeMouseMode(SDL_FALSE);
             }
 
