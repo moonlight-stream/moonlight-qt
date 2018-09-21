@@ -266,9 +266,12 @@ int main(int argc, char *argv[])
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", QByteArray("1"));
 
 #ifdef Q_OS_WIN32
-    // On Windows, use ANGLE so we don't have to load both DX and OGL
-    // user-mode drivers into our app.
-    qputenv("QT_OPENGL", "angle");
+    if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
+        // On Windows, use ANGLE so we don't have to load OpenGL
+        // user-mode drivers into our app. OGL drivers (especially Intel)
+        // seem to crash Moonlight far more often than DirectX.
+        qputenv("QT_OPENGL", "angle");
+    }
 #endif
 
     // Register custom metatypes for use in signals
