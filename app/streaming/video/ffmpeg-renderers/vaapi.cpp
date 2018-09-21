@@ -109,6 +109,11 @@ VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height, int, b
                 "Initialized VAAPI %d.%d",
                 major, minor);
 
+    const char* vendorString = vaQueryVendorString(vaDeviceContext->display);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Driver: %s",
+                vendorString ? vendorString : "<unknown>");
+
     // This will populate the driver_quirks
     err = av_hwdevice_ctx_init(m_HwContext);
     if (err < 0) {

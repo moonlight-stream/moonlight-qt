@@ -56,6 +56,7 @@ private:
     VdpOutputSurfaceDestroy* m_VdpOutputSurfaceDestroy;
     VdpOutputSurfaceQueryCapabilities* m_VdpOutputSurfaceQueryCapabilities;
     VdpVideoSurfaceGetParameters* m_VdpVideoSurfaceGetParameters;
+    VdpGetInformationString* m_VdpGetInformationString;
 
     // X11 stuff
     VdpPresentationQueueTargetCreateX11* m_VdpPresentationQueueTargetCreateX11;

@@ -91,6 +91,7 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height, i
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_DESTROY, &m_VdpOutputSurfaceDestroy);
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_QUERY_CAPABILITIES, &m_VdpOutputSurfaceQueryCapabilities);
     GET_PROC_ADDRESS(VDP_FUNC_ID_VIDEO_SURFACE_GET_PARAMETERS, &m_VdpVideoSurfaceGetParameters);
+    GET_PROC_ADDRESS(VDP_FUNC_ID_GET_INFORMATION_STRING, &m_VdpGetInformationString);
 
     SDL_GetWindowSize(window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
 
@@ -128,6 +129,13 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height, i
                      "Unsupported VDPAU rendering subsystem: %d",
                      info.subsystem);
         return false;
+    }
+
+    const char* infoString;
+    if (m_VdpGetInformationString(&infoString) == VDP_STATUS_OK) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Driver: %s",
+                    infoString);
     }
 
     // Try our available output formats to find something the GPU supports
