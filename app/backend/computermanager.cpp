@@ -423,9 +423,23 @@ public:
 
     void run()
     {
-        QWriteLocker lock(&m_ComputerManager->m_Lock);
+        QThread* pollingThread;
 
-        QThread* pollingThread = m_ComputerManager->m_PollThreads[m_Computer->uuid];
+        // Only do the minimum amount of work while holding the writer lock.
+        // We must release it before calling saveHosts().
+        {
+            QWriteLocker lock(&m_ComputerManager->m_Lock);
+
+            pollingThread = m_ComputerManager->m_PollThreads[m_Computer->uuid];
+
+            m_ComputerManager->m_PollThreads.remove(m_Computer->uuid);
+            m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
+        }
+
+        // Persist the new host list
+        m_ComputerManager->saveHosts();
+
+        // Delete the polling thread
         if (pollingThread != nullptr) {
             pollingThread->requestInterruption();
 
@@ -438,9 +452,8 @@ public:
             delete pollingThread;
         }
 
-        m_ComputerManager->m_PollThreads.remove(m_Computer->uuid);
-        m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
-
+        // Finally, delete the computer itself. This must be done
+        // last because the polling thread might be using it.
         delete m_Computer;
     }
 
