@@ -268,51 +268,51 @@ bool DXVA2Renderer::initializeRenderer()
 
     DXVA2_VideoProcessorCaps caps;
     hr = m_ProcService->GetVideoProcessorCaps(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, &caps);
-    if (SUCCEEDED(hr)) {
-        if (!(caps.DeviceCaps & DXVA2_VPDev_HardwareDevice)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2_VideoProcProgressiveDevice is not hardware: %x",
-                         caps.DeviceCaps);
-            return false;
-        }
-        else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGB) &&
-                 !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2_VideoProcProgressiveDevice can't convert YUV2RGB: %x",
-                         caps.VideoProcessorOperations);
-            return false;
-        }
-        else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchX) ||
-                 !(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchY)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2_VideoProcProgressiveDevice can't stretch video: %x",
-                         caps.VideoProcessorOperations);
-            return false;
-        }
-
-        if (caps.DeviceCaps & DXVA2_VPDev_EmulatedDXVA1) {
-            // DXVA2 over DXVA1 may have bad performance
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DXVA2_VideoProcProgressiveDevice is DXVA1");
-        }
-
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Brightness, &m_BrightnessRange);
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Contrast, &m_ContrastRange);
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Hue, &m_HueRange);
-        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Saturation, &m_SaturationRange);
-
-        hr = m_ProcService->CreateVideoProcessor(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, 0, &m_Processor);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CreateVideoProcessor() failed for DXVA2_VideoProcProgressiveDevice: %x",
-                         hr);
-            return false;
-        }
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "GetVideoProcessorCaps() failed for DXVA2_VideoProcProgressiveDevice: %x",
+                     hr);
+        return false;
     }
-    else {
+
+    if (!(caps.DeviceCaps & DXVA2_VPDev_HardwareDevice)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DXVA2_VideoProcProgressiveDevice is not hardware: %x",
+                     caps.DeviceCaps);
+        return false;
+    }
+    else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGB) &&
+             !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DXVA2_VideoProcProgressiveDevice can't convert YUV2RGB: %x",
+                     caps.VideoProcessorOperations);
+        return false;
+    }
+    else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchX) ||
+             !(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchY)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DXVA2_VideoProcProgressiveDevice can't stretch video: %x",
+                     caps.VideoProcessorOperations);
+        return false;
+    }
+
+    if (caps.DeviceCaps & DXVA2_VPDev_EmulatedDXVA1) {
+        // DXVA2 over DXVA1 may have bad performance
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "GetVideoProcessorCaps() failed for DXVA2_VideoProcProgressiveDevice: %x",
-                    hr);
+                    "DXVA2_VideoProcProgressiveDevice is DXVA1");
+    }
+
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Brightness, &m_BrightnessRange);
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Contrast, &m_ContrastRange);
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Hue, &m_HueRange);
+    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Saturation, &m_SaturationRange);
+
+    hr = m_ProcService->CreateVideoProcessor(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, 0, &m_Processor);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "CreateVideoProcessor() failed for DXVA2_VideoProcProgressiveDevice: %x",
+                     hr);
+        return false;
     }
 
     return true;
