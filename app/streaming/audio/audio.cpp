@@ -1,7 +1,6 @@
 #include "../session.hpp"
 #include "renderers/renderer.h"
 #include "renderers/sdl.h"
-#include "renderers/qtaud.h"
 
 #include <Limelight.h>
 

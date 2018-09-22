@@ -3,7 +3,6 @@
 #include <Limelight.h>
 #include <SDL.h>
 
-#include <QAudioDeviceInfo>
 #include <QtGlobal>
 
 #define MIN_QUEUED_FRAMES 2
@@ -11,20 +10,40 @@
 #define STOP_THE_WORLD_LIMIT 20
 #define DROP_RATIO_DENOM 32
 
-// Detecting this with SDL is quite problematic, so we'll use Qt's
-// multimedia framework to do so. It appears to be actually
-// accurate on Linux and macOS, unlike using SDL and relying
-// on a channel change in the format received.
+// This isn't accurate on macOS and Linux (PulseAudio),
+// since they both report supporting a large number of
+// channels, regardless of the actual output device.
 int SdlAudioRenderer::detectAudioConfiguration()
 {
-    int preferredChannelCount = QAudioDeviceInfo::defaultOutputDevice().preferredFormat().channelCount();
+    SDL_AudioSpec want, have;
+    SDL_AudioDeviceID dev;
+
+    SDL_zero(want);
+    want.freq = 48000;
+    want.format = AUDIO_S16;
+    want.channels = 6;
+    want.samples = 1024;
+
+    // Try to open for 5.1 surround sound, but allow SDL to tell us that's
+    // not available.
+    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
+    if (dev == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to open audio device");
+        // We'll probably have issues during audio stream init, but we'll
+        // try anyway
+        return AUDIO_CONFIGURATION_STEREO;
+    }
+
+    SDL_CloseAudioDevice(dev);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio output device prefers %d channel configuration",
-                preferredChannelCount);
+                "Audio device has %d channels", have.channels);
 
-    // We can better downmix 5.1 to quad than we can upmix stereo
-    if (preferredChannelCount > 2) {
+    if (have.channels > 2) {
+        // We don't support quadraphonic or 7.1 surround, but SDL
+        // should be able to downmix or upmix better from 5.1 than
+        // from stereo, so use 5.1 in non-stereo cases.
         return AUDIO_CONFIGURATION_51_SURROUND;
     }
     else {

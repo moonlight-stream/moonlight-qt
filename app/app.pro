@@ -1,4 +1,4 @@
-QT += core quick network quickcontrols2 svg multimedia
+QT += core quick network quickcontrols2 svg
 CONFIG += c++11
 
 unix:!macx {
@@ -96,7 +96,6 @@ SOURCES += \
     streaming/session.cpp \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
-    streaming/audio/renderers/qtaud.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
     streaming/streamutils.cpp \
@@ -115,7 +114,6 @@ HEADERS += \
     streaming/session.hpp \
     streaming/audio/renderers/renderer.h \
     streaming/audio/renderers/sdl.h \
-    streaming/audio/renderers/qtaud.h \
     gui/computermodel.h \
     gui/appmodel.h \
     streaming/video/decoder.h \
