@@ -89,6 +89,15 @@ bool StreamingPreferences::isRunningWayland()
     return qgetenv("XDG_SESSION_TYPE") == QByteArray("wayland");
 }
 
+bool StreamingPreferences::isWow64()
+{
+#ifdef Q_OS_WIN32
+    return QSysInfo::currentCpuArchitecture() != QSysInfo::buildCpuArchitecture();
+#else
+    return false;
+#endif
+}
+
 int StreamingPreferences::getMaximumStreamingFrameRate()
 {
     // Never let the maximum drop below 60 FPS

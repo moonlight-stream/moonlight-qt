@@ -19,6 +19,8 @@ public:
 
     Q_INVOKABLE static bool isRunningWayland();
 
+    Q_INVOKABLE static bool isWow64();
+
     Q_INVOKABLE static int getMaximumStreamingFrameRate();
 
     Q_INVOKABLE QRect getDesktopResolution(int displayIndex);

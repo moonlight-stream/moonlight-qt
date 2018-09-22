@@ -37,6 +37,9 @@ GridView {
         if (prefs.isRunningWayland()) {
             waylandDialog.open()
         }
+        else if (prefs.isWow64()) {
+            wow64Dialog.open()
+        }
         else if (!prefs.hasAnyHardwareAcceleration()) {
             noHwDecoderDialog.open()
         }
@@ -221,6 +224,17 @@ GridView {
               "Please switch to an X session for optimal performance."
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
+        }
+    }
+
+    MessageDialog {
+        id: wow64Dialog
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        text: "This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance."
+        onAccepted: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-qt/releases");
         }
     }
 
