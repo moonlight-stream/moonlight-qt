@@ -14,6 +14,13 @@ CONFIG += debug_and_release
 # Ensure symbols are always generated
 CONFIG += force_debug_info
 
+# Precompile QML files to avoid writing qmlcache on portable versions.
+# Since this binds the app against the Qt runtime version, we will only
+# do this for Windows and Mac, since they ship with the Qt runtime.
+win32|macx {
+    CONFIG += qtquickcompiler
+}
+
 TEMPLATE = app
 
 # The following define makes your compiler emit warnings if you use
