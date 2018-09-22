@@ -151,7 +151,12 @@ int PortAudioRenderer::detectAudioConfiguration()
         return false;
     }
 
-    if (deviceInfo->maxOutputChannels > 2) {
+    // PulseAudio reports max output channels that don't
+    // correspond to any output devices (32 channels), so
+    // only use 5.1 surround sound if the output channel count
+    // is reasonable. Additionally, PortAudio doesn't do remixing
+    // for quadraphonic, so only use 5.1 if we have 6 or more channels.
+    if (deviceInfo->maxOutputChannels == 6 || deviceInfo->maxOutputChannels == 8) {
         return AUDIO_CONFIGURATION_51_SURROUND;
     }
     else {
