@@ -512,8 +512,20 @@ bool Session::validateLaunch()
         }
     }
 
-    // Test that audio hardware is functional
-    m_AudioDisabled = !testAudio(m_StreamConfig.audioConfiguration);
+    // Test if audio works at the specified audio configuration
+    bool audioTestPassed = testAudio(m_StreamConfig.audioConfiguration);
+
+    // Gracefully degrade to stereo if 5.1 doesn't work
+    if (!audioTestPassed && m_StreamConfig.audioConfiguration == AUDIO_CONFIGURATION_51_SURROUND) {
+        audioTestPassed = testAudio(AUDIO_CONFIGURATION_STEREO);
+        if (audioTestPassed) {
+            m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
+            emitLaunchWarning("5.1 surround sound is not supported by the current audio device.");
+        }
+    }
+
+    // If nothing worked, warn the user that audio will not work
+    m_AudioDisabled = !audioTestPassed;
     if (m_AudioDisabled) {
         emitLaunchWarning("Failed to open audio device. Audio will be unavailable during this session.");
     }
