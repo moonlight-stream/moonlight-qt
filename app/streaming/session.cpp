@@ -294,9 +294,6 @@ void Session::initialize()
     m_VideoCallbacks.setup = drSetup;
     m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
 
-    // Submit for decode without using a separate thread
-    m_VideoCallbacks.capabilities |= CAPABILITY_DIRECT_SUBMIT;
-
     // Slice up to 4 times for parallel decode, once slice per core
     int slices = qMin(MAX_SLICES, SDL_GetCPUCount());
     m_VideoCallbacks.capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
