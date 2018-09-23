@@ -120,13 +120,16 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
                                              SAMPLES_PER_FRAME,
                                              0);
     if (samplesDecoded > 0) {
-        SDL_AtomicLock(&s_ActiveSession->m_AudioRendererLock);
-        if (s_ActiveSession->m_AudioRenderer != nullptr) {
-            s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
-                                                          static_cast<int>(sizeof(short) *
-                                                            samplesDecoded *
-                                                            s_ActiveSession->m_AudioConfig.channelCount));
+        // If we can't acquire the lock, that means we're being destroyed
+        // so don't even bother trying to wait.
+        if (SDL_AtomicTryLock(&s_ActiveSession->m_AudioRendererLock)) {
+            if (s_ActiveSession->m_AudioRenderer != nullptr) {
+                s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
+                                                              static_cast<int>(sizeof(short) *
+                                                                samplesDecoded *
+                                                                s_ActiveSession->m_AudioConfig.channelCount));
+            }
+            SDL_AtomicUnlock(&s_ActiveSession->m_AudioRendererLock);
         }
-        SDL_AtomicUnlock(&s_ActiveSession->m_AudioRendererLock);
     }
 }

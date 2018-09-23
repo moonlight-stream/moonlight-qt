@@ -170,25 +170,33 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // Use a lock since we'll be yanking this decoder out
     // from underneath the session when we initiate destruction.
     // We need to destroy the decoder on the main thread to satisfy
-    // some API constraints (like DXVA2).
+    // some API constraints (like DXVA2). If we can't acquire it,
+    // that means the decoder is about to be destroyed, so we can
+    // safely return DR_OK and wait for m_NeedsIdr to be set by
+    // the decoder reinitialization code.
 
-    SDL_AtomicLock(&s_ActiveSession->m_DecoderLock);
+    if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
+        if (s_ActiveSession->m_NeedsIdr) {
+            // If we reset our decoder, we'll need to request an IDR frame
+            s_ActiveSession->m_NeedsIdr = false;
+            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            return DR_NEED_IDR;
+        }
 
-    if (s_ActiveSession->m_NeedsIdr) {
-        // If we reset our decoder, we'll need to request an IDR frame
-        s_ActiveSession->m_NeedsIdr = false;
-        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
-        return DR_NEED_IDR;
-    }
-
-    IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
-    if (decoder != nullptr) {
-        int ret = decoder->submitDecodeUnit(du);
-        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
-        return ret;
+        IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
+        if (decoder != nullptr) {
+            int ret = decoder->submitDecodeUnit(du);
+            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            return ret;
+        }
+        else {
+            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+            return DR_OK;
+        }
     }
     else {
-        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+        // Decoder is going away. Ignore anything coming in until
+        // the lock is released.
         return DR_OK;
     }
 }
