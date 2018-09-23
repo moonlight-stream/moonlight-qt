@@ -354,16 +354,6 @@ void Session::initialize()
                                           m_StreamConfig.width,
                                           m_StreamConfig.height,
                                           m_StreamConfig.fps);
-
-        // Oddly enough, the H.264 encoder on my GTX 1080 is actually more
-        // performant than the HEVC encoder (especially because split frame encode
-        // is disabled for HEVC by moonlight-common-c). Use H.264 for 1440p 100 FPS and above.
-        if (m_StreamConfig.width * m_StreamConfig.height * m_StreamConfig.fps >= 2560 * 1440 * 100) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Preferring H.264 for higher performance");
-            m_StreamConfig.supportsHevc = false;
-        }
-
         m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:
