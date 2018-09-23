@@ -70,14 +70,6 @@ bool PortAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION*
         return false;
     }
 
-    error = Pa_StartStream(m_Stream);
-    if (error != paNoError) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Pa_StartStream() failed: %s",
-                     Pa_GetErrorText(error));
-        return false;
-    }
-
     return true;
 }
 
@@ -101,6 +93,17 @@ void PortAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
     // race since we'll either read the original value of m_WriteIndex (which is safe,
     // we just won't consider this sample) or the new value of m_WriteIndex
     m_WriteIndex = (m_WriteIndex + 1) % CIRCULAR_BUFFER_SIZE;
+
+    // Start the stream after we've written the first sample to it
+    if (Pa_IsStreamStopped(m_Stream) == 1) {
+        PaError error = Pa_StartStream(m_Stream);
+        if (error != paNoError) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Pa_StartStream() failed: %s",
+                         Pa_GetErrorText(error));
+            return;
+        }
+    }
 }
 
 bool PortAudioRenderer::testAudio(int audioConfiguration)
