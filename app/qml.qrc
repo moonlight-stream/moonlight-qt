@@ -7,5 +7,7 @@
         <file>gui/StreamSegue.qml</file>
         <file>gui/GamepadMapper.qml</file>
         <file>gui/QuitSegue.qml</file>
+        <file>gui/NavigableToolButton.qml</file>
+        <file>gui/NavigableItemDelegate.qml</file>
     </qresource>
 </RCC>

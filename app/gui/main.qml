@@ -23,6 +23,20 @@ ApplicationWindow {
         id: stackView
         initialItem: "PcView.qml"
         anchors.fill: parent
+        focus: true
+
+        onCurrentItemChanged: {
+            // Ensure focus travels to the next view
+            if (currentItem) {
+                currentItem.forceActiveFocus()
+            }
+        }
+
+        Keys.onEscapePressed: {
+            if (depth > 1) {
+                stackView.pop()
+            }
+        }
     }
 
     onVisibilityChanged: {
@@ -68,7 +82,7 @@ ApplicationWindow {
             spacing: 20
             anchors.fill: parent
 
-            ToolButton {
+            NavigableToolButton {
                 // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1
 
@@ -85,6 +99,10 @@ ApplicationWindow {
                 }
 
                 onClicked: stackView.pop()
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
             }
 
             Label {
@@ -97,7 +115,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
 
-            ToolButton {
+            NavigableToolButton {
                 property string browserUrl: ""
 
                 id: updateButton
@@ -122,7 +140,6 @@ ApplicationWindow {
 
                 onClicked: Qt.openUrlExternally(browserUrl);
 
-
                 function updateAvailable(url)
                 {
                     updateButton.browserUrl = url
@@ -133,9 +150,13 @@ ApplicationWindow {
                     AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
                     AutoUpdateChecker.start()
                 }
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
             }
 
-            ToolButton {
+            NavigableToolButton {
                 Image {
                     source: "qrc:/res/question_mark.svg"
                     anchors.centerIn: parent
@@ -152,9 +173,13 @@ ApplicationWindow {
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
             }
 
-            ToolButton {
+            NavigableToolButton {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
 
@@ -173,9 +198,13 @@ ApplicationWindow {
                 }
 
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
             }
 
-            ToolButton {
+            NavigableToolButton {
                 Image {
                     source: "qrc:/res/settings.svg"
                     anchors.centerIn: parent
@@ -186,6 +215,10 @@ ApplicationWindow {
                 }
 
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000

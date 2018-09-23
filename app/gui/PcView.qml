@@ -13,6 +13,8 @@ GridView {
     property ComputerModel computerModel : createModel()
 
     id: pcGrid
+    focus: true
+    activeFocusOnTab: true
     anchors.fill: parent
     anchors.leftMargin: (parent.width % (cellWidth + anchors.rightMargin)) / 2
     anchors.topMargin: 20
@@ -75,8 +77,9 @@ GridView {
 
     model: computerModel
 
-    delegate: ItemDelegate {
+    delegate: NavigableItemDelegate {
         width: 300; height: 300;
+        grid: pcGrid
 
         Image {
             id: pcIcon

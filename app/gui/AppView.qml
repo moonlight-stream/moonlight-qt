@@ -11,6 +11,8 @@ GridView {
     property AppModel appModel : createModel()
 
     id: appGrid
+    focus: true
+    activeFocusOnTab: true
     anchors.fill: parent
     anchors.leftMargin: (parent.width % (cellWidth + anchors.rightMargin)) / 2
     anchors.topMargin: 20
@@ -47,8 +49,9 @@ GridView {
 
     model: appModel
 
-    delegate: ItemDelegate {
+    delegate: NavigableItemDelegate {
         width: 200; height: 335;
+        grid: pcGrid
 
         Image {
             id: appIcon
