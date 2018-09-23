@@ -3,6 +3,11 @@
 #include "renderer.h"
 #include <SDL.h>
 
+#ifndef HAVE_SLVIDEO
+#error SDL audio backend is only available for Steam Link
+#error Please install PortAudio to build for Linux
+#endif
+
 class SdlAudioRenderer : public IAudioRenderer
 {
 public:

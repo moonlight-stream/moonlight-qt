@@ -164,7 +164,7 @@ int PortAudioRenderer::detectAudioConfiguration()
     }
 }
 
-int PortAudioRenderer::paStreamCallback(const void*, void* output, unsigned long frameCount, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags statusFlags, void* userData)
+int PortAudioRenderer::paStreamCallback(const void*, void* output, unsigned long frameCount, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void* userData)
 {
     auto me = reinterpret_cast<PortAudioRenderer*>(userData);
 

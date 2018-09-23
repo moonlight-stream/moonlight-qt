@@ -55,6 +55,11 @@ unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 opus
 
+    packagesExist(portaudio-2.0) {
+        PKGCONFIG += portaudio-2.0
+        CONFIG += portaudio
+    }
+
     packagesExist(libavcodec) {
         PKGCONFIG += libavcodec libavutil
         CONFIG += ffmpeg
@@ -75,13 +80,13 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus
-    CONFIG += ffmpeg
+    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus -lportaudio
+    CONFIG += ffmpeg portaudio
 }
 macx {
-    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -framework SDL2
+    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -lportaudio -framework SDL2
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
-    CONFIG += ffmpeg
+    CONFIG += ffmpeg portaudio
 }
 
 SOURCES += \
@@ -95,7 +100,6 @@ SOURCES += \
     streaming/input.cpp \
     streaming/session.cpp \
     streaming/audio/audio.cpp \
-    streaming/audio/renderers/sdlaud.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
     streaming/streamutils.cpp \
@@ -113,7 +117,6 @@ HEADERS += \
     streaming/input.hpp \
     streaming/session.hpp \
     streaming/audio/renderers/renderer.h \
-    streaming/audio/renderers/sdl.h \
     gui/computermodel.h \
     gui/appmodel.h \
     streaming/video/decoder.h \
@@ -171,8 +174,14 @@ config_SLVideo {
 
     DEFINES += HAVE_SLVIDEO
     LIBS += -lSLVideo
-    SOURCES += streaming/video/sl.cpp
-    HEADERS += streaming/video/sl.h
+
+    SOURCES += \
+        streaming/video/sl.cpp \
+        streaming/audio/renderers/sdlaud.cpp
+
+    HEADERS += \
+        streaming/video/sl.h \
+        streaming/audio/renderers/sdl.h
 }
 win32 {
     message(DXVA2 renderer selected)
@@ -195,6 +204,13 @@ macx {
     HEADERS += \
         streaming/video/ffmpeg-renderers/vt.h \
         streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.h
+}
+portaudio {
+    message(PortAudio audio renderer selected)
+
+    DEFINES += HAVE_PORTAUDIO
+    SOURCES += streaming/audio/renderers/portaudiorenderer.cpp
+    HEADERS += streaming/audio/renderers/portaudiorenderer.h
 }
 
 RESOURCES += \

@@ -31,6 +31,7 @@ matrix:
             - libavutil-dev
             - libva-dev
             - libvdpau-dev
+            - portaudio19-dev
 
 install:
     - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5'

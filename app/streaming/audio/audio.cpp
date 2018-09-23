@@ -1,12 +1,21 @@
 #include "../session.hpp"
 #include "renderers/renderer.h"
+
+#ifdef HAVE_PORTAUDIO
+#include "renderers/portaudiorenderer.h"
+#else
 #include "renderers/sdl.h"
+#endif
 
 #include <Limelight.h>
 
 IAudioRenderer* Session::createAudioRenderer()
 {
+#ifdef HAVE_PORTAUDIO
+    return new PortAudioRenderer();
+#else
     return new SdlAudioRenderer();
+#endif
 }
 
 bool Session::testAudio(int audioConfiguration)
