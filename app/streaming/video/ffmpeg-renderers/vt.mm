@@ -160,10 +160,20 @@ public:
         // We need to add a subview for our display layer.
         NSView* contentView = info.info.cocoa.window.contentView;
         m_View = [[NSView alloc] initWithFrame:contentView.bounds];
-        m_View.wantsLayer = YES;
-        [contentView addSubview: m_View];
 
-        setupDisplayLayer();
+        m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
+        m_DisplayLayer.bounds = m_View.bounds;
+        m_DisplayLayer.position = CGPointMake(CGRectGetMidX(m_View.bounds), CGRectGetMidY(m_View.bounds));
+        m_DisplayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+
+        // Create a layer-hosted view by setting the layer before wantsLayer
+        // This avoids us having to add our AVSampleBufferDisplayLayer as a
+        // sublayer of a layer-backed view which leaves a useless layer in
+        // the middle.
+        m_View.layer = m_DisplayLayer;
+        m_View.wantsLayer = YES;
+
+        [contentView addSubview: m_View];
 
         err = av_hwdevice_ctx_create(&m_HwContext,
                                      AV_HWDEVICE_TYPE_VIDEOTOOLBOX,
@@ -210,24 +220,6 @@ public:
     }
 
 private:
-    void setupDisplayLayer()
-    {
-        CALayer* oldLayer = m_DisplayLayer;
-
-        m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
-        m_DisplayLayer.bounds = m_View.bounds;
-        m_DisplayLayer.position = CGPointMake(CGRectGetMidX(m_View.bounds), CGRectGetMidY(m_View.bounds));
-        m_DisplayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
-
-        CALayer* viewLayer = m_View.layer;
-        if (oldLayer != nil) {
-            [viewLayer replaceSublayer:oldLayer with:m_DisplayLayer];
-        }
-        else {
-            [viewLayer addSublayer:m_DisplayLayer];
-        }
-    }
-
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
