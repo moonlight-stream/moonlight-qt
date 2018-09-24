@@ -163,6 +163,8 @@ ApplicationWindow {
             }
 
             NavigableToolButton {
+                id: helpButton
+
                 Image {
                     source: "qrc:/res/question_mark.svg"
                     anchors.centerIn: parent
@@ -175,7 +177,13 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Help"
+                ToolTip.text: "Help" + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
+
+                Shortcut {
+                    id: helpShortcut
+                    sequence: StandardKey.HelpContents
+                    onActivated: helpButton.clicked()
+                }
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
@@ -211,6 +219,8 @@ ApplicationWindow {
             }
 
             NavigableToolButton {
+                id: settingsButton
+
                 Image {
                     source: "qrc:/res/settings.svg"
                     anchors.centerIn: parent
@@ -226,10 +236,16 @@ ApplicationWindow {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
                 }
 
+                Shortcut {
+                    id: settingsShortcut
+                    sequence: StandardKey.Preferences
+                    onActivated: settingsButton.clicked()
+                }
+
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Settings"
+                ToolTip.text: "Settings" + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
             }
         }
     }
