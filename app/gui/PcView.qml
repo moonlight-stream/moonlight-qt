@@ -45,6 +45,9 @@ GridView {
         else if (!prefs.hasAnyHardwareAcceleration()) {
             noHwDecoderDialog.open()
         }
+
+        // Don't show any highlighted item until interacting with them
+        currentIndex = -1
     }
 
     function pairingComplete(error)
@@ -131,13 +134,13 @@ GridView {
 
         Menu {
             id: pcContextMenu
-            MenuItem {
+            NavigableMenuItem {
                 text: "Wake PC"
                 onTriggered: computerModel.wakeComputer(index)
                 visible: !model.addPc && !model.online && model.wakeable
                 height: visible ? implicitHeight : 0
             }
-            MenuItem {
+            NavigableMenuItem {
                 text: "Delete PC"
                 onTriggered: {
                     deletePcDialog.pcIndex = index

@@ -9,5 +9,6 @@
         <file>gui/QuitSegue.qml</file>
         <file>gui/NavigableToolButton.qml</file>
         <file>gui/NavigableItemDelegate.qml</file>
+        <file>gui/NavigableMenuItem.qml</file>
     </qresource>
 </RCC>

@@ -26,13 +26,19 @@ ApplicationWindow {
         focus: true
 
         onCurrentItemChanged: {
-            // Ensure focus travels to the next view
+            // Ensure focus travels to the next view when going back
             if (currentItem) {
                 currentItem.forceActiveFocus()
             }
         }
 
         Keys.onEscapePressed: {
+            if (depth > 1) {
+                stackView.pop()
+            }
+        }
+
+        Keys.onBackPressed: {
             if (depth > 1) {
                 stackView.pop()
             }

@@ -31,6 +31,11 @@ GridView {
         stackView.pop()
     }
 
+    Component.onCompleted: {
+        // Don't show any highlighted item until interacting with them
+        currentIndex = -1
+    }
+
     onVisibleChanged: {
         if (visible) {
             appModel.computerLost.connect(computerLost)
@@ -51,7 +56,7 @@ GridView {
 
     delegate: NavigableItemDelegate {
         width: 200; height: 335;
-        grid: pcGrid
+        grid: appGrid
 
         Image {
             id: appIcon
@@ -129,7 +134,7 @@ GridView {
                 }
                 height: visible ? implicitHeight : 0
             }
-            MenuItem {
+            NavigableMenuItem {
                 text: "Quit Game"
                 onTriggered: {
                     quitAppDialog.appName = appModel.getRunningAppName()

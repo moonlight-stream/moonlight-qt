@@ -4,6 +4,8 @@ import QtQuick.Controls 2.2
 ItemDelegate {
     property GridView grid
 
+    highlighted: grid.activeFocus && grid.currentItem === this
+
     Keys.onLeftPressed: {
         grid.moveCurrentIndexLeft()
     }
@@ -13,11 +15,9 @@ ItemDelegate {
     Keys.onDownPressed: {
         grid.moveCurrentIndexDown()
     }
-
     Keys.onUpPressed: {
         grid.moveCurrentIndexUp()
     }
-
     Keys.onReturnPressed: {
         clicked()
     }
