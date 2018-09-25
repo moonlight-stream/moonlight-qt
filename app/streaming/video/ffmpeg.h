@@ -32,6 +32,10 @@ private:
                                 int videoFormat, int width, int height,
                                 int maxFps, bool enableVsync, bool testOnly);
 
+    void logVideoStats(VIDEO_STATS& stats, const char* title);
+
+    void addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst);
+
     IFFmpegRenderer* createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg);
 
     void reset();
@@ -48,6 +52,11 @@ private:
     SDL_atomic_t m_QueuedFrames;
     int m_ConsecutiveFailedDecodes;
     Pacer* m_Pacer;
+    VIDEO_STATS m_ActiveWndVideoStats;
+    VIDEO_STATS m_LastWndVideoStats;
+    VIDEO_STATS m_GlobalVideoStats;
+    int m_LastFrameNumber;
+    int m_StreamFps;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCTestFrame[];

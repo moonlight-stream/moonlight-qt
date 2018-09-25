@@ -20,12 +20,13 @@
 // V-sync happens.
 #define TIMER_SLACK_MS 3
 
-Pacer::Pacer(IFFmpegRenderer* renderer) :
+Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
     m_FrameQueueLock(0),
     m_VsyncSource(nullptr),
     m_VsyncRenderer(renderer),
     m_MaxVideoFps(0),
-    m_DisplayFps(0)
+    m_DisplayFps(0),
+    m_VideoStats(videoStats)
 {
 
 }
@@ -82,6 +83,7 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
     // Catch up if we're several frames ahead
     while (m_FrameQueue.count() > frameDropTarget) {
         AVFrame* frame = m_FrameQueue.dequeue();
+        m_VideoStats->pacerDroppedFrames++;
         av_frame_free(&frame);
     }
 
@@ -111,7 +113,10 @@ RenderNextFrame:
     SDL_AtomicUnlock(&m_FrameQueueLock);
 
     // Render it
+    Uint32 beforeRender = SDL_GetTicks();
     m_VsyncRenderer->renderFrameAtVsync(frame);
+    m_VideoStats->totalRenderTime += SDL_GetTicks() - beforeRender;
+    m_VideoStats->renderedFrames++;
 
     // Free the frame
     av_frame_free(&frame);
@@ -164,7 +169,10 @@ void Pacer::submitFrame(AVFrame* frame)
         SDL_AtomicUnlock(&m_FrameQueueLock);
     }
     else {
+        Uint32 beforeRender = SDL_GetTicks();
         m_VsyncRenderer->renderFrameAtVsync(frame);
+        m_VideoStats->totalRenderTime += SDL_GetTicks() - beforeRender;
+        m_VideoStats->renderedFrames++;
         av_frame_free(&frame);
     }
 }

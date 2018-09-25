@@ -60,10 +60,16 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
       m_HwDecodeCfg(nullptr),
       m_Renderer(nullptr),
       m_ConsecutiveFailedDecodes(0),
-      m_Pacer(nullptr)
+      m_Pacer(nullptr),
+      m_LastFrameNumber(0),
+      m_StreamFps(0)
 {
     av_init_packet(&m_Pkt);
     SDL_AtomicSet(&m_QueuedFrames, 0);
+
+    SDL_zero(m_ActiveWndVideoStats);
+    SDL_zero(m_LastWndVideoStats);
+    SDL_zero(m_GlobalVideoStats);
 
     // Use linear filtering when renderer scaling is required
     SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "1");
@@ -115,6 +121,8 @@ void FFmpegVideoDecoder::reset()
 
     delete m_Renderer;
     m_Renderer = nullptr;
+
+    logVideoStats(m_GlobalVideoStats, "Global video stats");
 }
 
 bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* window,
@@ -137,7 +145,8 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
         }
     }
 
-    m_Pacer = new Pacer(m_Renderer);
+    m_StreamFps = maxFps;
+    m_Pacer = new Pacer(m_Renderer, &m_ActiveWndVideoStats);
     if (!m_Pacer->initialize(window, maxFps, enableVsync)) {
         return false;
     }
@@ -223,6 +232,80 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
 #endif
 
     return true;
+}
+
+void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
+{
+    dst.receivedFrames += src.receivedFrames;
+    dst.decodedFrames += src.decodedFrames;
+    dst.renderedFrames += src.renderedFrames;
+    dst.networkDroppedFrames += src.networkDroppedFrames;
+    dst.pacerDroppedFrames += src.pacerDroppedFrames;
+    dst.totalReassemblyTime += src.totalReassemblyTime;
+    dst.totalDecodeTime += src.totalDecodeTime;
+    dst.totalRenderTime += src.totalRenderTime;
+
+    Uint32 now = SDL_GetTicks();
+
+    // Initialize the measurement start point if this is the first video stat window
+    if (!dst.measurementStartTimestamp) {
+        dst.measurementStartTimestamp = src.measurementStartTimestamp;
+    }
+
+    // The following code assumes the global measure was already started first
+    SDL_assert(dst.measurementStartTimestamp <= src.measurementStartTimestamp);
+
+    dst.receivedFps = (float)dst.receivedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
+    dst.decodedFps = (float)dst.decodedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
+    dst.renderedFps = (float)dst.renderedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
+}
+
+void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
+{
+    if (stats.renderedFps > 0 || stats.renderedFrames != 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "%s", title);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "----------------------------------------------------------");
+    }
+
+    if (stats.renderedFps > 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Incoming frame rate from network: %.2f FPS",
+                    stats.receivedFps);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Decoding frame rate: %.2f FPS",
+                    stats.decodedFps);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Rendering frame rate: %.2f FPS",
+                    stats.renderedFps);
+    }
+    if (stats.renderedFrames != 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Total frames received: %u",
+                    stats.receivedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Total frames decoded: %u",
+                    stats.decodedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Total frames rendered: %u",
+                    stats.renderedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Average reassembly time: %.2f ms",
+                    (float)stats.totalReassemblyTime / stats.decodedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Average decode time: %.2f ms",
+                    (float)stats.totalDecodeTime / stats.decodedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Average render time: %.2f ms",
+                    (float)stats.totalRenderTime / stats.renderedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Frames lost during network transmission: %.2f%%",
+                    (float)stats.networkDroppedFrames / stats.decodedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Frames dropped by frame pacing: %.2f%%",
+                    (float)stats.pacerDroppedFrames / stats.decodedFrames);
+    }
 }
 
 IFFmpegRenderer* FFmpegVideoDecoder::createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg)
@@ -346,6 +429,38 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     PLENTRY entry = du->bufferList;
     int err;
 
+    // Flip stats windows roughly every second
+    if (m_ActiveWndVideoStats.receivedFrames == m_StreamFps) {
+#ifdef QT_DEBUG
+        VIDEO_STATS lastTwoWndStats = {};
+        addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
+        addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);
+
+        // Print stats from the last 2 windows
+        logVideoStats(lastTwoWndStats, "Periodic video stats");
+#endif
+
+        // Accumulate these values into the global stats
+        addVideoStats(m_ActiveWndVideoStats, m_GlobalVideoStats);
+
+        // Move this window into the last window slot and clear it for next window
+        SDL_memcpy(&m_LastWndVideoStats, &m_ActiveWndVideoStats, sizeof(m_ActiveWndVideoStats));
+        SDL_zero(m_ActiveWndVideoStats);
+        m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
+    }
+
+    m_ActiveWndVideoStats.receivedFrames++;
+
+    if (!m_LastFrameNumber) {
+        m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
+        m_LastFrameNumber = du->frameNumber;
+    }
+    else {
+        // Any frame number greater than m_LastFrameNumber + 1 represents a dropped frame
+        m_ActiveWndVideoStats.networkDroppedFrames += du->frameNumber - (m_LastFrameNumber + 1);
+        m_LastFrameNumber = du->frameNumber;
+    }
+
     if (du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE > m_DecodeBuffer.length()) {
         m_DecodeBuffer = QByteArray(du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE, 0);
     }
@@ -363,6 +478,10 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     m_Pkt.data = reinterpret_cast<uint8_t*>(m_DecodeBuffer.data());
     m_Pkt.size = du->fullLength;
+
+    m_ActiveWndVideoStats.totalReassemblyTime += LiGetMillis() - du->receiveTimeMs;
+
+    Uint32 beforeDecode = SDL_GetTicks();
 
     err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
     if (err < 0) {
@@ -403,6 +522,11 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Queue the frame for rendering from the main thread
         SDL_AtomicIncRef(&m_QueuedFrames);
         queueFrame(frame);
+
+        // Count time in avcodec_send_packet() and avcodec_receive_frame()
+        // as time spent decoding
+        m_ActiveWndVideoStats.totalDecodeTime += SDL_GetTicks() - beforeDecode;
+        m_ActiveWndVideoStats.decodedFrames++;
     }
     else {
         av_frame_free(&frame);
@@ -446,6 +570,10 @@ void FFmpegVideoDecoder::dropFrame(SDL_UserEvent* event)
     }
     else {
         av_frame_free(&frame);
+
+        // Since Pacer won't see this frame, we'll mark it as a drop
+        // on its behalf
+        m_ActiveWndVideoStats.pacerDroppedFrames++;
     }
     SDL_AtomicDecRef(&m_QueuedFrames);
 }

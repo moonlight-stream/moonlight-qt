@@ -1,5 +1,6 @@
 #pragma once
 
+#include "../../decoder.h"
 #include "../renderer.h"
 
 #include <QQueue>
@@ -13,7 +14,7 @@ public:
 class Pacer
 {
 public:
-    Pacer(IFFmpegRenderer* renderer);
+    Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats);
 
     ~Pacer();
 
@@ -35,4 +36,5 @@ private:
     int m_MaxVideoFps;
     int m_DisplayFps;
     bool m_EnableVsync;
+    PVIDEO_STATS m_VideoStats;
 };

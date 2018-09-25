@@ -8,6 +8,21 @@
 
 #define MAX_SLICES 4
 
+typedef struct _VIDEO_STATS {
+    uint32_t receivedFrames;
+    uint32_t decodedFrames;
+    uint32_t renderedFrames;
+    uint32_t networkDroppedFrames;
+    uint32_t pacerDroppedFrames;
+    uint32_t totalReassemblyTime;
+    uint32_t totalDecodeTime;
+    uint32_t totalRenderTime;
+    float receivedFps;
+    float decodedFps;
+    float renderedFps;
+    uint32_t measurementStartTimestamp;
+} VIDEO_STATS, *PVIDEO_STATS;
+
 class IVideoDecoder {
 public:
     virtual ~IVideoDecoder() {}
