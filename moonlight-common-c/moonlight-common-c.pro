@@ -24,6 +24,7 @@ macx {
 unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl
+    DEFINES += HAVE_CLOCK_GETTIME=1
 }
 
 COMMON_C_DIR = $$PWD/moonlight-common-c
