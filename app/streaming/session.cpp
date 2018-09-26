@@ -275,8 +275,9 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
     return caps;
 }
 
-Session::Session(NvComputer* computer, NvApp& app)
-    : m_Computer(computer),
+Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
+    : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
+      m_Computer(computer),
       m_App(app),
       m_Window(nullptr),
       m_VideoDecoder(nullptr),
@@ -290,7 +291,6 @@ Session::Session(NvComputer* computer, NvApp& app)
       m_AudioRenderer(nullptr),
       m_AudioRendererLock(0)
 {
-
 }
 
 void Session::initialize()
@@ -310,10 +310,10 @@ void Session::initialize()
                 slices);
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
-    m_StreamConfig.width = m_Preferences.width;
-    m_StreamConfig.height = m_Preferences.height;
-    m_StreamConfig.fps = m_Preferences.fps;
-    m_StreamConfig.bitrate = m_Preferences.bitrateKbps;
+    m_StreamConfig.width = m_Preferences->width;
+    m_StreamConfig.height = m_Preferences->height;
+    m_StreamConfig.fps = m_Preferences->fps;
+    m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -326,7 +326,7 @@ void Session::initialize()
     // Only the first 4 bytes are populated in the RI key IV
     RAND_bytes(reinterpret_cast<unsigned char*>(m_StreamConfig.remoteInputAesIv), 4);
 
-    switch (m_Preferences.audioConfig)
+    switch (m_Preferences->audioConfig)
     {
     case StreamingPreferences::AC_AUTO:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Autodetecting audio configuration");
@@ -344,12 +344,12 @@ void Session::initialize()
                 "Audio configuration: %d",
                 m_StreamConfig.audioConfiguration);
 
-    switch (m_Preferences.videoCodecConfig)
+    switch (m_Preferences->videoCodecConfig)
     {
     case StreamingPreferences::VCC_AUTO:
         // TODO: Determine if HEVC is better depending on the decoder
         m_StreamConfig.supportsHevc =
-                isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+                isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
                                           VIDEO_FORMAT_H265,
                                           m_StreamConfig.width,
                                           m_StreamConfig.height,
@@ -384,7 +384,7 @@ void Session::initialize()
         m_StreamConfig.packetSize = 1024;
     }
 
-    switch (m_Preferences.windowMode)
+    switch (m_Preferences->windowMode)
     {
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
@@ -416,28 +416,28 @@ bool Session::validateLaunch()
 {
     QStringList warningList;
 
-    if (m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
+    if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
         emitLaunchWarning("Your settings selection to force software decoding may cause poor streaming performance.");
     }
 
-    if (m_Preferences.unsupportedFps && m_StreamConfig.fps > 60) {
+    if (m_Preferences->unsupportedFps && m_StreamConfig.fps > 60) {
         emitLaunchWarning("Using unsupported FPS options may cause stuttering or lag.");
 
-        if (m_Preferences.enableVsync) {
+        if (m_Preferences->enableVsync) {
             emitLaunchWarning("V-sync will be disabled when streaming at a higher frame rate than the display.");
         }
     }
 
     if (m_StreamConfig.supportsHevc) {
-        bool hevcForced = m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
-                m_Preferences.videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
+        bool hevcForced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
+                m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
 
-        if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+        if (!isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
                                        VIDEO_FORMAT_H265,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
                                        m_StreamConfig.fps) &&
-                m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_AUTO) {
+                m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO) {
             if (hevcForced) {
                 emitLaunchWarning("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.");
             }
@@ -473,7 +473,7 @@ bool Session::validateLaunch()
             emitLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
                               "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
         }
-        else if (!isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+        else if (!isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
                                             VIDEO_FORMAT_H265_MAIN10,
                                             m_StreamConfig.width,
                                             m_StreamConfig.height,
@@ -525,13 +525,13 @@ bool Session::validateLaunch()
         emitLaunchWarning("Failed to open audio device. Audio will be unavailable during this session.");
     }
 
-    if (m_Preferences.videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
-            !isHardwareDecodeAvailable(m_Preferences.videoDecoderSelection,
+    if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
+            !isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
                                        m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
                                        m_StreamConfig.fps)) {
-        if (m_Preferences.videoCodecConfig == StreamingPreferences::VCC_AUTO) {
+        if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_AUTO) {
             emit displayLaunchError("Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC's GPU.");
         }
         else {
@@ -543,7 +543,7 @@ bool Session::validateLaunch()
     }
 
     // Add the capability flags from the chosen decoder/renderer
-    m_VideoCallbacks.capabilities |= getDecoderCapabilities(m_Preferences.videoDecoderSelection,
+    m_VideoCallbacks.capabilities |= getDecoderCapabilities(m_Preferences->videoDecoderSelection,
                                                             m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
                                                             m_StreamConfig.width,
                                                             m_StreamConfig.height,
@@ -844,7 +844,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // For non-full screen windows, call getWindowDimensions()
     // again after creating a window to allow it to account
     // for window chrome size.
-    if (m_Preferences.windowMode == StreamingPreferences::WM_WINDOWED) {
+    if (m_Preferences->windowMode == StreamingPreferences::WM_WINDOWED) {
         getWindowDimensions(x, y, width, height);
 
         // We must set the size before the position because centering
@@ -1050,7 +1050,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 // forcefully disable V-sync to allow the stream to render faster
                 // than the display.
                 int displayHz = StreamUtils::getDisplayRefreshRate(m_Window);
-                bool enableVsync = m_Preferences.enableVsync;
+                bool enableVsync = m_Preferences->enableVsync;
                 if (displayHz + 5 < m_StreamConfig.fps) {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                 "Disabling V-sync because refresh rate limit exceeded");
@@ -1059,7 +1059,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
                 // Choose a new decoder (hopefully the same one, but possibly
                 // not if a GPU was removed or something).
-                if (!chooseDecoder(m_Preferences.videoDecoderSelection,
+                if (!chooseDecoder(m_Preferences->videoDecoderSelection,
                                    m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
                                    m_ActiveVideoHeight, m_ActiveVideoFrameRate,
                                    enableVsync,

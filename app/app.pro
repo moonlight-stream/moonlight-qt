@@ -96,6 +96,8 @@ SOURCES += \
     backend/nvpairingmanager.cpp \
     backend/computermanager.cpp \
     backend/boxartmanager.cpp \
+    cli/commandlineparser.cpp \
+    cli/startstream.cpp \
     settings/streamingpreferences.cpp \
     streaming/input.cpp \
     streaming/session.cpp \
@@ -113,6 +115,8 @@ HEADERS += \
     backend/nvpairingmanager.h \
     backend/computermanager.h \
     backend/boxartmanager.h \
+    cli/commandlineparser.h \
+    cli/startstream.h \
     settings/streamingpreferences.h \
     streaming/input.hpp \
     streaming/session.hpp \

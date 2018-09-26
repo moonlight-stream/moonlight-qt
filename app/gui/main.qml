@@ -21,7 +21,7 @@ ApplicationWindow {
 
     StackView {
         id: stackView
-        initialItem: "PcView.qml"
+        initialItem: initialView
         anchors.fill: parent
         focus: true
 

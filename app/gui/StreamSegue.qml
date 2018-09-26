@@ -9,6 +9,7 @@ Item {
     property Session session
     property string appName
     property string stageText : "Starting " + appName + "..."
+    property bool quitAfter : false
 
     anchors.fill: parent
 
@@ -72,11 +73,15 @@ Item {
             // Run the streaming session to completion
             session.exec(Screen.virtualX, Screen.virtualY)
 
-            // Show the Qt window again after streaming
-            window.visible = true
+            if (quitAfter) {
+                Qt.quit()
+            } else {
+                // Show the Qt window again after streaming
+                window.visible = true
 
-            // Exit this view
-            stackView.pop()
+                // Exit this view
+                stackView.pop()
+            }
         }
         else {
             // Show the toolbar again when we become hidden

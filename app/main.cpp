@@ -1,5 +1,6 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 #include <QIcon>
 #include <QQuickStyle>
 #include <QMutex>
@@ -15,6 +16,8 @@
 #include "streaming/video/ffmpeg.h"
 #endif
 
+#include "cli/startstream.h"
+#include "cli/commandlineparser.h"
 #include "path.h"
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
@@ -299,8 +302,31 @@ int main(int argc, char *argv[])
 
     QQuickStyle::setStyle("Material");
 
-    // Load the main.qml file
     QQmlApplicationEngine engine;
+    QString initialView;
+
+    GlobalCommandLineParser parser;
+    switch (parser.parse(app.arguments())) {
+    case GlobalCommandLineParser::NormalStartRequested:
+        initialView = "PcView.qml";
+        break;
+    case GlobalCommandLineParser::StreamRequested:
+        {
+            initialView = "CliStartStreamSegue.qml";
+            StreamingPreferences* preferences = new StreamingPreferences(&app);
+            StreamCommandLineParser streamParser;
+            streamParser.parse(app.arguments(), preferences);
+            QString host = streamParser.getHost();
+            QString game = streamParser.getGame();
+            auto launcher = new CliStartStream::Launcher(host, game, preferences, &app);
+            engine.rootContext()->setContextProperty("launcher", launcher);
+            break;
+        }
+    }
+
+    engine.rootContext()->setContextProperty("initialView", initialView);
+
+    // Load the main.qml file
     engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;

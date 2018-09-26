@@ -8,7 +8,7 @@ class StreamingPreferences : public QObject
     Q_OBJECT
 
 public:
-    StreamingPreferences();
+    StreamingPreferences(QObject *parent = nullptr);
 
     Q_INVOKABLE static int
     getDefaultBitrate(int width, int height, int fps);
