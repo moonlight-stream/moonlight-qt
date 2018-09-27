@@ -160,6 +160,10 @@ Launcher::Launcher(QString computer, QString app,
             this, &Launcher::onTimeout);
 }
 
+Launcher::~Launcher()
+{
+}
+
 void Launcher::execute(ComputerManager *manager)
 {
     Q_D(Launcher);

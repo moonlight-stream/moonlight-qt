@@ -887,7 +887,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // Capture the mouse by default on release builds only.
     // This prevents the mouse from becoming trapped inside
     // Moonlight when it's halted at a debug break.
-    if (m_Preferences.windowMode != StreamingPreferences::WM_WINDOWED) {
+    if (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED) {
         SDL_SetRelativeMouseMode(SDL_TRUE);
     }
 #endif

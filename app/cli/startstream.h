@@ -22,6 +22,7 @@ public:
     explicit Launcher(QString computer, QString app,
                       StreamingPreferences* preferences,
                       QObject *parent = nullptr);
+    ~Launcher();
     Q_INVOKABLE void execute(ComputerManager *manager);
 
 signals:
