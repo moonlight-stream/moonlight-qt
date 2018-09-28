@@ -16,6 +16,6 @@ struct KeyEvent {
     u_char modifier;
 };
 
-+ (struct KeyEvent) translateKeyEvent:(unichar) inputChar;
++ (struct KeyEvent) translateKeyEvent:(unichar) inputChar withModifierFlags:(UIKeyModifierFlags)modifierFlags;
 
 @end

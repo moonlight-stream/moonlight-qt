@@ -25,6 +25,8 @@
     float xDeltaFactor;
     float yDeltaFactor;
     float screenFactor;
+    
+    NSDictionary<NSString *, NSNumber *> *dictCodes;
 }
 
 - (void) setMouseDeltaFactors:(float)x y:(float)y {
@@ -46,6 +48,7 @@
         Log(LOG_I, @"Setting manual on-screen controls level: %d", (int)level);
         [onScreenControls setLevel:level];
     }
+    [self becomeFirstResponder];
 }
 
 - (Boolean)isConfirmedMove:(CGPoint)currentPoint from:(CGPoint)originalPoint {
@@ -215,25 +218,13 @@
         } else {
             // Character 0 will be our known sentinel value
             for (int i = 1; i < [inputText length]; i++) {
-                struct KeyEvent event = [KeyboardSupport translateKeyEvent:[inputText characterAtIndex:i]];
+                struct KeyEvent event = [KeyboardSupport translateKeyEvent:[inputText characterAtIndex:i] withModifierFlags:0];
                 if (event.keycode == 0) {
                     // If we don't know the code, don't send anything.
                     Log(LOG_W, @"Unknown key code: [%c]", [inputText characterAtIndex:i]);
                     continue;
                 }
-                
-                // When we want to send a modified key (like uppercase letters) we need to send the
-                // modifier ("shift") seperately from the key itself.
-                if (event.modifier != 0) {
-                    LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_DOWN, event.modifier);
-                    usleep(50 * 1000);
-                }
-                LiSendKeyboardEvent(event.keycode, KEY_ACTION_DOWN, event.modifier);
-                usleep(50 * 1000);
-                LiSendKeyboardEvent(event.keycode, KEY_ACTION_UP, event.modifier);
-                if (event.modifier != 0) {
-                    LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_UP, event.modifier);
-                }
+                [self sendLowLevelEvent:event];
             }
         }
     });
@@ -244,6 +235,71 @@
     // Move the insertion point back to the end of the text box
     UITextRange *textRange = [textField textRangeFromPosition:textField.endOfDocument toPosition:textField.endOfDocument];
     [textField setSelectedTextRange:textRange];
+}
+
+- (void)specialCharPressed:(UIKeyCommand *)cmd {
+    struct KeyEvent event = [KeyboardSupport translateKeyEvent:0x20 withModifierFlags:[cmd modifierFlags]];
+    event.keycode = [[dictCodes valueForKey:[cmd input]] intValue];
+    [self sendLowLevelEvent:event];
+}
+
+- (void)keyPressed:(UIKeyCommand *)cmd {
+    struct KeyEvent event = [KeyboardSupport translateKeyEvent:[[cmd input] characterAtIndex:0] withModifierFlags:[cmd modifierFlags]];
+    [self sendLowLevelEvent:event];
+}
+
+- (void)sendLowLevelEvent:(struct KeyEvent)event {
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+        // When we want to send a modified key (like uppercase letters) we need to send the
+        // modifier ("shift") seperately from the key itself.
+        if (event.modifier != 0) {
+            LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_DOWN, event.modifier);
+        }
+        LiSendKeyboardEvent(event.keycode, KEY_ACTION_DOWN, event.modifier);
+        usleep(50 * 1000);
+        LiSendKeyboardEvent(event.keycode, KEY_ACTION_UP, event.modifier);
+        if (event.modifier != 0) {
+            LiSendKeyboardEvent(event.modifierKeycode, KEY_ACTION_UP, event.modifier);
+        }
+    });
+}
+
+- (BOOL)canBecomeFirstResponder {
+    return YES;
+}
+
+- (NSArray<UIKeyCommand *> *)keyCommands
+{
+    NSString *charset = @"qwertyuiopasdfghjklzxcvbnm1234567890\t§[]\\'\"/.,`<>-´ç+`¡'º;ñ= ";
+    
+    NSMutableArray<UIKeyCommand *> * commands = [NSMutableArray<UIKeyCommand *> array];
+    dictCodes = [[NSDictionary alloc] initWithObjectsAndKeys: [NSNumber numberWithInt: 0x0d], @"\r", [NSNumber numberWithInt: 0x08], @"\b", [NSNumber numberWithInt: 0x1b], UIKeyInputEscape, [NSNumber numberWithInt: 0x28], UIKeyInputDownArrow, [NSNumber numberWithInt: 0x26], UIKeyInputUpArrow, [NSNumber numberWithInt: 0x25], UIKeyInputLeftArrow, [NSNumber numberWithInt: 0x27], UIKeyInputRightArrow, nil];
+    
+    [charset enumerateSubstringsInRange:NSMakeRange(0, charset.length)
+                                options:NSStringEnumerationByComposedCharacterSequences
+                             usingBlock:^(NSString *substring, NSRange substringRange, NSRange enclosingRange, BOOL *stop) {
+                                 [commands addObject:[UIKeyCommand keyCommandWithInput:substring modifierFlags:0 action:@selector(keyPressed:)]];
+                                 [commands addObject:[UIKeyCommand keyCommandWithInput:substring modifierFlags:UIKeyModifierShift action:@selector(keyPressed:)]];
+                                 [commands addObject:[UIKeyCommand keyCommandWithInput:substring modifierFlags:UIKeyModifierControl action:@selector(keyPressed:)]];
+                                 [commands addObject:[UIKeyCommand keyCommandWithInput:substring modifierFlags:UIKeyModifierAlternate action:@selector(keyPressed:)]];
+                             }];
+    
+    for (NSString *c in [dictCodes keyEnumerator]) {
+        [commands addObject:[UIKeyCommand keyCommandWithInput:c
+                                                modifierFlags:0
+                                                       action:@selector(specialCharPressed:)]];
+        [commands addObject:[UIKeyCommand keyCommandWithInput:c
+                                                modifierFlags:UIKeyModifierShift
+                                                       action:@selector(specialCharPressed:)]];
+        [commands addObject:[UIKeyCommand keyCommandWithInput:c
+                                                modifierFlags:UIKeyModifierControl
+                                                       action:@selector(specialCharPressed:)]];
+        [commands addObject:[UIKeyCommand keyCommandWithInput:c
+                                                modifierFlags:UIKeyModifierAlternate
+                                                       action:@selector(specialCharPressed:)]];
+    }
+    
+    return commands;
 }
 
 @end
