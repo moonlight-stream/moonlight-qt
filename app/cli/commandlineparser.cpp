@@ -12,6 +12,19 @@ static bool inRange(int value, int min, int max)
     return value >= min && value <= max;
 }
 
+// This method returns key's value from QMap where the key is a QString.
+// Key matching is case insensitive.
+template <typename T>
+static T mapValue(QMap<QString, T> map, QString key)
+{
+    for(auto& item : map.toStdMap()) {
+        if (QString::compare(item.first, key, Qt::CaseInsensitive) == 0) {
+            return item.second;
+        }
+    }
+    return T();
+}
+
 class CommandLineParser : public QCommandLineParser
 {
 public:
@@ -37,6 +50,13 @@ public:
         }
     }
 
+    void handleUnknownOptions()
+    {
+        if (unknownOptionNames().length()) {
+            showError(QString("Unknown options: %1").arg(unknownOptionNames().join(", ")));
+        }
+    }
+
     void showMessage(QString message, MessageType type) const
     {
     #if defined(Q_OS_WIN)
@@ -46,6 +66,7 @@ public:
         MessageBoxW(nullptr, reinterpret_cast<const wchar_t *>(message.utf16()),
                     reinterpret_cast<const wchar_t *>(title.utf16()), flags);
     #endif
+        message = message.endsWith('\n') ? message : message + '\n';
         fputs(qPrintable(message), type == Info ? stdout : stderr);
     }
 
@@ -84,7 +105,7 @@ public:
 
     QString getChoiceOptionValue(QString name) const
     {
-        if(!m_Choices[name].contains(value(name))) {
+        if (!m_Choices[name].contains(value(name), Qt::CaseInsensitive)) {
             showError(QString("Invalid %1 choice: %2").arg(name, value(name)));
         }
         return value(name);
@@ -150,10 +171,13 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
     parser.addPositionalArgument("action", "Action to execute", "<action>");
     parser.parse(args);
     auto posArgs = parser.positionalArguments();
-    QString action = posArgs.isEmpty() ? QString() : posArgs.first();
+    QString action = posArgs.isEmpty() ? QString() : posArgs.first().toLower();
 
     if (action == "") {
+        // This method will not return and terminates the process if --version
+        // or --help is specified
         parser.handleHelpAndVersionOptions();
+        parser.handleUnknownOptions();
         return NormalStartRequested;
     } else if (action == "stream") {
         return StreamRequested;
@@ -225,6 +249,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
         parser.showError(parser.errorText());
     }
 
+    parser.handleUnknownOptions();
+
     // Resolve display's width and height
     QRegularExpression resolutionRexExp("^(720|1080|1440|4K|resolution)$");
     QStringList resoOptions = parser.optionNames().filter(resolutionRexExp);
@@ -275,7 +301,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --display option
     if (parser.isSet("display-mode")) {
-        preferences->windowMode = m_WindowModeMap[parser.getChoiceOptionValue("display-mode")];
+        preferences->windowMode = mapValue(m_WindowModeMap, parser.getChoiceOptionValue("display-mode"));
     }
 
     // Resolve --vsync and --no-vsync options
@@ -283,7 +309,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --audio-config option
     if (parser.isSet("audio-config")) {
-        preferences->audioConfig = m_AudioConfigMap[parser.getChoiceOptionValue("audio-config")];
+        preferences->audioConfig = mapValue(m_AudioConfigMap, parser.getChoiceOptionValue("audio-config"));
     }
 
     // Resolve --multi-controller and --no-multi-controller options
@@ -300,14 +326,16 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --video-codec option
     if (parser.isSet("video-codec")) {
-        preferences->videoCodecConfig = m_VideoCodecMap[parser.getChoiceOptionValue("video-codec")];
+        preferences->videoCodecConfig = mapValue(m_VideoCodecMap, parser.getChoiceOptionValue("video-codec"));
     }
 
     // Resolve --video-decoder option
     if (parser.isSet("video-decoder")) {
-        preferences->videoDecoderSelection = m_VideoDecoderMap[parser.getChoiceOptionValue("video-decoder")];
+        preferences->videoDecoderSelection = mapValue(m_VideoDecoderMap, parser.getChoiceOptionValue("video-decoder"));
     }
 
+    // This method will not return and terminates the process if --version or
+    // --help is specified
     parser.handleHelpAndVersionOptions();
 
     // Verify that both host and game has been provided

@@ -26,8 +26,8 @@ public:
     Q_INVOKABLE void execute(ComputerManager *manager);
 
 signals:
-    void searchingComputer(QString name);
-    void searchingApp(QString name);
+    void searchingComputer();
+    void searchingApp();
     void sessionCreated(QString appName, Session *session);
     void failed(QString text);
 

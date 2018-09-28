@@ -4,8 +4,8 @@
 
 #include <QTimer>
 
-#define COMPUTER_SEEK_TIMEOUT 15000
-#define APP_SEEK_TIMEOUT 15000
+#define COMPUTER_SEEK_TIMEOUT 10000
+#define APP_SEEK_TIMEOUT 10000
 
 namespace CliStartStream
 {
@@ -62,7 +62,7 @@ public:
                 // would find the host
                 m_ComputerManager->addNewHost(m_ComputerName, false);
                 m_ComputerManager->startPolling();
-                emit q->searchingComputer(m_ComputerName);
+                emit q->searchingComputer();
             }
             break;
         case Event::ComputerUpdated:
@@ -73,7 +73,7 @@ public:
                         m_TimeoutTimer->start(APP_SEEK_TIMEOUT);
                         m_Computer = event.computer;
                         m_ComputerManager->stopPollingAsync();
-                        emit q->searchingApp(m_AppName);
+                        emit q->searchingApp();
                     } else {
                         m_State = StateFailure;
                         emit q->failed(QString("Computer %1 has not been paired").arg(m_ComputerName));

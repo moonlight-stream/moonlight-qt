@@ -7,12 +7,12 @@ import ComputerManager 1.0
 Item {
     visible: false
 
-    function onSearchingComputer(name) {
-        stageLabel.text = "Searching computer " + name + "..."
+    function onSearchingComputer() {
+        stageLabel.text = "Establishing connection to PC..."
     }
 
-    function onSearchingApp(name) {
-        stageLabel.text = "Searching application " + name + "..."
+    function onSearchingApp() {
+        stageLabel.text = "Loading app list..."
     }
 
     function onSessionCreated(appName, session) {
