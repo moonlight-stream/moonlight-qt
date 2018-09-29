@@ -92,6 +92,7 @@ macx {
 SOURCES += \
     main.cpp \
     backend/identitymanager.cpp \
+    backend/nvcomputer.cpp \
     backend/nvhttp.cpp \
     backend/nvpairingmanager.cpp \
     backend/computermanager.cpp \
@@ -109,6 +110,7 @@ SOURCES += \
 HEADERS += \
     utils.h \
     backend/identitymanager.h \
+    backend/nvcomputer.h \
     backend/nvhttp.h \
     backend/nvpairingmanager.h \
     backend/computermanager.h \
