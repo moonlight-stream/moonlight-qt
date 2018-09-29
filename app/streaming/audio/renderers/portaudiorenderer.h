@@ -36,6 +36,7 @@ private:
     int m_ChannelCount;
     int m_WriteIndex;
     int m_ReadIndex;
+    bool m_Started;
     short m_AudioBuffer[CIRCULAR_BUFFER_SIZE * CIRCULAR_BUFFER_STRIDE];
 };
 

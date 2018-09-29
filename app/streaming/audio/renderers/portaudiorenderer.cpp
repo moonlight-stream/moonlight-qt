@@ -8,7 +8,8 @@ PortAudioRenderer::PortAudioRenderer()
     : m_Stream(nullptr),
       m_ChannelCount(0),
       m_WriteIndex(0),
-      m_ReadIndex(0)
+      m_ReadIndex(0),
+      m_Started(false)
 {
     PaError error = Pa_Initialize();
     if (error != paNoError) {
@@ -95,7 +96,7 @@ void PortAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
     m_WriteIndex = (m_WriteIndex + 1) % CIRCULAR_BUFFER_SIZE;
 
     // Start the stream after we've written the first sample to it
-    if (Pa_IsStreamStopped(m_Stream) == 1) {
+    if (!m_Started) {
         PaError error = Pa_StartStream(m_Stream);
         if (error != paNoError) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -103,6 +104,8 @@ void PortAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
                          Pa_GetErrorText(error));
             return;
         }
+
+        m_Started = true;
     }
 }
 
