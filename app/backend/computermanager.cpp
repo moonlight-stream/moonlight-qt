@@ -400,6 +400,8 @@ private:
            }
         } catch (const GfeHttpResponseException& e) {
             emit pairingCompleted(m_Computer, e.toQString());
+        } catch (const QtNetworkReplyException& e) {
+            emit pairingCompleted(m_Computer, e.toQString());
         }
     }
 
@@ -452,6 +454,12 @@ private:
             else {
                 emit quitAppFailed(e.toQString());
             }
+        } catch (const QtNetworkReplyException& e) {
+            {
+                QWriteLocker lock(&m_Computer->lock);
+                m_Computer->pendingQuit = false;
+            }
+            emit quitAppFailed(e.toQString());
         }
     }
 
@@ -535,7 +543,24 @@ private:
 
         QString serverInfo;
         try {
-            serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::VERBOSE);
+            // There's a race condition between GameStream servers reporting presence over
+            // mDNS and the HTTPS server being ready to respond to our queries. To work
+            // around this issue, we will issue the request again after a few seconds if
+            // we see a ServiceUnavailableError error.
+            try {
+                serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::VERBOSE);
+            } catch (const QtNetworkReplyException& e) {
+                if (e.getError() == QNetworkReply::ServiceUnavailableError) {
+                    qWarning() << "Retrying request in 5 seconds after ServiceUnavailableError";
+                    QThread::sleep(5);
+                    serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::VERBOSE);
+                    qInfo() << "Retry successful";
+                }
+                else {
+                    // Rethrow other errors
+                    throw e;
+                }
+            }
         } catch (...) {
             if (!m_Mdns) {
                 emit computerAddCompleted(false);

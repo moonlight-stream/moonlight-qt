@@ -5,7 +5,8 @@
 #include <Limelight.h>
 
 #include <QUrl>
-#include <QtNetwork/QNetworkAccessManager>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 class NvApp
 {
@@ -52,7 +53,7 @@ public:
 
     }
 
-    const char* what() const throw()
+    const char* what() const
     {
         return m_StatusMessage.toLatin1();
     }
@@ -75,6 +76,41 @@ public:
 private:
     int m_StatusCode;
     QString m_StatusMessage;
+};
+
+class QtNetworkReplyException : public std::exception
+{
+public:
+    QtNetworkReplyException(QNetworkReply::NetworkError error, QString errorText) :
+        m_Error(error),
+        m_ErrorText(errorText)
+    {
+
+    }
+
+    const char* what() const
+    {
+        return m_ErrorText.toLatin1();
+    }
+
+    const char* getErrorText() const
+    {
+        return m_ErrorText.toLatin1();
+    }
+
+    QNetworkReply::NetworkError getError() const
+    {
+        return m_Error;
+    }
+
+    QString toQString() const
+    {
+        return m_ErrorText + " (Error " + QString::number(m_Error) + ")";
+    }
+
+private:
+    QNetworkReply::NetworkError m_Error;
+    QString m_ErrorText;
 };
 
 class NvHTTP

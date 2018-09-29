@@ -419,7 +419,7 @@ NvHTTP::openConnection(QUrl baseUrl,
         if (logLevel >= NvLogLevel::ERROR) {
             qWarning() << command << " request failed with error " << reply->error();
         }
-        GfeHttpResponseException exception(reply->error(), reply->errorString());
+        QtNetworkReplyException exception(reply->error(), reply->errorString());
         delete reply;
         throw exception;
     }

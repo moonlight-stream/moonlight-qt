@@ -779,6 +779,10 @@ void Session::exec(int displayOriginX, int displayOriginY)
         emit displayLaunchError(e.toQString());
         s_ActiveSessionSemaphore.release();
         return;
+    } catch (const QtNetworkReplyException& e) {
+        emit displayLaunchError(e.toQString());
+        s_ActiveSessionSemaphore.release();
+        return;
     }
 
     SDL_assert(!SDL_WasInit(SDL_INIT_VIDEO));
