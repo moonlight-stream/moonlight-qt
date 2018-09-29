@@ -53,7 +53,7 @@ public:
 
     }
 
-    const char* what() const
+    const char* what() const throw()
     {
         return m_StatusMessage.toLatin1();
     }
@@ -88,7 +88,7 @@ public:
 
     }
 
-    const char* what() const
+    const char* what() const throw()
     {
         return m_ErrorText.toLatin1();
     }
