@@ -28,6 +28,8 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 * Windows 7 or later
 * Visual Studio 2015 or later
 * Select MSVC Desktop toolchain during Qt installation
+* 7-Zip (only if building installers for non-development PCs)
+* WiX Toolset v3.11 or later (only if building installers for non-development PCs)
 
 ### Mac-specific Requirements
 * macOS El Capitan (10.11) or later
@@ -44,8 +46,8 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
 3. Open the project in Qt Creator or build from qmake on the command line.
     * To build a binary for use on non-development machines, use the scripts in the `scripts` folder.
-        * For Windows builds, use `scripts\generate-installers.bat`. Execute this script from the root of the repository within a Qt command prompt.
-        * For macOS builds, use `scripts/generate-dmg.sh`. Execute this script from the root of the repository and ensure Qt's `bin` folder is in your `$PATH`
+        * For Windows builds, use `scripts\generate-installers.bat`. Execute this script from the root of the repository within a Qt command prompt. Ensure WiX and 7-Zip binary directories are in your `%PATH%`.
+        * For macOS builds, use `scripts/generate-dmg.sh`. Execute this script from the root of the repository and ensure Qt's `bin` folder is in your `$PATH`.
 
 ## Contribute
 1. Fork us
