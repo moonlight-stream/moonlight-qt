@@ -22,7 +22,7 @@
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
-#include "streaming/session.hpp"
+#include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)

@@ -1,4 +1,4 @@
-#include "../session.hpp"
+#include "../session.h"
 #include "renderers/renderer.h"
 
 #ifdef HAVE_PORTAUDIO

@@ -120,8 +120,8 @@ HEADERS += \
     cli/commandlineparser.h \
     cli/startstream.h \
     settings/streamingpreferences.h \
-    streaming/input.hpp \
-    streaming/session.hpp \
+    streaming/input.h \
+    streaming/session.h \
     streaming/audio/renderers/renderer.h \
     gui/computermodel.h \
     gui/appmodel.h \

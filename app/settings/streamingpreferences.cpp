@@ -1,5 +1,5 @@
 #include "streamingpreferences.h"
-#include "streaming/session.hpp"
+#include "streaming/session.h"
 #include "streaming/streamutils.h"
 
 #include <QSettings>

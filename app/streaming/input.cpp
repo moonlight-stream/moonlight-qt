@@ -1,6 +1,6 @@
 #include <Limelight.h>
 #include <SDL.h>
-#include "streaming/session.hpp"
+#include "streaming/session.h"
 #include "path.h"
 
 #include <QtGlobal>

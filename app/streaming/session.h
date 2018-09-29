@@ -6,7 +6,7 @@
 #include <opus_multistream.h>
 #include "backend/computermanager.h"
 #include "settings/streamingpreferences.h"
-#include "input.hpp"
+#include "input.h"
 #include "video/decoder.h"
 #include "audio/renderers/renderer.h"
 
