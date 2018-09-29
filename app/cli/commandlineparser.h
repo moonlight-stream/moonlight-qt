@@ -29,11 +29,11 @@ public:
     void parse(const QStringList &args, StreamingPreferences *preferences);
 
     QString getHost() const;
-    QString getGame() const;
+    QString getAppName() const;
 
 private:
     QString m_Host;
-    QString m_Game;
+    QString m_AppName;
     QMap<QString, StreamingPreferences::WindowMode> m_WindowModeMap;
     QMap<QString, StreamingPreferences::AudioConfig> m_AudioConfigMap;
     QMap<QString, StreamingPreferences::VideoCodecConfig> m_VideoCodecMap;

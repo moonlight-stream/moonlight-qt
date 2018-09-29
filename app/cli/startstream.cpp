@@ -76,18 +76,28 @@ public:
                         emit q->searchingApp();
                     } else {
                         m_State = StateFailure;
-                        emit q->failed(QString("Computer %1 has not been paired").arg(m_ComputerName));
+                        QString msg = QString("Computer %1 has not been paired. "
+                                              "Please open Moonlight to pair before streaming.")
+                                .arg(event.computer->name);
+                        emit q->failed(msg);
                     }
                 }
             }
             if (m_State == StateSeekApp) {
                 int index = getAppIndex();
                 if (-1 != index) {
-                    m_State = StateStartSession;
-                    m_TimeoutTimer->stop();
                     app = m_Computer->appList[index];
-                    session = new Session(m_Computer, app, m_Preferences);
-                    emit q->sessionCreated(app.name, session);
+                    if (isNotStreaming() || isStreamingApp(app)) {
+                        m_State = StateStartSession;
+                        m_TimeoutTimer->stop();
+                        session = new Session(m_Computer, app, m_Preferences);
+                        emit q->sessionCreated(app.name, session);
+                    } else {
+                        m_State = StateFailure;
+                        QString msg = QString("%1 is already running. Please quit %1 to stream %2.")
+                                .arg(getCurrentAppName(), app.name);
+                        emit q->failed(msg);
+                    }
                 }
             }
             break;
@@ -132,6 +142,26 @@ public:
             }
         }
         return -1;
+    }
+
+    bool isNotStreaming() const
+    {
+        return m_Computer->currentGameId == 0;
+    }
+
+    bool isStreamingApp(NvApp app) const
+    {
+        return m_Computer->currentGameId == app.id;
+    }
+
+    QString getCurrentAppName() const
+    {
+        for (NvApp app : m_Computer->appList) {
+            if (m_Computer->currentGameId == app.id) {
+                return app.name;
+            }
+        }
+        return "<UNKNOWN>";
     }
 
     Launcher *q_ptr;

@@ -78,7 +78,7 @@ public:
 
     [[ noreturn ]] void showError(QString message) const
     {
-        showMessage(message, Error);
+        showMessage(message + "\n\n" + helpText(), Error);
         exit(1);
     }
 
@@ -164,7 +164,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "Starts Moonlight normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
-        "  stream          Start streaming a game\n"
+        "  stream          Start streaming an app\n"
         "\n"
         "See 'moonlight <action> --help' for help of specific action."
     );
@@ -220,13 +220,13 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.setupCommonOptions();
     parser.setApplicationDescription(
         "\n"
-        "Starts directly streaming a given game."
+        "Starts directly streaming a given app."
     );
     parser.addPositionalArgument("stream", "Start stream");
 
     // Add other arguments and options
-    parser.addPositionalArgument("host", "Host computer name, uuid or address", "<host>");
-    parser.addPositionalArgument("game", "Game name", "<game>");
+    parser.addPositionalArgument("host", "Host computer name, UUID, or IP address", "<host>");
+    parser.addPositionalArgument("app", "App to stream", "\"<app>\"");
 
     parser.addFlagOption("720",  "1280x720 resolution");
     parser.addFlagOption("1080", "1920x1080 resolution");
@@ -338,7 +338,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // --help is specified
     parser.handleHelpAndVersionOptions();
 
-    // Verify that both host and game has been provided
+    // Verify that both host and app has been provided
     auto posArgs = parser.positionalArguments();
     if (posArgs.length() < 2) {
         parser.showError("Host not provided");
@@ -346,9 +346,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     m_Host = parser.positionalArguments().at(1);
 
     if (posArgs.length() < 3) {
-        parser.showError("Game not provided");
+        parser.showError("App not provided");
     }
-    m_Game = parser.positionalArguments().at(2);
+    m_AppName = parser.positionalArguments().at(2);
 }
 
 QString StreamCommandLineParser::getHost() const
@@ -356,8 +356,8 @@ QString StreamCommandLineParser::getHost() const
     return m_Host;
 }
 
-QString StreamCommandLineParser::getGame() const
+QString StreamCommandLineParser::getAppName() const
 {
-    return m_Game;
+    return m_AppName;
 }
 

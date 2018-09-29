@@ -316,9 +316,9 @@ int main(int argc, char *argv[])
             StreamingPreferences* preferences = new StreamingPreferences(&app);
             StreamCommandLineParser streamParser;
             streamParser.parse(app.arguments(), preferences);
-            QString host = streamParser.getHost();
-            QString game = streamParser.getGame();
-            auto launcher = new CliStartStream::Launcher(host, game, preferences, &app);
+            QString host    = streamParser.getHost();
+            QString appName = streamParser.getAppName();
+            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }
