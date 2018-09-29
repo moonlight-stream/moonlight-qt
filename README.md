@@ -21,12 +21,31 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
  - Gamepad support with SDL gamepad mappings
 
 ## Building
+### General Build Requirements
+* Qt 5.9 SDK or later
+
+### Windows-specific Requirements
+* Windows 7 or later
+* Visual Studio 2015 or later
+* Select MSVC Desktop toolchain during Qt installation
+
+### Mac-specific Requirements
+* macOS El Capitan (10.11) or later
+* Xcode with High Sierra (10.13) SDK (Mojave SDK not yet supported until Qt 5.12 later this year)
+* [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
+
+### Linux-specific Requirements
+* GCC or Clang
+* Install your distro equivalents of: `openssl-devel qt5-devel SDL2-devel ffmpeg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel portaudio-devel`
+
+### Build Setup Steps
 1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download
-    - On Windows, install Visual Studio 2017 and select MSVC 2017 toolchain during Qt installation
-    - On Mac, install the latest version of XCode
-    - On Linux, install your distro equivalents of: `openssl-devel qt5-devel SDL2-devel ffmpeg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel portaudio-devel`
+    * You may also use Homebrew on macOS or your Linux distro's package manager for the Qt SDK as long as the packages are Qt 5.9 or later.
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
-3. Open the project in Qt Creator or build from qmake on the command line
+3. Open the project in Qt Creator or build from qmake on the command line.
+    * To build a binary for use on non-development machines, use the scripts in the `scripts` folder.
+        * For Windows builds, use `scripts\generate-installers.bat`. Execute this script from the root of the repository within a Qt command prompt.
+        * For macOS builds, use `scripts/generate-dmg.sh`. Execute this script from the root of the repository and ensure Qt's `bin` folder is in your `$PATH`
 
 ## Contribute
 1. Fork us
