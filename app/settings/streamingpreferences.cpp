@@ -22,7 +22,8 @@
 #define SER_MDNS "mdns"
 #define SER_MOUSEACCELERATION "mouseacceleration"
 
-StreamingPreferences::StreamingPreferences()
+StreamingPreferences::StreamingPreferences(QObject *parent)
+    : QObject(parent)
 {
     reload();
 }

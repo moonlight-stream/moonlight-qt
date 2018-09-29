@@ -10,5 +10,6 @@
         <file>gui/NavigableToolButton.qml</file>
         <file>gui/NavigableItemDelegate.qml</file>
         <file>gui/NavigableMenuItem.qml</file>
+        <file>gui/CliStartStreamSegue.qml</file>
     </qresource>
 </RCC>

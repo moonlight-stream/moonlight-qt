@@ -18,7 +18,7 @@ class Session : public QObject
     friend class DeferredSessionCleanupTask;
 
 public:
-    explicit Session(NvComputer* computer, NvApp& app);
+    explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
 
     Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);
 
@@ -102,7 +102,7 @@ private:
     static
     int drSubmitDecodeUnit(PDECODE_UNIT du);
 
-    StreamingPreferences m_Preferences;
+    StreamingPreferences* m_Preferences;
     STREAM_CONFIGURATION m_StreamConfig;
     DECODER_RENDERER_CALLBACKS m_VideoCallbacks;
     NvComputer* m_Computer;
