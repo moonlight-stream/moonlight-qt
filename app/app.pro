@@ -265,7 +265,7 @@ unix:!macx: {
     appstream.files = deploy/linux/com.moonlight_stream.Moonlight.appdata.xml
     appstream.path = $$PREFIX/$$DATADIR/metainfo/
 
-    appdata.files = gamecontrollerdb.txt
+    appdata.files = SDL_GameControllerDB/gamecontrollerdb.txt
     appdata.path = "$$PREFIX/$$DATADIR/Moonlight Game Streaming Project/Moonlight/"
 
     INSTALLS += target appdata desktop icons appstream
@@ -282,7 +282,7 @@ win32 {
 macx {
     QMAKE_INFO_PLIST = $$PWD/Info.plist
 
-    APP_BUNDLE_RESOURCES.files = moonlight.icns gamecontrollerdb.txt
+    APP_BUNDLE_RESOURCES.files = moonlight.icns SDL_GameControllerDB/gamecontrollerdb.txt
     APP_BUNDLE_RESOURCES.path = Contents/Resources
     QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES
 }

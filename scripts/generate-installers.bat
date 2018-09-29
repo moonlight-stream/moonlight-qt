@@ -93,7 +93,7 @@ copy %SOURCE_ROOT%\libs\windows\lib\%ARCH%\*.dll %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Copying GC mapping list
-copy %SOURCE_ROOT%\app\gamecontrollerdb.txt %DEPLOY_FOLDER%
+copy %SOURCE_ROOT%\app\SDL_GameControllerDB\gamecontrollerdb.txt %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Deploying Qt dependencies
