@@ -109,7 +109,7 @@ void PortAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
     }
 }
 
-bool PortAudioRenderer::testAudio(int audioConfiguration)
+bool PortAudioRenderer::testAudio(int audioConfiguration) const
 {
     PaStreamParameters params = {};
 
@@ -117,6 +117,13 @@ bool PortAudioRenderer::testAudio(int audioConfiguration)
     if (outputDeviceIndex == paNoDevice) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "No output device available");
+        return false;
+    }
+
+    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(outputDeviceIndex);
+    if (deviceInfo == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Pa_GetDeviceInfo() failed");
         return false;
     }
 
@@ -135,20 +142,37 @@ bool PortAudioRenderer::testAudio(int audioConfiguration)
 
     params.sampleFormat = paInt16;
     params.device = outputDeviceIndex;
+    params.suggestedLatency = deviceInfo->defaultLowOutputLatency;
 
-    PaError error = Pa_IsFormatSupported(nullptr, &params, 48000);
-    if (error == paFormatIsSupported) {
-        return true;
-    }
-    else {
+    // We used to just use Pa_IsFormatSupported() but there are cases
+    // where Pa_IsFormatSupported() will fail but when we actually
+    // call Pa_OpenStream(), it fails with device unavailable.
+    PaStream* stream;
+    PaError error = Pa_OpenStream(&stream, nullptr, &params,
+                                  48000,
+                                  SAMPLES_PER_FRAME,
+                                  paNoFlag,
+                                  nullptr, nullptr);
+    if (error != paNoError) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Pa_IsFormatSupported() failed: %s",
+                     "Pa_OpenStream() failed: %s",
                      Pa_GetErrorText(error));
         return false;
     }
+
+    error = Pa_StartStream(m_Stream);
+    if (error != paNoError) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Pa_StartStream() failed: %s",
+                     Pa_GetErrorText(error));
+    }
+
+    Pa_CloseStream(stream);
+
+    return error == paNoError;
 }
 
-int PortAudioRenderer::detectAudioConfiguration()
+int PortAudioRenderer::detectAudioConfiguration() const
 {
     const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(Pa_GetDefaultOutputDevice());
     if (deviceInfo == nullptr) {

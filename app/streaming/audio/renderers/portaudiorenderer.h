@@ -20,9 +20,9 @@ public:
 
     virtual void submitAudio(short* audioBuffer, int audioSize);
 
-    virtual bool testAudio(int audioConfiguration);
+    virtual bool testAudio(int audioConfiguration) const;
 
-    virtual int detectAudioConfiguration();
+    virtual int detectAudioConfiguration() const;
 
     static int paStreamCallback(const void *input,
                                 void *output,

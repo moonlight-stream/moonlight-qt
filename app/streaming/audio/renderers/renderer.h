@@ -14,7 +14,7 @@ public:
 
     virtual void submitAudio(short* audioBuffer, int audioSize) = 0;
 
-    virtual bool testAudio(int audioConfiguration) = 0;
+    virtual bool testAudio(int audioConfiguration) const = 0;
 
-    virtual int detectAudioConfiguration() = 0;
+    virtual int detectAudioConfiguration() const = 0;
 };

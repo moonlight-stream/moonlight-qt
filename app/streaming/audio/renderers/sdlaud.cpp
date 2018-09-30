@@ -13,7 +13,7 @@
 // This isn't accurate on macOS and Linux (PulseAudio),
 // since they both report supporting a large number of
 // channels, regardless of the actual output device.
-int SdlAudioRenderer::detectAudioConfiguration()
+int SdlAudioRenderer::detectAudioConfiguration() const
 {
     SDL_AudioSpec want, have;
     SDL_AudioDeviceID dev;
@@ -51,7 +51,7 @@ int SdlAudioRenderer::detectAudioConfiguration()
     }
 }
 
-bool SdlAudioRenderer::testAudio(int audioConfiguration)
+bool SdlAudioRenderer::testAudio(int audioConfiguration) const
 {
     SDL_AudioSpec want, have;
     SDL_AudioDeviceID dev;
