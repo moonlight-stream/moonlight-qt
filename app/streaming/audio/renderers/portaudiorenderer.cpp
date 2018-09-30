@@ -160,7 +160,7 @@ bool PortAudioRenderer::testAudio(int audioConfiguration) const
         return false;
     }
 
-    error = Pa_StartStream(m_Stream);
+    error = Pa_StartStream(stream);
     if (error != paNoError) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Pa_StartStream() failed: %s",
