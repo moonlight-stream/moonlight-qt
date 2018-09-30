@@ -23,6 +23,9 @@
 // How long the fingers must be stationary to start a drag
 #define DRAG_ACTIVATION_DELAY 650
 
+// How far the finger can move before it cancels a drag or tap
+#define DEAD_ZONE_DELTA 0.1f
+
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
     BACK_FLAG, SPECIAL_FLAG, PLAY_FLAG,
@@ -31,17 +34,17 @@ const int SdlInputHandler::k_ButtonMap[] = {
     UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG
 };
 
-SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer)
+SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer, int streamWidth, int streamHeight)
     : m_LastMouseMotionTime(0),
       m_MultiController(prefs.multiController),
       m_NeedsInputDelay(false),
-      m_LastPrimaryTouchX(0),
-      m_LastPrimaryTouchY(0),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
       m_DragButton(0),
-      m_NumFingersDown(0)
+      m_NumFingersDown(0),
+      m_StreamWidth(streamWidth),
+      m_StreamHeight(streamHeight)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -89,6 +92,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* comput
 
     SDL_zero(m_GamepadState);
     SDL_zero(m_TouchDownEvent);
+    SDL_zero(m_CumulativeDelta);
 }
 
 SdlInputHandler::~SdlInputHandler()
@@ -741,6 +745,12 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
 {
     int fingerIndex = -1;
 
+    // Observations on Windows 10: x and y appear to be relative to 0,0 of the window client area.
+    // Although SDL documentation states they are 0.0 - 1.0 float values, they can actually be higher
+    // or lower than those values as touch events continue for touches started within the client area that
+    // leave the client area during a drag motion.
+    // dx and dy are deltas from the last touch event, not the first touch down.
+
     // Determine the index of this finger using our list
     // of fingers that are currently active on screen.
     // This is also required to handle finger up which
@@ -770,12 +780,7 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
         }
     }
 
-    if (fingerIndex < 0) {
-        // Finger not found
-        SDL_assert(fingerIndex >= 0);
-        return;
-    }
-    else if (fingerIndex >= MAX_FINGERS) {
+    if (fingerIndex < 0 || fingerIndex >= MAX_FINGERS) {
         // Too many fingers
         return;
     }
@@ -783,13 +788,16 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
     // Handle cursor motion based on the position of the
     // primary finger on screen
     if (fingerIndex == 0) {
-        if (event->type == SDL_FINGERDOWN) {
-            m_LastPrimaryTouchX = event->x;
-            m_LastPrimaryTouchY = event->y;
-        }
-        else {
-            // TODO: event - m_LastPrimaryTouch
-            // LiSendMouseMotion()
+        // The event x and y values are relative to our window width
+        // and height. However, we want to scale them to be relative
+        // to the host resolution. Fortunately this is easy since we
+        // already have normalized values. We'll just multiply them
+        // by the stream dimensions to get real X and Y values rather
+        // than the client window dimensions.
+        short deltaX = static_cast<short>(event->dx * m_StreamWidth);
+        short deltaY = static_cast<short>(event->dy * m_StreamHeight);
+        if (deltaX != 0 || deltaY != 0) {
+            LiSendMouseMoveEvent(deltaX, deltaY);
         }
     }
 
@@ -803,12 +811,20 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
                                    this);
     }
 
-    // On motion, stop the drag timer if a finger has
-    // moved outside the deadzone
     if (event->type == SDL_FINGERMOTION) {
-        // TODO: event - m_TouchDownEvent
-        SDL_RemoveTimer(m_DragTimer);
-        m_DragTimer = 0;
+        // Count the total cumulative dx/dy that the finger
+        // has moved.
+        m_CumulativeDelta[fingerIndex] += qAbs(event->x);
+        m_CumulativeDelta[fingerIndex] += qAbs(event->y);
+
+        // If it's outside the deadzone delta, cancel drags and taps
+        if (m_CumulativeDelta[fingerIndex] > DEAD_ZONE_DELTA) {
+            SDL_RemoveTimer(m_DragTimer);
+            m_DragTimer = 0;
+
+            // This effectively cancels the tap logic below
+            m_TouchDownEvent[fingerIndex].timestamp = 0;
+        }
     }
 
     if (event->type == SDL_FINGERUP) {
@@ -820,17 +836,6 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
         if (m_DragButton != 0) {
             LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, m_DragButton);
             m_DragButton = 0;
-        }
-        // 3 finger tap
-        if (event->timestamp - m_TouchDownEvent[2].timestamp < 250) {
-            // Zero timestamp of the other fingers to ensure we won't
-            // generate spurious clicks on release
-            m_TouchDownEvent[0].timestamp = 0;
-            m_TouchDownEvent[1].timestamp = 0;
-
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Keyboard gesture detected");
-            SDL_StartTextInput();
         }
         // 2 finger tap
         else if (event->timestamp - m_TouchDownEvent[1].timestamp < 250) {
@@ -862,8 +867,12 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
 
     m_NumFingersDown = SDL_GetNumTouchFingers(event->touchId);
 
-    if (event->type == SDL_FINGERDOWN) {
+    if (event->type == SDL_FINGERDOWN) {      
         m_TouchDownEvent[fingerIndex] = *event;
+        m_CumulativeDelta[fingerIndex] = 0;
+    }
+    else if (event->type == SDL_FINGERUP) {
+        m_TouchDownEvent[fingerIndex] = {};
     }
 }
 

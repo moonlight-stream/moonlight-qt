@@ -17,12 +17,13 @@ struct GamepadState {
 };
 
 #define MAX_GAMEPADS 4
-#define MAX_FINGERS 3
+#define MAX_FINGERS 2
 
 class SdlInputHandler
 {
 public:
-    explicit SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer);
+    explicit SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer,
+                             int streamWidth, int streamHeight);
 
     ~SdlInputHandler();
 
@@ -71,13 +72,14 @@ private:
     GamepadState m_GamepadState[MAX_GAMEPADS];
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
-    float m_LastPrimaryTouchX;
-    float m_LastPrimaryTouchY;
+    float m_CumulativeDelta[MAX_FINGERS];
     SDL_TimerID m_LeftButtonReleaseTimer;
     SDL_TimerID m_RightButtonReleaseTimer;
     SDL_TimerID m_DragTimer;
     char m_DragButton;
     int m_NumFingersDown;
+    int m_StreamWidth;
+    int m_StreamHeight;
 
     static const int k_ButtonMap[];
 };
