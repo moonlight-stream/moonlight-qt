@@ -107,7 +107,8 @@ SOURCES += \
     gui/appmodel.cpp \
     streaming/streamutils.cpp \
     backend/autoupdatechecker.cpp \
-    path.cpp
+    path.cpp \
+    settings/mappingmanager.cpp
 
 HEADERS += \
     utils.h \
@@ -128,7 +129,8 @@ HEADERS += \
     streaming/video/decoder.h \
     streaming/streamutils.h \
     backend/autoupdatechecker.h \
-    path.h
+    path.h \
+    settings/mappingmanager.h
 
 # Platform-specific renderers and decoders
 ffmpeg {
