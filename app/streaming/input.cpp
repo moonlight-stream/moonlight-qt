@@ -140,9 +140,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             // further keyboard input
             SDL_SetRelativeMouseMode(SDL_FALSE);
 
-            SDL_Event event;
-
             // Push a quit event to the main loop
+            SDL_Event event;
             event.type = SDL_QUIT;
             event.quit.timestamp = SDL_GetTicks();
             SDL_PushEvent(&event);
@@ -621,6 +620,23 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
     }
     else {
         state->buttons &= ~k_ButtonMap[event->button];
+    }
+
+    // Handle Start+Select+L1+R1 as a gamepad quit combo
+    if (state->buttons == (PLAY_FLAG | BACK_FLAG | LB_FLAG | RB_FLAG)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected quit gamepad button combo");
+
+        // Push a quit event to the main loop
+        SDL_Event event;
+        event.type = SDL_QUIT;
+        event.quit.timestamp = SDL_GetTicks();
+        SDL_PushEvent(&event);
+
+        // Clear buttons down on this gameapd
+        LiSendMultiControllerEvent(state->index, m_GamepadMask,
+                                   0, 0, 0, 0, 0, 0, 0);
+        return;
     }
 
     sendGamepadState(state);
