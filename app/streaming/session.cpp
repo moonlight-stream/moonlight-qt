@@ -525,6 +525,11 @@ bool Session::validateLaunch()
         emitLaunchWarning("Failed to open audio device. Audio will be unavailable during this session.");
     }
 
+    // Check for unmapped gamepads
+    if (!SdlInputHandler::getUnmappedGamepads().isEmpty()) {
+        emitLaunchWarning("An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this.");
+    }
+
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
             !isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
                                        m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
@@ -1107,12 +1112,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
         case SDL_CONTROLLERDEVICEREMOVED:
             inputHandler.handleControllerDeviceEvent(&event.cdevice);
             break;
+        case SDL_JOYDEVICEADDED:
+            inputHandler.handleJoystickArrivalEvent(&event.jdevice);
+            break;
         }
     }
-
-    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "SDL_WaitEvent() failed: %s",
-                 SDL_GetError());
 
 DispatchDeferredCleanup:
 #ifdef Q_OS_WIN32

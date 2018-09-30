@@ -668,9 +668,37 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
     }
 }
 
+void SdlInputHandler::handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event)
+{
+    SDL_assert(event->type == SDL_JOYDEVICEADDED);
+
+    if (!SDL_IsGameController(event->which)) {
+        char guidStr[33];
+        SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(event->which),
+                                  guidStr, sizeof(guidStr));
+        const char* name = SDL_JoystickNameForIndex(event->which);
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Joystick discovered with no mapping: %s %s",
+                    name ? name : "<UNKNOWN>",
+                    guidStr);
+        SDL_Joystick* joy = SDL_JoystickOpen(event->which);
+        if (joy != nullptr) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Number of axes: %d | Number of buttons: %d | Number of hats: %d",
+                        SDL_JoystickNumAxes(joy), SDL_JoystickNumButtons(joy),
+                        SDL_JoystickNumHats(joy));
+            SDL_JoystickClose(joy);
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to open joystick for query: %s",
+                        SDL_GetError());
+        }
+    }
+}
+
 int SdlInputHandler::getAttachedGamepadMask()
 {
-    int i;
     int count;
     int mask;
 
@@ -680,11 +708,66 @@ int SdlInputHandler::getAttachedGamepadMask()
     }
 
     count = mask = 0;
-    for (i = 0; i < SDL_NumJoysticks(); i++) {
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
             mask |= (1 << count++);
         }
     }
 
     return mask;
+}
+
+QString SdlInputHandler::getUnmappedGamepads()
+{
+    QString ret;
+
+    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
+                     SDL_GetError());
+    }
+
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+        if (!SDL_IsGameController(i)) {
+            char guidStr[33];
+            SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(i),
+                                      guidStr, sizeof(guidStr));
+            const char* name = SDL_JoystickNameForIndex(i);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unmapped joystick: %s %s",
+                        name ? name : "<UNKNOWN>",
+                        guidStr);
+            SDL_Joystick* joy = SDL_JoystickOpen(i);
+            if (joy != nullptr) {
+                int numButtons = SDL_JoystickNumButtons(joy);
+                int numHats = SDL_JoystickNumHats(joy);
+                int numAxes = SDL_JoystickNumAxes(joy);
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Number of axes: %d | Number of buttons: %d | Number of hats: %d",
+                            numAxes, numButtons, numHats);
+
+                if (numAxes >= 4 && numButtons >= 8 && numHats <= 1) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Joystick likely to be an unmapped game controller");
+                    if (!ret.isEmpty()) {
+                        ret += ", ";
+                    }
+
+                    ret += name;
+                }
+
+                SDL_JoystickClose(joy);
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Unable to open joystick for query: %s",
+                            SDL_GetError());
+            }
+        }
+    }
+
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+
+    return ret;
 }

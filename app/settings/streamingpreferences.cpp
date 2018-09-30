@@ -99,6 +99,11 @@ bool StreamingPreferences::isWow64()
 #endif
 }
 
+QString StreamingPreferences::getUnmappedGamepads()
+{
+    return SdlInputHandler::getUnmappedGamepads();
+}
+
 int StreamingPreferences::getMaximumStreamingFrameRate()
 {
     // Never let the maximum drop below 60 FPS

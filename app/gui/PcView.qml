@@ -46,6 +46,12 @@ GridView {
             noHwDecoderDialog.open()
         }
 
+        var unmappedGamepads = prefs.getUnmappedGamepads()
+        if (unmappedGamepads) {
+            unmappedGamepadDialog.unmappedGamepads = unmappedGamepads
+            unmappedGamepadDialog.open()
+        }
+
         // Don't show any highlighted item until interacting with them
         currentIndex = -1
     }
@@ -241,6 +247,20 @@ GridView {
         text: "This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance."
         onAccepted: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-qt/releases");
+        }
+    }
+
+    MessageDialog {
+        id: unmappedGamepadDialog
+        property string unmappedGamepads : ""
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        text: "Moonlight detected gamepads without a proper mapping. " +
+              "The following gamepads will not function until this is resolved: " + unmappedGamepads + "\n\n" +
+              "Click the Help button for information on how to map your gamepads."
+        onHelp: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping");
         }
     }
 

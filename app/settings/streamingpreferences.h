@@ -27,6 +27,8 @@ public:
 
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
 
+    Q_INVOKABLE QString getUnmappedGamepads();
+
     void reload();
 
     enum AudioConfig

@@ -39,7 +39,12 @@ public:
 
     void handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event);
 
+    void handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event);
+
     int getAttachedGamepadMask();
+
+    static
+    QString getUnmappedGamepads();
 
 private:
     GamepadState*
