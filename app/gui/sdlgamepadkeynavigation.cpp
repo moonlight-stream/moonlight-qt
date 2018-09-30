@@ -6,9 +6,12 @@
 
 #include "settings/mappingmanager.h"
 
+#define AXIS_NAVIGATION_REPEAT_DELAY 150
+
 SdlGamepadKeyNavigation::SdlGamepadKeyNavigation()
     : m_Enabled(false),
-      m_SettingsMode(false)
+      m_SettingsMode(false),
+      m_LastAxisNavigationEventTime(0)
 {
     m_PollingTimer = new QTimer(this);
     connect(m_PollingTimer, SIGNAL(timeout()), this, SLOT(onPollingTimerFired()));
@@ -45,6 +48,7 @@ void SdlGamepadKeyNavigation::enable()
     // on first init of the GC subsystem. We can't depend on them due to
     // overlapping lifetimes of SdlGamepadKeyNavigation instances, so we
     // will attach ourselves.
+    SDL_PumpEvents();
     SDL_FlushEvent(SDL_CONTROLLERDEVICEADDED);
 
     // Open all currently attached game controllers
@@ -162,6 +166,66 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
                 m_Gamepads.append(gc);
             }
             break;
+        }
+    }
+
+    // Handle analog sticks by polling
+    for (auto gc : m_Gamepads) {
+        short leftX = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTX);
+        short leftY = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTY);
+        if (SDL_GetTicks() - m_LastAxisNavigationEventTime < AXIS_NAVIGATION_REPEAT_DELAY) {
+            // Do nothing
+        }
+        else if (leftY < -30000) {
+            if (m_SettingsMode) {
+                // Back-tab
+                sendKey(QEvent::Type::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
+                sendKey(QEvent::Type::KeyRelease, Qt::Key_Tab, Qt::ShiftModifier);
+            }
+            else {
+                sendKey(QEvent::Type::KeyPress, Qt::Key_Up);
+                sendKey(QEvent::Type::KeyRelease, Qt::Key_Up);
+            }
+
+            m_LastAxisNavigationEventTime = SDL_GetTicks();
+        }
+        else if (leftY > 30000) {
+            if (m_SettingsMode) {
+                sendKey(QEvent::Type::KeyPress, Qt::Key_Tab);
+                sendKey(QEvent::Type::KeyRelease, Qt::Key_Tab);
+            }
+            else {
+                sendKey(QEvent::Type::KeyPress, Qt::Key_Down);
+                sendKey(QEvent::Type::KeyRelease, Qt::Key_Down);
+            }
+
+            m_LastAxisNavigationEventTime = SDL_GetTicks();
+        }
+        else if (leftX < -30000) {
+            sendKey(QEvent::Type::KeyPress, Qt::Key_Left);
+            sendKey(QEvent::Type::KeyRelease, Qt::Key_Left);
+            if (m_SettingsMode) {
+                // Some settings controls respond to left/right (like the slider)
+                // and others respond to up/down (like combo boxes). They seem to
+                // be mutually exclusive though so let's just send both.
+                sendKey(QEvent::Type::KeyPress, Qt::Key_Up);
+                sendKey(QEvent::Type::KeyRelease, Qt::Key_Up);
+            }
+
+            m_LastAxisNavigationEventTime = SDL_GetTicks();
+        }
+        else if (leftX > 30000) {
+            sendKey(QEvent::Type::KeyPress, Qt::Key_Right);
+            sendKey(QEvent::Type::KeyRelease, Qt::Key_Right);
+            if (m_SettingsMode) {
+                // Some settings controls respond to left/right (like the slider)
+                // and others respond to up/down (like combo boxes). They seem to
+                // be mutually exclusive though so let's just send both.
+                sendKey(QEvent::Type::KeyPress, Qt::Key_Down);
+                sendKey(QEvent::Type::KeyRelease, Qt::Key_Down);
+            }
+
+            m_LastAxisNavigationEventTime = SDL_GetTicks();
         }
     }
 }

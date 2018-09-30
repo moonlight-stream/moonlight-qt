@@ -31,4 +31,5 @@ private:
     QList<SDL_GameController*> m_Gamepads;
     bool m_Enabled;
     bool m_SettingsMode;
+    Uint32 m_LastAxisNavigationEventTime;
 };
