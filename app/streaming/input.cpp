@@ -17,6 +17,12 @@
 #define VK_NUMPAD0 0x60
 #endif
 
+// How long the mouse button will be pressed for a tap to click gesture
+#define TAP_BUTTON_RELEASE_DELAY 100
+
+// How long the fingers must be stationary to start a drag
+#define DRAG_ACTIVATION_DELAY 650
+
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
     BACK_FLAG, SPECIAL_FLAG, PLAY_FLAG,
@@ -28,7 +34,14 @@ const int SdlInputHandler::k_ButtonMap[] = {
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer)
     : m_LastMouseMotionTime(0),
       m_MultiController(prefs.multiController),
-      m_NeedsInputDelay(false)
+      m_NeedsInputDelay(false),
+      m_LastPrimaryTouchX(0),
+      m_LastPrimaryTouchY(0),
+      m_LeftButtonReleaseTimer(0),
+      m_RightButtonReleaseTimer(0),
+      m_DragTimer(0),
+      m_DragButton(0),
+      m_NumFingersDown(0)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -75,6 +88,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* comput
     }
 
     SDL_zero(m_GamepadState);
+    SDL_zero(m_TouchDownEvent);
 }
 
 SdlInputHandler::~SdlInputHandler()
@@ -84,6 +98,10 @@ SdlInputHandler::~SdlInputHandler()
             SDL_GameControllerClose(m_GamepadState[i].controller);
         }
     }
+
+    SDL_RemoveTimer(m_LeftButtonReleaseTimer);
+    SDL_RemoveTimer(m_RightButtonReleaseTimer);
+    SDL_RemoveTimer(m_DragTimer);
 
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
@@ -388,6 +406,10 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
         // Not capturing
         return;
     }
+    else if (event->which == SDL_TOUCH_MOUSEID) {
+        // Ignore synthetic mouse events
+        return;
+    }
 
     switch (event->button)
     {
@@ -423,6 +445,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         // Not capturing
         return;
     }
+    else if (event->which == SDL_TOUCH_MOUSEID) {
+        // Ignore synthetic mouse events
+        return;
+    }
+
     short xdelta = (short)event->xrel;
     short ydelta = (short)event->yrel;
 
@@ -465,6 +492,10 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         // Not capturing
         return;
     }
+    else if (event->which == SDL_TOUCH_MOUSEID) {
+        // Ignore synthetic mouse events
+        return;
+    }
 
     if (event->y != 0) {
         LiSendScrollEvent((signed char)event->y);
@@ -500,6 +531,36 @@ void SdlInputHandler::sendGamepadState(GamepadState* state)
                                state->lsY,
                                state->rsX,
                                state->rsY);
+}
+
+Uint32 SdlInputHandler::releaseLeftButtonTimerCallback(Uint32, void*)
+{
+    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+    return 0;
+}
+
+Uint32 SdlInputHandler::releaseRightButtonTimerCallback(Uint32, void*)
+{
+    LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+    return 0;
+}
+
+Uint32 SdlInputHandler::dragTimerCallback(Uint32, void *param)
+{
+    auto me = reinterpret_cast<SdlInputHandler*>(param);
+
+    // Check how many fingers are down now to decide
+    // which button to hold down
+    if (me->m_NumFingersDown == 2) {
+        me->m_DragButton = BUTTON_RIGHT;
+    }
+    else if (me->m_NumFingersDown == 1) {
+        me->m_DragButton = BUTTON_LEFT;
+    }
+
+    LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, me->m_DragButton);
+
+    return 0;
 }
 
 void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
@@ -673,6 +734,136 @@ void SdlInputHandler::handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event)
                         "Unable to open joystick for query: %s",
                         SDL_GetError());
         }
+    }
+}
+
+void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
+{
+    int fingerIndex = -1;
+
+    // Determine the index of this finger using our list
+    // of fingers that are currently active on screen.
+    // This is also required to handle finger up which
+    // where the finger will not be in SDL_GetTouchFinger()
+    // anymore.
+    if (event->type != SDL_FINGERDOWN) {
+        for (int i = 0; i < MAX_FINGERS; i++) {
+            if (event->fingerId == m_TouchDownEvent[i].fingerId) {
+                fingerIndex = i;
+                break;
+            }
+        }
+    }
+    else {
+        // Resolve the new finger by determining the ID of each
+        // finger on the display.
+        int numTouchFingers = SDL_GetNumTouchFingers(event->touchId);
+        for (int i = 0; i < numTouchFingers; i++) {
+            SDL_Finger* finger = SDL_GetTouchFinger(event->touchId, i);
+            SDL_assert(finger != nullptr);
+            if (finger != nullptr) {
+                if (finger->id == event->fingerId) {
+                    fingerIndex = i;
+                    break;
+                }
+            }
+        }
+    }
+
+    if (fingerIndex < 0) {
+        // Finger not found
+        SDL_assert(fingerIndex >= 0);
+        return;
+    }
+    else if (fingerIndex >= MAX_FINGERS) {
+        // Too many fingers
+        return;
+    }
+
+    // Handle cursor motion based on the position of the
+    // primary finger on screen
+    if (fingerIndex == 0) {
+        if (event->type == SDL_FINGERDOWN) {
+            m_LastPrimaryTouchX = event->x;
+            m_LastPrimaryTouchY = event->y;
+        }
+        else {
+            // TODO: event - m_LastPrimaryTouch
+            // LiSendMouseMotion()
+        }
+    }
+
+    // Start a drag timer when primary or secondary
+    // fingers go down
+    if (event->type == SDL_FINGERDOWN &&
+            (fingerIndex == 0 || fingerIndex == 1)) {
+        SDL_RemoveTimer(m_DragTimer);
+        m_DragTimer = SDL_AddTimer(DRAG_ACTIVATION_DELAY,
+                                   dragTimerCallback,
+                                   this);
+    }
+
+    // On motion, stop the drag timer if a finger has
+    // moved outside the deadzone
+    if (event->type == SDL_FINGERMOTION) {
+        // TODO: event - m_TouchDownEvent
+        SDL_RemoveTimer(m_DragTimer);
+        m_DragTimer = 0;
+    }
+
+    if (event->type == SDL_FINGERUP) {
+        // Cancel the drag timer on finger up
+        SDL_RemoveTimer(m_DragTimer);
+        m_DragTimer = 0;
+
+        // Release any drag
+        if (m_DragButton != 0) {
+            LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, m_DragButton);
+            m_DragButton = 0;
+        }
+        // 3 finger tap
+        if (event->timestamp - m_TouchDownEvent[2].timestamp < 250) {
+            // Zero timestamp of the other fingers to ensure we won't
+            // generate spurious clicks on release
+            m_TouchDownEvent[0].timestamp = 0;
+            m_TouchDownEvent[1].timestamp = 0;
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Keyboard gesture detected");
+            SDL_StartTextInput();
+        }
+        // 2 finger tap
+        else if (event->timestamp - m_TouchDownEvent[1].timestamp < 250) {
+            // Zero timestamp of the primary finger to ensure we won't
+            // generate a left click if the primary finger comes up soon.
+            m_TouchDownEvent[0].timestamp = 0;
+
+            // Press down the right mouse button
+            LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
+
+            // Queue a timer to release it in 100 ms
+            SDL_RemoveTimer(m_RightButtonReleaseTimer);
+            m_RightButtonReleaseTimer = SDL_AddTimer(TAP_BUTTON_RELEASE_DELAY,
+                                                     releaseRightButtonTimerCallback,
+                                                     nullptr);
+        }
+        // 1 finger tap
+        else if (event->timestamp - m_TouchDownEvent[0].timestamp < 250) {
+            // Press down the left mouse button
+            LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+
+            // Queue a timer to release it in 100 ms
+            SDL_RemoveTimer(m_LeftButtonReleaseTimer);
+            m_LeftButtonReleaseTimer = SDL_AddTimer(TAP_BUTTON_RELEASE_DELAY,
+                                                    releaseLeftButtonTimerCallback,
+                                                    nullptr);
+        }
+    }
+
+    m_NumFingersDown = SDL_GetNumTouchFingers(event->touchId);
+
+    if (event->type == SDL_FINGERDOWN) {
+        m_TouchDownEvent[fingerIndex] = *event;
     }
 }
 

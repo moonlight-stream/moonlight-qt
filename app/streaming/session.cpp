@@ -1115,6 +1115,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
         case SDL_JOYDEVICEADDED:
             inputHandler.handleJoystickArrivalEvent(&event.jdevice);
             break;
+        case SDL_FINGERDOWN:
+        case SDL_FINGERMOTION:
+        case SDL_FINGERUP:
+            inputHandler.handleTouchFingerEvent(&event.tfinger);
+            break;
         }
     }
 
