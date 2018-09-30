@@ -43,6 +43,10 @@ ApplicationWindow {
                 stackView.pop()
             }
         }
+
+        Keys.onMenuPressed: {
+            settingsButton.clicked()
+        }
     }
 
     onVisibilityChanged: {

@@ -108,7 +108,8 @@ SOURCES += \
     streaming/streamutils.cpp \
     backend/autoupdatechecker.cpp \
     path.cpp \
-    settings/mappingmanager.cpp
+    settings/mappingmanager.cpp \
+    gui/sdlgamepadkeynavigation.cpp
 
 HEADERS += \
     utils.h \
@@ -130,7 +131,8 @@ HEADERS += \
     streaming/streamutils.h \
     backend/autoupdatechecker.h \
     path.h \
-    settings/mappingmanager.h
+    settings/mappingmanager.h \
+    gui/sdlgamepadkeynavigation.h
 
 # Platform-specific renderers and decoders
 ffmpeg {

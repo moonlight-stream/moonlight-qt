@@ -8,6 +8,7 @@ import ComputerModel 1.0
 
 import ComputerManager 1.0
 import StreamingPreferences 1.0
+import SdlGamepadKeyNavigation 1.0
 
 GridView {
     property ComputerModel computerModel : createModel()
@@ -30,6 +31,19 @@ GridView {
 
     StreamingPreferences {
         id: prefs
+    }
+
+    SdlGamepadKeyNavigation {
+        id: gamepadKeyNav
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            gamepadKeyNav.enable()
+        }
+        else {
+            gamepadKeyNav.disable()
+        }
     }
 
     Component.onCompleted: {
@@ -144,7 +158,6 @@ GridView {
                 text: "Wake PC"
                 onTriggered: computerModel.wakeComputer(index)
                 visible: !model.addPc && !model.online && model.wakeable
-                height: visible ? implicitHeight : 0
             }
             NavigableMenuItem {
                 text: "Delete PC"
@@ -185,6 +198,7 @@ GridView {
                     }
                 }
             } else if (!model.online) {
+                // Using open() here because it may be activated by keyboard
                 pcContextMenu.open()
             }
         }
@@ -193,10 +207,18 @@ GridView {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton;
             onClicked: {
-                // right click
-                if (!model.addPc) { // but only for actual PCs, not the add-pc option
-                    pcContextMenu.open()
+                if (!model.addPc) {
+                    // popup() ensures the menu appears under the mouse cursor
+                    pcContextMenu.popup()
                 }
+            }
+        }
+
+        Keys.onMenuPressed: {
+            if (!model.addPc) {
+                // We must use open() here so the menu is positioned on
+                // the ItemDelegate and not where the mouse cursor is
+                pcContextMenu.open()
             }
         }
     }

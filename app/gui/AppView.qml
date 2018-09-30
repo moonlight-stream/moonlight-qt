@@ -3,8 +3,8 @@ import QtQuick.Dialogs 1.2
 import QtQuick.Controls 2.2
 
 import AppModel 1.0
-
 import ComputerManager 1.0
+import SdlGamepadKeyNavigation 1.0
 
 GridView {
     property int computerIndex
@@ -36,12 +36,18 @@ GridView {
         currentIndex = -1
     }
 
+    SdlGamepadKeyNavigation {
+        id: gamepadKeyNav
+    }
+
     onVisibleChanged: {
         if (visible) {
             appModel.computerLost.connect(computerLost)
+            gamepadKeyNav.enable()
         }
         else {
             appModel.computerLost.disconnect(computerLost)
+            gamepadKeyNav.disable()
         }
     }
 
@@ -119,20 +125,25 @@ GridView {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton
             onClicked: {
-                // Right click
-                appContextMenu.open()
+                // popup() ensures the menu appears under the mouse cursor
+                appContextMenu.popup()
             }
+        }
+
+        Keys.onMenuPressed: {
+            // We must use open() here so the menu is positioned on
+            // the ItemDelegate and not where the mouse cursor is
+            appContextMenu.open()
         }
 
         Menu {
             id: appContextMenu
-            MenuItem {
+            NavigableMenuItem {
                 text: model.running ? "Resume Game" : "Launch Game"
                 onTriggered: {
                     appContextMenu.close()
                     launchOrResumeSelectedApp()
                 }
-                height: visible ? implicitHeight : 0
             }
             NavigableMenuItem {
                 text: "Quit Game"
@@ -142,7 +153,6 @@ GridView {
                     quitAppDialog.open()
                 }
                 visible: model.running
-                height: visible ? implicitHeight : 0
             }
         }
     }

@@ -24,6 +24,7 @@
 #include "backend/autoupdatechecker.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
+#include "gui/sdlgamepadkeynavigation.h"
 
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
 // Log to file for release Windows builds
@@ -288,6 +289,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
     qmlRegisterType<StreamingPreferences>("StreamingPreferences", 1, 0, "StreamingPreferences");
+    qmlRegisterType<SdlGamepadKeyNavigation>("SdlGamepadKeyNavigation", 1, 0, "SdlGamepadKeyNavigation");
     qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
                                               "ComputerManager",
@@ -338,14 +340,16 @@ int main(int argc, char *argv[])
                      SDL_GetError());
     }
 
+    // Use atexit() to ensure SDL_Quit() is called. This avoids
+    // racing with object destruction where SDL may be used.
+    atexit(SDL_Quit);
+
     // Avoid the default behavior of changing the timer resolution to 1 ms.
     // We don't want this all the time that Moonlight is open. We will set
     // it manually when we start streaming.
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
 
     int err = app.exec();
-
-    SDL_Quit();
 
     return err;
 }

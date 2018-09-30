@@ -3,6 +3,7 @@ import QtQuick.Controls 2.2
 
 import StreamingPreferences 1.0
 import ComputerManager 1.0
+import SdlGamepadKeyNavigation 1.0
 
 ScrollView {
     id: settingsPage
@@ -10,6 +11,25 @@ ScrollView {
 
     StreamingPreferences {
         id: prefs
+    }
+
+    // The StackView will trigger a visibility change when
+    // we're pushed onto it, causing our onVisibleChanged
+    // routine to run, but only if we start as invisible
+    visible: false
+
+    SdlGamepadKeyNavigation {
+        id: gamepadKeyNav
+    }
+
+    onVisibleChanged: {
+        if (visible) {
+            gamepadKeyNav.setSettingsMode(true)
+            gamepadKeyNav.enable()
+        }
+        else {
+            gamepadKeyNav.disable()
+        }
     }
 
     Component.onDestruction: {
