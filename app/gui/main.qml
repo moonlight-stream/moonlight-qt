@@ -47,6 +47,13 @@ ApplicationWindow {
         Keys.onMenuPressed: {
             settingsButton.clicked()
         }
+
+        // This is a keypress we've reserved for letting the
+        // SdlGamepadKeyNavigation object tell us to show settings
+        // when Menu is consumed by a focused control.
+        Keys.onHangupPressed: {
+            settingsButton.clicked()
+        }
     }
 
     onVisibilityChanged: {

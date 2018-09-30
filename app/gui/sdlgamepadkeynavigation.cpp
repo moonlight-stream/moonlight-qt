@@ -142,9 +142,14 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
                 sendKey(type, Qt::Key_Escape);
                 break;
             case SDL_CONTROLLER_BUTTON_X:
+                sendKey(type, Qt::Key_Menu);
+                break;
             case SDL_CONTROLLER_BUTTON_Y:
             case SDL_CONTROLLER_BUTTON_START:
-                sendKey(type, Qt::Key_Menu);
+                // HACK: We use this keycode to inform main.qml
+                // to show the settings when Key_Menu is handled
+                // by the control in focus.
+                sendKey(type, Qt::Key_Hangup);
                 break;
             default:
                 break;
