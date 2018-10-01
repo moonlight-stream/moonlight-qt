@@ -94,19 +94,11 @@ int Session::arInit(int /* audioConfiguration */,
 
 void Session::arCleanup()
 {
-    // m_AudioRenderer is deleted in cleanupAudioRenderer()
+    delete s_ActiveSession->m_AudioRenderer;
+    s_ActiveSession->m_AudioRenderer = nullptr;
 
     opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
     s_ActiveSession->m_OpusDecoder = nullptr;
-}
-
-// This is called on the main thread
-void Session::cleanupAudioRendererOnMainThread()
-{
-    SDL_AtomicLock(&m_AudioRendererLock);
-    delete m_AudioRenderer;
-    m_AudioRenderer = nullptr;
-    SDL_AtomicUnlock(&m_AudioRendererLock);
 }
 
 void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
@@ -120,16 +112,9 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
                                              SAMPLES_PER_FRAME,
                                              0);
     if (samplesDecoded > 0) {
-        // If we can't acquire the lock, that means we're being destroyed
-        // so don't even bother trying to wait.
-        if (SDL_AtomicTryLock(&s_ActiveSession->m_AudioRendererLock)) {
-            if (s_ActiveSession->m_AudioRenderer != nullptr) {
-                s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
-                                                              static_cast<int>(sizeof(short) *
-                                                                samplesDecoded *
-                                                                s_ActiveSession->m_AudioConfig.channelCount));
-            }
-            SDL_AtomicUnlock(&s_ActiveSession->m_AudioRendererLock);
-        }
+        s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
+                                                      static_cast<int>(sizeof(short) *
+                                                        samplesDecoded *
+                                                        s_ActiveSession->m_AudioConfig.channelCount));
     }
 }
