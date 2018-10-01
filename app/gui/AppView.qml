@@ -166,7 +166,8 @@ GridView {
         property int nextAppIndex: 0
         text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
         standardButtons: StandardButton.Yes | StandardButton.No
-        onYes: {
+
+        function quitApp() {
             var component = Qt.createComponent("QuitSegue.qml")
             var params = {"appName": appName}
             if (segueToStream) {
@@ -185,6 +186,11 @@ GridView {
             // Trigger the quit after pushing the quit segue on screen
             appModel.quitRunningApp()
         }
+
+        onYes: quitApp()
+
+        // For keyboard/gamepad navigation
+        onAccepted: quitApp()
     }
 
     ScrollBar.vertical: ScrollBar {

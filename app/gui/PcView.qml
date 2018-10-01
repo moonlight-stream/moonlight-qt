@@ -305,10 +305,16 @@ GridView {
         property int pcIndex : -1;
         text:"Are you sure you want to remove this PC?"
         standardButtons: StandardButton.Yes | StandardButton.No
-        onYes: {
+
+        function deletePc() {
             console.log("deleting PC pairing for PC at index: " + pcIndex)
             computerModel.deleteComputer(pcIndex);
         }
+
+        onYes: deletePc()
+
+        // For keyboard/gamepad activation
+        onAccepted: deletePc()
     }
 
     Dialog {
