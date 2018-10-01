@@ -43,8 +43,8 @@ Item {
 
     function displayLaunchError(text)
     {
+        // Display the error dialog after Session::exec() returns
         errorDialog.text = text
-        errorDialog.open()
     }
 
     function displayLaunchWarning(text)
@@ -81,6 +81,14 @@ Item {
 
                 // Exit this view
                 stackView.pop()
+
+                // Display any launch errors. We do this after
+                // the Qt UI is visible again to prevent losing
+                // focus on the dialog which would impact gamepad
+                // users.
+                if (errorDialog.text) {
+                    errorDialog.open()
+                }
             }
         }
         else {
