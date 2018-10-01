@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 
@@ -7,6 +8,7 @@ import QtQuick.Controls.Material 2.1
 
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
+import StreamingPreferences 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
@@ -18,6 +20,10 @@ ApplicationWindow {
 
     Material.theme: Material.Dark
     Material.accent: Material.Purple
+
+    StreamingPreferences {
+        id: prefs
+    }
 
     StackView {
         id: stackView
@@ -71,6 +77,34 @@ ApplicationWindow {
         else if (!shouldPoll && pollingActive) {
             ComputerManager.stopPollingAsync()
             pollingActive = false
+        }
+    }
+
+    property bool initialized: false
+
+    onAfterSynchronizing: {
+        // We use this callback to trigger dialog display because
+        // it only happens once the window is fully constructed.
+        // Doing it earlier can lead to the dialog appearing behind
+        // the window or otherwise without input focus.
+        if (!initialized) {
+            if (prefs.isRunningWayland()) {
+                waylandDialog.open()
+            }
+            else if (prefs.isWow64()) {
+                wow64Dialog.open()
+            }
+            else if (!prefs.hasAnyHardwareAcceleration()) {
+                noHwDecoderDialog.open()
+            }
+
+            var unmappedGamepads = prefs.getUnmappedGamepads()
+            if (unmappedGamepads) {
+                unmappedGamepadDialog.unmappedGamepads = unmappedGamepads
+                unmappedGamepadDialog.open()
+            }
+
+            initialized = true;
         }
     }
 
@@ -258,6 +292,56 @@ ApplicationWindow {
                 ToolTip.visible: hovered
                 ToolTip.text: "Settings" + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
             }
+        }
+    }
+
+    MessageDialog {
+        id: noHwDecoderDialog
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        text: "No functioning hardware accelerated H.264 video decoder was detected by Moonlight. " +
+              "Your streaming performance may be severely degraded in this configuration. " +
+              "Click the Help button for more information on solving this problem."
+        onHelp: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
+        }
+    }
+
+    MessageDialog {
+        id: waylandDialog
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        text: "Moonlight does not support hardware acceleration on Wayland. Continuing on Wayland may result in poor streaming performance. " +
+              "Please switch to an X session for optimal performance."
+        onHelp: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
+        }
+    }
+
+    MessageDialog {
+        id: wow64Dialog
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        text: "This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance."
+        onAccepted: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-qt/releases");
+        }
+    }
+
+    MessageDialog {
+        id: unmappedGamepadDialog
+        property string unmappedGamepads : ""
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Ok | StandardButton.Help
+        text: "Moonlight detected gamepads without a proper mapping. " +
+              "The following gamepads will not function until this is resolved: " + unmappedGamepads + "\n\n" +
+              "Click the Help button for information on how to map your gamepads."
+        onHelp: {
+            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping");
         }
     }
 }
