@@ -27,7 +27,25 @@ bool Session::testAudio(int audioConfiguration)
         return false;
     }
 
-    bool ret = audioRenderer->testAudio(audioConfiguration);
+    // Build a fake OPUS_MULTISTREAM_CONFIGURATION to give
+    // the renderer the channel count and sample rate.
+    OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
+    opusConfig.sampleRate = 48000;
+
+    switch (audioConfiguration)
+    {
+    case AUDIO_CONFIGURATION_STEREO:
+        opusConfig.channelCount = 2;
+        break;
+    case AUDIO_CONFIGURATION_51_SURROUND:
+        opusConfig.channelCount = 6;
+        break;
+    default:
+        SDL_assert(false);
+        return false;
+    }
+
+    bool ret = audioRenderer->prepareForPlayback(&opusConfig);
 
     delete audioRenderer;
 

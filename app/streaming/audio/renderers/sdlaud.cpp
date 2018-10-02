@@ -56,45 +56,6 @@ void SdlAudioRenderer::adjustOpusChannelMapping(OPUS_MULTISTREAM_CONFIGURATION*)
     // The default mapping is fine for SDL
 }
 
-bool SdlAudioRenderer::testAudio(int audioConfiguration) const
-{
-    SDL_AudioSpec want, have;
-    SDL_AudioDeviceID dev;
-
-    SDL_zero(want);
-    want.freq = 48000;
-    want.format = AUDIO_S16;
-    want.samples = SAMPLES_PER_FRAME;
-
-    switch (audioConfiguration) {
-    case AUDIO_CONFIGURATION_STEREO:
-        want.channels = 2;
-        break;
-    case AUDIO_CONFIGURATION_51_SURROUND:
-        want.channels = 6;
-        break;
-    default:
-        SDL_assert(false);
-        return false;
-    }
-
-    // Test audio device for functionality
-    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
-    if (dev == 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Audio test - Failed to open audio device: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    SDL_CloseAudioDevice(dev);
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio test - Successful with %d channels",
-                want.channels);
-    return true;
-}
-
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
       m_ChannelCount(0),
