@@ -51,11 +51,6 @@ int SdlAudioRenderer::detectAudioConfiguration() const
     }
 }
 
-void SdlAudioRenderer::adjustOpusChannelMapping(OPUS_MULTISTREAM_CONFIGURATION*) const
-{
-    // The default mapping is fine for SDL
-}
-
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
       m_ChannelCount(0),

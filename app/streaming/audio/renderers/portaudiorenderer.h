@@ -22,8 +22,6 @@ public:
 
     virtual int detectAudioConfiguration() const;
 
-    virtual void adjustOpusChannelMapping(OPUS_MULTISTREAM_CONFIGURATION* opusConfig) const;
-
     static int paStreamCallback(const void *input,
                                 void *output,
                                 unsigned long frameCount,

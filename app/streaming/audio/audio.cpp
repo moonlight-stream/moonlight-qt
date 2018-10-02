@@ -77,27 +77,23 @@ int Session::arInit(int /* audioConfiguration */,
 
     SDL_memcpy(&s_ActiveSession->m_AudioConfig, opusConfig, sizeof(*opusConfig));
 
-    s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer();
-    if (s_ActiveSession->m_AudioRenderer == nullptr) {
-        return -1;
-    }
-
-    // Allow the audio renderer to adjust the channel mapping to fit its
-    // preferred channel order
-    s_ActiveSession->m_AudioRenderer->adjustOpusChannelMapping(&s_ActiveSession->m_AudioConfig);
-
     s_ActiveSession->m_OpusDecoder =
             opus_multistream_decoder_create(opusConfig->sampleRate,
                                             opusConfig->channelCount,
                                             opusConfig->streams,
                                             opusConfig->coupledStreams,
-                                            s_ActiveSession->m_AudioConfig.mapping,
+                                            opusConfig->mapping,
                                             &error);
     if (s_ActiveSession->m_OpusDecoder == NULL) {
-        delete s_ActiveSession->m_AudioRenderer;
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create decoder: %d",
                      error);
+        return -1;
+    }
+
+    s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer();
+    if (s_ActiveSession->m_AudioRenderer == nullptr) {
+        opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
         return -2;
     }
 

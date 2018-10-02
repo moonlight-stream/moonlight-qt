@@ -131,42 +131,6 @@ int PortAudioRenderer::detectAudioConfiguration() const
     }
 }
 
-void PortAudioRenderer::adjustOpusChannelMapping(OPUS_MULTISTREAM_CONFIGURATION* opusConfig) const
-{
-    const OPUS_MULTISTREAM_CONFIGURATION origConfig = *opusConfig;
-
-    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(Pa_GetDefaultOutputDevice());
-    if (deviceInfo == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Pa_GetDeviceInfo() failed");
-        return;
-    }
-
-    const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
-    if (hostApiInfo == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Pa_GetHostApiInfo() failed");
-        return;
-    }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "PortAudio host API: %s",
-                hostApiInfo->name);
-
-    if (hostApiInfo->type == paALSA) {
-        // The default mapping array has is: FL-FR-C-LFE-RL-RR
-        // ALSA expects: FL-FR-RL-RR-C-LFE
-        opusConfig->mapping[0] = origConfig.mapping[0];
-        opusConfig->mapping[1] = origConfig.mapping[1];
-        if (opusConfig->channelCount == 6) {
-            opusConfig->mapping[2] = origConfig.mapping[4];
-            opusConfig->mapping[3] = origConfig.mapping[5];
-            opusConfig->mapping[4] = origConfig.mapping[2];
-            opusConfig->mapping[5] = origConfig.mapping[3];
-        }
-    }
-}
-
 int PortAudioRenderer::paStreamCallback(const void*, void* output, unsigned long frameCount, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void* userData)
 {
     auto me = reinterpret_cast<PortAudioRenderer*>(userData);

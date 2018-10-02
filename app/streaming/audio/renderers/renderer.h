@@ -10,8 +10,6 @@ class IAudioRenderer
 public:
     virtual ~IAudioRenderer() {}
 
-    virtual void adjustOpusChannelMapping(OPUS_MULTISTREAM_CONFIGURATION* opusConfig) const = 0;
-
     virtual bool prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig) = 0;
 
     virtual void submitAudio(short* audioBuffer, int audioSize) = 0;
