@@ -194,8 +194,8 @@ StreamCommandLineParser::StreamCommandLineParser()
         {"borderless", StreamingPreferences::WM_FULLSCREEN_DESKTOP},
     };
     m_AudioConfigMap = {
-        {"stereo",   StreamingPreferences::AC_FORCE_STEREO},
-        {"surround", StreamingPreferences::AC_FORCE_SURROUND},
+        {"stereo",       StreamingPreferences::AC_STEREO},
+        {"5.1-surround", StreamingPreferences::AC_51_SURROUND},
     };
     m_VideoCodecMap = {
         {"auto",  StreamingPreferences::VCC_AUTO},

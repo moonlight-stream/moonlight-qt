@@ -408,11 +408,11 @@ ScrollView {
                         id: audioListModel
                         ListElement {
                             text: "Stereo"
-                            val: StreamingPreferences.AC_FORCE_STEREO
+                            val: StreamingPreferences.AC_STEREO
                         }
                         ListElement {
                             text: "5.1 surround sound"
-                            val: StreamingPreferences.AC_FORCE_SURROUND
+                            val: StreamingPreferences.AC_51_SURROUND
                         }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human

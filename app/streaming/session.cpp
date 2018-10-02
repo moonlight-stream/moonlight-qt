@@ -328,10 +328,10 @@ void Session::initialize()
 
     switch (m_Preferences->audioConfig)
     {
-    case StreamingPreferences::AC_FORCE_STEREO:
+    case StreamingPreferences::AC_STEREO:
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
         break;
-    case StreamingPreferences::AC_FORCE_SURROUND:
+    case StreamingPreferences::AC_51_SURROUND:
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
         break;
     }

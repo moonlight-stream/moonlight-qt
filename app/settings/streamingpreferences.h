@@ -33,9 +33,8 @@ public:
 
     enum AudioConfig
     {
-        AC_AUTO,
-        AC_FORCE_STEREO,
-        AC_FORCE_SURROUND
+        AC_STEREO,
+        AC_51_SURROUND
     };
     Q_ENUM(AudioConfig)
 
