@@ -74,14 +74,14 @@ bool PortAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION*
     return true;
 }
 
-void PortAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
+bool PortAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
 {
     SDL_assert(audioSize == SAMPLES_PER_FRAME * m_ChannelCount * 2);
 
     // Check if there is space for this sample in the buffer. Again, this can race
     // but in the worst case, we'll not see the sample callback having consumed a sample.
     if (((m_WriteIndex + 1) % CIRCULAR_BUFFER_SIZE) == m_ReadIndex) {
-        return;
+        return true;
     }
 
     SDL_memcpy(&m_AudioBuffer[m_WriteIndex * CIRCULAR_BUFFER_STRIDE], audioBuffer, audioSize);
@@ -102,33 +102,13 @@ void PortAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Pa_StartStream() failed: %s",
                          Pa_GetErrorText(error));
-            return;
+            return false;
         }
 
         m_Started = true;
     }
-}
 
-int PortAudioRenderer::detectAudioConfiguration() const
-{
-    const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(Pa_GetDefaultOutputDevice());
-    if (deviceInfo == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Pa_GetDeviceInfo() failed");
-        return false;
-    }
-
-    // PulseAudio reports max output channels that don't
-    // correspond to any output devices (32 channels), so
-    // only use 5.1 surround sound if the output channel count
-    // is reasonable. Additionally, PortAudio doesn't do remixing
-    // for quadraphonic, so only use 5.1 if we have 6 or more channels.
-    if (deviceInfo->maxOutputChannels == 6 || deviceInfo->maxOutputChannels == 8) {
-        return AUDIO_CONFIGURATION_51_SURROUND;
-    }
-    else {
-        return AUDIO_CONFIGURATION_STEREO;
-    }
+    return true;
 }
 
 int PortAudioRenderer::paStreamCallback(const void*, void* output, unsigned long frameCount, const PaStreamCallbackTimeInfo*, PaStreamCallbackFlags, void* userData)

@@ -124,6 +124,7 @@ private:
     short m_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
     IAudioRenderer* m_AudioRenderer;
     OPUS_MULTISTREAM_CONFIGURATION m_AudioConfig;
+    int m_AudioSampleCount;
 
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;

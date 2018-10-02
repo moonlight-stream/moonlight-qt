@@ -288,7 +288,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false),
       m_OpusDecoder(nullptr),
-      m_AudioRenderer(nullptr)
+      m_AudioRenderer(nullptr),
+      m_AudioSampleCount(0)
 {
 }
 
@@ -327,10 +328,6 @@ void Session::initialize()
 
     switch (m_Preferences->audioConfig)
     {
-    case StreamingPreferences::AC_AUTO:
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Autodetecting audio configuration");
-        m_StreamConfig.audioConfiguration = detectAudioConfiguration();
-        break;
     case StreamingPreferences::AC_FORCE_STEREO:
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
         break;

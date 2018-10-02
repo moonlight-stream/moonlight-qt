@@ -10,47 +10,6 @@
 #define STOP_THE_WORLD_LIMIT 20
 #define DROP_RATIO_DENOM 32
 
-// This isn't accurate on macOS and Linux (PulseAudio),
-// since they both report supporting a large number of
-// channels, regardless of the actual output device.
-int SdlAudioRenderer::detectAudioConfiguration() const
-{
-    SDL_AudioSpec want, have;
-    SDL_AudioDeviceID dev;
-
-    SDL_zero(want);
-    want.freq = 48000;
-    want.format = AUDIO_S16;
-    want.channels = 6;
-    want.samples = 1024;
-
-    // Try to open for 5.1 surround sound, but allow SDL to tell us that's
-    // not available.
-    dev = SDL_OpenAudioDevice(NULL, 0, &want, &have, SDL_AUDIO_ALLOW_CHANNELS_CHANGE);
-    if (dev == 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to open audio device");
-        // We'll probably have issues during audio stream init, but we'll
-        // try anyway
-        return AUDIO_CONFIGURATION_STEREO;
-    }
-
-    SDL_CloseAudioDevice(dev);
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio device has %d channels", have.channels);
-
-    if (have.channels > 2) {
-        // We don't support quadraphonic or 7.1 surround, but SDL
-        // should be able to downmix or upmix better from 5.1 than
-        // from stereo, so use 5.1 in non-stereo cases.
-        return AUDIO_CONFIGURATION_51_SURROUND;
-    }
-    else {
-        return AUDIO_CONFIGURATION_STEREO;
-    }
-}
-
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
       m_ChannelCount(0),
@@ -141,7 +100,7 @@ SdlAudioRenderer::~SdlAudioRenderer()
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 }
 
-void SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
+bool SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
 {
     m_SampleIndex++;
 
@@ -181,13 +140,13 @@ void SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
         // Hard drops happen all at once to forcefully
         // resync with the source.
         m_PendingHardDrops--;
-        return;
+        return true;
     }
     else if (m_PendingDrops != 0 && m_SampleIndex % DROP_RATIO_DENOM == 0) {
         // Normal drops are interspersed with the audio data
         // to hide the glitches.
         m_PendingDrops--;
-        return;
+        return true;
     }
 
     if (SDL_QueueAudio(m_AudioDevice, audioBuffer, audioSize) < 0) {
@@ -195,4 +154,6 @@ void SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
                      "Failed to queue audio sample: %s",
                      SDL_GetError());
     }
+
+    return true;
 }

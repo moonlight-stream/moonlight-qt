@@ -17,9 +17,7 @@ public:
 
     virtual bool prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig);
 
-    virtual void submitAudio(short* audioBuffer, int audioSize);
-
-    virtual int detectAudioConfiguration() const;
+    virtual bool submitAudio(short* audioBuffer, int audioSize);
 
 private:
     SDL_AudioDeviceID m_AudioDevice;

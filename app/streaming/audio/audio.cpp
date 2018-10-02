@@ -52,23 +52,6 @@ bool Session::testAudio(int audioConfiguration)
     return ret;
 }
 
-int Session::detectAudioConfiguration()
-{
-    IAudioRenderer* audioRenderer;
-
-    audioRenderer = createAudioRenderer();
-    if (audioRenderer == nullptr) {
-        // Hope for the best
-        return AUDIO_CONFIGURATION_STEREO;
-    }
-
-    int audioConfig = audioRenderer->detectAudioConfiguration();
-
-    delete audioRenderer;
-
-    return audioConfig;
-}
-
 int Session::arInit(int /* audioConfiguration */,
                     const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                     void* /* arContext */, int /* arFlags */)
@@ -92,15 +75,10 @@ int Session::arInit(int /* audioConfiguration */,
     }
 
     s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer();
-    if (s_ActiveSession->m_AudioRenderer == nullptr) {
-        opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
-        return -2;
-    }
-
     if (!s_ActiveSession->m_AudioRenderer->prepareForPlayback(opusConfig)) {
         delete s_ActiveSession->m_AudioRenderer;
         opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
-        return -3;
+        return -2;
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -123,16 +101,40 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
 {
     int samplesDecoded;
 
-    samplesDecoded = opus_multistream_decode(s_ActiveSession->m_OpusDecoder,
-                                             (unsigned char*)sampleData,
-                                             sampleLength,
-                                             s_ActiveSession->m_OpusDecodeBuffer,
-                                             SAMPLES_PER_FRAME,
-                                             0);
-    if (samplesDecoded > 0) {
-        s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
-                                                      static_cast<int>(sizeof(short) *
-                                                        samplesDecoded *
-                                                        s_ActiveSession->m_AudioConfig.channelCount));
+    s_ActiveSession->m_AudioSampleCount++;
+
+    if (s_ActiveSession->m_AudioRenderer != nullptr) {
+        samplesDecoded = opus_multistream_decode(s_ActiveSession->m_OpusDecoder,
+                                                 (unsigned char*)sampleData,
+                                                 sampleLength,
+                                                 s_ActiveSession->m_OpusDecodeBuffer,
+                                                 SAMPLES_PER_FRAME,
+                                                 0);
+        if (samplesDecoded > 0) {
+            if (!s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
+                                                               static_cast<int>(
+                                                                   sizeof(short) *
+                                                                   samplesDecoded *
+                                                                   s_ActiveSession->m_AudioConfig.channelCount))) {
+
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Reinitializing audio renderer after failure");
+
+                delete s_ActiveSession->m_AudioRenderer;
+                s_ActiveSession->m_AudioRenderer = nullptr;
+            }
+        }
+    }
+
+    // Only try to recreate the audio renderer every 200 samples (1 second)
+    // to avoid thrashing if the audio device is unavailable. It is
+    // safe to reinitialize here because we can't be torn down while
+    // the audio decoder/playback thread is still alive.
+    if (s_ActiveSession->m_AudioRenderer == nullptr && (s_ActiveSession->m_AudioSampleCount % 200) == 0) {
+        s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer();
+        if (!s_ActiveSession->m_AudioRenderer->prepareForPlayback(&s_ActiveSession->m_AudioConfig)) {
+            delete s_ActiveSession->m_AudioRenderer;
+            s_ActiveSession->m_AudioRenderer = nullptr;
+        }
     }
 }

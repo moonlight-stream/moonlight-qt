@@ -194,7 +194,6 @@ StreamCommandLineParser::StreamCommandLineParser()
         {"borderless", StreamingPreferences::WM_FULLSCREEN_DESKTOP},
     };
     m_AudioConfigMap = {
-        {"auto",     StreamingPreferences::AC_AUTO},
         {"stereo",   StreamingPreferences::AC_FORCE_STEREO},
         {"surround", StreamingPreferences::AC_FORCE_SURROUND},
     };

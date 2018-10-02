@@ -407,10 +407,6 @@ ScrollView {
                     model: ListModel {
                         id: audioListModel
                         ListElement {
-                            text: "Autodetect"
-                            val: StreamingPreferences.AC_AUTO
-                        }
-                        ListElement {
                             text: "Stereo"
                             val: StreamingPreferences.AC_FORCE_STEREO
                         }

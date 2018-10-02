@@ -12,7 +12,6 @@ public:
 
     virtual bool prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig) = 0;
 
-    virtual void submitAudio(short* audioBuffer, int audioSize) = 0;
-
-    virtual int detectAudioConfiguration() const = 0;
+    // Return false if an unrecoverable error has occurred and the renderer must be reinitialized
+    virtual bool submitAudio(short* audioBuffer, int audioSize) = 0;
 };

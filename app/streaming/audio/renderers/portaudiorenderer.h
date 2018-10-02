@@ -18,9 +18,7 @@ public:
 
     virtual bool prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig);
 
-    virtual void submitAudio(short* audioBuffer, int audioSize);
-
-    virtual int detectAudioConfiguration() const;
+    virtual bool submitAudio(short* audioBuffer, int audioSize);
 
     static int paStreamCallback(const void *input,
                                 void *output,
