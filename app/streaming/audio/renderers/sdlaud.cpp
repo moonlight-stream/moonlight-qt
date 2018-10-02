@@ -51,6 +51,11 @@ int SdlAudioRenderer::detectAudioConfiguration() const
     }
 }
 
+void SdlAudioRenderer::adjustOpusChannelMapping(OPUS_MULTISTREAM_CONFIGURATION*) const
+{
+    // The default mapping is fine for SDL
+}
+
 bool SdlAudioRenderer::testAudio(int audioConfiguration) const
 {
     SDL_AudioSpec want, have;

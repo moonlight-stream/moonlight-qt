@@ -23,6 +23,8 @@ public:
 
     virtual int detectAudioConfiguration() const;
 
+    virtual void adjustOpusChannelMapping(OPUS_MULTISTREAM_CONFIGURATION* opusConfig) const;
+
 private:
     SDL_AudioDeviceID m_AudioDevice;
     Uint32 m_ChannelCount;
