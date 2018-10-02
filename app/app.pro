@@ -52,12 +52,15 @@ macx {
 }
 
 unix:!macx {
-    CONFIG += link_pkgconfig
+    CONFIG += link_pkgconfig soundio
     PKGCONFIG += openssl sdl2 opus
 
-    packagesExist(portaudio-2.0) {
-        PKGCONFIG += portaudio-2.0
-        CONFIG += portaudio
+    # For libsoundio
+    packagesExist(libpulse) {
+        PKGCONFIG += libpulse
+    }
+    packagesExist(alsa) {
+        PKGCONFIG += alsa
     }
 
     packagesExist(libavcodec) {
@@ -80,13 +83,17 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus -lportaudio
-    CONFIG += ffmpeg portaudio
+    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus
+    CONFIG += ffmpeg soundio
 }
 macx {
-    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -lportaudio -framework SDL2
+    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -framework SDL2
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
-    CONFIG += ffmpeg portaudio
+
+    # For libsoundio
+    LIBS += -framework CoreAudio -framework AudioUnit
+
+    CONFIG += ffmpeg soundio
 }
 
 SOURCES += \
@@ -103,6 +110,7 @@ SOURCES += \
     streaming/input.cpp \
     streaming/session.cpp \
     streaming/audio/audio.cpp \
+    streaming/audio/renderers/sdlaud.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
     streaming/streamutils.cpp \
@@ -125,6 +133,7 @@ HEADERS += \
     streaming/input.h \
     streaming/session.h \
     streaming/audio/renderers/renderer.h \
+    streaming/audio/renderers/sdl.h \
     gui/computermodel.h \
     gui/appmodel.h \
     streaming/video/decoder.h \
@@ -185,13 +194,8 @@ config_SLVideo {
     DEFINES += HAVE_SLVIDEO
     LIBS += -lSLVideo
 
-    SOURCES += \
-        streaming/video/sl.cpp \
-        streaming/audio/renderers/sdlaud.cpp
-
-    HEADERS += \
-        streaming/video/sl.h \
-        streaming/audio/renderers/sdl.h
+    SOURCES += streaming/video/sl.cpp
+    HEADERS += streaming/video/sl.h
 }
 win32 {
     message(DXVA2 renderer selected)
@@ -215,12 +219,12 @@ macx {
         streaming/video/ffmpeg-renderers/vt.h \
         streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.h
 }
-portaudio {
-    message(PortAudio audio renderer selected)
+soundio {
+    message(libsoundio audio renderer selected)
 
-    DEFINES += HAVE_PORTAUDIO
-    SOURCES += streaming/audio/renderers/portaudiorenderer.cpp
-    HEADERS += streaming/audio/renderers/portaudiorenderer.h
+    DEFINES += HAVE_SOUNDIO SOUNDIO_STATIC_LIBRARY
+    SOURCES += streaming/audio/renderers/soundioaudiorenderer.cpp
+    HEADERS += streaming/audio/renderers/soundioaudiorenderer.h
 }
 
 RESOURCES += \
@@ -246,6 +250,13 @@ else:unix: LIBS += -L$$OUT_PWD/../qmdnsengine/ -lqmdnsengine
 
 INCLUDEPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
+
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../soundio/release/ -lsoundio
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../soundio/debug/ -lsoundio
+else:unix: LIBS += -L$$OUT_PWD/../soundio/ -lsoundio
+
+INCLUDEPATH += $$PWD/../soundio/libsoundio
+DEPENDPATH += $$PWD/../soundio/libsoundio
 
 unix:!macx: {
     isEmpty(PREFIX) {

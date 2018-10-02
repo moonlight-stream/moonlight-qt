@@ -1,8 +1,8 @@
 #include "../session.h"
 #include "renderers/renderer.h"
 
-#ifdef HAVE_PORTAUDIO
-#include "renderers/portaudiorenderer.h"
+#ifndef Q_OS_LINUX
+#include "renderers/soundioaudiorenderer.h"
 #else
 #include "renderers/sdl.h"
 #endif
@@ -11,8 +11,8 @@
 
 IAudioRenderer* Session::createAudioRenderer()
 {
-#ifdef HAVE_PORTAUDIO
-    return new PortAudioRenderer();
+#ifndef Q_OS_LINUX
+    return new SoundIoAudioRenderer();
 #else
     return new SdlAudioRenderer();
 #endif
@@ -100,6 +100,16 @@ void Session::arCleanup()
 void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
 {
     int samplesDecoded;
+
+    // Set this thread to high priority to reduce
+    // the chance of missing our sample delivery time
+    if (s_ActiveSession->m_AudioSampleCount == 0) {
+        if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to set audio thread to high priority: %s",
+                        SDL_GetError());
+        }
+    }
 
     s_ActiveSession->m_AudioSampleCount++;
 
