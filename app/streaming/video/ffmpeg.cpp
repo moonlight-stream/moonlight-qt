@@ -431,7 +431,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     // Flip stats windows roughly every second
     if (m_ActiveWndVideoStats.receivedFrames == m_StreamFps) {
-#ifdef QT_DEBUG
+#if 0
         VIDEO_STATS lastTwoWndStats = {};
         addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
         addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);
