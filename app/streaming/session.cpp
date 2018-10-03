@@ -1113,11 +1113,17 @@ void Session::exec(int displayOriginX, int displayOriginY)
         case SDL_JOYDEVICEADDED:
             inputHandler.handleJoystickArrivalEvent(&event.jdevice);
             break;
+
+        // SDL2 sends touch events from trackpads by default on
+        // macOS. This totally screws our actual mouse handling,
+        // so we must explicitly ignore touch events on macOS.
+#ifndef Q_OS_DARWIN
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
         case SDL_FINGERUP:
             inputHandler.handleTouchFingerEvent(&event.tfinger);
             break;
+#endif
         }
     }
 
