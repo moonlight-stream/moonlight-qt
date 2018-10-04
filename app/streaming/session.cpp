@@ -992,13 +992,19 @@ void Session::exec(int displayOriginX, int displayOriginY)
             }
 #endif
 
-            // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
-            // This lets user to interact with our window's title bar and with the buttons in it.
-            // Doing this while the window is full-screen breaks the transition out of FS
-            // (desktop and exclusive), so we must check for that before releasing mouse capture.
-            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST &&
-                    !(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) {
-                SDL_SetRelativeMouseMode(SDL_FALSE);
+
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+                // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
+                // This lets user to interact with our window's title bar and with the buttons in it.
+                // Doing this while the window is full-screen breaks the transition out of FS
+                // (desktop and exclusive), so we must check for that before releasing mouse capture.
+                if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) {
+                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                }
+
+                // Raise all keys that are currently pressed. If we don't do this, certain keys
+                // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
+                inputHandler.raiseAllKeys();
             }
 
             // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
@@ -1138,6 +1144,9 @@ DispatchDeferredCleanup:
     SDL_SetRelativeMouseMode(SDL_FALSE);
     SDL_EnableScreenSaver();
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
+
+    // Raise any keys that are still down
+    inputHandler.raiseAllKeys();
 
     // Destroy the decoder, since this must be done on the main thread
     SDL_AtomicLock(&m_DecoderLock);

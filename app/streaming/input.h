@@ -47,6 +47,8 @@ public:
 
     int getAttachedGamepadMask();
 
+    void raiseAllKeys();
+
     static
     QString getUnmappedGamepads();
 
@@ -70,6 +72,7 @@ private:
     bool m_NeedsInputDelay;
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
+    QSet<short> m_KeysDown;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
     float m_CumulativeDelta[MAX_FINGERS];

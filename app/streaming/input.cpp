@@ -121,24 +121,10 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             (event->keysym.mod & KMOD_CTRL) &&
             (event->keysym.mod & KMOD_ALT) &&
             (event->keysym.mod & KMOD_SHIFT)) {
-
-        // Force raise all keys in the combo to avoid
-        // leaving them down after disconnecting
-        LiSendKeyboardEvent(0xA0, KEY_ACTION_UP, 0);
-        LiSendKeyboardEvent(0xA1, KEY_ACTION_UP, 0);
-        LiSendKeyboardEvent(0xA2, KEY_ACTION_UP, 0);
-        LiSendKeyboardEvent(0xA3, KEY_ACTION_UP, 0);
-        LiSendKeyboardEvent(0xA4, KEY_ACTION_UP, 0);
-        LiSendKeyboardEvent(0xA5, KEY_ACTION_UP, 0);
-
         // Check for quit combo (Ctrl+Alt+Shift+Q)
         if (event->keysym.sym == SDLK_q) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected quit key combo");
-
-            // Uncapture the mouse to avoid processing any
-            // further keyboard input
-            SDL_SetRelativeMouseMode(SDL_FALSE);
 
             // Push a quit event to the main loop
             SDL_Event event;
@@ -151,7 +137,13 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         else if (event->keysym.sym == SDLK_z) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected mouse capture toggle combo");
+
+            // Stop handling future input
             SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+
+            // Force raise all keys to ensure they aren't stuck,
+            // since we won't get their key up events.
+            raiseAllKeys();
             return;
         }
         // Check for the full-screen combo (Ctrl+Alt+Shift+X)
@@ -159,6 +151,10 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected full-screen toggle combo");
             Session::s_ActiveSession->toggleFullscreen();
+
+            // Force raise all keys just be safe across this full-screen/windowed
+            // transition just in case key events get lost.
+            raiseAllKeys();
             return;
         }
     }
@@ -382,6 +378,14 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                              event->keysym.scancode);
                 return;
         }
+    }
+
+    // Track the key state so we always know which keys are down
+    if (event->state == SDL_PRESSED) {
+        m_KeysDown.insert(keyCode);
+    }
+    else {
+        m_KeysDown.remove(keyCode);
     }
 
     LiSendKeyboardEvent(keyCode,
@@ -912,6 +916,23 @@ int SdlInputHandler::getAttachedGamepadMask()
     }
 
     return mask;
+}
+
+void SdlInputHandler::raiseAllKeys()
+{
+    if (m_KeysDown.isEmpty()) {
+        return;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Raising %d keys",
+                m_KeysDown.count());
+
+    for (auto keyDown : m_KeysDown) {
+        LiSendKeyboardEvent(keyDown, KEY_ACTION_UP, 0);
+    }
+
+    m_KeysDown.clear();
 }
 
 QString SdlInputHandler::getUnmappedGamepads()
