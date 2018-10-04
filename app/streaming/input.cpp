@@ -426,9 +426,11 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             button = BUTTON_RIGHT;
             break;
         case SDL_BUTTON_X1:
+            button = BUTTON_X1;
+            break;
         case SDL_BUTTON_X2:
-            // Unsupported by GameStream
-            return;
+            button = BUTTON_X2;
+            break;
         default:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Unhandled button event: %d",
