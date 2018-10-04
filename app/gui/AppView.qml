@@ -73,6 +73,9 @@ GridView {
                 width: 150
                 height: 200
             }
+            width: sourceSize.width
+            height: sourceSize.height
+            fillMode: Image.Pad
         }
 
         Image {
