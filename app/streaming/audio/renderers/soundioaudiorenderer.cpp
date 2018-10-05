@@ -390,6 +390,23 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
             break;
         }
 
+        // Place an upper-bound on audio stream latency to
+        // avoid accumulating packets in queue-based backends
+        // like WASAPI. This bound is just a bit larger than
+        // our circular buffer size (since the circular buffer
+        // will drain into this queue).
+        if (me->m_SoundIo->current_backend == SoundIoBackendWasapi) {
+            double latency;
+            if (soundio_outstream_get_latency(stream, &latency) == SoundIoErrorNone) {
+                if (latency > 0.040) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Audio latency exceeded cap: %f seconds",
+                                latency);
+                    soundio_outstream_clear_buffer(stream);
+                }
+            }
+        }
+
         if (framesLeft >= frameCount) {
             framesLeft -= frameCount;
         }
