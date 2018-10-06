@@ -82,7 +82,10 @@ ApplicationWindow {
 
     property bool initialized: false
 
-    onAfterSynchronizing: {
+    // BUG: Using onAfterSynchronizing: here causes very strange
+    // failures on Linux. Many shaders fail to compile and we
+    // eventually segfault deep inside the Qt OpenGL code.
+    onAfterRendering: {
         // We use this callback to trigger dialog display because
         // it only happens once the window is fully constructed.
         // Doing it earlier can lead to the dialog appearing behind
