@@ -7,3 +7,6 @@
 [submodule "app/SDL_GameControllerDB"]
 	path = app/SDL_GameControllerDB
 	url = https://github.com/gabomdq/SDL_GameControllerDB.git
+[submodule "soundio/libsoundio"]
+	path = soundio/libsoundio
+	url = https://github.com/andrewrk/libsoundio.git
