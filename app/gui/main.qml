@@ -18,6 +18,12 @@ ApplicationWindow {
     width: 1280
     height: 600
 
+    // Maximize the window by default when the stream is configured
+    // for full-screen or borderless windowed. This is ideal for TV
+    // setups where the user doesn't want a tiny window in the middle
+    // of their screen when starting Moonlight.
+    visibility: prefs.windowMode != StreamingPreferences.WM_WINDOWED ? "Maximized" : "Windowed"
+
     Material.theme: Material.Dark
     Material.accent: Material.Purple
 
