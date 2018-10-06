@@ -73,7 +73,7 @@ ScrollView {
                 Row {
                     spacing: 5
 
-                    ComboBox {
+                    AutoResizingComboBox {
                         // ignore setting the index at first, and actually set it when the component is loaded
                         Component.onCompleted: {
                             // Add native resolutions for all attached displays
@@ -145,7 +145,6 @@ ScrollView {
                         }
 
                         id: resolutionComboBox
-                        width: 200
                         textRole: "text"
                         model: ListModel {
                             id: resolutionListModel
@@ -188,7 +187,7 @@ ScrollView {
                         }
                     }
 
-                    ComboBox {
+                    AutoResizingComboBox {
                         function createModel() {
                             var fpsListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
 
@@ -253,7 +252,6 @@ ScrollView {
 
                         id: fpsComboBox
                         textRole: "text"
-                        width: 250
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
                             var selectedFps = parseInt(model.get(currentIndex).video_fps)
@@ -315,7 +313,7 @@ ScrollView {
                     color: "white"
                 }
 
-                ComboBox {
+                AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
                         var savedWm = prefs.windowMode
@@ -331,7 +329,6 @@ ScrollView {
                     }
 
                     id: windowModeComboBox
-                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
                     textRole: "text"
                     model: ListModel {
                         id: windowModeListModel
@@ -386,7 +383,7 @@ ScrollView {
                     color: "white"
                 }
 
-                ComboBox {
+                AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
                         var saved_audio = prefs.audioConfig
@@ -402,7 +399,6 @@ ScrollView {
                     }
 
                     id: audioComboBox
-                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
                     textRole: "text"
                     model: ListModel {
                         id: audioListModel
@@ -519,7 +515,7 @@ ScrollView {
                     color: "white"
                 }
 
-                ComboBox {
+                AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
                         var saved_vds = prefs.videoDecoderSelection
@@ -535,7 +531,6 @@ ScrollView {
                     }
 
                     id: decoderComboBox
-                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
                     textRole: "text"
                     model: ListModel {
                         id: decoderListModel
@@ -567,7 +562,7 @@ ScrollView {
                     color: "white"
                 }
 
-                ComboBox {
+                AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
                         var saved_vcc = prefs.videoCodecConfig
@@ -583,7 +578,6 @@ ScrollView {
                     }
 
                     id: codecComboBox
-                    width: Math.min(bitrateDesc.implicitWidth, parent.width)
                     textRole: "text"
                     model: ListModel {
                         id: codecListModel
