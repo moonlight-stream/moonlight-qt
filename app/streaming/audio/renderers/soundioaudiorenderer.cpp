@@ -331,6 +331,33 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
     // Clamp framesLeft to frameCountMax
     framesLeft = qMin(framesLeft, frameCountMax);
 
+    // Place an upper-bound on audio stream latency to
+    // avoid accumulating packets in queue-based backends
+    // like WASAPI. This bound was set by testing on several
+    // Windows machines. The highest latency was found on
+    // a XPS 9343 running Windows 7 in Steam Big Picture
+    // and the 5.1 audio test clip from Fraunhofer.
+    if (me->m_SoundIo->current_backend == SoundIoBackendWasapi) {
+        double latency;
+        if (soundio_outstream_get_latency(stream, &latency) == SoundIoErrorNone) {
+            if (latency > 0.050) {
+                // If our latency is higher than desired, drop these samples to gracefully lower
+                // the latency without glitching too much. Dropping the whole buffer causes
+                // a much more noticeable glitch. This approach also ensures that we don't
+                // accidentally underflow if the driver/kernel side is delayed and isn't
+                // consuming data fast enough. Dropping a frame at a time and re-evaluating
+                // each time ensures that we'll stop dropping if latency returns to normal.
+                readPtr += framesLeft * stream->bytes_per_sample * me->m_OpusChannelCount;
+                bytesRead += framesLeft * stream->bytes_per_sample * me->m_OpusChannelCount;
+                framesLeft = 0;
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Latency exceeded drop cap: %f",
+                            latency);
+            }
+        }
+    }
+
     for (;;) {
         int frameCount;
         int err;
@@ -388,24 +415,6 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
                          "soundio_outstream_end_write() failed: %s",
                          soundio_strerror(err));
             break;
-        }
-
-        // Place an upper-bound on audio stream latency to
-        // avoid accumulating packets in queue-based backends
-        // like WASAPI. This bound was set by testing on several
-        // Windows machines. The highest latency was found on
-        // a XPS 9343 running Windows 7 in Steam Big Picture
-        // and the 5.1 audio test clip.
-        if (me->m_SoundIo->current_backend == SoundIoBackendWasapi) {
-            double latency;
-            if (soundio_outstream_get_latency(stream, &latency) == SoundIoErrorNone) {
-                if (latency > 0.075) {
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Audio latency exceeded cap: %f seconds",
-                                latency);
-                    soundio_outstream_clear_buffer(stream);
-                }
-            }
         }
 
         if (framesLeft >= frameCount) {
