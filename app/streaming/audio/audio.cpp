@@ -1,7 +1,7 @@
 #include "../session.h"
 #include "renderers/renderer.h"
 
-#ifndef Q_OS_LINUX
+#ifdef HAVE_SOUNDIO
 #include "renderers/soundioaudiorenderer.h"
 #else
 #include "renderers/sdl.h"
@@ -11,7 +11,7 @@
 
 IAudioRenderer* Session::createAudioRenderer()
 {
-#ifndef Q_OS_LINUX
+#ifdef HAVE_SOUNDIO
     return new SoundIoAudioRenderer();
 #else
     return new SdlAudioRenderer();

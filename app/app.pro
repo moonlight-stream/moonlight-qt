@@ -52,7 +52,7 @@ macx {
 }
 
 unix:!macx {
-    CONFIG += link_pkgconfig soundio
+    CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 opus
 
     # For libsoundio
