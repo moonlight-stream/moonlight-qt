@@ -33,6 +33,26 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.6.0" date="2018-10-06">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added keyboard and gamepad UI navigation</li>
+					<li>Added support for mouse X1 and X2 buttons (back and forward)</li>
+					<li>Added support for mouse movement with touchscreens</li>
+					<li>Improved HEVC performance at high bitrates</li>
+					<li>Added support for launching streaming sessions directly from a terminal or script</li>
+					<li>Added quit shortcut for gamepads: Select+Start+L1+R1</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed not saving deletion of PCs</li>
+					<li>Fixed keys being stuck down on the host PC after Moonlight loses focus or quits</li>
+					<li>Fixed some warning dialogs being stuck behind the UI window</li>
+					<li>Updated included gamepad mapping list</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.5.0" date="2018-09-15">
 			<description>
 				<p>New features:</p>
