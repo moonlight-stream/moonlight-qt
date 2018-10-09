@@ -292,7 +292,16 @@
                                                 modifierFlags:UIKeyModifierShift
                                                        action:@selector(specialCharPressed:)]];
         [commands addObject:[UIKeyCommand keyCommandWithInput:c
+                                                modifierFlags:UIKeyModifierShift | UIKeyModifierAlternate
+                                                       action:@selector(specialCharPressed:)]];
+        [commands addObject:[UIKeyCommand keyCommandWithInput:c
+                                                modifierFlags:UIKeyModifierShift | UIKeyModifierControl
+                                                       action:@selector(specialCharPressed:)]];
+        [commands addObject:[UIKeyCommand keyCommandWithInput:c
                                                 modifierFlags:UIKeyModifierControl
+                                                       action:@selector(specialCharPressed:)]];
+        [commands addObject:[UIKeyCommand keyCommandWithInput:c
+                                                modifierFlags:UIKeyModifierControl | UIKeyModifierAlternate
                                                        action:@selector(specialCharPressed:)]];
         [commands addObject:[UIKeyCommand keyCommandWithInput:c
                                                 modifierFlags:UIKeyModifierAlternate
