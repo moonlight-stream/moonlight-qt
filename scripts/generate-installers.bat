@@ -110,10 +110,12 @@ if !ERRORLEVEL! NEQ 0 goto Error
 
 if "%SIGN%"=="1" (
     echo Signing deployed binaries
+    set FILES_TO_SIGN=
     for /r "%DEPLOY_FOLDER%" %%f in (*.dll *.exe) do (
-        signtool %SIGNTOOL_PARAMS% %%f
-        if !ERRORLEVEL! NEQ 0 goto Error
+        set FILES_TO_SIGN=!FILES_TO_SIGN! %%f
     )
+    signtool %SIGNTOOL_PARAMS% !FILES_TO_SIGN!
+    if !ERRORLEVEL! NEQ 0 goto Error
 )
 
 echo Building MSI
