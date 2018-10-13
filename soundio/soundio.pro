@@ -23,6 +23,11 @@ CONFIG += staticlib
     QMAKE_CFLAGS += /TP
 }
 
+# Older GCC versions defaulted to GNU89
+*-g++ {
+    QMAKE_CFLAGS += -std=gnu99
+}
+
 # Disable warnings
 CONFIG += warn_off
 
