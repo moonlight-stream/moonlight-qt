@@ -866,6 +866,27 @@ void Session::exec(int displayOriginX, int displayOriginY)
         return;
     }
 
+    QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
+    QImage svgImage(ICON_SIZE, ICON_SIZE, QImage::Format_RGBA8888);
+    svgImage.fill(0);
+
+    QPainter svgPainter(&svgImage);
+    svgIconRenderer.render(&svgPainter);
+    SDL_Surface* iconSurface = SDL_CreateRGBSurfaceWithFormatFrom((void*)svgImage.constBits(),
+                                                                  svgImage.width(),
+                                                                  svgImage.height(),
+                                                                  32,
+                                                                  4 * svgImage.width(),
+                                                                  SDL_PIXELFORMAT_RGBA32);
+#ifndef Q_OS_DARWIN
+    // Other platforms seem to preserve our Qt icon when creating a new window.
+    if (iconSurface != nullptr) {
+        // This must be called before entering full-screen mode on Windows
+        // or our icon will not persist when toggling to windowed mode
+        SDL_SetWindowIcon(m_Window, iconSurface);
+    }
+#endif
+
     // For non-full screen windows, call getWindowDimensions()
     // again after creating a window to allow it to account
     // for window chrome size.
@@ -888,25 +909,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
         // Enter full screen
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
-
-    QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
-    QImage svgImage(ICON_SIZE, ICON_SIZE, QImage::Format_RGBA8888);
-    svgImage.fill(0);
-
-    QPainter svgPainter(&svgImage);
-    svgIconRenderer.render(&svgPainter);
-    SDL_Surface* iconSurface = SDL_CreateRGBSurfaceWithFormatFrom((void*)svgImage.constBits(),
-                                                                  svgImage.width(),
-                                                                  svgImage.height(),
-                                                                  32,
-                                                                  4 * svgImage.width(),
-                                                                  SDL_PIXELFORMAT_RGBA32);
-#ifndef Q_OS_DARWIN
-    // Other platforms seem to preserve our Qt icon when creating a new window
-    if (iconSurface != nullptr) {
-        SDL_SetWindowIcon(m_Window, iconSurface);
-    }
-#endif
 
 #ifndef QT_DEBUG
     // Capture the mouse by default on release builds only.
