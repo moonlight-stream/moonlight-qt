@@ -48,11 +48,17 @@ ApplicationWindow {
             if (depth > 1) {
                 stackView.pop()
             }
+            else {
+                quitConfirmationDialog.open()
+            }
         }
 
         Keys.onBackPressed: {
             if (depth > 1) {
                 stackView.pop()
+            }
+            else {
+                quitConfirmationDialog.open()
             }
         }
 
@@ -367,5 +373,19 @@ ApplicationWindow {
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping");
         }
+    }
+
+    // This dialog appears when quitting via keyboard or gamepad button
+    MessageDialog {
+        id: quitConfirmationDialog
+        modality:Qt.WindowModal
+        icon: StandardIcon.Warning
+        standardButtons: StandardButton.Yes | StandardButton.No
+        text: "Are you sure you want to quit?"
+
+        onYes: Qt.quit()
+
+        // For keyboard/gamepad navigation
+        onAccepted: Qt.quit()
     }
 }
