@@ -68,21 +68,36 @@ ApplicationWindow {
         }
     }
 
-    onVisibilityChanged: {
-        // We don't want to just use 'active' here because that will stop polling if
-        // we lose focus, which might be overzealous for users with multiple screens
-        // where we may be clearly visible on the other display. Ideally we'll poll
-        // only if the window is visible to the user (not if obscured by other windows),
-        // but it seems difficult to do this portably.
-        var shouldPoll = visibility !== Window.Minimized && visibility !== Window.Hidden
-
-        if (shouldPoll && !pollingActive) {
-            ComputerManager.startPolling()
-            pollingActive = true
+    // This timer keeps us polling for 5 minutes of inactivity
+    // to allow the user to work with Moonlight on a second display
+    // while dealing with configuration issues. This will ensure
+    // machines come online even if the input focus isn't on Moonlight.
+    Timer {
+        id: inactivityTimer
+        interval: 5 * 60000
+        onTriggered: {
+            if (!active && pollingActive) {
+                ComputerManager.stopPollingAsync()
+                pollingActive = false
+            }
         }
-        else if (!shouldPoll && pollingActive) {
-            ComputerManager.stopPollingAsync()
-            pollingActive = false
+    }
+
+    onActiveChanged: {
+        if (active) {
+            // Stop the inactivity timer
+            inactivityTimer.stop()
+
+            // Restart polling if it was stopped
+            if (!pollingActive) {
+                ComputerManager.startPolling()
+                pollingActive = true
+            }
+        }
+        else {
+            // Start the inactivity timer to stop polling
+            // if focus does not return within a few minutes.
+            inactivityTimer.restart()
         }
     }
 
