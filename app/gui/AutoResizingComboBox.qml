@@ -9,17 +9,17 @@ ComboBox {
 
     TextMetrics {
         id: popupMetrics
-        font: popup.font
     }
 
     TextMetrics {
         id: textMetrics
-        font: parent.font
     }
 
     // We call this every time the options change (and init)
     // so we can adjust the combo box width here too
     onActivated: {
+        textMetrics.font = font
+        popupMetrics.font = popup.font
         textWidth = 0
         for (var i = 0; i < count; i++){
             textMetrics.text = textAt(i)
