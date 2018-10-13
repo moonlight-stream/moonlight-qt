@@ -133,6 +133,16 @@ GridView {
             }
         }
 
+        ToolTip {
+            // We don't use the shared tooltip because then the tooltip
+            // would follow the mouse cursor while visible rather than
+            // resetting to invisible as it should
+            text: model.name
+            delay: 1000
+            timeout: 5000
+            visible: parent.hovered
+        }
+
         Keys.onMenuPressed: {
             // We must use open() here so the menu is positioned on
             // the ItemDelegate and not where the mouse cursor is
