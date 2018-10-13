@@ -1,6 +1,7 @@
 #include <Limelight.h>
 #include "ffmpeg.h"
 #include "streaming/streamutils.h"
+#include <h264_stream.h>
 
 #ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
@@ -20,6 +21,8 @@
 
 // This is gross but it allows us to use sizeof()
 #include "ffmpeg_videosamples.cpp"
+
+#define MAX_SPS_EXTRA_SIZE 16
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
@@ -62,7 +65,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
       m_ConsecutiveFailedDecodes(0),
       m_Pacer(nullptr),
       m_LastFrameNumber(0),
-      m_StreamFps(0)
+      m_StreamFps(0),
+      m_NeedsSpsFixup(false)
 {
     av_init_packet(&m_Pkt);
     SDL_AtomicSet(&m_QueuedFrames, 0);
@@ -223,6 +227,17 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Test decode failed: %s", errorstring);
             return false;
+        }
+    }
+    else {
+        if ((videoFormat & VIDEO_FORMAT_MASK_H264) &&
+                !(m_Renderer->getDecoderCapabilities() & CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC)) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using H.264 SPS fixup");
+            m_NeedsSpsFixup = true;
+        }
+        else {
+            m_NeedsSpsFixup = false;
         }
     }
 
@@ -424,6 +439,49 @@ bool FFmpegVideoDecoder::initialize(
     }
 }
 
+void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
+{
+    if (m_NeedsSpsFixup && entry->bufferType == BUFFER_TYPE_SPS) {
+        const char naluHeader[] = {0x00, 0x00, 0x00, 0x01};
+        h264_stream_t* stream = h264_new();
+        int nalStart, nalEnd;
+
+        // Read the old NALU
+        find_nal_unit((uint8_t*)entry->data, entry->length, &nalStart, &nalEnd);
+        read_nal_unit(stream,
+                      (unsigned char *)&entry->data[nalStart],
+                      nalEnd - nalStart);
+
+        SDL_assert(nalStart == sizeof(naluHeader));
+        SDL_assert(nalEnd == entry->length);
+
+        // Fixup the SPS to what OS X needs to use hardware acceleration
+        stream->sps->num_ref_frames = 1;
+        stream->sps->vui.max_dec_frame_buffering = 1;
+
+        int initialOffset = offset;
+
+        // Copy the modified NALU data. This assumes a 3 byte prefix and
+        // begins writing from the 2nd byte, so we must write the data
+        // first, then go back and write the Annex B prefix.
+        offset += write_nal_unit(stream, (uint8_t*)&m_DecodeBuffer.data()[initialOffset + 3],
+                                 MAX_SPS_EXTRA_SIZE + entry->length - sizeof(naluHeader));
+
+        // Copy the NALU prefix over from the original SPS
+        memcpy(&m_DecodeBuffer.data()[initialOffset], naluHeader, sizeof(naluHeader));
+        offset += sizeof(naluHeader);
+
+        h264_free(stream);
+    }
+    else {
+        // Write the buffer as-is
+        memcpy(&m_DecodeBuffer.data()[offset],
+               entry->data,
+               entry->length);
+        offset += entry->length;
+    }
+}
+
 int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 {
     PLENTRY entry = du->bufferList;
@@ -461,23 +519,23 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         m_LastFrameNumber = du->frameNumber;
     }
 
-    if (du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE > m_DecodeBuffer.length()) {
-        m_DecodeBuffer = QByteArray(du->fullLength + AV_INPUT_BUFFER_PADDING_SIZE, 0);
+    int requiredBufferSize = du->fullLength;
+    if (du->frameType == FRAME_TYPE_IDR) {
+        // Add some extra space in case we need to do an SPS fixup
+        requiredBufferSize += MAX_SPS_EXTRA_SIZE;
+    }
+    if (requiredBufferSize + AV_INPUT_BUFFER_PADDING_SIZE > m_DecodeBuffer.length()) {
+        m_DecodeBuffer = QByteArray(requiredBufferSize + AV_INPUT_BUFFER_PADDING_SIZE, 0);
     }
 
     int offset = 0;
     while (entry != nullptr) {
-        memcpy(&m_DecodeBuffer.data()[offset],
-               entry->data,
-               entry->length);
-        offset += entry->length;
+        writeBuffer(entry, offset);
         entry = entry->next;
     }
 
-    SDL_assert(offset == du->fullLength);
-
     m_Pkt.data = reinterpret_cast<uint8_t*>(m_DecodeBuffer.data());
-    m_Pkt.size = du->fullLength;
+    m_Pkt.size = offset;
 
     m_ActiveWndVideoStats.totalReassemblyTime += LiGetMillis() - du->receiveTimeMs;
 

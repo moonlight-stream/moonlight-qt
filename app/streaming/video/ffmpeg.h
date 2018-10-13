@@ -40,6 +40,8 @@ private:
 
     void reset();
 
+    void writeBuffer(PLENTRY entry, int& offset);
+
     static
     enum AVPixelFormat ffGetFormat(AVCodecContext* context,
                                    const enum AVPixelFormat* pixFmts);
@@ -57,6 +59,7 @@ private:
     VIDEO_STATS m_GlobalVideoStats;
     int m_LastFrameNumber;
     int m_StreamFps;
+    bool m_NeedsSpsFixup;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCTestFrame[];

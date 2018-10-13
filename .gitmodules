@@ -10,3 +10,6 @@
 [submodule "soundio/libsoundio"]
 	path = soundio/libsoundio
 	url = https://github.com/andrewrk/libsoundio.git
+[submodule "h264bitstream/h264bitstream"]
+	path = h264bitstream/h264bitstream
+	url = https://github.com/aizvorski/h264bitstream.git

@@ -350,6 +350,20 @@ void Session::initialize()
                                           m_StreamConfig.width,
                                           m_StreamConfig.height,
                                           m_StreamConfig.fps);
+        {
+            // Prior to GFE 3.11, GFE did not allow us to constrain
+            // the number of reference frames, so we have to fixup the SPS
+            // to allow decoding via VideoToolbox on macOS. Since we don't
+            // have fixup code for HEVC, just avoid it if GFE is too old.
+            QVector<int> gfeVersion = NvHTTP::parseQuad(m_Computer->gfeVersion);
+            if (gfeVersion.isEmpty() || // Very old versions don't have GfeVersion at all
+                    gfeVersion[0] < 3 ||
+                    (gfeVersion[0] == 3 && gfeVersion[1] < 11)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Disabling HEVC on macOS due to old GFE version");
+                m_StreamConfig.supportsHevc = false;
+            }
+        }
         m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:

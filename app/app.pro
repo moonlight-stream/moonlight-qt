@@ -258,6 +258,13 @@ else:unix: LIBS += -L$$OUT_PWD/../soundio/ -lsoundio
 INCLUDEPATH += $$PWD/../soundio/libsoundio
 DEPENDPATH += $$PWD/../soundio/libsoundio
 
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../h264bitstream/release/ -lh264bitstream
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../h264bitstream/debug/ -lh264bitstream
+else:unix: LIBS += -L$$OUT_PWD/../h264bitstream/ -lh264bitstream
+
+INCLUDEPATH += $$PWD/../h264bitstream/h264bitstream
+DEPENDPATH += $$PWD/../h264bitstream/h264bitstream
+
 unix:!macx: {
     isEmpty(PREFIX) {
         PREFIX = /usr/local
