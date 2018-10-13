@@ -22,6 +22,11 @@ CONFIG += staticlib
 # Disable warnings
 CONFIG += warn_off
 
+# Older GCC versions defaulted to GNU89
+*-g++ {
+    QMAKE_CFLAGS += -std=gnu99
+}
+
 SRC_DIR = $$PWD/h264bitstream
 
 SOURCES += \
