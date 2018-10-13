@@ -703,9 +703,13 @@ void Session::updateOptimalWindowDisplayMode()
         bestMode = desktopMode;
     }
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Chosen best display mode: %dx%dx%d",
-                bestMode.w, bestMode.h, bestMode.refresh_rate);
+    if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        // Only print when the window is actually in full-screen exclusive mode,
+        // otherwise we're not actually using the mode we've set here
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Chosen best display mode: %dx%dx%d",
+                    bestMode.w, bestMode.h, bestMode.refresh_rate);
+    }
 
     SDL_SetWindowDisplayMode(m_Window, &bestMode);
 }
