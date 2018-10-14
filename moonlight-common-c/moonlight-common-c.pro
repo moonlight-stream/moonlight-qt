@@ -67,7 +67,7 @@ INCLUDEPATH += \
 CONFIG += warn_off staticlib
 DEFINES += HAS_SOCKLEN_T
 
-debug {
+CONFIG(debug, debug|release) {
     # Enable asserts on debug builds
     DEFINES += LC_DEBUG
 }

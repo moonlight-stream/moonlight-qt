@@ -44,6 +44,11 @@ unix:!macx {
     }
 }
 
+CONFIG(release, debug|release) {
+    # Disable asserts on release builds
+    DEFINES += NDEBUG
+}
+
 DEFINES += \
     SOUNDIO_STATIC_LIBRARY               \
     SOUNDIO_VERSION_MAJOR=1              \
