@@ -350,6 +350,7 @@ void Session::initialize()
                                           m_StreamConfig.width,
                                           m_StreamConfig.height,
                                           m_StreamConfig.fps);
+#ifdef Q_OS_DARWIN
         {
             // Prior to GFE 3.11, GFE did not allow us to constrain
             // the number of reference frames, so we have to fixup the SPS
@@ -364,6 +365,7 @@ void Session::initialize()
                 m_StreamConfig.supportsHevc = false;
             }
         }
+#endif
         m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:
