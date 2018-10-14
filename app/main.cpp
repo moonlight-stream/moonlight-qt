@@ -16,6 +16,10 @@
 #include "streaming/video/ffmpeg.h"
 #endif
 
+#ifdef Q_OS_WIN32
+#include "antihookingprotection.h"
+#endif
+
 #include "cli/startstream.h"
 #include "cli/commandlineparser.h"
 #include "path.h"
@@ -262,6 +266,14 @@ int main(int argc, char *argv[])
     // Create a crash dump when we crash on Windows
     SetUnhandledExceptionFilter(UnhandledExceptionHandler);
 #endif
+
+#ifdef Q_OS_WIN32
+    // Force AntiHooking.dll to be statically imported and loaded
+    // by ntdll by calling a dummy function.
+    AntiHookingDummyImport();
+#endif
+
+    qWarning() << qgetenv("Path");
 
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 

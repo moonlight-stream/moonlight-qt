@@ -265,6 +265,12 @@ else:unix: LIBS += -L$$OUT_PWD/../h264bitstream/ -lh264bitstream
 INCLUDEPATH += $$PWD/../h264bitstream/h264bitstream
 DEPENDPATH += $$PWD/../h264bitstream/h264bitstream
 
+win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
+else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
+
+INCLUDEPATH += $$PWD/../AntiHooking
+DEPENDPATH += $$PWD/../AntiHooking
+
 unix:!macx: {
     isEmpty(PREFIX) {
         PREFIX = /usr/local
