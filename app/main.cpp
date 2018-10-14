@@ -273,8 +273,6 @@ int main(int argc, char *argv[])
     AntiHookingDummyImport();
 #endif
 
-    qWarning() << qgetenv("Path");
-
     QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
     // This avoids using the default keychain for SSL, which may cause
