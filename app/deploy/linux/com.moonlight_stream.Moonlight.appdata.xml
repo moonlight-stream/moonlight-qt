@@ -33,6 +33,21 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.6.1" date="2018-10-14">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added support for quitting Moonlight via gamepad</li>
+					<li>Added tooltips for games with very long names</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Added a workaround for a memory leak in the VAAPI driver for AMD GPUs</li>
+					<li>Fixed combo boxes on the settings page being too small for certain DPI scaling</li>
+					<li>Reduced power usage when Moonlight is idling in the background for a while</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.6.0" date="2018-10-06">
 			<description>
 				<p>New features:</p>
