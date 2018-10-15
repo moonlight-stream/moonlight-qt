@@ -84,7 +84,7 @@ private:
         return false;
     }
 
-    static HMODULE LoadLibraryAHook(LPCSTR lpLibFileName)
+    static HMODULE WINAPI LoadLibraryAHook(LPCSTR lpLibFileName)
     {
         if (lpLibFileName && isImageBlacklistedA(lpLibFileName)) {
             SetLastError(ERROR_ACCESS_DISABLED_BY_POLICY);
@@ -94,7 +94,7 @@ private:
         return s_RealLoadLibraryA(lpLibFileName);
     }
 
-    static HMODULE LoadLibraryWHook(LPCWSTR lpLibFileName)
+    static HMODULE WINAPI LoadLibraryWHook(LPCWSTR lpLibFileName)
     {
         if (lpLibFileName && isImageBlacklistedW(lpLibFileName)) {
             SetLastError(ERROR_ACCESS_DISABLED_BY_POLICY);
@@ -104,7 +104,7 @@ private:
         return s_RealLoadLibraryW(lpLibFileName);
     }
 
-    static HMODULE LoadLibraryExAHook(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
+    static HMODULE WINAPI LoadLibraryExAHook(LPCSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     {
         if (lpLibFileName && isImageBlacklistedA(lpLibFileName)) {
             SetLastError(ERROR_ACCESS_DISABLED_BY_POLICY);
@@ -114,7 +114,7 @@ private:
         return s_RealLoadLibraryExA(lpLibFileName, hFile, dwFlags);
     }
 
-    static HMODULE LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
+    static HMODULE WINAPI LoadLibraryExWHook(LPCWSTR lpLibFileName, HANDLE hFile, DWORD dwFlags)
     {
         if (lpLibFileName && isImageBlacklistedW(lpLibFileName)) {
             SetLastError(ERROR_ACCESS_DISABLED_BY_POLICY);
