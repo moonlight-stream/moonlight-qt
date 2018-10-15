@@ -1,3 +1,5 @@
+#include <QString>
+
 #include "vaapi.h"
 #include <streaming/streamutils.h>
 
@@ -113,6 +115,21 @@ VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height, int, b
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Driver: %s",
                 vendorString ? vendorString : "<unknown>");
+
+    // AMD's Gallium VAAPI driver has a nasty memory leak
+    // that causes memory to be leaked for each submitted frame.
+    // The Flatpak runtime has a VDPAU driver in place that works
+    // well, so use that instead on AMD systems.
+    if (vendorString && qgetenv("FORCE_VAAPI") != "1") {
+        QString vendorStr(vendorString);
+        if (vendorStr.contains("AMD", Qt::CaseInsensitive) ||
+                vendorStr.contains("Radeon", Qt::CaseInsensitive)) {
+            // Fail and let VDPAU pick this up
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Avoiding VAAPI on AMD driver");
+            return false;
+        }
+    }
 
     // This will populate the driver_quirks
     err = av_hwdevice_ctx_init(m_HwContext);
