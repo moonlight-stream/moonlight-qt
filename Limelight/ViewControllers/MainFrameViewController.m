@@ -992,9 +992,8 @@ static NSMutableSet* hostList;
     cell.layer.shadowOpacity = 0.5f;
     cell.layer.shadowPath = shadowPath.CGPath;
     
-    cell.layer.borderWidth = 1;
-    
 #if !TARGET_OS_TV
+    cell.layer.borderWidth = 1;
     cell.layer.borderColor = [[UIColor colorWithRed:0 green:0 blue:0 alpha:0.3f] CGColor];
     cell.exclusiveTouch = YES;
 #endif
@@ -1046,12 +1045,20 @@ static NSMutableSet* hostList;
     self.navigationController.navigationBar.topItem.rightBarButtonItem.enabled = YES;
 }
 
+#if TARGET_OS_TV
+- (BOOL)canBecomeFocused {
+    return YES;
+}
+#endif
+
 - (void)didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
     
+#if !TARGET_OS_TV
     if (context.nextFocusedView != nil) {
         [context.nextFocusedView setAlpha:0.8];
     }
     [context.previouslyFocusedView setAlpha:1.0];
+#endif
 }
 
 @end
