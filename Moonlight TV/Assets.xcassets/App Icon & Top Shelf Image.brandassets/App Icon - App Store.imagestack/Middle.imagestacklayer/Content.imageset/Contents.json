@@ -1,7 +1,8 @@
 {
   "images" : [
     {
-      "idiom" : "tv"
+      "idiom" : "tv",
+      "filename" : "wedges-app.png"
     }
   ],
   "info" : {
