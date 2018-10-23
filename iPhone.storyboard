@@ -127,6 +127,7 @@
                                 <segments>
                                     <segment title="30 FPS"/>
                                     <segment title="60 FPS"/>
+                                    <segment title="120 FPS"/>
                                 </segments>
                                 <color key="tintColor" red="0.6716768741607666" green="0.61711704730987549" blue="0.99902987480163574" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                             </segmentedControl>

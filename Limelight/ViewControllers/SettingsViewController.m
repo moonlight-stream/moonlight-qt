@@ -109,16 +109,42 @@ static const int bitrateTable[] = {
     // Ensure we pick a bitrate that falls exactly onto a slider notch
     _bitrate = bitrateTable[[self getSliderValueForBitrate:[currentSettings.bitrate intValue]]];
     
-    NSInteger framerate = [currentSettings.framerate integerValue] == 30 ? 0 : 1;
+    NSInteger framerate;
+    switch ([currentSettings.framerate integerValue]) {
+        case 30:
+            framerate = 0;
+            break;
+        default:
+        case 60:
+            framerate = 1;
+            break;
+        case 120:
+            framerate = 2;
+            break;
+    }
     NSInteger resolution;
-    if ([currentSettings.height integerValue] == 360) {
-        resolution = 0;
-    } else if ([currentSettings.height integerValue] == 720) {
-        resolution = 1;
-    } else if ([currentSettings.height integerValue] == 1080) {
-        resolution = 2;
-    } else {
-        resolution = 1;
+    switch ([currentSettings.height integerValue]) {
+        case 360:
+            resolution = 0;
+            break;
+        default:
+        case 720:
+            resolution = 1;
+            break;
+        case 1080:
+            resolution = 2;
+            break;
+    }
+    
+    // Only show the 120 FPS option if we have a > 60-ish Hz display
+    bool enable120Fps = false;
+    if (@available(iOS 10.3, *)) {
+        if ([UIScreen mainScreen].maximumFramesPerSecond > 62) {
+            enable120Fps = true;
+        }
+    }
+    if (!enable120Fps) {
+        [self.framerateSelector removeSegmentAtIndex:2 animated:NO];
     }
     
     [self.optimizeSettingsSelector setSelectedSegmentIndex:currentSettings.optimizeGames ? 1 : 0];
@@ -139,30 +165,34 @@ static const int bitrateTable[] = {
 }
 
 - (void) newResolutionFpsChosen {
-    NSInteger frameRate = [self getChosenFrameRate];
-    NSInteger resHeight = [self getChosenStreamHeight];
+    NSInteger fps = [self getChosenFrameRate];
+    NSInteger width = [self getChosenStreamWidth];
+    NSInteger height = [self getChosenStreamHeight];
     NSInteger defaultBitrate;
     
-    // 1080p60 is 20 Mbps
-    if (frameRate == 60 && resHeight == 1080) {
-        defaultBitrate = 20000;
+    // This table prefers 16:10 resolutions because they are
+    // only slightly more pixels than the 16:9 equivalents, so
+    // we don't want to bump those 16:10 resolutions up to the
+    // next 16:9 slot.
+    //
+    // This logic is shamelessly stolen from Moonlight Qt:
+    // https://github.com/moonlight-stream/moonlight-qt/blob/master/app/settings/streamingpreferences.cpp
+    
+    if (width * height <= 640 * 360) {
+        defaultBitrate = 1000 * (fps / 30.0);
     }
-    // 720p60 and 1080p30 are 10 Mbps
-    else if ((frameRate == 60 && resHeight == 720) ||
-             (frameRate == 30 && resHeight == 1080)) {
-        defaultBitrate = 10000;
+    // This covers 1280x720 and 1280x800 too
+    else if (width * height <= 1366 * 768) {
+        defaultBitrate = 5000 * (fps / 30.0);
     }
-    // 720p30 is 5 Mbps
-    else if (resHeight == 720) {
-        defaultBitrate = 5000;
+    else if (width * height <= 1920 * 1200) {
+        defaultBitrate = 10000 * (fps / 30.0);
     }
-    // 360p60 is 2 Mbps
-    else if (frameRate == 60 && resHeight == 360) {
-        defaultBitrate = 2000;
+    else if (width * height <= 2560 * 1600) {
+        defaultBitrate = 20000 * (fps / 30.0);
     }
-    // 360p30 is 1 Mbps
-    else {
-        defaultBitrate = 1000;
+    else /* if (width * height <= 3840 * 2160) */ {
+        defaultBitrate = 40000 * (fps / 30.0);
     }
     
     // We should always be exactly on a slider position with default bitrates
@@ -185,7 +215,16 @@ static const int bitrateTable[] = {
 }
 
 - (NSInteger) getChosenFrameRate {
-    return [self.framerateSelector selectedSegmentIndex] == 0 ? 30 : 60;
+    switch ([self.framerateSelector selectedSegmentIndex]) {
+        case 0:
+            return 30;
+        case 1:
+            return 60;
+        case 2:
+            return 120;
+        default:
+            abort();
+    }
 }
 
 - (NSInteger) getChosenStreamHeight {
