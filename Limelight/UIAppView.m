@@ -68,10 +68,7 @@ static UIImage* noImage;
     if ([_app.id isEqualToString:_app.host.currentGame]) {
         // Only create the app overlay if needed
         _appOverlay = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Play"]];
-#if TARGET_OS_TV
-        _appOverlay.adjustsImageWhenAncestorFocused = YES;
-        _appOverlay.userInteractionEnabled = YES;
-#else
+#if !TARGET_OS_TV
         _appOverlay.layer.shadowColor = [UIColor blackColor].CGColor;
         _appOverlay.layer.shadowOffset = CGSizeMake(0, 0);
         _appOverlay.layer.shadowOpacity = 1;
