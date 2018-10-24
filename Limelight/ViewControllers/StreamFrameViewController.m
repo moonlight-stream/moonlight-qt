@@ -20,6 +20,8 @@
     ControllerSupport *_controllerSupport;
     StreamManager *_streamMan;
     NSTimer *_inactivityTimer;
+    UITapGestureRecognizer *_menuGestureRecognizer;
+    UITapGestureRecognizer *_menuDoubleTapGestureRecognizer;
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -30,6 +32,15 @@
     [[self revealViewController] setPrimaryViewController:self];
 #endif
 }
+
+#ifdef TARGET_OS_TV
+- (void)controllerPauseButtonPressed:(id)sender { }
+- (void)controllerPauseButtonDoublePressed:(id)sender {
+    Log(LOG_I, @"Menu double-pressed -- backing out of stream");
+    [self returnToMainFrame];
+}
+#endif
+
 
 - (void)viewDidLoad
 {
@@ -46,6 +57,21 @@
     
     _controllerSupport = [[ControllerSupport alloc] initWithConfig:self.streamConfig];
     _inactivityTimer = nil;
+#if TARGET_OS_TV
+    if (!_menuGestureRecognizer || !_menuDoubleTapGestureRecognizer) {
+        _menuGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(controllerPauseButtonPressed:)];
+        _menuGestureRecognizer.allowedPressTypes = @[@(UIPressTypeMenu)];
+
+        _menuDoubleTapGestureRecognizer = [[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(controllerPauseButtonDoublePressed:)];
+        _menuDoubleTapGestureRecognizer.numberOfTapsRequired = 2;
+        [_menuGestureRecognizer requireGestureRecognizerToFail:_menuDoubleTapGestureRecognizer];
+        _menuDoubleTapGestureRecognizer.allowedPressTypes = @[@(UIPressTypeMenu)];
+    }
+    
+    [self.view addGestureRecognizer:_menuGestureRecognizer];
+    [self.view addGestureRecognizer:_menuDoubleTapGestureRecognizer];
+#endif
+
     _streamMan = [[StreamManager alloc] initWithConfig:self.streamConfig
                                             renderView:self.view
                                    connectionCallbacks:self];
