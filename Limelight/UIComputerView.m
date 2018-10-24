@@ -54,7 +54,9 @@ static const int LABEL_DY = 20;
     
     [_hostLabel setText:@"Add Host"];
     [_hostLabel sizeToFit];
+#if !TARGET_OS_TV
     _hostLabel.textColor = [UIColor whiteColor];
+#endif
     _hostLabel.center = CGPointMake(_hostButton.frame.origin.x + (_hostButton.frame.size.width / 2), _hostButton.frame.origin.y + _hostButton.frame.size.height + LABEL_DY);
     
     UIImageView* addIcon = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"AddComputerIcon"]];
@@ -128,7 +130,9 @@ static const int LABEL_DY = 20;
 
 - (void) updateContentsForHost:(TemporaryHost*)host {
     _hostLabel.text = _host.name;
+#if !TARGET_OS_TV
     _hostLabel.textColor = [UIColor whiteColor];
+#endif
     [_hostLabel sizeToFit];
     
     switch (host.pairState) {
@@ -142,7 +146,9 @@ static const int LABEL_DY = 20;
             _hostPairState.text = @"Paired";
             break;
     }
+#if !TARGET_OS_TV
     _hostPairState.textColor = [UIColor whiteColor];
+#endif
     [_hostPairState sizeToFit];
     
     if (host.online) {
