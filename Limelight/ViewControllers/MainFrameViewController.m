@@ -501,7 +501,10 @@ static NSMutableSet* hostList;
     
 #if !TARGET_OS_TV
     if (currentPosition != FrontViewPositionLeft) {
-        [[self revealViewController] revealToggle:self];
+        // This must not be animated because we need the position
+        // to change (and notify our callback to save settings data)
+        // before we call prepareToStreamApp.
+        [[self revealViewController] revealToggleAnimated:NO];
     }
 #endif
     
