@@ -2,6 +2,9 @@
 #include "nvhttp.h"
 #include "settings/streamingpreferences.h"
 
+#include <Limelight.h>
+#include <QtEndian>
+
 #include <QThread>
 #include <QThreadPool>
 
@@ -573,6 +576,12 @@ private:
         // Update addresses depending on the context
         if (m_Mdns) {
             newComputer->localAddress = m_Address;
+
+            // Get the WAN IP address using STUN if we're on mDNS
+            quint32 addr;
+            if (LiFindExternalAddressIP4("stun.stunprotocol.org", 3478, &addr) == 0) {
+                newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
+            }
         }
         else {
             newComputer->manualAddress = m_Address;
