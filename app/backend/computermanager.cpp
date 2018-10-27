@@ -579,8 +579,12 @@ private:
 
             // Get the WAN IP address using STUN if we're on mDNS
             quint32 addr;
-            if (LiFindExternalAddressIP4("stun.stunprotocol.org", 3478, &addr) == 0) {
+            int err = LiFindExternalAddressIP4("stun.stunprotocol.org", 3478, &addr);
+            if (err == 0) {
                 newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
+            }
+            else {
+                qWarning() << "STUN failed to get WAN address:" << err;
             }
         }
         else {
