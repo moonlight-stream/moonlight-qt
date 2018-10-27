@@ -78,6 +78,9 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
             inet_ntop(AF_INET, &wanAddr, addrStr, sizeof(addrStr));
             host.externalAddress = [NSString stringWithFormat: @"%s", addrStr];
         }
+        else {
+            Log(LOG_E, @"STUN failed to get WAN address: %d", err);
+        }
         
         host.activeAddress = host.localAddress = service.hostName;
         host.name = service.hostName;
