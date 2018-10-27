@@ -9,6 +9,10 @@
 #import "MDNSManager.h"
 #import "TemporaryHost.h"
 
+#include <arpa/inet.h>
+
+#include <Limelight.h>
+
 @implementation MDNSManager {
     NSNetServiceBrowser* mDNSBrowser;
     NSMutableArray* services;
@@ -60,11 +64,25 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
 }
 
 - (void)netServiceDidResolveAddress:(NSNetService *)service {
-    Log(LOG_D, @"Resolved address: %@ -> %@", service, service.hostName);
-    TemporaryHost* host = [[TemporaryHost alloc] init];
-    host.activeAddress = host.localAddress = service.hostName;
-    host.name = service.hostName;
-    [self.callback updateHost:host];
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        Log(LOG_D, @"Resolved address: %@ -> %@", service, service.hostName);
+        TemporaryHost* host = [[TemporaryHost alloc] init];
+        
+        // Since we discovered this host over mDNS, we know we're on the same network
+        // as the PC and we can use our current WAN address as a likely candidate
+        // for our PC's external address.
+        struct in_addr wanAddr;
+        int err = LiFindExternalAddressIP4("stun.stunprotocol.org", 3478, &wanAddr.s_addr);
+        if (err == 0) {
+            char addrStr[INET_ADDRSTRLEN];
+            inet_ntop(AF_INET, &wanAddr, addrStr, sizeof(addrStr));
+            host.externalAddress = [NSString stringWithFormat: @"%s", addrStr];
+        }
+        
+        host.activeAddress = host.localAddress = service.hostName;
+        host.name = service.hostName;
+        [self.callback updateHost:host];
+    });
 }
 
 - (void)netService:(NSNetService *)sender didNotResolve:(NSDictionary *)errorDict {

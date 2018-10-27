@@ -158,21 +158,19 @@
     [_hostQueue removeObject:host];
 }
 
-// Override from MDNSCallback
+// Override from MDNSCallback - called in a worker thread
 - (void)updateHost:(TemporaryHost*)host {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        // Discover the hosts before adding to eliminate duplicates
-        Log(LOG_D, @"Found host through MDNS: %@:", host.name);
-        // Since this is on a background thread, we do not need to use the opQueue
-        DiscoveryWorker* worker = (DiscoveryWorker*)[self createWorkerForHost:host];
-        [worker discoverHost];
-        if ([self addHostToDiscovery:host]) {
-            Log(LOG_I, @"Found new host through MDNS: %@:", host.name);
-            [self->_callback updateAllHosts:self->_hostQueue];
-        } else {
-            Log(LOG_D, @"Found existing host through MDNS: %@", host.name);
-        }
-    });
+    // Discover the hosts before adding to eliminate duplicates
+    Log(LOG_D, @"Found host through MDNS: %@:", host.name);
+    // Since this is on a background thread, we do not need to use the opQueue
+    DiscoveryWorker* worker = (DiscoveryWorker*)[self createWorkerForHost:host];
+    [worker discoverHost];
+    if ([self addHostToDiscovery:host]) {
+        Log(LOG_I, @"Found new host through MDNS: %@:", host.name);
+        [self->_callback updateAllHosts:self->_hostQueue];
+    } else {
+        Log(LOG_D, @"Found existing host through MDNS: %@", host.name);
+    }
 }
 
 - (TemporaryHost*) getHostInDiscovery:(NSString*)uuidString {

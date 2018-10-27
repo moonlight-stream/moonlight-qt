@@ -34,6 +34,8 @@
 		98AB2E561CAD427A0089BB98 /* protocol.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E151CAD422B0089BB98 /* protocol.c */; };
 		98AB2E571CAD427A0089BB98 /* unix.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E171CAD422B0089BB98 /* unix.c */; };
 		98AB2E581CAD427A0089BB98 /* win32.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E181CAD422B0089BB98 /* win32.c */; };
+		98C1FC13218404040023FDDF /* SimpleStun.c in Sources */ = {isa = PBXBuildFile; fileRef = 98C1FC11218404030023FDDF /* SimpleStun.c */; };
+		98C1FC142184124C0023FDDF /* SimpleStun.c in Sources */ = {isa = PBXBuildFile; fileRef = 98C1FC11218404030023FDDF /* SimpleStun.c */; };
 		FB1A67F821324F4900507771 /* rs.c in Sources */ = {isa = PBXBuildFile; fileRef = 9857AEEE1EBE85E10084F99E /* rs.c */; };
 		FB1A67F921324F4900507771 /* RtpFecQueue.c in Sources */ = {isa = PBXBuildFile; fileRef = 9857AEE91EBE85A20084F99E /* RtpFecQueue.c */; };
 		FB1A67FA21324F4900507771 /* AudioStream.c in Sources */ = {isa = PBXBuildFile; fileRef = 98AB2E1A1CAD423B0089BB98 /* AudioStream.c */; };
@@ -144,6 +146,7 @@
 		98AB2E3C1CAD423B0089BB98 /* Video.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Video.h; sourceTree = "<group>"; };
 		98AB2E3D1CAD423B0089BB98 /* VideoDepacketizer.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VideoDepacketizer.c; sourceTree = "<group>"; };
 		98AB2E3E1CAD423B0089BB98 /* VideoStream.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = VideoStream.c; sourceTree = "<group>"; };
+		98C1FC11218404030023FDDF /* SimpleStun.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = SimpleStun.c; sourceTree = "<group>"; };
 		FB1A67EF21324EE300507771 /* libmoonlight-common-tv.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libmoonlight-common-tv.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		FB290E2E19B37A4E004C83CF /* libmoonlight-common.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libmoonlight-common.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -281,6 +284,7 @@
 				98AB2E391CAD423B0089BB98 /* RtspConnection.c */,
 				98AB2E3A1CAD423B0089BB98 /* RtspParser.c */,
 				98AB2E3B1CAD423B0089BB98 /* SdpGenerator.c */,
+				98C1FC11218404030023FDDF /* SimpleStun.c */,
 				98AB2E3C1CAD423B0089BB98 /* Video.h */,
 				98AB2E3D1CAD423B0089BB98 /* VideoDepacketizer.c */,
 				98AB2E3E1CAD423B0089BB98 /* VideoStream.c */,
@@ -403,6 +407,7 @@
 				FB1A680A21324F4900507771 /* callbacks.c in Sources */,
 				FB1A680B21324F4900507771 /* compress.c in Sources */,
 				FB1A680C21324F4900507771 /* host.c in Sources */,
+				98C1FC13218404040023FDDF /* SimpleStun.c in Sources */,
 				FB1A680D21324F4900507771 /* list.c in Sources */,
 				FB1A680E21324F4900507771 /* packet.c in Sources */,
 				FB1A680F21324F4900507771 /* peer.c in Sources */,
@@ -416,6 +421,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				98C1FC142184124C0023FDDF /* SimpleStun.c in Sources */,
 				98AB2E401CAD425A0089BB98 /* AudioStream.c in Sources */,
 				98AB2E411CAD425A0089BB98 /* ByteBuffer.c in Sources */,
 				98AB2E421CAD425A0089BB98 /* Connection.c in Sources */,
