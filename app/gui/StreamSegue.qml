@@ -3,6 +3,7 @@ import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 import QtQuick.Window 2.2
 
+import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 
 Item {
@@ -58,10 +59,25 @@ Item {
         toast.visible = true
     }
 
+    // It's important that we don't call enable() here
+    // or it may interfere with the Session instance
+    // getting notified of initial connected gamepads.
+    SdlGamepadKeyNavigation {
+        id: gamepadKeyNav
+    }
+
     onVisibleChanged: {
         if (visible) {
             // Hide the toolbar before we start loading
             toolBar.visible = false
+
+            // Set the hint text. We do this here rather than
+            // in the hintText control itself to synchronize
+            // with Session.exec() which requires no concurrent
+            // gamepad usage.
+            hintText.text = gamepadKeyNav.getConnectedGamepads() > 0 ?
+                      "Tip: Press Start+Select+L1+R1 to disconnect your session" :
+                      "Tip: Press Ctrl+Alt+Shift+Q to disconnect your session"
 
             // Hook up our signals
             session.stageStarting.connect(stageStarting)
@@ -118,7 +134,7 @@ Item {
     }
 
     Label {
-        text: "Tip: Press Ctrl+Alt+Shift+Q to disconnect your session"
+        id: hintText
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 50
         anchors.horizontalCenter: parent.horizontalCenter

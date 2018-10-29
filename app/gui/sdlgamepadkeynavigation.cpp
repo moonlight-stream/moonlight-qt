@@ -244,3 +244,23 @@ void SdlGamepadKeyNavigation::setSettingsMode(bool settingsMode)
 {
     m_SettingsMode = settingsMode;
 }
+
+int SdlGamepadKeyNavigation::getConnectedGamepads()
+{
+    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
+                     SDL_GetError());
+        return 0;
+    }
+
+    int count = 0;
+    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+        if (SDL_IsGameController(i)) {
+            count++;
+        }
+    }
+
+    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+    return count;
+}

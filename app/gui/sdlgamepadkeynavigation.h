@@ -20,6 +20,8 @@ public:
 
     Q_INVOKABLE void setSettingsMode(bool settingsMode);
 
+    Q_INVOKABLE int getConnectedGamepads();
+
 private:
     void sendKey(QEvent::Type type, Qt::Key key, Qt::KeyboardModifiers modifiers = Qt::NoModifier);
 
