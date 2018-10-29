@@ -33,6 +33,19 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.6.2" date="2018-10-28">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added automatic IP address detection for Internet streaming</li>
+					<li>Added a quit shortcut tip for gamepad users</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed server state polling not being stopped while streaming</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.6.1" date="2018-10-14">
 			<description>
 				<p>New features:</p>
