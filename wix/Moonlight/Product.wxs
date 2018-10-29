@@ -15,7 +15,7 @@
            Name="$(var.FullName)"
            Language="1033"
            Version="!(bind.fileVersion.MoonlightExe)"
-           Manufacturer="Moonlight Game Streaming Team"
+           Manufacturer="Moonlight Game Streaming Project"
            UpgradeCode="5c09f94e-f809-4c6a-9b7b-597c99f041fe">
 
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />

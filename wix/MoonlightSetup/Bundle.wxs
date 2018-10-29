@@ -6,7 +6,7 @@
 
   <Bundle Name="Moonlight Game Streaming Client"
           Version="!(bind.PackageVersion.Moonlight)"
-          Manufacturer="Moonlight Game Streaming Team"
+          Manufacturer="Moonlight Game Streaming Project"
           UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
           HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
           UpdateUrl="https://github.com/moonlight-stream/moonlight-qt/releases"
