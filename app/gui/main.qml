@@ -89,6 +89,29 @@ ApplicationWindow {
         }
     }
 
+    onVisibleChanged: {
+        // When we become invisible while streaming is going on,
+        // stop polling immediately.
+        if (!visible) {
+            inactivityTimer.stop()
+
+            if (pollingActive) {
+                ComputerManager.stopPollingAsync()
+                pollingActive = false
+            }
+        }
+        else if (active) {
+            // When we become visible and active again, start polling
+            inactivityTimer.stop()
+
+            // Restart polling if it was stopped
+            if (!pollingActive) {
+                ComputerManager.startPolling()
+                pollingActive = true
+            }
+        }
+    }
+
     onActiveChanged: {
         if (active) {
             // Stop the inactivity timer
