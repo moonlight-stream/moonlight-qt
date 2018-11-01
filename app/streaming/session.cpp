@@ -270,6 +270,8 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
 
     int caps = decoder->getDecoderCapabilities();
 
+    delete decoder;
+
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
     SDL_DestroyWindow(window);
