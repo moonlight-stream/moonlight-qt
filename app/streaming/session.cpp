@@ -228,11 +228,14 @@ bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelect
         return false;
     }
 
-    SDL_DestroyWindow(window);
-
     bool ret = decoder->isHardwareAccelerated();
 
     delete decoder;
+
+    // This must be called after the decoder is deleted, because
+    // the renderer may want to interact with the window
+    SDL_DestroyWindow(window);
+
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
     return ret;
@@ -265,11 +268,12 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
         return false;
     }
 
-    SDL_DestroyWindow(window);
-
     int caps = decoder->getDecoderCapabilities();
 
-    delete decoder;
+    // This must be called after the decoder is deleted, because
+    // the renderer may want to interact with the window
+    SDL_DestroyWindow(window);
+
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
     return caps;
@@ -1176,7 +1180,10 @@ DispatchDeferredCleanup:
     m_VideoDecoder = nullptr;
     SDL_AtomicUnlock(&m_DecoderLock);
 
+    // This must be called after the decoder is deleted, because
+    // the renderer may want to interact with the window
     SDL_DestroyWindow(m_Window);
+
     if (iconSurface != nullptr) {
         SDL_FreeSurface(iconSurface);
     }
