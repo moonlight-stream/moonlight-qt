@@ -655,8 +655,29 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
     if (event->type == SDL_CONTROLLERDEVICEADDED) {
         int i;
         const char* name;
+        SDL_GameController* controller;
 
-        for (i = 0; i < MAX_GAMEPADS; i++) {
+        controller = SDL_GameControllerOpen(event->which);
+        if (controller == NULL) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to open gamepad: %s",
+                         SDL_GetError());
+            return;
+        }
+
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+        // Determine this player's preferred index
+        i = SDL_GameControllerGetPlayerIndex(controller);
+        if (i < 0 || i >= MAX_GAMEPADS || m_GamepadState[i].controller != NULL) {
+            // If the player index is unavailable or invalid, start searching from 0
+            i = 0;
+        }
+#else
+        // SDL 2.0.8 and earlier has no player number hints
+        i = 0;
+#endif
+
+        for (; i < MAX_GAMEPADS; i++) {
             if (m_GamepadState[i].controller == NULL) {
                 // Found an empty slot
                 break;
@@ -666,6 +687,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         if (i == MAX_GAMEPADS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "No open gamepad slots found!");
+            SDL_GameControllerClose(controller);
             return;
         }
 
@@ -677,14 +699,8 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             // Always player 1 in single controller mode
             state->index = 0;
         }
-        state->controller = SDL_GameControllerOpen(event->which);
-        if (state->controller == NULL) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to open gamepad: %s",
-                         SDL_GetError());
-            return;
-        }
 
+        state->controller = controller;
         state->jsId = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(state->controller));
 
         name = SDL_GameControllerName(state->controller);
@@ -908,6 +924,7 @@ int SdlInputHandler::getAttachedGamepadMask()
         return 0x1;
     }
 
+    // TODO: Use SDL_GameControllerGetPlayerIndex() for accurate indexes?
     count = mask = 0;
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
