@@ -85,6 +85,9 @@ typedef enum
                                      Called on Android in onResume()
                                 */
 
+    /* Display events */
+    SDL_DISPLAYEVENT   = 0x150,  /**< Display state change */
+
     /* Window events */
     SDL_WINDOWEVENT    = 0x200, /**< Window state change */
     SDL_SYSWMEVENT,             /**< System specific event */
@@ -144,6 +147,9 @@ typedef enum
     SDL_AUDIODEVICEADDED = 0x1100, /**< A new audio device is available */
     SDL_AUDIODEVICEREMOVED,        /**< An audio device has been removed. */
 
+    /* Sensor events */
+    SDL_SENSORUPDATE = 0x1200,     /**< A sensor was updated */
+
     /* Render events */
     SDL_RENDER_TARGETS_RESET = 0x2000, /**< The render targets have been reset and their contents need to be updated */
     SDL_RENDER_DEVICE_RESET, /**< The device has been reset and all textures need to be recreated */
@@ -167,6 +173,21 @@ typedef struct SDL_CommonEvent
     Uint32 type;
     Uint32 timestamp;   /**< In milliseconds, populated using SDL_GetTicks() */
 } SDL_CommonEvent;
+
+/**
+ *  \brief Display state change event data (event.display.*)
+ */
+typedef struct SDL_DisplayEvent
+{
+    Uint32 type;        /**< ::SDL_DISPLAYEVENT */
+    Uint32 timestamp;   /**< In milliseconds, populated using SDL_GetTicks() */
+    Uint32 display;     /**< The associated display index */
+    Uint8 event;        /**< ::SDL_DisplayEventID */
+    Uint8 padding1;
+    Uint8 padding2;
+    Uint8 padding3;
+    Sint32 data1;       /**< event dependent data */
+} SDL_DisplayEvent;
 
 /**
  *  \brief Window state change event data (event.window.*)
@@ -472,6 +493,17 @@ typedef struct SDL_DropEvent
 
 
 /**
+ *  \brief Sensor event structure (event.sensor.*)
+ */
+typedef struct SDL_SensorEvent
+{
+    Uint32 type;        /**< ::SDL_SENSORUPDATE */
+    Uint32 timestamp;   /**< In milliseconds, populated using SDL_GetTicks() */
+    Sint32 which;       /**< The instance ID of the sensor */
+    float data[6];      /**< Up to 6 values from the sensor - additional values can be queried using SDL_SensorGetData() */
+} SDL_SensorEvent;
+
+/**
  *  \brief The "quit requested" event
  */
 typedef struct SDL_QuitEvent
@@ -526,6 +558,7 @@ typedef union SDL_Event
 {
     Uint32 type;                    /**< Event type, shared with all events */
     SDL_CommonEvent common;         /**< Common event data */
+    SDL_DisplayEvent display;       /**< Window event data */
     SDL_WindowEvent window;         /**< Window event data */
     SDL_KeyboardEvent key;          /**< Keyboard event data */
     SDL_TextEditingEvent edit;      /**< Text editing event data */
@@ -542,6 +575,7 @@ typedef union SDL_Event
     SDL_ControllerButtonEvent cbutton;  /**< Game Controller button event data */
     SDL_ControllerDeviceEvent cdevice;  /**< Game Controller device event data */
     SDL_AudioDeviceEvent adevice;   /**< Audio device event data */
+    SDL_SensorEvent sensor;         /**< Sensor event data */
     SDL_QuitEvent quit;             /**< Quit request event data */
     SDL_UserEvent user;             /**< Custom event data */
     SDL_SysWMEvent syswm;           /**< System dependent window event data */
