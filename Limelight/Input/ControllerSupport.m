@@ -216,8 +216,12 @@
                 
                 // Yay, iOS 12.1 now supports analog stick buttons
                 if (@available(iOS 12.1, tvOS 12.1, *)) {
-                    UPDATE_BUTTON_FLAG(limeController, LS_CLK_FLAG, gamepad.leftThumbstickButton.pressed);
-                    UPDATE_BUTTON_FLAG(limeController, RS_CLK_FLAG, gamepad.rightThumbstickButton.pressed);
+                    if (gamepad.leftThumbstickButton != nil) {
+                        UPDATE_BUTTON_FLAG(limeController, LS_CLK_FLAG, gamepad.leftThumbstickButton.pressed);
+                    }
+                    if (gamepad.rightThumbstickButton != nil) {
+                        UPDATE_BUTTON_FLAG(limeController, RS_CLK_FLAG, gamepad.rightThumbstickButton.pressed);
+                    }
                 }
                 
                 leftStickX = gamepad.leftThumbstick.xAxis.value * 0x7FFE;
@@ -276,6 +280,12 @@
         if (controller != NULL) {
             if (controller.extendedGamepad != NULL) {
                 level = OnScreenControlsLevelAutoGCExtendedGamepad;
+                if (@available(iOS 12.1, tvOS 12.1, *)) {
+                    if (controller.extendedGamepad.leftThumbstickButton != nil &&
+                        controller.extendedGamepad.rightThumbstickButton != nil) {
+                        level = OnScreenControlsLevelAutoGCExtendedGamepadWithStickButtons;
+                    }
+                }
                 break;
             }
             else if (controller.gamepad != NULL) {

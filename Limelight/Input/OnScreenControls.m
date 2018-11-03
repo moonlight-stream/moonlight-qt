@@ -202,6 +202,18 @@ static float L3_Y;
             [self hideSticks];
             [self drawL3R3];
             break;
+        case OnScreenControlsLevelAutoGCExtendedGamepadWithStickButtons:
+            // This variant of GCExtendedGamepad has L3 and R3 but
+            // is still missing Select
+            [self setupExtendedGamepadControls];
+            
+            [self hideButtons];
+            [self hideBumpers];
+            [self hideTriggers];
+            [self hideL3R3];
+            [self drawStartSelect];
+            [self hideSticks];
+            break;
         case OnScreenControlsLevelSimple:
             [self setupSimpleControls];
             

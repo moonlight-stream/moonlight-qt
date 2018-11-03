@@ -22,6 +22,7 @@ typedef NS_ENUM(NSInteger, OnScreenControlsLevel) {
     // Internal levels selected by ControllerSupport
     OnScreenControlsLevelAutoGCGamepad,
     OnScreenControlsLevelAutoGCExtendedGamepad,
+    OnScreenControlsLevelAutoGCExtendedGamepadWithStickButtons
 };
 
 #if TARGET_OS_IPHONE
