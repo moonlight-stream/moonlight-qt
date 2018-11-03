@@ -6,12 +6,6 @@
 #include <SDL.h>
 #include "utils.h"
 
-// HACK: Need to call SetThreadExecutionState() because SDL doesn't
-#ifdef Q_OS_WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#endif
-
 #ifdef HAVE_FFMPEG
 #include "video/ffmpeg.h"
 #endif
@@ -936,13 +930,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // Disable the screen saver
     SDL_DisableScreenSaver();
 
-#ifdef Q_OS_WIN32
-    // HACK: SDL doesn't call this, so we must do so to disable the
-    // screensaver when we're in windowed mode. DirectX will disable
-    // it for us when we're in full-screen exclusive mode.
-    SetThreadExecutionState(ES_CONTINUOUS | ES_DISPLAY_REQUIRED);
-#endif
-
     // Set timer resolution to 1 ms on Windows for greater
     // sleep precision and more accurate callback timing.
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "1");
@@ -1162,11 +1149,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
     }
 
 DispatchDeferredCleanup:
-#ifdef Q_OS_WIN32
-    // HACK: See comment above
-    SetThreadExecutionState(ES_CONTINUOUS);
-#endif
-
     // Uncapture the mouse and hide the window immediately,
     // so we can return to the Qt GUI ASAP.
     SDL_SetRelativeMouseMode(SDL_FALSE);
