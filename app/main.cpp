@@ -5,6 +5,7 @@
 #include <QQuickStyle>
 #include <QMutex>
 #include <QtDebug>
+#include <QNetworkProxyFactory>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -287,6 +288,13 @@ int main(int argc, char *argv[])
         qputenv("QT_OPENGL", "angle");
     }
 #endif
+
+    // We don't want system proxies to apply to us
+    QNetworkProxyFactory::setUseSystemConfiguration(false);
+
+    // Clear any default application proxy
+    QNetworkProxy noProxy(QNetworkProxy::NoProxy);
+    QNetworkProxy::setApplicationProxy(noProxy);
 
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");

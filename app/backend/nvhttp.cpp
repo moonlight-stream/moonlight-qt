@@ -10,6 +10,7 @@
 #include <QSslKey>
 #include <QImageReader>
 #include <QtEndian>
+#include <QNetworkProxy>
 
 #define REQUEST_TIMEOUT_MS 5000
 
@@ -24,6 +25,10 @@ NvHTTP::NvHTTP(QString address) :
     m_BaseUrlHttps.setHost(address);
     m_BaseUrlHttp.setPort(47989);
     m_BaseUrlHttps.setPort(47984);
+
+    // Never use a proxy server
+    QNetworkProxy noProxy(QNetworkProxy::NoProxy);
+    m_Nam.setProxy(noProxy);
 }
 
 QVector<int>
