@@ -64,7 +64,7 @@ ScrollView {
                 Label {
                     width: parent.width
                     id: resFPSdesc
-                    text: qsTr("Setting values too high for your PC may cause lag, stuttering, or errors.")
+                    text: qsTr("Setting values too high for your PC or network connection may cause lag, stuttering, or errors.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                     color: "white"
@@ -329,6 +329,7 @@ ScrollView {
                     }
 
                     id: windowModeComboBox
+                    hoverEnabled: true
                     textRole: "text"
                     model: ListModel {
                         id: windowModeListModel
@@ -348,16 +349,27 @@ ScrollView {
                     onActivated: {
                         prefs.windowMode = windowModeListModel.get(currentIndex).val
                     }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Full-screen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc."
                 }
 
                 CheckBox {
                     id: vsyncCheck
+                    hoverEnabled: true
                     text: "<font color=\"white\">Enable V-Sync</font>"
                     font.pointSize:  12
                     checked: prefs.enableVsync
                     onCheckedChanged: {
                         prefs.enableVsync = checked
                     }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing"
                 }
             }
         }
