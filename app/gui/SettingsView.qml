@@ -467,6 +467,29 @@ ScrollView {
         }
 
         GroupBox {
+            id: uiSettingsGroupBox
+            width: (parent.width - parent.padding)
+            padding: 12
+            title: "<font color=\"skyblue\">UI Settings</font>"
+            font.pointSize: 12
+
+            Row {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: startWindowedCheck
+                    text: "<font color=\"white\">Start Moonlight in windowed mode</font>"
+                    font.pointSize: 12
+                    checked: prefs.startWindowed
+                    onCheckedChanged: {
+                        prefs.startWindowed = checked
+                    }
+                }
+            }
+        }
+
+        GroupBox {
             id: hostSettingsGroupBox
             width: (parent.width - parent.padding)
             padding: 12

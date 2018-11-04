@@ -74,6 +74,7 @@ public:
     Q_PROPERTY(bool unsupportedFps MEMBER unsupportedFps NOTIFY unsupportedFpsChanged)
     Q_PROPERTY(bool enableMdns MEMBER enableMdns NOTIFY enableMdnsChanged)
     Q_PROPERTY(bool mouseAcceleration MEMBER mouseAcceleration NOTIFY mouseAccelerationChanged)
+    Q_PROPERTY(bool startWindowed MEMBER startWindowed NOTIFY startWindowedChanged)
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
@@ -91,6 +92,7 @@ public:
     bool unsupportedFps;
     bool enableMdns;
     bool mouseAcceleration;
+    bool startWindowed;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
     VideoDecoderSelection videoDecoderSelection;
@@ -110,5 +112,6 @@ signals:
     void videoCodecConfigChanged();
     void videoDecoderSelectionChanged();
     void windowModeChanged();
+    void startWindowedChanged();
 };
 
