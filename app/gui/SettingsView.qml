@@ -449,13 +449,19 @@ ScrollView {
                 }
 
                 CheckBox {
-                    id: mouseAccelerationCheck
-                    text: "<font color=\"white\">Enable mouse acceleration</font>"
+                    id: rawInputCheck
+                    hoverEnabled: true
+                    text: "<font color=\"white\">Raw mouse input</font>"
                     font.pointSize:  12
-                    checked: prefs.mouseAcceleration
+                    checked: !prefs.mouseAcceleration
                     onCheckedChanged: {
-                        prefs.mouseAcceleration = checked
+                        prefs.mouseAcceleration = !checked
                     }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "When checked, mouse input is not accelerated or scaled by the OS before passing to Moonlight"
                 }
             }
         }
