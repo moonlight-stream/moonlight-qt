@@ -5,9 +5,24 @@ import StreamingPreferences 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 
-ScrollView {
+Flickable {
     id: settingsPage
     objectName: "Settings"
+    anchors.fill: parent
+
+    contentWidth: settingsColumn1.width > settingsColumn2.width ? settingsColumn1.width : settingsColumn2.width
+    contentHeight: settingsColumn1.height > settingsColumn2.height ? settingsColumn1.height : settingsColumn2.height
+
+    ScrollBar.vertical: ScrollBar {
+        parent: settingsPage.parent
+        anchors {
+            top: settingsPage.top
+            left: settingsPage.right
+            bottom: settingsPage.bottom
+
+            leftMargin: -10
+        }
+    }
 
     StreamingPreferences {
         id: prefs
