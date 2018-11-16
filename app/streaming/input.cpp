@@ -17,6 +17,8 @@
 #define VK_NUMPAD0 0x60
 #endif
 
+#define MOUSE_POLLING_INTERVAL 5
+
 // How long the mouse button will be pressed for a tap to click gesture
 #define TAP_BUTTON_RELEASE_DELAY 100
 
@@ -34,10 +36,9 @@ const int SdlInputHandler::k_ButtonMap[] = {
     UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG
 };
 
-SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer, int streamWidth, int streamHeight)
-    : m_LastMouseMotionTime(0),
-      m_MultiController(prefs.multiController),
-      m_NeedsInputDelay(false),
+SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int streamWidth, int streamHeight)
+    : m_MultiController(prefs.multiController),
+      m_MouseMoveTimer(0),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
@@ -77,22 +78,14 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* comput
         m_GamepadMask = 0;
     }
 
-    // Prior to GFE 3.14.1, sending too many mouse motion events can cause
-    // GFE to choke and input latency to increase significantly. We will
-    // artificially throttle them to avoid this situation.
-    QVector<int> gfeVersion = NvHTTP::parseQuad(computer->gfeVersion);
-    if (gfeVersion.isEmpty() || // Very old versions don't have GfeVersion at all
-            gfeVersion[0] < 3 ||
-            (gfeVersion[0] == 3 && gfeVersion[1] < 14) ||
-            (gfeVersion[0] == 3 && gfeVersion[1] == 14 && gfeVersion[2] < 1)) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "This older version of GFE requires input delay hack");
-        m_NeedsInputDelay = true;
-    }
-
     SDL_zero(m_GamepadState);
     SDL_zero(m_TouchDownEvent);
     SDL_zero(m_CumulativeDelta);
+
+    SDL_AtomicSet(&m_MouseDeltaX, 0);
+    SDL_AtomicSet(&m_MouseDeltaY, 0);
+
+    m_MouseMoveTimer = SDL_AddTimer(MOUSE_POLLING_INTERVAL, SdlInputHandler::mouseMoveTimerCallback, this);
 }
 
 SdlInputHandler::~SdlInputHandler()
@@ -103,6 +96,7 @@ SdlInputHandler::~SdlInputHandler()
         }
     }
 
+    SDL_RemoveTimer(m_MouseMoveTimer);
     SDL_RemoveTimer(m_LeftButtonReleaseTimer);
     SDL_RemoveTimer(m_RightButtonReleaseTimer);
     SDL_RemoveTimer(m_DragTimer);
@@ -459,40 +453,10 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         return;
     }
 
-    short xdelta = (short)event->xrel;
-    short ydelta = (short)event->yrel;
-
-    // If we're sending more than one motion event per millisecond,
-    // delay for 1 ms to allow batching of mouse move events. On older
-    // versions of GFE, we will unconditionally wait this 1 ms to
-    // work around an input processing issue that causes massive mouse latency.
-    Uint32 currentTime = SDL_GetTicks();
-    if (m_NeedsInputDelay || !SDL_TICKS_PASSED(currentTime, m_LastMouseMotionTime + 1)) {
-        SDL_Delay(1);
-        currentTime = SDL_GetTicks();
-    }
-    m_LastMouseMotionTime = currentTime;
-
-    // Pump even if we didn't delay since we might get some extra events
-    SDL_PumpEvents();
-
-    // Batch all of the pending mouse motion events
-    SDL_Event nextEvent;
-    while (SDL_PeepEvents(&nextEvent,
-                          1,
-                          SDL_GETEVENT,
-                          SDL_MOUSEMOTION,
-                          SDL_MOUSEMOTION) == 1) {
-        // In theory, these can overflow but in practice
-        // it should be highly unlikely since it would require
-        // moving 64K pixels in 1 ms.
-        xdelta += nextEvent.motion.xrel;
-        ydelta += nextEvent.motion.yrel;
-    }
-
-    if (xdelta != 0 || ydelta != 0) {
-        LiSendMouseMoveEvent(xdelta, ydelta);
-    }
+    // Batch until the next mouse polling window or we'll get awful
+    // input lag everything except GFE 3.14 and 3.15.
+    SDL_AtomicAdd(&m_MouseDeltaX, event->xrel);
+    SDL_AtomicAdd(&m_MouseDeltaY, event->yrel);
 }
 
 void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
@@ -570,6 +534,20 @@ Uint32 SdlInputHandler::dragTimerCallback(Uint32, void *param)
     LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, me->m_DragButton);
 
     return 0;
+}
+
+Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
+{
+    auto me = reinterpret_cast<SdlInputHandler*>(param);
+
+    short deltaX = (short)SDL_AtomicSet(&me->m_MouseDeltaX, 0);
+    short deltaY = (short)SDL_AtomicSet(&me->m_MouseDeltaY, 0);
+
+    if (deltaX != 0 || deltaY != 0) {
+        LiSendMouseMoveEvent(deltaX, deltaY);
+    }
+
+    return interval;
 }
 
 void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)

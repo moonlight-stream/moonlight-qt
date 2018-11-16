@@ -67,9 +67,13 @@ private:
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
-    Uint32 m_LastMouseMotionTime;
+    static
+    Uint32 mouseMoveTimerCallback(Uint32 interval, void* param);
+
     bool m_MultiController;
-    bool m_NeedsInputDelay;
+    SDL_TimerID m_MouseMoveTimer;
+    SDL_atomic_t m_MouseDeltaX;
+    SDL_atomic_t m_MouseDeltaY;
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<short> m_KeysDown;
