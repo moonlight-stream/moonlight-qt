@@ -33,6 +33,22 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.6.3" date="2018-11-16">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added support for GeForce Experience 3.16</li>
+					<li>Added an option to force Moonlight to start in windowed mode</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed scrolling not working on the settings page</li>
+					<li>Skipped using proxy servers when attempting to stream</li>
+					<li>Fixed a couple possible crashes</li>
+					<li>Renamed the mouse acceleration option to be more clear</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.6.2" date="2018-10-28">
 			<description>
 				<p>New features:</p>
