@@ -352,7 +352,7 @@ int main(int argc, char *argv[])
         return -1;
 
     SDL_SetMainReady();
-    if (SDL_Init(0) != 0) {
+    if (SDL_Init(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Init() failed: %s",
                      SDL_GetError());
