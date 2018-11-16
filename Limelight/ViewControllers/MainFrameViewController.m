@@ -326,13 +326,13 @@ static NSMutableSet* hostList;
                 [Utils addHelpOptionToDialog:applistAlert];
                 [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                 
-                if (view != nil) {
-                    // Only display an alert if this was the result of a real
-                    // user action, not just passively entering the foreground again
-                    [self hideLoadingFrame: ^{
+                // Only display an alert if this was the result of a real
+                // user action, not just passively entering the foreground again
+                [self hideLoadingFrame: ^{
+                    if (view != nil) {
                         [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
-                    }];
-                }
+                    }
+                }];
                 
                 host.online = NO;
                 [self showHostSelectionView];
