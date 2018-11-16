@@ -302,65 +302,67 @@ static NSMutableSet* hostList;
         return;
     }
     
-    [self showLoadingFrame];
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
-        ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
-        
-        // Exempt this host from discovery while handling the serverinfo request
-        [self->_discMan removeHostFromDiscovery:host];
-        [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
-                                                            fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
-        [self->_discMan addHostToDiscovery:host];
-        
-        if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
-            Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
-            dispatch_async(dispatch_get_main_queue(), ^{
-                if (host != self->_selectedHost) {
-                    return;
-                }
-                
-                UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching Server Info Failed"
-                                                                                      message:@"The connection to the PC was interrupted."
-                                                                               preferredStyle:UIAlertControllerStyleAlert];
-                [Utils addHelpOptionToDialog:applistAlert];
-                [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                
-                // Only display an alert if this was the result of a real
-                // user action, not just passively entering the foreground again
-                [self hideLoadingFrame: ^{
-                    if (view != nil) {
-                        [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
-                    }
-                }];
-                
-                host.online = NO;
-                [self showHostSelectionView];
-            });
-        } else {
-            Log(LOG_D, @"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
-            if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
-                Log(LOG_I, @"Already Paired");
-                [self alreadyPaired];
-            }
-            // Only pair when this was the result of explicit user action
-            else if (view != nil) {
-                Log(LOG_I, @"Trying to pair");
-                // Polling the server while pairing causes the server to screw up
-                [self->_discMan stopDiscoveryBlocking];
-                PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:self->_cert callback:self];
-                [self->_opQueue addOperation:pMan];
-            }
-            else {
-                // Not user action, so just return to host screen
+    [self showLoadingFrame: ^{
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+            HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
+            ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+            
+            // Exempt this host from discovery while handling the serverinfo request
+            [self->_discMan removeHostFromDiscovery:host];
+            [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
+                                                                fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
+            [self->_discMan addHostToDiscovery:host];
+            
+            if (serverInfoResp == nil || ![serverInfoResp isStatusOk]) {
+                Log(LOG_W, @"Failed to get server info: %@", serverInfoResp.statusMessage);
                 dispatch_async(dispatch_get_main_queue(), ^{
-                    [self hideLoadingFrame:^{
-                        [self showHostSelectionView];
+                    if (host != self->_selectedHost) {
+                        [self hideLoadingFrame:nil];
+                        return;
+                    }
+                    
+                    UIAlertController* applistAlert = [UIAlertController alertControllerWithTitle:@"Fetching Server Info Failed"
+                                                                                          message:@"The connection to the PC was interrupted."
+                                                                                   preferredStyle:UIAlertControllerStyleAlert];
+                    [Utils addHelpOptionToDialog:applistAlert];
+                    [applistAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+                    
+                    // Only display an alert if this was the result of a real
+                    // user action, not just passively entering the foreground again
+                    [self hideLoadingFrame: ^{
+                        if (view != nil) {
+                            [[self activeViewController] presentViewController:applistAlert animated:YES completion:nil];
+                        }
                     }];
+                    
+                    host.online = NO;
+                    [self showHostSelectionView];
                 });
+            } else {
+                Log(LOG_D, @"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
+                if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
+                    Log(LOG_I, @"Already Paired");
+                    [self alreadyPaired];
+                }
+                // Only pair when this was the result of explicit user action
+                else if (view != nil) {
+                    Log(LOG_I, @"Trying to pair");
+                    // Polling the server while pairing causes the server to screw up
+                    [self->_discMan stopDiscoveryBlocking];
+                    PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:self->_cert callback:self];
+                    [self->_opQueue addOperation:pMan];
+                }
+                else {
+                    // Not user action, so just return to host screen
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [self hideLoadingFrame:^{
+                            [self showHostSelectionView];
+                        }];
+                    });
+                }
             }
-        }
-    });
+        });
+    }];
 }
 
 - (UIViewController*) activeViewController {
@@ -422,33 +424,34 @@ static NSMutableSet* hostList;
 
 - (void) addHostClicked {
     Log(LOG_D, @"Clicked add host");
-    [self showLoadingFrame];
-    UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-    [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-        NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
-        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-            [self->_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
-                if (host != nil) {
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        @synchronized(hostList) {
-                            [hostList addObject:host];
-                        }
-                        [self updateHosts];
-                    });
-                } else {
-                    UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
-                    [Utils addHelpOptionToDialog:hostNotFoundAlert];
-                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                    dispatch_async(dispatch_get_main_queue(), ^{
-                        [[self activeViewController] presentViewController:hostNotFoundAlert animated:YES completion:nil];
-                    });
-                }
-            }];});
-    }]];
-    [alertController addTextFieldWithConfigurationHandler:nil];
-    [self hideLoadingFrame: ^{
-        [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
+    [self showLoadingFrame: ^{
+        UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+        [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+            NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
+            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+                [self->_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
+                    if (host != nil) {
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            @synchronized(hostList) {
+                                [hostList addObject:host];
+                            }
+                            [self updateHosts];
+                        });
+                    } else {
+                        UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
+                        [Utils addHelpOptionToDialog:hostNotFoundAlert];
+                        [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+                        dispatch_async(dispatch_get_main_queue(), ^{
+                            [[self activeViewController] presentViewController:hostNotFoundAlert animated:YES completion:nil];
+                        });
+                    }
+                }];});
+        }]];
+        [alertController addTextFieldWithConfigurationHandler:nil];
+        [self hideLoadingFrame: ^{
+            [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
+        }];
     }];
 }
 
@@ -522,68 +525,70 @@ static NSMutableSet* hostList;
         [alertController addAction:[UIAlertAction actionWithTitle:
                                     [app.id isEqualToString:currentApp.id] ? @"Quit App" : @"Quit Running App and Start" style:UIAlertActionStyleDestructive handler:^(UIAlertAction* action){
                                         Log(LOG_I, @"Quitting application: %@", currentApp.name);
-                                        [self showLoadingFrame];
-                                        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                                            HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
-                                            HttpResponse* quitResponse = [[HttpResponse alloc] init];
-                                            HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
-                                            
-                                            // Exempt this host from discovery while handling the quit operation
-                                            [self->_discMan removeHostFromDiscovery:app.host];
-                                            [hMan executeRequestSynchronously:quitRequest];
-                                            if (quitResponse.statusCode == 200) {
-                                                ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
-                                                [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
-                                                                                                    fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
-                                                if (![serverInfoResp isStatusOk] || [[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"]) {
-                                                    // On newer GFE versions, the quit request succeeds even though the app doesn't
-                                                    // really quit if another client tries to kill your app. We'll patch the response
-                                                    // to look like the old error in that case, so the UI behaves.
-                                                    quitResponse.statusCode = 599;
-                                                }
-                                            }
-                                            [self->_discMan addHostToDiscovery:app.host];
-                                            
-                                            UIAlertController* alert;
-                                            
-                                            // If it fails, display an error and stop the current operation
-                                            if (quitResponse.statusCode != 200) {
-                                                alert = [UIAlertController alertControllerWithTitle:@"Quitting App Failed"
-                                                                                            message:@"Failed to quit app. If this app was started by "
-                                                         "another device, you'll need to quit from that device."
-                                                                                     preferredStyle:UIAlertControllerStyleAlert];
-                                            }
-                                            // If it succeeds and we're to start streaming, segue to the stream and return
-                                            else if (![app.id isEqualToString:currentApp.id]) {
-                                                app.host.currentGame = @"0";
+                                        [self showLoadingFrame: ^{
+                                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+                                                HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
+                                                HttpResponse* quitResponse = [[HttpResponse alloc] init];
+                                                HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
                                                 
+                                                // Exempt this host from discovery while handling the quit operation
+                                                [self->_discMan removeHostFromDiscovery:app.host];
+                                                [hMan executeRequestSynchronously:quitRequest];
+                                                if (quitResponse.statusCode == 200) {
+                                                    ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
+                                                    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
+                                                                                                        fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
+                                                    if (![serverInfoResp isStatusOk] || [[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"]) {
+                                                        // On newer GFE versions, the quit request succeeds even though the app doesn't
+                                                        // really quit if another client tries to kill your app. We'll patch the response
+                                                        // to look like the old error in that case, so the UI behaves.
+                                                        quitResponse.statusCode = 599;
+                                                    }
+                                                }
+                                                [self->_discMan addHostToDiscovery:app.host];
+                                                
+                                                UIAlertController* alert;
+                                                
+                                                // If it fails, display an error and stop the current operation
+                                                if (quitResponse.statusCode != 200) {
+                                                    alert = [UIAlertController alertControllerWithTitle:@"Quitting App Failed"
+                                                                                                message:@"Failed to quit app. If this app was started by "
+                                                             "another device, you'll need to quit from that device."
+                                                                                         preferredStyle:UIAlertControllerStyleAlert];
+                                                }
+                                                // If it succeeds and we're to start streaming, segue to the stream and return
+                                                else if (![app.id isEqualToString:currentApp.id]) {
+                                                    app.host.currentGame = @"0";
+                                                    
+                                                    dispatch_async(dispatch_get_main_queue(), ^{
+                                                        [self updateAppsForHost:app.host];
+                                                        [self prepareToStreamApp:app];
+                                                        [self hideLoadingFrame: ^{
+                                                            [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                                        }];
+                                                    });
+                                                    
+                                                    return;
+                                                }
+                                                // Otherwise, display a dialog to notify the user that the app was quit
+                                                else {
+                                                    app.host.currentGame = @"0";
+                                                    
+                                                    alert = [UIAlertController alertControllerWithTitle:@"Quitting App"
+                                                                                                message:@"The app was quit successfully."
+                                                                                         preferredStyle:UIAlertControllerStyleAlert];
+                                                }
+                                                
+                                                [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
                                                 dispatch_async(dispatch_get_main_queue(), ^{
                                                     [self updateAppsForHost:app.host];
-                                                    [self prepareToStreamApp:app];
                                                     [self hideLoadingFrame: ^{
-                                                        [self performSegueWithIdentifier:@"createStreamFrame" sender:nil];
+                                                        [[self activeViewController] presentViewController:alert animated:YES completion:nil];
                                                     }];
                                                 });
-                                                
-                                                return;
-                                            }
-                                            // Otherwise, display a dialog to notify the user that the app was quit
-                                            else {
-                                                app.host.currentGame = @"0";
-                                                
-                                                alert = [UIAlertController alertControllerWithTitle:@"Quitting App"
-                                                                                            message:@"The app was quit successfully."
-                                                                                     preferredStyle:UIAlertControllerStyleAlert];
-                                            }
-                                            
-                                            [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                                            dispatch_async(dispatch_get_main_queue(), ^{
-                                                [self updateAppsForHost:app.host];
-                                                [self hideLoadingFrame: ^{
-                                                    [[self activeViewController] presentViewController:alert animated:YES completion:nil];
-                                                }];
                                             });
-                                        });
+                                        }];
+                                        
                                     }]];
         [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
         [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
@@ -650,11 +655,11 @@ static NSMutableSet* hostList;
     }
 }
 
-- (void) showLoadingFrame {
+- (void) showLoadingFrame:(void (^)(void))completion {
     // Avoid animating this as it significantly prolongs the loading frame's
     // time on screen and can lead to warnings about dismissing while it's
     // still animating.
-    [[self activeViewController] presentViewController:_loadingFrame animated:NO completion:nil];
+    [[self activeViewController] presentViewController:_loadingFrame animated:NO completion:completion];
 }
 
 - (void) hideLoadingFrame:(void (^)(void))completion {
