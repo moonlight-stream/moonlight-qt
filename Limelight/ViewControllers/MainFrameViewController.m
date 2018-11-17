@@ -119,6 +119,7 @@ static NSMutableSet* hostList;
         usingCachedAppList = true;
         dispatch_async(dispatch_get_main_queue(), ^{
             if (host != self->_selectedHost) {
+                [self hideLoadingFrame: nil];
                 return;
             }
             
@@ -146,6 +147,7 @@ static NSMutableSet* hostList;
             Log(LOG_W, @"Failed to get applist: %@", appListResp.statusMessage);
             dispatch_async(dispatch_get_main_queue(), ^{
                 if (host != self->_selectedHost) {
+                    [self hideLoadingFrame: nil];
                     return;
                 }
                 
@@ -165,6 +167,7 @@ static NSMutableSet* hostList;
                 [self updateApplist:[appListResp getAppList] forHost:host];
 
                 if (host != self->_selectedHost) {
+                    [self hideLoadingFrame: nil];
                     return;
                 }
                 
