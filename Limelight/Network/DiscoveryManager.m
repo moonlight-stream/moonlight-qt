@@ -59,7 +59,7 @@
         host.online = YES;
         [serverInfoResponse populateHost:host];
         if (![self addHostToDiscovery:host]) {
-            callback(nil, @"Host already added");
+            callback(nil, @"Host information updated");
         } else {
             callback(host, nil);
         }
