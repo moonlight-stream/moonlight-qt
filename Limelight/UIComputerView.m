@@ -80,7 +80,7 @@ static const int LABEL_DY = 20;
     _host = host;
     _callback = callback;
     
-    UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(hostLongClicked)];
+    UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(hostLongClicked:)];
     [_hostButton addGestureRecognizer:longPressRecognizer];
     [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
     
@@ -169,8 +169,10 @@ static const int LABEL_DY = 20;
     [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
 }
 
-- (void) hostLongClicked {
-    [_callback hostLongClicked:_host view:self];
+- (void) hostLongClicked:(UILongPressGestureRecognizer*)gesture {
+    if (gesture.state == UIGestureRecognizerStateBegan) {
+        [_callback hostLongClicked:_host view:self];
+    }
 }
 
 - (void) hostClicked {
