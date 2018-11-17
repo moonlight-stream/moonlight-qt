@@ -14,6 +14,11 @@
 #include <libxml2/libxml/xmlreader.h>
 #include <string.h>
 
+#define SHORT_TIMEOUT_SEC 2
+#define NORMAL_TIMEOUT_SEC 5
+#define LONG_TIMEOUT_SEC 60
+#define EXTRA_LONG_TIMEOUT_SEC 180
+
 @implementation HttpManager {
     NSURLSession* _urlSession;
     NSString* _baseHTTPURL;
@@ -104,17 +109,10 @@ static const NSString* HTTPS_PORT = @"47984";
     _errorOccurred = false;
 }
 
-- (NSURLRequest*) createRequestFromString:(NSString*) urlString enableTimeout:(BOOL)normalTimeout {
+- (NSURLRequest*) createRequestFromString:(NSString*) urlString timeout:(int)timeout {
     NSURL* url = [[NSURL alloc] initWithString:urlString];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
-    if (normalTimeout) {
-        // Timeout the request after 4 seconds
-        [request setTimeoutInterval:4];
-    }
-    else {
-        // Timeout the request after 60 seconds
-        [request setTimeoutInterval:60];
-    }
+    [request setTimeoutInterval:timeout];
     return request;
 }
 
@@ -122,49 +120,49 @@ static const NSString* HTTPS_PORT = @"47984";
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=getservercert&salt=%@&clientcert=%@",
                            _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:_cert]];
     // This call blocks while waiting for the user to input the PIN on the PC
-    return [self createRequestFromString:urlString enableTimeout:FALSE];
+    return [self createRequestFromString:urlString timeout:EXTRA_LONG_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newUnpairRequest {
     NSString* urlString = [NSString stringWithFormat:@"%@/unpair?uniqueid=%@", _baseHTTPSURL, _uniqueId];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newChallengeRequest:(NSData*)challenge {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientchallenge=%@",
                            _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:challenge]];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newChallengeRespRequest:(NSData*)challengeResp {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&serverchallengeresp=%@",
                            _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:challengeResp]];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newClientSecretRespRequest:(NSString*)clientPairSecret {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientpairingsecret=%@", _baseHTTPSURL, _uniqueId, _deviceName, clientPairSecret];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newPairChallenge {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=pairchallenge", _baseHTTPSURL, _uniqueId, _deviceName];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest *)newAppListRequest {
     NSString* urlString = [NSString stringWithFormat:@"%@/applist?uniqueid=%@", _baseHTTPSURL, _uniqueId];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
-- (NSURLRequest *)newServerInfoRequest {
+- (NSURLRequest *)newServerInfoRequest:(bool)fastFail {
     NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo?uniqueid=%@", _baseHTTPSURL, _uniqueId];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:(fastFail ? SHORT_TIMEOUT_SEC : NORMAL_TIMEOUT_SEC)];
 }
 
 - (NSURLRequest *)newHttpServerInfoRequest {
     NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo", _baseHTTPURL];
-    return [self createRequestFromString:urlString enableTimeout:TRUE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newLaunchRequest:(StreamConfiguration*)config {
@@ -180,7 +178,7 @@ static const NSString* HTTPS_PORT = @"47984";
                            config.gamepadMask, config.gamepadMask];
     Log(LOG_I, @"Requesting: %@", urlString);
     // This blocks while the app is launching
-    return [self createRequestFromString:urlString enableTimeout:FALSE];
+    return [self createRequestFromString:urlString timeout:LONG_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newResumeRequest:(StreamConfiguration*)config {
@@ -190,17 +188,17 @@ static const NSString* HTTPS_PORT = @"47984";
                            (config.audioChannelMask << 16) | config.audioChannelCount];
     Log(LOG_I, @"Requesting: %@", urlString);
     // This blocks while the app is resuming
-    return [self createRequestFromString:urlString enableTimeout:FALSE];
+    return [self createRequestFromString:urlString timeout:LONG_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newQuitAppRequest {
     NSString* urlString = [NSString stringWithFormat:@"%@/cancel?uniqueid=%@", _baseHTTPSURL, _uniqueId];
-    return [self createRequestFromString:urlString enableTimeout:FALSE];
+    return [self createRequestFromString:urlString timeout:LONG_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newAppAssetRequestWithAppId:(NSString *)appId {
     NSString* urlString = [NSString stringWithFormat:@"%@/appasset?uniqueid=%@&appid=%@&AssetType=2&AssetIdx=0", _baseHTTPSURL, _uniqueId, appId];
-    return [self createRequestFromString:urlString enableTimeout:FALSE];
+    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSString*) bytesToHex:(NSData*)data {

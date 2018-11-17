@@ -48,11 +48,11 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     if (_host.localAddress != nil) {
         [array addObject:_host.localAddress];
     }
-    if (_host.externalAddress != nil) {
-        [array addObject:_host.externalAddress];
-    }
     if (_host.address != nil) {
         [array addObject:_host.address];
+    }
+    if (_host.externalAddress != nil) {
+        [array addObject:_host.externalAddress];
     }
     
     // Remove duplicate addresses from the list.
@@ -88,8 +88,8 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     
     Log(LOG_D, @"%@ has %d unique addresses", _host.name, [addresses count]);
     
-    // Give the PC 3 tries to respond before declaring it offline
-    for (int i = 0; i < 3; i++) {
+    // Give the PC 2 tries to respond before declaring it offline
+    for (int i = 0; i < 2; i++) {
         for (NSString *address in addresses) {
             if (self.cancelled) {
                 // Get out without updating the status because
@@ -134,7 +134,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
                                                      cert:_cert];
     ServerInfoResponse* response = [[ServerInfoResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:response
-                                                       withUrlRequest:[hMan newServerInfoRequest]
+                                                       withUrlRequest:[hMan newServerInfoRequest:true]
                                        fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
     return response;
 }

@@ -20,7 +20,7 @@
 - (NSURLRequest*) newClientSecretRespRequest:(NSString*)clientPairSecret;
 - (NSURLRequest*) newPairChallenge;
 - (NSURLRequest*) newAppListRequest;
-- (NSURLRequest*) newServerInfoRequest;
+- (NSURLRequest*) newServerInfoRequest:(bool)fastFail;
 - (NSURLRequest*) newHttpServerInfoRequest;
 - (NSURLRequest*) newLaunchRequest:(StreamConfiguration*)config;
 - (NSURLRequest*) newResumeRequest:(StreamConfiguration*)config;

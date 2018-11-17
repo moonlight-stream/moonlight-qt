@@ -31,7 +31,7 @@
 
 - (void) main {
     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
-    [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[_httpManager newServerInfoRequest]
+    [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[_httpManager newServerInfoRequest:false]
                                                fallbackError:401 fallbackRequest:[_httpManager newHttpServerInfoRequest]]];
     if (serverInfoResp == nil) {
         [_callback pairFailed:@"Unable to connect to PC"];

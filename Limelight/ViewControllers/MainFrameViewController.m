@@ -309,7 +309,7 @@ static NSMutableSet* hostList;
             
             // Exempt this host from discovery while handling the serverinfo request
             [self->_discMan removeHostFromDiscovery:host];
-            [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
+            [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest:false]
                                                                 fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
             [self->_discMan addHostToDiscovery:host];
             
@@ -536,7 +536,7 @@ static NSMutableSet* hostList;
                                                 [hMan executeRequestSynchronously:quitRequest];
                                                 if (quitResponse.statusCode == 200) {
                                                     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
-                                                    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest]
+                                                    [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest:false]
                                                                                                         fallbackError:401 fallbackRequest:[hMan newHttpServerInfoRequest]]];
                                                     if (![serverInfoResp isStatusOk] || [[serverInfoResp getStringTag:@"state"] hasSuffix:@"_SERVER_BUSY"]) {
                                                         // On newer GFE versions, the quit request succeeds even though the app doesn't
