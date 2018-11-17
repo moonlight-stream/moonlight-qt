@@ -382,9 +382,7 @@ static NSMutableSet* hostList;
         [longClickAlert addAction:[UIAlertAction actionWithTitle:@"Wake" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
             UIAlertController* wolAlert = [UIAlertController alertControllerWithTitle:@"Wake On LAN" message:@"" preferredStyle:UIAlertControllerStyleAlert];
             [wolAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-            if (host.pairState != PairStatePaired) {
-                wolAlert.message = @"Cannot wake host because you are not paired";
-            } else if (host.mac == nil || [host.mac isEqualToString:@"00:00:00:00:00:00"]) {
+            if (host.mac == nil || [host.mac isEqualToString:@"00:00:00:00:00:00"]) {
                 wolAlert.message = @"Host MAC unknown, unable to send WOL Packet";
             } else {
                 dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
