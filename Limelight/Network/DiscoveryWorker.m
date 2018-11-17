@@ -115,10 +115,6 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
             Log(LOG_D, @"Received serverinfo response on try %d", i);
             break;
         }
-        else {
-            // Wait for one second then retry
-            [NSThread sleepForTimeInterval:1];
-        }
     }
 
     _host.online = receivedResponse;
