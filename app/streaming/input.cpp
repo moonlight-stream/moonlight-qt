@@ -634,6 +634,8 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         int i;
         const char* name;
         SDL_GameController* controller;
+        const char* mapping;
+        char guidStr[33];
 
         controller = SDL_GameControllerOpen(event->which);
         if (controller == NULL) {
@@ -681,16 +683,20 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         state->controller = controller;
         state->jsId = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(state->controller));
 
-        char guidStr[33];
         SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(SDL_GameControllerGetJoystick(state->controller)),
                                   guidStr, sizeof(guidStr));
+        mapping = SDL_GameControllerMapping(state->controller);
         name = SDL_GameControllerName(state->controller);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Gamepad %d (player %d) is: %s (%s)",
+                    "Gamepad %d (player %d) is: %s (%s -> %s)",
                     i,
                     state->index,
-                    name != NULL ? name : "<null>",
-                    guidStr);
+                    name != nullptr ? name : "<null>",
+                    guidStr,
+                    mapping != nullptr ? mapping : "<null>");
+        if (mapping != nullptr) {
+            SDL_free((void*)mapping);
+        }
         
         // Add this gamepad to the gamepad mask
         if (m_MultiController) {
