@@ -69,14 +69,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     MappingManager mappingManager;
     mappingManager.applyMappings();
 
-    if (!m_MultiController) {
-        // Player 1 is always present in non-MC mode
-        m_GamepadMask = 0x1;
-    }
-    else {
-        // Otherwise, detect gamepads on the fly
-        m_GamepadMask = 0;
-    }
+    // Initialize the gamepad mask with currently attached gamepads to avoid
+    // causing gamepads to unexpectedly disappear and reappear on the host
+    // during stream startup as we detect currently attached gamepads one at a time.
+    m_GamepadMask = getAttachedGamepadMask();
 
     SDL_zero(m_GamepadState);
     SDL_zero(m_TouchDownEvent);
@@ -700,7 +696,9 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         
         // Add this gamepad to the gamepad mask
         if (m_MultiController) {
-            SDL_assert(!(m_GamepadMask & (1 << state->index)));
+            // NB: Don't assert that it's unset here because we will already
+            // have the mask set for initially attached gamepads to avoid confusing
+            // apps running on the host.
             m_GamepadMask |= (1 << state->index);
         }
         else {
