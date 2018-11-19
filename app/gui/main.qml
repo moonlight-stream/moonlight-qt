@@ -137,6 +137,11 @@ ApplicationWindow {
         // Doing it earlier can lead to the dialog appearing behind
         // the window or otherwise without input focus.
         if (!initialized) {
+            // Set initialized before calling anything else, because
+            // pumping the event loop can cause us to get another
+            // onAfterRendering call and potentially reenter this code.
+            initialized = true;
+
             if (prefs.isRunningWayland()) {
                 waylandDialog.open()
             }
@@ -152,8 +157,6 @@ ApplicationWindow {
                 unmappedGamepadDialog.unmappedGamepads = unmappedGamepads
                 unmappedGamepadDialog.open()
             }
-
-            initialized = true;
         }
     }
 
