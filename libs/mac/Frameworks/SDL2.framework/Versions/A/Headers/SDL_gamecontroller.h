@@ -176,14 +176,6 @@ extern DECLSPEC SDL_bool SDLCALL SDL_IsGameController(int joystick_index);
 extern DECLSPEC const char *SDLCALL SDL_GameControllerNameForIndex(int joystick_index);
 
 /**
- *  Get the mapping of a game controller.
- *  This can be called before any controllers are opened.
- *
- *  \return the mapping string.  Must be freed with SDL_free().  Returns NULL if no mapping is available
- */
-extern DECLSPEC char *SDLCALL SDL_GameControllerMappingForDeviceIndex(int joystick_index);
-
-/**
  *  Open a game controller for use.
  *  The index passed as an argument refers to the N'th game controller on the system.
  *  This index is not the value which will identify this controller in future
@@ -203,13 +195,6 @@ extern DECLSPEC SDL_GameController *SDLCALL SDL_GameControllerFromInstanceID(SDL
  *  Return the name for this currently opened controller
  */
 extern DECLSPEC const char *SDLCALL SDL_GameControllerName(SDL_GameController *gamecontroller);
-
-/**
- *  Get the player index of an opened game controller, or -1 if it's not available
- *
- *  For XInput controllers this returns the XInput user index.
- */
-extern DECLSPEC int SDLCALL SDL_GameControllerGetPlayerIndex(SDL_GameController *gamecontroller);
 
 /**
  *  Get the USB vendor ID of an opened controller, if available.
@@ -359,19 +344,6 @@ SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
  */
 extern DECLSPEC Uint8 SDLCALL SDL_GameControllerGetButton(SDL_GameController *gamecontroller,
                                                           SDL_GameControllerButton button);
-
-/**
- *  Trigger a rumble effect
- *  Each call to this function cancels any previous rumble effect, and calling it with 0 intensity stops any rumbling.
- *
- *  \param gamecontroller The controller to vibrate
- *  \param low_frequency_rumble The intensity of the low frequency (left) rumble motor, from 0 to 0xFFFF
- *  \param high_frequency_rumble The intensity of the high frequency (right) rumble motor, from 0 to 0xFFFF
- *  \param duration_ms The duration of the rumble effect, in milliseconds
- *
- *  \return 0, or -1 if rumble isn't supported on this joystick
- */
-extern DECLSPEC int SDLCALL SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
 
 /**
  *  Close a controller previously opened with SDL_GameControllerOpen().

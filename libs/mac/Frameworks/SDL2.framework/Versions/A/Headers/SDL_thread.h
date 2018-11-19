@@ -54,13 +54,12 @@ typedef unsigned int SDL_TLSID;
 /**
  *  The SDL thread priority.
  *
- *  \note On many systems you require special privileges to set high or time critical priority.
+ *  \note On many systems you require special privileges to set high priority.
  */
 typedef enum {
     SDL_THREAD_PRIORITY_LOW,
     SDL_THREAD_PRIORITY_NORMAL,
-    SDL_THREAD_PRIORITY_HIGH,
-    SDL_THREAD_PRIORITY_TIME_CRITICAL
+    SDL_THREAD_PRIORITY_HIGH
 } SDL_ThreadPriority;
 
 /**
@@ -106,24 +105,14 @@ SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data,
                  pfnSDL_CurrentBeginThread pfnBeginThread,
                  pfnSDL_CurrentEndThread pfnEndThread);
 
-extern DECLSPEC SDL_Thread *SDLCALL
-SDL_CreateThreadWithStackSize(int (SDLCALL * fn) (void *),
-                 const char *name, const size_t stacksize, void *data,
-                 pfnSDL_CurrentBeginThread pfnBeginThread,
-                 pfnSDL_CurrentEndThread pfnEndThread);
-
-
 /**
  *  Create a thread.
  */
 #if defined(SDL_CreateThread) && SDL_DYNAMIC_API
 #undef SDL_CreateThread
 #define SDL_CreateThread(fn, name, data) SDL_CreateThread_REAL(fn, name, data, (pfnSDL_CurrentBeginThread)_beginthreadex, (pfnSDL_CurrentEndThread)_endthreadex)
-#undef SDL_CreateThreadWithStackSize
-#define SDL_CreateThreadWithStackSize(fn, name, stacksize, data) SDL_CreateThreadWithStackSize_REAL(fn, name, stacksize, data, (pfnSDL_CurrentBeginThread)_beginthreadex, (pfnSDL_CurrentEndThread)_endthreadex)
 #else
 #define SDL_CreateThread(fn, name, data) SDL_CreateThread(fn, name, data, (pfnSDL_CurrentBeginThread)_beginthreadex, (pfnSDL_CurrentEndThread)_endthreadex)
-#define SDL_CreateThreadWithStackSize(fn, name, stacksize, data) SDL_CreateThreadWithStackSize(fn, name, data, (pfnSDL_CurrentBeginThread)_beginthreadex, (pfnSDL_CurrentEndThread)_endthreadex)
 #endif
 
 #elif defined(__OS2__)
@@ -143,30 +132,14 @@ extern DECLSPEC SDL_Thread *SDLCALL
 SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data,
                  pfnSDL_CurrentBeginThread pfnBeginThread,
                  pfnSDL_CurrentEndThread pfnEndThread);
-extern DECLSPEC SDL_Thread *SDLCALL
-SDL_CreateThreadWithStackSize(SDL_ThreadFunction fn, const char *name, const size_t stacksize, void *data,
-                 pfnSDL_CurrentBeginThread pfnBeginThread,
-                 pfnSDL_CurrentEndThread pfnEndThread);
 #if defined(SDL_CreateThread) && SDL_DYNAMIC_API
 #undef SDL_CreateThread
 #define SDL_CreateThread(fn, name, data) SDL_CreateThread_REAL(fn, name, data, (pfnSDL_CurrentBeginThread)_beginthread, (pfnSDL_CurrentEndThread)_endthread)
-#undef SDL_CreateThreadWithStackSize
-#define SDL_CreateThreadWithStackSize(fn, name, stacksize, data) SDL_CreateThreadWithStackSize_REAL(fn, name, data, (pfnSDL_CurrentBeginThread)_beginthread, (pfnSDL_CurrentEndThread)_endthread)
 #else
 #define SDL_CreateThread(fn, name, data) SDL_CreateThread(fn, name, data, (pfnSDL_CurrentBeginThread)_beginthread, (pfnSDL_CurrentEndThread)_endthread)
-#define SDL_CreateThreadWithStackSize(fn, name, stacksize, data) SDL_CreateThreadWithStackSize(fn, name, stacksize, data, (pfnSDL_CurrentBeginThread)_beginthread, (pfnSDL_CurrentEndThread)_endthread)
 #endif
 
 #else
-
-/**
- *  Create a thread with a default stack size.
- *
- *  This is equivalent to calling:
- *  SDL_CreateThreadWithStackSize(fn, name, 0, data);
- */
-extern DECLSPEC SDL_Thread *SDLCALL
-SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
 
 /**
  *  Create a thread.
@@ -185,17 +158,9 @@ SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
  *   If a system imposes requirements, SDL will try to munge the string for
  *    it (truncate, etc), but the original string contents will be available
  *    from SDL_GetThreadName().
- *
- *   The size (in bytes) of the new stack can be specified. Zero means "use
- *    the system default" which might be wildly different between platforms
- *    (x86 Linux generally defaults to eight megabytes, an embedded device
- *    might be a few kilobytes instead).
- *
- *   In SDL 2.1, stacksize will be folded into the original SDL_CreateThread
- *    function.
  */
 extern DECLSPEC SDL_Thread *SDLCALL
-SDL_CreateThreadWithStackSize(SDL_ThreadFunction fn, const char *name, const size_t stacksize, void *data);
+SDL_CreateThread(SDL_ThreadFunction fn, const char *name, void *data);
 
 #endif
 

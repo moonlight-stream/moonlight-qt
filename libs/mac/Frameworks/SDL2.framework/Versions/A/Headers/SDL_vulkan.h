@@ -135,11 +135,11 @@ extern DECLSPEC void SDLCALL SDL_Vulkan_UnloadLibrary(void);
  *  \brief Get the names of the Vulkan instance extensions needed to create
  *         a surface with \c SDL_Vulkan_CreateSurface().
  *
- *  \param [in]     \c NULL or window Window for which the required Vulkan instance
+ *  \param [in]     window Window for which the required Vulkan instance
  *                  extensions should be retrieved
- *  \param [in,out] pCount pointer to an \c unsigned related to the number of
+ *  \param [in,out] count pointer to an \c unsigned related to the number of
  *                  required Vulkan instance extensions
- *  \param [out]    pNames \c NULL or a pointer to an array to be filled with the
+ *  \param [out]    names \c NULL or a pointer to an array to be filled with the
  *                  required Vulkan instance extensions
  *
  *  \return \c SDL_TRUE on success, \c SDL_FALSE on error.
@@ -153,10 +153,6 @@ extern DECLSPEC void SDLCALL SDL_Vulkan_UnloadLibrary(void);
  *  is smaller than the number of required extensions, \c SDL_FALSE will be
  *  returned instead of \c SDL_TRUE, to indicate that not all the required
  *  extensions were returned.
- * 
- *  \note If \c window is not NULL, it will be checked against its creation
- *        flags to ensure that the Vulkan flag is present. This parameter
- *        will be removed in a future major release.
  *
  *  \note The returned list of extensions will contain \c VK_KHR_surface
  *        and zero or more platform specific extensions
@@ -164,13 +160,12 @@ extern DECLSPEC void SDLCALL SDL_Vulkan_UnloadLibrary(void);
  *  \note The extension names queried here must be enabled when calling
  *        VkCreateInstance, otherwise surface creation will fail.
  *
- *  \note \c window should have been created with the \c SDL_WINDOW_VULKAN flag
- *        or be \c NULL
+ *  \note \c window should have been created with the \c SDL_WINDOW_VULKAN flag.
  *
  *  \code
  *  unsigned int count;
  *  // get count of required extensions
- *  if(!SDL_Vulkan_GetInstanceExtensions(NULL, &count, NULL))
+ *  if(!SDL_Vulkan_GetInstanceExtensions(window, &count, NULL))
  *      handle_error();
  *
  *  static const char *const additionalExtensions[] =
@@ -184,7 +179,7 @@ extern DECLSPEC void SDLCALL SDL_Vulkan_UnloadLibrary(void);
  *      handle_error();
  *
  *  // get names of required extensions
- *  if(!SDL_Vulkan_GetInstanceExtensions(NULL, &count, names))
+ *  if(!SDL_Vulkan_GetInstanceExtensions(window, &count, names))
  *      handle_error();
  *
  *  // copy additional extensions after required extensions

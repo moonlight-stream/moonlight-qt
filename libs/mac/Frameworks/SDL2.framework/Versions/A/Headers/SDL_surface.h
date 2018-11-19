@@ -249,13 +249,6 @@ extern DECLSPEC int SDLCALL SDL_SetColorKey(SDL_Surface * surface,
                                             int flag, Uint32 key);
 
 /**
- *  \brief Returns whether the surface has a color key
- *
- *  \return SDL_TRUE if the surface has a color key, or SDL_FALSE if the surface is NULL or has no color key
- */
-extern DECLSPEC SDL_bool SDLCALL SDL_HasColorKey(SDL_Surface * surface);
-
-/**
  *  \brief Gets the color key (transparent pixel) in a blittable surface.
  *
  *  \param surface The surface to update

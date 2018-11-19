@@ -117,17 +117,6 @@
 extern "C" {
 #endif /* __cplusplus */
 
-/* FIXME: For SDL 2.1, adjust all the magnitude variables to be Uint16 (0xFFFF).
- *
- * At the moment the magnitude variables are mixed between signed/unsigned, and
- * it is also not made clear that ALL of those variables expect a max of 0x7FFF.
- *
- * Some platforms may have higher precision than that (Linux FF, Windows XInput)
- * so we should fix the inconsistency in favor of higher possible precision,
- * adjusting for platforms that use different scales.
- * -flibit
- */
-
 /**
  *  \typedef SDL_Haptic
  *
@@ -667,8 +656,8 @@ typedef struct SDL_HapticRamp
  * This struct is exclusively for the ::SDL_HAPTIC_LEFTRIGHT effect.
  *
  * The Left/Right effect is used to explicitly control the large and small
- * motors, commonly found in modern game controllers. The small (right) motor
- * is high frequency, and the large (left) motor is low frequency.
+ * motors, commonly found in modern game controllers. One motor is high
+ * frequency, the other is low frequency.
  *
  * \sa SDL_HAPTIC_LEFTRIGHT
  * \sa SDL_HapticEffect
@@ -679,7 +668,7 @@ typedef struct SDL_HapticLeftRight
     Uint16 type;            /**< ::SDL_HAPTIC_LEFTRIGHT */
 
     /* Replay */
-    Uint32 length;          /**< Duration of the effect in milliseconds. */
+    Uint32 length;          /**< Duration of the effect. */
 
     /* Rumble */
     Uint16 large_magnitude; /**< Control of the large controller motor. */

@@ -51,19 +51,16 @@
 #include <intrin.h>
 #else
 #ifdef __ALTIVEC__
-#if defined(HAVE_ALTIVEC_H) && !defined(__APPLE_ALTIVEC__) && !defined(SDL_DISABLE_ALTIVEC_H)
+#if HAVE_ALTIVEC_H && !defined(__APPLE_ALTIVEC__) && !defined(SDL_DISABLE_ALTIVEC_H)
 #include <altivec.h>
 #undef pixel
 #undef bool
 #endif
 #endif
-#if defined(__ARM_NEON__) && !defined(SDL_DISABLE_ARM_NEON_H)
-#include <arm_neon.h>
-#endif
 #if defined(__3dNOW__) && !defined(SDL_DISABLE_MM3DNOW_H)
 #include <mm3dnow.h>
 #endif
-#if defined(HAVE_IMMINTRIN_H) && !defined(SDL_DISABLE_IMMINTRIN_H)
+#if HAVE_IMMINTRIN_H && !defined(SDL_DISABLE_IMMINTRIN_H)
 #include <immintrin.h>
 #else
 #if defined(__MMX__) && !defined(SDL_DISABLE_MMINTRIN_H)
@@ -163,11 +160,6 @@ extern DECLSPEC SDL_bool SDLCALL SDL_HasAVX(void);
 extern DECLSPEC SDL_bool SDLCALL SDL_HasAVX2(void);
 
 /**
- *  This function returns true if the CPU has AVX-512F (foundation) features.
- */
-extern DECLSPEC SDL_bool SDLCALL SDL_HasAVX512F(void);
-
-/**
  *  This function returns true if the CPU has NEON (ARM SIMD) features.
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasNEON(void);
@@ -176,6 +168,7 @@ extern DECLSPEC SDL_bool SDLCALL SDL_HasNEON(void);
  *  This function returns the amount of RAM configured in the system, in MB.
  */
 extern DECLSPEC int SDLCALL SDL_GetSystemRAM(void);
+
 
 /* Ends C function definitions when using C++ */
 #ifdef __cplusplus

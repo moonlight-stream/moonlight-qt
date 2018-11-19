@@ -170,24 +170,6 @@ typedef enum
 } SDL_WindowEventID;
 
 /**
- *  \brief Event subtype for display events
- */
-typedef enum
-{
-    SDL_DISPLAYEVENT_NONE,          /**< Never used */
-    SDL_DISPLAYEVENT_ORIENTATION    /**< Display orientation has changed to data1 */
-} SDL_DisplayEventID;
-
-typedef enum
-{
-    SDL_ORIENTATION_UNKNOWN,            /**< The display orientation can't be determined */
-    SDL_ORIENTATION_LANDSCAPE,          /**< The display is in landscape mode, with the right side up, relative to portrait mode */
-    SDL_ORIENTATION_LANDSCAPE_FLIPPED,  /**< The display is in landscape mode, with the left side up, relative to portrait mode */
-    SDL_ORIENTATION_PORTRAIT,           /**< The display is in portrait mode */
-    SDL_ORIENTATION_PORTRAIT_FLIPPED    /**< The display is in portrait mode, upside down */
-} SDL_DisplayOrientation;
-
-/**
  *  \brief An opaque handle to an OpenGL context.
  */
 typedef void *SDL_GLContext;
@@ -335,6 +317,18 @@ extern DECLSPEC const char * SDLCALL SDL_GetDisplayName(int displayIndex);
 extern DECLSPEC int SDLCALL SDL_GetDisplayBounds(int displayIndex, SDL_Rect * rect);
 
 /**
+ *  \brief Get the dots/pixels-per-inch for a display
+ *
+ *  \note Diagonal, horizontal and vertical DPI can all be optionally
+ *        returned if the parameter is non-NULL.
+ *
+ *  \return 0 on success, or -1 if no DPI information is available or the index is out of range.
+ *
+ *  \sa SDL_GetNumVideoDisplays()
+ */
+extern DECLSPEC int SDLCALL SDL_GetDisplayDPI(int displayIndex, float * ddpi, float * hdpi, float * vdpi);
+
+/**
  *  \brief Get the usable desktop area represented by a display, with the
  *         primary display located at 0,0
  *
@@ -352,27 +346,6 @@ extern DECLSPEC int SDLCALL SDL_GetDisplayBounds(int displayIndex, SDL_Rect * re
  *  \sa SDL_GetNumVideoDisplays()
  */
 extern DECLSPEC int SDLCALL SDL_GetDisplayUsableBounds(int displayIndex, SDL_Rect * rect);
-
-/**
- *  \brief Get the dots/pixels-per-inch for a display
- *
- *  \note Diagonal, horizontal and vertical DPI can all be optionally
- *        returned if the parameter is non-NULL.
- *
- *  \return 0 on success, or -1 if no DPI information is available or the index is out of range.
- *
- *  \sa SDL_GetNumVideoDisplays()
- */
-extern DECLSPEC int SDLCALL SDL_GetDisplayDPI(int displayIndex, float * ddpi, float * hdpi, float * vdpi);
-
-/**
- *  \brief Get the orientation of a display
- *
- *  \return The orientation of the display, or SDL_ORIENTATION_UNKNOWN if it isn't available.
- *
- *  \sa SDL_GetNumVideoDisplays()
- */
-extern DECLSPEC SDL_DisplayOrientation SDLCALL SDL_GetDisplayOrientation(int displayIndex);
 
 /**
  *  \brief Returns the number of available display modes.
