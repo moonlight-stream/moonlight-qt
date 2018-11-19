@@ -18,7 +18,9 @@ CONFIG += force_debug_info
 # Since this binds the app against the Qt runtime version, we will only
 # do this for Windows and Mac, since they ship with the Qt runtime.
 win32|macx {
-    CONFIG += qtquickcompiler
+    CONFIG(release, debug|release) {
+        CONFIG += qtquickcompiler
+    }
 }
 
 TEMPLATE = app
