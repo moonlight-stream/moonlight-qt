@@ -312,7 +312,13 @@ macx {
 
     APP_BUNDLE_RESOURCES.files = moonlight.icns SDL_GameControllerDB/gamecontrollerdb.txt
     APP_BUNDLE_RESOURCES.path = Contents/Resources
-    QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES
+
+    APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true)
+    APP_BUNDLE_FRAMEWORKS.path = Contents/Frameworks
+
+    QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES APP_BUNDLE_FRAMEWORKS
+
+    QMAKE_RPATHDIR += @executable_path/../Frameworks
 }
 
 VERSION = 0.6.3
