@@ -587,10 +587,12 @@ void Session::getWindowDimensions(int& x, int& y,
                                   int& width, int& height)
 {
     int displayIndex = 0;
+    bool fullScreen;
 
     if (m_Window != nullptr) {
         displayIndex = SDL_GetWindowDisplayIndex(m_Window);
         SDL_assert(displayIndex >= 0);
+        fullScreen = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN);
     }
     // Create our window on the same display that Qt's UI
     // was being displayed on.
@@ -617,10 +619,16 @@ void Session::getWindowDimensions(int& x, int& y,
                             i, SDL_GetError());
             }
         }
+
+        fullScreen = (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED);
     }
 
     SDL_Rect usableBounds;
-    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+    if (fullScreen && SDL_GetDisplayBounds(displayIndex, &usableBounds) == 0) {
+        width = usableBounds.w;
+        height = usableBounds.h;
+    }
+    else if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
         width = usableBounds.w;
         height = usableBounds.h;
 
