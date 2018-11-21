@@ -43,10 +43,6 @@ echo Copying dylib dependencies
 mkdir $BUILD_FOLDER/app/Moonlight.app/Contents/lib
 cp $SOURCE_ROOT/libs/mac/lib/*.dylib $BUILD_FOLDER/app/Moonlight.app/Contents/lib/ || fail "Dylib copy failed!"
 
-echo Copying frameworks dependencies
-mkdir $BUILD_FOLDER/app/Moonlight.app/Contents/Frameworks
-cp -R $SOURCE_ROOT/libs/mac/Frameworks/ $BUILD_FOLDER/app/Moonlight.app/Contents/Frameworks/ || fail "Framework copy failed!"
-
 echo Creating app bundle
 EXTRA_ARGS=
 if [ "$BUILD_CONFIG" == "Debug" ]; then EXTRA_ARGS="$EXTRA_ARGS -use-debug-libs"; fi
