@@ -226,7 +226,16 @@ Flickable {
                             // Use 64 as the cutoff for adding a separate option to
                             // handle wonky displays that report just over 60 Hz.
                             if (max_fps > 64) {
-                                fpsListModel.append({"text": max_fps+" FPS", "video_fps": ""+max_fps})
+                                // Mark any FPS value greater than 120 as unsupported
+                                if (prefs.unsupportedFps && max_fps > 120) {
+                                    fpsListModel.append({"text": max_fps+" FPS (Unsupported)", "video_fps": ""+max_fps})
+                                }
+                                else if (max_fps > 120) {
+                                    fpsListModel.append({"text": "120 FPS", "video_fps": "120"})
+                                }
+                                else {
+                                    fpsListModel.append({"text": max_fps+" FPS", "video_fps": ""+max_fps})
+                                }
                             }
 
                             // Add unsupported FPS values that come after the display max FPS

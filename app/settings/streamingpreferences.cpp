@@ -136,9 +136,7 @@ int StreamingPreferences::getMaximumStreamingFrameRate()
                 }
             }
 
-            // Cap the frame rate at 120 FPS. Past this, the encoders start
-            // to max out and drop frames.
-            maxFrameRate = qMax(maxFrameRate, qMin(120, bestMode.refresh_rate));
+            maxFrameRate = qMax(maxFrameRate, bestMode.refresh_rate);
         }
     }
 
