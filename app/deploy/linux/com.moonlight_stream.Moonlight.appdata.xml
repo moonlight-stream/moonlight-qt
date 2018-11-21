@@ -33,6 +33,19 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.6.4" date="2018-11-20">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added an option to match client display refresh rate when FPS is unlocked</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed multiple gamepads not being detected on the host in some scenarios</li>
+					<li>Fixed an incorrect warning when trying to stream at 4K</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.6.3" date="2018-11-16">
 			<description>
 				<p>New features:</p>
