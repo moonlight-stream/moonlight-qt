@@ -508,15 +508,6 @@ bool Session::validateLaunch()
             m_StreamConfig.width = 1920;
             m_StreamConfig.height = 1080;
         }
-        // This list is sorted from least to greatest
-        else if (m_Computer->displayModes.last().width < 3840 ||
-                 (m_Computer->displayModes.last().refreshRate < 60 && m_StreamConfig.fps >= 60)) {
-            emitLaunchWarning("Your host PC GPU doesn't support 4K streaming. "
-                              "A GeForce GTX 900-series (Maxwell) or later GPU is required for 4K streaming.");
-
-            m_StreamConfig.width = 1920;
-            m_StreamConfig.height = 1080;
-        }
     }
 
     // Test if audio works at the specified audio configuration
@@ -783,18 +774,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
     Q_ASSERT(m_Computer->currentGameId == 0 ||
              m_Computer->currentGameId == m_App.id);
 
-    bool enableGameOptimizations = false;
-    for (const NvDisplayMode &mode : m_Computer->displayModes) {
-        if (mode.width == m_StreamConfig.width &&
-                mode.height == m_StreamConfig.height) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Found host supported resolution: %dx%d",
-                        mode.width, mode.height);
-            enableGameOptimizations = prefs.gameOptimizations;
-            break;
-        }
-    }
-
     try {
         NvHTTP http(m_Computer->activeAddress);
         if (m_Computer->currentGameId != 0) {
@@ -802,7 +781,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         }
         else {
             http.launchApp(m_App.id, &m_StreamConfig,
-                           enableGameOptimizations,
+                           prefs.gameOptimizations,
                            prefs.playAudioOnHost,
                            inputHandler.getAttachedGamepadMask());
         }
