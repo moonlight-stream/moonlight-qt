@@ -298,8 +298,16 @@ void ClLogMessage(const char* format, ...)
     _streamConfig.height = config.height;
     _streamConfig.fps = config.frameRate;
     _streamConfig.bitrate = config.bitRate;
-    _streamConfig.streamingRemotely = config.streamingRemotely;
     _streamConfig.enableHdr = config.enableHdr;
+    
+    // Use some of the HEVC encoding efficiency improvements to
+    // reduce bandwidth usage while still gaining some image
+    // quality improvement.
+    _streamConfig.hevcBitratePercentageMultiplier = 75;
+    
+    // Detect remote streaming automatically based on the IP address of the target
+    _streamConfig.streamingRemotely = STREAM_CFG_AUTO;
+    _streamConfig.packetSize = 1392;
     
     switch (config.audioChannelCount) {
         case 2:
@@ -337,20 +345,6 @@ void ClLogMessage(const char* format, ...)
     
     // HEVC must be supported when HDR is enabled
     assert(!_streamConfig.enableHdr || _streamConfig.supportsHevc);
-    
-    // Use some of the HEVC encoding efficiency improvements to
-    // reduce bandwidth usage while still gaining some image
-    // quality improvement.
-    if (config.streamingRemotely) {
-        // In the case of remotely streaming, we want the best possible qualtity for a limited bandwidth, so we set the multiplier to 0
-        _streamConfig.hevcBitratePercentageMultiplier = 0;
-        // When streaming remotely we want to use a packet size of 1024
-        _streamConfig.packetSize = 1024;
-    }
-    else {
-        _streamConfig.hevcBitratePercentageMultiplier = 75;
-        _streamConfig.packetSize = 1292;
-    }
 
     memcpy(_streamConfig.remoteInputAesKey, [config.riKey bytes], [config.riKey length]);
     memset(_streamConfig.remoteInputAesIv, 0, 16);
