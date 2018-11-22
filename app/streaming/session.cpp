@@ -315,6 +315,8 @@ void Session::initialize()
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
+    m_StreamConfig.streamingRemotely = STREAM_CFG_AUTO;
+    m_StreamConfig.packetSize = 1392;
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Video bitrate: %d kbps",
@@ -380,20 +382,6 @@ void Session::initialize()
         m_StreamConfig.supportsHevc = true;
         m_StreamConfig.enableHdr = true;
         break;
-    }
-
-    if (m_Computer->activeAddress == m_Computer->remoteAddress) {
-        m_StreamConfig.streamingRemotely = 1;
-    }
-    else {
-        m_StreamConfig.streamingRemotely = 0;
-    }
-
-    if (m_Computer->activeAddress == m_Computer->localAddress) {
-        m_StreamConfig.packetSize = 1392;
-    }
-    else {
-        m_StreamConfig.packetSize = 1024;
     }
 
     switch (m_Preferences->windowMode)
