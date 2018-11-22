@@ -89,10 +89,9 @@ GridView {
             }
         }
 
-        Text {
+        Label {
             id: appNameText
             text: model.name
-            color: "white"
             width: parent.width
             height: 125
             anchors.top: appIcon.bottom

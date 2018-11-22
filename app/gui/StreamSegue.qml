@@ -129,7 +129,6 @@ Item {
             verticalAlignment: Text.AlignVCenter
 
             wrapMode: Text.Wrap
-            color: "white"
         }
     }
 
@@ -142,7 +141,6 @@ Item {
         verticalAlignment: Text.AlignVCenter
 
         wrapMode: Text.Wrap
-        color: "white"
     }
 
     MessageDialog {

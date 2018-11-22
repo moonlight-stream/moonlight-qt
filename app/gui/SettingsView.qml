@@ -72,8 +72,7 @@ Flickable {
                     id: resFPStitle
                     text: qsTr("Resolution and FPS")
                     font.pointSize: 12
-                    wrapMode: Text.Wrap                    
-                    color: "white"
+                    wrapMode: Text.Wrap
                 }
 
                 Label {
@@ -82,7 +81,6 @@ Flickable {
                     text: qsTr("Setting values too high for your PC or network connection may cause lag, stuttering, or errors.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
-                    color: "white"
                 }
 
                 Row {
@@ -297,7 +295,6 @@ Flickable {
                     text: qsTr("Video bitrate: ")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
-                    color: "white"
                 }
 
                 Label {
@@ -306,7 +303,6 @@ Flickable {
                     text: qsTr("Lower bitrate to reduce lag and stuttering. Raise bitrate to increase image quality.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
-                    color: "white"
                 }
 
                 Slider {
@@ -334,7 +330,6 @@ Flickable {
                     text: qsTr("Display mode")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
-                    color: "white"
                 }
 
                 AutoResizingComboBox {
@@ -383,7 +378,7 @@ Flickable {
                 CheckBox {
                     id: vsyncCheck
                     hoverEnabled: true
-                    text: "<font color=\"white\">Enable V-Sync</font>"
+                    text: "Enable V-Sync"
                     font.pointSize:  12
                     checked: prefs.enableVsync
                     onCheckedChanged: {
@@ -416,7 +411,6 @@ Flickable {
                     text: qsTr("Audio configuration")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
-                    color: "white"
                 }
 
                 AutoResizingComboBox {
@@ -469,7 +463,7 @@ Flickable {
 
                 CheckBox {
                     id: startWindowedCheck
-                    text: "<font color=\"white\">Start Moonlight in windowed mode</font>"
+                    text: "Start Moonlight in windowed mode"
                     font.pointSize: 12
                     checked: prefs.startWindowed
                     onCheckedChanged: {
@@ -499,7 +493,7 @@ Flickable {
 
                 CheckBox {
                     id: multiControllerCheck
-                    text: "<font color=\"white\">Multiple controller support</font>"
+                    text: "Multiple controller support"
                     font.pointSize:  12
                     checked: prefs.multiController
                     onCheckedChanged: {
@@ -510,7 +504,7 @@ Flickable {
                 CheckBox {
                     id: rawInputCheck
                     hoverEnabled: true
-                    text: "<font color=\"white\">Raw mouse input</font>"
+                    text: "Raw mouse input"
                     font.pointSize:  12
                     checked: !prefs.mouseAcceleration
                     onCheckedChanged: {
@@ -538,7 +532,7 @@ Flickable {
 
                 CheckBox {
                     id: optimizeGameSettingsCheck
-                    text: "<font color=\"white\">Optimize game settings</font>"
+                    text: "Optimize game settings"
                     font.pointSize:  12
                     checked: prefs.gameOptimizations
                     onCheckedChanged: {
@@ -548,7 +542,7 @@ Flickable {
 
                 CheckBox {
                     id: audioPcCheck
-                    text: "<font color=\"white\">Play audio on host PC</font>"
+                    text: "Play audio on host PC"
                     font.pointSize:  12
                     checked: prefs.playAudioOnHost
                     onCheckedChanged: {
@@ -575,7 +569,6 @@ Flickable {
                     text: qsTr("Video decoder")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
-                    color: "white"
                 }
 
                 AutoResizingComboBox {
@@ -622,7 +615,6 @@ Flickable {
                     text: qsTr("Video codec")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
-                    color: "white"
                 }
 
                 AutoResizingComboBox {
@@ -672,7 +664,7 @@ Flickable {
 
                 CheckBox {
                     id: unlockUnsupportedFps
-                    text: "<font color=\"white\">Unlock unsupported FPS options</font>"
+                    text: "Unlock unsupported FPS options"
                     font.pointSize: 12
                     checked: prefs.unsupportedFps
                     onCheckedChanged: {
@@ -686,7 +678,7 @@ Flickable {
 
                 CheckBox {
                     id: enableMdns
-                    text: "<font color=\"white\">Automatically find PCs on the local network (Recommended)</font>"
+                    text: "Automatically find PCs on the local network (Recommended)"
                     font.pointSize: 12
                     checked: prefs.enableMdns
                     onCheckedChanged: {

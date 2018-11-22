@@ -124,10 +124,9 @@ GridView {
             visible: !model.addPc && model.statusUnknown
         }
 
-        Text {
+        Label {
             id: pcNameText
             text: model.name
-            color: "white"
 
             width: parent.width
             anchors.top: pcIcon.bottom
