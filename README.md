@@ -4,8 +4,6 @@
 
 Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and  [iOS](https://github.com/moonlight-stream/moonlight-ios).
 
-See the [releases page](https://github.com/moonlight-stream/moonlight-qt/releases) for download links for Windows and Mac. For Linux, we're on [Flathub](https://flathub.org/apps/details/com.moonlight_stream.Moonlight).
-
 You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
  [![Windows AppVeyor Status](https://ci.appveyor.com/api/projects/status/glj5cxqwy2w3bglv/branch/master?svg=true)](https://ci.appveyor.com/project/cgutman/moonlight-qt/branch/master)
@@ -19,6 +17,10 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
  - HEVC support for better image quality at reduced bandwidth
  - Keyboard and mouse support
  - Gamepad support with SDL gamepad mappings
+ 
+## Downloads
+- [Windows and macOS](https://github.com/moonlight-stream/moonlight-qt/releases)
+- [Linux](https://flathub.org/apps/details/com.moonlight_stream.Moonlight)
 
 ## Building
 ### General Build Requirements
