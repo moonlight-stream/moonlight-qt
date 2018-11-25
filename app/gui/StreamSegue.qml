@@ -3,6 +3,7 @@ import QtQuick.Controls 2.2
 import QtQuick.Dialogs 1.2
 import QtQuick.Window 2.2
 
+import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 
@@ -11,6 +12,7 @@ Item {
     property string appName
     property string stageText : "Starting " + appName + "..."
     property bool quitAfter : false
+    property bool sessionLaunched : false
 
     anchors.fill: parent
 
@@ -59,6 +61,27 @@ Item {
         toast.visible = true
     }
 
+    function streamingFinished() {
+        if (quitAfter) {
+            window.visible = false
+            Qt.quit()
+        } else {
+            // Show the Qt window again after streaming
+            window.visible = true
+
+            // Exit this view
+            stackView.pop()
+
+            // Display any launch errors. We do this after
+            // the Qt UI is visible again to prevent losing
+            // focus on the dialog which would impact gamepad
+            // users.
+            if (errorDialog.text) {
+                errorDialog.open()
+            }
+        }
+    }
+
     // It's important that we don't call enable() here
     // or it may interfere with the Session instance
     // getting notified of initial connected gamepads.
@@ -68,6 +91,12 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
+            // Prevent session restart after execution returns from QuitSegue
+            if (sessionLaunched) {
+                return
+            }
+            sessionLaunched = true
+
             // Hide the toolbar before we start loading
             toolBar.visible = false
 
@@ -87,27 +116,21 @@ Item {
             session.displayLaunchWarning.connect(displayLaunchWarning)
 
             // Run the streaming session to completion
-            session.exec(Screen.virtualX, Screen.virtualY)
+            session.exec(Screen.virtualX, Screen.virtualY);
 
-            if (quitAfter) {
-                Qt.quit()
-            } else {
-                // Show the Qt window again after streaming
+            if (!errorDialog.text && session.shouldQuitAppAfter()) {
+                // Show the Qt window again to show quit segue
                 window.visible = true
-
-                // Exit this view
-                stackView.pop()
-
-                // Display any launch errors. We do this after
-                // the Qt UI is visible again to prevent losing
-                // focus on the dialog which would impact gamepad
-                // users.
-                if (errorDialog.text) {
-                    errorDialog.open()
-                }
+                var component = Qt.createComponent("QuitSegue.qml")
+                stackView.push(component.createObject(stackView, {"appName": appName}))
+                // Quit app
+                ComputerManager.quitAppCompleted.connect(streamingFinished)
+                ComputerManager.quitRunningApp(session)
+            } else {
+                streamingFinished()
             }
         }
-        else {
+        else if (!quitAfter) {
             // Show the toolbar again when we become hidden
             toolBar.visible = true
         }

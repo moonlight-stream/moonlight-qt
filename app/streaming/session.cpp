@@ -275,6 +275,16 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
     return caps;
 }
 
+NvComputer *Session::getComputer() const
+{
+    return m_Computer;
+}
+
+bool Session::shouldQuitAppAfter() const
+{
+    return m_Preferences->quitAppAfter;
+}
+
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
     : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
       m_Computer(computer),

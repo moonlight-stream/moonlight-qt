@@ -100,6 +100,7 @@ macx {
 
 SOURCES += \
     main.cpp \
+    backend/computerseeker.cpp \
     backend/identitymanager.cpp \
     backend/nvcomputer.cpp \
     backend/nvhttp.cpp \
@@ -107,6 +108,7 @@ SOURCES += \
     backend/computermanager.cpp \
     backend/boxartmanager.cpp \
     cli/commandlineparser.cpp \
+    cli/quitstream.cpp \
     cli/startstream.cpp \
     settings/streamingpreferences.cpp \
     streaming/input.cpp \
@@ -123,6 +125,7 @@ SOURCES += \
 
 HEADERS += \
     utils.h \
+    backend/computerseeker.h \
     backend/identitymanager.h \
     backend/nvcomputer.h \
     backend/nvhttp.h \
@@ -130,6 +133,7 @@ HEADERS += \
     backend/computermanager.h \
     backend/boxartmanager.h \
     cli/commandlineparser.h \
+    cli/quitstream.h \
     cli/startstream.h \
     settings/streamingpreferences.h \
     streaming/input.h \

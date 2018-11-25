@@ -73,6 +73,7 @@ public:
     Q_PROPERTY(bool multiController MEMBER multiController NOTIFY multiControllerChanged)
     Q_PROPERTY(bool unsupportedFps MEMBER unsupportedFps NOTIFY unsupportedFpsChanged)
     Q_PROPERTY(bool enableMdns MEMBER enableMdns NOTIFY enableMdnsChanged)
+    Q_PROPERTY(bool quitAppAfter MEMBER quitAppAfter NOTIFY quitAppAfterChanged)
     Q_PROPERTY(bool mouseAcceleration MEMBER mouseAcceleration NOTIFY mouseAccelerationChanged)
     Q_PROPERTY(bool startWindowed MEMBER startWindowed NOTIFY startWindowedChanged)
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
@@ -91,6 +92,7 @@ public:
     bool multiController;
     bool unsupportedFps;
     bool enableMdns;
+    bool quitAppAfter;
     bool mouseAcceleration;
     bool startWindowed;
     AudioConfig audioConfig;
@@ -107,6 +109,7 @@ signals:
     void multiControllerChanged();
     void unsupportedFpsChanged();
     void enableMdnsChanged();
+    void quitAppAfterChanged();
     void mouseAccelerationChanged();
     void audioConfigChanged();
     void videoCodecConfigChanged();

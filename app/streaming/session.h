@@ -30,6 +30,10 @@ public:
     int getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
                                int videoFormat, int width, int height, int frameRate);
 
+    NvComputer* getComputer() const;
+
+    Q_INVOKABLE bool shouldQuitAppAfter() const;
+
 signals:
     void stageStarting(QString stage);
 
