@@ -33,4 +33,6 @@ private:
     struct SoundIoRingBuffer* m_RingBuffer;
     struct SoundIoChannelLayout m_EffectiveLayout;
     bool m_Errored;
+
+    static const double k_RawSampleLengthSec;
 };

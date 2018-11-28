@@ -4,6 +4,13 @@
 
 #include <QtGlobal>
 
+// This determines the size of the buffers we'll
+// get from CoreAudio. Since GFE sends us packets
+// in 5 ms chunks, we'll give them to the OS in
+// buffers of the same size. It is also the minimum
+// size that we will write when called to fill a buffer.
+const double SoundIoAudioRenderer::k_RawSampleLengthSec = 0.005;
+
 SoundIoAudioRenderer::SoundIoAudioRenderer()
     : m_OpusChannelCount(0),
       m_SoundIo(nullptr),
@@ -152,16 +159,11 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
 
     m_OutputStream->format = SoundIoFormatS16NE;
     m_OutputStream->sample_rate = opusConfig->sampleRate;
+    m_OutputStream->software_latency = k_RawSampleLengthSec;
     m_OutputStream->name = "Moonlight";
     m_OutputStream->userdata = this;
     m_OutputStream->error_callback = sioErrorCallback;
     m_OutputStream->write_callback = sioWriteCallback;
-
-    // This determines the size of the buffers we'll
-    // get from CoreAudio. Since GFE sends us packets
-    // in 5 ms chunks, we'll give them to the OS in
-    // buffers of the same size.
-    m_OutputStream->software_latency = 0.005;
 
     SoundIoChannelLayout bestLayout = m_Device->current_layout;
     for (int i = 0; i < m_Device->layout_count; i++) {
@@ -330,6 +332,12 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
 
     // Clamp framesLeft to frameCountMax
     framesLeft = qMin(framesLeft, frameCountMax);
+
+    // Ensure we always write at least a buffer, even if it's silence, to avoid
+    // busy looping when no audio data is available while libsoundio tries to keep
+    // us from starving the output device.
+    frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * k_RawSampleLengthSec));
+    frameCountMin = qMin(frameCountMin, frameCountMax);
 
     // Place an upper-bound on audio stream latency to
     // avoid accumulating packets in queue-based backends
