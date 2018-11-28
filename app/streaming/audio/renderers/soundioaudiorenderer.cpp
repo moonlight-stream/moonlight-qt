@@ -341,11 +341,12 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
 
     // Place an upper-bound on audio stream latency to
     // avoid accumulating packets in queue-based backends
-    // like WASAPI. This bound was set by testing on several
-    // Windows machines. The highest latency was found on
-    // a XPS 9343 running Windows 7 in Steam Big Picture
-    // and the 5.1 audio test clip from Fraunhofer.
-    if (me->m_SoundIo->current_backend == SoundIoBackendWasapi) {
+    // like WASAPI, ALSA, and PulseAudio.
+    //
+    // This bound was set by testing on several Windows machines.
+    // The highest latency was found on a XPS 9343 running Windows 7
+    // in Steam Big Picture and the 5.1 audio test clip from Fraunhofer.
+    if (me->m_SoundIo->current_backend != SoundIoBackendCoreAudio && me->m_SoundIo->current_backend != SoundIoBackendJack) {
         double latency;
         if (soundio_outstream_get_latency(stream, &latency) == SoundIoErrorNone) {
             if (latency > 0.050) {
