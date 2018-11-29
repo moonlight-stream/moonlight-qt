@@ -425,35 +425,31 @@ static NSMutableSet* hostList;
 
 - (void) addHostClicked {
     Log(LOG_D, @"Clicked add host");
-    [self showLoadingFrame: ^{
-        UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
-        [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
-            NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
-            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
-                [self->_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
-                    if (host != nil) {
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            @synchronized(hostList) {
-                                [hostList addObject:host];
-                            }
-                            [self updateHosts];
-                        });
-                    } else {
-                        UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
-                        [Utils addHelpOptionToDialog:hostNotFoundAlert];
-                        [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
-                        dispatch_async(dispatch_get_main_queue(), ^{
-                            [[self activeViewController] presentViewController:hostNotFoundAlert animated:YES completion:nil];
-                        });
-                    }
-                }];});
-        }]];
-        [alertController addTextFieldWithConfigurationHandler:nil];
-        [self hideLoadingFrame: ^{
-            [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
-        }];
-    }];
+    UIAlertController* alertController = [UIAlertController alertControllerWithTitle:@"Host Address" message:@"Please enter a hostname or IP address" preferredStyle:UIAlertControllerStyleAlert];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"Cancel" style:UIAlertActionStyleCancel handler:nil]];
+    [alertController addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        NSString* hostAddress = ((UITextField*)[[alertController textFields] objectAtIndex:0]).text;
+        dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
+            [self->_discMan discoverHost:hostAddress withCallback:^(TemporaryHost* host, NSString* error){
+                if (host != nil) {
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        @synchronized(hostList) {
+                            [hostList addObject:host];
+                        }
+                        [self updateHosts];
+                    });
+                } else {
+                    UIAlertController* hostNotFoundAlert = [UIAlertController alertControllerWithTitle:@"Add Host" message:error preferredStyle:UIAlertControllerStyleAlert];
+                    [Utils addHelpOptionToDialog:hostNotFoundAlert];
+                    [hostNotFoundAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:nil]];
+                    dispatch_async(dispatch_get_main_queue(), ^{
+                        [[self activeViewController] presentViewController:hostNotFoundAlert animated:YES completion:nil];
+                    });
+                }
+            }];});
+    }]];
+    [alertController addTextFieldWithConfigurationHandler:nil];
+    [[self activeViewController] presentViewController:alertController animated:YES completion:nil];
 }
 
 - (void) prepareToStreamApp:(TemporaryApp *)app {
