@@ -462,12 +462,12 @@ Flickable {
                 spacing: 5
 
                 CheckBox {
-                    id: startWindowedCheck
-                    text: "Start Moonlight in windowed mode"
+                    id: startMaximizedCheck
+                    text: "Maximize Moonlight window on startup"
                     font.pointSize: 12
-                    checked: prefs.startWindowed
+                    checked: !prefs.startWindowed
                     onCheckedChanged: {
-                        prefs.startWindowed = checked
+                        prefs.startWindowed = !checked
                     }
                 }
             }
