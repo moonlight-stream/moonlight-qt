@@ -49,7 +49,12 @@ static const int LABEL_DY = 20;
     
     [_hostButton setBackgroundImage:[UIImage imageNamed:@"Computer"] forState:UIControlStateNormal];
     [_hostButton setContentEdgeInsets:UIEdgeInsetsMake(0, 4, 0, 4)];
-    [_hostButton addTarget:self action:@selector(addClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
+    if (@available(iOS 9.0, tvOS 9.0, *)) {
+        [_hostButton addTarget:self action:@selector(addClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
+    }
+    else {
+        [_hostButton addTarget:self action:@selector(addClicked) forControlEvents:UIControlEventTouchUpInside];
+    }
     [_hostButton sizeToFit];
     
     [_hostLabel setText:@"Add Host"];
@@ -84,7 +89,13 @@ static const int LABEL_DY = 20;
     
     UILongPressGestureRecognizer* longPressRecognizer = [[UILongPressGestureRecognizer alloc] initWithTarget:self action:@selector(hostLongClicked:)];
     [_hostButton addGestureRecognizer:longPressRecognizer];
-    [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
+    
+    if (@available(iOS 9.0, tvOS 9.0, *)) {
+        [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
+    }
+    else {
+        [_hostButton addTarget:self action:@selector(hostClicked) forControlEvents:UIControlEventTouchUpInside];
+    }
     
     [self updateContentsForHost:host];
     [self updateBounds];

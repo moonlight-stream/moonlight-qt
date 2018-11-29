@@ -40,7 +40,12 @@ static UIImage* noImage;
     [_appButton setBackgroundImage:noImage forState:UIControlStateNormal];
     [_appButton setContentEdgeInsets:UIEdgeInsetsMake(0, 4, 0, 4)];
     [_appButton sizeToFit];
-    [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
+    if (@available(iOS 9.0, tvOS 9.0, *)) {
+        [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventPrimaryActionTriggered];
+    }
+    else {
+        [_appButton addTarget:self action:@selector(appClicked) forControlEvents:UIControlEventTouchUpInside];
+    }
     
     [self addSubview:_appButton];
     [self sizeToFit];
