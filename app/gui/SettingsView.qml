@@ -492,13 +492,19 @@ Flickable {
                 spacing: 5
 
                 CheckBox {
-                    id: multiControllerCheck
-                    text: "Multiple controller support"
+                    id: singleControllerCheck
+                    text: "Force gamepad #1 always present"
                     font.pointSize:  12
-                    checked: prefs.multiController
+                    checked: !prefs.multiController
                     onCheckedChanged: {
-                        prefs.multiController = checked
+                        prefs.multiController = !checked
                     }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.\n" +
+                                  "Only enable this option when streaming a game that doesn't support gamepads being connected after startup."
                 }
 
                 CheckBox {
