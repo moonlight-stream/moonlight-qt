@@ -164,7 +164,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "Starts Moonlight normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
-        "  quit            Quit currently running app\n"
+        "  quit            Quit the currently running app\n"
         "  stream          Start streaming an app\n"
         "\n"
         "See 'moonlight <action> --help' for help of specific action."
@@ -203,7 +203,7 @@ void QuitCommandLineParser::parse(const QStringList &args)
     parser.setupCommonOptions();
     parser.setApplicationDescription(
         "\n"
-        "Quit currently running app at given host."
+        "Quit the currently running app on the given host."
     );
     parser.addPositionalArgument("quit", "quit running app");
     parser.addPositionalArgument("host", "Host computer name, UUID, or IP address", "<host>");

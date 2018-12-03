@@ -25,7 +25,7 @@ public:
 
 signals:
     void searchingComputer();
-    void quitingApp();
+    void quittingApp();
     void failed(QString text);
 
 private slots:

@@ -12,8 +12,8 @@ Item {
         stageLabel.text = "Establishing connection to PC..."
     }
 
-    function onQuitingApp() {
-        stageLabel.text = "Quiting app..."
+    function onQuittingApp() {
+        stageLabel.text = "Quitting app..."
     }
 
     function onFailure(message) {
@@ -30,7 +30,7 @@ Item {
         if (visible && !launcher.isExecuted()) {
             toolBar.visible = false
             launcher.searchingComputer.connect(onSearchingComputer)
-            launcher.quitingApp.connect(onQuitingApp)
+            launcher.quittingApp.connect(onQuittingApp)
             launcher.failed.connect(onFailure)
             launcher.execute(ComputerManager)
         }

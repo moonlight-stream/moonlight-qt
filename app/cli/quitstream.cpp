@@ -81,7 +81,7 @@ public:
             if (m_State == StateSeekComputer) {
                 if (event.computer->pairState == NvComputer::PS_PAIRED) {
                     m_State = StateQuitApp;
-                    emit q->quitingApp();
+                    emit q->quittingApp();
                     m_ComputerManager->quitRunningApp(event.computer);
                 } else {
                     m_State = StateFailure;
