@@ -12,6 +12,9 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
     // Never communicate over HTTP
     m_Nam.setStrictTransportSecurityEnabled(true);
 
+    // Allow HTTP redirects
+    m_Nam.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
+
     connect(&m_Nam, SIGNAL(finished(QNetworkReply*)),
             this, SLOT(handleUpdateCheckRequestFinished(QNetworkReply*)));
 
