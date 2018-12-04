@@ -19,16 +19,16 @@
 		</ul>
 	</description>
 
-	<url type="homepage">https://moonlight-stream.com</url>
+	<url type="homepage">https://moonlight-stream.org</url>
 	<url type="bugtracker">https://github.com/moonlight-stream/moonlight-qt/issues</url>
 	<url type="help">https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide</url>
 
 	<screenshots>
 		<screenshot type="default">
-			<image>https://moonlight-stream.com/appstream_resources/moonlight_screenshot_1.png</image>
+			<image>https://moonlight-stream.org/appstream_resources/moonlight_screenshot_1.png</image>
 		</screenshot>
 		<screenshot>
-			<image>https://moonlight-stream.com/appstream_resources/moonlight_screenshot_2.png</image>
+			<image>https://moonlight-stream.org/appstream_resources/moonlight_screenshot_2.png</image>
 		</screenshot>
 	</screenshots>
 
@@ -214,7 +214,7 @@
 	</categories>
 
 	<developer_name>Moonlight Game Streaming Team</developer_name>
-	<update_contact>cameron@moonlight-stream.com</update_contact>
+	<update_contact>cameron@moonlight-stream.org</update_contact>
 
 	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
 

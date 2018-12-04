@@ -1,6 +1,6 @@
 # Moonlight PC
 
-[Moonlight PC](http://moonlight-stream.com) is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield, but built to run on Windows, Mac, and Linux. This client is the successor to [Moonlight Chrome](https://github.com/moonlight-stream/moonlight-chrome) for streaming on PC.
+[Moonlight PC](https://moonlight-stream.org) is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield, but built to run on Windows, Mac, and Linux. This client is the successor to [Moonlight Chrome](https://github.com/moonlight-stream/moonlight-chrome) for streaming on PC.
 
 Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and  [iOS](https://github.com/moonlight-stream/moonlight-ios).
 
@@ -57,4 +57,4 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 2. Write code
 3. Send Pull Requests
 
-Check out our [website](http://moonlight-stream.com) for project links and information.
+Check out our [website](https://moonlight-stream.org) for project links and information.

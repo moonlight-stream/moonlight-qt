@@ -27,7 +27,7 @@ void AutoUpdateChecker::start()
 {
 #if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN) // Only run update checker on platforms without auto-update
     // We'll get a callback when this is finished
-    QUrl url("https://moonlight-stream.com/updates/qt.json");
+    QUrl url("https://moonlight-stream.org/updates/qt.json");
     m_Nam.get(QNetworkRequest(url));
 #endif
 }
