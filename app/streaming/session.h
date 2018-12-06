@@ -120,7 +120,7 @@ private:
     int m_DisplayOriginX;
     int m_DisplayOriginY;
     bool m_PendingWindowedTransition;
-    bool m_ConnectionTerminated;
+    bool m_UnexpectedTermination;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;

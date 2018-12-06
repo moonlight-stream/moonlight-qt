@@ -73,7 +73,7 @@ void Session::clStageFailed(int stage, long errorCode)
 
 void Session::clConnectionTerminated(long errorCode)
 {
-    s_ActiveSession->m_ConnectionTerminated = true;
+    s_ActiveSession->m_UnexpectedTermination = true;
     emit s_ActiveSession->displayLaunchError("Connection terminated");
 
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -288,7 +288,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_DisplayOriginX(0),
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false),
-      m_ConnectionTerminated(false),
+      m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0)
@@ -577,7 +577,7 @@ private:
     {
         // Only quit the running app if our session terminated gracefully
         bool shouldQuit =
-                !m_Session->m_ConnectionTerminated &&
+                !m_Session->m_UnexpectedTermination &&
                 m_Session->m_Preferences->quitAppAfter;
 
         // Notify the UI
@@ -781,6 +781,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // Check for validation errors/warnings and emit
     // signals for them, if appropriate
     if (!validateLaunch()) {
+        emit sessionFinished();
         return;
     }
 
@@ -823,11 +824,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
         }
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(e.toQString());
-        s_ActiveSessionSemaphore.release();
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     } catch (const QtNetworkReplyException& e) {
         emit displayLaunchError(e.toQString());
-        s_ActiveSessionSemaphore.release();
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
 
@@ -837,7 +838,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
         emit displayLaunchError(QString::fromLocal8Bit(SDL_GetError()));
-        s_ActiveSessionSemaphore.release();
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
 
@@ -865,7 +866,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         // We already displayed an error dialog in the stage failure
         // listener.
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        s_ActiveSessionSemaphore.release();
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
 
@@ -887,7 +888,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                      "SDL_CreateWindow() failed: %s",
                      SDL_GetError());
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        s_ActiveSessionSemaphore.release();
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
 
@@ -966,6 +967,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
     }
 
     int currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+
+    // Now that we're about to stream, any SDL_QUIT event is expected
+    // unless it comes from the connection termination callback where
+    // (m_UnexpectedTermination is set back to true).
+    m_UnexpectedTermination = false;
 
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
