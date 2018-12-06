@@ -73,6 +73,7 @@ void Session::clStageFailed(int stage, long errorCode)
 
 void Session::clConnectionTerminated(long errorCode)
 {
+    s_ActiveSession->m_ConnectionTerminated = true;
     emit s_ActiveSession->displayLaunchError("Connection terminated");
 
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -287,6 +288,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_DisplayOriginX(0),
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false),
+      m_ConnectionTerminated(false),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0)
@@ -573,19 +575,24 @@ private:
 
     void run() override
     {
+        // Only quit the running app if our session terminated gracefully
+        bool shouldQuit =
+                !m_Session->m_ConnectionTerminated &&
+                m_Session->m_Preferences->quitAppAfter;
+
         // Notify the UI
-        if (!m_Session->m_Preferences->quitAppAfter) {
-            emit m_Session->sessionFinished();
+        if (shouldQuit) {
+            emit m_Session->quitStarting();
         }
         else {
-            emit m_Session->quitStarting();
+            emit m_Session->sessionFinished();
         }
 
         // Finish cleanup of the connection state
         LiStopConnection();
 
         // Perform a best-effort app quit
-        if (m_Session->m_Preferences->quitAppAfter) {
+        if (shouldQuit) {
             NvHTTP http(m_Session->m_Computer->activeAddress);
 
             // Logging is already done inside NvHTTP
