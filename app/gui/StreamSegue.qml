@@ -73,7 +73,14 @@ Item {
     function sessionFinished()
     {
         if (quitAfter) {
-            Qt.quit()
+            if (errorDialog.text) {
+                // Quit when the error dialog is acknowledged
+                errorDialog.open()
+            }
+            else {
+                // Quit immediately
+                Qt.quit()
+            }
         } else {
             // Exit this view
             stackView.pop()
@@ -164,8 +171,19 @@ Item {
         modality:Qt.WindowModal
         icon: StandardIcon.Critical
         standardButtons: StandardButton.Ok | StandardButton.Help
+
+        onAccepted: {
+            if (quitAfter) {
+                Qt.quit()
+            }
+        }
+
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting");
+
+            if (quitAfter) {
+                Qt.quit()
+            }
         }
     }
 }
