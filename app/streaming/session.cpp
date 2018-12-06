@@ -275,16 +275,6 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
     return caps;
 }
 
-NvComputer *Session::getComputer() const
-{
-    return m_Computer;
-}
-
-bool Session::shouldQuitAppAfter() const
-{
-    return m_Preferences->quitAppAfter;
-}
-
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
     : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
       m_Computer(computer),
@@ -301,6 +291,14 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0)
 {
+}
+
+Session::~Session()
+{
+    // Acquire session semaphore to ensure all cleanup is done before the destructor returns
+    // and the object is deallocated.
+    s_ActiveSessionSemaphore.acquire();
+    s_ActiveSessionSemaphore.release();
 }
 
 void Session::initialize()
@@ -561,15 +559,48 @@ bool Session::validateLaunch()
 
 class DeferredSessionCleanupTask : public QRunnable
 {
-    void run() override
-    {
-        // Finish cleanup of the connection state
-        LiStopConnection();
+public:
+    DeferredSessionCleanupTask(Session* session) :
+        m_Session(session) {}
 
+private:
+    virtual ~DeferredSessionCleanupTask() override
+    {
         // Allow another session to start now that we're cleaned up
         Session::s_ActiveSession = nullptr;
         Session::s_ActiveSessionSemaphore.release();
     }
+
+    void run() override
+    {
+        // Notify the UI
+        if (!m_Session->m_Preferences->quitAppAfter) {
+            emit m_Session->sessionFinished();
+        }
+        else {
+            emit m_Session->quitStarting();
+        }
+
+        // Finish cleanup of the connection state
+        LiStopConnection();
+
+        // Perform a best-effort app quit
+        if (m_Session->m_Preferences->quitAppAfter) {
+            NvHTTP http(m_Session->m_Computer->activeAddress);
+
+            // Logging is already done inside NvHTTP
+            try {
+                http.quitApp();
+            } catch (const GfeHttpResponseException&) {
+            } catch (const QtNetworkReplyException&) {
+            }
+
+            // Session is finished now
+            emit m_Session->sessionFinished();
+        }
+    }
+
+    Session* m_Session;
 };
 
 void Session::getWindowDimensions(int& x, int& y,
@@ -1162,6 +1193,6 @@ DispatchDeferredCleanup:
     // Cleanup can take a while, so dispatch it to a worker thread.
     // When it is complete, it will release our s_ActiveSessionSemaphore
     // reference.
-    QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask());
+    QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
 }
 

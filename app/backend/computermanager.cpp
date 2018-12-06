@@ -1,7 +1,6 @@
 #include "computermanager.h"
 #include "nvhttp.h"
 #include "settings/streamingpreferences.h"
-#include "streaming/session.h"
 
 #include <Limelight.h>
 #include <QtEndian>
@@ -477,11 +476,6 @@ void ComputerManager::quitRunningApp(NvComputer* computer)
 
     PendingQuitTask* quit = new PendingQuitTask(this, computer);
     QThreadPool::globalInstance()->start(quit);
-}
-
-void ComputerManager::quitRunningApp(Session *session)
-{
-    quitRunningApp(session->getComputer());
 }
 
 void ComputerManager::stopPollingAsync()

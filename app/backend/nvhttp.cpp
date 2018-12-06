@@ -57,13 +57,8 @@ NvHTTP::getCurrentGame(QString serverInfo)
     // GFE 2.8 started keeping currentgame set to the last game played. As a result, it no longer
     // has the semantics that its name would indicate. To contain the effects of this change as much
     // as possible, we'll force the current game to zero if the server isn't in a streaming session.
-    //
-    // However, current game info must be available also in other states than just _SERVER_BUSY as
-    // it is required for quitting currently running app. Quitting app occurs at end of stream if
-    // configured so. At that point the server state may be in some other state than _SERVER_BUSY
-    // for a short while, but that must not prevent quitting of the app.
     QString serverState = getXmlString(serverInfo, "state");
-    if (serverState != nullptr && !serverState.endsWith("_SERVER_AVAILABLE"))
+    if (serverState != nullptr && serverState.endsWith("_SERVER_BUSY"))
     {
         return getXmlString(serverInfo, "currentgame").toInt();
     }

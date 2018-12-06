@@ -12,7 +12,6 @@ Item {
     property string appName
     property string stageText : "Starting " + appName + "..."
     property bool quitAfter : false
-    property bool sessionLaunched : false
 
     anchors.fill: parent
 
@@ -61,16 +60,26 @@ Item {
         toast.visible = true
     }
 
-    function streamingFinished() {
+    function quitStarting()
+    {
+        // Avoid the push transition animation
+        var component = Qt.createComponent("QuitSegue.qml")
+        stackView.replace(stackView.currentItem, component.createObject(stackView, {"appName": appName}), StackView.Immediate)
+
+        // Show the Qt window again to show quit segue
+        window.visible = true
+    }
+
+    function sessionFinished()
+    {
         if (quitAfter) {
-            window.visible = false
             Qt.quit()
         } else {
-            // Show the Qt window again after streaming
-            window.visible = true
-
             // Exit this view
             stackView.pop()
+
+            // Show the Qt window again after streaming
+            window.visible = true
 
             // Display any launch errors. We do this after
             // the Qt UI is visible again to prevent losing
@@ -91,12 +100,6 @@ Item {
 
     onVisibleChanged: {
         if (visible) {
-            // Prevent session restart after execution returns from QuitSegue
-            if (sessionLaunched) {
-                return
-            }
-            sessionLaunched = true
-
             // Hide the toolbar before we start loading
             toolBar.visible = false
 
@@ -114,21 +117,11 @@ Item {
             session.connectionStarted.connect(connectionStarted)
             session.displayLaunchError.connect(displayLaunchError)
             session.displayLaunchWarning.connect(displayLaunchWarning)
+            session.quitStarting.connect(quitStarting)
+            session.sessionFinished.connect(sessionFinished)
 
             // Run the streaming session to completion
-            session.exec(Screen.virtualX, Screen.virtualY);
-
-            if (!errorDialog.text && session.shouldQuitAppAfter()) {
-                // Show the Qt window again to show quit segue
-                window.visible = true
-                var component = Qt.createComponent("QuitSegue.qml")
-                stackView.push(component.createObject(stackView, {"appName": appName}))
-                // Quit app
-                ComputerManager.quitAppCompleted.connect(streamingFinished)
-                ComputerManager.quitRunningApp(session)
-            } else {
-                streamingFinished()
-            }
+            session.exec(Screen.virtualX, Screen.virtualY)
         }
         else if (!quitAfter) {
             // Show the toolbar again when we become hidden

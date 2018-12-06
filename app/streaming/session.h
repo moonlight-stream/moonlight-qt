@@ -20,6 +20,8 @@ class Session : public QObject
 public:
     explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
 
+    virtual ~Session();
+
     Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);
 
     static
@@ -29,10 +31,6 @@ public:
     static
     int getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
                                int videoFormat, int width, int height, int frameRate);
-
-    NvComputer* getComputer() const;
-
-    Q_INVOKABLE bool shouldQuitAppAfter() const;
 
 signals:
     void stageStarting(QString stage);
@@ -44,6 +42,10 @@ signals:
     void displayLaunchError(QString text);
 
     void displayLaunchWarning(QString text);
+
+    void quitStarting();
+
+    void sessionFinished();
 
 private:
     void initialize();
