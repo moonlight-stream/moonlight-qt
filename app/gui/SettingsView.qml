@@ -701,6 +701,16 @@ Flickable {
                         }
                     }
                 }
+
+                CheckBox {
+                    id: quitAppAfter
+                    text: "Quit app after quitting session"
+                    font.pointSize: 12
+                    checked: prefs.quitAppAfter
+                    onCheckedChanged: {
+                        prefs.quitAppAfter = checked
+                    }
+                }
             }
         }
     }

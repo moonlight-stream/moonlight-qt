@@ -164,6 +164,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "Starts Moonlight normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
+        "  quit            Quit the currently running app\n"
         "  stream          Start streaming an app\n"
         "\n"
         "See 'moonlight <action> --help' for help of specific action."
@@ -179,11 +180,55 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         parser.handleHelpAndVersionOptions();
         parser.handleUnknownOptions();
         return NormalStartRequested;
+    } else if (action == "quit") {
+        return QuitRequested;
     } else if (action == "stream") {
         return StreamRequested;
     } else {
         parser.showError(QString("Invalid action: %1").arg(action));
     }
+}
+
+QuitCommandLineParser::QuitCommandLineParser()
+{
+}
+
+QuitCommandLineParser::~QuitCommandLineParser()
+{
+}
+
+void QuitCommandLineParser::parse(const QStringList &args)
+{
+    CommandLineParser parser;
+    parser.setupCommonOptions();
+    parser.setApplicationDescription(
+        "\n"
+        "Quit the currently running app on the given host."
+    );
+    parser.addPositionalArgument("quit", "quit running app");
+    parser.addPositionalArgument("host", "Host computer name, UUID, or IP address", "<host>");
+
+    if (!parser.parse(args)) {
+        parser.showError(parser.errorText());
+    }
+
+    parser.handleUnknownOptions();
+
+    // This method will not return and terminates the process if --version or
+    // --help is specified
+    parser.handleHelpAndVersionOptions();
+
+    // Verify that host has been provided
+    auto posArgs = parser.positionalArguments();
+    if (posArgs.length() < 2) {
+        parser.showError("Host not provided");
+    }
+    m_Host = parser.positionalArguments().at(1);
+}
+
+QString QuitCommandLineParser::getHost() const
+{
+    return m_Host;
 }
 
 StreamCommandLineParser::StreamCommandLineParser()
@@ -238,6 +283,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addChoiceOption("display-mode", "display mode", m_WindowModeMap.keys());
     parser.addChoiceOption("audio-config", "audio config", m_AudioConfigMap.keys());
     parser.addToggleOption("multi-controller", "multiple controller support");
+    parser.addToggleOption("quit-after", "quit app after session");
     parser.addToggleOption("mouse-acceleration", "mouse acceleration");
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
@@ -314,6 +360,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --multi-controller and --no-multi-controller options
     preferences->multiController = parser.getToggleOptionValue("multi-controller", preferences->multiController);
 
+    // Resolve --quit-after and --no-quit-after options
+    preferences->quitAppAfter = parser.getToggleOptionValue("quit-after", preferences->quitAppAfter);
+
     // Resolve --mouse-acceleration and --no-mouse-acceleration options
     preferences->mouseAcceleration = parser.getToggleOptionValue("mouse-acceleration", preferences->mouseAcceleration);
 
@@ -359,4 +408,3 @@ QString StreamCommandLineParser::getAppName() const
 {
     return m_AppName;
 }
-

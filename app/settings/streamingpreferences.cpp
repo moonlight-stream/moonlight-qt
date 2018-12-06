@@ -20,6 +20,7 @@
 #define SER_WINDOWMODE "windowmode"
 #define SER_UNSUPPORTEDFPS "unsupportedfps"
 #define SER_MDNS "mdns"
+#define SER_QUITAPPAFTER "quitAppAfter"
 #define SER_MOUSEACCELERATION "mouseacceleration"
 #define SER_STARTWINDOWED "startwindowed"
 
@@ -43,6 +44,7 @@ void StreamingPreferences::reload()
     multiController = settings.value(SER_MULTICONT, true).toBool();
     unsupportedFps = settings.value(SER_UNSUPPORTEDFPS, false).toBool();
     enableMdns = settings.value(SER_MDNS, true).toBool();
+    quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
     mouseAcceleration = settings.value(SER_MOUSEACCELERATION, false).toBool();
     startWindowed = settings.value(SER_STARTWINDOWED, false).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
@@ -71,6 +73,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_MULTICONT, multiController);
     settings.setValue(SER_UNSUPPORTEDFPS, unsupportedFps);
     settings.setValue(SER_MDNS, enableMdns);
+    settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
     settings.setValue(SER_MOUSEACCELERATION, mouseAcceleration);
     settings.setValue(SER_STARTWINDOWED, startWindowed);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));

@@ -21,6 +21,7 @@
 #include "antihookingprotection.h"
 #endif
 
+#include "cli/quitstream.h"
 #include "cli/startstream.h"
 #include "cli/commandlineparser.h"
 #include "path.h"
@@ -342,6 +343,15 @@ int main(int argc, char *argv[])
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }
+    case GlobalCommandLineParser::QuitRequested:
+        {
+            initialView = "CliQuitStreamSegue.qml";
+            QuitCommandLineParser quitParser;
+            quitParser.parse(app.arguments());
+            auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
+            engine.rootContext()->setContextProperty("launcher", launcher);
+            break;
+        }
     }
 
     engine.rootContext()->setContextProperty("initialView", initialView);
@@ -368,6 +378,10 @@ int main(int argc, char *argv[])
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
 
     int err = app.exec();
+
+    // Give worker tasks time to properly exit. Fixes PendingQuitTask
+    // sometimes freezing and blocking process exit.
+    QThreadPool::globalInstance()->waitForDone(30000);
 
     return err;
 }

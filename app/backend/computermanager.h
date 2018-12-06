@@ -14,6 +14,8 @@
 #include <QSettings>
 #include <QRunnable>
 
+class Session;
+
 class MdnsPendingComputer : public QObject
 {
     Q_OBJECT
@@ -72,6 +74,7 @@ public:
     void pairHost(NvComputer* computer, QString pin);
 
     void quitRunningApp(NvComputer* computer);
+    Q_INVOKABLE void quitRunningApp(Session* session);
 
     QVector<NvComputer*> getComputers();
 
