@@ -33,6 +33,23 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.7.0" date="2018-12-05">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added option to quit the app after stopping the stream</li>
+					<li>Added CLI option to quit the running app</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Switched to libsoundio backend to address audio glitches and reduce latency</li>
+					<li>Fixed CLI version output</li>
+					<li>Fixed streaming error messages not showing up when launching from CLI</li>
+					<li>Updated included SDL gamepad mappings</li>
+					<li>Various minor UI tweaks</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.6.4" date="2018-11-20">
 			<description>
 				<p>New features:</p>
