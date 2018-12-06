@@ -223,6 +223,9 @@ LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
 int main(int argc, char *argv[])
 {
+    // Set the app version for the QCommandLineParser's showVersion() command
+    QCoreApplication::setApplicationVersion(VERSION_STR);
+
     // Set these here to allow us to use the default QSettings constructor.
     // These also ensure that our cache directory is named correctly. As such,
     // it is critical that these be called before Path::initialize().
