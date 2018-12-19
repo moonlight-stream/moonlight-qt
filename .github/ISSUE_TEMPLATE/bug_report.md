@@ -13,6 +13,9 @@ Any special steps that are required for the bug to appear.
 **Screenshots**
 If applicable, add screenshots to help explain your problem. If the issue is related to video glitching or poor quality, please include screenshots.
 
+**Affected games**
+List the games you've tried that exhibit the issue. To see if the issue is game-specific, try streaming Steam Big Picture with Moonlight and see if the issue persists there.
+
 **Moonlight settings (please complete the following information)**
 - Have any settings been adjusted from defaults?
 - If so, which settings have been changed?
@@ -22,10 +25,15 @@ If applicable, add screenshots to help explain your problem. If the issue is rel
  - OS: [e.g. Windows 10 1803]
  - Moonlight Version: [e.g. v0.2.0]
 
-**Logs (please attach)**
+**Server PC details (please complete the following information)**
+ - OS: [e.g. Windows 10 1803]
+ - GeForce Experience version: [e.g. 3.16.0.140]
+ - Nvidia GPU driver: [e.g. 417.35]
+
+**Moonlight Logs (please attach)**
 - On Windows, `Moonlight-###.log` files can be found in `%TEMP%`. Simply type that into the File Explorer path field to navigate there.
 - On macOS, `Moonlight-###.log` files can be found in `/tmp`. In Finder, press Cmd+Shift+G, then type `/tmp` to navigate there.
 - On Linux, logs print to the terminal when running via `flatpak run com.moonlight_stream.Moonlight`
 
 **Additional context**
-Add any other context about the problem here.
+Anything else you think may be relevant to the issue
