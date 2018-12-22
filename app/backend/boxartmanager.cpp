@@ -97,7 +97,7 @@ void BoxArtManager::handleBoxArtLoadComplete(NvComputer* computer, NvApp app, QU
 
 QUrl BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, int appId)
 {
-    NvHTTP http(computer->activeAddress);
+    NvHTTP http(computer->activeAddress, computer->serverCert);
 
     QString cachePath = getFilePathForBoxArt(computer, appId);
     QImage image;

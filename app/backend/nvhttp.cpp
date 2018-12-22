@@ -14,8 +14,9 @@
 
 #define REQUEST_TIMEOUT_MS 5000
 
-NvHTTP::NvHTTP(QString address) :
-    m_Address(address)
+NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
+    m_Address(address),
+    m_ServerCert(serverCert)
 {
     Q_ASSERT(!address.isEmpty());
 
@@ -390,8 +391,17 @@ NvHTTP::openConnection(QUrl baseUrl,
 
     QNetworkReply* reply = m_Nam.get(request);
 
-    // Ignore self-signed certificate errors (since GFE uses them)
-    reply->ignoreSslErrors();
+    if (m_ServerCert.isNull()) {
+        // No server cert yet
+        reply->ignoreSslErrors();
+    }
+    else {
+        // Pin the server certificate received during pairing
+        QList<QSslError> expectedSslErrors;
+        expectedSslErrors.append(QSslError(QSslError::HostNameMismatch, m_ServerCert));
+        expectedSslErrors.append(QSslError(QSslError::SelfSignedCertificate, m_ServerCert));
+        reply->ignoreSslErrors(expectedSslErrors);
+    }
 
     // Run the request with a timeout if requested
     QEventLoop loop;

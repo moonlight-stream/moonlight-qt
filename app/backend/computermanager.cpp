@@ -27,7 +27,7 @@ public:
 private:
     bool tryPollComputer(QString address, bool& changed)
     {
-        NvHTTP http(address);
+        NvHTTP http(address, m_Computer->serverCert);
 
         QString serverInfo;
         try {
@@ -36,7 +36,7 @@ private:
             return false;
         }
 
-        NvComputer newState(address, serverInfo);
+        NvComputer newState(address, serverInfo, QSslCertificate());
 
         // Ensure the machine that responded is the one we intended to contact
         if (m_Computer->uuid != newState.uuid) {
@@ -52,7 +52,7 @@ private:
     {
         Q_ASSERT(m_Computer->activeAddress != nullptr);
 
-        NvHTTP http(m_Computer->activeAddress);
+        NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
 
         QVector<NvApp> appList;
 
@@ -385,7 +385,7 @@ private:
         NvPairingManager pairingManager(m_Computer->activeAddress);
 
         try {
-           NvPairingManager::PairState result = pairingManager.pair(m_Computer->appVersion, m_Pin);
+           NvPairingManager::PairState result = pairingManager.pair(m_Computer->appVersion, m_Pin, m_Computer->serverCert);
            switch (result)
            {
            case NvPairingManager::PairState::PIN_WRONG:
@@ -438,7 +438,7 @@ signals:
 private:
     void run()
     {
-        NvHTTP http(m_Computer->activeAddress);
+        NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
 
         try {
             if (m_Computer->currentGameId != 0) {
@@ -540,7 +540,7 @@ signals:
 private:
     void run()
     {
-        NvHTTP http(m_Address);
+        NvHTTP http(m_Address, QSslCertificate());
 
         qInfo() << "Processing new PC at" << m_Address << "from" << (m_Mdns ? "mDNS" : "user");
 
@@ -571,7 +571,7 @@ private:
             return;
         }
 
-        NvComputer* newComputer = new NvComputer(m_Address, serverInfo);
+        NvComputer* newComputer = new NvComputer(m_Address, serverInfo, QSslCertificate());
 
         // Update addresses depending on the context
         if (m_Mdns) {

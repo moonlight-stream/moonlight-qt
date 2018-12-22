@@ -9,7 +9,7 @@
 #include <openssl/evp.h>
 
 NvPairingManager::NvPairingManager(QString address) :
-    m_Http(address)
+    m_Http(address, QSslCertificate())
 {
     QByteArray cert = IdentityManager::get()->getCertificate();
     BIO *bio = BIO_new_mem_buf(cert.data(), -1);
@@ -161,7 +161,7 @@ NvPairingManager::saltPin(QByteArray salt, QString pin)
 }
 
 NvPairingManager::PairState
-NvPairingManager::pair(QString appVersion, QString pin)
+NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverCert)
 {
     int serverMajorVersion = NvHTTP::parseQuad(appVersion).at(0);
     qInfo() << "Pairing with server generation:" << serverMajorVersion;
@@ -200,8 +200,8 @@ NvPairingManager::pair(QString appVersion, QString pin)
         return PairState::FAILED;
     }
 
-    QByteArray serverCert = NvHTTP::getXmlStringFromHex(getCert, "plaincert");
-    if (serverCert == nullptr)
+    QByteArray serverCertStr = NvHTTP::getXmlStringFromHex(getCert, "plaincert");
+    if (serverCertStr == nullptr)
     {
         qCritical() << "Server likely already pairing";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
@@ -262,7 +262,7 @@ NvPairingManager::pair(QString appVersion, QString pin)
 
     if (!verifySignature(serverSecret,
                          serverSignature,
-                         serverCert))
+                         serverCertStr))
     {
         qCritical() << "MITM detected";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
@@ -271,7 +271,7 @@ NvPairingManager::pair(QString appVersion, QString pin)
 
     QByteArray expectedResponseData;
     expectedResponseData.append(randomChallenge);
-    expectedResponseData.append(getSignatureFromPemCert(serverCert));
+    expectedResponseData.append(getSignatureFromPemCert(serverCertStr));
     expectedResponseData.append(serverSecret);
     if (QCryptographicHash::hash(expectedResponseData, hashAlgo) != serverResponse)
     {
@@ -309,5 +309,6 @@ NvPairingManager::pair(QString appVersion, QString pin)
         return PairState::FAILED;
     }
 
+    serverCert = QSslCertificate(serverCertStr);
     return PairState::PAIRED;
 }

@@ -122,7 +122,7 @@ public:
         VERBOSE
     };
 
-    explicit NvHTTP(QString address);
+    explicit NvHTTP(QString address, QSslCertificate serverCert);
 
     static
     int
@@ -191,4 +191,5 @@ private:
 
     QString m_Address;
     QNetworkAccessManager m_Nam;
+    QSslCertificate m_ServerCert;
 };

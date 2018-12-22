@@ -593,7 +593,7 @@ private:
 
         // Perform a best-effort app quit
         if (shouldQuit) {
-            NvHTTP http(m_Session->m_Computer->activeAddress);
+            NvHTTP http(m_Session->m_Computer->activeAddress, m_Session->m_Computer->serverCert);
 
             // Logging is already done inside NvHTTP
             try {
@@ -812,7 +812,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
              m_Computer->currentGameId == m_App.id);
 
     try {
-        NvHTTP http(m_Computer->activeAddress);
+        NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
         if (m_Computer->currentGameId != 0) {
             http.resumeApp(&m_StreamConfig);
         }

@@ -10,6 +10,7 @@
 #define SER_REMOTEADDR "remoteaddress"
 #define SER_MANUALADDR "manualaddress"
 #define SER_APPLIST "apps"
+#define SER_SRVCERT "srvcert"
 
 #define SER_APPNAME "name"
 #define SER_APPID "id"
@@ -23,6 +24,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->localAddress = settings.value(SER_LOCALADDR).toString();
     this->remoteAddress = settings.value(SER_REMOTEADDR).toString();
     this->manualAddress = settings.value(SER_MANUALADDR).toString();
+    this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
 
     int appCount = settings.beginReadArray(SER_APPLIST);
     for (int i = 0; i < appCount; i++) {
@@ -61,6 +63,7 @@ void NvComputer::serialize(QSettings& settings)
     settings.setValue(SER_LOCALADDR, localAddress);
     settings.setValue(SER_REMOTEADDR, remoteAddress);
     settings.setValue(SER_MANUALADDR, manualAddress);
+    settings.setValue(SER_SRVCERT, serverCert.toPem());
 
     // Avoid deleting an existing applist if we couldn't get one
     if (!appList.isEmpty()) {
@@ -84,8 +87,10 @@ void NvComputer::sortAppList()
     });
 }
 
-NvComputer::NvComputer(QString address, QString serverInfo)
+NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serverCert)
 {
+    this->serverCert = serverCert;
+
     this->name = NvHTTP::getXmlString(serverInfo, "hostname");
     if (this->name.isEmpty()) {
         this->name = "UNKNOWN";
@@ -255,6 +260,13 @@ bool NvComputer::update(NvComputer& that)
         changed = true;                       \
     }
 
+#define ASSIGN_IF_CHANGED_AND_NONNULL(field)  \
+    if (!that.field.isNull() &&               \
+        this->field != that.field) {          \
+        this->field = that.field;             \
+        changed = true;                       \
+    }
+
     ASSIGN_IF_CHANGED(name);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(macAddress);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(localAddress);
@@ -269,6 +281,7 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED(appVersion);
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);
+    ASSIGN_IF_CHANGED_AND_NONNULL(serverCert);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(appList);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(displayModes);
     return changed;

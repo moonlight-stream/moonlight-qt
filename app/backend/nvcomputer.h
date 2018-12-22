@@ -19,7 +19,7 @@ private:
     bool pendingQuit;
 
 public:
-    explicit NvComputer(QString address, QString serverInfo);
+    explicit NvComputer(QString address, QString serverInfo, QSslCertificate serverCert);
 
     explicit NvComputer(QSettings& settings);
 
@@ -68,6 +68,7 @@ public:
     QByteArray macAddress;
     QString name;
     QString uuid;
+    QSslCertificate serverCert;
     QVector<NvApp> appList;
 
     // Synchronization
