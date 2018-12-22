@@ -17,14 +17,14 @@
 
 @implementation PairManager {
     HttpManager* _httpManager;
-    NSData* _cert;
+    NSData* _clientCert;
     id<PairCallback> _callback;
 }
 
-- (id) initWithManager:(HttpManager*)httpManager andCert:(NSData*)cert callback:(id<PairCallback>)callback {
+- (id) initWithManager:(HttpManager*)httpManager clientCert:(NSData*)clientCert callback:(id<PairCallback>)callback {
     self = [super init];
     _httpManager = httpManager;
-    _cert = cert;
+    _clientCert = clientCert;
     _callback = callback;
     return self;
 }
@@ -62,7 +62,7 @@
     [_callback showPIN:PIN];
     
     HttpResponse* pairResp = [[HttpResponse alloc] init];
-    [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:pairResp withUrlRequest:[_httpManager newPairRequest:salt]]];
+    [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:pairResp withUrlRequest:[_httpManager newPairRequest:salt clientCert:_clientCert]]];
     if (![self verifyResponseStatus:pairResp]) {
         return;
     }
@@ -113,7 +113,7 @@
     NSData* serverChallenge = [decServerChallengeResp subdataWithRange:NSMakeRange(hashLength, 16)];
     
     NSData* clientSecret = [Utils randomBytes:16];
-    NSData* challengeRespHashInput = [self concatData:[self concatData:serverChallenge with:[CryptoManager getSignatureFromCert:_cert]] with:clientSecret];
+    NSData* challengeRespHashInput = [self concatData:[self concatData:serverChallenge with:[CryptoManager getSignatureFromCert:_clientCert]] with:clientSecret];
     NSData* challengeRespHash;
     if (serverMajorVersion >= 7) {
         challengeRespHash = [cryptoMan SHA256HashData: challengeRespHashInput];
@@ -180,7 +180,8 @@
         [_callback pairFailed:@"Pairing stage #5 failed"];
         return;
     }
-    [_callback pairSuccessful];
+    
+    [_callback pairSuccessful: [CryptoManager pemToDer:[Utils hexToBytes:plainCert]]];
 }
 
 - (BOOL) verifyResponseStatus:(HttpResponse*)resp {

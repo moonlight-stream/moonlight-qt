@@ -14,7 +14,7 @@
 
 @interface ConnectionHelper : NSObject
 
-+(AppListResponse*) getAppListForHostWithHostIP:(NSString*) hostIP deviceName:(NSString*)deviceName cert:(NSData*) cert uniqueID:(NSString*) uniqueId;
++(AppListResponse*) getAppListForHostWithHostIP:(NSString*) hostIP serverCert:(NSData*) serverCert uniqueID:(NSString*) uniqueId;
 
 @end
 

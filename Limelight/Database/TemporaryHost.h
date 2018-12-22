@@ -16,15 +16,17 @@
 @property (nonatomic, nullable) NSString * activeAddress;
 @property (nonatomic, nullable) NSString * currentGame;
 
+@property (nonatomic, nullable, retain) NSData *serverCert;
+@property (nonatomic, nullable, retain) NSString *address;
+@property (nonatomic, nullable, retain) NSString *externalAddress;
+@property (nonatomic, nullable, retain) NSString *localAddress;
+@property (nonatomic, nullable, retain) NSString *mac;
+@property (nonatomic)         int serverCodecModeSupport;
+
 NS_ASSUME_NONNULL_BEGIN
 
-@property (nonatomic, retain) NSString *address;
-@property (nonatomic, retain) NSString *externalAddress;
-@property (nonatomic, retain) NSString *localAddress;
-@property (nonatomic, retain) NSString *mac;
 @property (nonatomic, retain) NSString *name;
 @property (nonatomic, retain) NSString *uuid;
-@property (nonatomic)         int serverCodecModeSupport;
 @property (nonatomic, retain) NSMutableSet *appList;
 
 - (id) initFromHost:(Host*)host;

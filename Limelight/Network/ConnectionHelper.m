@@ -14,8 +14,8 @@
 
 @implementation ConnectionHelper
 
-+(AppListResponse*) getAppListForHostWithHostIP:(NSString*) hostIP deviceName:(NSString*)deviceName cert:(NSData*) cert uniqueID:(NSString*) uniqueId {
-    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostIP uniqueId:uniqueId deviceName:deviceName cert:cert];
++(AppListResponse*) getAppListForHostWithHostIP:(NSString*) hostIP serverCert:(NSData*) cert uniqueID:(NSString*) uniqueId {
+    HttpManager* hMan = [[HttpManager alloc] initWithHost:hostIP uniqueId:uniqueId serverCert:cert];
     
     // Try up to 5 times to get the app list
     AppListResponse* appListResp;

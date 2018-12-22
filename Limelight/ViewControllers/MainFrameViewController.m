@@ -37,7 +37,7 @@
     NSOperationQueue* _opQueue;
     TemporaryHost* _selectedHost;
     NSString* _uniqueId;
-    NSData* _cert;
+    NSData* _clientCert;
     DiscoveryManager* _discMan;
     AppAssetManager* _appManager;
     StreamConfiguration* _streamConfig;
@@ -98,11 +98,14 @@ static NSMutableSet* hostList;
     });
 }
 
-- (void)pairSuccessful {
+- (void)pairSuccessful:(NSData*)serverCert {
     dispatch_async(dispatch_get_main_queue(), ^{
+        // Store the cert from pairing with the host
+        self->_selectedHost.serverCert = serverCert;
+        
         [self->_pairAlert dismissViewControllerAnimated:YES completion:nil];
         self->_pairAlert = nil;
-
+        
         [self->_discMan startDiscovery];
         [self alreadyPaired];
     });
@@ -139,7 +142,7 @@ static NSMutableSet* hostList;
         // Exempt this host from discovery while handling the applist query
         [self->_discMan removeHostFromDiscovery:host];
         
-        AppListResponse* appListResp = [ConnectionHelper getAppListForHostWithHostIP:host.activeAddress deviceName:deviceName cert:self->_cert uniqueID:self->_uniqueId];
+        AppListResponse* appListResp = [ConnectionHelper getAppListForHostWithHostIP:host.activeAddress serverCert:host.serverCert uniqueID:self->_uniqueId];
         
         [self->_discMan addHostToDiscovery:host];
 
@@ -307,7 +310,7 @@ static NSMutableSet* hostList;
     
     [self showLoadingFrame: ^{
         dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-            HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
+            HttpManager* hMan = [[HttpManager alloc] initWithHost:host.activeAddress uniqueId:self->_uniqueId serverCert:host.serverCert];
             ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
             
             // Exempt this host from discovery while handling the serverinfo request
@@ -352,7 +355,7 @@ static NSMutableSet* hostList;
                     Log(LOG_I, @"Trying to pair");
                     // Polling the server while pairing causes the server to screw up
                     [self->_discMan stopDiscoveryBlocking];
-                    PairManager* pMan = [[PairManager alloc] initWithManager:hMan andCert:self->_cert callback:self];
+                    PairManager* pMan = [[PairManager alloc] initWithManager:hMan clientCert:self->_clientCert callback:self];
                     [self->_opQueue addOperation:pMan];
                 }
                 else {
@@ -457,6 +460,7 @@ static NSMutableSet* hostList;
     _streamConfig.host = app.host.activeAddress;
     _streamConfig.appID = app.id;
     _streamConfig.appName = app.name;
+    _streamConfig.serverCert = app.host.serverCert;
     
     DataManager* dataMan = [[DataManager alloc] init];
     TemporarySettings* streamSettings = [dataMan getSettings];
@@ -524,7 +528,7 @@ static NSMutableSet* hostList;
                                         Log(LOG_I, @"Quitting application: %@", currentApp.name);
                                         [self showLoadingFrame: ^{
                                             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-                                                HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:self->_uniqueId deviceName:deviceName cert:self->_cert];
+                                                HttpManager* hMan = [[HttpManager alloc] initWithHost:app.host.activeAddress uniqueId:self->_uniqueId serverCert:app.host.serverCert];
                                                 HttpResponse* quitResponse = [[HttpResponse alloc] init];
                                                 HttpRequest* quitRequest = [HttpRequest requestForResponse: quitResponse withUrlRequest:[hMan newQuitAppRequest]];
                                                 
@@ -700,7 +704,7 @@ static NSMutableSet* hostList;
     // Set up crypto
     [CryptoManager generateKeyPairUsingSSL];
     _uniqueId = [IdManager getUniqueId];
-    _cert = [CryptoManager readCertFromFile];
+    _clientCert = [CryptoManager readCertFromFile];
 
     _appManager = [[AppAssetManager alloc] initWithCallback:self];
     _opQueue = [[NSOperationQueue alloc] init];

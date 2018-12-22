@@ -25,12 +25,12 @@
     NSString* _baseHTTPSURL;
     NSString* _uniqueId;
     NSString* _deviceName;
-    NSData* _cert;
+    NSData* _serverCert;
     NSMutableData* _respData;
     NSData* _requestResp;
     dispatch_semaphore_t _requestLock;
     
-    BOOL _errorOccurred;
+    NSError* _error;
 }
 
 static const NSString* HTTP_PORT = @"47989";
@@ -43,11 +43,11 @@ static const NSString* HTTPS_PORT = @"47984";
     return [xmlString dataUsingEncoding:NSUTF8StringEncoding];
 }
 
-- (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert {
+- (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId serverCert:(NSData*) serverCert {
     self = [super init];
     _uniqueId = uniqueId;
     _deviceName = deviceName;
-    _cert = cert;
+    _serverCert = serverCert;
     _requestLock = dispatch_semaphore_create(0);
     _respData = [[NSMutableData alloc] init];
     NSURLSessionConfiguration* config = [NSURLSessionConfiguration ephemeralSessionConfiguration];
@@ -68,13 +68,15 @@ static const NSString* HTTPS_PORT = @"47984";
 }
 
 - (void) executeRequestSynchronously:(HttpRequest*)request {
-    Log(LOG_D, @"Making Request: %@", request);
     [_respData setLength:0];
+    _error = nil;
+    
+    Log(LOG_D, @"Making Request: %@", request);
     [[_urlSession dataTaskWithRequest:request.request completionHandler:^(NSData * __nullable data, NSURLResponse * __nullable response, NSError * __nullable error) {
         
         if (error != NULL) {
             Log(LOG_D, @"Connection error: %@", error);
-            self->_errorOccurred = true;
+            self->_error = error;
         }
         else {
             Log(LOG_D, @"Received response: %@", response);
@@ -94,7 +96,7 @@ static const NSString* HTTPS_PORT = @"47984";
     }] resume];
     dispatch_semaphore_wait(_requestLock, DISPATCH_TIME_FOREVER);
     
-    if (!_errorOccurred && request.response) {
+    if (!_error && request.response) {
         [request.response populateWithData:_requestResp];
         
         // If the fallback error code was detected, issue the fallback request
@@ -106,7 +108,15 @@ static const NSString* HTTPS_PORT = @"47984";
             [self executeRequestSynchronously:request];
         }
     }
-    _errorOccurred = false;
+    else if (_error && [_error code] == NSURLErrorServerCertificateUntrusted && request.fallbackRequest) {
+        // This will fall back to HTTP on serverinfo queries to allow us to pair again
+        // and get the server cert updated.
+        Log(LOG_D, @"Attempting fallback request after certificate trust failure");
+        request.request = request.fallbackRequest;
+        request.fallbackError = 0;
+        request.fallbackRequest = NULL;
+        [self executeRequestSynchronously:request];
+    }
 }
 
 - (NSURLRequest*) createRequestFromString:(NSString*) urlString timeout:(int)timeout {
@@ -116,9 +126,9 @@ static const NSString* HTTPS_PORT = @"47984";
     return request;
 }
 
-- (NSURLRequest*) newPairRequest:(NSData*)salt {
+- (NSURLRequest*) newPairRequest:(NSData*)salt clientCert:(NSData*)clientCert {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&phrase=getservercert&salt=%@&clientcert=%@",
-                           _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:_cert]];
+                           _baseHTTPURL, _uniqueId, _deviceName, [self bytesToHex:salt], [self bytesToHex:clientCert]];
     // This call blocks while waiting for the user to input the PIN on the PC
     return [self createRequestFromString:urlString timeout:EXTRA_LONG_TIMEOUT_SEC];
 }
@@ -130,18 +140,18 @@ static const NSString* HTTPS_PORT = @"47984";
 
 - (NSURLRequest*) newChallengeRequest:(NSData*)challenge {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientchallenge=%@",
-                           _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:challenge]];
+                           _baseHTTPURL, _uniqueId, _deviceName, [self bytesToHex:challenge]];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newChallengeRespRequest:(NSData*)challengeResp {
     NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&serverchallengeresp=%@",
-                           _baseHTTPSURL, _uniqueId, _deviceName, [self bytesToHex:challengeResp]];
+                           _baseHTTPURL, _uniqueId, _deviceName, [self bytesToHex:challengeResp]];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
 - (NSURLRequest*) newClientSecretRespRequest:(NSString*)clientPairSecret {
-    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientpairingsecret=%@", _baseHTTPSURL, _uniqueId, _deviceName, clientPairSecret];
+    NSString* urlString = [NSString stringWithFormat:@"%@/pair?uniqueid=%@&devicename=%@&updateState=1&clientpairingsecret=%@", _baseHTTPURL, _uniqueId, _deviceName, clientPairSecret];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
@@ -249,6 +259,26 @@ static const NSString* HTTPS_PORT = @"47984";
     // Allow untrusted server certificates
     if([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
     {
+        if (_serverCert) {
+            SecCertificateRef actualCert = SecTrustGetCertificateAtIndex(challenge.protectionSpace.serverTrust, 0);
+            
+            CFDataRef actualCertData;
+            
+            actualCertData = SecCertificateCopyData(actualCert);
+            
+            if (!CFEqual(actualCertData, (__bridge CFDataRef)_serverCert)) {
+                Log(LOG_E, @"Server certificate mismatch");
+                CFRelease(actualCertData);
+                completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+                return;
+            }
+            
+            CFRelease(actualCertData);
+            
+            // Fall-through to TLS success
+        }
+        
+        // Allow TLS handshake to proceed
         completionHandler(NSURLSessionAuthChallengeUseCredential,
                           [NSURLCredential credentialForTrust: challenge.protectionSpace.serverTrust]);
     }

@@ -12,8 +12,8 @@
 
 @interface HttpManager : NSObject <NSURLSessionDelegate>
 
-- (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId deviceName:(NSString*) deviceName cert:(NSData*) cert;
-- (NSURLRequest*) newPairRequest:(NSData*)salt;
+- (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId serverCert:(NSData*) serverCert;
+- (NSURLRequest*) newPairRequest:(NSData*)salt clientCert:(NSData*)clientCert;
 - (NSURLRequest*) newUnpairRequest;
 - (NSURLRequest*) newChallengeRequest:(NSData*)challenge;
 - (NSURLRequest*) newChallengeRespRequest:(NSData*)challengeResp;

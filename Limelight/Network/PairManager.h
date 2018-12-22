@@ -11,14 +11,14 @@
 @protocol PairCallback <NSObject>
 
 - (void) showPIN:(NSString*)PIN;
-- (void) pairSuccessful;
+- (void) pairSuccessful:(NSData*)serverCert;
 - (void) pairFailed:(NSString*)message;
 - (void) alreadyPaired;
 
 @end
 
 @interface PairManager : NSOperation
-- (id) initWithManager:(HttpManager*)httpManager andCert:(NSData*)cert callback:(id<PairCallback>)callback;
+- (id) initWithManager:(HttpManager*)httpManager clientCert:(NSData*)clientCert callback:(id<PairCallback>)callback;
 - (NSString*) generatePIN;
 - (NSData*) saltPIN:(NSString*)PIN;
 - (void) initiatePair:(int)serverMajorVersion;

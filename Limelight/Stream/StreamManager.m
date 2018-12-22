@@ -38,12 +38,10 @@
 - (void)main {
     [CryptoManager generateKeyPairUsingSSL];
     NSString* uniqueId = [IdManager getUniqueId];
-    NSData* cert = [CryptoManager readCertFromFile];
     
     HttpManager* hMan = [[HttpManager alloc] initWithHost:_config.host
                                                  uniqueId:uniqueId
-                                               deviceName:deviceName
-                                                     cert:cert];
+                                                     serverCert:_config.serverCert];
     
     ServerInfoResponse* serverInfoResp = [[ServerInfoResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:serverInfoResp withUrlRequest:[hMan newServerInfoRequest:false]

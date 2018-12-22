@@ -87,17 +87,28 @@ static NSData* p12 = nil;
     return (((int)[data length] + 15) / 16) * 16;
 }
 
-+ (NSData*) nullTerminateString:(NSData*)data {
-    NSMutableData* mutData = [NSMutableData dataWithData:data];
-    [mutData appendBytes:"" length:1];
-    return mutData;
++ (NSData*) pemToDer:(NSData*)pemCertBytes {
+    X509* x509;
+    
+    BIO* bio = BIO_new_mem_buf([pemCertBytes bytes], (int)[pemCertBytes length]);
+    x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+    BIO_free(bio);
+    
+    bio = BIO_new(BIO_s_mem());
+    i2d_X509_bio(bio, x509);
+
+    BUF_MEM* mem;
+    BIO_get_mem_ptr(bio, &mem);
+    
+    NSData* ret = [[NSData alloc] initWithBytes:mem->data length:mem->length];
+    BIO_free(bio);
+    
+    return ret;
 }
 
 - (bool) verifySignature:(NSData *)data withSignature:(NSData*)signature andCert:(NSData*)cert {
-    const char* buffer = [[CryptoManager nullTerminateString:cert] bytes];
     X509* x509;
-    BIO* bio = BIO_new(BIO_s_mem());
-    BIO_puts(bio, buffer);
+    BIO* bio = BIO_new_mem_buf([cert bytes], (int)[cert length]);
     x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
     
     BIO_free(bio);
@@ -122,9 +133,7 @@ static NSData* p12 = nil;
 }
 
 - (NSData *)signData:(NSData *)data withKey:(NSData *)key {
-    const char* buffer = [[CryptoManager nullTerminateString:key] bytes];
-    BIO* bio = BIO_new(BIO_s_mem());
-    BIO_puts(bio, buffer);
+    BIO* bio = BIO_new_mem_buf([key bytes], (int)[key length]);
     
     EVP_PKEY* pkey;
     pkey = PEM_read_bio_PrivateKey(bio, NULL, NULL, NULL);
@@ -211,11 +220,8 @@ static NSData* p12 = nil;
 }
 
 + (NSData *)getSignatureFromCert:(NSData *)cert {
-    const char* buffer = [[CryptoManager nullTerminateString:cert] bytes];
-    X509* x509;
-    BIO* bio = BIO_new(BIO_s_mem());
-    BIO_puts(bio, buffer);
-    x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
+    BIO* bio = BIO_new_mem_buf([cert bytes], (int)[cert length]);
+    X509* x509 = PEM_read_bio_X509(bio, NULL, NULL, NULL);
     
     if (!x509) {
         Log(LOG_E, @"Unable to parse certificate in memory!");

@@ -28,5 +28,6 @@
 @property BOOL enableHdr;
 @property BOOL multiController;
 @property BOOL allowHevc;
+@property NSData* serverCert;
 
 @end

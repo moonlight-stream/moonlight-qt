@@ -31,6 +31,7 @@
     self.uuid = host.uuid;
     self.pairState = [host.pairState intValue];
     self.serverCodecModeSupport = host.serverCodecModeSupport;
+    self.serverCert = host.serverCert;
     
     NSMutableSet *appList = [[NSMutableSet alloc] init];
 
@@ -59,6 +60,9 @@
     }
     if (self.mac != nil) {
         parentHost.mac = self.mac;
+    }
+    if (self.serverCert != nil) {
+        parentHost.serverCert = self.serverCert;
     }
     parentHost.name = self.name;
     parentHost.uuid = self.uuid;

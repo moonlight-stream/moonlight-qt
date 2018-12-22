@@ -16,16 +16,14 @@
 @implementation DiscoveryWorker {
     TemporaryHost* _host;
     NSString* _uniqueId;
-    NSData* _cert;
 }
 
 static const float POLL_RATE = 2.0f; // Poll every 2 seconds
 
-- (id) initWithHost:(TemporaryHost*)host uniqueId:(NSString*)uniqueId cert:(NSData*)cert {
+- (id) initWithHost:(TemporaryHost*)host uniqueId:(NSString*)uniqueId {
     self = [super init];
     _host = host;
     _uniqueId = uniqueId;
-    _cert = cert;
     return self;
 }
 
@@ -98,7 +96,7 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
                 return;
             }
             
-            ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:address];
+            ServerInfoResponse* serverInfoResp = [self requestInfoAtAddress:address cert:_host.serverCert];
             receivedResponse = [self checkResponse:serverInfoResp];
             if (receivedResponse) {
                 [serverInfoResp populateHost:_host];
@@ -123,11 +121,10 @@ static const float POLL_RATE = 2.0f; // Poll every 2 seconds
     }
 }
 
-- (ServerInfoResponse*) requestInfoAtAddress:(NSString*)address {
+- (ServerInfoResponse*) requestInfoAtAddress:(NSString*)address cert:(NSData*)cert {
     HttpManager* hMan = [[HttpManager alloc] initWithHost:address
                                                  uniqueId:_uniqueId
-                                               deviceName:deviceName
-                                                     cert:_cert];
+                                                     serverCert:cert];
     ServerInfoResponse* response = [[ServerInfoResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:response
                                                        withUrlRequest:[hMan newServerInfoRequest:true]
