@@ -434,9 +434,19 @@ NvHTTP::openConnection(QUrl baseUrl,
         if (logLevel >= NvLogLevel::ERROR) {
             qWarning() << command << " request failed with error " << reply->error();
         }
-        QtNetworkReplyException exception(reply->error(), reply->errorString());
-        delete reply;
-        throw exception;
+
+        if (!m_ServerCert.isNull() && reply->error() == QNetworkReply::SslHandshakeFailedError) {
+            // This will trigger falling back to HTTP for the serverinfo query
+            // then pairing again to get the updated certificate.
+            GfeHttpResponseException exception(401, "Server certificate mismatch");
+            delete reply;
+            throw exception;
+        }
+        else {
+            QtNetworkReplyException exception(reply->error(), reply->errorString());
+            delete reply;
+            throw exception;
+        }
     }
 
     return reply;
