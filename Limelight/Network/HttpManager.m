@@ -43,6 +43,10 @@ static const NSString* HTTPS_PORT = @"47984";
     return [xmlString dataUsingEncoding:NSUTF8StringEncoding];
 }
 
+- (void) setServerCert:(NSData*) serverCert {
+    _serverCert = serverCert;
+}
+
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId serverCert:(NSData*) serverCert {
     self = [super init];
     _uniqueId = uniqueId;
@@ -120,6 +124,9 @@ static const NSString* HTTPS_PORT = @"47984";
 }
 
 - (NSURLRequest*) createRequestFromString:(NSString*) urlString timeout:(int)timeout {
+    // Assert that we only issue HTTPS requests with a pinned cert
+    assert([urlString hasPrefix:@"http://"] || _serverCert != nil);
+    
     NSURL* url = [[NSURL alloc] initWithString:urlString];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setTimeoutInterval:timeout];
@@ -134,7 +141,7 @@ static const NSString* HTTPS_PORT = @"47984";
 }
 
 - (NSURLRequest*) newUnpairRequest {
-    NSString* urlString = [NSString stringWithFormat:@"%@/unpair?uniqueid=%@", _baseHTTPSURL, _uniqueId];
+    NSString* urlString = [NSString stringWithFormat:@"%@/unpair?uniqueid=%@", _baseHTTPURL, _uniqueId];
     return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
 }
 
@@ -166,13 +173,22 @@ static const NSString* HTTPS_PORT = @"47984";
 }
 
 - (NSURLRequest *)newServerInfoRequest:(bool)fastFail {
+    if (_serverCert == nil) {
+        // Use HTTP if the cert is not pinned yet
+        return [self newHttpServerInfoRequest:fastFail];
+    }
+    
     NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo?uniqueid=%@", _baseHTTPSURL, _uniqueId];
     return [self createRequestFromString:urlString timeout:(fastFail ? SHORT_TIMEOUT_SEC : NORMAL_TIMEOUT_SEC)];
 }
 
-- (NSURLRequest *)newHttpServerInfoRequest {
+- (NSURLRequest *)newHttpServerInfoRequest:(bool)fastFail {
     NSString* urlString = [NSString stringWithFormat:@"%@/serverinfo", _baseHTTPURL];
-    return [self createRequestFromString:urlString timeout:NORMAL_TIMEOUT_SEC];
+    return [self createRequestFromString:urlString timeout:(fastFail ? SHORT_TIMEOUT_SEC : NORMAL_TIMEOUT_SEC)];
+}
+
+- (NSURLRequest *)newHttpServerInfoRequest {
+    return [self newHttpServerInfoRequest:false];
 }
 
 - (NSURLRequest*) newLaunchRequest:(StreamConfiguration*)config {
@@ -259,24 +275,34 @@ static const NSString* HTTPS_PORT = @"47984";
     // Allow untrusted server certificates
     if([challenge.protectionSpace.authenticationMethod isEqualToString:NSURLAuthenticationMethodServerTrust])
     {
-        if (_serverCert) {
-            SecCertificateRef actualCert = SecTrustGetCertificateAtIndex(challenge.protectionSpace.serverTrust, 0);
-            
-            CFDataRef actualCertData;
-            
-            actualCertData = SecCertificateCopyData(actualCert);
-            
-            if (!CFEqual(actualCertData, (__bridge CFDataRef)_serverCert)) {
-                Log(LOG_E, @"Server certificate mismatch");
-                CFRelease(actualCertData);
-                completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
-                return;
-            }
-            
-            CFRelease(actualCertData);
-            
-            // Fall-through to TLS success
+        if (SecTrustGetCertificateCount(challenge.protectionSpace.serverTrust) != 1) {
+            Log(LOG_E, @"Server certificate count mismatch");
+            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            return;
         }
+        
+        SecCertificateRef actualCert = SecTrustGetCertificateAtIndex(challenge.protectionSpace.serverTrust, 0);
+        if (actualCert == nil) {
+            Log(LOG_E, @"Server certificate parsing error");
+            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            return;
+        }
+        
+        CFDataRef actualCertData = SecCertificateCopyData(actualCert);
+        if (actualCertData == nil) {
+            Log(LOG_E, @"Server certificate data parsing error");
+            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            return;
+        }
+        
+        if (!CFEqual(actualCertData, (__bridge CFDataRef)_serverCert)) {
+            Log(LOG_E, @"Server certificate mismatch");
+            CFRelease(actualCertData);
+            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            return;
+        }
+        
+        CFRelease(actualCertData);
         
         // Allow TLS handshake to proceed
         completionHandler(NSURLSessionAuthChallengeUseCredential,

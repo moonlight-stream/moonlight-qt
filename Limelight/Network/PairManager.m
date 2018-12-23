@@ -78,6 +78,10 @@
         return;
     }
     
+    // Pin the cert for TLS usage on this host
+    NSData* derCertBytes = [CryptoManager pemToDer:[Utils hexToBytes:plainCert]];
+    [_httpManager setServerCert:derCertBytes];
+    
     CryptoManager* cryptoMan = [[CryptoManager alloc] init];
     NSData* aesKey;
     
@@ -181,7 +185,7 @@
         return;
     }
     
-    [_callback pairSuccessful: [CryptoManager pemToDer:[Utils hexToBytes:plainCert]]];
+    [_callback pairSuccessful: derCertBytes];
 }
 
 - (BOOL) verifyResponseStatus:(HttpResponse*)resp {

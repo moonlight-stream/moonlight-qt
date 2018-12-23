@@ -13,6 +13,7 @@
 @interface HttpManager : NSObject <NSURLSessionDelegate>
 
 - (id) initWithHost:(NSString*) host uniqueId:(NSString*) uniqueId serverCert:(NSData*) serverCert;
+- (void) setServerCert:(NSData*) serverCert;
 - (NSURLRequest*) newPairRequest:(NSData*)salt clientCert:(NSData*)clientCert;
 - (NSURLRequest*) newUnpairRequest;
 - (NSURLRequest*) newChallengeRequest:(NSData*)challenge;
@@ -21,6 +22,7 @@
 - (NSURLRequest*) newPairChallenge;
 - (NSURLRequest*) newAppListRequest;
 - (NSURLRequest*) newServerInfoRequest:(bool)fastFail;
+- (NSURLRequest*) newHttpServerInfoRequest:(bool)fastFail;
 - (NSURLRequest*) newHttpServerInfoRequest;
 - (NSURLRequest*) newLaunchRequest:(StreamConfiguration*)config;
 - (NSURLRequest*) newResumeRequest:(StreamConfiguration*)config;
