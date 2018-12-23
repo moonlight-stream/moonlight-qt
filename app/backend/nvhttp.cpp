@@ -399,8 +399,12 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Build a URL for the request
     QUrl url(baseUrl);
     url.setPath("/" + command);
-    url.setQuery("uniqueid=" + IdentityManager::get()->getUniqueId() +
-                 "&uuid=" + QUuid::createUuid().toRfc4122().toHex() +
+
+    // Use a common UID for Moonlight clients to allow them to quit
+    // games for each other (otherwise GFE gets screwed up and it requires
+    // manual intervention to solve).
+    url.setQuery("uniqueid=0123456789ABCDEF&uuid=" +
+                 QUuid::createUuid().toRfc4122().toHex() +
                  ((arguments != nullptr) ? ("&" + arguments) : ""));
 
     QNetworkRequest request = QNetworkRequest(url);
