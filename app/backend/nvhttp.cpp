@@ -410,6 +410,10 @@ NvHTTP::openConnection(QUrl baseUrl,
 
     QNetworkReply* reply = m_Nam.get(request);
 
+    // Assert that we always have a server cert for HTTPS, since
+    // the request will fail anyway if we do not.
+    Q_ASSERT(!m_ServerCert.isNull() || baseUrl == m_BaseUrlHttp);
+
     if (!m_ServerCert.isNull()) {
         // Pin the server certificate received during pairing
         QList<QSslError> expectedSslErrors;
