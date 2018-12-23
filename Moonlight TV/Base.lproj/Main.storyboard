@@ -119,12 +119,20 @@
                                 <nil key="textColor"/>
                                 <nil key="highlightedColor"/>
                             </label>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" fixedFrame="YES" text="Label" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="T9a-QR-DGU" userLabel="Tip Label">
+                                <rect key="frame" x="914" y="821" width="93" height="46"/>
+                                <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMaxY="YES"/>
+                                <fontDescription key="fontDescription" style="UICTFontTextStyleHeadline"/>
+                                <nil key="textColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <viewLayoutGuide key="safeArea" id="Vnr-7v-hDb"/>
                     </view>
                     <connections>
                         <outlet property="spinner" destination="0eJ-kd-ugl" id="KfF-3I-6hN"/>
                         <outlet property="stageLabel" destination="BUJ-Dh-gl5" id="tEa-k3-sU2"/>
+                        <outlet property="tipLabel" destination="T9a-QR-DGU" id="M1t-iG-6aC"/>
                     </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="IJO-zp-f3d" userLabel="First Responder" sceneMemberID="firstResponder"/>

@@ -71,7 +71,17 @@
     [self.view addGestureRecognizer:_menuGestureRecognizer];
     [self.view addGestureRecognizer:_menuDoubleTapGestureRecognizer];
 #endif
-
+    
+#if TARGET_OS_TV
+    [self.tipLabel setText:@"Tip: Double tap the Menu button to disconnect from your PC"];
+#else
+    [self.tipLabel setText:@"Tip: Swipe from the left edge to disconnect from your PC"];
+#endif
+    
+    [self.tipLabel sizeToFit];
+    self.tipLabel.textAlignment = NSTextAlignmentCenter;
+    self.tipLabel.center = CGPointMake(self.view.frame.size.width / 2, self.tipLabel.center.y);
+    
     _streamMan = [[StreamManager alloc] initWithConfig:self.streamConfig
                                             renderView:self.view
                                    connectionCallbacks:self];
@@ -165,6 +175,7 @@
         // Leave the spinner spinning until it's obscured by
         // the first frame of video.
         self.stageLabel.hidden = YES;
+        self.tipLabel.hidden = YES;
 #if !TARGET_OS_TV
         [(StreamView*)self.view setupOnScreenControls: self->_controllerSupport swipeDelegate:self];
 #endif
