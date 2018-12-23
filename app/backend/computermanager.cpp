@@ -538,12 +538,8 @@ signals:
     void computerStateChanged(NvComputer* computer);
 
 private:
-    void run()
+    QString fetchServerInfo(NvHTTP& http)
     {
-        NvHTTP http(m_Address, QSslCertificate());
-
-        qInfo() << "Processing new PC at" << m_Address << "from" << (m_Mdns ? "mDNS" : "user");
-
         QString serverInfo;
         try {
             // There's a race condition between GameStream servers reporting presence over
@@ -564,14 +560,51 @@ private:
                     throw e;
                 }
             }
+            return serverInfo;
         } catch (...) {
             if (!m_Mdns) {
                 emit computerAddCompleted(false);
             }
+            return QString();
+        }
+    }
+
+    void run()
+    {
+        NvHTTP http(m_Address, QSslCertificate());
+
+        qInfo() << "Processing new PC at" << m_Address << "from" << (m_Mdns ? "mDNS" : "user");
+
+        // Perform initial serverinfo fetch over HTTP since we don't know which cert to use
+        QString serverInfo = fetchServerInfo(http);
+        if (serverInfo.isEmpty()) {
             return;
         }
 
+        // Create initial newComputer using HTTP serverinfo with no pinned cert
         NvComputer* newComputer = new NvComputer(m_Address, serverInfo, QSslCertificate());
+
+        // Check if we have a record of this host UUID to pull the pinned cert
+        NvComputer* existingComputer;
+        {
+            QReadLocker lock(&m_ComputerManager->m_Lock);
+            existingComputer = m_ComputerManager->m_KnownHosts[newComputer->uuid];
+            if (existingComputer != nullptr) {
+                http.setServerCert(existingComputer->serverCert);
+            }
+        }
+
+        // Fetch serverinfo again over HTTPS with the pinned cert
+        if (existingComputer != nullptr) {
+            serverInfo = fetchServerInfo(http);
+            if (serverInfo.isEmpty()) {
+                return;
+            }
+
+            // Update the polled computer with the HTTPS information
+            NvComputer httpsComputer(m_Address, serverInfo, QSslCertificate());
+            newComputer->update(httpsComputer);
+        }
 
         // Update addresses depending on the context
         if (m_Mdns) {
@@ -591,45 +624,47 @@ private:
             newComputer->manualAddress = m_Address;
         }
 
-        // Check if this PC already exists
-        QWriteLocker lock(&m_ComputerManager->m_Lock);
-        NvComputer* existingComputer = m_ComputerManager->m_KnownHosts[newComputer->uuid];
-        if (existingComputer != nullptr) {
-            // Fold it into the existing PC
-            bool changed = existingComputer->update(*newComputer);
-            delete newComputer;
+        {
+            // Check if this PC already exists
+            QWriteLocker lock(&m_ComputerManager->m_Lock);
+            NvComputer* existingComputer = m_ComputerManager->m_KnownHosts[newComputer->uuid];
+            if (existingComputer != nullptr) {
+                // Fold it into the existing PC
+                bool changed = existingComputer->update(*newComputer);
+                delete newComputer;
 
-            // Drop the lock before notifying
-            lock.unlock();
+                // Drop the lock before notifying
+                lock.unlock();
 
-            // For non-mDNS clients, let them know it succeeded
-            if (!m_Mdns) {
-                emit computerAddCompleted(true);
+                // For non-mDNS clients, let them know it succeeded
+                if (!m_Mdns) {
+                    emit computerAddCompleted(true);
+                }
+
+                // Tell our client if something changed
+                if (changed) {
+                    qInfo() << existingComputer->name << "is now at" << existingComputer->activeAddress;
+                    emit computerStateChanged(existingComputer);
+                }
             }
+            else {
+                // Store this in our active sets
+                m_ComputerManager->m_KnownHosts[newComputer->uuid] = newComputer;
 
-            // Tell our client if something changed
-            if (changed) {
-                qInfo() << existingComputer->name << "is now at" << existingComputer->activeAddress;
-                emit computerStateChanged(existingComputer);
+                // Start polling if enabled (write lock required)
+                m_ComputerManager->startPollingComputer(newComputer);
+
+                // Drop the lock before notifying
+                lock.unlock();
+
+                // For non-mDNS clients, let them know it succeeded
+                if (!m_Mdns) {
+                    emit computerAddCompleted(true);
+                }
+
+                // Tell our client about this new PC
+                emit computerStateChanged(newComputer);
             }
-        }
-        else {
-            // Store this in our active sets
-            m_ComputerManager->m_KnownHosts[newComputer->uuid] = newComputer;
-
-            // Start polling if enabled (write lock required)
-            m_ComputerManager->startPollingComputer(newComputer);
-
-            // Drop the lock before notifying
-            lock.unlock();
-
-            // For non-mDNS clients, let them know it succeeded
-            if (!m_Mdns) {
-                emit computerAddCompleted(true);
-            }
-
-            // Tell our client about this new PC
-            emit computerStateChanged(newComputer);
         }
     }
 

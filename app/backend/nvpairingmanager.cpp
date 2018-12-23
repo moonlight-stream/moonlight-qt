@@ -208,6 +208,18 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
         return PairState::ALREADY_IN_PROGRESS;
     }
 
+    serverCert = QSslCertificate(serverCertStr);
+    if (serverCert.isNull()) {
+        Q_ASSERT(!serverCert.isNull());
+
+        qCritical() << "Failed to parse plaincert";
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        return PairState::FAILED;
+    }
+
+    // Pin this cert for TLS
+    m_Http.setServerCert(serverCert);
+
     QByteArray randomChallenge = generateRandomBytes(16);
     QByteArray encryptedChallenge = encrypt(randomChallenge, &encKey);
     QString challengeXml = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
@@ -309,6 +321,5 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
         return PairState::FAILED;
     }
 
-    serverCert = QSslCertificate(serverCertStr);
     return PairState::PAIRED;
 }

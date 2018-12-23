@@ -32,6 +32,11 @@ NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
     m_Nam.setProxy(noProxy);
 }
 
+void NvHTTP::setServerCert(QSslCertificate serverCert)
+{
+    m_ServerCert = serverCert;
+}
+
 QVector<int>
 NvHTTP::parseQuad(QString quad)
 {
@@ -74,35 +79,49 @@ NvHTTP::getServerInfo(NvLogLevel logLevel)
 {
     QString serverInfo;
 
-    try
+    // Check if we have a pinned cert for this host yet
+    if (!m_ServerCert.isNull())
     {
-        // Always try HTTPS first, since it properly reports
-        // pairing status (and a few other attributes).
-        serverInfo = openConnectionToString(m_BaseUrlHttps,
-                                            "serverinfo",
-                                            nullptr,
-                                            true,
-                                            logLevel);
-        // Throws if the request failed
-        verifyResponseStatus(serverInfo);
-    }
-    catch (const GfeHttpResponseException& e)
-    {
-        if (e.getStatusCode() == 401)
+        try
         {
-            // Certificate validation error, fallback to HTTP
-            serverInfo = openConnectionToString(m_BaseUrlHttp,
+            // Always try HTTPS first, since it properly reports
+            // pairing status (and a few other attributes).
+            serverInfo = openConnectionToString(m_BaseUrlHttps,
                                                 "serverinfo",
                                                 nullptr,
                                                 true,
                                                 logLevel);
+            // Throws if the request failed
             verifyResponseStatus(serverInfo);
         }
-        else
+        catch (const GfeHttpResponseException& e)
         {
-            // Rethrow real errors
-            throw e;
+            if (e.getStatusCode() == 401)
+            {
+                // Certificate validation error, fallback to HTTP
+                serverInfo = openConnectionToString(m_BaseUrlHttp,
+                                                    "serverinfo",
+                                                    nullptr,
+                                                    true,
+                                                    logLevel);
+                verifyResponseStatus(serverInfo);
+            }
+            else
+            {
+                // Rethrow real errors
+                throw e;
+            }
         }
+    }
+    else
+    {
+        // Only use HTTP prior to pairing
+        serverInfo = openConnectionToString(m_BaseUrlHttp,
+                                            "serverinfo",
+                                            nullptr,
+                                            true,
+                                            logLevel);
+        verifyResponseStatus(serverInfo);
     }
 
     return serverInfo;
@@ -391,11 +410,7 @@ NvHTTP::openConnection(QUrl baseUrl,
 
     QNetworkReply* reply = m_Nam.get(request);
 
-    if (m_ServerCert.isNull()) {
-        // No server cert yet
-        reply->ignoreSslErrors();
-    }
-    else {
+    if (!m_ServerCert.isNull()) {
         // Pin the server certificate received during pairing
         QList<QSslError> expectedSslErrors;
         expectedSslErrors.append(QSslError(QSslError::HostNameMismatch, m_ServerCert));
@@ -435,7 +450,7 @@ NvHTTP::openConnection(QUrl baseUrl,
             qWarning() << command << " request failed with error " << reply->error();
         }
 
-        if (!m_ServerCert.isNull() && reply->error() == QNetworkReply::SslHandshakeFailedError) {
+        if (reply->error() == QNetworkReply::SslHandshakeFailedError) {
             // This will trigger falling back to HTTP for the serverinfo query
             // then pairing again to get the updated certificate.
             GfeHttpResponseException exception(401, "Server certificate mismatch");

@@ -152,6 +152,8 @@ public:
                            bool enableTimeout,
                            NvLogLevel logLevel = NvLogLevel::VERBOSE);
 
+    void setServerCert(QSslCertificate serverCert);
+
     static
     QVector<int>
     parseQuad(QString quad);
