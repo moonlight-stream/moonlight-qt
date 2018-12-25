@@ -40,7 +40,7 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
 ### Linux-specific Requirements
 * GCC or Clang
-* Install your distro equivalents of: `openssl-devel qt5-devel SDL2-devel ffmpeg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel`
+* Install your distro equivalents of: `openssl-devel qt5-devel SDL2-devel ffmpeg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel`
 * FFmpeg 4.0 is required to build. If your distro doesn't package FFmpeg 4.0, you can build and install it from source on http://ffmpeg.org/
 
 ### Build Setup Steps
