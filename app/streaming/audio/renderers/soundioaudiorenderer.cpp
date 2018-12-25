@@ -17,6 +17,7 @@ SoundIoAudioRenderer::SoundIoAudioRenderer()
       m_Device(nullptr),
       m_OutputStream(nullptr),
       m_RingBuffer(nullptr),
+      m_Latency(0),
       m_Errored(false)
 {
 
@@ -24,6 +25,10 @@ SoundIoAudioRenderer::SoundIoAudioRenderer()
 
 SoundIoAudioRenderer::~SoundIoAudioRenderer()
 {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio latency: %f",
+                m_Latency);
+
     if (m_OutputStream != nullptr) {
         soundio_outstream_destroy(m_OutputStream);
     }
@@ -330,41 +335,19 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
             (me->m_OpusChannelCount * stream->bytes_per_sample);
     int bytesRead = 0;
 
-    // Clamp framesLeft to frameCountMax
-    framesLeft = qMin(framesLeft, frameCountMax);
-
     // Ensure we always write at least a buffer, even if it's silence, to avoid
     // busy looping when no audio data is available while libsoundio tries to keep
     // us from starving the output device.
     frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * k_RawSampleLengthSec));
     frameCountMin = qMin(frameCountMin, frameCountMax);
 
-    // Place an upper-bound on audio stream latency to
-    // avoid accumulating packets in queue-based backends
-    // like WASAPI, ALSA, and PulseAudio.
-    //
-    // This bound was set by testing on several Windows machines.
-    // The highest latency was found on a XPS 9343 running Windows 7
-    // in Steam Big Picture and the 5.1 audio test clip from Fraunhofer.
-    if (me->m_SoundIo->current_backend != SoundIoBackendCoreAudio && me->m_SoundIo->current_backend != SoundIoBackendJack) {
-        double latency;
-        if (soundio_outstream_get_latency(stream, &latency) == SoundIoErrorNone) {
-            if (latency > 0.050) {
-                // If our latency is higher than desired, drop these samples to gracefully lower
-                // the latency without glitching too much. Dropping the whole buffer causes
-                // a much more noticeable glitch. This approach also ensures that we don't
-                // accidentally underflow if the driver/kernel side is delayed and isn't
-                // consuming data fast enough. Dropping a frame at a time and re-evaluating
-                // each time ensures that we'll stop dropping if latency returns to normal.
-                readPtr += framesLeft * stream->bytes_per_sample * me->m_OpusChannelCount;
-                bytesRead += framesLeft * stream->bytes_per_sample * me->m_OpusChannelCount;
-                framesLeft = 0;
+    // Clamp framesLeft to frameCountMin to ensure that we never write more than one sample.
+    // This makes sure that we never increase our latency beyond what the sink is consuming.
+    framesLeft = qMin(framesLeft, frameCountMin);
 
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Latency exceeded drop cap: %f",
-                            latency);
-            }
-        }
+    // Track latency on queueing-based backends
+    if (me->m_SoundIo->current_backend != SoundIoBackendCoreAudio && me->m_SoundIo->current_backend != SoundIoBackendJack) {
+        soundio_outstream_get_latency(stream, &me->m_Latency);
     }
 
     for (;;) {
