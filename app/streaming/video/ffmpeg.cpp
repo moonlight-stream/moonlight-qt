@@ -258,6 +258,7 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.pacerDroppedFrames += src.pacerDroppedFrames;
     dst.totalReassemblyTime += src.totalReassemblyTime;
     dst.totalDecodeTime += src.totalDecodeTime;
+    dst.totalPacerTime += src.totalPacerTime;
     dst.totalRenderTime += src.totalRenderTime;
 
     Uint32 now = SDL_GetTicks();
@@ -311,6 +312,9 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Average decode time: %.2f ms",
                     (float)stats.totalDecodeTime / stats.decodedFrames);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Average frame pacing delay: %.2f ms",
+                    (float)stats.totalPacerTime / stats.renderedFrames);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Average render time: %.2f ms",
                     (float)stats.totalRenderTime / stats.renderedFrames);
@@ -576,6 +580,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     if (err == 0) {
         // Reset failed decodes count if we reached this far
         m_ConsecutiveFailedDecodes = 0;
+
+        // Capture a frame timestamp to measuring pacing delay
+        frame->pts = SDL_GetTicks();
 
         // Queue the frame for rendering from the main thread
         SDL_AtomicIncRef(&m_QueuedFrames);

@@ -87,7 +87,6 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
         av_frame_free(&frame);
     }
 
-
     if (m_FrameQueue.isEmpty()) {
         SDL_AtomicUnlock(&m_FrameQueueLock);
 
@@ -112,8 +111,11 @@ RenderNextFrame:
     AVFrame* frame = m_FrameQueue.dequeue();
     SDL_AtomicUnlock(&m_FrameQueueLock);
 
-    // Render it
+    // Count time spent in Pacer's queues
     Uint32 beforeRender = SDL_GetTicks();
+    m_VideoStats->totalPacerTime += beforeRender - frame->pts;
+
+    // Render it
     m_VsyncRenderer->renderFrameAtVsync(frame);
     m_VideoStats->totalRenderTime += SDL_GetTicks() - beforeRender;
     m_VideoStats->renderedFrames++;
