@@ -971,7 +971,7 @@ QString SdlInputHandler::getUnmappedGamepads()
                             "Number of axes: %d | Number of buttons: %d | Number of hats: %d",
                             numAxes, numButtons, numHats);
 
-                if (numAxes >= 4 && numButtons >= 8 && numHats <= 1) {
+                if ((numAxes >= 4 && numAxes <= 8) && numButtons >= 8 && numHats <= 1) {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                 "Joystick likely to be an unmapped game controller");
                     if (!ret.isEmpty()) {
