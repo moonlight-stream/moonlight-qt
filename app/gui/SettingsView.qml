@@ -300,7 +300,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateDesc
-                    text: qsTr("Lower bitrate to reduce lag and stuttering. Raise bitrate to increase image quality.")
+                    text: qsTr("Lower the bitrate on slower connections. Raise the bitrate to increase image quality.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                 }
@@ -322,6 +322,11 @@ Flickable {
                         bitrateTitle.text = "Video bitrate: " + (value / 1000.0) + " Mbps"
                         prefs.bitrateKbps = value
                     }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "This slider controls video bitrate only. Audio data will add an additional 1-2 Mbps on top of this."
                 }
 
                 Label {
