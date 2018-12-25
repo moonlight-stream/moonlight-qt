@@ -246,9 +246,9 @@ int VDPAURenderer::getDecoderCapabilities()
     return 0;
 }
 
-IFFmpegRenderer::VSyncConstraint VDPAURenderer::getVsyncConstraint()
+IFFmpegRenderer::FramePacingConstraint VDPAURenderer::getFramePacingConstraint()
 {
-    return VSYNC_ANY;
+    return PACING_ANY;
 }
 
 void VDPAURenderer::renderFrameAtVsync(AVFrame* frame)

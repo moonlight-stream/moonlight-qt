@@ -644,9 +644,9 @@ int DXVA2Renderer::getDecoderCapabilities()
     return 0;
 }
 
-IFFmpegRenderer::VSyncConstraint DXVA2Renderer::getVsyncConstraint()
+IFFmpegRenderer::FramePacingConstraint DXVA2Renderer::getFramePacingConstraint()
 {
-    return VSYNC_ANY;
+    return PACING_ANY;
 }
 
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)

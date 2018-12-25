@@ -33,7 +33,8 @@ public:
                             int width,
                             int height,
                             int frameRate,
-                            bool enableVsync) = 0;
+                            bool enableVsync,
+                            bool enableFramePacing) = 0;
     virtual bool isHardwareAccelerated() = 0;
     virtual int getDecoderCapabilities() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;

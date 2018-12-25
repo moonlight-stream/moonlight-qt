@@ -8,10 +8,10 @@ extern "C" {
 
 class IFFmpegRenderer {
 public:
-    enum VSyncConstraint {
-        VSYNC_FORCE_OFF,
-        VSYNC_FORCE_ON,
-        VSYNC_ANY
+    enum FramePacingConstraint {
+        PACING_FORCE_OFF,
+        PACING_FORCE_ON,
+        PACING_ANY
     };
 
     virtual ~IFFmpegRenderer() {}
@@ -25,7 +25,7 @@ public:
     virtual void renderFrameAtVsync(AVFrame* frame) = 0;
     virtual bool needsTestFrame() = 0;
     virtual int getDecoderCapabilities() = 0;
-    virtual VSyncConstraint getVsyncConstraint() = 0;
+    virtual FramePacingConstraint getFramePacingConstraint() = 0;
 };
 
 class SdlRenderer : public IFFmpegRenderer {
@@ -42,7 +42,7 @@ public:
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();
     virtual int getDecoderCapabilities();
-    virtual VSyncConstraint getVsyncConstraint();
+    virtual FramePacingConstraint getFramePacingConstraint();
 
 private:
     SDL_Renderer* m_Renderer;

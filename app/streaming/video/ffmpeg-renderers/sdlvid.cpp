@@ -43,9 +43,9 @@ int SdlRenderer::getDecoderCapabilities()
     return CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
 }
 
-IFFmpegRenderer::VSyncConstraint SdlRenderer::getVsyncConstraint()
+IFFmpegRenderer::FramePacingConstraint SdlRenderer::getFramePacingConstraint()
 {
-    return VSYNC_ANY;
+    return PACING_ANY;
 }
 
 bool SdlRenderer::initialize(SDL_Window* window,

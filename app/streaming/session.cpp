@@ -99,11 +99,11 @@ void Session::clLogMessage(const char* format, ...)
     va_end(ap);
 }
 
-#define CALL_INITIALIZE(dec) (dec)->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync)
+#define CALL_INITIALIZE(dec) (dec)->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync, enableFramePacing)
 
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
-                            int frameRate, bool enableVsync, IVideoDecoder*& chosenDecoder)
+                            int frameRate, bool enableVsync, bool enableFramePacing, IVideoDecoder*& chosenDecoder)
 {
 #ifdef HAVE_SLVIDEO
     chosenDecoder = new SLVideoDecoder();
@@ -217,7 +217,7 @@ bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelect
         return false;
     }
 
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, decoder)) {
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, decoder)) {
         SDL_DestroyWindow(window);
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
@@ -257,7 +257,7 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
         return false;
     }
 
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, decoder)) {
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, decoder)) {
         SDL_DestroyWindow(window);
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
@@ -1120,6 +1120,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                                    m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
                                    m_ActiveVideoHeight, m_ActiveVideoFrameRate,
                                    enableVsync,
+                                   enableVsync && m_Preferences->framePacing,
                                    s_ActiveSession->m_VideoDecoder)) {
                     SDL_AtomicUnlock(&m_DecoderLock);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

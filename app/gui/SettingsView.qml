@@ -383,7 +383,7 @@ Flickable {
                 CheckBox {
                     id: vsyncCheck
                     hoverEnabled: true
-                    text: "Enable V-Sync"
+                    text: "V-Sync"
                     font.pointSize:  12
                     checked: prefs.enableVsync
                     onCheckedChanged: {
@@ -394,6 +394,22 @@ Flickable {
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
                     ToolTip.text: "Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing"
+                }
+
+                CheckBox {
+                    id: framePacingCheck
+                    hoverEnabled: true
+                    text: "Frame pacing"
+                    font.pointSize:  12
+                    enabled: prefs.enableVsync
+                    checked: prefs.enableVsync && prefs.framePacing
+                    onCheckedChanged: {
+                        prefs.framePacing = checked
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Frame pacing reduces micro-stutter by delaying frames that come in too early"
                 }
             }
         }

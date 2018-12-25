@@ -72,7 +72,8 @@ private:
     static
     bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                        SDL_Window* window, int videoFormat, int width, int height,
-                       int frameRate, bool enableVsync, IVideoDecoder*& chosenDecoder);
+                       int frameRate, bool enableVsync, bool enableFramePacing,
+                       IVideoDecoder*& chosenDecoder);
 
     static
     void clStageStarting(int stage);

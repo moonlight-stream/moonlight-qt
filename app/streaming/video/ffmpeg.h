@@ -18,7 +18,8 @@ public:
                             int width,
                             int height,
                             int maxFps,
-                            bool enableVsync) override;
+                            bool enableVsync,
+                            bool enableFramePacing) override;
     virtual bool isHardwareAccelerated() override;
     virtual int getDecoderCapabilities() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
@@ -30,7 +31,7 @@ public:
 private:
     bool completeInitialization(AVCodec* decoder, SDL_Window* window,
                                 int videoFormat, int width, int height,
-                                int maxFps, bool enableVsync, bool testOnly);
+                                int maxFps, bool enableFramePacing, bool testOnly);
 
     void logVideoStats(VIDEO_STATS& stats, const char* title);
 

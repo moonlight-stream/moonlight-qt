@@ -25,7 +25,7 @@ public:
     virtual void renderFrameAtVsync(AVFrame* frame);
     virtual bool needsTestFrame();
     virtual int getDecoderCapabilities();
-    virtual VSyncConstraint getVsyncConstraint();
+    virtual FramePacingConstraint getFramePacingConstraint();
 
 private:
     bool initializeDecoder();

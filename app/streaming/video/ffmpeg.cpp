@@ -131,27 +131,27 @@ void FFmpegVideoDecoder::reset()
 
 bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* window,
                                                 int videoFormat, int width, int height,
-                                                int maxFps, bool enableVsync, bool testOnly)
+                                                int maxFps, bool enableFramePacing, bool testOnly)
 {
-    auto vsyncConstraint = m_Renderer->getVsyncConstraint();
-    if (vsyncConstraint == IFFmpegRenderer::VSYNC_FORCE_OFF && enableVsync) {
+    auto vsyncConstraint = m_Renderer->getFramePacingConstraint();
+    if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_OFF && enableFramePacing) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "V-sync is forcefully disabled by the active renderer");
-        enableVsync = false;
+                    "Frame pacing is forcefully disabled by the active renderer");
+        enableFramePacing = false;
     }
-    else if (vsyncConstraint == IFFmpegRenderer::VSYNC_FORCE_ON && !enableVsync) {
+    else if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_ON && !enableFramePacing) {
         // FIXME: This duplicates logic in Session.cpp
         int displayHz = StreamUtils::getDisplayRefreshRate(window);
         if (displayHz + 5 >= maxFps) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "V-sync is forcefully enabled by the active renderer");
-            enableVsync = true;
+                        "Frame pacing is forcefully enabled by the active renderer");
+            enableFramePacing = true;
         }
     }
 
     m_StreamFps = maxFps;
     m_Pacer = new Pacer(m_Renderer, &m_ActiveWndVideoStats);
-    if (!m_Pacer->initialize(window, maxFps, enableVsync)) {
+    if (!m_Pacer->initialize(window, maxFps, enableFramePacing)) {
         return false;
     }
 
@@ -363,7 +363,8 @@ bool FFmpegVideoDecoder::initialize(
         int width,
         int height,
         int maxFps,
-        bool enableVsync)
+        bool enableVsync,
+        bool enableFramePacing)
 {
     AVCodec* decoder;
 
@@ -399,7 +400,7 @@ bool FFmpegVideoDecoder::initialize(
             m_Renderer = new SdlRenderer();
             if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
                     m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableVsync, false)) {
+                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, false)) {
                 return true;
             }
             else {
@@ -416,13 +417,13 @@ bool FFmpegVideoDecoder::initialize(
         m_HwDecodeCfg = config;
         // Initialize the hardware codec and submit a test frame if the renderer needs it
         if (m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableVsync, m_Renderer->needsTestFrame())) {
+                completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, m_Renderer->needsTestFrame())) {
             if (m_Renderer->needsTestFrame()) {
                 // The test worked, so now let's initialize it for real
                 reset();
                 if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
                         m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                        completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableVsync, false)) {
+                        completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, false)) {
                     return true;
                 }
                 else {
@@ -493,7 +494,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     // Flip stats windows roughly every second
     if (m_ActiveWndVideoStats.receivedFrames == m_StreamFps) {
-#if 0
+#if 1
         VIDEO_STATS lastTwoWndStats = {};
         addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
         addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);

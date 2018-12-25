@@ -20,7 +20,7 @@ public:
 
     void submitFrame(AVFrame* frame);
 
-    bool initialize(SDL_Window* window, int maxVideoFps, bool enableVsync);
+    bool initialize(SDL_Window* window, int maxVideoFps, bool enablePacing);
 
     void vsyncCallback(int timeUntilNextVsyncMillis);
 
@@ -35,6 +35,5 @@ private:
     IFFmpegRenderer* m_VsyncRenderer;
     int m_MaxVideoFps;
     int m_DisplayFps;
-    bool m_EnableVsync;
     PVIDEO_STATS m_VideoStats;
 };

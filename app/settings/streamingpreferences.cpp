@@ -23,6 +23,7 @@
 #define SER_QUITAPPAFTER "quitAppAfter"
 #define SER_MOUSEACCELERATION "mouseacceleration"
 #define SER_STARTWINDOWED "startwindowed"
+#define SER_FRAMEPACING "framepacing"
 
 StreamingPreferences::StreamingPreferences(QObject *parent)
     : QObject(parent)
@@ -47,6 +48,7 @@ void StreamingPreferences::reload()
     quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
     mouseAcceleration = settings.value(SER_MOUSEACCELERATION, false).toBool();
     startWindowed = settings.value(SER_STARTWINDOWED, false).toBool();
+    framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -76,6 +78,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
     settings.setValue(SER_MOUSEACCELERATION, mouseAcceleration);
     settings.setValue(SER_STARTWINDOWED, startWindowed);
+    settings.setValue(SER_FRAMEPACING, framePacing);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));

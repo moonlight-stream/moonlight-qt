@@ -177,9 +177,9 @@ VAAPIRenderer::getDecoderCapabilities()
     return 0;
 }
 
-IFFmpegRenderer::VSyncConstraint VAAPIRenderer::getVsyncConstraint()
+IFFmpegRenderer::FramePacingConstraint VAAPIRenderer::getFramePacingConstraint()
 {
-    return VSYNC_ANY;
+    return PACING_ANY;
 }
 
 void

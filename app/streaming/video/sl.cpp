@@ -34,7 +34,7 @@ SLVideoDecoder::getDecoderCapabilities()
 bool
 SLVideoDecoder::initialize(StreamingPreferences::VideoDecoderSelection vds,
                            SDL_Window*,
-                           int videoFormat, int, int, int frameRate, bool)
+                           int videoFormat, int, int, int frameRate, bool, bool)
 {
     // SLVideo only supports hardware decoding
     if (vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {

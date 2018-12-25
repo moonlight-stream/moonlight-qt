@@ -287,6 +287,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("mouse-acceleration", "mouse acceleration");
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
+    parser.addToggleOption("frame-pacing", "frame pacing");
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
     parser.addChoiceOption("video-decoder", "video decoder", m_VideoDecoderMap.keys());
 
@@ -371,6 +372,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --audio-on-host and --no-audio-on-host options
     preferences->playAudioOnHost = parser.getToggleOptionValue("audio-on-host", preferences->playAudioOnHost);
+
+    // Resolve --frame-pacing and --no-frame-pacing options
+    preferences->framePacing = parser.getToggleOptionValue("frame-pacing", preferences->framePacing);
 
     // Resolve --video-codec option
     if (parser.isSet("video-codec")) {

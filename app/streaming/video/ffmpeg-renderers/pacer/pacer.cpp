@@ -124,15 +124,14 @@ RenderNextFrame:
     av_frame_free(&frame);
 }
 
-bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enableVsync)
+bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
 {
     m_MaxVideoFps = maxVideoFps;
-    m_EnableVsync = enableVsync;
     m_DisplayFps = StreamUtils::getDisplayRefreshRate(window);
 
-    if (m_EnableVsync) {
+    if (enablePacing) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Frame pacing in tear-free mode: target %d Hz with %d FPS stream",
+                    "Frame pacing active: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
 
     #if defined(Q_OS_DARWIN)
@@ -150,7 +149,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enableVsync)
     }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Minimal latency tearing mode: target %d Hz with %d FPS stream",
+                    "Frame pacing disabled: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
     }
 
