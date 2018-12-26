@@ -105,6 +105,10 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
                             int frameRate, bool enableVsync, bool enableFramePacing, IVideoDecoder*& chosenDecoder)
 {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "V-sync %s",
+                enableVsync ? "enabled" : "disabled");
+
 #ifdef HAVE_SLVIDEO
     chosenDecoder = new SLVideoDecoder();
     if (CALL_INITIALIZE(chosenDecoder)) {
