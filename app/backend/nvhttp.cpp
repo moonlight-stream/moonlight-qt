@@ -423,6 +423,11 @@ NvHTTP::openConnection(QUrl baseUrl,
         QList<QSslError> expectedSslErrors;
         expectedSslErrors.append(QSslError(QSslError::HostNameMismatch, m_ServerCert));
         expectedSslErrors.append(QSslError(QSslError::SelfSignedCertificate, m_ServerCert));
+
+        // The SecureTransport backend for Qt TLS on macOS throws CertificateUntrusted
+        // instead of SelfSignedCertificate, so we will need to allow that error too.
+        expectedSslErrors.append(QSslError(QSslError::CertificateUntrusted, m_ServerCert));
+
         reply->ignoreSslErrors(expectedSslErrors);
     }
 
