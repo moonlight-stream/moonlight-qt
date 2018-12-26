@@ -233,9 +233,24 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
         }
     }
 
-    // Buffer at least 2 audio packets to smooth out network packet delivery jitter or
-    // 15 ms, whichever is greater.
-    int packetsToBuffer = qMax((int)(k_MinSampleLengthSec / k_RawSampleLengthSec) * 2, 3);
+    int packetsToBuffer;
+
+#ifdef Q_OS_LINUX
+    // PulseAudio and ALSA need the large buffer (see comment on k_MinSampleLengthSec),
+    // so we need a buffer at least double that size to allow packets to arrive
+    // while we're writing to the sink.
+    packetsToBuffer = (int)(k_MinSampleLengthSec / k_RawSampleLengthSec) * 2;
+#else
+    if (m_SoundIo->current_backend == SoundIoBackendWasapi) {
+        // 15 ms buffer seems to be fine for WASAPI
+        packetsToBuffer = 3;
+    }
+    else {
+        // 30 ms buffer on CoreAudio to avoid glitching on macOS
+        packetsToBuffer = 6;
+    }
+#endif
+
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Audio buffer size: %d packets",
                 packetsToBuffer);
