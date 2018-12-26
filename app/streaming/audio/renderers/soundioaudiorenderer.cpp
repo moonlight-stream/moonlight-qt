@@ -4,12 +4,20 @@
 
 #include <QtGlobal>
 
-// This determines the size of the buffers we'll
-// get from CoreAudio. Since GFE sends us packets
-// in 5 ms chunks, we'll give them to the OS in
-// buffers of the same size. It is also the minimum
-// size that we will write when called to fill a buffer.
+// GFE sends us packets in 5 ms chunks
 const double SoundIoAudioRenderer::k_RawSampleLengthSec = 0.005;
+
+#ifdef Q_OS_LINUX
+// PulseAudio and ALSA require more than just 5 ms samples
+// for some reason, so write a minimum of 20 ms each time to
+// prevent underruns on Bluetooth.
+const double SoundIoAudioRenderer::k_MinSampleLengthSec = 0.020;
+#else
+// This determines the size of the buffers we'll
+// get from CoreAudio. It is also the minimum
+// size that we will write when called to fill a buffer.
+const double SoundIoAudioRenderer::k_MinSampleLengthSec = k_RawSampleLengthSec;
+#endif
 
 SoundIoAudioRenderer::SoundIoAudioRenderer()
     : m_OpusChannelCount(0),
@@ -164,7 +172,7 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
 
     m_OutputStream->format = SoundIoFormatS16NE;
     m_OutputStream->sample_rate = opusConfig->sampleRate;
-    m_OutputStream->software_latency = k_RawSampleLengthSec;
+    m_OutputStream->software_latency = k_MinSampleLengthSec;
     m_OutputStream->name = "Moonlight";
     m_OutputStream->userdata = this;
     m_OutputStream->error_callback = sioErrorCallback;
@@ -225,12 +233,18 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
         }
     }
 
-    // Buffer up to 6 packets of audio (30 ms) to smooth
-    // out network packet delivery jitter
+    // Buffer at least 2 audio packets to smooth out network packet delivery jitter or
+    // 15 ms, whichever is greater.
+    int packetsToBuffer = qMax((int)(k_MinSampleLengthSec / k_RawSampleLengthSec) * 2, 3);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio buffer size: %d packets",
+                packetsToBuffer);
+
     m_RingBuffer = soundio_ring_buffer_create(m_SoundIo,
                                               m_OutputStream->bytes_per_sample *
                                               m_OpusChannelCount *
-                                              SAMPLES_PER_FRAME * 6);
+                                              SAMPLES_PER_FRAME *
+                                              packetsToBuffer);
     if (m_RingBuffer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "soundio_ring_buffer_create() failed");
@@ -244,6 +258,11 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
                      soundio_strerror(err));
         return false;
     }
+
+    // HACK: For some reason, a constant latency hangs around in the audio pipeline
+    // unless we wait for the audio stream to drain before actually submitting any samples.
+    // This is a gross hack, but it works remarkably well.
+    SDL_Delay(500);
 
     return true;
 }
@@ -338,7 +357,7 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
     // Ensure we always write at least a buffer, even if it's silence, to avoid
     // busy looping when no audio data is available while libsoundio tries to keep
     // us from starving the output device.
-    frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * k_RawSampleLengthSec));
+    frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * k_MinSampleLengthSec));
     frameCountMin = qMin(frameCountMin, frameCountMax);
 
     // Clamp framesLeft to frameCountMin to ensure that we never write more than one sample.

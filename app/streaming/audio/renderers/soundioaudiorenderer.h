@@ -36,4 +36,5 @@ private:
     bool m_Errored;
 
     static const double k_RawSampleLengthSec;
+    static const double k_MinSampleLengthSec;
 };
