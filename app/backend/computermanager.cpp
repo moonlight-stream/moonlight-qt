@@ -218,7 +218,7 @@ void ComputerManager::saveHosts()
     settings.beginWriteArray(SER_HOSTS);
     for (int i = 0; i < m_KnownHosts.count(); i++) {
         settings.setArrayIndex(i);
-        m_KnownHosts[m_KnownHosts.keys()[i]]->serialize(settings);
+        m_KnownHosts.value(m_KnownHosts.keys()[i])->serialize(settings);
     }
     settings.endArray();
 }
@@ -266,7 +266,7 @@ void ComputerManager::startPollingComputer(NvComputer* computer)
     }
 
     if (m_PollThreads.contains(computer->uuid)) {
-        Q_ASSERT(m_PollThreads[computer->uuid]->isRunning());
+        Q_ASSERT(m_PollThreads.value(computer->uuid)->isRunning());
         return;
     }
 
@@ -324,9 +324,8 @@ public:
         {
             QWriteLocker lock(&m_ComputerManager->m_Lock);
 
-            pollingThread = m_ComputerManager->m_PollThreads[m_Computer->uuid];
+            pollingThread = m_ComputerManager->m_PollThreads.take(m_Computer->uuid);
 
-            m_ComputerManager->m_PollThreads.remove(m_Computer->uuid);
             m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
         }
 
@@ -588,7 +587,7 @@ private:
         NvComputer* existingComputer;
         {
             QReadLocker lock(&m_ComputerManager->m_Lock);
-            existingComputer = m_ComputerManager->m_KnownHosts[newComputer->uuid];
+            existingComputer = m_ComputerManager->m_KnownHosts.value(newComputer->uuid);
             if (existingComputer != nullptr) {
                 http.setServerCert(existingComputer->serverCert);
             }
@@ -627,7 +626,7 @@ private:
         {
             // Check if this PC already exists
             QWriteLocker lock(&m_ComputerManager->m_Lock);
-            NvComputer* existingComputer = m_ComputerManager->m_KnownHosts[newComputer->uuid];
+            NvComputer* existingComputer = m_ComputerManager->m_KnownHosts.value(newComputer->uuid);
             if (existingComputer != nullptr) {
                 // Fold it into the existing PC
                 bool changed = existingComputer->update(*newComputer);
