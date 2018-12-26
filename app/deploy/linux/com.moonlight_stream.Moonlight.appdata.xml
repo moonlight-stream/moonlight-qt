@@ -4,7 +4,7 @@
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0+</project_license>
 	<name>Moonlight</name>
-	<summary>Stream games from your NVIDIA GameStream-enabled PC</summary>
+	<summary>Play games remotely from your NVIDIA GameStream-enabled PC</summary>
 
 	<description>
 		<p>Moonlight can stream games and other applications from a PC with an NVIDIA GeForce GTX 600-series or higher GPU and GeForce Experience installed.</p>
@@ -33,6 +33,23 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.8.0" date="2018-12-25">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Improved security of pairing - After this update, you must re-pair with your PC!</li>
+					<li>Enabled quitting games started by other Moonlight clients also running this update</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed the video bitrate slider not working above certain values on GFE 3.16</li>
+					<li>Fixed broken Bluetooth audio with PulseAudio</li>
+					<li>Reduced audio latency</li>
+					<li>Fixed some non-gamepad devices triggering the unmapped gamepad dialog box</li>
+					<li>Minor UI tweaks</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.7.0" date="2018-12-05">
 			<description>
 				<p>New features:</p>
