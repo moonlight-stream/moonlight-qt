@@ -134,9 +134,7 @@
             existingHost.externalAddress = host.externalAddress;
         }
         existingHost.activeAddress = host.activeAddress;
-        
-        // Set the host online now
-        existingHost.online = YES;
+        existingHost.online = host.online;
         return NO;
     }
     else {
