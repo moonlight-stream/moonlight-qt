@@ -29,9 +29,11 @@
     self.mac = host.mac;
     self.name = host.name;
     self.uuid = host.uuid;
-    self.pairState = [host.pairState intValue];
     self.serverCodecModeSupport = host.serverCodecModeSupport;
     self.serverCert = host.serverCert;
+    
+    // Ensure we don't use a stale cached pair state if we haven't pinned the cert yet
+    self.pairState = host.serverCert ? [host.pairState intValue] : PairStateUnpaired;
     
     NSMutableSet *appList = [[NSMutableSet alloc] init];
 
