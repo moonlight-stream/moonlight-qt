@@ -117,6 +117,12 @@
     
     TemporaryHost *existingHost = [self getHostInDiscovery:host.uuid];
     if (existingHost != nil) {
+        // NB: Our logic here depends on the fact that we never propagate
+        // the entire TemporaryHost to existingHost. In particular, when mDNS
+        // discovers a PC and we poll it, we will do so over HTTP which will
+        // not have accurate pair state. The fields explicitly copied below
+        // are accurate though.
+        
         // Update address of existing host
         if (host.address != nil) {
             existingHost.address = host.address;
@@ -128,6 +134,9 @@
             existingHost.externalAddress = host.externalAddress;
         }
         existingHost.activeAddress = host.activeAddress;
+        
+        // Set the host online now
+        existingHost.online = YES;
         return NO;
     }
     else {
