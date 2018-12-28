@@ -383,6 +383,20 @@ static NSMutableSet* hostList;
     return topController;
 }
 
+- (BOOL) loadingFrameIsPresented {
+    UIViewController *nextController = [UIApplication sharedApplication].keyWindow.rootViewController;
+    
+    while (nextController) {
+        if (nextController == _loadingFrame) {
+            return YES;
+        }
+        
+        nextController = nextController.presentedViewController;
+    }
+    
+    return NO;
+}
+
 - (void)hostLongClicked:(TemporaryHost *)host view:(UIView *)view {
     Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
@@ -669,7 +683,7 @@ static NSMutableSet* hostList;
         dispatch_async(dispatch_get_main_queue(), ^{
             // If loading frame is already active, just complete it now otherwise
             // we may not get a completion callback.
-            if ([self activeViewController] == self->_loadingFrame) {
+            if ([self loadingFrameIsPresented]) {
                 dispatch_semaphore_signal(self->_loadingFrameSemaphore);
                 if (completion) {
                     completion();
@@ -695,7 +709,7 @@ static NSMutableSet* hostList;
         dispatch_async(dispatch_get_main_queue(), ^{
             // If loading frame is already dismissed, just complete it now otherwise
             // we may not get a completion callback.
-            if ([self activeViewController] != self->_loadingFrame) {
+            if (![self loadingFrameIsPresented]) {
                 [self enableNavigation];
                 dispatch_semaphore_signal(self->_loadingFrameSemaphore);
                 if (completion) {
