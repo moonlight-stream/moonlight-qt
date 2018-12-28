@@ -114,21 +114,24 @@ static const NSString* HTTPS_PORT = @"47984";
             [self executeRequestSynchronously:request];
         }
     }
-    else if (_error && [_error code] == NSURLErrorServerCertificateUntrusted && request.fallbackRequest) {
-        // This will fall back to HTTP on serverinfo queries to allow us to pair again
-        // and get the server cert updated.
-        Log(LOG_D, @"Attempting fallback request after certificate trust failure");
-        request.request = request.fallbackRequest;
-        request.fallbackError = 0;
-        request.fallbackRequest = NULL;
-        [self executeRequestSynchronously:request];
+    else if (_error && [_error code] == NSURLErrorServerCertificateUntrusted) {
+        // We must have a pinned cert for HTTPS. If we fail, it must be due to
+        // a non-matching cert, not because we had no cert at all.
+        assert(_serverCert != nil);
+        
+        if (request.fallbackRequest) {
+            // This will fall back to HTTP on serverinfo queries to allow us to pair again
+            // and get the server cert updated.
+            Log(LOG_D, @"Attempting fallback request after certificate trust failure");
+            request.request = request.fallbackRequest;
+            request.fallbackError = 0;
+            request.fallbackRequest = NULL;
+            [self executeRequestSynchronously:request];
+        }
     }
 }
 
 - (NSURLRequest*) createRequestFromString:(NSString*) urlString timeout:(int)timeout {
-    // Assert that we only issue HTTPS requests with a pinned cert
-    assert([urlString hasPrefix:@"http://"] || _serverCert != nil);
-    
     NSURL* url = [[NSURL alloc] initWithString:urlString];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:url];
     [request setTimeoutInterval:timeout];
