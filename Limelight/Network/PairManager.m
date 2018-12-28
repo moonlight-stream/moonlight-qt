@@ -53,6 +53,7 @@
     }
 }
 
+// All codepaths must call pairFailed or pairSuccessful exactly once before returning!
 - (void) initiatePair:(int)serverMajorVersion {
     Log(LOG_I, @"Pairing with generation %d server", serverMajorVersion);
     
@@ -64,6 +65,7 @@
     HttpResponse* pairResp = [[HttpResponse alloc] init];
     [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:pairResp withUrlRequest:[_httpManager newPairRequest:salt clientCert:_clientCert]]];
     if (![self verifyResponseStatus:pairResp]) {
+        [_callback pairFailed:@"Pairing stage #1 failed"];
         return;
     }
     NSInteger pairedStatus;
@@ -101,10 +103,9 @@
     
     HttpResponse* challengeResp = [[HttpResponse alloc] init];
     [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:challengeResp withUrlRequest:[_httpManager newChallengeRequest:encryptedChallenge]]];
-    if (![self verifyResponseStatus:challengeResp]) {
-        return;
-    }
-    if (![challengeResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
+    if (![self verifyResponseStatus:challengeResp] ||
+        ![challengeResp getIntTag:@"paired" value:&pairedStatus] ||
+        pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #2 failed"];
         return;
@@ -129,10 +130,9 @@
     
     HttpResponse* secretResp = [[HttpResponse alloc] init];
     [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:secretResp withUrlRequest:[_httpManager newChallengeRespRequest:challengeRespEncrypted]]];
-    if (![self verifyResponseStatus:secretResp]) {
-        return;
-    }
-    if (![secretResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
+    if (![self verifyResponseStatus:secretResp] ||
+        ![secretResp getIntTag:@"paired" value:&pairedStatus] ||
+        pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #3 failed"];
         return;
@@ -165,10 +165,9 @@
     NSData* clientPairingSecret = [self concatData:clientSecret with:[cryptoMan signData:clientSecret withKey:[CryptoManager readKeyFromFile]]];
     HttpResponse* clientSecretResp = [[HttpResponse alloc] init];
     [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:clientSecretResp withUrlRequest:[_httpManager newClientSecretRespRequest:[Utils bytesToHex:clientPairingSecret]]]];
-    if (![self verifyResponseStatus:clientSecretResp]) {
-        return;
-    }
-    if (![clientSecretResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
+    if (![self verifyResponseStatus:clientSecretResp] ||
+        ![clientSecretResp getIntTag:@"paired" value:&pairedStatus] ||
+        pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #4 failed"];
         return;
@@ -176,10 +175,9 @@
     
     HttpResponse* clientPairChallengeResp = [[HttpResponse alloc] init];
     [_httpManager executeRequestSynchronously:[HttpRequest requestForResponse:clientPairChallengeResp withUrlRequest:[_httpManager newPairChallenge]]];
-    if (![self verifyResponseStatus:clientPairChallengeResp]) {
-        return;
-    }
-    if (![clientPairChallengeResp getIntTag:@"paired" value:&pairedStatus] || pairedStatus != 1) {
+    if (![self verifyResponseStatus:clientPairChallengeResp] ||
+        ![clientPairChallengeResp getIntTag:@"paired" value:&pairedStatus] ||
+        pairedStatus != 1) {
         [_httpManager executeRequestSynchronously:[HttpRequest requestWithUrlRequest:[_httpManager newUnpairRequest]]];
         [_callback pairFailed:@"Pairing stage #5 failed"];
         return;
