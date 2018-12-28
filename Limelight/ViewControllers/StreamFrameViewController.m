@@ -105,14 +105,17 @@
 }
 
 - (void)willMoveToParentViewController:(UIViewController *)parent {
-    [_controllerSupport cleanup];
-    [UIApplication sharedApplication].idleTimerDisabled = NO;
-    [_streamMan stopStream];
-    if (_inactivityTimer != nil) {
-        [_inactivityTimer invalidate];
-        _inactivityTimer = nil;
+    // Only cleanup when we're being destroyed
+    if (parent == nil) {
+        [_controllerSupport cleanup];
+        [UIApplication sharedApplication].idleTimerDisabled = NO;
+        [_streamMan stopStream];
+        if (_inactivityTimer != nil) {
+            [_inactivityTimer invalidate];
+            _inactivityTimer = nil;
+        }
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
     }
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 - (void) returnToMainFrame {
