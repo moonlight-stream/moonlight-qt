@@ -279,28 +279,28 @@ static const NSString* HTTPS_PORT = @"47984";
     {
         if (SecTrustGetCertificateCount(challenge.protectionSpace.serverTrust) != 1) {
             Log(LOG_E, @"Server certificate count mismatch");
-            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
             return;
         }
         
         SecCertificateRef actualCert = SecTrustGetCertificateAtIndex(challenge.protectionSpace.serverTrust, 0);
         if (actualCert == nil) {
             Log(LOG_E, @"Server certificate parsing error");
-            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
             return;
         }
         
         CFDataRef actualCertData = SecCertificateCopyData(actualCert);
         if (actualCertData == nil) {
             Log(LOG_E, @"Server certificate data parsing error");
-            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
             return;
         }
         
         if (!CFEqual(actualCertData, (__bridge CFDataRef)_serverCert)) {
             Log(LOG_E, @"Server certificate mismatch");
             CFRelease(actualCertData);
-            completionHandler(NSURLSessionAuthChallengeRejectProtectionSpace, NULL);
+            completionHandler(NSURLSessionAuthChallengePerformDefaultHandling, NULL);
             return;
         }
         
