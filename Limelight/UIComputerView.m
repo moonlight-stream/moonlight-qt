@@ -183,7 +183,11 @@ static const int LABEL_DY = 20;
 
 - (void) updateLoop {
     [self updateContentsForHost:_host];
-    [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
+    
+    // Stop updating when we detach from our parent view
+    if (self.superview != nil) {
+        [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
+    }
 }
 
 - (void) hostLongClicked:(UILongPressGestureRecognizer*)gesture {
