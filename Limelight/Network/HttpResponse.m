@@ -89,6 +89,8 @@
     }
     
     xmlFreeDoc(docPtr);
+    
+    Log(LOG_D, @"Parsed XML data: %@", _elements);
 }
 
 @end
