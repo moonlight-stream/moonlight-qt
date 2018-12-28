@@ -9,6 +9,8 @@
 #import "UIAppView.h"
 #import "AppAssetManager.h"
 
+static const float REFRESH_CYCLE = 2.0f;
+
 @implementation UIAppView {
     TemporaryApp* _app;
     UIButton* _appButton;
@@ -50,12 +52,12 @@ static UIImage* noImage;
     [self addSubview:_appButton];
     [self sizeToFit];
     
-    _appButton.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
-    self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
-    
     // Rasterizing the cell layer increases rendering performance by quite a bit
     self.layer.shouldRasterize = YES;
     self.layer.rasterizationScale = [UIScreen mainScreen].scale;
+    
+    [self updateAppImage];
+    [self startUpdateLoop];
     
     return self;
 }
@@ -69,6 +71,9 @@ static UIImage* noImage;
         [_appOverlay removeFromSuperview];
         _appOverlay = nil;
     }
+    
+    _appButton.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
+    self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
     
     if ([_app.id isEqualToString:_app.host.currentGame]) {
         // Only create the app overlay if needed
@@ -161,6 +166,23 @@ static UIImage* noImage;
 #endif
     }
     
+}
+
+- (void) startUpdateLoop {
+    [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
+}
+
+- (void) updateLoop {
+    // Update the app image if neccessary
+    if ((_appOverlay != nil && ![_app.id isEqualToString:_app.host.currentGame]) ||
+        (_appOverlay == nil && [_app.id isEqualToString:_app.host.currentGame])) {
+        [self updateAppImage];
+    }
+    
+    // Stop updating when we detach from our parent view
+    if (self.superview != nil) {
+        [self performSelector:@selector(updateLoop) withObject:self afterDelay:REFRESH_CYCLE];
+    }
 }
 
 @end
