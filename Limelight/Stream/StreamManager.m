@@ -105,13 +105,13 @@
     HttpResponse* launchResp = [[HttpResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:launchResp withUrlRequest:[hMan newLaunchRequest:_config]]];
     NSString *gameSession = [launchResp getStringTag:@"gamesession"];
-    if (launchResp == NULL || ![launchResp isStatusOk]) {
-        [_callbacks launchFailed:@"Failed to launch app"];
+    if (![launchResp isStatusOk]) {
+        [_callbacks launchFailed:launchResp.statusMessage];
         Log(LOG_E, @"Failed Launch Response: %@", launchResp.statusMessage);
         return FALSE;
     } else if (gameSession == NULL || [gameSession isEqualToString:@"0"]) {
-        [_callbacks launchFailed:launchResp.statusMessage];
-        Log(LOG_E, @"Failed to parse game session. Code: %ld Response: %@", (long)launchResp.statusCode, launchResp.statusMessage);
+        [_callbacks launchFailed:@"Failed to launch app"];
+        Log(LOG_E, @"Failed to parse game session");
         return FALSE;
     }
     
@@ -122,13 +122,13 @@
     HttpResponse* resumeResp = [[HttpResponse alloc] init];
     [hMan executeRequestSynchronously:[HttpRequest requestForResponse:resumeResp withUrlRequest:[hMan newResumeRequest:_config]]];
     NSString* resume = [resumeResp getStringTag:@"resume"];
-    if (resumeResp == NULL || ![resumeResp isStatusOk]) {
-        [_callbacks launchFailed:@"Failed to resume app"];
+    if (![resumeResp isStatusOk]) {
+        [_callbacks launchFailed:resumeResp.statusMessage];
         Log(LOG_E, @"Failed Resume Response: %@", resumeResp.statusMessage);
         return FALSE;
     } else if (resume == NULL || [resume isEqualToString:@"0"]) {
-        [_callbacks launchFailed:resumeResp.statusMessage];
-        Log(LOG_E, @"Failed to parse resume response. Code: %ld Response: %@", (long)resumeResp.statusCode, resumeResp.statusMessage);
+        [_callbacks launchFailed:@"Failed to resume app"];
+        Log(LOG_E, @"Failed to parse resume response");
         return FALSE;
     }
     
