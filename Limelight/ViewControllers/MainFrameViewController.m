@@ -345,8 +345,9 @@ static NSMutableSet* hostList;
                     [self showHostSelectionView];
                 });
             } else {
-                Log(LOG_D, @"server info pair status: %@", [serverInfoResp getStringTag:@"PairStatus"]);
-                if ([[serverInfoResp getStringTag:@"PairStatus"] isEqualToString:@"1"]) {
+                // Update the host object with this data
+                [serverInfoResp populateHost:host];
+                if (host.pairState == PairStatePaired) {
                     Log(LOG_I, @"Already Paired");
                     [self alreadyPaired];
                 }
@@ -544,6 +545,10 @@ static NSMutableSet* hostList;
                                                         // really quit if another client tries to kill your app. We'll patch the response
                                                         // to look like the old error in that case, so the UI behaves.
                                                         quitResponse.statusCode = 599;
+                                                    }
+                                                    else if ([serverInfoResp isStatusOk]) {
+                                                        // Update the host object with this info
+                                                        [serverInfoResp populateHost:app.host];
                                                     }
                                                 }
                                                 [self->_discMan addHostToDiscovery:app.host];
