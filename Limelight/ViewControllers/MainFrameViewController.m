@@ -48,6 +48,7 @@
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
     bool _background;
+    dispatch_semaphore_t _loadingFrameSemaphore;
 #if TARGET_OS_TV
     UITapGestureRecognizer* _menuRecognizer;
 #else
@@ -662,21 +663,65 @@ static NSMutableSet* hostList;
 }
 
 - (void) showLoadingFrame:(void (^)(void))completion {
-    // Avoid animating this as it significantly prolongs the loading frame's
-    // time on screen and can lead to warnings about dismissing while it's
-    // still animating.
-    [[self activeViewController] presentViewController:_loadingFrame animated:NO completion:completion];
+    // Wait for all loading frame operations to complete before starting this one
+    dispatch_semaphore_wait(_loadingFrameSemaphore, DISPATCH_TIME_FOREVER);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // If loading frame is already active, just complete it now otherwise
+            // we may not get a completion callback.
+            if ([self activeViewController] == self->_loadingFrame) {
+                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
+                if (completion) {
+                    completion();
+                }
+                return;
+            }
+            
+            // Avoid animating this as it significantly prolongs the loading frame's time on screen
+            [[self activeViewController] presentViewController:self->_loadingFrame animated:NO completion:^{
+                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
+                if (completion) {
+                    completion();
+                }
+            }];
+        });
+    });
 }
 
 - (void) hideLoadingFrame:(void (^)(void))completion {
-    // See comment above in showLoadingFrame about why we don't animate this
-    [_loadingFrame dismissViewControllerAnimated:NO completion:completion];
-    [self enableNavigation];
+    // Wait for all loading frame operations to complete before starting this one
+    dispatch_semaphore_wait(_loadingFrameSemaphore, DISPATCH_TIME_FOREVER);
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        dispatch_async(dispatch_get_main_queue(), ^{
+            // If loading frame is already dismissed, just complete it now otherwise
+            // we may not get a completion callback.
+            if ([self activeViewController] != self->_loadingFrame) {
+                [self enableNavigation];
+                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
+                if (completion) {
+                    completion();
+                }
+                return;
+            }
+            
+            // See comment above in showLoadingFrame about why we don't animate this
+            [self->_loadingFrame dismissViewControllerAnimated:NO completion:^{
+                [self enableNavigation];
+                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
+                if (completion) {
+                    completion();
+                }
+            }];
+        });
+    });
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    
+    // Ensure only one loading frame operation can take place at a time
+    _loadingFrameSemaphore = dispatch_semaphore_create(1);
     
 #if !TARGET_OS_TV
     // Set the side bar button action. When it's tapped, it'll show the sidebar.
