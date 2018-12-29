@@ -10,5 +10,11 @@
 
 @interface LoadingFrameViewController : UIViewController
 
+- (void)showLoadingFrame:(void (^)(void))completion;
+
+- (void)dismissLoadingFrame:(void (^)(void))completion;
+
+- (BOOL)isShown;
+
 @property (weak, nonatomic) IBOutlet UIActivityIndicatorView *loadingSpinner;
 @end

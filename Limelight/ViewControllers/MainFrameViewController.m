@@ -48,7 +48,6 @@
     NSArray* _sortedAppList;
     NSCache* _boxArtCache;
     bool _background;
-    dispatch_semaphore_t _loadingFrameSemaphore;
 #if TARGET_OS_TV
     UITapGestureRecognizer* _menuRecognizer;
 #else
@@ -383,20 +382,6 @@ static NSMutableSet* hostList;
     return topController;
 }
 
-- (BOOL) loadingFrameIsPresented {
-    UIViewController *nextController = [UIApplication sharedApplication].keyWindow.rootViewController;
-    
-    while (nextController) {
-        if (nextController == _loadingFrame) {
-            return YES;
-        }
-        
-        nextController = nextController.presentedViewController;
-    }
-    
-    return NO;
-}
-
 - (void)hostLongClicked:(TemporaryHost *)host view:(UIView *)view {
     Log(LOG_D, @"Long clicked host: %@", host.name);
     UIAlertController* longClickAlert = [UIAlertController alertControllerWithTitle:host.name message:@"" preferredStyle:UIAlertControllerStyleActionSheet];
@@ -677,65 +662,17 @@ static NSMutableSet* hostList;
 }
 
 - (void) showLoadingFrame:(void (^)(void))completion {
-    // Wait for all loading frame operations to complete before starting this one
-    dispatch_semaphore_wait(_loadingFrameSemaphore, DISPATCH_TIME_FOREVER);
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            // If loading frame is already active, just complete it now otherwise
-            // we may not get a completion callback.
-            if ([self loadingFrameIsPresented]) {
-                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
-                if (completion) {
-                    completion();
-                }
-                return;
-            }
-            
-            // Avoid animating this as it significantly prolongs the loading frame's time on screen
-            [[self activeViewController] presentViewController:self->_loadingFrame animated:NO completion:^{
-                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
-                if (completion) {
-                    completion();
-                }
-            }];
-        });
-    });
+    [_loadingFrame showLoadingFrame:completion];
 }
 
 - (void) hideLoadingFrame:(void (^)(void))completion {
-    // Wait for all loading frame operations to complete before starting this one
-    dispatch_semaphore_wait(_loadingFrameSemaphore, DISPATCH_TIME_FOREVER);
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-        dispatch_async(dispatch_get_main_queue(), ^{
-            // If loading frame is already dismissed, just complete it now otherwise
-            // we may not get a completion callback.
-            if (![self loadingFrameIsPresented]) {
-                [self enableNavigation];
-                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
-                if (completion) {
-                    completion();
-                }
-                return;
-            }
-            
-            // See comment above in showLoadingFrame about why we don't animate this
-            [self->_loadingFrame dismissViewControllerAnimated:NO completion:^{
-                [self enableNavigation];
-                dispatch_semaphore_signal(self->_loadingFrameSemaphore);
-                if (completion) {
-                    completion();
-                }
-            }];
-        });
-    });
+    [self enableNavigation];
+    [_loadingFrame dismissLoadingFrame:completion];
 }
 
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    
-    // Ensure only one loading frame operation can take place at a time
-    _loadingFrameSemaphore = dispatch_semaphore_create(1);
     
 #if !TARGET_OS_TV
     // Set the side bar button action. When it's tapped, it'll show the sidebar.
@@ -888,7 +825,7 @@ static NSMutableSet* hostList;
     // loading frame which will cause an infinite loop by starting
     // another loading frame. To avoid this, just don't refresh
     // if we're coming back from a loading frame view.
-    [self beginForegroundRefresh: ![[self activeViewController] isKindOfClass:[LoadingFrameViewController class]]];
+    [self beginForegroundRefresh: !([_loadingFrame isShown] || [_loadingFrame isBeingDismissed])];
 }
 
 - (void)viewDidDisappear:(BOOL)animated

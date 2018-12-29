@@ -8,11 +8,9 @@
 
 #import "LoadingFrameViewController.h"
 
-@interface LoadingFrameViewController ()
-
-@end
-
-@implementation LoadingFrameViewController
+@implementation LoadingFrameViewController {
+    BOOL presented;
+};
 
 - (void)viewDidLoad {
     [super viewDidLoad];
@@ -20,19 +18,38 @@
     self.loadingSpinner.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height / 2);
 }
 
-- (void)didReceiveMemoryWarning {
-    [super didReceiveMemoryWarning];
-    // Dispose of any resources that can be recreated.
+- (UIViewController*) activeViewController {
+    UIViewController *topController = [UIApplication sharedApplication].keyWindow.rootViewController;
+    
+    while (topController.presentedViewController) {
+        topController = topController.presentedViewController;
+    }
+    
+    return topController;
 }
 
-/*
-#pragma mark - Navigation
-
-// In a storyboard-based application, you will often want to do a little preparation before navigation
-- (void)prepareForSegue:(UIStoryboardSegue *)segue sender:(id)sender {
-    // Get the new view controller using [segue destinationViewController].
-    // Pass the selected object to the new view controller.
+- (void)showLoadingFrame:(void (^)(void))completion {
+    if (!presented) {
+        presented = YES;
+        [[self activeViewController] presentViewController:self animated:NO completion:completion];
+    }
+    else if (completion) {
+        completion();
+    }
 }
-*/
+
+- (void)dismissLoadingFrame:(void (^)(void))completion {
+    if (presented) {
+        presented = NO;
+        [self dismissViewControllerAnimated:NO completion:completion];
+    }
+    else if (completion) {
+        completion();
+    }
+}
+
+- (BOOL)isShown {
+    return presented;
+}
 
 @end
