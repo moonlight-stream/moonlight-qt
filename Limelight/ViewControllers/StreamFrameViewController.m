@@ -80,7 +80,7 @@
     
     [self.tipLabel sizeToFit];
     self.tipLabel.textAlignment = NSTextAlignmentCenter;
-    self.tipLabel.center = CGPointMake(self.view.frame.size.width / 2, self.tipLabel.center.y);
+    self.tipLabel.center = CGPointMake(self.view.frame.size.width / 2, self.view.frame.size.height * 0.9);
     
     _streamMan = [[StreamManager alloc] initWithConfig:self.streamConfig
                                             renderView:self.view
