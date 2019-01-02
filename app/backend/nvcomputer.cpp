@@ -193,10 +193,16 @@ bool NvComputer::wake()
                 // Send to all ports
                 for (quint16 port : WOL_PORTS) {
                     if (sock.writeDatagram(wolPayload, address, port)) {
-                        qInfo().nospace().noquote() << "Send WoL packet to " << name << " via " << address.toString() << ":" << port;
+                        qInfo().nospace().noquote() << "Sent WoL packet to " << name << " via " << address.toString() << ":" << port;
                         success = true;
                     }
+                    else {
+                        qWarning() << "Send failed:" << sock.error();
+                    }
                 }
+            }
+            else {
+                qWarning() << "Bind failed:" << sock.error();
             }
         }
     }
