@@ -192,7 +192,13 @@ GridView {
             onClicked: {
                 if (!model.addPc) {
                     // popup() ensures the menu appears under the mouse cursor
-                    pcContextMenu.popup()
+                    if (pcContextMenu.popup) {
+                        pcContextMenu.popup()
+                    }
+                    else {
+                        // Qt 5.9 doesn't have popup()
+                        pcContextMenu.open()
+                    }
                 }
             }
         }

@@ -134,7 +134,13 @@ GridView {
             acceptedButtons: Qt.RightButton
             onClicked: {
                 // popup() ensures the menu appears under the mouse cursor
-                appContextMenu.popup()
+                if (appContextMenu.popup) {
+                    appContextMenu.popup()
+                }
+                else {
+                    // Qt 5.9 doesn't have popup()
+                    appContextMenu.open()
+                }
             }
         }
 
