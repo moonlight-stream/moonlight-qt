@@ -116,7 +116,8 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                         if (currentVer < latestVer) {
                             qDebug() << "Update available";
 
-                            emit onUpdateAvailable(updateObj["browser_url"].toString());
+                            emit onUpdateAvailable(updateObj["version"].toString(),
+                                                   updateObj["browser_url"].toString());
                             return;
                         }
                         else if (currentVer > latestVer) {

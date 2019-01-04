@@ -235,7 +235,6 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Update available for Moonlight"
 
                 // Invisible until we get a callback notifying us that
                 // an update is available
@@ -243,8 +242,9 @@ ApplicationWindow {
 
                 onClicked: Qt.openUrlExternally(browserUrl);
 
-                function updateAvailable(url)
+                function updateAvailable(version, url)
                 {
+                    ToolTip.text = "Update available for Moonlight: Version " + version
                     updateButton.browserUrl = url
                     updateButton.visible = true
                 }

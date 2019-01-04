@@ -12,7 +12,7 @@ public:
     Q_INVOKABLE void start();
 
 signals:
-    void onUpdateAvailable(QString url);
+    void onUpdateAvailable(QString newVersion, QString url);
 
 private slots:
     void handleUpdateCheckRequestFinished(QNetworkReply* reply);
