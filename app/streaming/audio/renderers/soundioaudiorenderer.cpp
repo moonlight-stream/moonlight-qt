@@ -375,10 +375,6 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
     frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * k_MinSampleLengthSec));
     frameCountMin = qMin(frameCountMin, frameCountMax);
 
-    // Clamp framesLeft to frameCountMin to ensure that we never write more than one sample.
-    // This makes sure that we never increase our latency beyond what the sink is consuming.
-    framesLeft = qMin(framesLeft, frameCountMin);
-
     // Track latency on queueing-based backends
     if (me->m_SoundIo->current_backend != SoundIoBackendCoreAudio && me->m_SoundIo->current_backend != SoundIoBackendJack) {
         soundio_outstream_get_latency(stream, &me->m_Latency);
