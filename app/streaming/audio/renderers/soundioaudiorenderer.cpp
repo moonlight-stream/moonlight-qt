@@ -369,6 +369,9 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
             (me->m_OpusChannelCount * stream->bytes_per_sample);
     int bytesRead = 0;
 
+    // Clamp framesLeft to frameCountMax
+    framesLeft = qMin(framesLeft, frameCountMax);
+
     // Ensure we always write at least a buffer, even if it's silence, to avoid
     // busy looping when no audio data is available while libsoundio tries to keep
     // us from starving the output device.
