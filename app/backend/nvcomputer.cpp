@@ -2,6 +2,7 @@
 
 #include <QUdpSocket>
 #include <QHostInfo>
+#include <QNetworkInterface>
 
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
@@ -172,6 +173,32 @@ bool NvComputer::wake()
     QVector<QString> addressList = uniqueAddresses();
     addressList.append("255.255.255.255");
 
+    // Try to broadcast on all available NICs
+    for (const QNetworkInterface& nic : QNetworkInterface::allInterfaces()) {
+        // Ensure the interface is up and skip the loopback adapter
+        if ((nic.flags() & QNetworkInterface::IsUp) == 0 ||
+                (nic.flags() & QNetworkInterface::IsLoopBack) != 0) {
+            continue;
+        }
+
+        QHostAddress allNodesMulticast("FF02::1");
+        for (const QNetworkAddressEntry& addr : nic.addressEntries()) {
+            // Store the scope ID for this NIC if IPv6 is enabled
+            if (!addr.ip().scopeId().isEmpty()) {
+                allNodesMulticast.setScopeId(addr.ip().scopeId());
+            }
+
+            // Skip IPv6 which doesn't support broadcast
+            if (!addr.broadcast().isNull()) {
+                addressList.append(addr.broadcast().toString());
+            }
+        }
+
+        if (!allNodesMulticast.scopeId().isEmpty()) {
+            addressList.append(allNodesMulticast.toString());
+        }
+    }
+
     // Try all unique address strings or host names
     bool success = false;
     for (QString& addressString : addressList) {
@@ -186,23 +213,15 @@ bool NvComputer::wake()
         for (QHostAddress& address : hostInfo.addresses()) {
             QUdpSocket sock;
 
-            // Bind to any address on the correct protocol
-            if (sock.bind(address.protocol() == QUdpSocket::IPv4Protocol ?
-                          QHostAddress::AnyIPv4 : QHostAddress::AnyIPv6)) {
-
-                // Send to all ports
-                for (quint16 port : WOL_PORTS) {
-                    if (sock.writeDatagram(wolPayload, address, port)) {
-                        qInfo().nospace().noquote() << "Sent WoL packet to " << name << " via " << address.toString() << ":" << port;
-                        success = true;
-                    }
-                    else {
-                        qWarning() << "Send failed:" << sock.error();
-                    }
+            // Send to all ports
+            for (quint16 port : WOL_PORTS) {
+                if (sock.writeDatagram(wolPayload, address, port)) {
+                    qInfo().nospace().noquote() << "Sent WoL packet to " << name << " via " << address.toString() << ":" << port;
+                    success = true;
                 }
-            }
-            else {
-                qWarning() << "Bind failed:" << sock.error();
+                else {
+                    qWarning() << "Send failed:" << sock.error();
+                }
             }
         }
     }
