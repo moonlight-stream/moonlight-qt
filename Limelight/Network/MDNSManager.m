@@ -72,7 +72,7 @@ static NSString* NV_SERVICE_TYPE = @"_nvstream._tcp";
         // as the PC and we can use our current WAN address as a likely candidate
         // for our PC's external address.
         struct in_addr wanAddr;
-        int err = LiFindExternalAddressIP4("stun.stunprotocol.org", 3478, &wanAddr.s_addr);
+        int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &wanAddr.s_addr);
         if (err == 0) {
             char addrStr[INET_ADDRSTRLEN];
             inet_ntop(AF_INET, &wanAddr, addrStr, sizeof(addrStr));
