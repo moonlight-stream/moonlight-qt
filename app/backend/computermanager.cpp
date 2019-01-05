@@ -611,7 +611,7 @@ private:
 
             // Get the WAN IP address using STUN if we're on mDNS
             quint32 addr;
-            int err = LiFindExternalAddressIP4("stun.stunprotocol.org", 3478, &addr);
+            int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &addr);
             if (err == 0) {
                 newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
             }
