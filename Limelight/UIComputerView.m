@@ -204,4 +204,14 @@ static const int LABEL_DY = 20;
     [_callback addHostClicked];
 }
 
+#if TARGET_OS_TV
+- (void) didUpdateFocusInContext:(UIFocusUpdateContext *)context withAnimationCoordinator:(UIFocusAnimationCoordinator *)coordinator {
+    UIButton *previousButton = (UIButton *)context.previouslyFocusedItem;
+    UIButton *nextButton = (UIButton *) context.nextFocusedItem;
+    
+    previousButton.layer.shadowColor = [[UIColor blackColor] CGColor];
+    nextButton.layer.shadowColor = [[UIColor greenColor] CGColor];
+}
+#endif
+
 @end
