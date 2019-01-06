@@ -13,6 +13,9 @@
 #include <QNetworkProxy>
 
 #define REQUEST_TIMEOUT_MS 5000
+#define LAUNCH_TIMEOUT_MS 120000
+#define RESUME_TIMEOUT_MS 30000
+#define QUIT_TIMEOUT_MS 30000
 
 NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
     m_Address(address),
@@ -89,7 +92,7 @@ NvHTTP::getServerInfo(NvLogLevel logLevel)
             serverInfo = openConnectionToString(m_BaseUrlHttps,
                                                 "serverinfo",
                                                 nullptr,
-                                                true,
+                                                REQUEST_TIMEOUT_MS,
                                                 logLevel);
             // Throws if the request failed
             verifyResponseStatus(serverInfo);
@@ -102,7 +105,7 @@ NvHTTP::getServerInfo(NvLogLevel logLevel)
                 serverInfo = openConnectionToString(m_BaseUrlHttp,
                                                     "serverinfo",
                                                     nullptr,
-                                                    true,
+                                                    REQUEST_TIMEOUT_MS,
                                                     logLevel);
                 verifyResponseStatus(serverInfo);
             }
@@ -119,7 +122,7 @@ NvHTTP::getServerInfo(NvLogLevel logLevel)
         serverInfo = openConnectionToString(m_BaseUrlHttp,
                                             "serverinfo",
                                             nullptr,
-                                            true,
+                                            REQUEST_TIMEOUT_MS,
                                             logLevel);
         verifyResponseStatus(serverInfo);
     }
@@ -180,7 +183,7 @@ NvHTTP::launchApp(int appId,
                                    "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration)+
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
                                    "&gcmap="+QString::number(gamepadMask),
-                                   false);
+                                   LAUNCH_TIMEOUT_MS);
 
     // Throws if the request failed
     verifyResponseStatus(response);
@@ -200,7 +203,7 @@ NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
                                    "rikey="+QString(QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex())+
                                    "&rikeyid="+QString::number(riKeyId)+
                                    "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration),
-                                   false);
+                                   RESUME_TIMEOUT_MS);
 
     // Throws if the request failed
     verifyResponseStatus(response);
@@ -213,7 +216,7 @@ NvHTTP::quitApp()
             openConnectionToString(m_BaseUrlHttps,
                                    "cancel",
                                    nullptr,
-                                   false);
+                                   QUIT_TIMEOUT_MS);
 
     // Throws if the request failed
     verifyResponseStatus(response);
@@ -260,7 +263,7 @@ NvHTTP::getAppList()
     QString appxml = openConnectionToString(m_BaseUrlHttps,
                                             "applist",
                                             nullptr,
-                                            true,
+                                            REQUEST_TIMEOUT_MS,
                                             NvLogLevel::ERROR);
     verifyResponseStatus(appxml);
 
@@ -328,7 +331,7 @@ NvHTTP::getBoxArt(int appId)
                                           "appasset",
                                           "appid="+QString::number(appId)+
                                           "&AssetType=2&AssetIdx=0",
-                                          true,
+                                          REQUEST_TIMEOUT_MS,
                                           NvLogLevel::VERBOSE);
     QImage image = QImageReader(reply).read();
     delete reply;
@@ -375,10 +378,10 @@ QString
 NvHTTP::openConnectionToString(QUrl baseUrl,
                                QString command,
                                QString arguments,
-                               bool enableTimeout,
+                               int timeoutMs,
                                NvLogLevel logLevel)
 {
-    QNetworkReply* reply = openConnection(baseUrl, command, arguments, enableTimeout, logLevel);
+    QNetworkReply* reply = openConnection(baseUrl, command, arguments, timeoutMs, logLevel);
     QString ret;
 
     QTextStream stream(reply);
@@ -393,7 +396,7 @@ QNetworkReply*
 NvHTTP::openConnection(QUrl baseUrl,
                        QString command,
                        QString arguments,
-                       bool enableTimeout,
+                       int timeoutMs,
                        NvLogLevel logLevel)
 {
     // Build a URL for the request
@@ -434,9 +437,8 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Run the request with a timeout if requested
     QEventLoop loop;
     QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    if (enableTimeout)
-    {
-        QTimer::singleShot(REQUEST_TIMEOUT_MS, &loop, SLOT(quit()));
+    if (timeoutMs) {
+        QTimer::singleShot(timeoutMs, &loop, SLOT(quit()));
     }
     if (logLevel >= NvLogLevel::VERBOSE) {
         qInfo() << "Executing request:" << url.toString();
@@ -467,6 +469,11 @@ NvHTTP::openConnection(QUrl baseUrl,
             // This will trigger falling back to HTTP for the serverinfo query
             // then pairing again to get the updated certificate.
             GfeHttpResponseException exception(401, "Server certificate mismatch");
+            delete reply;
+            throw exception;
+        }
+        else if (reply->error() == QNetworkReply::OperationCanceledError) {
+            QtNetworkReplyException exception(QNetworkReply::TimeoutError, "Request timed out");
             delete reply;
             throw exception;
         }

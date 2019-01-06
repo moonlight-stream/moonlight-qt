@@ -8,6 +8,8 @@
 #include <openssl/x509.h>
 #include <openssl/evp.h>
 
+#define REQUEST_TIMEOUT_MS 5000
+
 NvPairingManager::NvPairingManager(QString address) :
     m_Http(address, QSslCertificate())
 {
@@ -192,7 +194,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
                                                     "pair",
                                                     "devicename=roth&updateState=1&phrase=getservercert&salt=" +
                                                     salt.toHex() + "&clientcert=" + IdentityManager::get()->getCertificate().toHex(),
-                                                    false);
+                                                    0);
     NvHTTP::verifyResponseStatus(getCert);
     if (NvHTTP::getXmlString(getCert, "paired") != "1")
     {
@@ -204,7 +206,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     if (serverCertStr == nullptr)
     {
         qCritical() << "Server likely already pairing";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::ALREADY_IN_PROGRESS;
     }
 
@@ -213,7 +215,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
         Q_ASSERT(!serverCert.isNull());
 
         qCritical() << "Failed to parse plaincert";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
     }
 
@@ -226,12 +228,12 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
                                                          "pair",
                                                          "devicename=roth&updateState=1&clientchallenge=" +
                                                          encryptedChallenge.toHex(),
-                                                         true);
+                                                         REQUEST_TIMEOUT_MS);
     NvHTTP::verifyResponseStatus(challengeXml);
     if (NvHTTP::getXmlString(challengeXml, "paired") != "1")
     {
         qCritical() << "Failed pairing at stage #2";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
     }
 
@@ -259,12 +261,12 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
                                                     "pair",
                                                     "devicename=roth&updateState=1&serverchallengeresp=" +
                                                     encryptedChallengeResponseHash.toHex(),
-                                                    true);
+                                                    REQUEST_TIMEOUT_MS);
     NvHTTP::verifyResponseStatus(respXml);
     if (NvHTTP::getXmlString(respXml, "paired") != "1")
     {
         qCritical() << "Failed pairing at stage #3";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
     }
 
@@ -277,7 +279,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
                          serverCertStr))
     {
         qCritical() << "MITM detected";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
     }
 
@@ -288,7 +290,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     if (QCryptographicHash::hash(expectedResponseData, hashAlgo) != serverResponse)
     {
         qCritical() << "Incorrect PIN";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::PIN_WRONG;
     }
 
@@ -300,24 +302,24 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
                                                           "pair",
                                                           "devicename=roth&updateState=1&clientpairingsecret=" +
                                                           clientPairingSecret.toHex(),
-                                                          true);
+                                                          REQUEST_TIMEOUT_MS);
     NvHTTP::verifyResponseStatus(secretRespXml);
     if (NvHTTP::getXmlString(secretRespXml, "paired") != "1")
     {
         qCritical() << "Failed pairing at stage #4";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
     }
 
     QString pairChallengeXml = m_Http.openConnectionToString(m_Http.m_BaseUrlHttps,
                                                              "pair",
                                                              "devicename=roth&updateState=1&phrase=pairchallenge",
-                                                             true);
+                                                             REQUEST_TIMEOUT_MS);
     NvHTTP::verifyResponseStatus(pairChallengeXml);
     if (NvHTTP::getXmlString(pairChallengeXml, "paired") != "1")
     {
         qCritical() << "Failed pairing at stage #5";
-        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, true);
+        m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
     }
 

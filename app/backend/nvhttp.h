@@ -149,7 +149,7 @@ public:
     openConnectionToString(QUrl baseUrl,
                            QString command,
                            QString arguments,
-                           bool enableTimeout,
+                           int timeoutMs,
                            NvLogLevel logLevel = NvLogLevel::VERBOSE);
 
     void setServerCert(QSslCertificate serverCert);
@@ -188,7 +188,7 @@ private:
     openConnection(QUrl baseUrl,
                    QString command,
                    QString arguments,
-                   bool enableTimeout,
+                   int timeoutMs,
                    NvLogLevel logLevel);
 
     QString m_Address;
