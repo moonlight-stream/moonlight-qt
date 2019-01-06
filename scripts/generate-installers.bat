@@ -96,6 +96,17 @@ if "%ML_SYMBOL_STORE%" NEQ "" (
     )
 )
 
+if "%ML_SYMBOL_ARCHIVE%" NEQ "" (
+    echo Copying PDB ZIP to symbol archive: %ML_SYMBOL_ARCHIVE%
+    copy %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols-%ARCH%-%VERSION%.zip %ML_SYMBOL_ARCHIVE%
+    if !ERRORLEVEL! NEQ 0 goto Error
+) else (
+    if "%MUST_DEPLOY_SYMBOLS%"=="1" (
+        echo "A symbol archive directory must be specified in ML_SYMBOL_ARCHIVE for signed release builds"
+        exit /b 1
+    )
+)
+
 echo Copying DLL dependencies
 copy %SOURCE_ROOT%\libs\windows\lib\%ARCH%\*.dll %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
