@@ -307,7 +307,6 @@ Flickable {
 
                 Slider {
                     id: slider
-                    wheelEnabled: true
 
                     value: prefs.bitrateKbps
 
