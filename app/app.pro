@@ -314,7 +314,11 @@ win32 {
     QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
 }
 macx {
-    QMAKE_INFO_PLIST = $$PWD/Info.plist
+    # Create Info.plist in object dir with the correct version string
+    system(cp $$PWD/Info.plist $$OUT_PWD/Info.plist)
+    system(sed -i -e 's/VERSION/$$cat(version.txt)/g' $$OUT_PWD/Info.plist)
+
+    QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
 
     APP_BUNDLE_RESOURCES.files = moonlight.icns SDL_GameControllerDB/gamecontrollerdb.txt
     APP_BUNDLE_RESOURCES.path = Contents/Resources
