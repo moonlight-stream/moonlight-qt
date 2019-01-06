@@ -327,5 +327,5 @@ macx {
     QMAKE_RPATHDIR += @executable_path/../Frameworks
 }
 
-VERSION = 0.8.0
-DEFINES += VERSION_STR=\\\"0.8.0\\\"
+VERSION = "$$cat(version.txt)"
+DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
