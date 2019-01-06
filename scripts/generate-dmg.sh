@@ -17,6 +17,7 @@ BUILD_ROOT=$PWD/build
 SOURCE_ROOT=$PWD
 BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
+VERSION=`cat $SOURCE_ROOT/app/version.txt`
 
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER
@@ -37,8 +38,8 @@ popd
 
 echo Saving dSYM file
 pushd $BUILD_FOLDER
-dsymutil app/Moonlight.app/Contents/MacOS/Moonlight -o Moonlight.dsym || fail "dSYM creation failed!"
-cp -R Moonlight.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
+dsymutil app/Moonlight.app/Contents/MacOS/Moonlight -o Moonlight-$VERSION.dsym || fail "dSYM creation failed!"
+cp -R Moonlight-$VERSION.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
 popd
 
 echo Copying dylib dependencies
@@ -54,3 +55,4 @@ macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app
 
 echo Creating DMG
 create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER || fail "create-dmg failed!"
+mv $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg $INSTALLER_FOLDER/Moonlight-$VERSION.dmg
