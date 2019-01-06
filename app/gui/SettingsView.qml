@@ -321,11 +321,6 @@ Flickable {
                         bitrateTitle.text = "Video bitrate: " + (value / 1000.0) + " Mbps"
                         prefs.bitrateKbps = value
                     }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
-                    ToolTip.visible: hovered
-                    ToolTip.text: "This slider controls video bitrate only. Audio data will add an additional 1-2 Mbps on top of this."
                 }
 
                 Label {
