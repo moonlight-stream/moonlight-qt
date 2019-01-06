@@ -9,9 +9,11 @@ const double SoundIoAudioRenderer::k_RawSampleLengthSec = 0.005;
 
 #ifdef Q_OS_LINUX
 // PulseAudio and ALSA require more than just 5 ms samples
-// for some reason, so write a minimum of 20 ms each time to
+// for some reason, so write a minimum of 25 ms each time to
 // prevent underruns on Bluetooth.
-const double SoundIoAudioRenderer::k_MinSampleLengthSec = 0.020;
+// https://github.com/moonlight-stream/moonlight-qt/issues/147
+// https://github.com/moonlight-stream/moonlight-qt/issues/157
+const double SoundIoAudioRenderer::k_MinSampleLengthSec = 0.025;
 #else
 // This determines the size of the buffers we'll
 // get from CoreAudio. It is also the minimum
