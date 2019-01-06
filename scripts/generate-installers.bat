@@ -50,6 +50,7 @@ set BUILD_FOLDER=%BUILD_ROOT%\build-%ARCH%-%BUILD_CONFIG%
 set DEPLOY_FOLDER=%BUILD_ROOT%\deploy-%ARCH%-%BUILD_CONFIG%
 set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%ARCH%-%BUILD_CONFIG%
 set SYMBOLS_FOLDER=%BUILD_ROOT%\symbols-%ARCH%-%BUILD_CONFIG%
+set /p VERSION=<%SOURCE_ROOT%\app\version.txt
 
 echo Cleaning output directories
 rmdir /s /q %DEPLOY_FOLDER%
@@ -81,7 +82,7 @@ for /r "%BUILD_FOLDER%" %%f in (*.pdb) do (
 )
 copy %SOURCE_ROOT%\libs\windows\lib\%ARCH%\*.pdb %SYMBOLS_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
-7z a %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols.zip %SYMBOLS_FOLDER%\*.pdb
+7z a %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols-%ARCH%-%VERSION%.zip %SYMBOLS_FOLDER%\*.pdb
 if !ERRORLEVEL! NEQ 0 goto Error
 
 if "%ML_SYMBOL_STORE%" NEQ "" (
@@ -157,6 +158,9 @@ if "%SIGN%"=="1" (
     if !ERRORLEVEL! NEQ 0 goto Error
 )
 
+rem Rename the installer to match the publishing convention
+ren %INSTALLER_FOLDER%\MoonlightSetup.exe MoonlightSetup-%ARCH%-%VERSION%.exe
+
 echo Building portable package
 rem This must be done after WiX harvesting and signing, since the VCRT dlls are MS signed
 rem and should not be harvested for inclusion in the full installer
@@ -164,19 +168,19 @@ copy "%VCToolsRedistDir%%ARCH%\Microsoft.VC141.CRT\*.dll" %DEPLOY_FOLDER%
 rem This file tells Moonlight that it's a portable installation
 echo. > %DEPLOY_FOLDER%\portable.dat
 if !ERRORLEVEL! NEQ 0 goto Error
-7z a %INSTALLER_FOLDER%\MoonlightPortable.zip %DEPLOY_FOLDER%\*
+7z a %INSTALLER_FOLDER%\MoonlightPortable-%ARCH%-%VERSION%.zip %DEPLOY_FOLDER%\*
 if !ERRORLEVEL! NEQ 0 goto Error
 
 if /i "%APPVEYOR%"=="true" (
     echo Pushing artifacts
-    appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightSetup.exe -FileName MoonlightSetup-%ARCH%-%BUILD_CONFIG%.exe
+    appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightSetup-%ARCH%-%VERSION%.exe -FileName MoonlightSetup-%ARCH%-%BUILD_CONFIG%.exe
     if !ERRORLEVEL! NEQ 0 goto Error
-    appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightPortable.zip -FileName MoonlightPortable-%ARCH%-%BUILD_CONFIG%.zip
+    appveyor PushArtifact %INSTALLER_FOLDER%\MoonlightPortable-%ARCH%-%VERSION%.zip -FileName MoonlightPortable-%ARCH%-%BUILD_CONFIG%.zip
     if !ERRORLEVEL! NEQ 0 goto Error
-    appveyor PushArtifact %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols.zip -FileName MoonlightDebuggingSymbols-%ARCH%-%BUILD_CONFIG%.zip
+    appveyor PushArtifact %SYMBOLS_FOLDER%\MoonlightDebuggingSymbols-%ARCH%-%VERSION%.zip -FileName MoonlightDebuggingSymbols-%ARCH%-%BUILD_CONFIG%.zip
 )
 
-echo Build successful!
+echo Build successful for Moonlight v%VERSION%!
 exit /b 0
 
 :Error
