@@ -17,6 +17,13 @@ if /I "%BUILD_CONFIG%"=="debug" (
             set BUILD_CONFIG=release
             set SIGN=1
             set MUST_DEPLOY_SYMBOLS=1
+
+            rem Fail if there are unstaged changes
+            git diff-index --quiet HEAD --
+            if !ERRORLEVEL! NEQ 0 (
+                echo Signed release builds must not have unstaged changes!
+                exit /b 1
+            )
         ) else (
             echo Invalid build configuration
             exit /b 1
