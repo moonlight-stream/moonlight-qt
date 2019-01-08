@@ -33,6 +33,24 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.8.1" date="2018-01-08">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Stricter adherence to the specified bitrate when streaming over the Internet</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed audio crackling that impacted certain systems</li>
+					<li>Fixed Wake-on-LAN packets failing to send on some systems</li>
+					<li>Reduced audio latency when resuming a session where audio is already playing</li>
+					<li>Added option to enable the old SDL audio renderer by setting ML_AUDIO=SDL</li>
+					<li>Updated to use the new Qt 5.12 Flatpak runtime</li>
+					<li>Updated to FFmpeg 4.1</li>
+					<li>Minor UI tweaks</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.8.0" date="2018-12-25">
 			<description>
 				<p>New features:</p>
