@@ -147,6 +147,19 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
+        else if (event->keysym.sym == SDLK_s) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected stats toggle combo");
+
+            // Toggle the stats overlay
+            Session::get()->getOverlayManager().setOverlayState(OverlayManager::OverlayDebug,
+                                                                !Session::get()->getOverlayManager().isOverlayEnabled(OverlayManager::OverlayDebug));
+
+            // Force raise all keys just be safe across this full-screen/windowed
+            // transition just in case key events get lost.
+            raiseAllKeys();
+            return;
+        }
     }
 
     if (!SDL_GetRelativeMouseMode()) {

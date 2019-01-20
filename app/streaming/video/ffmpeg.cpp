@@ -1,6 +1,8 @@
 #include <Limelight.h>
 #include "ffmpeg.h"
 #include "streaming/streamutils.h"
+#include "streaming/session.h"
+
 #include <h264_stream.h>
 
 #ifdef Q_OS_WIN32
@@ -276,54 +278,51 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.renderedFps = (float)dst.renderedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
 }
 
+void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
+{
+    int offset = 0;
+
+    // Start with an empty string
+    output[offset] = 0;
+
+    if (stats.receivedFps > 0) {
+        offset += sprintf(&output[offset],
+                          "Incoming frame rate from host PC: %.2f FPS\n"
+                          "Decoding frame rate: %.2f FPS\n"
+                          "Rendering frame rate: %.2f FPS\n",
+                          stats.receivedFps,
+                          stats.decodedFps,
+                          stats.renderedFps);
+    }
+
+    if (stats.renderedFrames != 0) {
+        offset += sprintf(&output[offset],
+                          "Average reassembly time: %.2f ms\n"
+                          "Average decode time: %.2f ms\n"
+                          "Average frame pacing delay: %.2f ms\n"
+                          "Average render time: %.2f ms\n"
+                          "Frames dropped by your network connection: %.2f%%\n"
+                          "Frames dropped by frame pacing: %.2f%%",
+                          (float)stats.totalReassemblyTime / stats.decodedFrames,
+                          (float)stats.totalDecodeTime / stats.decodedFrames,
+                          (float)stats.totalPacerTime / stats.renderedFrames,
+                          (float)stats.totalRenderTime / stats.renderedFrames,
+                          (float)stats.networkDroppedFrames / stats.decodedFrames,
+                          (float)stats.pacerDroppedFrames / stats.decodedFrames);
+    }
+}
+
 void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
 {
     if (stats.renderedFps > 0 || stats.renderedFrames != 0) {
+        char videoStatsStr[512];
+        stringifyVideoStats(stats, videoStatsStr);
+
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "%s", title);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "----------------------------------------------------------");
-    }
-
-    if (stats.renderedFps > 0) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Incoming frame rate from network: %.2f FPS",
-                    stats.receivedFps);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Decoding frame rate: %.2f FPS",
-                    stats.decodedFps);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Rendering frame rate: %.2f FPS",
-                    stats.renderedFps);
-    }
-    if (stats.renderedFrames != 0) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Total frames received: %u",
-                    stats.receivedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Total frames decoded: %u",
-                    stats.decodedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Total frames rendered: %u",
-                    stats.renderedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Average reassembly time: %.2f ms",
-                    (float)stats.totalReassemblyTime / stats.decodedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Average decode time: %.2f ms",
-                    (float)stats.totalDecodeTime / stats.decodedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Average frame pacing delay: %.2f ms",
-                    (float)stats.totalPacerTime / stats.renderedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Average render time: %.2f ms",
-                    (float)stats.totalRenderTime / stats.renderedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Frames lost during network transmission: %.2f%%",
-                    (float)stats.networkDroppedFrames / stats.decodedFrames);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Frames dropped by frame pacing: %.2f%%",
-                    (float)stats.pacerDroppedFrames / stats.decodedFrames);
+                    "----------------------------------------------------------\n%s",
+                    videoStatsStr);
     }
 }
 
@@ -492,16 +491,26 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     PLENTRY entry = du->bufferList;
     int err;
 
-    // Flip stats windows roughly every second
-    if (m_ActiveWndVideoStats.receivedFrames == m_StreamFps) {
-#if 0
-        VIDEO_STATS lastTwoWndStats = {};
-        addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
-        addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);
+    if (!m_LastFrameNumber) {
+        m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
+        m_LastFrameNumber = du->frameNumber;
+    }
+    else {
+        // Any frame number greater than m_LastFrameNumber + 1 represents a dropped frame
+        m_ActiveWndVideoStats.networkDroppedFrames += du->frameNumber - (m_LastFrameNumber + 1);
+        m_LastFrameNumber = du->frameNumber;
+    }
 
-        // Print stats from the last 2 windows
-        logVideoStats(lastTwoWndStats, "Periodic video stats");
-#endif
+    // Flip stats windows roughly every second
+    if (SDL_TICKS_PASSED(SDL_GetTicks(), m_ActiveWndVideoStats.measurementStartTimestamp + 1000)) {
+        // Update overlay stats if it's enabled
+        if (Session::get()->getOverlayManager().isOverlayEnabled(OverlayManager::OverlayDebug)) {
+            VIDEO_STATS lastTwoWndStats = {};
+            addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
+            addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);
+
+            stringifyVideoStats(lastTwoWndStats, Session::get()->getOverlayManager().getOverlayText(OverlayManager::OverlayDebug));
+        }
 
         // Accumulate these values into the global stats
         addVideoStats(m_ActiveWndVideoStats, m_GlobalVideoStats);
@@ -513,16 +522,6 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     }
 
     m_ActiveWndVideoStats.receivedFrames++;
-
-    if (!m_LastFrameNumber) {
-        m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
-        m_LastFrameNumber = du->frameNumber;
-    }
-    else {
-        // Any frame number greater than m_LastFrameNumber + 1 represents a dropped frame
-        m_ActiveWndVideoStats.networkDroppedFrames += du->frameNumber - (m_LastFrameNumber + 1);
-        m_LastFrameNumber = du->frameNumber;
-    }
 
     int requiredBufferSize = du->fullLength;
     if (du->frameType == FRAME_TYPE_IDR) {

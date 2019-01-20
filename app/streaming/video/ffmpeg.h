@@ -33,6 +33,8 @@ private:
                                 int videoFormat, int width, int height,
                                 int maxFps, bool enableFramePacing, bool testOnly);
 
+    void stringifyVideoStats(VIDEO_STATS& stats, char* output);
+
     void logVideoStats(VIDEO_STATS& stats, const char* title);
 
     void addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst);
@@ -58,6 +60,7 @@ private:
     VIDEO_STATS m_ActiveWndVideoStats;
     VIDEO_STATS m_LastWndVideoStats;
     VIDEO_STATS m_GlobalVideoStats;
+
     int m_LastFrameNumber;
     int m_StreamFps;
     bool m_NeedsSpsFixup;

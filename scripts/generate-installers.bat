@@ -115,6 +115,10 @@ echo Copying AntiHooking.dll
 copy %BUILD_FOLDER%\AntiHooking\%BUILD_CONFIG%\AntiHooking.dll %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
+echo Copying d3dx9_43.dll from DirectX SDK
+expand "%DXSDK_DIR%\Redist\Jun2010_d3dx9_43_%ARCH%.cab" -F:d3dx9_43.dll %DEPLOY_FOLDER%
+if !ERRORLEVEL! NEQ 0 goto Error
+
 echo Copying GC mapping list
 copy %SOURCE_ROOT%\app\SDL_GameControllerDB\gamecontrollerdb.txt %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error

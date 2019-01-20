@@ -4,11 +4,11 @@
 
 #include <Limelight.h>
 #include <opus_multistream.h>
-#include "backend/computermanager.h"
 #include "settings/streamingpreferences.h"
 #include "input.h"
 #include "video/decoder.h"
 #include "audio/renderers/renderer.h"
+#include "video/overlaymanager.h"
 
 class Session : public QObject
 {
@@ -31,6 +31,16 @@ public:
     static
     int getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
                                int videoFormat, int width, int height, int frameRate);
+
+    static Session* get()
+    {
+        return s_ActiveSession;
+    }
+
+    OverlayManager& getOverlayManager()
+    {
+        return m_OverlayManager;
+    }
 
 signals:
     void stageStarting(QString stage);
@@ -133,6 +143,8 @@ private:
     IAudioRenderer* m_AudioRenderer;
     OPUS_MULTISTREAM_CONFIGURATION m_AudioConfig;
     int m_AudioSampleCount;
+
+    OverlayManager m_OverlayManager;
 
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;

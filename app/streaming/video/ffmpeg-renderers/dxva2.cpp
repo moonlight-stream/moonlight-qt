@@ -2,6 +2,7 @@
 #include "dxva2.h"
 #include "../ffmpeg.h"
 #include <streaming/streamutils.h>
+#include <streaming/session.h>
 
 #include <SDL_syswm.h>
 
@@ -25,7 +26,8 @@ DXVA2Renderer::DXVA2Renderer() :
     m_RenderTarget(nullptr),
     m_ProcService(nullptr),
     m_Processor(nullptr),
-    m_FrameIndex(0)
+    m_FrameIndex(0),
+    m_OverlayFont(nullptr)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
@@ -44,6 +46,7 @@ DXVA2Renderer::~DXVA2Renderer()
     SAFE_COM_RELEASE(m_RenderTarget);
     SAFE_COM_RELEASE(m_ProcService);
     SAFE_COM_RELEASE(m_Processor);
+    SAFE_COM_RELEASE(m_OverlayFont);
 
     for (int i = 0; i < ARRAYSIZE(m_DecSurfaces); i++) {
         SAFE_COM_RELEASE(m_DecSurfaces[i]);
@@ -311,6 +314,32 @@ bool DXVA2Renderer::initializeRenderer()
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateVideoProcessor() failed for DXVA2_VideoProcProgressiveDevice: %x",
+                     hr);
+        return false;
+    }
+
+    return true;
+}
+
+bool DXVA2Renderer::initializeOverlay()
+{
+    HRESULT hr;
+
+    hr = D3DXCreateFontA(m_Device,
+                         20,
+                         0,
+                         FW_HEAVY,
+                         1,
+                         false,
+                         ANSI_CHARSET,
+                         OUT_DEFAULT_PRECIS,
+                         DEFAULT_QUALITY,
+                         DEFAULT_PITCH | FF_DONTCARE,
+                         "",
+                         &m_OverlayFont);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "D3DXCreateFontA() failed: %x",
                      hr);
         return false;
     }
@@ -622,6 +651,9 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
         return false;
     }
 
+    // It's okay if this fails
+    initializeOverlay();
+
     // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
     // When focus is lost, the window is minimized then immediately restored without
     // input focus. This glitches out the renderer and a bunch of other stuff.
@@ -785,12 +817,54 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
 
     bltParams.Alpha = DXVA2_Fixed32OpaqueAlpha();
 
-    m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0f, 0);
+    hr = m_Device->Clear(0, nullptr, D3DCLEAR_TARGET, D3DCOLOR_ARGB(255, 0, 0, 0), 0.0f, 0);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Clear() failed: %x",
+                     hr);
+        SDL_Event event;
+        event.type = SDL_RENDER_TARGETS_RESET;
+        SDL_PushEvent(&event);
+        return;
+    }
+
+    hr = m_Device->BeginScene();
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "BeginScene() failed: %x",
+                     hr);
+        SDL_Event event;
+        event.type = SDL_RENDER_TARGETS_RESET;
+        SDL_PushEvent(&event);
+        return;
+    }
 
     hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VideoProcessBlt() failed: %x",
+                     hr);
+        SDL_Event event;
+        event.type = SDL_RENDER_TARGETS_RESET;
+        SDL_PushEvent(&event);
+        return;
+    }
+
+    if (m_OverlayFont != nullptr) {
+        if (Session::get()->getOverlayManager().isOverlayEnabled(OverlayManager::OverlayDebug)) {
+            m_OverlayFont->DrawTextA(nullptr,
+                                     Session::get()->getOverlayManager().getOverlayText(OverlayManager::OverlayDebug),
+                                     -1,
+                                     &sample.DstRect,
+                                     DT_LEFT | DT_NOCLIP,
+                                     D3DCOLOR_ARGB(255, 255, 255, 255));
+        }
+    }
+
+    hr = m_Device->EndScene();
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "EndScene() failed: %x",
                      hr);
         SDL_Event event;
         event.type = SDL_RENDER_TARGETS_RESET;

@@ -37,13 +37,17 @@ DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 win32 {
-    INCLUDEPATH += $$PWD/../libs/windows/include
+    INCLUDEPATH += \
+        $$PWD/../libs/windows/include \
+        $$(DXSDK_DIR)/Include
 
     contains(QT_ARCH, i386) {
         LIBS += -L$$PWD/../libs/windows/lib/x86
+        LIBS += -L$$(DXSDK_DIR)/Lib/x86
     }
     contains(QT_ARCH, x86_64) {
         LIBS += -L$$PWD/../libs/windows/lib/x64
+        LIBS += -L$$(DXSDK_DIR)/Lib/x64
     }
 
     LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
@@ -85,7 +89,7 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus
+    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus -ld3dx9
     CONFIG += ffmpeg soundio
 }
 macx {
@@ -121,7 +125,8 @@ SOURCES += \
     backend/autoupdatechecker.cpp \
     path.cpp \
     settings/mappingmanager.cpp \
-    gui/sdlgamepadkeynavigation.cpp
+    gui/sdlgamepadkeynavigation.cpp \
+    streaming/video/overlaymanager.cpp
 
 HEADERS += \
     utils.h \
@@ -147,7 +152,8 @@ HEADERS += \
     backend/autoupdatechecker.h \
     path.h \
     settings/mappingmanager.h \
-    gui/sdlgamepadkeynavigation.h
+    gui/sdlgamepadkeynavigation.h \
+    streaming/video/overlaymanager.h
 
 # Platform-specific renderers and decoders
 ffmpeg {

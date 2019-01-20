@@ -4,6 +4,7 @@
 #include "pacer/pacer.h"
 
 #include <d3d9.h>
+#include <d3dx9.h>
 #include <dxva2api.h>
 
 extern "C" {
@@ -31,6 +32,7 @@ private:
     bool initializeDecoder();
     bool initializeRenderer();
     bool initializeDevice(SDL_Window* window, bool enableVsync);
+    bool initializeOverlay();
     bool isDecoderBlacklisted();
 
     static
@@ -67,4 +69,5 @@ private:
     DXVA2_ValueRange m_SaturationRange;
     DXVA2_VideoDesc m_Desc;
     REFERENCE_TIME m_FrameIndex;
+    LPD3DXFONT m_OverlayFont;
 };
