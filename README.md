@@ -28,10 +28,11 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
 ### Windows-specific Requirements
 * Windows 7 or later
-* Visual Studio 2015 or later
+* [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2015 or later (Community edition is fine)
 * Select MSVC Desktop toolchain during Qt installation
-* 7-Zip (only if building installers for non-development PCs)
-* WiX Toolset v3.11 or later (only if building installers for non-development PCs)
+* [DirectX SDK](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
+* [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
+* [WiX Toolset](http://wixtoolset.org/releases/) v3.11 or later (only if building installers for non-development PCs)
 
 ### Mac-specific Requirements
 * macOS Sierra (10.12) or later
