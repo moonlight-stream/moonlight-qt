@@ -174,38 +174,19 @@ ComputerManager::~ComputerManager()
     delete m_MdnsBrowser;
     m_MdnsBrowser = nullptr;
 
-    {
-        QMutableMapIterator<QString, QThread*> i(m_PollThreads);
-
-        // Interrupt all polling threads
-        while (i.hasNext()) {
-            i.next();
-            i.value()->requestInterruption();
-        }
-
-        // Wait for all threads to terminate before destroying
-        // the NvComputer objects.
-        i.toFront();
-        while (i.hasNext()) {
-            i.next();
-
-            QThread* thread = i.value();
-            thread->wait();
-            delete thread;
-
-            i.remove();
-        }
+    // Interrupt polling
+    for (ComputerPollingEntry* entry : m_PollEntries) {
+        entry->interrupt();
     }
 
-    {
-        QMutableMapIterator<QString, NvComputer*> i(m_KnownHosts);
+    // Delete all polling entries (and associated threads)
+    for (ComputerPollingEntry* entry : m_PollEntries) {
+        delete entry;
+    }
 
-        // Destroy all NvComputer objects
-        while (i.hasNext()) {
-            i.next();
-            delete i.value();
-            i.remove();
-        }
+    // Destroy all NvComputer objects now that polling is halted
+    for (NvComputer* computer : m_KnownHosts) {
+        delete computer;
     }
 }
 
@@ -265,16 +246,22 @@ void ComputerManager::startPollingComputer(NvComputer* computer)
         return;
     }
 
-    if (m_PollThreads.contains(computer->uuid)) {
-        Q_ASSERT(m_PollThreads.value(computer->uuid)->isRunning());
-        return;
+    ComputerPollingEntry* pollingEntry;
+
+    if (!m_PollEntries.contains(computer->uuid)) {
+        pollingEntry = m_PollEntries[computer->uuid] = new ComputerPollingEntry();
+    }
+    else {
+        pollingEntry = m_PollEntries[computer->uuid];
     }
 
-    PcMonitorThread* thread = new PcMonitorThread(computer);
-    connect(thread, SIGNAL(computerStateChanged(NvComputer*)),
-            this, SLOT(handleComputerStateChanged(NvComputer*)));
-    m_PollThreads[computer->uuid] = thread;
-    thread->start();
+    if (!pollingEntry->isActive()) {
+        PcMonitorThread* thread = new PcMonitorThread(computer);
+        connect(thread, SIGNAL(computerStateChanged(NvComputer*)),
+                this, SLOT(handleComputerStateChanged(NvComputer*)));
+        pollingEntry->setActiveThread(thread);
+        thread->start();
+    }
 }
 
 void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
@@ -317,14 +304,14 @@ public:
 
     void run()
     {
-        QThread* pollingThread;
+        ComputerPollingEntry* pollingEntry;
 
         // Only do the minimum amount of work while holding the writer lock.
         // We must release it before calling saveHosts().
         {
             QWriteLocker lock(&m_ComputerManager->m_Lock);
 
-            pollingThread = m_ComputerManager->m_PollThreads.take(m_Computer->uuid);
+            pollingEntry = m_ComputerManager->m_PollEntries.take(m_Computer->uuid);
 
             m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
         }
@@ -332,18 +319,8 @@ public:
         // Persist the new host list
         m_ComputerManager->saveHosts();
 
-        // Delete the polling thread
-        if (pollingThread != nullptr) {
-            pollingThread->requestInterruption();
-
-            // We must wait here because we're going to delete computer
-            // and we can't do that out from underneath the poller.
-            pollingThread->wait();
-
-            // The thread is safe to delete now
-            Q_ASSERT(pollingThread->isFinished());
-            delete pollingThread;
-        }
+        // Delete the polling entry first. This will stop all polling threads too.
+        delete pollingEntry;
 
         // Finally, delete the computer itself. This must be done
         // last because the polling thread might be using it.
@@ -498,20 +475,8 @@ void ComputerManager::stopPollingAsync()
     m_MdnsBrowser = nullptr;
 
     // Interrupt all threads, but don't wait for them to terminate
-    QMutableMapIterator<QString, QThread*> i(m_PollThreads);
-    while (i.hasNext()) {
-        i.next();
-
-        QThread* thread = i.value();
-
-        // Let this thread delete itself when it's finished
-        connect(thread, SIGNAL(finished()),
-                thread, SLOT(deleteLater()));
-
-        // The threads will delete themselves when they terminate,
-        // but we remove them from the polling threads map here.
-        i.value()->requestInterruption();
-        i.remove();
+    for (ComputerPollingEntry* entry : m_PollEntries) {
+        entry->interrupt();
     }
 }
 
