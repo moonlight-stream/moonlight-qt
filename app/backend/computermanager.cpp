@@ -31,7 +31,7 @@ private:
 
         QString serverInfo;
         try {
-            serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::NONE);
+            serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::NVLL_NONE);
         } catch (...) {
             return false;
         }
@@ -511,12 +511,12 @@ private:
             // around this issue, we will issue the request again after a few seconds if
             // we see a ServiceUnavailableError error.
             try {
-                serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::VERBOSE);
+                serverInfo = http.getServerInfo(NvHTTP::NVLL_VERBOSE);
             } catch (const QtNetworkReplyException& e) {
                 if (e.getError() == QNetworkReply::ServiceUnavailableError) {
                     qWarning() << "Retrying request in 5 seconds after ServiceUnavailableError";
                     QThread::sleep(5);
-                    serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::VERBOSE);
+                    serverInfo = http.getServerInfo(NvHTTP::NVLL_VERBOSE);
                     qInfo() << "Retry successful";
                 }
                 else {

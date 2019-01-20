@@ -117,9 +117,9 @@ class NvHTTP
 {
 public:
     enum NvLogLevel {
-        NONE,
-        ERROR,
-        VERBOSE
+        NVLL_NONE,
+        NVLL_ERROR,
+        NVLL_VERBOSE
     };
 
     explicit NvHTTP(QString address, QSslCertificate serverCert);
@@ -150,7 +150,7 @@ public:
                            QString command,
                            QString arguments,
                            int timeoutMs,
-                           NvLogLevel logLevel = NvLogLevel::VERBOSE);
+                           NvLogLevel logLevel = NvLogLevel::NVLL_VERBOSE);
 
     void setServerCert(QSslCertificate serverCert);
 
