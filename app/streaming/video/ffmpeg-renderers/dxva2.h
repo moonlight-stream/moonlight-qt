@@ -70,4 +70,5 @@ private:
     DXVA2_VideoDesc m_Desc;
     REFERENCE_TIME m_FrameIndex;
     LPD3DXFONT m_OverlayFont;
+    bool m_BlockingPresent;
 };

@@ -27,7 +27,8 @@ DXVA2Renderer::DXVA2Renderer() :
     m_ProcService(nullptr),
     m_Processor(nullptr),
     m_FrameIndex(0),
-    m_OverlayFont(nullptr)
+    m_OverlayFont(nullptr),
+    m_BlockingPresent(false)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
@@ -541,6 +542,8 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
             d3dpp.BackBufferCount = 1;
         }
 
+        m_BlockingPresent = false;
+
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Windowed mode with DWM running");
     }
@@ -550,6 +553,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferCount = 1;
+        m_BlockingPresent = true;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "V-Sync enabled");
@@ -560,6 +564,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
         d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
         d3dpp.BackBufferCount = 1;
+        m_BlockingPresent = false;
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "V-Sync disabled in tearing mode");
@@ -872,7 +877,14 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
         return;
     }
 
-    hr = m_Device->PresentEx(nullptr, nullptr, nullptr, nullptr, 0);
+    do {
+        // Use D3DPRESENT_DONOTWAIT if present may block in order to avoid holding the giant
+        // lock around this D3D device for excessive lengths of time (blocking concurrent decoding tasks).
+        hr = m_Device->PresentEx(nullptr, nullptr, nullptr, nullptr, m_BlockingPresent ? D3DPRESENT_DONOTWAIT : 0);
+        if (hr == D3DERR_WASSTILLDRAWING) {
+            SDL_Delay(1);
+        }
+    } while (hr == D3DERR_WASSTILLDRAWING);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "PresentEx() failed: %x",
