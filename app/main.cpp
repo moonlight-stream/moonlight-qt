@@ -290,7 +290,7 @@ int main(int argc, char *argv[])
 
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
-    qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", QByteArray("1"));
+    qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
 
 #ifdef Q_OS_WIN32
     if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
@@ -332,7 +332,25 @@ int main(int argc, char *argv[])
                                                     return new AutoUpdateChecker();
                                                 });
 
-    QQuickStyle::setStyle("Material");
+    // Use the dense material dark theme by default
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
+        qputenv("QT_QUICK_CONTROLS_STYLE", "Material");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_THEME")) {
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_ACCENT")) {
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "Purple");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_UNIVERSAL_THEME")) {
+        qputenv("QT_QUICK_CONTROLS_UNIVERSAL_THEME", "Dark");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_1_STYLE")) {
+        qputenv("QT_QUICK_CONTROLS_1_STYLE", "Flat");
+    }
 
     QQmlApplicationEngine engine;
     QString initialView;

@@ -4,8 +4,6 @@ import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 
-import QtQuick.Controls.Material 2.1
-
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
@@ -19,9 +17,6 @@ ApplicationWindow {
     height: 600
 
     visibility: prefs.startWindowed ? "Windowed" : "Maximized"
-
-    Material.theme: Material.Dark
-    Material.accent: Material.Purple
 
     StreamingPreferences {
         id: prefs
