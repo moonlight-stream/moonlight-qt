@@ -27,9 +27,12 @@ public:
     bool isUsingFrameQueue();
 
 private:
+    void renderFrame(AVFrame* frame);
+
     QQueue<AVFrame*> m_FrameQueue;
     QQueue<int> m_FrameQueueHistory;
     SDL_SpinLock m_FrameQueueLock;
+    bool m_DropNextFrame;
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;

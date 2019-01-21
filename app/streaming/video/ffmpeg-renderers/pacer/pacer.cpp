@@ -22,6 +22,7 @@
 
 Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
     m_FrameQueueLock(0),
+    m_DropNextFrame(false),
     m_VsyncSource(nullptr),
     m_VsyncRenderer(renderer),
     m_MaxVideoFps(0),
@@ -102,7 +103,8 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
             SDL_AtomicUnlock(&m_FrameQueueLock);
         }
 
-        // Nothing to render at this time
+        // Nothing to render at this time. This counts as a drop.
+        m_DropNextFrame = false;
         return;
     }
 
@@ -111,17 +113,7 @@ RenderNextFrame:
     AVFrame* frame = m_FrameQueue.dequeue();
     SDL_AtomicUnlock(&m_FrameQueueLock);
 
-    // Count time spent in Pacer's queues
-    Uint32 beforeRender = SDL_GetTicks();
-    m_VideoStats->totalPacerTime += beforeRender - frame->pts;
-
-    // Render it
-    m_VsyncRenderer->renderFrameAtVsync(frame);
-    m_VideoStats->totalRenderTime += SDL_GetTicks() - beforeRender;
-    m_VideoStats->renderedFrames++;
-
-    // Free the frame
-    av_frame_free(&frame);
+    renderFrame(frame);
 }
 
 bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
@@ -156,6 +148,39 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
     return true;
 }
 
+void Pacer::renderFrame(AVFrame* frame)
+{
+    // Drop this frame if we believe we've run into V-sync waits
+    if (m_DropNextFrame) {
+        m_VideoStats->pacerDroppedFrames++;
+        av_frame_free(&frame);
+        m_DropNextFrame = false;
+        return;
+    }
+
+    // Count time spent in Pacer's queues
+    Uint32 beforeRender = SDL_GetTicks();
+    m_VideoStats->totalPacerTime += beforeRender - frame->pts;
+
+    // Render it
+    m_VsyncRenderer->renderFrameAtVsync(frame);
+    Uint32 afterRender = SDL_GetTicks();
+
+    // If rendering took longer than an entire V-sync interval,
+    // there must have been a frame pending display that blocked us.
+    // Drop our next frame to clear the backed up display pipeline.
+    if (afterRender - beforeRender > 1000 / m_DisplayFps) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Render time exceeded V-sync period (%d ms); dropping next frame to reduce latency",
+                    afterRender - beforeRender);
+        m_DropNextFrame = true;
+    }
+
+    m_VideoStats->totalRenderTime += afterRender - beforeRender;
+    m_VideoStats->renderedFrames++;
+    av_frame_free(&frame);
+}
+
 void Pacer::submitFrame(AVFrame* frame)
 {
     // Make sure initialize() has been called
@@ -170,11 +195,7 @@ void Pacer::submitFrame(AVFrame* frame)
         SDL_AtomicUnlock(&m_FrameQueueLock);
     }
     else {
-        Uint32 beforeRender = SDL_GetTicks();
-        m_VsyncRenderer->renderFrameAtVsync(frame);
-        m_VideoStats->totalRenderTime += SDL_GetTicks() - beforeRender;
-        m_VideoStats->renderedFrames++;
-        av_frame_free(&frame);
+        renderFrame(frame);
     }
 }
 
