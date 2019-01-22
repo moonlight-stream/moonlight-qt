@@ -256,6 +256,7 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.receivedFrames += src.receivedFrames;
     dst.decodedFrames += src.decodedFrames;
     dst.renderedFrames += src.renderedFrames;
+    dst.totalFrames += src.totalFrames;
     dst.networkDroppedFrames += src.networkDroppedFrames;
     dst.pacerDroppedFrames += src.pacerDroppedFrames;
     dst.totalReassemblyTime += src.totalReassemblyTime;
@@ -273,6 +274,7 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     // The following code assumes the global measure was already started first
     SDL_assert(dst.measurementStartTimestamp <= src.measurementStartTimestamp);
 
+    dst.totalFps = (float)dst.totalFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
     dst.receivedFps = (float)dst.receivedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
     dst.decodedFps = (float)dst.decodedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
     dst.renderedFps = (float)dst.renderedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
@@ -287,9 +289,11 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
 
     if (stats.receivedFps > 0) {
         offset += sprintf(&output[offset],
-                          "Incoming frame rate from host PC: %.2f FPS\n"
+                          "Estimated host PC frame rate: %.2f FPS\n"
+                          "Incoming frame rate from network: %.2f FPS\n"
                           "Decoding frame rate: %.2f FPS\n"
                           "Rendering frame rate: %.2f FPS\n",
+                          stats.totalFps,
                           stats.receivedFps,
                           stats.decodedFps,
                           stats.renderedFps);
@@ -297,18 +301,18 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
 
     if (stats.renderedFrames != 0) {
         offset += sprintf(&output[offset],
-                          "Average reassembly time: %.2f ms\n"
-                          "Average decode time: %.2f ms\n"
-                          "Average frame pacing delay: %.2f ms\n"
-                          "Average render time: %.2f ms\n"
                           "Frames dropped by your network connection: %.2f%%\n"
-                          "Frames dropped by frame pacing: %.2f%%",
-                          (float)stats.totalReassemblyTime / stats.decodedFrames,
+                          "Frames dropped by frame pacing: %.2f%%\n"
+                          "Average receive time: %.2f ms\n"
+                          "Average decoding time: %.2f ms\n"
+                          "Average frame queue delay: %.2f ms\n"
+                          "Average rendering time: %.2f ms\n",
+                          (float)stats.networkDroppedFrames / stats.totalFrames * 100,
+                          (float)stats.pacerDroppedFrames / stats.decodedFrames * 100,
+                          (float)stats.totalReassemblyTime / stats.receivedFrames,
                           (float)stats.totalDecodeTime / stats.decodedFrames,
                           (float)stats.totalPacerTime / stats.renderedFrames,
-                          (float)stats.totalRenderTime / stats.renderedFrames,
-                          (float)stats.networkDroppedFrames / stats.decodedFrames,
-                          (float)stats.pacerDroppedFrames / stats.decodedFrames);
+                          (float)stats.totalRenderTime / stats.renderedFrames);
     }
 }
 
@@ -498,6 +502,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     else {
         // Any frame number greater than m_LastFrameNumber + 1 represents a dropped frame
         m_ActiveWndVideoStats.networkDroppedFrames += du->frameNumber - (m_LastFrameNumber + 1);
+        m_ActiveWndVideoStats.totalFrames += du->frameNumber - (m_LastFrameNumber + 1);
         m_LastFrameNumber = du->frameNumber;
     }
 
@@ -522,6 +527,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     }
 
     m_ActiveWndVideoStats.receivedFrames++;
+    m_ActiveWndVideoStats.totalFrames++;
 
     int requiredBufferSize = du->fullLength;
     if (du->frameType == FRAME_TYPE_IDR) {

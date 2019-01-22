@@ -12,12 +12,14 @@ typedef struct _VIDEO_STATS {
     uint32_t receivedFrames;
     uint32_t decodedFrames;
     uint32_t renderedFrames;
+    uint32_t totalFrames;
     uint32_t networkDroppedFrames;
     uint32_t pacerDroppedFrames;
     uint32_t totalReassemblyTime;
     uint32_t totalDecodeTime;
     uint32_t totalPacerTime;
     uint32_t totalRenderTime;
+    float totalFps;
     float receivedFps;
     float decodedFps;
     float renderedFps;
