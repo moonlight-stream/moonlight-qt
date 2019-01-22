@@ -35,7 +35,7 @@ bool FFmpegVideoDecoder::isHardwareAccelerated()
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
-    return m_Renderer->getDecoderCapabilities();
+    return CAPABILITY_DIRECT_SUBMIT | m_Renderer->getDecoderCapabilities();
 }
 
 enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
@@ -71,7 +71,6 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
       m_NeedsSpsFixup(false)
 {
     av_init_packet(&m_Pkt);
-    SDL_AtomicSet(&m_QueuedFrames, 0);
 
     SDL_zero(m_ActiveWndVideoStats);
     SDL_zero(m_LastWndVideoStats);
@@ -93,28 +92,6 @@ IFFmpegRenderer* FFmpegVideoDecoder::getRenderer()
 
 void FFmpegVideoDecoder::reset()
 {
-    // Drop any frames still queued to ensure
-    // they are properly freed.
-    SDL_Event event;
-
-    while (SDL_AtomicGet(&m_QueuedFrames) > 0) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Waiting for %d frames to return",
-                    SDL_AtomicGet(&m_QueuedFrames));
-
-        if (SDL_PeepEvents(&event,
-                           1,
-                           SDL_GETEVENT,
-                           SDL_USEREVENT,
-                           SDL_USEREVENT) == 1) {
-            dropFrame(&event.user);
-        }
-        else {
-            SDL_Delay(10);
-            SDL_PumpEvents();
-        }
-    }
-
     delete m_Pacer;
     m_Pacer = nullptr;
 
@@ -590,14 +567,13 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Capture a frame timestamp to measuring pacing delay
         frame->pts = SDL_GetTicks();
 
-        // Queue the frame for rendering from the main thread
-        SDL_AtomicIncRef(&m_QueuedFrames);
-        queueFrame(frame);
-
         // Count time in avcodec_send_packet() and avcodec_receive_frame()
         // as time spent decoding
         m_ActiveWndVideoStats.totalDecodeTime += SDL_GetTicks() - beforeDecode;
         m_ActiveWndVideoStats.decodedFrames++;
+
+        // Queue the frame for rendering (or render now if pacer is disabled)
+        m_Pacer->submitFrame(frame);
     }
     else {
         av_frame_free(&frame);
@@ -621,30 +597,13 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 }
 
 // Called on main thread
-void FFmpegVideoDecoder::renderFrame(SDL_UserEvent* event)
+void FFmpegVideoDecoder::renderFrame(SDL_UserEvent*)
 {
-    AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
-    m_Pacer->submitFrame(frame);
-    SDL_AtomicDecRef(&m_QueuedFrames);
+    SDL_assert(false);
 }
 
 // Called on main thread
-void FFmpegVideoDecoder::dropFrame(SDL_UserEvent* event)
+void FFmpegVideoDecoder::dropFrame(SDL_UserEvent*)
 {
-    AVFrame* frame = reinterpret_cast<AVFrame*>(event->data1);
-    // If Pacer is using a frame queue, we can just queue the
-    // frame and let it decide whether to drop or not. If Pacer
-    // is submitting directly for rendering, we drop the frame
-    // ourselves.
-    if (m_Pacer->isUsingFrameQueue()) {
-        m_Pacer->submitFrame(frame);
-    }
-    else {
-        av_frame_free(&frame);
-
-        // Since Pacer won't see this frame, we'll mark it as a drop
-        // on its behalf
-        m_ActiveWndVideoStats.pacerDroppedFrames++;
-    }
-    SDL_AtomicDecRef(&m_QueuedFrames);
+    SDL_assert(false);
 }

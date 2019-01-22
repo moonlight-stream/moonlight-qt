@@ -54,7 +54,6 @@ private:
     QByteArray m_DecodeBuffer;
     const AVCodecHWConfig* m_HwDecodeCfg;
     IFFmpegRenderer* m_Renderer;
-    SDL_atomic_t m_QueuedFrames;
     int m_ConsecutiveFailedDecodes;
     Pacer* m_Pacer;
     VIDEO_STATS m_ActiveWndVideoStats;
