@@ -126,7 +126,8 @@ SOURCES += \
     path.cpp \
     settings/mappingmanager.cpp \
     gui/sdlgamepadkeynavigation.cpp \
-    streaming/video/overlaymanager.cpp
+    streaming/video/overlaymanager.cpp \
+    streaming/sdlhelper.cpp
 
 HEADERS += \
     utils.h \
@@ -153,7 +154,8 @@ HEADERS += \
     path.h \
     settings/mappingmanager.h \
     gui/sdlgamepadkeynavigation.h \
-    streaming/video/overlaymanager.h
+    streaming/video/overlaymanager.h \
+    streaming/sdlhelper.h
 
 # Platform-specific renderers and decoders
 ffmpeg {
