@@ -27,12 +27,14 @@ public:
     bool isUsingFrameQueue();
 
 private:
+    void addRenderTimeToHistory(int renderTime);
+
     void renderFrame(AVFrame* frame);
 
     QQueue<AVFrame*> m_FrameQueue;
     QQueue<int> m_FrameQueueHistory;
+    QQueue<int> m_RenderTimeHistory;
     SDL_SpinLock m_FrameQueueLock;
-    bool m_DropNextFrame;
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;
