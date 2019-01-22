@@ -3,7 +3,6 @@
 #include <Limelight.h>
 #include <SDL.h>
 #include "settings/streamingpreferences.h"
-#include "streaming/sdlhelper.h"
 
 #define SDL_CODE_FRAME_READY 0
 
@@ -54,6 +53,6 @@ public:
         event.user.data1 = data1;
         event.user.data2 = data2;
 
-        SDLHelper::pushEvent(&event);
+        SDL_PushEvent(&event);
     }
 };

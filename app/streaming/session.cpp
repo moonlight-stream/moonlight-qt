@@ -1,7 +1,6 @@
 #include "session.h"
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
-#include "streaming/sdlhelper.h"
 
 #include <Limelight.h>
 #include <SDL.h>
@@ -982,8 +981,14 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
     for (;;) {
-        SDLHelper::waitEvent(&event);
-
+        // We explicitly use SDL_PollEvent() and SDL_Delay() because
+        // SDL_WaitEvent() has an internal SDL_Delay(10) inside which
+        // blocks this thread too long for high polling rate mice and high
+        // refresh rate displays.
+        if (!SDL_PollEvent(&event)) {
+            SDL_Delay(1);
+            continue;
+        }
         switch (event.type) {
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
