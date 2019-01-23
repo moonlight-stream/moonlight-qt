@@ -12,7 +12,7 @@
 #endif
 
 #define FRAME_HISTORY_ENTRIES 8
-#define RENDER_TIME_HISTORY_ENTRIES 8
+#define RENDER_TIME_HISTORY_ENTRIES 20
 
 // We may be woken up slightly late so don't go all the way
 // up to the next V-sync since we may accidentally step into
@@ -218,7 +218,7 @@ void Pacer::renderFrame(AVFrame* frame)
     // there must have been frames pending in the pipeline that are blocking us.
     // Drop our this frame to clear the backed up display pipeline.
     for (int renderTime : m_RenderTimeHistory) {
-        if (renderTime <= 1000 / m_DisplayFps) {
+        if (renderTime < 1000 / m_DisplayFps) {
             dropFrame = false;
             break;
         }
