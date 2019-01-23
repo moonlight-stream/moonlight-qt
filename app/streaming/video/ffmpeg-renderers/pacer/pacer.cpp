@@ -22,7 +22,8 @@
 #define TIMER_SLACK_MS 3
 
 Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
-    m_FrameQueueLock(0),
+    m_RenderThread(nullptr),
+    m_Stopping(false),
     m_VsyncSource(nullptr),
     m_VsyncRenderer(renderer),
     m_MaxVideoFps(0),
@@ -38,10 +39,65 @@ Pacer::~Pacer()
     delete m_VsyncSource;
     m_VsyncSource = nullptr;
 
+    // Stop the render thread
+    m_Stopping = true;
+    if (m_RenderThread != nullptr) {
+        m_FrameQueueNotEmpty.wakeAll();
+        SDL_WaitThread(m_RenderThread, nullptr);
+    }
+
+    // Delete any remaining unconsumed frames
     while (!m_FrameQueue.isEmpty()) {
         AVFrame* frame = m_FrameQueue.dequeue();
         av_frame_free(&frame);
     }
+}
+
+int Pacer::renderThread(void* context)
+{
+    Pacer* me = reinterpret_cast<Pacer*>(context);
+
+    while (!me->m_Stopping) {
+        // Acquire the frame queue lock to protect the queue and
+        // the not empty condition
+        me->m_FrameQueueLock.lock();
+
+        // Wait for a frame to be ready to render
+        while (!me->m_Stopping && me->m_FrameQueue.isEmpty()) {
+            me->m_FrameQueueNotEmpty.wait(&me->m_FrameQueueLock);
+        }
+
+        if (me->m_Stopping) {
+            // Exit this thread
+            me->m_FrameQueueLock.unlock();
+            break;
+        }
+
+        // Dequeue the most recent frame for rendering and free the others.
+        // NB: m_FrameQueueLock still held here!
+        AVFrame* lastFrame = nullptr;
+        while (!me->m_FrameQueue.isEmpty()) {
+            if (lastFrame != nullptr) {
+                // Don't hold the frame queue lock across av_frame_free(),
+                // since it could need to talk to the GPU driver. This is safe
+                // because we're guaranteed that the queue will not shrink during
+                // this time (and so dequeue() below will always get something).
+                me->m_FrameQueueLock.unlock();
+                av_frame_free(&lastFrame);
+                me->m_FrameQueueLock.lock();
+            }
+
+            lastFrame = me->m_FrameQueue.dequeue();
+        }
+
+        // Release the frame queue lock before rendering
+        me->m_FrameQueueLock.unlock();
+
+        // Render and free the mot current frame
+        me->renderFrame(lastFrame);
+    }
+
+    return 0;
 }
 
 // Called in an arbitrary thread by the IVsyncSource on V-sync
@@ -53,9 +109,7 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
 
     SDL_assert(timeUntilNextVsyncMillis >= TIMER_SLACK_MS);
 
-    Uint32 vsyncCallbackStartTime = SDL_GetTicks();
-
-    SDL_AtomicLock(&m_FrameQueueLock);
+    m_FrameQueueLock.lock();
 
     // If the queue length history entries are large, be strict
     // about dropping excess frames.
@@ -84,34 +138,29 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
     // Catch up if we're several frames ahead
     while (m_FrameQueue.count() > frameDropTarget) {
         AVFrame* frame = m_FrameQueue.dequeue();
+
+        // Drop the lock while we call av_frame_free()
+        m_FrameQueueLock.unlock();
         m_VideoStats->pacerDroppedFrames++;
         av_frame_free(&frame);
+        m_FrameQueueLock.lock();
     }
 
     if (m_FrameQueue.isEmpty()) {
-        SDL_AtomicUnlock(&m_FrameQueueLock);
+        // Wait for a frame to arrive or our V-sync timeout to expire
+        if (!m_FrameQueueNotEmpty.wait(&m_FrameQueueLock, timeUntilNextVsyncMillis - TIMER_SLACK_MS)) {
+            // Wait timed out - unlock and bail
+            m_FrameQueueLock.unlock();
 
-        while (!SDL_TICKS_PASSED(SDL_GetTicks(),
-                                 vsyncCallbackStartTime + timeUntilNextVsyncMillis - TIMER_SLACK_MS)) {
-            SDL_Delay(1);
-
-            SDL_AtomicLock(&m_FrameQueueLock);
-            if (!m_FrameQueue.isEmpty()) {
-                // Don't release the lock
-                goto RenderNextFrame;
-            }
-            SDL_AtomicUnlock(&m_FrameQueueLock);
+            // Nothing to render at this time. This counts as a drop.
+            addRenderTimeToHistory(0);
+            return;
         }
-
-        // Nothing to render at this time. This counts as a drop.
-        addRenderTimeToHistory(0);
-        return;
     }
 
-RenderNextFrame:
     // Grab the first frame
     AVFrame* frame = m_FrameQueue.dequeue();
-    SDL_AtomicUnlock(&m_FrameQueueLock);
+    m_FrameQueueLock.unlock();
 
     renderFrame(frame);
 }
@@ -143,6 +192,10 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Frame pacing disabled: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
+    }
+
+    if (m_VsyncSource == nullptr) {
+        m_RenderThread = SDL_CreateThread(Pacer::renderThread, "Pacer Render Thread", this);
     }
 
     return true;
@@ -205,20 +258,9 @@ void Pacer::submitFrame(AVFrame* frame)
     // Make sure initialize() has been called
     SDL_assert(m_MaxVideoFps != 0);
 
-    // Queue the frame until the V-sync callback if
-    // we have a V-sync source, otherwise deliver it
-    // immediately and hope for the best.
-    if (isUsingFrameQueue()) {
-        SDL_AtomicLock(&m_FrameQueueLock);
-        m_FrameQueue.enqueue(frame);
-        SDL_AtomicUnlock(&m_FrameQueueLock);
-    }
-    else {
-        renderFrame(frame);
-    }
-}
-
-bool Pacer::isUsingFrameQueue()
-{
-    return m_VsyncSource != nullptr;
+    // Queue the frame and possibly wake up the render thread
+    m_FrameQueueLock.lock();
+    m_FrameQueue.enqueue(frame);
+    m_FrameQueueLock.unlock();
+    m_FrameQueueNotEmpty.wakeOne();
 }

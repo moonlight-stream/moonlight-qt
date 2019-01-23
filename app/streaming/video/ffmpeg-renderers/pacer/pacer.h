@@ -4,6 +4,8 @@
 #include "../renderer.h"
 
 #include <QQueue>
+#include <QMutex>
+#include <QWaitCondition>
 
 class IVsyncSource {
 public:
@@ -24,9 +26,9 @@ public:
 
     void vsyncCallback(int timeUntilNextVsyncMillis);
 
-    bool isUsingFrameQueue();
-
 private:
+    static int renderThread(void* context);
+
     void addRenderTimeToHistory(int renderTime);
 
     void renderFrame(AVFrame* frame);
@@ -34,7 +36,10 @@ private:
     QQueue<AVFrame*> m_FrameQueue;
     QQueue<int> m_FrameQueueHistory;
     QQueue<int> m_RenderTimeHistory;
-    SDL_SpinLock m_FrameQueueLock;
+    QMutex m_FrameQueueLock;
+    QWaitCondition m_FrameQueueNotEmpty;
+    SDL_Thread* m_RenderThread;
+    bool m_Stopping;
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;
