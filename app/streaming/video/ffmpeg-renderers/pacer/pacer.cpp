@@ -84,6 +84,7 @@ int Pacer::renderThread(void* context)
                 // this time (and so dequeue() below will always get something).
                 me->m_FrameQueueLock.unlock();
                 av_frame_free(&lastFrame);
+                me->m_VideoStats->pacerDroppedFrames++;
                 me->m_FrameQueueLock.lock();
             }
 
