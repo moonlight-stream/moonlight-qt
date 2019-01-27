@@ -66,7 +66,7 @@ GridView {
 
         Image {
             id: appIcon
-            anchors.horizontalCenter: parent.horizontalCenter;
+            anchors.horizontalCenter: parent.horizontalCenter
             y: 20
             source: model.boxart
             sourceSize {
@@ -80,12 +80,39 @@ GridView {
 
         Image {
             id: runningIcon
+            anchors.verticalCenterOffset: -45
             anchors.centerIn: appIcon
             visible: model.running
             source: "qrc:/res/baseline-play_circle_filled_white-48px.svg"
             sourceSize {
                 width: 75
                 height: 75
+            }
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                onClicked: {
+                   launchOrResumeSelectedApp()
+                }
+            }
+        }
+
+        Image {
+            id: quitIcon
+            anchors.verticalCenterOffset: 45
+            anchors.centerIn: appIcon
+            visible: model.running
+            source: "qrc:/res/baseline-cancel-24px.svg"
+            sourceSize {
+                width: 75
+                height: 75
+            }
+            MouseArea {
+                anchors.fill: parent
+                acceptedButtons: Qt.LeftButton
+                onClicked: {
+                    doQuitGame()
+                }
             }
         }
 
@@ -125,29 +152,20 @@ GridView {
         }
 
         onClicked: {
-            // Nothing is running or this app is running
-            launchOrResumeSelectedApp()
-        }
-
-        MouseArea {
-            anchors.fill: parent
-            acceptedButtons: Qt.RightButton
-            onClicked: {
-                // popup() ensures the menu appears under the mouse cursor
-                if (appContextMenu.popup) {
-                    appContextMenu.popup()
-                }
-                else {
-                    // Qt 5.9 doesn't have popup()
-                    appContextMenu.open()
-                }
+            if (model.running) {
+                // This will primarily be keyboard/gamepad driven so use
+                // open() instead of popup()
+                appContextMenu.open()
+            }
+            else {
+                launchOrResumeSelectedApp()
             }
         }
 
-        Keys.onMenuPressed: {
-            // We must use open() here so the menu is positioned on
-            // the ItemDelegate and not where the mouse cursor is
-            appContextMenu.open()
+        function doQuitGame() {
+            quitAppDialog.appName = appModel.getRunningAppName()
+            quitAppDialog.segueToStream = false
+            quitAppDialog.open()
         }
 
         Menu {
@@ -161,11 +179,7 @@ GridView {
             }
             NavigableMenuItem {
                 text: "Quit Game"
-                onTriggered: {
-                    quitAppDialog.appName = appModel.getRunningAppName()
-                    quitAppDialog.segueToStream = false
-                    quitAppDialog.open()
-                }
+                onTriggered: doQuitGame()
                 visible: model.running
             }
         }
