@@ -349,7 +349,7 @@ int main(int argc, char *argv[])
         qputenv("QT_QUICK_CONTROLS_UNIVERSAL_THEME", "Dark");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_1_STYLE")) {
-        qputenv("QT_QUICK_CONTROLS_1_STYLE", "Flat");
+        qputenv("QT_QUICK_CONTROLS_1_STYLE", "Base");
     }
 
     QQmlApplicationEngine engine;
