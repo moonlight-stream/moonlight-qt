@@ -186,20 +186,24 @@ GridView {
             }
         }
 
+        onPressAndHold: {
+            if (!model.addPc) {
+                // popup() ensures the menu appears under the mouse cursor
+                if (pcContextMenu.popup) {
+                    pcContextMenu.popup()
+                }
+                else {
+                    // Qt 5.9 doesn't have popup()
+                    pcContextMenu.open()
+                }
+            }
+        }
+
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton;
             onClicked: {
-                if (!model.addPc) {
-                    // popup() ensures the menu appears under the mouse cursor
-                    if (pcContextMenu.popup) {
-                        pcContextMenu.popup()
-                    }
-                    else {
-                        // Qt 5.9 doesn't have popup()
-                        pcContextMenu.open()
-                    }
-                }
+                parent.onPressAndHold()
             }
         }
 
