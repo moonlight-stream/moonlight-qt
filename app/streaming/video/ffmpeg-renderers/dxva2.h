@@ -34,6 +34,7 @@ private:
     bool initializeDevice(SDL_Window* window, bool enableVsync);
     bool initializeOverlay();
     bool isDecoderBlacklisted();
+    bool isDXVideoProcessorAPIBlacklisted();
 
     static
     AVBufferRef* ffPoolAlloc(void* opaque, int size);

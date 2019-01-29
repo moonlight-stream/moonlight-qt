@@ -260,63 +260,65 @@ bool DXVA2Renderer::initializeRenderer()
     m_DisplayWidth = renderTargetDesc.Width;
     m_DisplayHeight = renderTargetDesc.Height;
 
-    hr = DXVA2CreateVideoService(m_Device, IID_IDirectXVideoProcessorService,
-                                 reinterpret_cast<void**>(&m_ProcService));
+    if (!isDXVideoProcessorAPIBlacklisted()) {
+        hr = DXVA2CreateVideoService(m_Device, IID_IDirectXVideoProcessorService,
+                                     reinterpret_cast<void**>(&m_ProcService));
 
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "DXVA2CreateVideoService(IID_IDirectXVideoProcessorService) failed: %x",
-                     hr);
-        return false;
-    }
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DXVA2CreateVideoService(IID_IDirectXVideoProcessorService) failed: %x",
+                         hr);
+            return false;
+        }
 
-    DXVA2_VideoProcessorCaps caps;
-    hr = m_ProcService->GetVideoProcessorCaps(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, &caps);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "GetVideoProcessorCaps() failed for DXVA2_VideoProcProgressiveDevice: %x",
-                     hr);
-        return false;
-    }
+        DXVA2_VideoProcessorCaps caps;
+        hr = m_ProcService->GetVideoProcessorCaps(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, &caps);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "GetVideoProcessorCaps() failed for DXVA2_VideoProcProgressiveDevice: %x",
+                         hr);
+            return false;
+        }
 
-    if (!(caps.DeviceCaps & DXVA2_VPDev_HardwareDevice)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "DXVA2_VideoProcProgressiveDevice is not hardware: %x",
-                     caps.DeviceCaps);
-        return false;
-    }
-    else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGB) &&
-             !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "DXVA2_VideoProcProgressiveDevice can't convert YUV2RGB: %x",
-                     caps.VideoProcessorOperations);
-        return false;
-    }
-    else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchX) ||
-             !(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchY)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "DXVA2_VideoProcProgressiveDevice can't stretch video: %x",
-                     caps.VideoProcessorOperations);
-        return false;
-    }
+        if (!(caps.DeviceCaps & DXVA2_VPDev_HardwareDevice)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DXVA2_VideoProcProgressiveDevice is not hardware: %x",
+                         caps.DeviceCaps);
+            return false;
+        }
+        else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGB) &&
+                 !(caps.VideoProcessorOperations & DXVA2_VideoProcess_YUV2RGBExtended)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DXVA2_VideoProcProgressiveDevice can't convert YUV2RGB: %x",
+                         caps.VideoProcessorOperations);
+            return false;
+        }
+        else if (!(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchX) ||
+                 !(caps.VideoProcessorOperations & DXVA2_VideoProcess_StretchY)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DXVA2_VideoProcProgressiveDevice can't stretch video: %x",
+                         caps.VideoProcessorOperations);
+            return false;
+        }
 
-    if (caps.DeviceCaps & DXVA2_VPDev_EmulatedDXVA1) {
-        // DXVA2 over DXVA1 may have bad performance
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "DXVA2_VideoProcProgressiveDevice is DXVA1");
-    }
+        if (caps.DeviceCaps & DXVA2_VPDev_EmulatedDXVA1) {
+            // DXVA2 over DXVA1 may have bad performance
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "DXVA2_VideoProcProgressiveDevice is DXVA1");
+        }
 
-    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Brightness, &m_BrightnessRange);
-    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Contrast, &m_ContrastRange);
-    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Hue, &m_HueRange);
-    m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Saturation, &m_SaturationRange);
+        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Brightness, &m_BrightnessRange);
+        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Contrast, &m_ContrastRange);
+        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Hue, &m_HueRange);
+        m_ProcService->GetProcAmpRange(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, DXVA2_ProcAmp_Saturation, &m_SaturationRange);
 
-    hr = m_ProcService->CreateVideoProcessor(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, 0, &m_Processor);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "CreateVideoProcessor() failed for DXVA2_VideoProcProgressiveDevice: %x",
-                     hr);
-        return false;
+        hr = m_ProcService->CreateVideoProcessor(DXVA2_VideoProcProgressiveDevice, &m_Desc, renderTargetDesc.Format, 0, &m_Processor);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CreateVideoProcessor() failed for DXVA2_VideoProcProgressiveDevice: %x",
+                         hr);
+            return false;
+        }
     }
 
     return true;
@@ -346,6 +348,50 @@ bool DXVA2Renderer::initializeOverlay()
     }
 
     return true;
+}
+
+bool DXVA2Renderer::isDXVideoProcessorAPIBlacklisted()
+{
+    IDirect3D9* d3d9;
+    HRESULT hr;
+    bool result = false;
+
+    hr = m_Device->GetDirect3D(&d3d9);
+    if (SUCCEEDED(hr)) {
+        D3DCAPS9 caps;
+
+        hr = m_Device->GetDeviceCaps(&caps);
+        if (SUCCEEDED(hr)) {
+            D3DADAPTER_IDENTIFIER9 id;
+
+            hr = d3d9->GetAdapterIdentifier(caps.AdapterOrdinal, 0, &id);
+            if (SUCCEEDED(hr) && id.VendorId == 0x8086) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding IDirectXVideoProcessor API on Intel GPU");
+
+                // On Intel GPUs, we can get unwanted video "enhancements" due to post-processing
+                // effects that the GPU driver forces on us. In many cases, this makes the video
+                // actually look worse. We can avoid these by using StretchRect() instead on these
+                // platforms.
+                result = true;
+            }
+            else {
+                result = false;
+            }
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "GetDeviceCaps() failed: %x", hr);
+        }
+
+        d3d9->Release();
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "GetDirect3D() failed: %x", hr);
+    }
+
+    return result;
 }
 
 bool DXVA2Renderer::isDecoderBlacklisted()
@@ -844,15 +890,26 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
         return;
     }
 
-    hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "VideoProcessBlt() failed: %x",
-                     hr);
-        SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
-        SDL_PushEvent(&event);
-        return;
+    if (m_Processor) {
+        hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "VideoProcessBlt() failed, falling back to StretchRect(): %x",
+                         hr);
+            m_Processor->Release();
+            m_Processor = nullptr;
+        }
+    }
+
+    if (!m_Processor) {
+        // This function doesn't trigger any of Intel's garbage video "enhancements"
+        hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget, &sample.DstRect, D3DTEXF_NONE);
+        if (FAILED(hr)) {
+            SDL_Event event;
+            event.type = SDL_RENDER_TARGETS_RESET;
+            SDL_PushEvent(&event);
+            return;
+        }
     }
 
     if (m_OverlayFont != nullptr) {
