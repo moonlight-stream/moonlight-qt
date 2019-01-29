@@ -671,9 +671,13 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
 
     int alignment;
 
-    // HEVC using DXVA requires 128B alignment
+    // HEVC using DXVA requires 128 pixel alignment, however Intel GPUs decoding HEVC
+    // using StretchRect() to render draw a translucent green line at the top of
+    // the screen in full-screen mode at 720p/1080p unless we use 32 pixel alignment.
+    // This appears to work without issues on AMD and Nvidia GPUs too, so we will
+    // do it unconditionally for now.
     if (m_VideoFormat & VIDEO_FORMAT_MASK_H265) {
-        alignment = 128;
+        alignment = 32;
     }
     else {
         alignment = 16;
