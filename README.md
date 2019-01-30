@@ -20,7 +20,8 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
  
 ## Downloads
 - [Windows and macOS](https://github.com/moonlight-stream/moonlight-qt/releases)
-- [Linux](https://flathub.org/apps/details/com.moonlight_stream.Moonlight)
+- [Snap (for Ubuntu-based Linux distros)](https://snapcraft.io/moonlight)
+- [Flatpak (for other Linux distros)](https://flathub.org/apps/details/com.moonlight_stream.Moonlight)
 
 ## Building
 ### General Build Requirements
