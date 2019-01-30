@@ -335,8 +335,8 @@ void VDPAURenderer::renderFrameAtVsync(AVFrame* frame)
                                    0, nullptr,
                                    &sourceRect,
                                    chosenSurface,
-                                   &outputRect,
                                    nullptr,
+                                   &outputRect,
                                    0,
                                    nullptr);
     if (status != VDP_STATUS_OK) {
