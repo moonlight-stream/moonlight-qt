@@ -57,6 +57,21 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
                 prefs.mouseAcceleration ? "1" : "0");
 
+    // We must initialize joystick explicitly before gamecontroller in order
+    // to ensure we receive gamecontroller attach events for gamepads where
+    // SDL doesn't have a built-in mapping. By starting joystick first, we
+    // can allow mapping manager to update the mappings before GC attach
+    // events are generated.
+    SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
+    if (SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_JOYSTICK) failed: %s",
+                     SDL_GetError());
+    }
+
+    MappingManager mappingManager;
+    mappingManager.applyMappings();
+
     // We need to reinit this each time, since you only get
     // an initial set of gamepad arrival events once per init.
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
@@ -65,9 +80,6 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
                      SDL_GetError());
     }
-
-    MappingManager mappingManager;
-    mappingManager.applyMappings();
 
     // Initialize the gamepad mask with currently attached gamepads to avoid
     // causing gamepads to unexpectedly disappear and reappear on the host
@@ -99,6 +111,9 @@ SdlInputHandler::~SdlInputHandler()
 
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
+
+    SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+    SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
 }
 
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)

@@ -254,6 +254,11 @@ int SdlGamepadKeyNavigation::getConnectedGamepads()
         return 0;
     }
 
+    // Applying mappings is necessary to ensure gamepad without
+    // a built-in mapping are properly counted.
+    MappingManager mappingManager;
+    mappingManager.applyMappings();
+
     int count = 0;
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
