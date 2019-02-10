@@ -5,6 +5,7 @@ MenuItem {
     // Ensure focus can't be given to an invisible item
     enabled: visible
     height: visible ? implicitHeight : 0
+    focusPolicy: visible ? Qt.TabFocus : Qt.NoFocus
 
     Keys.onReturnPressed: {
         triggered()
