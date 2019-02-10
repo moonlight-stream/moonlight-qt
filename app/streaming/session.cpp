@@ -815,6 +815,21 @@ void Session::exec(int displayOriginX, int displayOriginY)
     Q_ASSERT(m_Computer->currentGameId == 0 ||
              m_Computer->currentGameId == m_App.id);
 
+    // SOPS will set all settings to 720p60 if it doesn't recognize
+    // the chosen resolution. Avoid that by disabling SOPS when it
+    // is not streaming a supported resolution.
+    bool enableGameOptimizations = false;
+    for (const NvDisplayMode &mode : m_Computer->displayModes) {
+        if (mode.width == m_StreamConfig.width &&
+                mode.height == m_StreamConfig.height) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Found host supported resolution: %dx%d",
+                        mode.width, mode.height);
+            enableGameOptimizations = prefs.gameOptimizations;
+            break;
+        }
+    }
+
     try {
         NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
         if (m_Computer->currentGameId != 0) {
@@ -822,7 +837,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         }
         else {
             http.launchApp(m_App.id, &m_StreamConfig,
-                           prefs.gameOptimizations,
+                           enableGameOptimizations,
                            prefs.playAudioOnHost,
                            inputHandler.getAttachedGamepadMask());
         }
