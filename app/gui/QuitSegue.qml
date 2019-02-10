@@ -27,19 +27,26 @@ Item {
             errorDialog.open()
         }
 
-        // Exit this view
-        stackView.pop()
-
         // If we're supposed to launch another game after this, do so now
         if (error === undefined && nextSession !== null) {
             var component = Qt.createComponent("StreamSegue.qml")
             var segue = component.createObject(stackView, {"appName": nextAppName, "session": nextSession})
-            stackView.push(segue)
+            stackView.replace(segue)
+        }
+        else {
+            // Show the toolbar again
+            toolBar.visible = true
+
+            // Exit this view
+            stackView.pop()
         }
     }
 
     onVisibleChanged: {
         if (visible) {
+            // Hide the toolbar before we start loading
+            toolBar.visible = false
+
             // Connect the quit completion signal
             ComputerManager.quitAppCompleted.connect(quitAppCompleted)
         }
