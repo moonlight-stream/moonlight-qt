@@ -73,8 +73,11 @@ void Session::clStageFailed(int stage, long errorCode)
 
 void Session::clConnectionTerminated(long errorCode)
 {
-    s_ActiveSession->m_UnexpectedTermination = true;
-    emit s_ActiveSession->displayLaunchError("Connection terminated");
+    // Display the termination dialog if this was not intended
+    if (errorCode != 0) {
+        s_ActiveSession->m_UnexpectedTermination = true;
+        emit s_ActiveSession->displayLaunchError("Connection terminated");
+    }
 
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                  "Connection terminated: %ld",
