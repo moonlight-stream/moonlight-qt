@@ -909,6 +909,9 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
         // This function doesn't trigger any of Intel's garbage video "enhancements"
         hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget, &sample.DstRect, D3DTEXF_NONE);
         if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "StretchRect() failed: %x",
+                         hr);
             SDL_Event event;
             event.type = SDL_RENDER_TARGETS_RESET;
             SDL_PushEvent(&event);
