@@ -197,10 +197,15 @@ static const NSString* HTTPS_PORT = @"47984";
 }
 
 - (NSURLRequest*) newLaunchRequest:(StreamConfiguration*)config {
+    // Using an FPS value over 60 causes SOPS to default to 720p60,
+    // so force it to 60 when starting. This won't impact our ability
+    // to get > 60 FPS while actually streaming though.
+    int fps = config.frameRate > 60 ? 60 : config.frameRate;
+    
     NSString* urlString = [NSString stringWithFormat:@"%@/launch?uniqueid=%@&appid=%@&mode=%dx%dx%d&additionalStates=1&sops=%d&rikey=%@&rikeyid=%d%@&localAudioPlayMode=%d&surroundAudioInfo=%d&remoteControllersBitmap=%d&gcmap=%d",
                            _baseHTTPSURL, _uniqueId,
                            config.appID,
-                           config.width, config.height, config.frameRate,
+                           config.width, config.height, fps,
                            config.optimizeGameSettings ? 1 : 0,
                            [Utils bytesToHex:config.riKey], config.riKeyId,
                            config.enableHdr ? @"&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0": @"",
