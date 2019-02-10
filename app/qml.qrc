@@ -13,5 +13,6 @@
         <file>gui/CliQuitStreamSegue.qml</file>
         <file>gui/CliStartStreamSegue.qml</file>
         <file>gui/AutoResizingComboBox.qml</file>
+        <file>gui/NavigableMenu.qml</file>
     </qresource>
 </RCC>

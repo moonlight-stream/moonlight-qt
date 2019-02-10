@@ -135,20 +135,22 @@ GridView {
             wrapMode: Text.Wrap
         }
 
-        Menu {
+        NavigableMenu {
             id: pcContextMenu
             NavigableMenuItem {
-                text: "Wake PC"
-                onTriggered: computerModel.wakeComputer(index)
-                visible: !model.addPc && !model.online && model.wakeable
-            }
-            NavigableMenuItem {
+                parentMenu: pcContextMenu
                 text: "Delete PC"
                 onTriggered: {
                     deletePcDialog.pcIndex = index
                     // get confirmation first, actual closing is called from the dialog
                     deletePcDialog.open()
                 }
+            }
+            NavigableMenuItem {
+                parentMenu: pcContextMenu
+                text: "Wake PC"
+                onTriggered: computerModel.wakeComputer(index)
+                visible: !model.addPc && !model.online && model.wakeable
             }
         }
 

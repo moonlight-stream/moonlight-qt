@@ -162,15 +162,24 @@ GridView {
             }
         }
 
+        Keys.onMenuPressed: {
+            if (model.running) {
+                // This will primarily be keyboard/gamepad driven so use
+                // open() instead of popup()
+                appContextMenu.open()
+            }
+        }
+
         function doQuitGame() {
             quitAppDialog.appName = appModel.getRunningAppName()
             quitAppDialog.segueToStream = false
             quitAppDialog.open()
         }
 
-        Menu {
+        NavigableMenu {
             id: appContextMenu
             NavigableMenuItem {
+                parentMenu: appContextMenu
                 text: model.running ? "Resume Game" : "Launch Game"
                 onTriggered: {
                     appContextMenu.close()
@@ -178,6 +187,7 @@ GridView {
                 }
             }
             NavigableMenuItem {
+                parentMenu: appContextMenu
                 text: "Quit Game"
                 onTriggered: doQuitGame()
                 visible: model.running
