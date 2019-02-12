@@ -98,6 +98,9 @@ private:
     void clLogMessage(const char* format, ...);
 
     static
+    void clRumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);
@@ -132,6 +135,7 @@ private:
     int m_DisplayOriginY;
     bool m_PendingWindowedTransition;
     bool m_UnexpectedTermination;
+    SdlInputHandler* m_InputHandler;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;

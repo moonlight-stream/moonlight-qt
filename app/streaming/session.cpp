@@ -38,7 +38,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clConnectionTerminated,
     nullptr,
     nullptr,
-    Session::clLogMessage
+    Session::clLogMessage,
+    Session::clRumble
 };
 
 AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
@@ -100,6 +101,11 @@ void Session::clLogMessage(const char* format, ...)
                     format,
                     ap);
     va_end(ap);
+}
+
+void Session::clRumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor)
+{
+    s_ActiveSession->m_InputHandler->rumble(controllerNumber, lowFreqMotor, highFreqMotor);
 }
 
 #define CALL_INITIALIZE(dec) (dec)->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync, enableFramePacing)
@@ -295,7 +301,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_DisplayOriginX(0),
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false),
-      m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
+      m_UnexpectedTermination(true), // Failure prior to streaming is unexpected      
+      m_InputHandler(nullptr),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0)
@@ -308,6 +315,8 @@ Session::~Session()
     // and the object is deallocated.
     s_ActiveSessionSemaphore.acquire();
     s_ActiveSessionSemaphore.release();
+
+    delete m_InputHandler;
 }
 
 void Session::initialize()
@@ -809,9 +818,9 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     // Initialize the gamepad code with our preferences
     StreamingPreferences prefs;
-    SdlInputHandler inputHandler(prefs, m_Computer,
-                                 m_StreamConfig.width,
-                                 m_StreamConfig.height);
+    m_InputHandler = new SdlInputHandler(prefs, m_Computer,
+                                         m_StreamConfig.width,
+                                         m_StreamConfig.height);
 
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
@@ -842,7 +851,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
             http.launchApp(m_App.id, &m_StreamConfig,
                            enableGameOptimizations,
                            prefs.playAudioOnHost,
-                           inputHandler.getAttachedGamepadMask());
+                           m_InputHandler->getAttachedGamepadMask());
         }
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(e.toQString());
@@ -1070,7 +1079,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
                 // Raise all keys that are currently pressed. If we don't do this, certain keys
                 // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
-                inputHandler.raiseAllKeys();
+                m_InputHandler->raiseAllKeys();
             }
 
             // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
@@ -1160,31 +1169,31 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
         case SDL_KEYUP:
         case SDL_KEYDOWN:
-            inputHandler.handleKeyEvent(&event.key);
+            m_InputHandler->handleKeyEvent(&event.key);
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
-            inputHandler.handleMouseButtonEvent(&event.button);
+            m_InputHandler->handleMouseButtonEvent(&event.button);
             break;
         case SDL_MOUSEMOTION:
-            inputHandler.handleMouseMotionEvent(&event.motion);
+            m_InputHandler->handleMouseMotionEvent(&event.motion);
             break;
         case SDL_MOUSEWHEEL:
-            inputHandler.handleMouseWheelEvent(&event.wheel);
+            m_InputHandler->handleMouseWheelEvent(&event.wheel);
             break;
         case SDL_CONTROLLERAXISMOTION:
-            inputHandler.handleControllerAxisEvent(&event.caxis);
+            m_InputHandler->handleControllerAxisEvent(&event.caxis);
             break;
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
-            inputHandler.handleControllerButtonEvent(&event.cbutton);
+            m_InputHandler->handleControllerButtonEvent(&event.cbutton);
             break;
         case SDL_CONTROLLERDEVICEADDED:
         case SDL_CONTROLLERDEVICEREMOVED:
-            inputHandler.handleControllerDeviceEvent(&event.cdevice);
+            m_InputHandler->handleControllerDeviceEvent(&event.cdevice);
             break;
         case SDL_JOYDEVICEADDED:
-            inputHandler.handleJoystickArrivalEvent(&event.jdevice);
+            m_InputHandler->handleJoystickArrivalEvent(&event.jdevice);
             break;
 
         // SDL2 sends touch events from trackpads by default on
@@ -1194,7 +1203,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
         case SDL_FINGERUP:
-            inputHandler.handleTouchFingerEvent(&event.tfinger);
+            m_InputHandler->handleTouchFingerEvent(&event.tfinger);
             break;
 #endif
         }
@@ -1208,7 +1217,7 @@ DispatchDeferredCleanup:
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
 
     // Raise any keys that are still down
-    inputHandler.raiseAllKeys();
+    m_InputHandler->raiseAllKeys();
 
     // Destroy the decoder, since this must be done on the main thread
     SDL_AtomicLock(&m_DecoderLock);

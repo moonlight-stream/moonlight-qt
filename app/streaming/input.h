@@ -8,6 +8,8 @@
 struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
+    SDL_Haptic* haptic;
+    int hapticEffectId;
     short index;
 
     short buttons;
@@ -42,6 +44,8 @@ public:
     void handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event);
 
     void handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event);
+
+    void rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
