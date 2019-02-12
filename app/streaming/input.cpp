@@ -817,23 +817,34 @@ void SdlInputHandler::handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event)
 
 void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
+    // Check if the controller supports haptics (and if the controller exists at all)
     SDL_Haptic* haptic = m_GamepadState[controllerNumber].haptic;
-    SDL_HapticEffect effect;
-
     if (haptic == nullptr) {
         return;
     }
 
-    SDL_memset(&effect, 0, sizeof(effect));
-    effect.type = SDL_HAPTIC_LEFTRIGHT;
-    effect.leftright.large_magnitude = lowFreqMotor;
-    effect.leftright.small_magnitude = highFreqMotor;
-    effect.leftright.length = 10000; // Choose 10 second max duration - can be cancelled sooner.
-
+    // Stop the last effect we played
     if (m_GamepadState[controllerNumber].hapticEffectId >= 0) {
         SDL_HapticDestroyEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId);
     }
 
+    // If this callback is telling us to stop both motors, don't bother queuing a new effect
+    if (lowFreqMotor == 0 && highFreqMotor == 0) {
+        return;
+    }
+
+    SDL_HapticEffect effect;
+    SDL_memset(&effect, 0, sizeof(effect));
+    effect.type = SDL_HAPTIC_LEFTRIGHT;
+
+    // The effect should last until we are instructed to stop or change it
+    effect.leftright.length = SDL_HAPTIC_INFINITY;
+
+    // SDL haptics range from 0-32767 but XInput uses 0-65535, so divide by 2 to correct for SDL's scaling
+    effect.leftright.large_magnitude = lowFreqMotor / 2;
+    effect.leftright.small_magnitude = highFreqMotor / 2;
+
+    // Play the new effect
     m_GamepadState[controllerNumber].hapticEffectId = SDL_HapticNewEffect(haptic, &effect);
     if (m_GamepadState[controllerNumber].hapticEffectId >= 0) {
         SDL_HapticRunEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId, 1);
