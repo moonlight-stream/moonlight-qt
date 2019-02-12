@@ -7,12 +7,11 @@
 //
 
 // Swift
-#import "Moonlight-Swift.h"
 #if !TARGET_OS_IPHONE
 #import "Gamepad.h"
 #endif
 #import "StreamConfiguration.h"
-@class Controller;
+#import "Controller.h"
 
 @class OnScreenControls;
 

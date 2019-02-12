@@ -7,6 +7,7 @@
 //
 
 #import "ControllerSupport.h"
+#import "Controller.h"
 
 #import "OnScreenControls.h"
 #if !TARGET_OS_IPHONE
@@ -16,10 +17,6 @@
 
 #import "DataManager.h"
 #include "Limelight.h"
-
-// Swift
-#import "Moonlight-Swift.h"
-@class Controller;
 
 @import GameController;
 
@@ -322,6 +319,8 @@
                 limeController = [[Controller alloc] init];
                 limeController.playerIndex = i;
             }
+            
+            limeController.gamepad = controller;
 
             [_controllers setObject:limeController forKey:[NSNumber numberWithInteger:controller.playerIndex]];
             
@@ -477,8 +476,12 @@
         self->_controllerNumbers &= ~(1 << controller.playerIndex);
         Log(LOG_I, @"Unassigning controller index: %ld", (long)controller.playerIndex);
         
+        // Unset the GCController on this object (in case it is the OSC, which will persist)
+        Controller* limeController = [self->_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
+        limeController.gamepad = nil;
+        
         // Inform the server of the updated active gamepads before removing this controller
-        [self updateFinished:[self->_controllers objectForKey:[NSNumber numberWithInteger:controller.playerIndex]]];
+        [self updateFinished:limeController];
         [self->_controllers removeObjectForKey:[NSNumber numberWithInteger:controller.playerIndex]];
 
         // Re-evaluate the on-screen control mode
