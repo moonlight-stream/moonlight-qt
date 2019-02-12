@@ -42,6 +42,8 @@
 
 -(void) updateFinished:(Controller*)controller;
 
+-(void) rumble:(unsigned short)controllerNumber lowFreqMotor:(unsigned short)lowFreqMotor highFreqMotor:(unsigned short)highFreqMotor;
+
 +(int) getConnectedGamepadMask:(StreamConfiguration*)streamConfig;
 
 @property (nonatomic, strong) id connectObserver;

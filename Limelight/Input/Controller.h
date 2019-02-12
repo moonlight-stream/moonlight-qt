@@ -20,5 +20,7 @@
 @property (nonatomic)                   short lastLeftStickY;
 @property (nonatomic)                   short lastRightStickX;
 @property (nonatomic)                   short lastRightStickY;
+@property (nonatomic)                   unsigned short lowFreqMotor;
+@property (nonatomic)                   unsigned short highFreqMotor;
 
 @end

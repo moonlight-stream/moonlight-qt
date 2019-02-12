@@ -243,6 +243,11 @@ void ClLogMessage(const char* format, ...)
     va_end(va);
 }
 
+void ClRumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor)
+{
+    [_callbacks rumble:controllerNumber lowFreqMotor:lowFreqMotor highFreqMotor:highFreqMotor];
+}
+
 -(void) terminate
 {
     // Interrupt any action blocking LiStartConnection(). This is
@@ -375,6 +380,7 @@ void ClLogMessage(const char* format, ...)
     _clCallbacks.displayMessage = ClDisplayMessage;
     _clCallbacks.displayTransientMessage = ClDisplayTransientMessage;
     _clCallbacks.logMessage = ClLogMessage;
+    _clCallbacks.rumble = ClRumble;
 
     return self;
 }
