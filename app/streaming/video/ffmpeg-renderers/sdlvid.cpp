@@ -1,16 +1,49 @@
 #include "sdlvid.h"
 
+#include "streaming/session.h"
+
 #include <Limelight.h>
 
 SdlRenderer::SdlRenderer()
     : m_Renderer(nullptr),
-      m_Texture(nullptr)
+      m_Texture(nullptr),
+      m_DebugOverlayFont(nullptr),
+      m_DebugOverlaySurface(nullptr),
+      m_DebugOverlayTexture(nullptr)
 {
+    SDL_assert(TTF_WasInit() == 0);
+    if (TTF_Init() != 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "TTF_Init() failed: %s",
+                    TTF_GetError());
+        return;
+    }
 
+    m_DebugOverlayFont = TTF_OpenFont("ModeSeven.ttf", 20);
+    if (m_DebugOverlayFont == nullptr) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "TTF_OpenFont() failed: %s",
+                    TTF_GetError());
+    }
 }
 
 SdlRenderer::~SdlRenderer()
 {
+    if (m_DebugOverlayFont != nullptr) {
+        TTF_CloseFont(m_DebugOverlayFont);
+    }
+
+    TTF_Quit();
+    SDL_assert(TTF_WasInit() == 0);
+
+    if (m_DebugOverlayTexture != nullptr) {
+        SDL_DestroyTexture(m_DebugOverlayTexture);
+    }
+
+    if (m_DebugOverlaySurface != nullptr) {
+        SDL_FreeSurface(m_DebugOverlaySurface);
+    }
+
     if (m_Texture != nullptr) {
         SDL_DestroyTexture(m_Texture);
     }
@@ -46,6 +79,35 @@ int SdlRenderer::getDecoderCapabilities()
 IFFmpegRenderer::FramePacingConstraint SdlRenderer::getFramePacingConstraint()
 {
     return PACING_ANY;
+}
+
+void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
+{
+    if (type == Overlay::OverlayDebug) {
+        if (m_DebugOverlayFont == nullptr) {
+            // Can't proceed without a font
+            return;
+        }
+
+        SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicGetPtr((void**)&m_DebugOverlaySurface);
+
+        // Free the old surface
+        if (oldSurface != nullptr && SDL_AtomicCASPtr((void**)&m_DebugOverlaySurface, oldSurface, nullptr)) {
+            SDL_FreeSurface(oldSurface);
+        }
+
+        if (Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+            // The _Wrapped variant is required for line breaks to work
+            SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_DebugOverlayFont,
+                                                                  Session::get()->getOverlayManager().getOverlayText(type),
+                                                                  Session::get()->getOverlayManager().getOverlayColor(type),
+                                                                  1000);
+            SDL_AtomicSetPtr((void**)&m_DebugOverlaySurface, surface);
+        }
+    }
+    else {
+        SDL_assert(false);
+    }
 }
 
 bool SdlRenderer::initialize(SDL_Window* window,
@@ -109,6 +171,35 @@ void SdlRenderer::renderFrameAtVsync(AVFrame* frame)
                          frame->linesize[2]);
 
     SDL_RenderClear(m_Renderer);
+
+    // Draw the video content itself
     SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
+
+    // Draw the overlays
+    if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
+        // If a new surface has been created for updated overlay data, convert it into a texture.
+        // NB: We have to do this conversion at render-time because we can only interact
+        // with the renderer on a single thread.
+        SDL_Surface* surface = (SDL_Surface*)SDL_AtomicGetPtr((void**)&m_DebugOverlaySurface);
+        if (surface != nullptr && SDL_AtomicCASPtr((void**)&m_DebugOverlaySurface, surface, nullptr)) {
+            if (m_DebugOverlayTexture != nullptr) {
+                SDL_DestroyTexture(m_DebugOverlayTexture);
+            }
+
+            m_DebugOverlayRect.x = 0;
+            m_DebugOverlayRect.y = 0;
+            m_DebugOverlayRect.w = surface->w;
+            m_DebugOverlayRect.h = surface->h;
+
+            m_DebugOverlayTexture = SDL_CreateTextureFromSurface(m_Renderer, surface);
+            SDL_FreeSurface(surface);
+        }
+
+        // If we have a debug overlay texture, render it too
+        if (m_DebugOverlayTexture != nullptr) {
+            SDL_RenderCopy(m_Renderer, m_DebugOverlayTexture, nullptr, &m_DebugOverlayRect);
+        }
+    }
+
     SDL_RenderPresent(m_Renderer);
 }

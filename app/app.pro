@@ -91,7 +91,7 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lavcodec -lavutil -lopus -ld3dx9
+    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ld3dx9
     CONFIG += ffmpeg soundio
 }
 macx {
@@ -307,7 +307,7 @@ unix:!macx: {
     appstream.files = deploy/linux/com.moonlight_stream.Moonlight.appdata.xml
     appstream.path = $$PREFIX/$$DATADIR/metainfo/
 
-    appdata.files = SDL_GameControllerDB/gamecontrollerdb.txt
+    appdata.files = SDL_GameControllerDB/gamecontrollerdb.txt ModeSeven.ttf
     appdata.path = "$$PREFIX/$$DATADIR/Moonlight Game Streaming Project/Moonlight/"
 
     INSTALLS += target appdata desktop icons appstream
@@ -328,7 +328,7 @@ macx {
 
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
 
-    APP_BUNDLE_RESOURCES.files = moonlight.icns SDL_GameControllerDB/gamecontrollerdb.txt
+    APP_BUNDLE_RESOURCES.files = moonlight.icns SDL_GameControllerDB/gamecontrollerdb.txt ModeSeven.ttf
     APP_BUNDLE_RESOURCES.path = Contents/Resources
 
     APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true)
