@@ -78,42 +78,58 @@ GridView {
             fillMode: Image.Pad
         }
 
-        Image {
-            id: runningIcon
-            anchors.verticalCenterOffset: -45
+        ToolButton {
+            id: resumeButton
+            anchors.verticalCenterOffset: -50
             anchors.centerIn: appIcon
             visible: model.running
-            source: "qrc:/res/baseline-play_circle_filled_white-48px.svg"
-            sourceSize {
-                width: 75
-                height: 75
-            }
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                onClicked: {
-                   launchOrResumeSelectedApp()
+            implicitWidth: 125
+            implicitHeight: 125
+
+            Image {
+                source: "qrc:/res/baseline-play_circle_filled_white-48px.svg"
+                anchors.centerIn: parent
+                sourceSize {
+                    width: 75
+                    height: 75
                 }
             }
+
+            onClicked: {
+                launchOrResumeSelectedApp()
+            }
+
+            ToolTip.text: "Resume Game"
+            ToolTip.delay: 1000
+            ToolTip.timeout: 3000
+            ToolTip.visible: hovered
         }
 
-        Image {
-            id: quitIcon
-            anchors.verticalCenterOffset: 45
+        ToolButton {
+            id: quitButton
+            anchors.verticalCenterOffset: 50
             anchors.centerIn: appIcon
             visible: model.running
-            source: "qrc:/res/baseline-cancel-24px.svg"
-            sourceSize {
-                width: 75
-                height: 75
-            }
-            MouseArea {
-                anchors.fill: parent
-                acceptedButtons: Qt.LeftButton
-                onClicked: {
-                    doQuitGame()
+            implicitWidth: 125
+            implicitHeight: 125
+
+            Image {
+                source: "qrc:/res/baseline-cancel-24px.svg"
+                anchors.centerIn: parent
+                sourceSize {
+                    width: 75
+                    height: 75
                 }
             }
+
+            onClicked: {
+                doQuitGame()
+            }
+
+            ToolTip.text: "Quit Game"
+            ToolTip.delay: 1000
+            ToolTip.timeout: 3000
+            ToolTip.visible: hovered
         }
 
         Label {
