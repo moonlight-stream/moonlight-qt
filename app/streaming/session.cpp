@@ -112,14 +112,14 @@ void Session::clRumble(unsigned short controllerNumber, unsigned short lowFreqMo
 
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
-                            int frameRate, bool enableVsync, bool enableFramePacing, IVideoDecoder*& chosenDecoder)
+                            int frameRate, bool enableVsync, bool enableFramePacing, bool testOnly, IVideoDecoder*& chosenDecoder)
 {
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "V-sync %s",
                 enableVsync ? "enabled" : "disabled");
 
 #ifdef HAVE_SLVIDEO
-    chosenDecoder = new SLVideoDecoder();
+    chosenDecoder = new SLVideoDecoder(testOnly);
     if (CALL_INITIALIZE(chosenDecoder)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SLVideo video decoder chosen");
@@ -134,7 +134,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 #endif
 
 #ifdef HAVE_FFMPEG
-    chosenDecoder = new FFmpegVideoDecoder();
+    chosenDecoder = new FFmpegVideoDecoder(testOnly);
     if (CALL_INITIALIZE(chosenDecoder)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "FFmpeg-based video decoder chosen");
@@ -230,7 +230,7 @@ bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelect
         return false;
     }
 
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, decoder)) {
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, true, decoder)) {
         SDL_DestroyWindow(window);
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
@@ -270,7 +270,7 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
         return false;
     }
 
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, decoder)) {
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, true, decoder)) {
         SDL_DestroyWindow(window);
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
@@ -1152,6 +1152,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                                    m_ActiveVideoHeight, m_ActiveVideoFrameRate,
                                    enableVsync,
                                    enableVsync && m_Preferences->framePacing,
+                                   false,
                                    s_ActiveSession->m_VideoDecoder)) {
                     SDL_AtomicUnlock(&m_DecoderLock);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

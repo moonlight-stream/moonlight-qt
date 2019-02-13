@@ -1,6 +1,6 @@
 #include "sl.h"
 
-SLVideoDecoder::SLVideoDecoder()
+SLVideoDecoder::SLVideoDecoder(bool)
     : m_VideoContext(nullptr),
       m_VideoStream(nullptr)
 {

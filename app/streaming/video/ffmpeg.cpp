@@ -59,7 +59,7 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
     return AV_PIX_FMT_NONE;
 }
 
-FFmpegVideoDecoder::FFmpegVideoDecoder()
+FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
     : m_VideoDecoderCtx(nullptr),
       m_DecodeBuffer(1024 * 1024, 0),
       m_HwDecodeCfg(nullptr),
@@ -68,7 +68,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder()
       m_Pacer(nullptr),
       m_LastFrameNumber(0),
       m_StreamFps(0),
-      m_NeedsSpsFixup(false)
+      m_NeedsSpsFixup(false),
+      m_TestOnly(testOnly)
 {
     av_init_packet(&m_Pkt);
 
@@ -105,13 +106,22 @@ void FFmpegVideoDecoder::reset()
     delete m_Renderer;
     m_Renderer = nullptr;
 
-    logVideoStats(m_GlobalVideoStats, "Global video stats");
+    if (!m_TestOnly) {
+        logVideoStats(m_GlobalVideoStats, "Global video stats");
+    }
+    else {
+        // Test-only decoders can't have any frames submitted
+        SDL_assert(m_GlobalVideoStats.totalFrames == 0);
+    }
 }
 
 bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* window,
                                                 int videoFormat, int width, int height,
-                                                int maxFps, bool enableFramePacing, bool testOnly)
+                                                int maxFps, bool enableFramePacing, bool testFrame)
 {
+    // In test-only mode, we should only see test frames
+    SDL_assert(!m_TestOnly || testFrame);
+
     auto vsyncConstraint = m_Renderer->getFramePacingConstraint();
     if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_OFF && enableFramePacing) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -129,9 +139,13 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
     }
 
     m_StreamFps = maxFps;
-    m_Pacer = new Pacer(m_Renderer, &m_ActiveWndVideoStats);
-    if (!m_Pacer->initialize(window, maxFps, enableFramePacing)) {
-        return false;
+
+    // Don't bother initializing Pacer if we're not actually going to render
+    if (!testFrame) {
+        m_Pacer = new Pacer(m_Renderer, &m_ActiveWndVideoStats);
+        if (!m_Pacer->initialize(window, maxFps, enableFramePacing)) {
+            return false;
+        }
     }
 
     m_VideoDecoderCtx = avcodec_alloc_context3(decoder);
@@ -189,7 +203,7 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
     // our minds on the selected video codec, so we'll do a trial run
     // now to see if things will actually work when the video stream
     // comes in.
-    if (testOnly) {
+    if (testFrame) {
         if (videoFormat & VIDEO_FORMAT_MASK_H264) {
             m_Pkt.data = (uint8_t*)k_H264TestFrame;
             m_Pkt.size = sizeof(k_H264TestFrame);
@@ -380,7 +394,7 @@ bool FFmpegVideoDecoder::initialize(
             m_Renderer = new SdlRenderer();
             if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
                     m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, false)) {
+                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, m_TestOnly)) {
                 return true;
             }
             else {
@@ -397,7 +411,13 @@ bool FFmpegVideoDecoder::initialize(
         m_HwDecodeCfg = config;
         // Initialize the hardware codec and submit a test frame if the renderer needs it
         if (m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, m_Renderer->needsTestFrame())) {
+                completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, m_TestOnly || m_Renderer->needsTestFrame())) {
+            if (m_TestOnly) {
+                // This decoder is only for testing capabilities, so don't bother
+                // creating a usable renderer
+                return true;
+            }
+
             if (m_Renderer->needsTestFrame()) {
                 // The test worked, so now let's initialize it for real
                 reset();
@@ -471,6 +491,8 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 {
     PLENTRY entry = du->bufferList;
     int err;
+
+    SDL_assert(!m_TestOnly);
 
     if (!m_LastFrameNumber) {
         m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();

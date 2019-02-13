@@ -10,8 +10,8 @@ extern "C" {
 
 class FFmpegVideoDecoder : public IVideoDecoder {
 public:
-    FFmpegVideoDecoder();
-    virtual ~FFmpegVideoDecoder();
+    FFmpegVideoDecoder(bool testOnly);
+    virtual ~FFmpegVideoDecoder() override;
     virtual bool initialize(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window,
                             int videoFormat,
@@ -31,7 +31,7 @@ public:
 private:
     bool completeInitialization(AVCodec* decoder, SDL_Window* window,
                                 int videoFormat, int width, int height,
-                                int maxFps, bool enableFramePacing, bool testOnly);
+                                int maxFps, bool enableFramePacing, bool testFrame);
 
     void stringifyVideoStats(VIDEO_STATS& stats, char* output);
 
@@ -63,6 +63,7 @@ private:
     int m_LastFrameNumber;
     int m_StreamFps;
     bool m_NeedsSpsFixup;
+    bool m_TestOnly;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCTestFrame[];

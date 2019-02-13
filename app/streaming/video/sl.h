@@ -7,7 +7,7 @@
 class SLVideoDecoder : public IVideoDecoder
 {
 public:
-    SLVideoDecoder();
+    SLVideoDecoder(bool testOnly);
     virtual ~SLVideoDecoder();
     virtual bool initialize(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window,
