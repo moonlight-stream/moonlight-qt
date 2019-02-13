@@ -812,6 +812,11 @@ void SdlInputHandler::handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event)
 
 void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
+    // Make sure the controller number is within our supported count
+    if (controllerNumber >= MAX_GAMEPADS) {
+        return;
+    }
+
     // Check if the controller supports haptics (and if the controller exists at all)
     SDL_Haptic* haptic = m_GamepadState[controllerNumber].haptic;
     if (haptic == nullptr) {
