@@ -105,7 +105,13 @@ void Session::clLogMessage(const char* format, ...)
 
 void Session::clRumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
-    s_ActiveSession->m_InputHandler->rumble(controllerNumber, lowFreqMotor, highFreqMotor);
+    // The input handler can be closed during the stream if LiStopConnection() hasn't completed yet
+    // but the stream has been stopped by the user. In this case, just discard the rumble.
+    SDL_AtomicLock(&s_ActiveSession->m_InputHandlerLock);
+    if (s_ActiveSession->m_InputHandler != nullptr) {
+        s_ActiveSession->m_InputHandler->rumble(controllerNumber, lowFreqMotor, highFreqMotor);
+    }
+    SDL_AtomicUnlock(&s_ActiveSession->m_InputHandlerLock);
 }
 
 #define CALL_INITIALIZE(dec) (dec)->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync, enableFramePacing)
@@ -301,22 +307,23 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_DisplayOriginX(0),
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false),
-      m_UnexpectedTermination(true), // Failure prior to streaming is unexpected      
+      m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
       m_InputHandler(nullptr),
+      m_InputHandlerLock(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0)
 {
 }
 
+// NB: This may not get destroyed for a long time! Don't put any vital cleanup here.
+// Use Session::exec() or DeferredSessionCleanupTask instead.
 Session::~Session()
 {
     // Acquire session semaphore to ensure all cleanup is done before the destructor returns
     // and the object is deallocated.
     s_ActiveSessionSemaphore.acquire();
     s_ActiveSessionSemaphore.release();
-
-    delete m_InputHandler;
 }
 
 void Session::initialize()
@@ -1219,6 +1226,15 @@ DispatchDeferredCleanup:
 
     // Raise any keys that are still down
     m_InputHandler->raiseAllKeys();
+
+    // Destroy the input handler now. Any rumble callbacks that
+    // occur after this point will be discarded. This must be destroyed
+    // before allow the UI to continue execution or it could interfere
+    // with SDLGamepadKeyNavigation.
+    SDL_AtomicLock(&m_InputHandlerLock);
+    delete m_InputHandler;
+    m_InputHandler = nullptr;
+    SDL_AtomicUnlock(&m_InputHandlerLock);
 
     // Destroy the decoder, since this must be done on the main thread
     SDL_AtomicLock(&m_DecoderLock);
