@@ -61,7 +61,7 @@ macx {
 
 unix:!macx {
     CONFIG += link_pkgconfig soundio
-    PKGCONFIG += openssl sdl2 opus
+    PKGCONFIG += openssl sdl2 SDL2_ttf opus
 
     # For libsoundio
     packagesExist(libpulse) {
