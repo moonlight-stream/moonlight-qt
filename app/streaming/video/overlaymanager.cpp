@@ -8,15 +8,22 @@ OverlayManager::OverlayManager() :
     memset(m_Overlays, 0, sizeof(m_Overlays));
 
     m_Overlays[OverlayType::OverlayDebug].color = {0xFF, 0xFF, 0xFF, 0xFF};
+    m_Overlays[OverlayType::OverlayDebug].fontSize = 20;
 }
 
 bool OverlayManager::isOverlayEnabled(OverlayType type)
 {
     return m_Overlays[type].enabled;
 }
+
 char* OverlayManager::getOverlayText(OverlayType type)
 {
     return m_Overlays[type].text;
+}
+
+int OverlayManager::getOverlayFontSize(OverlayType type)
+{
+    return m_Overlays[type].fontSize;
 }
 
 void OverlayManager::setOverlayTextUpdated(OverlayType type)

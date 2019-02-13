@@ -27,12 +27,12 @@ public:
     virtual bool needsTestFrame();
     virtual int getDecoderCapabilities();
     virtual FramePacingConstraint getFramePacingConstraint();
+    virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
 
 private:
     bool initializeDecoder();
     bool initializeRenderer();
     bool initializeDevice(SDL_Window* window, bool enableVsync);
-    bool initializeOverlay();
     bool isDecoderBlacklisted();
     bool isDXVideoProcessorAPIBlacklisted();
 
@@ -70,6 +70,6 @@ private:
     DXVA2_ValueRange m_SaturationRange;
     DXVA2_VideoDesc m_Desc;
     REFERENCE_TIME m_FrameIndex;
-    LPD3DXFONT m_OverlayFont;
+    LPD3DXFONT m_DebugOverlayFont;
     bool m_BlockingPresent;
 };

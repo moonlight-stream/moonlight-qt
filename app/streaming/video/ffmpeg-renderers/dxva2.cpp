@@ -27,7 +27,7 @@ DXVA2Renderer::DXVA2Renderer() :
     m_ProcService(nullptr),
     m_Processor(nullptr),
     m_FrameIndex(0),
-    m_OverlayFont(nullptr),
+    m_DebugOverlayFont(nullptr),
     m_BlockingPresent(false)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
@@ -47,7 +47,7 @@ DXVA2Renderer::~DXVA2Renderer()
     SAFE_COM_RELEASE(m_RenderTarget);
     SAFE_COM_RELEASE(m_ProcService);
     SAFE_COM_RELEASE(m_Processor);
-    SAFE_COM_RELEASE(m_OverlayFont);
+    SAFE_COM_RELEASE(m_DebugOverlayFont);
 
     for (int i = 0; i < ARRAYSIZE(m_DecSurfaces); i++) {
         SAFE_COM_RELEASE(m_DecSurfaces[i]);
@@ -319,32 +319,6 @@ bool DXVA2Renderer::initializeRenderer()
                          hr);
             return false;
         }
-    }
-
-    return true;
-}
-
-bool DXVA2Renderer::initializeOverlay()
-{
-    HRESULT hr;
-
-    hr = D3DXCreateFontA(m_Device,
-                         20,
-                         0,
-                         FW_HEAVY,
-                         1,
-                         false,
-                         ANSI_CHARSET,
-                         OUT_DEFAULT_PRECIS,
-                         DEFAULT_QUALITY,
-                         DEFAULT_PITCH | FF_DONTCARE,
-                         "",
-                         &m_OverlayFont);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3DXCreateFontA() failed: %x",
-                     hr);
-        return false;
     }
 
     return true;
@@ -706,9 +680,6 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
         return false;
     }
 
-    // It's okay if this fails
-    initializeOverlay();
-
     // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
     // When focus is lost, the window is minimized then immediately restored without
     // input focus. This glitches out the renderer and a bunch of other stuff.
@@ -734,6 +705,33 @@ int DXVA2Renderer::getDecoderCapabilities()
 IFFmpegRenderer::FramePacingConstraint DXVA2Renderer::getFramePacingConstraint()
 {
     return PACING_ANY;
+}
+
+void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType)
+{
+    HRESULT hr;
+
+    // Initialize the overlay font if it's not already created
+    if (m_DebugOverlayFont == nullptr) {
+        hr = D3DXCreateFontA(m_Device,
+                             Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug),
+                             0,
+                             FW_HEAVY,
+                             1,
+                             false,
+                             ANSI_CHARSET,
+                             OUT_DEFAULT_PRECIS,
+                             DEFAULT_QUALITY,
+                             DEFAULT_PITCH | FF_DONTCARE,
+                             "",
+                             &m_DebugOverlayFont);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "D3DXCreateFontA() failed: %x",
+                         hr);
+            m_DebugOverlayFont = nullptr;
+        }
+    }
 }
 
 void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
@@ -919,15 +917,15 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
         }
     }
 
-    if (m_OverlayFont != nullptr) {
+    if (m_DebugOverlayFont != nullptr) {
         if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
             SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayDebug);
-            m_OverlayFont->DrawTextA(nullptr,
-                                     Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
-                                     -1,
-                                     &sample.DstRect,
-                                     DT_LEFT | DT_NOCLIP,
-                                     D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
+            m_DebugOverlayFont->DrawTextA(nullptr,
+                                          Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
+                                          -1,
+                                          &sample.DstRect,
+                                          DT_LEFT | DT_NOCLIP,
+                                          D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
         }
     }
 

@@ -18,13 +18,6 @@ SdlRenderer::SdlRenderer()
                     TTF_GetError());
         return;
     }
-
-    m_DebugOverlayFont = TTF_OpenFont("ModeSeven.ttf", 20);
-    if (m_DebugOverlayFont == nullptr) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "TTF_OpenFont() failed: %s",
-                    TTF_GetError());
-    }
 }
 
 SdlRenderer::~SdlRenderer()
@@ -85,8 +78,16 @@ void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     if (type == Overlay::OverlayDebug) {
         if (m_DebugOverlayFont == nullptr) {
-            // Can't proceed without a font
-            return;
+            m_DebugOverlayFont = TTF_OpenFont("ModeSeven.ttf",
+                                              Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug));
+            if (m_DebugOverlayFont == nullptr) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "TTF_OpenFont() failed: %s",
+                            TTF_GetError());
+
+                // Can't proceed without a font
+                return;
+            }
         }
 
         SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicGetPtr((void**)&m_DebugOverlaySurface);
