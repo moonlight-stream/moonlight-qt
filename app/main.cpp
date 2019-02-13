@@ -311,6 +311,10 @@ int main(int argc, char *argv[])
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
 
+    // Disable desktop settings awareness due to issues with QGnomePlatform
+    // breaking our dialog rendering on Linux.
+    QGuiApplication::setDesktopSettingsAware(false);
+
     QGuiApplication app(argc, argv);
 
     app.setWindowIcon(QIcon(":/res/moonlight.svg"));
