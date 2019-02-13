@@ -37,7 +37,7 @@ public:
         return s_ActiveSession;
     }
 
-    OverlayManager& getOverlayManager()
+    Overlay::OverlayManager& getOverlayManager()
     {
         return m_OverlayManager;
     }
@@ -149,7 +149,7 @@ private:
     OPUS_MULTISTREAM_CONFIGURATION m_AudioConfig;
     int m_AudioSampleCount;
 
-    OverlayManager m_OverlayManager;
+    Overlay::OverlayManager m_OverlayManager;
 
     static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;

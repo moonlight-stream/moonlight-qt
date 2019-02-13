@@ -920,9 +920,9 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
     }
 
     if (m_OverlayFont != nullptr) {
-        if (Session::get()->getOverlayManager().isOverlayEnabled(OverlayManager::OverlayDebug)) {
+        if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
             m_OverlayFont->DrawTextA(nullptr,
-                                     Session::get()->getOverlayManager().getOverlayText(OverlayManager::OverlayDebug),
+                                     Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
                                      -1,
                                      &sample.DstRect,
                                      DT_LEFT | DT_NOCLIP,

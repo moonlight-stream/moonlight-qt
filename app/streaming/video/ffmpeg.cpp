@@ -103,6 +103,10 @@ void FFmpegVideoDecoder::reset()
     // need to delete in the renderer destructor.
     avcodec_free_context(&m_VideoDecoderCtx);
 
+    if (!m_TestOnly) {
+        Session::get()->getOverlayManager().setOverlayRenderer(nullptr);
+    }
+
     delete m_Renderer;
     m_Renderer = nullptr;
 
@@ -232,6 +236,9 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
         else {
             m_NeedsSpsFixup = false;
         }
+
+        // Tell overlay manager to use this renderer
+        Session::get()->getOverlayManager().setOverlayRenderer(m_Renderer);
     }
 
 #ifdef QT_DEBUG
@@ -508,12 +515,13 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     // Flip stats windows roughly every second
     if (SDL_TICKS_PASSED(SDL_GetTicks(), m_ActiveWndVideoStats.measurementStartTimestamp + 1000)) {
         // Update overlay stats if it's enabled
-        if (Session::get()->getOverlayManager().isOverlayEnabled(OverlayManager::OverlayDebug)) {
+        if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
             VIDEO_STATS lastTwoWndStats = {};
             addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
             addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);
 
-            stringifyVideoStats(lastTwoWndStats, Session::get()->getOverlayManager().getOverlayText(OverlayManager::OverlayDebug));
+            stringifyVideoStats(lastTwoWndStats, Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug));
+            Session::get()->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayDebug);
         }
 
         // Accumulate these values into the global stats

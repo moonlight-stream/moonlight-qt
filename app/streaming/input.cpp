@@ -180,8 +180,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                         "Detected stats toggle combo");
 
             // Toggle the stats overlay
-            Session::get()->getOverlayManager().setOverlayState(OverlayManager::OverlayDebug,
-                                                                !Session::get()->getOverlayManager().isOverlayEnabled(OverlayManager::OverlayDebug));
+            Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
+                                                                !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
 
             // Force raise all keys just be safe across this full-screen/windowed
             // transition just in case key events get lost.

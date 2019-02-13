@@ -2,11 +2,13 @@
 
 #include <SDL.h>
 
+#include "streaming/video/overlaymanager.h"
+
 extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
-class IFFmpegRenderer {
+class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:
     enum FramePacingConstraint {
         PACING_FORCE_OFF,
@@ -14,7 +16,6 @@ public:
         PACING_ANY
     };
 
-    virtual ~IFFmpegRenderer() {}
     virtual bool initialize(SDL_Window* window,
                             int videoFormat,
                             int width,
@@ -26,6 +27,11 @@ public:
     virtual bool needsTestFrame() = 0;
     virtual int getDecoderCapabilities() = 0;
     virtual FramePacingConstraint getFramePacingConstraint() = 0;
+
+    // IOverlayRenderer
+    virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
+        // Nothing
+    }
 };
 
 class SdlRenderer : public IFFmpegRenderer {
