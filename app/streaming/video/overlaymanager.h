@@ -2,6 +2,8 @@
 
 #include <QString>
 
+#include <SDL.h>
+
 namespace Overlay {
 
 enum OverlayType {
@@ -28,11 +30,13 @@ public:
     char* getOverlayText(OverlayType type);
     void setOverlayTextUpdated(OverlayType type);
     void setOverlayState(OverlayType type, bool enabled);
+    SDL_Color getOverlayColor(OverlayType type);
 
     void setOverlayRenderer(IOverlayRenderer* renderer);
 
     struct {
         bool enabled;
+        SDL_Color color;
         char text[512];
     } m_Overlays[OverlayMax];
     IOverlayRenderer* m_Renderer;

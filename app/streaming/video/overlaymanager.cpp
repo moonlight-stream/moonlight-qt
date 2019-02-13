@@ -6,6 +6,8 @@ OverlayManager::OverlayManager() :
     m_Renderer(nullptr)
 {
     memset(m_Overlays, 0, sizeof(m_Overlays));
+
+    m_Overlays[OverlayType::OverlayDebug].color = {0xFF, 0xFF, 0xFF, 0xFF};
 }
 
 bool OverlayManager::isOverlayEnabled(OverlayType type)
@@ -42,6 +44,11 @@ void OverlayManager::setOverlayState(OverlayType type, bool enabled)
             m_Renderer->notifyOverlayUpdated(type);
         }
     }
+}
+
+SDL_Color OverlayManager::getOverlayColor(OverlayType type)
+{
+    return m_Overlays[type].color;
 }
 
 void OverlayManager::setOverlayRenderer(IOverlayRenderer* renderer)

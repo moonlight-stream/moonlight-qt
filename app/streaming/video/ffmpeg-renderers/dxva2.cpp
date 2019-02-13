@@ -921,12 +921,13 @@ void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
 
     if (m_OverlayFont != nullptr) {
         if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
+            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayDebug);
             m_OverlayFont->DrawTextA(nullptr,
                                      Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
                                      -1,
                                      &sample.DstRect,
                                      DT_LEFT | DT_NOCLIP,
-                                     D3DCOLOR_ARGB(255, 255, 255, 255));
+                                     D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
         }
     }
 
