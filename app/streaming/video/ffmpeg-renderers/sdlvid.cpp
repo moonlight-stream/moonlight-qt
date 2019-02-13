@@ -1,4 +1,4 @@
-#include "renderer.h"
+#include "sdlvid.h"
 
 #include <Limelight.h>
 

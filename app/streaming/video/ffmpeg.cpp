@@ -5,6 +5,8 @@
 
 #include <h264_stream.h>
 
+#include "ffmpeg-renderers/sdlvid.h"
+
 #ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
 #endif
