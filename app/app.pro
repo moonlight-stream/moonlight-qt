@@ -53,7 +53,9 @@ win32 {
     LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
 }
 macx {
-    INCLUDEPATH += $$PWD/../libs/mac/include $$PWD/../libs/mac/Frameworks/SDL2.framework/Versions/A/Headers
+    INCLUDEPATH += $$PWD/../libs/mac/include
+    INCLUDEPATH += $$PWD/../libs/mac/Frameworks/SDL2.framework/Versions/A/Headers
+    INCLUDEPATH += $$PWD/../libs/mac/Frameworks/SDL2_ttf.framework/Versions/A/Headers
     LIBS += -L$$PWD/../libs/mac/lib -F$$PWD/../libs/mac/Frameworks
 }
 
@@ -93,7 +95,7 @@ win32 {
     CONFIG += ffmpeg soundio
 }
 macx {
-    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -framework SDL2
+    LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -framework SDL2 -framework SDL2_ttf
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit
 
     # For libsoundio
