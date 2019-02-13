@@ -682,17 +682,12 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             return;
         }
 
-#if SDL_VERSION_ATLEAST(2, 0, 9)
-        // Determine this player's preferred index
-        i = SDL_GameControllerGetPlayerIndex(controller);
-        if (i < 0 || i >= MAX_GAMEPADS || m_GamepadState[i].controller != NULL) {
-            // If the player index is unavailable or invalid, start searching from 0
-            i = 0;
-        }
-#else
-        // SDL 2.0.8 and earlier has no player number hints
+        // We used to use SDL_GameControllerGetPlayerIndex() here but that
+        // can lead to strange issues due to bugs in Windows where an Xbox
+        // controller will join as player 2, even though no player 1 controller
+        // is connected at all. This pretty much screws any attempt to use
+        // the gamepad in single player games, so just assign them in order from 0.
         i = 0;
-#endif
 
         for (; i < MAX_GAMEPADS; i++) {
             if (m_GamepadState[i].controller == NULL) {
@@ -996,7 +991,6 @@ int SdlInputHandler::getAttachedGamepadMask()
         return 0x1;
     }
 
-    // TODO: Use SDL_GameControllerGetPlayerIndex() for accurate indexes?
     count = mask = 0;
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
