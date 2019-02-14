@@ -7,6 +7,7 @@
 //
 
 #import "TemporarySettings.h"
+#import "OnScreenControls.h"
 
 @implementation TemporarySettings
 
@@ -35,7 +36,8 @@
     self.playAudioOnPC = [[NSUserDefaults standardUserDefaults] boolForKey:@"audioOnPC"] || NO;
     self.enableHdr = [[NSUserDefaults standardUserDefaults] boolForKey:@"enableHdr"] || NO;
     self.optimizeGames = [[NSUserDefaults standardUserDefaults] boolForKey:@"optimizeGames"] || YES;
-    self.multiController = YES;
+    self.multiController = [[NSUserDefaults standardUserDefaults] boolForKey:@"multipleControllers"] || YES;
+    
     NSInteger _screenSize = [[NSUserDefaults standardUserDefaults] integerForKey:@"streamResolution"];
     switch (_screenSize) {
         case 0:
@@ -52,6 +54,7 @@
             self.width = [NSNumber numberWithInteger:1920];
             break;
     }
+    self.onscreenControls = (NSInteger)OnScreenControlsLevelOff;
 #else
     self.bitrate = settings.bitrate;
     self.framerate = settings.framerate;
@@ -62,8 +65,8 @@
     self.enableHdr = settings.enableHdr;
     self.optimizeGames = settings.optimizeGames;
     self.multiController = settings.multiController;
-#endif
     self.onscreenControls = settings.onscreenControls;
+#endif
     self.uniqueId = settings.uniqueId;
     self.streamingRemotely = settings.streamingRemotely;
     

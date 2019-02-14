@@ -76,19 +76,24 @@ static UIImage* noImage;
     self.frame = CGRectMake(0, 0, noImage.size.width, noImage.size.height);
     
     if ([_app.id isEqualToString:_app.host.currentGame]) {
+#if TARGET_OS_TV
+        _appButton.layer.masksToBounds = NO;
+
+        _appButton.layer.shadowColor = [UIColor greenColor].CGColor;
+        _appButton.layer.shadowOffset = CGSizeMake(5,8);
+        _appButton.layer.shadowOpacity = 0.7;
+#else
         // Only create the app overlay if needed
         _appOverlay = [[UIImageView alloc] initWithImage:[UIImage imageNamed:@"Play"]];
-#if !TARGET_OS_TV
         _appOverlay.layer.shadowColor = [UIColor blackColor].CGColor;
         _appOverlay.layer.shadowOffset = CGSizeMake(0, 0);
         _appOverlay.layer.shadowOpacity = 1;
         _appOverlay.layer.shadowRadius = 2.0;
-#endif
-        
         [self addSubview:_appOverlay];
         
         _appOverlay.frame = CGRectMake(0, 0, noImage.size.width / 2.f, noImage.size.height / 4.f);
         [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
+#endif
     }
     
     BOOL noAppImage = false;
@@ -120,10 +125,11 @@ static UIImage* noImage;
 #else
             _appButton.frame = CGRectMake(0, 0, appImage.size.width / 2, appImage.size.height / 2);
             self.frame = CGRectMake(0, 0, appImage.size.width / 2, appImage.size.height / 2);
-#endif
+
             _appOverlay.frame = CGRectMake(0, 0, self.frame.size.width / 2.f, self.frame.size.height / 4.f);
             _appOverlay.layer.shadowRadius = 4.0;
             [_appOverlay setCenter:CGPointMake(self.frame.size.width/2, self.frame.size.height/6)];
+#endif
             [_appButton setBackgroundImage:appImage forState:UIControlStateNormal];
             [self setNeedsDisplay];
         } else {
@@ -176,7 +182,9 @@ static UIImage* noImage;
     // Update the app image if neccessary
     if ((_appOverlay != nil && ![_app.id isEqualToString:_app.host.currentGame]) ||
         (_appOverlay == nil && [_app.id isEqualToString:_app.host.currentGame])) {
+#if !TARGET_OS_TV
         [self updateAppImage];
+#endif
     }
     
     // Stop updating when we detach from our parent view

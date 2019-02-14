@@ -191,12 +191,15 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         // Allow the display to go to sleep now
         [UIApplication sharedApplication].idleTimerDisabled = NO;
-        
-        UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection was terminated" preferredStyle:UIAlertControllerStyleAlert];
-        [conTermAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+        if (errorCode == 0) {
             [self returnToMainFrame];
-        }]];
-        [self presentViewController:conTermAlert animated:YES completion:nil];
+        } else {
+            UIAlertController* conTermAlert = [UIAlertController alertControllerWithTitle:@"Connection Terminated" message:@"The connection was terminated" preferredStyle:UIAlertControllerStyleAlert];
+            [conTermAlert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault handler:^(UIAlertAction* action){
+                [self returnToMainFrame];
+            }]];
+            [self presentViewController:conTermAlert animated:YES completion:nil];
+        }
     });
 
     [_streamMan stopStream];
