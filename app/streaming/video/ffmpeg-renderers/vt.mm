@@ -7,11 +7,13 @@
 
 #include <SDL_syswm.h>
 #include <Limelight.h>
+#include <streaming/session.h>
 
 #include <mach/mach_time.h>
 #import <Cocoa/Cocoa.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
+#import <dispatch/dispatch.h>
 
 class VTRenderer : public IFFmpegRenderer
 {
@@ -20,7 +22,8 @@ public:
         : m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
-          m_View(nullptr)
+          m_StreamView(nullptr),
+          m_DebugOverlayTextField(nullptr)
     {
     }
 
@@ -34,8 +37,12 @@ public:
             CFRelease(m_FormatDesc);
         }
 
-        if (m_View != nullptr) {
-            [m_View removeFromSuperview];
+        if (m_DebugOverlayTextField != nullptr) {
+            [m_DebugOverlayTextField removeFromSuperview];
+        }
+
+        if (m_StreamView != nullptr) {
+            [m_StreamView removeFromSuperview];
         }
     }
 
@@ -159,21 +166,21 @@ public:
         // SDL adds its own content view to listen for events.
         // We need to add a subview for our display layer.
         NSView* contentView = info.info.cocoa.window.contentView;
-        m_View = [[NSView alloc] initWithFrame:contentView.bounds];
+        m_StreamView = [[NSView alloc] initWithFrame:contentView.bounds];
 
         m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
-        m_DisplayLayer.bounds = m_View.bounds;
-        m_DisplayLayer.position = CGPointMake(CGRectGetMidX(m_View.bounds), CGRectGetMidY(m_View.bounds));
+        m_DisplayLayer.bounds = m_StreamView.bounds;
+        m_DisplayLayer.position = CGPointMake(CGRectGetMidX(m_StreamView.bounds), CGRectGetMidY(m_StreamView.bounds));
         m_DisplayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
 
         // Create a layer-hosted view by setting the layer before wantsLayer
         // This avoids us having to add our AVSampleBufferDisplayLayer as a
         // sublayer of a layer-backed view which leaves a useless layer in
         // the middle.
-        m_View.layer = m_DisplayLayer;
-        m_View.wantsLayer = YES;
+        m_StreamView.layer = m_DisplayLayer;
+        m_StreamView.wantsLayer = YES;
 
-        [contentView addSubview: m_View];
+        [contentView addSubview: m_StreamView];
 
         err = av_hwdevice_ctx_create(&m_HwContext,
                                      AV_HWDEVICE_TYPE_VIDEOTOOLBOX,
@@ -188,6 +195,41 @@ public:
         }
 
         return true;
+    }
+
+    static void updateDebugOverlayOnMainThread(void* context)
+    {
+        VTRenderer* me = (VTRenderer*)context;
+
+        // Lazy initialization for the overlay
+        if (me->m_DebugOverlayTextField == nullptr) {
+            me->m_DebugOverlayTextField = [[NSTextField alloc] initWithFrame:me->m_StreamView.bounds];
+            [me->m_DebugOverlayTextField setBezeled:NO];
+            [me->m_DebugOverlayTextField setDrawsBackground:NO];
+            [me->m_DebugOverlayTextField setEditable:NO];
+            [me->m_DebugOverlayTextField setSelectable:NO];
+
+            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayDebug);
+            [me->m_DebugOverlayTextField setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
+            [me->m_DebugOverlayTextField setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug)]];
+
+            [me->m_StreamView addSubview: me->m_DebugOverlayTextField];
+        }
+
+        // Update text contents
+        [me->m_DebugOverlayTextField setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug)]];
+
+        // Unhide if it's enabled
+        [me->m_DebugOverlayTextField setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)];
+    }
+
+    virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
+    {
+        // We must do the actual UI updates on the main thread, so queue an
+        // async callback on the main thread via GCD to do the UI update.
+        if (type == Overlay::OverlayDebug) {
+            dispatch_async_f(dispatch_get_main_queue(), this, updateDebugOverlayOnMainThread);
+        }
     }
 
     virtual bool prepareDecoderContext(AVCodecContext* context) override
@@ -223,7 +265,8 @@ private:
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
-    NSView* m_View;
+    NSView* m_StreamView;
+    NSTextField* m_DebugOverlayTextField;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {
