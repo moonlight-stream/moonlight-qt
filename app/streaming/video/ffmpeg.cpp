@@ -86,6 +86,12 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
 FFmpegVideoDecoder::~FFmpegVideoDecoder()
 {
     reset();
+
+    // Set log level back to default.
+    // NB: We don't do this in reset() because we want
+    // to preserve the log level across reset() during
+    // test initialization.
+    av_log_set_level(AV_LOG_INFO);
 }
 
 IFFmpegRenderer* FFmpegVideoDecoder::getRenderer()
@@ -243,11 +249,6 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
         Session::get()->getOverlayManager().setOverlayRenderer(m_Renderer);
     }
 
-#ifdef QT_DEBUG
-    // Restore default log level before streaming
-    av_log_set_level(AV_LOG_INFO);
-#endif
-
     return true;
 }
 
@@ -371,10 +372,8 @@ bool FFmpegVideoDecoder::initialize(
 {
     AVCodec* decoder;
 
-#ifdef QT_DEBUG
-    // Increase log level during initialization
+    // Increase log level until the first frame is decoded
     av_log_set_level(AV_LOG_DEBUG);
-#endif
 
     if (videoFormat & VIDEO_FORMAT_MASK_H264) {
         decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
@@ -595,6 +594,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     if (err == 0) {
         // Reset failed decodes count if we reached this far
         m_ConsecutiveFailedDecodes = 0;
+
+        // Restore default log level after a successful decode
+        av_log_set_level(AV_LOG_INFO);
 
         // Capture a frame timestamp to measuring pacing delay
         frame->pts = SDL_GetTicks();
