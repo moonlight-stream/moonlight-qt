@@ -115,6 +115,21 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
         }
     }
 
+    // See if we need to drop this sample
+    if (s_ActiveSession->m_DropAudioEndTime != 0) {
+        if (SDL_TICKS_PASSED(SDL_GetTicks(), s_ActiveSession->m_DropAudioEndTime)) {
+            // Avoid calling SDL_GetTicks() now
+            s_ActiveSession->m_DropAudioEndTime = 0;
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Audio drop window has ended");
+        }
+        else {
+            // We're still in the drop window
+            return;
+        }
+    }
+
     s_ActiveSession->m_AudioSampleCount++;
 
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
@@ -145,10 +160,22 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     // safe to reinitialize here because we can't be torn down while
     // the audio decoder/playback thread is still alive.
     if (s_ActiveSession->m_AudioRenderer == nullptr && (s_ActiveSession->m_AudioSampleCount % 200) == 0) {
+        // Since we're doing this inline and audio initialization takes time, we need
+        // to drop samples to account for the time we've spent blocking audio rendering
+        // so we return to real-time playback and don't accumulate latency.
+        Uint32 audioReinitStartTime = SDL_GetTicks();
+
         s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer();
         if (!s_ActiveSession->m_AudioRenderer->prepareForPlayback(&s_ActiveSession->m_AudioConfig)) {
             delete s_ActiveSession->m_AudioRenderer;
             s_ActiveSession->m_AudioRenderer = nullptr;
         }
+
+        Uint32 audioReinitStopTime = SDL_GetTicks();
+
+        s_ActiveSession->m_DropAudioEndTime = audioReinitStopTime + (audioReinitStopTime - audioReinitStartTime);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Audio reinitialization took %d ms - starting drop window",
+                    audioReinitStopTime - audioReinitStartTime);
     }
 }

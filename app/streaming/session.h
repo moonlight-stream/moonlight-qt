@@ -149,6 +149,7 @@ private:
     IAudioRenderer* m_AudioRenderer;
     OPUS_MULTISTREAM_CONFIGURATION m_AudioConfig;
     int m_AudioSampleCount;
+    Uint32 m_DropAudioEndTime;
 
     Overlay::OverlayManager m_OverlayManager;
 

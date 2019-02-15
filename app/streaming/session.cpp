@@ -312,7 +312,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandlerLock(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
-      m_AudioSampleCount(0)
+      m_AudioSampleCount(0),
+      m_DropAudioEndTime(0)
 {
 }
 
