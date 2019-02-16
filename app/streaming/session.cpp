@@ -862,10 +862,14 @@ void Session::exec(int displayOriginX, int displayOriginY)
                            m_InputHandler->getAttachedGamepadMask());
         }
     } catch (const GfeHttpResponseException& e) {
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
         emit displayLaunchError(e.toQString());
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     } catch (const QtNetworkReplyException& e) {
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
         emit displayLaunchError(e.toQString());
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
@@ -876,6 +880,8 @@ void Session::exec(int displayOriginX, int displayOriginY)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
                      SDL_GetError());
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
         emit displayLaunchError(QString::fromLocal8Bit(SDL_GetError()));
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
@@ -904,6 +910,8 @@ void Session::exec(int displayOriginX, int displayOriginY)
     if (err != 0) {
         // We already displayed an error dialog in the stage failure
         // listener.
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
@@ -926,6 +934,8 @@ void Session::exec(int displayOriginX, int displayOriginY)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateWindow() failed: %s",
                      SDL_GetError());
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
