@@ -3,6 +3,9 @@ language: cpp
 git:
   depth: 1
 
+env:
+  - NJOBS=2
+
 matrix:
   include:
     - os: osx
@@ -34,8 +37,8 @@ matrix:
 install:
     - '[ "$TRAVIS_OS_NAME" != osx ] || brew install qt5'
     - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt5'
-    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_VER=2.0.9 && wget https://www.libsdl.org/release/SDL2-$SDL2_VER.tar.gz && tar -xvf SDL2-$SDL2_VER.tar.gz && cd SDL2-$SDL2_VER && ./configure && make && sudo make install && cd ..; fi
-    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_TTF_VER=2.0.15 && wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$SDL2_TTF_VER.tar.gz && tar -xvf SDL2_ttf-$SDL2_TTF_VER.tar.gz && cd SDL2_ttf-$SDL2_TTF_VER && ./configure && make && sudo make install && cd ..; fi
+    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_VER=2.0.9 && wget https://www.libsdl.org/release/SDL2-$SDL2_VER.tar.gz && tar -xvf SDL2-$SDL2_VER.tar.gz && cd SDL2-$SDL2_VER && ./configure && make -j$NJOBS && sudo make install && cd ..; fi
+    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_TTF_VER=2.0.15 && wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$SDL2_TTF_VER.tar.gz && tar -xvf SDL2_ttf-$SDL2_TTF_VER.tar.gz && cd SDL2_ttf-$SDL2_TTF_VER && ./configure && make -j$NJOBS && sudo make install && cd ..; fi
 
 before_script:
     - '[ "$TRAVIS_OS_NAME" != "linux" ] || source /opt/qt59/bin/qt59-env.sh'
@@ -46,5 +49,5 @@ before_script:
 
 script:
     - qmake moonlight-qt.pro -spec $QMAKESPEC
-    - make debug
-    - make release
+    - make -j$NJOBS debug
+    - make -j$NJOBS release
