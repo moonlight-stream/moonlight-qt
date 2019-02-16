@@ -289,7 +289,9 @@ defineTest(copyToDestDir) {
     files = $$1
 
     for(FILE, files) {
-        QMAKE_POST_LINK += $$QMAKE_COPY $$shell_quote($$shell_path($$PWD/$$FILE)) $$shell_quote($$shell_path($$OUT_PWD)) $$escape_expand(\\n\\t)
+        !equals(PWD, $$OUT_PWD) {
+            QMAKE_POST_LINK += $$QMAKE_COPY $$shell_quote($$shell_path($$PWD/$$FILE)) $$shell_quote($$shell_path($$OUT_PWD)) $$escape_expand(\\n\\t)
+        }
     }
 
     export(QMAKE_POST_LINK)
