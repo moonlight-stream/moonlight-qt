@@ -54,7 +54,7 @@ void MappingManager::save()
 
 void MappingManager::applyMappings()
 {
-    QString mappingFile = Path::getGamepadMappingFile();
+    QString mappingFile = Path::getDataFilePath("gamecontrollerdb.txt");
     if (!mappingFile.isEmpty()) {
         std::string mappingFileNative = QDir::toNativeSeparators(mappingFile).toStdString();
 

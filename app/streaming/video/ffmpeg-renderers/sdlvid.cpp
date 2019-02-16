@@ -1,6 +1,9 @@
 #include "sdlvid.h"
 
 #include "streaming/session.h"
+#include "path.h"
+
+#include <QDir>
 
 #include <Limelight.h>
 
@@ -78,7 +81,14 @@ void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     if (type == Overlay::OverlayDebug) {
         if (m_DebugOverlayFont == nullptr) {
-            m_DebugOverlayFont = TTF_OpenFont("ModeSeven.ttf",
+            QByteArray fontPath = QDir::toNativeSeparators(Path::getDataFilePath("ModeSeven.ttf")).toUtf8();
+            if (fontPath.isEmpty()) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Unable to locate SDL overlay font");
+                return;
+            }
+
+            m_DebugOverlayFont = TTF_OpenFont(fontPath.data(),
                                               Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug));
             if (m_DebugOverlayFont == nullptr) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,

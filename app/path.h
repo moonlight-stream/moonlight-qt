@@ -9,12 +9,11 @@ public:
 
     static QString getBoxArtCacheDir();
 
-    static QString getGamepadMappingFile();
+    static QString getDataFilePath(QString fileName);
 
     static void initialize(bool portable);
 
 private:
     static QString s_LogDir;
     static QString s_BoxArtCacheDir;
-    static const QString k_GameControllerMappingFile;
 };
