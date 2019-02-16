@@ -15,7 +15,6 @@
 #endif
 
 #define PACING_HISTORY_ENTRIES 8
-#define RENDER_TIME_HISTORY_ENTRIES 20
 
 // We may be woken up slightly late so don't go all the way
 // up to the next V-sync since we may accidentally step into
@@ -159,9 +158,6 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
         if (!m_PacingQueueNotEmpty.wait(&m_FrameQueueLock, timeUntilNextVsyncMillis - TIMER_SLACK_MS)) {
             // Wait timed out - unlock and bail
             m_FrameQueueLock.unlock();
-
-            // Nothing to render at this time. This counts as a drop.
-            addRenderTimeToHistory(0);
             return;
         }
     }
@@ -210,43 +206,8 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
     return true;
 }
 
-void Pacer::addRenderTimeToHistory(int renderTime)
-{
-    if (m_RenderTimeHistory.count() == RENDER_TIME_HISTORY_ENTRIES) {
-        m_RenderTimeHistory.dequeue();
-    }
-
-    m_RenderTimeHistory.enqueue(renderTime);
-}
-
 void Pacer::renderFrame(AVFrame* frame)
 {
-    bool dropFrame = !m_RenderTimeHistory.isEmpty();
-
-    // If rendering consistently takes longer than an entire V-sync interval,
-    // there must have been frames pending in the pipeline that are blocking us.
-    // Drop our this frame to clear the backed up display pipeline.
-    for (int renderTime : m_RenderTimeHistory) {
-        if (renderTime < 1000 / m_DisplayFps) {
-            dropFrame = false;
-            break;
-        }
-    }
-
-    // Drop this frame if we believe we've run into V-sync waits
-    if (dropFrame) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Render time (%d ms) consistently exceeded V-sync period; dropping frame to reduce latency",
-                    m_RenderTimeHistory[0]);
-
-        // Add 0 render time to history to account for the drop
-        addRenderTimeToHistory(0);
-
-        m_VideoStats->pacerDroppedFrames++;
-        av_frame_free(&frame);
-        return;
-    }
-
     // Count time spent in Pacer's queues
     Uint32 beforeRender = SDL_GetTicks();
     m_VideoStats->totalPacerTime += beforeRender - frame->pts;
@@ -255,11 +216,23 @@ void Pacer::renderFrame(AVFrame* frame)
     m_VsyncRenderer->renderFrame(frame);
     Uint32 afterRender = SDL_GetTicks();
 
-    addRenderTimeToHistory(afterRender - beforeRender);
-
     m_VideoStats->totalRenderTime += afterRender - beforeRender;
     m_VideoStats->renderedFrames++;
     av_frame_free(&frame);
+
+    // If a frame has arrived while rendering, our renderer probably
+    // was blocked waiting on V-Sync. Drop a frame to allow the
+    // queued frame to drain.
+    m_FrameQueueLock.lock();
+    if (!m_RenderQueue.isEmpty()) {
+        frame = m_RenderQueue.dequeue();
+        m_FrameQueueLock.unlock();
+        m_VideoStats->pacerDroppedFrames++;
+        av_frame_free(&frame);
+    }
+    else {
+        m_FrameQueueLock.unlock();
+    }
 }
 
 void Pacer::submitFrame(AVFrame* frame)

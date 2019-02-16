@@ -29,14 +29,11 @@ public:
 private:
     static int renderThread(void* context);
 
-    void addRenderTimeToHistory(int renderTime);
-
     void renderFrame(AVFrame* frame);
 
     QQueue<AVFrame*> m_RenderQueue;
     QQueue<AVFrame*> m_PacingQueue;
     QQueue<int> m_PacingQueueHistory;
-    QQueue<int> m_RenderTimeHistory;
     QMutex m_FrameQueueLock;
     QWaitCondition m_RenderQueueNotEmpty;
     QWaitCondition m_PacingQueueNotEmpty;
