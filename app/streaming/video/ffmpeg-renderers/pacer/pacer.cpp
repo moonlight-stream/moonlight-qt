@@ -8,10 +8,13 @@
 #endif
 
 #ifdef Q_OS_WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#include <VersionHelpers.h>
 #include "dxvsyncsource.h"
 #endif
 
-#define FRAME_HISTORY_ENTRIES 8
+#define PACING_HISTORY_ENTRIES 8
 #define RENDER_TIME_HISTORY_ENTRIES 20
 
 // We may be woken up slightly late so don't go all the way
@@ -42,13 +45,17 @@ Pacer::~Pacer()
     // Stop the render thread
     m_Stopping = true;
     if (m_RenderThread != nullptr) {
-        m_FrameQueueNotEmpty.wakeAll();
+        m_RenderQueueNotEmpty.wakeAll();
         SDL_WaitThread(m_RenderThread, nullptr);
     }
 
     // Delete any remaining unconsumed frames
-    while (!m_FrameQueue.isEmpty()) {
-        AVFrame* frame = m_FrameQueue.dequeue();
+    while (!m_RenderQueue.isEmpty()) {
+        AVFrame* frame = m_RenderQueue.dequeue();
+        av_frame_free(&frame);
+    }
+    while (!m_PacingQueue.isEmpty()) {
+        AVFrame* frame = m_PacingQueue.dequeue();
         av_frame_free(&frame);
     }
 }
@@ -63,8 +70,8 @@ int Pacer::renderThread(void* context)
         me->m_FrameQueueLock.lock();
 
         // Wait for a frame to be ready to render
-        while (!me->m_Stopping && me->m_FrameQueue.isEmpty()) {
-            me->m_FrameQueueNotEmpty.wait(&me->m_FrameQueueLock);
+        while (!me->m_Stopping && me->m_RenderQueue.isEmpty()) {
+            me->m_RenderQueueNotEmpty.wait(&me->m_FrameQueueLock);
         }
 
         if (me->m_Stopping) {
@@ -76,7 +83,7 @@ int Pacer::renderThread(void* context)
         // Dequeue the most recent frame for rendering and free the others.
         // NB: m_FrameQueueLock still held here!
         AVFrame* lastFrame = nullptr;
-        while (!me->m_FrameQueue.isEmpty()) {
+        while (!me->m_RenderQueue.isEmpty()) {
             if (lastFrame != nullptr) {
                 // Don't hold the frame queue lock across av_frame_free(),
                 // since it could need to talk to the GPU driver. This is safe
@@ -88,7 +95,7 @@ int Pacer::renderThread(void* context)
                 me->m_FrameQueueLock.lock();
             }
 
-            lastFrame = me->m_FrameQueue.dequeue();
+            lastFrame = me->m_RenderQueue.dequeue();
         }
 
         // Release the frame queue lock before rendering
@@ -120,7 +127,7 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
     // frame history to drop frames only if consistently above the
     // one queued frame mark.
     if (m_MaxVideoFps >= m_DisplayFps) {
-        for (int queueHistoryEntry : m_FrameQueueHistory) {
+        for (int queueHistoryEntry : m_PacingQueueHistory) {
             if (queueHistoryEntry <= 1) {
                 // Be lenient as long as the queue length
                 // resolves before the end of frame history
@@ -129,16 +136,16 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
             }
         }
 
-        if (m_FrameQueueHistory.count() == FRAME_HISTORY_ENTRIES) {
-            m_FrameQueueHistory.dequeue();
+        if (m_PacingQueueHistory.count() == PACING_HISTORY_ENTRIES) {
+            m_PacingQueueHistory.dequeue();
         }
 
-        m_FrameQueueHistory.enqueue(m_FrameQueue.count());
+        m_PacingQueueHistory.enqueue(m_PacingQueue.count());
     }
 
     // Catch up if we're several frames ahead
-    while (m_FrameQueue.count() > frameDropTarget) {
-        AVFrame* frame = m_FrameQueue.dequeue();
+    while (m_PacingQueue.count() > frameDropTarget) {
+        AVFrame* frame = m_PacingQueue.dequeue();
 
         // Drop the lock while we call av_frame_free()
         m_FrameQueueLock.unlock();
@@ -147,9 +154,9 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
         m_FrameQueueLock.lock();
     }
 
-    if (m_FrameQueue.isEmpty()) {
+    if (m_PacingQueue.isEmpty()) {
         // Wait for a frame to arrive or our V-sync timeout to expire
-        if (!m_FrameQueueNotEmpty.wait(&m_FrameQueueLock, timeUntilNextVsyncMillis - TIMER_SLACK_MS)) {
+        if (!m_PacingQueueNotEmpty.wait(&m_FrameQueueLock, timeUntilNextVsyncMillis - TIMER_SLACK_MS)) {
             // Wait timed out - unlock and bail
             m_FrameQueueLock.unlock();
 
@@ -159,11 +166,10 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
         }
     }
 
-    // Grab the first frame
-    AVFrame* frame = m_FrameQueue.dequeue();
+    // Place the first frame on the render queue
+    m_RenderQueue.enqueue(m_PacingQueue.dequeue());
     m_FrameQueueLock.unlock();
-
-    renderFrame(frame);
+    m_RenderQueueNotEmpty.wakeOne();
 }
 
 bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
@@ -179,7 +185,11 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
     #if defined(Q_OS_DARWIN)
         m_VsyncSource = DisplayLinkVsyncSourceFactory::createVsyncSource(this);
     #elif defined(Q_OS_WIN32)
-        m_VsyncSource = new DxVsyncSource(this);
+        // Don't use D3DKMTWaitForVerticalBlankEvent() on Windows 7, because
+        // it blocks during other concurrent DX operations (like actually rendering).
+        if (IsWindows8OrGreater()) {
+            m_VsyncSource = new DxVsyncSource(this);
+        }
     #else
         // Platforms without a VsyncSource will just render frames
         // immediately like they used to.
@@ -195,9 +205,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     m_DisplayFps, m_MaxVideoFps);
     }
 
-    if (m_VsyncSource == nullptr) {
-        m_RenderThread = SDL_CreateThread(Pacer::renderThread, "Pacer Render Thread", this);
-    }
+    m_RenderThread = SDL_CreateThread(Pacer::renderThread, "Pacer Render Thread", this);
 
     return true;
 }
@@ -261,7 +269,17 @@ void Pacer::submitFrame(AVFrame* frame)
 
     // Queue the frame and possibly wake up the render thread
     m_FrameQueueLock.lock();
-    m_FrameQueue.enqueue(frame);
+    if (m_VsyncSource != nullptr) {
+        m_PacingQueue.enqueue(frame);
+    }
+    else {
+        m_RenderQueue.enqueue(frame);
+    }
     m_FrameQueueLock.unlock();
-    m_FrameQueueNotEmpty.wakeOne();
+    if (m_VsyncSource != nullptr) {
+        m_PacingQueueNotEmpty.wakeOne();
+    }
+    else {
+        m_RenderQueueNotEmpty.wakeOne();
+    }
 }

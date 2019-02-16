@@ -33,11 +33,13 @@ private:
 
     void renderFrame(AVFrame* frame);
 
-    QQueue<AVFrame*> m_FrameQueue;
-    QQueue<int> m_FrameQueueHistory;
+    QQueue<AVFrame*> m_RenderQueue;
+    QQueue<AVFrame*> m_PacingQueue;
+    QQueue<int> m_PacingQueueHistory;
     QQueue<int> m_RenderTimeHistory;
     QMutex m_FrameQueueLock;
-    QWaitCondition m_FrameQueueNotEmpty;
+    QWaitCondition m_RenderQueueNotEmpty;
+    QWaitCondition m_PacingQueueNotEmpty;
     SDL_Thread* m_RenderThread;
     bool m_Stopping;
 
