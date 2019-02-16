@@ -244,8 +244,11 @@ public:
 
     virtual bool needsTestFrame() override
     {
-        // We query VT to determine whether the codec is supported
-        return false;
+        // We used to trust VT to tell us whether decode will work, but
+        // there are cases where it can lie because the hardware technically
+        // can decode the format but VT is unserviceable for some other reason.
+        // Decoding the test frame will tell us for sure whether it will work.
+        return true;
     }
 
     virtual int getDecoderCapabilities() override
