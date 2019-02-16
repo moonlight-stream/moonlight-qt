@@ -140,7 +140,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             (event->keysym.mod & KMOD_ALT) &&
             (event->keysym.mod & KMOD_SHIFT)) {
         // Check for quit combo (Ctrl+Alt+Shift+Q)
-        if (event->keysym.sym == SDLK_q) {
+        if (event->keysym.scancode == SDL_SCANCODE_Q) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected quit key combo");
 
@@ -152,7 +152,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             return;
         }
         // Check for the unbind combo (Ctrl+Alt+Shift+Z)
-        else if (event->keysym.sym == SDLK_z) {
+        else if (event->keysym.scancode == SDL_SCANCODE_Z) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected mouse capture toggle combo");
 
@@ -165,7 +165,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             return;
         }
         // Check for the full-screen combo (Ctrl+Alt+Shift+X)
-        else if (event->keysym.sym == SDLK_x) {
+        else if (event->keysym.scancode == SDL_SCANCODE_X) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected full-screen toggle combo");
             Session::s_ActiveSession->toggleFullscreen();
@@ -175,7 +175,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
-        else if (event->keysym.sym == SDLK_s) {
+        else if (event->keysym.scancode == SDL_SCANCODE_S) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected stats toggle combo");
 
