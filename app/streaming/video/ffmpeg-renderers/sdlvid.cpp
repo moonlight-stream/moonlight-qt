@@ -171,7 +171,7 @@ bool SdlRenderer::initialize(SDL_Window* window,
     return true;
 }
 
-void SdlRenderer::renderFrameAtVsync(AVFrame* frame)
+void SdlRenderer::renderFrame(AVFrame* frame)
 {
     SDL_UpdateYUVTexture(m_Texture, nullptr,
                          frame->data[0],

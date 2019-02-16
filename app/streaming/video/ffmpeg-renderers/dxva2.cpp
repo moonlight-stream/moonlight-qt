@@ -734,7 +734,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType)
     }
 }
 
-void DXVA2Renderer::renderFrameAtVsync(AVFrame *frame)
+void DXVA2Renderer::renderFrame(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
     HRESULT hr;

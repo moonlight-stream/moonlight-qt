@@ -183,7 +183,7 @@ IFFmpegRenderer::FramePacingConstraint VAAPIRenderer::getFramePacingConstraint()
 }
 
 void
-VAAPIRenderer::renderFrameAtVsync(AVFrame* frame)
+VAAPIRenderer::renderFrame(AVFrame* frame)
 {
     VASurfaceID surface = (VASurfaceID)(uintptr_t)frame->data[3];
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;

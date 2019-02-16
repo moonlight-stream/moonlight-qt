@@ -251,7 +251,7 @@ IFFmpegRenderer::FramePacingConstraint VDPAURenderer::getFramePacingConstraint()
     return PACING_ANY;
 }
 
-void VDPAURenderer::renderFrameAtVsync(AVFrame* frame)
+void VDPAURenderer::renderFrame(AVFrame* frame)
 {
     VdpStatus status;
     VdpVideoSurface videoSurface = (VdpVideoSurface)(uintptr_t)frame->data[3];

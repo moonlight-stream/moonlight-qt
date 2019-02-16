@@ -15,7 +15,7 @@ public:
                             int maxFps,
                             bool enableVsync) override;
     virtual bool prepareDecoderContext(AVCodecContext* context) override;
-    virtual void renderFrameAtVsync(AVFrame* frame) override;
+    virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
     virtual int getDecoderCapabilities() override;
     virtual FramePacingConstraint getFramePacingConstraint() override;

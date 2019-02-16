@@ -23,7 +23,7 @@ public:
                             int maxFps,
                             bool enableVsync) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context) = 0;
-    virtual void renderFrameAtVsync(AVFrame* frame) = 0;
+    virtual void renderFrame(AVFrame* frame) = 0;
     virtual bool needsTestFrame() = 0;
     virtual int getDecoderCapabilities() = 0;
     virtual FramePacingConstraint getFramePacingConstraint() = 0;

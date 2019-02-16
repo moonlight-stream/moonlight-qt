@@ -244,7 +244,7 @@ void Pacer::renderFrame(AVFrame* frame)
     m_VideoStats->totalPacerTime += beforeRender - frame->pts;
 
     // Render it
-    m_VsyncRenderer->renderFrameAtVsync(frame);
+    m_VsyncRenderer->renderFrame(frame);
     Uint32 afterRender = SDL_GetTicks();
 
     addRenderTimeToHistory(afterRender - beforeRender);

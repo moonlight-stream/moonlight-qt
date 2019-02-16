@@ -21,12 +21,12 @@ public:
                             int width,
                             int height,
                             int maxFps,
-                            bool enableVsync);
-    virtual bool prepareDecoderContext(AVCodecContext* context);
-    virtual void renderFrameAtVsync(AVFrame* frame);
-    virtual bool needsTestFrame();
-    virtual int getDecoderCapabilities();
-    virtual FramePacingConstraint getFramePacingConstraint();
+                            bool enableVsync) override;
+    virtual bool prepareDecoderContext(AVCodecContext* context) override;
+    virtual void renderFrame(AVFrame* frame) override;
+    virtual bool needsTestFrame() override;
+    virtual int getDecoderCapabilities() override;
+    virtual FramePacingConstraint getFramePacingConstraint() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
 
 private:

@@ -47,7 +47,7 @@ public:
     }
 
     // Caller frees frame after we return
-    virtual void renderFrameAtVsync(AVFrame* frame) override
+    virtual void renderFrame(AVFrame* frame) override
     {
         OSStatus status;
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
