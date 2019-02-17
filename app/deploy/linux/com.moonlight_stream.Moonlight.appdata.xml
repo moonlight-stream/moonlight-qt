@@ -33,6 +33,31 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.9.0" date="2019-02-17">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added gamepad rumble support</li>
+					<li>Added a dedicated quit button to the running app tile</li>
+					<li>Reduced video latency on Windows and Linux</li>
+					<li>Added a performance overlay for software decoding</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed delayed first video frame with GFE 3.17</li>
+					<li>Fixed erroneously setting host resolution to 720p in certain configurations</li>
+					<li>The connection termination dialog is no longer displayed for intentional termination</li>
+					<li>Fixed some gamepads only functioning for UI navigation and not in game</li>
+					<li>Fixed audio latency increasing when switching audio devices</li>
+					<li>Fixed VDPAU scaling behavior on AMD cards</li>
+					<li>Fixed several bugs in gamepad navigation behavior</li>
+					<li>Work around a bug in QGnomePlatform that breaks dialog rendering on Linux</li>
+					<li>Updated included SDL gamepad mappings</li>
+					<li>Fixed hotkey behavior on non-latin keyboards</li>
+					<li>Fixed incorrect frame drop percentages in debug stats</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.8.1" date="2019-01-08">
 			<description>
 				<p>New features:</p>
