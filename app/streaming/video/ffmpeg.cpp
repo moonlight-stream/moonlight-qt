@@ -303,7 +303,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
     if (stats.renderedFrames != 0) {
         offset += sprintf(&output[offset],
                           "Frames dropped by your network connection: %.2f%%\n"
-                          "Frames dropped by frame pacing: %.2f%%\n"
+                          "Frames dropped due to network jitter: %.2f%%\n"
                           "Average receive time: %.2f ms\n"
                           "Average decoding time: %.2f ms\n"
                           "Average frame queue delay: %.2f ms\n"
