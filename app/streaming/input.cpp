@@ -139,10 +139,69 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             (event->keysym.mod & KMOD_CTRL) &&
             (event->keysym.mod & KMOD_ALT) &&
             (event->keysym.mod & KMOD_SHIFT)) {
+        // First we test the SDLK combos for matches,
+        // that way we ensure that latin keyboard users
+        // can match to the key they see on their keyboards.
+        // If nothing matches that, we'll then go on to
+        // checking scancodes so non-latin keyboard users
+        // can have working hotkeys (though possibly in
+        // odd positions). We must do all SDLK tests before
+        // any scancode tests to avoid issues in cases
+        // where the SDLK for one shortcut collides with
+        // the scancode of another.
+
         // Check for quit combo (Ctrl+Alt+Shift+Q)
-        if (event->keysym.scancode == SDL_SCANCODE_Q) {
+        if (event->keysym.sym == SDLK_q) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected quit key combo");
+                        "Detected quit key combo (SDLK)");
+
+            // Push a quit event to the main loop
+            SDL_Event event;
+            event.type = SDL_QUIT;
+            event.quit.timestamp = SDL_GetTicks();
+            SDL_PushEvent(&event);
+            return;
+        }
+        // Check for the unbind combo (Ctrl+Alt+Shift+Z)
+        else if (event->keysym.sym == SDLK_z) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected mouse capture toggle combo (SDLK)");
+
+            // Stop handling future input
+            SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+
+            // Force raise all keys to ensure they aren't stuck,
+            // since we won't get their key up events.
+            raiseAllKeys();
+            return;
+        }
+        else if (event->keysym.sym == SDLK_x) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected full-screen toggle combo (SDLK)");
+            Session::s_ActiveSession->toggleFullscreen();
+
+            // Force raise all keys just be safe across this full-screen/windowed
+            // transition just in case key events get lost.
+            raiseAllKeys();
+            return;
+        }
+        else if (event->keysym.sym == SDLK_s) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected stats toggle combo (SDLK)");
+
+            // Toggle the stats overlay
+            Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
+                                                                !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
+
+            // Force raise all keys just be safe across this full-screen/windowed
+            // transition just in case key events get lost.
+            raiseAllKeys();
+            return;
+        }
+        // Check for quit combo (Ctrl+Alt+Shift+Q)
+        else if (event->keysym.scancode == SDL_SCANCODE_Q) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected quit key combo (scancode)");
 
             // Push a quit event to the main loop
             SDL_Event event;
@@ -154,7 +213,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         // Check for the unbind combo (Ctrl+Alt+Shift+Z)
         else if (event->keysym.scancode == SDL_SCANCODE_Z) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected mouse capture toggle combo");
+                        "Detected mouse capture toggle combo (scancode)");
 
             // Stop handling future input
             SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
@@ -167,7 +226,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         // Check for the full-screen combo (Ctrl+Alt+Shift+X)
         else if (event->keysym.scancode == SDL_SCANCODE_X) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected full-screen toggle combo");
+                        "Detected full-screen toggle combo (scancode)");
             Session::s_ActiveSession->toggleFullscreen();
 
             // Force raise all keys just be safe across this full-screen/windowed
@@ -177,7 +236,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
         else if (event->keysym.scancode == SDL_SCANCODE_S) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected stats toggle combo");
+                        "Detected stats toggle combo (scancode)");
 
             // Toggle the stats overlay
             Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
