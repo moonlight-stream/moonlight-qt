@@ -775,9 +775,20 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         state->jsId = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(state->controller));
         state->haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(state->controller));
         state->hapticEffectId = -1;
-        if (state->haptic != nullptr && (SDL_HapticQuery(state->haptic) & SDL_HAPTIC_LEFTRIGHT) == 0) {
-            SDL_HapticClose(state->haptic);
-            state->haptic = nullptr;
+        state->hapticMethod = GAMEPAD_HAPTIC_METHOD_NONE;
+        if (state->haptic != nullptr) {
+            if ((SDL_HapticQuery(state->haptic) & SDL_HAPTIC_LEFTRIGHT) == 0) {
+                if (SDL_HapticRumbleSupported(state->haptic)) {
+                    SDL_HapticRumbleInit(state->haptic);
+                    state->hapticMethod = GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE;
+                    SDL_HapticRumblePlay(state->haptic, 0.75, 350);
+                } else {
+                    SDL_HapticClose(state->haptic);
+                    state->haptic = nullptr;
+                }
+            } else {
+                state->hapticMethod = GAMEPAD_HAPTIC_METHOD_LEFTRIGHT;
+            }
         }
 
         SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(SDL_GameControllerGetJoystick(state->controller)),
@@ -884,7 +895,11 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
 
     // Stop the last effect we played
     if (m_GamepadState[controllerNumber].hapticEffectId >= 0) {
-        SDL_HapticDestroyEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId);
+        if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_LEFTRIGHT) {
+            SDL_HapticDestroyEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId);
+        } else if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE) {
+            SDL_HapticRumbleStop(haptic);
+        }
     }
 
     // If this callback is telling us to stop both motors, don't bother queuing a new effect
@@ -892,22 +907,30 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
         return;
     }
 
-    SDL_HapticEffect effect;
-    SDL_memset(&effect, 0, sizeof(effect));
-    effect.type = SDL_HAPTIC_LEFTRIGHT;
+    if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_LEFTRIGHT) {
+        SDL_HapticEffect effect;
+        SDL_memset(&effect, 0, sizeof(effect));
+        effect.type = SDL_HAPTIC_LEFTRIGHT;
 
-    // The effect should last until we are instructed to stop or change it
-    effect.leftright.length = SDL_HAPTIC_INFINITY;
+        // The effect should last until we are instructed to stop or change it
+        effect.leftright.length = SDL_HAPTIC_INFINITY;
 
-    // SDL haptics range from 0-32767 but XInput uses 0-65535, so divide by 2 to correct for SDL's scaling
-    effect.leftright.large_magnitude = lowFreqMotor / 2;
-    effect.leftright.small_magnitude = highFreqMotor / 2;
+        // SDL haptics range from 0-32767 but XInput uses 0-65535, so divide by 2 to correct for SDL's scaling
+        effect.leftright.large_magnitude = lowFreqMotor / 2;
+        effect.leftright.small_magnitude = highFreqMotor / 2;
 
-    // Play the new effect
-    m_GamepadState[controllerNumber].hapticEffectId = SDL_HapticNewEffect(haptic, &effect);
-    if (m_GamepadState[controllerNumber].hapticEffectId >= 0) {
-        SDL_HapticRunEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId, 1);
+        // Play the new effect
+        m_GamepadState[controllerNumber].hapticEffectId = SDL_HapticNewEffect(haptic, &effect);
+        if (m_GamepadState[controllerNumber].hapticEffectId >= 0) {
+            SDL_HapticRunEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId, 1);
+        }
+    } else if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE) {
+        SDL_HapticRumblePlay(haptic,
+                             std::min(1.0, std::max(highFreqMotor, lowFreqMotor)/65535.0),
+                             SDL_HAPTIC_INFINITY);
+        m_GamepadState[controllerNumber].hapticEffectId = 1;
     }
+
 }
 
 void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
