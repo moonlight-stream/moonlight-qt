@@ -31,6 +31,8 @@ private:
 
     void renderFrame(AVFrame* frame);
 
+    void dropFrameForEnqueue(QQueue<AVFrame*>& queue);
+
     QQueue<AVFrame*> m_RenderQueue;
     QQueue<AVFrame*> m_PacingQueue;
     QQueue<int> m_PacingQueueHistory;

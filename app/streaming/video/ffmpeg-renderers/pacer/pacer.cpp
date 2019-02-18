@@ -14,6 +14,10 @@
 #include "dxvsyncsource.h"
 #endif
 
+// Limit the number of queued frames to prevent excessive memory consumption
+// if the V-Sync source or renderer is blocked for a while.
+#define MAX_QUEUED_FRAMES 8
+
 // We may be woken up slightly late so don't go all the way
 // up to the next V-sync since we may accidentally step into
 // the next V-sync period. It also takes some amount of time
@@ -162,6 +166,7 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
     }
 
     // Place the first frame on the render queue
+    dropFrameForEnqueue(m_RenderQueue);
     m_RenderQueue.enqueue(m_PacingQueue.dequeue());
     m_FrameQueueLock.unlock();
     m_RenderQueueNotEmpty.wakeOne();
@@ -253,6 +258,15 @@ void Pacer::renderFrame(AVFrame* frame)
     m_FrameQueueLock.unlock();
 }
 
+void Pacer::dropFrameForEnqueue(QQueue<AVFrame*>& queue)
+{
+    SDL_assert(queue.size() <= MAX_QUEUED_FRAMES);
+    if (queue.size() == MAX_QUEUED_FRAMES) {
+        AVFrame* frame = queue.dequeue();
+        av_frame_free(&frame);
+    }
+}
+
 void Pacer::submitFrame(AVFrame* frame)
 {
     // Make sure initialize() has been called
@@ -261,9 +275,11 @@ void Pacer::submitFrame(AVFrame* frame)
     // Queue the frame and possibly wake up the render thread
     m_FrameQueueLock.lock();
     if (m_VsyncSource != nullptr) {
+        dropFrameForEnqueue(m_PacingQueue);
         m_PacingQueue.enqueue(frame);
     }
     else {
+        dropFrameForEnqueue(m_RenderQueue);
         m_RenderQueue.enqueue(frame);
     }
     m_FrameQueueLock.unlock();
