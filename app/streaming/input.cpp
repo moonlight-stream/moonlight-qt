@@ -927,7 +927,8 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
         }
     } else if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE) {
         SDL_HapticRumblePlay(haptic,
-                             std::min(1.0, std::max(highFreqMotor, lowFreqMotor)/65535.0),
+                             std::min(1.0, (GAMEPAD_HAPTIC_SIMPLE_HIFREQ_MOTOR_WEIGHT*highFreqMotor +
+                                            GAMEPAD_HAPTIC_SIMPLE_LOWFREQ_MOTOR_WEIGHT*lowFreqMotor) / 65535.0),
                              SDL_HAPTIC_INFINITY);
     }
 
