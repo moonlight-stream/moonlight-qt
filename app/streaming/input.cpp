@@ -895,13 +895,13 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
     }
 
     // Stop the last effect we played
-        if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_LEFTRIGHT) {
-            if (m_GamepadState[controllerNumber].hapticEffectId >= 0) {
-                SDL_HapticDestroyEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId);
-            }
-        } else if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE) {
-            SDL_HapticRumbleStop(haptic);
+    if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_LEFTRIGHT) {
+        if (m_GamepadState[controllerNumber].hapticEffectId >= 0) {
+            SDL_HapticDestroyEffect(haptic, m_GamepadState[controllerNumber].hapticEffectId);
         }
+    } else if (m_GamepadState[controllerNumber].hapticMethod == GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE) {
+        SDL_HapticRumbleStop(haptic);
+    }
 
     // If this callback is telling us to stop both motors, don't bother queuing a new effect
     if (lowFreqMotor == 0 && highFreqMotor == 0) {
