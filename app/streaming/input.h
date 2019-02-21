@@ -9,6 +9,7 @@ struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
     SDL_Haptic* haptic;
+    int hapticMethod;
     int hapticEffectId;
     short index;
 
@@ -20,6 +21,13 @@ struct GamepadState {
 
 #define MAX_GAMEPADS 4
 #define MAX_FINGERS 2
+
+#define GAMEPAD_HAPTIC_METHOD_NONE 0
+#define GAMEPAD_HAPTIC_METHOD_LEFTRIGHT 1
+#define GAMEPAD_HAPTIC_METHOD_SIMPLERUMBLE 2
+
+#define GAMEPAD_HAPTIC_SIMPLE_HIFREQ_MOTOR_WEIGHT 0.33
+#define GAMEPAD_HAPTIC_SIMPLE_LOWFREQ_MOTOR_WEIGHT 0.8
 
 class SdlInputHandler
 {
