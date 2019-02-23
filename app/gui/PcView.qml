@@ -32,14 +32,18 @@ GridView {
         id: gamepadKeyNav
     }
 
+    Component.onCompleted: {
+        // Don't show any highlighted item until interacting with them.
+        // We do this here instead of onActivated to avoid losing the user's
+        // selection when backing out of a different page of the app.
+        currentIndex = -1
+    }
+
     StackView.onActivated: {
         gamepadKeyNav.enable()
 
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
-
-        // Don't show any highlighted item until interacting with them
-        currentIndex = -1
     }
 
     StackView.onDeactivating: {
