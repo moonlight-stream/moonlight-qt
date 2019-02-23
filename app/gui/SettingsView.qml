@@ -28,26 +28,17 @@ Flickable {
         id: prefs
     }
 
-    // The StackView will trigger a visibility change when
-    // we're pushed onto it, causing our onVisibleChanged
-    // routine to run, but only if we start as invisible
-    visible: false
-
     SdlGamepadKeyNavigation {
         id: gamepadKeyNav
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            gamepadKeyNav.setSettingsMode(true)
-            gamepadKeyNav.enable()
-        }
-        else {
-            gamepadKeyNav.disable()
-        }
+    StackView.onActivated: {
+        gamepadKeyNav.setSettingsMode(true)
+        gamepadKeyNav.enable()
     }
 
-    Component.onDestruction: {
+    StackView.onDeactivating: {
+        gamepadKeyNav.disable()
         prefs.save()
     }
 

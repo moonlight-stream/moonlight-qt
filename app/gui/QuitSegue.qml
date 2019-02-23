@@ -14,11 +14,6 @@ Item {
 
     anchors.fill: parent
 
-    // The StackView will trigger a visibility change when
-    // we're pushed onto it, causing our onVisibleChanged
-    // routine to run, but only if we start as invisible
-    visible: false
-
     function quitAppCompleted(error)
     {
         // Display a failed dialog if we got an error
@@ -42,18 +37,17 @@ Item {
         }
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            // Hide the toolbar before we start loading
-            toolBar.visible = false
+    StackView.onActivated: {
+        // Hide the toolbar before we start loading
+        toolBar.visible = false
 
-            // Connect the quit completion signal
-            ComputerManager.quitAppCompleted.connect(quitAppCompleted)
-        }
-        else {
-            // Disconnect the signal
-            ComputerManager.quitAppCompleted.disconnect(quitAppCompleted)
-        }
+        // Connect the quit completion signal
+        ComputerManager.quitAppCompleted.connect(quitAppCompleted)
+    }
+
+    StackView.onDeactivating: {
+        // Disconnect the signal
+        ComputerManager.quitAppCompleted.disconnect(quitAppCompleted)
     }
 
     Row {

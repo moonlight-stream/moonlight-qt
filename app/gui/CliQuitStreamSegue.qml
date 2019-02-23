@@ -21,13 +21,8 @@ Item {
         errorDialog.open()
     }
 
-    // The StackView will trigger a visibility change when
-    // we're pushed onto it, causing our onVisibleChanged
-    // routine to run, but only if we start as invisible
-    visible: false
-
-    onVisibleChanged: {
-        if (visible && !launcher.isExecuted()) {
+    StackView.onActivated: {
+        if (!launcher.isExecuted()) {
             toolBar.visible = false
             launcher.searchingComputer.connect(onSearchingComputer)
             launcher.quittingApp.connect(onQuittingApp)

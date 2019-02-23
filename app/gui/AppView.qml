@@ -20,35 +20,27 @@ GridView {
     anchors.bottomMargin: 5
     cellWidth: 225; cellHeight: 385;
 
-    // The StackView will trigger a visibility change when
-    // we're pushed onto it, causing our onVisibleChanged
-    // routine to run, but only if we start as invisible
-    visible: false
-
     function computerLost()
     {
         // Go back to the PC view on PC loss
         stackView.pop()
     }
 
-    Component.onCompleted: {
-        // Don't show any highlighted item until interacting with them
-        currentIndex = -1
-    }
-
     SdlGamepadKeyNavigation {
         id: gamepadKeyNav
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            appModel.computerLost.connect(computerLost)
-            gamepadKeyNav.enable()
-        }
-        else {
-            appModel.computerLost.disconnect(computerLost)
-            gamepadKeyNav.disable()
-        }
+    StackView.onActivated: {
+        appModel.computerLost.connect(computerLost)
+        gamepadKeyNav.enable()
+
+        // Don't show any highlighted item until interacting with them
+        currentIndex = -1
+    }
+
+    StackView.onDeactivating: {
+        appModel.computerLost.disconnect(computerLost)
+        gamepadKeyNav.disable()
     }
 
     function createModel()

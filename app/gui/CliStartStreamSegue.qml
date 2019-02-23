@@ -6,8 +6,6 @@ import QtQuick.Dialogs 1.2
 import ComputerManager 1.0
 
 Item {
-    visible: false
-
     function onSearchingComputer() {
         stageLabel.text = "Establishing connection to PC..."
     }
@@ -36,8 +34,8 @@ Item {
         quitAppDialog.open()
     }
 
-    onVisibleChanged: {
-        if (visible && !launcher.isExecuted()) {
+    StackView.onActivated: {
+        if (!launcher.isExecuted()) {
             toolBar.visible = false
             launcher.searchingComputer.connect(onSearchingComputer)
             launcher.searchingApp.connect(onSearchingApp)

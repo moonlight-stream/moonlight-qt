@@ -24,11 +24,6 @@ GridView {
     cellWidth: 350; cellHeight: 350;
     objectName: "Computers"
 
-    // The StackView will trigger a visibility change when
-    // we're pushed onto it, causing our onVisibleChanged
-    // routine to run, but only if we start as invisible
-    visible: false
-
     StreamingPreferences {
         id: prefs
     }
@@ -37,21 +32,19 @@ GridView {
         id: gamepadKeyNav
     }
 
-    onVisibleChanged: {
-        if (visible) {
-            gamepadKeyNav.enable()
-        }
-        else {
-            gamepadKeyNav.disable()
-        }
-    }
+    StackView.onActivated: {
+        gamepadKeyNav.enable()
 
-    Component.onCompleted: {
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
 
         // Don't show any highlighted item until interacting with them
         currentIndex = -1
+    }
+
+    StackView.onDeactivating: {
+        gamepadKeyNav.disable()
+        ComputerManager.computerAddCompleted.disconnect(addComplete)
     }
 
     function pairingComplete(error)
