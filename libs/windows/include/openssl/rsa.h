@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -374,7 +374,7 @@ void RSA_meth_free(RSA_METHOD *meth);
 RSA_METHOD *RSA_meth_dup(const RSA_METHOD *meth);
 const char *RSA_meth_get0_name(const RSA_METHOD *meth);
 int RSA_meth_set1_name(RSA_METHOD *meth, const char *name);
-int RSA_meth_get_flags(RSA_METHOD *meth);
+int RSA_meth_get_flags(const RSA_METHOD *meth);
 int RSA_meth_set_flags(RSA_METHOD *meth, int flags);
 void *RSA_meth_get0_app_data(const RSA_METHOD *meth);
 int RSA_meth_set0_app_data(RSA_METHOD *meth, void *app_data);
@@ -407,9 +407,9 @@ int RSA_meth_set_priv_dec(RSA_METHOD *rsa,
                                            unsigned char *to, RSA *rsa,
                                            int padding));
 int (*RSA_meth_get_mod_exp(const RSA_METHOD *meth))
-    (BIGNUM *r0, const BIGNUM *I, RSA *rsa, BN_CTX *ctx);
+    (BIGNUM *r0, const BIGNUM *i, RSA *rsa, BN_CTX *ctx);
 int RSA_meth_set_mod_exp(RSA_METHOD *rsa,
-                         int (*mod_exp) (BIGNUM *r0, const BIGNUM *I, RSA *rsa,
+                         int (*mod_exp) (BIGNUM *r0, const BIGNUM *i, RSA *rsa,
                                          BN_CTX *ctx));
 int (*RSA_meth_get_bn_mod_exp(const RSA_METHOD *meth))
     (BIGNUM *r, const BIGNUM *a, const BIGNUM *p,

@@ -26,6 +26,9 @@ extern "C" {
 # define OPENSSL_SYS_WIN64A 1
 #endif
 #define OPENSSL_MIN_API 0x10100000L
+#ifndef OPENSSL_NO_COMP
+# define OPENSSL_NO_COMP
+#endif
 #ifndef OPENSSL_NO_MD2
 # define OPENSSL_NO_MD2
 #endif
@@ -106,12 +109,18 @@ extern "C" {
  * still won't see them if the library has been built to disable deprecated
  * functions.
  */
-#if defined(OPENSSL_NO_DEPRECATED)
-# define DECLARE_DEPRECATED(f)
-#elif __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0)
-# define DECLARE_DEPRECATED(f)    f __attribute__ ((deprecated));
-#else
-# define DECLARE_DEPRECATED(f)   f;
+#ifndef DECLARE_DEPRECATED
+# if defined(OPENSSL_NO_DEPRECATED)
+#  define DECLARE_DEPRECATED(f)
+# else
+#  define DECLARE_DEPRECATED(f)   f;
+#  ifdef __GNUC__
+#   if __GNUC__ > 3 || (__GNUC__ == 3 && __GNUC_MINOR__ > 0)
+#    undef DECLARE_DEPRECATED
+#    define DECLARE_DEPRECATED(f)    f __attribute__ ((deprecated));
+#   endif
+#  endif
+# endif
 #endif
 
 #ifndef OPENSSL_FILE

@@ -1,5 +1,5 @@
 /*
- * Copyright 1995-2016 The OpenSSL Project Authors. All Rights Reserved.
+ * Copyright 1995-2018 The OpenSSL Project Authors. All Rights Reserved.
  *
  * Licensed under the OpenSSL license (the "License").  You may not use
  * this file except in compliance with the License.  You can obtain a copy
@@ -397,7 +397,7 @@ int (*X509_LOOKUP_meth_get_new_item(const X509_LOOKUP_METHOD* method))
     (X509_LOOKUP *ctx);
 
 int X509_LOOKUP_meth_set_free(X509_LOOKUP_METHOD *method,
-                              void (*free) (X509_LOOKUP *ctx));
+                              void (*free_fn) (X509_LOOKUP *ctx));
 void (*X509_LOOKUP_meth_get_free(const X509_LOOKUP_METHOD* method))
     (X509_LOOKUP *ctx);
 
