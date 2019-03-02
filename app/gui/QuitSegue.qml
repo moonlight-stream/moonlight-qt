@@ -29,9 +29,6 @@ Item {
             stackView.replace(segue)
         }
         else {
-            // Show the toolbar again
-            toolBar.visible = true
-
             // Exit this view
             stackView.pop()
         }
@@ -46,6 +43,9 @@ Item {
     }
 
     StackView.onDeactivating: {
+        // Show the toolbar again
+        toolBar.visible = true
+
         // Disconnect the signal
         ComputerManager.quitAppCompleted.disconnect(quitAppCompleted)
     }
