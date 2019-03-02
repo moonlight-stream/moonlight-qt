@@ -38,6 +38,7 @@ Item {
         // see them briefly when we pop off the StackView
         stageSpinner.visible = false
         stageLabel.visible = false
+        hintText.visible = false
 
         // Hide the window now that streaming has begun
         window.visible = false
