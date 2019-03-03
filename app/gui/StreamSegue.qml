@@ -15,11 +15,6 @@ Item {
 
     anchors.fill: parent
 
-    // The StackView will trigger a visibility change when
-    // we're pushed onto it, causing our onVisibleChanged
-    // routine to run, but only if we start as invisible
-    visible: false
-
     function stageStarting(stage)
     {
         // Update the spinner text
@@ -111,14 +106,29 @@ Item {
         toolBar.visible = true
     }
 
-    // !!! Changing this to use the StackView activation callbacks
-    // causes our mouse polling rate to drop significantly on
-    // Windows for some reason !!!
-    onVisibleChanged: {
-        if (visible) {
-            // Hide the toolbar before we start loading
-            toolBar.visible = false
+    StackView.onActivated: {
+        // Hide the toolbar before we start loading
+        toolBar.visible = false
 
+        // Hook up our signals
+        session.stageStarting.connect(stageStarting)
+        session.stageFailed.connect(stageFailed)
+        session.connectionStarted.connect(connectionStarted)
+        session.displayLaunchError.connect(displayLaunchError)
+        session.displayLaunchWarning.connect(displayLaunchWarning)
+        session.quitStarting.connect(quitStarting)
+        session.sessionFinished.connect(sessionFinished)
+
+        // Kick off the stream
+        streamLoader.active = true
+    }
+
+    Loader {
+        id: streamLoader
+        active: false
+        asynchronous: true
+
+        onLoaded: {
             // Set the hint text. We do this here rather than
             // in the hintText control itself to synchronize
             // with Session.exec() which requires no concurrent
@@ -127,18 +137,11 @@ Item {
                       "Tip: Press Start+Select+L1+R1 to disconnect your session" :
                       "Tip: Press Ctrl+Alt+Shift+Q to disconnect your session"
 
-            // Hook up our signals
-            session.stageStarting.connect(stageStarting)
-            session.stageFailed.connect(stageFailed)
-            session.connectionStarted.connect(connectionStarted)
-            session.displayLaunchError.connect(displayLaunchError)
-            session.displayLaunchWarning.connect(displayLaunchWarning)
-            session.quitStarting.connect(quitStarting)
-            session.sessionFinished.connect(sessionFinished)
-
             // Run the streaming session to completion
             session.exec(Screen.virtualX, Screen.virtualY)
         }
+
+        sourceComponent: Item {}
     }
 
     Row {
