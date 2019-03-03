@@ -6,6 +6,7 @@
 #include <QMutex>
 #include <QtDebug>
 #include <QNetworkProxyFactory>
+#include <QPalette>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -311,11 +312,19 @@ int main(int argc, char *argv[])
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
 
-    // Disable desktop settings awareness due to issues with QGnomePlatform
-    // breaking our dialog rendering on Linux.
-    QGuiApplication::setDesktopSettingsAware(false);
-
     QGuiApplication app(argc, argv);
+
+    // Override the default palette to fix dialog rendering on Linux
+    // with QGnomePlatform loaded. Using setDesktopSettingsAware(false)
+    // also works but can cause crashes in some configurations.
+    //
+    // See the following issues:
+    // https://github.com/moonlight-stream/moonlight-qt/issues/161
+    // https://github.com/moonlight-stream/moonlight-qt/issues/185
+    // https://github.com/FedoraQt/QGnomePlatform/issues/42
+#ifdef Q_OS_LINUX
+    app.setPalette(QPalette(Qt::lightGray));
+#endif
 
     app.setWindowIcon(QIcon(":/res/moonlight.svg"));
 
