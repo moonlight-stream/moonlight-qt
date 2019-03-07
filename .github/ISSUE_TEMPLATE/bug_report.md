@@ -22,18 +22,19 @@ List the games you've tried that exhibit the issue. To see if the issue is game-
 - Does the problem still occur after reverting settings back to default?
 
 **Client PC details (please complete the following information)**
- - OS: [e.g. Windows 10 1803]
- - Moonlight Version: [e.g. v0.2.0]
+ - OS: [e.g. Windows 10 1809]
+ - Moonlight Version: [e.g. v0.9.0]
 
 **Server PC details (please complete the following information)**
- - OS: [e.g. Windows 10 1803]
+ - OS: [e.g. Windows 10 1809]
  - GeForce Experience version: [e.g. 3.16.0.140]
  - Nvidia GPU driver: [e.g. 417.35]
 
 **Moonlight Logs (please attach)**
 - On Windows, `Moonlight-###.log` files can be found in `%TEMP%`. Simply type that into the File Explorer path field to navigate there.
 - On macOS, `Moonlight-###.log` files can be found in `/tmp`. In Finder, press Cmd+Shift+G, then type `/tmp` to navigate there.
-- On Linux, logs print to the terminal when running via `flatpak run com.moonlight_stream.Moonlight`
+- On Linux with the Flatpak, logs print to the terminal when running with the command: `flatpak run com.moonlight_stream.Moonlight`
+- On Linux with the Snap, logs print to the terminal when running with the command: `moonlight`
 
 **Additional context**
 Anything else you think may be relevant to the issue
