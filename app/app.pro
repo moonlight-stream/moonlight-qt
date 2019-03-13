@@ -92,7 +92,10 @@ unix:!macx {
 }
 win32 {
     LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ld3dx9
-    CONFIG += ffmpeg soundio
+    CONFIG += ffmpeg
+}
+win32:!winrt {
+    CONFIG += soundio
 }
 macx {
     LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -framework SDL2 -framework SDL2_ttf
@@ -211,7 +214,7 @@ config_SLVideo {
     SOURCES += streaming/video/sl.cpp
     HEADERS += streaming/video/sl.h
 }
-win32 {
+win32:!winrt {
     message(DXVA2 renderer selected)
 
     SOURCES += \
@@ -265,12 +268,14 @@ else:unix: LIBS += -L$$OUT_PWD/../qmdnsengine/ -lqmdnsengine
 INCLUDEPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../soundio/release/ -lsoundio
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../soundio/debug/ -lsoundio
-else:unix: LIBS += -L$$OUT_PWD/../soundio/ -lsoundio
+!winrt {
+    win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../soundio/release/ -lsoundio
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../soundio/debug/ -lsoundio
+    else:unix: LIBS += -L$$OUT_PWD/../soundio/ -lsoundio
 
-INCLUDEPATH += $$PWD/../soundio/libsoundio
-DEPENDPATH += $$PWD/../soundio/libsoundio
+    INCLUDEPATH += $$PWD/../soundio/libsoundio
+    DEPENDPATH += $$PWD/../soundio/libsoundio
+}
 
 win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../h264bitstream/release/ -lh264bitstream
 else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../h264bitstream/debug/ -lh264bitstream
@@ -279,11 +284,13 @@ else:unix: LIBS += -L$$OUT_PWD/../h264bitstream/ -lh264bitstream
 INCLUDEPATH += $$PWD/../h264bitstream/h264bitstream
 DEPENDPATH += $$PWD/../h264bitstream/h264bitstream
 
-win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
-else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
+!winrt {
+    win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
 
-INCLUDEPATH += $$PWD/../AntiHooking
-DEPENDPATH += $$PWD/../AntiHooking
+    INCLUDEPATH += $$PWD/../AntiHooking
+    DEPENDPATH += $$PWD/../AntiHooking
+}
 
 defineTest(copyToDestDir) {
     files = $$1

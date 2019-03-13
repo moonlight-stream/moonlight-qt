@@ -345,10 +345,17 @@ int main(int argc, char *argv[])
                                                     return new AutoUpdateChecker();
                                                 });
 
+#ifndef Q_OS_WINRT
     // Use the dense material dark theme by default
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
         qputenv("QT_QUICK_CONTROLS_STYLE", "Material");
     }
+#else
+    // Use universal dark on WinRT
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
+        qputenv("QT_QUICK_CONTROLS_STYLE", "Universal");
+    }
+#endif
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_THEME")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
     }

@@ -59,7 +59,7 @@ public:
 
     void showMessage(QString message, MessageType type) const
     {
-    #if defined(Q_OS_WIN)
+    #if defined(Q_OS_WIN32)
         UINT flags = MB_OK | MB_TOPMOST | MB_SETFOREGROUND;
         flags |= (type == Info ? MB_ICONINFORMATION : MB_ICONERROR);
         QString title = "Moonlight";
