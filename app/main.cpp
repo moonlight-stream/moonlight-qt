@@ -137,14 +137,6 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
         break;
     }
 
-    // HACK: Avoid printing this internal Qt warning which seems to print every time we
-    // start our event loop for the QNetworkReply. I have found this warning in many
-    // unrelated bug reports, but none actually tackle this warning itself. It seems to be
-    // new in Qt 5.12.
-    if (msg.startsWith("QNetworkReplyHttpImplPrivate::_q_startOperation was called more than once")) {
-        return;
-    }
-
     QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
     QString txt = QString("%1 - Qt %2: %3\n").arg(logTime.toString()).arg(typeTxt).arg(msg);
 
