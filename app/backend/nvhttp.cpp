@@ -447,6 +447,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Run the request with a timeout if requested
     QEventLoop loop;
     connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()), &loop, SLOT(quit()));
     if (timeoutMs) {
         QTimer::singleShot(timeoutMs, &loop, SLOT(quit()));
     }

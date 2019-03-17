@@ -130,8 +130,12 @@ private:
                 emit computerStateChanged(m_Computer);
             }
 
-            // Wait a bit to poll again
-            QThread::sleep(3);
+            // Wait a bit to poll again, but do it in 100 ms chunks
+            // so we can be interrupted reasonably quickly.
+            // FIXME: QWaitCondition would be better.
+            for (int i = 0; i < 30 && !isInterruptionRequested(); i++) {
+                QThread::msleep(100);
+            }
         }
     }
 
