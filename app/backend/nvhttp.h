@@ -113,8 +113,10 @@ private:
     QString m_ErrorText;
 };
 
-class NvHTTP
+class NvHTTP : public QObject
 {
+    Q_OBJECT
+
 public:
     enum NvLogLevel {
         NVLL_NONE,
@@ -184,6 +186,9 @@ public:
     QUrl m_BaseUrlHttp;
     QUrl m_BaseUrlHttps;
 private:
+    void
+    handleSslErrors(QNetworkReply* reply, const QList<QSslError>& errors);
+
     QNetworkReply*
     openConnection(QUrl baseUrl,
                    QString command,

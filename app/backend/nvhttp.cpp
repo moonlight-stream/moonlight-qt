@@ -33,6 +33,8 @@ NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
     // Never use a proxy server
     QNetworkProxy noProxy(QNetworkProxy::NoProxy);
     m_Nam.setProxy(noProxy);
+
+    connect(&m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
 }
 
 void NvHTTP::setServerCert(QSslCertificate serverCert)
@@ -377,6 +379,28 @@ NvHTTP::getXmlString(QString xml,
     return nullptr;
 }
 
+void NvHTTP::handleSslErrors(QNetworkReply* reply, const QList<QSslError>& errors)
+{
+    bool ignoreErrors = true;
+
+    if (m_ServerCert.isNull()) {
+        // We should never make an HTTPS request without a cert
+        Q_ASSERT(!m_ServerCert.isNull());
+        return;
+    }
+
+    for (auto error : errors) {
+        if (m_ServerCert != error.certificate()) {
+            ignoreErrors = false;
+            break;
+        }
+    }
+
+    if (ignoreErrors) {
+        reply->ignoreSslErrors(errors);
+    }
+}
+
 QString
 NvHTTP::openConnectionToString(QUrl baseUrl,
                                QString command,
@@ -413,33 +437,16 @@ NvHTTP::openConnection(QUrl baseUrl,
                  QUuid::createUuid().toRfc4122().toHex() +
                  ((arguments != nullptr) ? ("&" + arguments) : ""));
 
-    QNetworkRequest request = QNetworkRequest(url);
+    QNetworkRequest request(url);
 
     // Add our client certificate
     request.setSslConfiguration(IdentityManager::get()->getSslConfig());
 
     QNetworkReply* reply = m_Nam.get(request);
 
-    // Assert that we always have a server cert for HTTPS, since
-    // the request will fail anyway if we do not.
-    Q_ASSERT(!m_ServerCert.isNull() || baseUrl == m_BaseUrlHttp);
-
-    if (!m_ServerCert.isNull()) {
-        // Pin the server certificate received during pairing
-        QList<QSslError> expectedSslErrors;
-        expectedSslErrors.append(QSslError(QSslError::HostNameMismatch, m_ServerCert));
-        expectedSslErrors.append(QSslError(QSslError::SelfSignedCertificate, m_ServerCert));
-
-        // The SecureTransport backend for Qt TLS on macOS throws CertificateUntrusted
-        // instead of SelfSignedCertificate, so we will need to allow that error too.
-        expectedSslErrors.append(QSslError(QSslError::CertificateUntrusted, m_ServerCert));
-
-        reply->ignoreSslErrors(expectedSslErrors);
-    }
-
     // Run the request with a timeout if requested
     QEventLoop loop;
-    QObject::connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
+    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
     if (timeoutMs) {
         QTimer::singleShot(timeoutMs, &loop, SLOT(quit()));
     }
