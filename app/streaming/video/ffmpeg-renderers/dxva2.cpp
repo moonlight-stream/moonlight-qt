@@ -741,7 +741,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     case Overlay::OverlayStatusUpdate:
         if (m_StatusOverlayFont == nullptr) {
             hr = D3DXCreateFontA(m_Device,
-                                 Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayNotification),
+                                 Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayStatusUpdate),
                                  0,
                                  FW_HEAVY,
                                  1,
