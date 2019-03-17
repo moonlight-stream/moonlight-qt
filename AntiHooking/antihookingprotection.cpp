@@ -134,7 +134,11 @@ private:
         // This DLL shipped with ASUS Sonic Radar 3 improperly handles
         // D3D9 exclusive fullscreen in a way that causes CreateDeviceEx()
         // to deadlock. https://github.com/moonlight-stream/moonlight-qt/issues/102
-        L"NahimicOSD.dll"
+        L"NahimicOSD.dll",
+        // This DLL has been seen in several crash reports. Some Googling
+        // suggests it's highly unstable and causes issues in many games.
+        L"EZFRD32.dll",
+        L"EZFRD64.dll",
     };
 };
 
