@@ -418,6 +418,9 @@ int main(int argc, char *argv[])
     // it manually when we start streaming.
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
 
+    // Disable minimize on focus loss by default. Users seem to want this off by default.
+    SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0", SDL_HINT_DEFAULT);
+
     int err = app.exec();
 
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
