@@ -8,8 +8,8 @@ namespace Overlay {
 
 enum OverlayType {
     OverlayDebug,
-    OverlayMinorNotification,
-    OverlayMajorNotification,
+    OverlayStatusUpdate,
+    OverlayNotification,
     OverlayMax
 };
 

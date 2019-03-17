@@ -28,6 +28,7 @@ DXVA2Renderer::DXVA2Renderer() :
     m_Processor(nullptr),
     m_FrameIndex(0),
     m_DebugOverlayFont(nullptr),
+    m_StatusOverlayFont(nullptr),
     m_BlockingPresent(false)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
@@ -48,6 +49,7 @@ DXVA2Renderer::~DXVA2Renderer()
     SAFE_COM_RELEASE(m_ProcService);
     SAFE_COM_RELEASE(m_Processor);
     SAFE_COM_RELEASE(m_DebugOverlayFont);
+    SAFE_COM_RELEASE(m_StatusOverlayFont);
 
     for (int i = 0; i < ARRAYSIZE(m_DecSurfaces); i++) {
         SAFE_COM_RELEASE(m_DecSurfaces[i]);
@@ -707,30 +709,61 @@ IFFmpegRenderer::FramePacingConstraint DXVA2Renderer::getFramePacingConstraint()
     return PACING_ANY;
 }
 
-void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType)
+void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     HRESULT hr;
 
-    // Initialize the overlay font if it's not already created
-    if (m_DebugOverlayFont == nullptr) {
-        hr = D3DXCreateFontA(m_Device,
-                             Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug),
-                             0,
-                             FW_HEAVY,
-                             1,
-                             false,
-                             ANSI_CHARSET,
-                             OUT_DEFAULT_PRECIS,
-                             DEFAULT_QUALITY,
-                             DEFAULT_PITCH | FF_DONTCARE,
-                             "",
-                             &m_DebugOverlayFont);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "D3DXCreateFontA() failed: %x",
-                         hr);
-            m_DebugOverlayFont = nullptr;
+    switch (type)
+    {
+    case Overlay::OverlayDebug:
+        if (m_DebugOverlayFont == nullptr) {
+            hr = D3DXCreateFontA(m_Device,
+                                 Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug),
+                                 0,
+                                 FW_HEAVY,
+                                 1,
+                                 false,
+                                 ANSI_CHARSET,
+                                 OUT_DEFAULT_PRECIS,
+                                 DEFAULT_QUALITY,
+                                 DEFAULT_PITCH | FF_DONTCARE,
+                                 "",
+                                 &m_DebugOverlayFont);
+            if (FAILED(hr)) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "D3DXCreateFontA() failed: %x",
+                             hr);
+                m_DebugOverlayFont = nullptr;
+            }
         }
+        break;
+
+    case Overlay::OverlayStatusUpdate:
+        if (m_StatusOverlayFont == nullptr) {
+            hr = D3DXCreateFontA(m_Device,
+                                 Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayNotification),
+                                 0,
+                                 FW_HEAVY,
+                                 1,
+                                 false,
+                                 ANSI_CHARSET,
+                                 OUT_DEFAULT_PRECIS,
+                                 DEFAULT_QUALITY,
+                                 DEFAULT_PITCH | FF_DONTCARE,
+                                 "",
+                                 &m_StatusOverlayFont);
+            if (FAILED(hr)) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "D3DXCreateFontA() failed: %x",
+                             hr);
+                m_StatusOverlayFont = nullptr;
+            }
+        }
+        break;
+
+    default:
+        SDL_assert(false);
+        break;
     }
 }
 
@@ -926,6 +959,18 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                                           &sample.DstRect,
                                           DT_LEFT | DT_NOCLIP,
                                           D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
+        }
+    }
+
+    if (m_StatusOverlayFont != nullptr) {
+        if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayStatusUpdate)) {
+            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayStatusUpdate);
+            m_StatusOverlayFont->DrawTextA(nullptr,
+                                           Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayStatusUpdate),
+                                           -1,
+                                           &sample.DstRect,
+                                           DT_RIGHT | DT_NOCLIP,
+                                           D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
         }
     }
 

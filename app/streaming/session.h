@@ -102,6 +102,9 @@ private:
     void clRumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor);
 
     static
+    void clConnectionStatusUpdate(int connectionStatus);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);

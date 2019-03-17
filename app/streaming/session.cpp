@@ -39,7 +39,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     nullptr,
     nullptr,
     Session::clLogMessage,
-    Session::clRumble
+    Session::clRumble,
+    Session::clConnectionStatusUpdate
 };
 
 AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
@@ -112,6 +113,21 @@ void Session::clRumble(unsigned short controllerNumber, unsigned short lowFreqMo
         s_ActiveSession->m_InputHandler->rumble(controllerNumber, lowFreqMotor, highFreqMotor);
     }
     SDL_AtomicUnlock(&s_ActiveSession->m_InputHandlerLock);
+}
+
+void Session::clConnectionStatusUpdate(int connectionStatus)
+{
+    switch (connectionStatus)
+    {
+    case CONN_STATUS_POOR:
+        strcpy(s_ActiveSession->m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Poor network connection");
+        s_ActiveSession->m_OverlayManager.setOverlayTextUpdated(Overlay::OverlayStatusUpdate);
+        s_ActiveSession->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
+        break;
+    case CONN_STATUS_OKAY:
+        s_ActiveSession->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, false);
+        break;
+    }
 }
 
 #define CALL_INITIALIZE(dec) (dec)->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync, enableFramePacing)

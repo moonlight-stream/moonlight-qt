@@ -22,11 +22,13 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
 
 private:
+    void renderOverlay(Overlay::OverlayType type);
+
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
-    TTF_Font* m_DebugOverlayFont;
-    SDL_Surface* m_DebugOverlaySurface;
-    SDL_Texture* m_DebugOverlayTexture;
-    SDL_Rect m_DebugOverlayRect;
+    TTF_Font* m_OverlayFonts[Overlay::OverlayMax];
+    SDL_Surface* m_OverlaySurfaces[Overlay::OverlayMax];
+    SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
+    SDL_Rect m_OverlayRects[Overlay::OverlayMax];
 };
 
