@@ -175,7 +175,7 @@ GridView {
                     }
                     else {
                         // cannot pair while something is streaming or attempting to pair
-                        errorDialog.text = "This PC is currently busy. Make sure to quit any running games and try again."
+                        errorDialog.text = "You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again."
                         errorDialog.open()
                     }
                 }
