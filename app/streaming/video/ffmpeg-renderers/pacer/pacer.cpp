@@ -65,6 +65,12 @@ int Pacer::renderThread(void* context)
 {
     Pacer* me = reinterpret_cast<Pacer*>(context);
 
+    if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Unable to set render thread to high priority: %s",
+                    SDL_GetError());
+    }
+
     while (!me->m_Stopping) {
         // Acquire the frame queue lock to protect the queue and
         // the not empty condition

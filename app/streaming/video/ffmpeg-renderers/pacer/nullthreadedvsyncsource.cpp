@@ -33,7 +33,11 @@ int NullThreadedVsyncSource::vsyncThread(void* context)
 {
     NullThreadedVsyncSource* me = reinterpret_cast<NullThreadedVsyncSource*>(context);
 
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_TIME_CRITICAL);
+#else
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
+#endif;
 
     while (SDL_AtomicGet(&me->m_Stopping) == 0) {
         me->m_Pacer->vsyncCallback(1000 / me->m_DisplayFps);

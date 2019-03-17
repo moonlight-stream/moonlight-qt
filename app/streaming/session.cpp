@@ -1007,14 +1007,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // sleep precision and more accurate callback timing.
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "1");
 
-    // Raise the priority of the main thread, since it handles
-    // time-sensitive video rendering
-    if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Unable to set main thread to high priority: %s",
-                    SDL_GetError());
-    }
-
     int currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
 
     // Now that we're about to stream, any SDL_QUIT event is expected

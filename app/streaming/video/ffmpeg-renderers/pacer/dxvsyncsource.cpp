@@ -76,7 +76,11 @@ int DxVsyncSource::vsyncThread(void* context)
 {
     DxVsyncSource* me = reinterpret_cast<DxVsyncSource*>(context);
 
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_TIME_CRITICAL);
+#else
     SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
+#endif
 
     D3DKMT_OPENADAPTERFROMHDC openAdapterParams = {};
     HMONITOR lastMonitor = nullptr;
