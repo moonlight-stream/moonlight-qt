@@ -54,8 +54,9 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     // is via normal motion events that are influenced by mouse acceleration).
     // Otherwise, we'll use raw input capture which is straight from the device
     // without modification by the OS.
-    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-                prefs.mouseAcceleration ? "1" : "0");
+    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
+                            prefs.mouseAcceleration ? "1" : "0",
+                            SDL_HINT_OVERRIDE);
 
     // We must initialize joystick explicitly before gamecontroller in order
     // to ensure we receive gamecontroller attach events for gamepads where

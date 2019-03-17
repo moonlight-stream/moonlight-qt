@@ -174,7 +174,7 @@ bool SdlRenderer::initialize(SDL_Window* window,
     // input focus. This glitches out the renderer and a bunch of other stuff.
     // Direct3D9Ex itself seems to have this minimize on focus loss behavior on its
     // own, so just disable SDL's handling of the focus loss event.
-    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
+    SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0", SDL_HINT_OVERRIDE);
 #endif
 
     return true;
