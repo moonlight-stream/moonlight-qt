@@ -476,6 +476,16 @@ Flickable {
                         prefs.startWindowed = !checked
                     }
                 }
+
+                CheckBox {
+                    id: connectionWarningsCheck
+                    text: "Show connection quality warnings"
+                    font.pointSize: 12
+                    checked: prefs.connectionWarnings
+                    onCheckedChanged: {
+                        prefs.connectionWarnings = checked
+                    }
+                }
             }
         }
     }

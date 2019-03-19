@@ -117,10 +117,23 @@ void Session::clRumble(unsigned short controllerNumber, unsigned short lowFreqMo
 
 void Session::clConnectionStatusUpdate(int connectionStatus)
 {
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Connection status update: %d",
+                connectionStatus);
+
+    if (!s_ActiveSession->m_Preferences->connectionWarnings) {
+        return;
+    }
+
     switch (connectionStatus)
     {
     case CONN_STATUS_POOR:
-        strcpy(s_ActiveSession->m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Poor network connection");
+        if (s_ActiveSession->m_StreamConfig.bitrate > 5000) {
+            strcpy(s_ActiveSession->m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Slow connection to PC\nReduce bitrate");
+        }
+        else {
+            strcpy(s_ActiveSession->m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Poor connection to PC");
+        }
         s_ActiveSession->m_OverlayManager.setOverlayTextUpdated(Overlay::OverlayStatusUpdate);
         s_ActiveSession->m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
         break;
