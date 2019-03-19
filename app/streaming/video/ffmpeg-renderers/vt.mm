@@ -22,12 +22,12 @@ public:
         : m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
-          m_StreamView(nullptr),
-          m_DebugOverlayTextField(nullptr)
+          m_StreamView(nullptr)
     {
+        SDL_zero(m_OverlayTextFields);
     }
 
-    virtual ~VTRenderer()
+    virtual ~VTRenderer() override
     {
         if (m_HwContext != nullptr) {
             av_buffer_unref(&m_HwContext);
@@ -37,8 +37,10 @@ public:
             CFRelease(m_FormatDesc);
         }
 
-        if (m_DebugOverlayTextField != nullptr) {
-            [m_DebugOverlayTextField removeFromSuperview];
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            if (m_OverlayTextFields[i] != nullptr) {
+                [m_OverlayTextFields[i] removeFromSuperview];
+            }
         }
 
         if (m_StreamView != nullptr) {
@@ -197,38 +199,68 @@ public:
         return true;
     }
 
+    void updateOverlayOnMainThread(Overlay::OverlayType type)
+    {
+        // Lazy initialization for the overlay
+        if (m_OverlayTextFields[type] == nullptr) {
+            m_OverlayTextFields[type] = [[NSTextField alloc] initWithFrame:m_StreamView.bounds];
+            [m_OverlayTextFields[type] setBezeled:NO];
+            [m_OverlayTextFields[type] setDrawsBackground:NO];
+            [m_OverlayTextFields[type] setEditable:NO];
+            [m_OverlayTextFields[type] setSelectable:NO];
+
+            switch (type) {
+            case Overlay::OverlayDebug:
+                [m_OverlayTextFields[type] setAlignment:NSLeftTextAlignment];
+                break;
+            case Overlay::OverlayStatusUpdate:
+                [m_OverlayTextFields[type] setAlignment:NSRightTextAlignment];
+                break;
+            default:
+                break;
+            }
+
+            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(type);
+            [m_OverlayTextFields[type] setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
+            [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(type)]];
+
+            [m_StreamView addSubview: m_OverlayTextFields[type]];
+        }
+
+        // Update text contents
+        [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(type)]];
+
+        // Unhide if it's enabled
+        [m_OverlayTextFields[type] setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(type)];
+    }
+
     static void updateDebugOverlayOnMainThread(void* context)
     {
         VTRenderer* me = (VTRenderer*)context;
 
-        // Lazy initialization for the overlay
-        if (me->m_DebugOverlayTextField == nullptr) {
-            me->m_DebugOverlayTextField = [[NSTextField alloc] initWithFrame:me->m_StreamView.bounds];
-            [me->m_DebugOverlayTextField setBezeled:NO];
-            [me->m_DebugOverlayTextField setDrawsBackground:NO];
-            [me->m_DebugOverlayTextField setEditable:NO];
-            [me->m_DebugOverlayTextField setSelectable:NO];
+        me->updateOverlayOnMainThread(Overlay::OverlayDebug);
+    }
 
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayDebug);
-            [me->m_DebugOverlayTextField setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
-            [me->m_DebugOverlayTextField setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug)]];
+    static void updateStatusOverlayOnMainThread(void* context)
+    {
+        VTRenderer* me = (VTRenderer*)context;
 
-            [me->m_StreamView addSubview: me->m_DebugOverlayTextField];
-        }
-
-        // Update text contents
-        [me->m_DebugOverlayTextField setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug)]];
-
-        // Unhide if it's enabled
-        [me->m_DebugOverlayTextField setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)];
+        me->updateOverlayOnMainThread(Overlay::OverlayStatusUpdate);
     }
 
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
     {
         // We must do the actual UI updates on the main thread, so queue an
         // async callback on the main thread via GCD to do the UI update.
-        if (type == Overlay::OverlayDebug) {
+        switch (type) {
+        case Overlay::OverlayDebug:
             dispatch_async_f(dispatch_get_main_queue(), this, updateDebugOverlayOnMainThread);
+            break;
+        case Overlay::OverlayStatusUpdate:
+            dispatch_async_f(dispatch_get_main_queue(), this, updateStatusOverlayOnMainThread);
+            break;
+        default:
+            break;
         }
     }
 
@@ -269,7 +301,7 @@ private:
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
     NSView* m_StreamView;
-    NSTextField* m_DebugOverlayTextField;
+    NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {
