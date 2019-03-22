@@ -332,6 +332,12 @@ bool DXVA2Renderer::isDXVideoProcessorAPIBlacklisted()
     HRESULT hr;
     bool result = false;
 
+    if (qgetenv("DXVA2_DISABLE_VIDPROC_BLACKLIST") == "1") {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "IDirectXVideoProcessor blacklist is disabled");
+        return false;
+    }
+
     hr = m_Device->GetDirect3D(&d3d9);
     if (SUCCEEDED(hr)) {
         D3DCAPS9 caps;
@@ -378,6 +384,12 @@ bool DXVA2Renderer::isDecoderBlacklisted()
 
     // TODO: Update for HEVC Main10
     SDL_assert(m_VideoFormat != VIDEO_FORMAT_H265_MAIN10);
+
+    if (qgetenv("DXVA2_DISABLE_DECODER_BLACKLIST") == "1") {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "DXVA2 decoder blacklist is disabled");
+        return false;
+    }
 
     hr = m_Device->GetDirect3D(&d3d9);
     if (SUCCEEDED(hr)) {
