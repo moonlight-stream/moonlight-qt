@@ -34,13 +34,12 @@ CONFIG += warn_off
 unix:!macx {
     CONFIG += link_pkgconfig
 
-    packagesExist(libpulse) {
-        PKGCONFIG += libpulse
-        CONFIG += pulseaudio
-    }
-    packagesExist(alsa) {
+    contains(QT_ARCH, arm)|packagesExist(alsa) {
         PKGCONFIG += alsa
         CONFIG += alsa
+    } else:packagesExist(libpulse) {
+        PKGCONFIG += libpulse
+        CONFIG += pulseaudio
     }
 }
 

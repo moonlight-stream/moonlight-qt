@@ -64,11 +64,10 @@ unix:!macx {
     PKGCONFIG += openssl sdl2 SDL2_ttf opus
 
     # For libsoundio
-    packagesExist(libpulse) {
-        PKGCONFIG += libpulse
-    }
-    packagesExist(alsa) {
+    contains(QT_ARCH, arm)|packagesExist(alsa) {
         PKGCONFIG += alsa
+    } else:packagesExist(libpulse) {
+        PKGCONFIG += libpulse
     }
 
     packagesExist(libavcodec) {
