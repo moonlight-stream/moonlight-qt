@@ -7,6 +7,7 @@
 #include <QtDebug>
 #include <QNetworkProxyFactory>
 #include <QPalette>
+#include <QFont>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -316,6 +317,18 @@ int main(int argc, char *argv[])
     // https://github.com/FedoraQt/QGnomePlatform/issues/42
 #ifdef Q_OS_LINUX
     app.setPalette(QPalette(Qt::lightGray));
+#endif
+
+#ifdef HAVE_SLVIDEO
+    // Qt 5.9 from the Steam Link SDK is not able to load any fonts
+    // since the Steam Link doesn't include any of the ones it looks
+    // for. We know it has NotoSans so we will explicitly ask for that.
+    if (app.font().family().isEmpty()) {
+        qWarning() << "SL HACK: No default font - using NotoSans";
+
+        QFont fon("NotoSans");
+        app.setFont(fon);
+    }
 #endif
 
     app.setWindowIcon(QIcon(":/res/moonlight.svg"));
