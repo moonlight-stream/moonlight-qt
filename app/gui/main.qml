@@ -256,6 +256,7 @@ ApplicationWindow {
 
             NavigableToolButton {
                 id: helpButton
+                visible: SystemProperties.hasBrowser
 
                 Image {
                     source: "qrc:/res/question_mark.svg"
@@ -342,26 +343,23 @@ ApplicationWindow {
         }
     }
 
-    MessageDialog {
+    ErrorMessageDialog {
         id: noHwDecoderDialog
-        modality:Qt.WindowModal
         icon: StandardIcon.Warning
-        standardButtons: StandardButton.Ok | StandardButton.Help
         text: "No functioning hardware accelerated H.264 video decoder was detected by Moonlight. " +
-              "Your streaming performance may be severely degraded in this configuration. " +
-              "Click the Help button for more information on solving this problem."
+              "Your streaming performance may be severely degraded in this configuration."
+        helpText: "Click the Help button for more information on solving this problem."
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
         }
     }
 
-    MessageDialog {
+    ErrorMessageDialog {
         id: waylandDialog
-        modality:Qt.WindowModal
         icon: StandardIcon.Warning
-        standardButtons: StandardButton.Ok | StandardButton.Help
         text: "Moonlight does not support hardware acceleration on Wayland. Continuing on Wayland may result in poor streaming performance. " +
               "Please switch to an X session for optimal performance."
+        helpText: "Click the Help button for more information."
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
         }
@@ -369,7 +367,6 @@ ApplicationWindow {
 
     MessageDialog {
         id: wow64Dialog
-        modality:Qt.WindowModal
         icon: StandardIcon.Warning
         standardButtons: StandardButton.Ok | StandardButton.Cancel
         text: "This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance."
@@ -378,15 +375,12 @@ ApplicationWindow {
         }
     }
 
-    MessageDialog {
+    ErrorMessageDialog {
         id: unmappedGamepadDialog
         property string unmappedGamepads : ""
-        modality:Qt.WindowModal
         icon: StandardIcon.Warning
-        standardButtons: StandardButton.Ok | StandardButton.Help
-        text: "Moonlight detected gamepads without a proper mapping. " +
-              "The following gamepads will not function until this is resolved: " + unmappedGamepads + "\n\n" +
-              "Click the Help button for information on how to map your gamepads."
+        text: "Moonlight detected gamepads without a mapping:\n" + unmappedGamepads
+        helpText: "Click the Help button for information on how to map your gamepads."
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping");
         }
@@ -395,7 +389,6 @@ ApplicationWindow {
     // This dialog appears when quitting via keyboard or gamepad button
     MessageDialog {
         id: quitConfirmationDialog
-        modality:Qt.WindowModal
         icon: StandardIcon.Warning
         standardButtons: StandardButton.Yes | StandardButton.No
         text: "Are you sure you want to quit?"

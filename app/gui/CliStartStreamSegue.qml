@@ -64,14 +64,13 @@ Item {
         }
     }
 
-    MessageDialog {
+    ErrorMessageDialog {
         id: errorDialog
-        modality:Qt.WindowModal
-        icon: StandardIcon.Critical
-        standardButtons: StandardButton.Ok | StandardButton.Help
+
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting");
         }
+
         onVisibleChanged: {
             if (!visible) {
                 Qt.quit();

@@ -174,24 +174,17 @@ Item {
         wrapMode: Text.Wrap
     }
 
-    MessageDialog {
+    ErrorMessageDialog {
         id: errorDialog
-        modality:Qt.WindowModal
-        icon: StandardIcon.Critical
-        standardButtons: StandardButton.Ok | StandardButton.Help
 
-        onAccepted: {
-            if (quitAfter) {
+        onVisibleChanged: {
+            if (!visible) {
                 Qt.quit()
             }
         }
 
         onHelp: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting");
-
-            if (quitAfter) {
-                Qt.quit()
-            }
         }
     }
 }

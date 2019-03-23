@@ -54,6 +54,7 @@ GridView {
         // Display a failed dialog if we got an error
         if (error !== undefined) {
             errorDialog.text = error
+            errorDialog.helpText = ""
             errorDialog.open()
         }
     }
@@ -61,7 +62,8 @@ GridView {
     function addComplete(success)
     {
         if (!success) {
-            errorDialog.text = "Unable to connect to the specified PC. Click the Help button for possible solutions."
+            errorDialog.text = "Unable to connect to the specified PC."
+            errorDialog.helpText = "Click the Help button for possible solutions."
             errorDialog.open()
         }
     }
@@ -171,6 +173,7 @@ GridView {
                     else {
                         // cannot pair while something is streaming or attempting to pair
                         errorDialog.text = "You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again."
+                        errorDialog.helpText = ""
                         errorDialog.open()
                     }
                 }
@@ -210,12 +213,8 @@ GridView {
         }
     }
 
-    MessageDialog {
+    ErrorMessageDialog {
         id: errorDialog
-        // don't allow edits to the rest of the window while open
-        modality:Qt.WindowModal
-        icon: StandardIcon.Critical
-        standardButtons: StandardButton.Ok | StandardButton.Help
         onHelp: {
             // Using Setup-Guide here instead of Troubleshooting because it's likely that users
             // will arrive here by forgetting to enable GameStream or not forwarding ports.
