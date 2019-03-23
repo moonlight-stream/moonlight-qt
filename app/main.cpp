@@ -225,6 +225,8 @@ LONG WINAPI UnhandledExceptionHandler(struct _EXCEPTION_POINTERS *ExceptionInfo)
 
 int main(int argc, char *argv[])
 {
+    SDL_SetMainReady();
+
     // Set the app version for the QCommandLineParser's showVersion() command
     QCoreApplication::setApplicationVersion(VERSION_STR);
 
@@ -304,6 +306,16 @@ int main(int argc, char *argv[])
 
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
+
+#ifdef HAVE_SLVIDEO
+    // Steam Link requires that we initialize video before creating our
+    // QGuiApplication in order to configure the framebuffer correctly.
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+    }
+#endif
 
     QGuiApplication app(argc, argv);
 
@@ -415,10 +427,9 @@ int main(int argc, char *argv[])
     if (engine.rootObjects().isEmpty())
         return -1;
 
-    SDL_SetMainReady();
-    if (SDL_Init(SDL_INIT_TIMER) != 0) {
+    if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_Init() failed: %s",
+                     "SDL_InitSubSystem(SDL_INIT_TIMER) failed: %s",
                      SDL_GetError());
     }
 
