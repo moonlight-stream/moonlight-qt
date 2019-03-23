@@ -370,11 +370,11 @@ int main(int argc, char *argv[])
     GlobalCommandLineParser parser;
     switch (parser.parse(app.arguments())) {
     case GlobalCommandLineParser::NormalStartRequested:
-        initialView = "PcView.qml";
+        initialView = "qrc:/gui/PcView.qml";
         break;
     case GlobalCommandLineParser::StreamRequested:
         {
-            initialView = "CliStartStreamSegue.qml";
+            initialView = "qrc:/gui/CliStartStreamSegue.qml";
             StreamingPreferences* preferences = new StreamingPreferences(&app);
             StreamCommandLineParser streamParser;
             streamParser.parse(app.arguments(), preferences);
@@ -386,7 +386,7 @@ int main(int argc, char *argv[])
         }
     case GlobalCommandLineParser::QuitRequested:
         {
-            initialView = "CliQuitStreamSegue.qml";
+            initialView = "qrc:/gui/CliQuitStreamSegue.qml";
             QuitCommandLineParser quitParser;
             quitParser.parse(app.arguments());
             auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
