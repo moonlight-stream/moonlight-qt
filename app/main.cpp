@@ -307,7 +307,7 @@ int main(int argc, char *argv[])
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
 
-#ifdef HAVE_SLVIDEO
+#ifdef STEAM_LINK
     // Steam Link requires that we initialize video before creating our
     // QGuiApplication in order to configure the framebuffer correctly.
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
@@ -331,7 +331,7 @@ int main(int argc, char *argv[])
     app.setPalette(QPalette(Qt::lightGray));
 #endif
 
-#ifdef HAVE_SLVIDEO
+#ifdef STEAM_LINK
     // Qt 5.9 from the Steam Link SDK is not able to load any fonts
     // since the Steam Link doesn't include any of the ones it looks
     // for. We know it has NotoSans so we will explicitly ask for that.

@@ -11,7 +11,7 @@
 #endif
 
 #ifdef HAVE_SLVIDEO
-#include "video/sl.h"
+#include "video/slvid.h"
 #endif
 
 #ifdef Q_OS_WIN32

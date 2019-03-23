@@ -205,14 +205,16 @@ libvdpau {
     SOURCES += streaming/video/ffmpeg-renderers/vdpau.cpp
     HEADERS += streaming/video/ffmpeg-renderers/vdpau.h
 }
-config_SLVideo {
-    message(SLVideo decoder/renderer selected)
+config_SL {
+    message(Steam Link build configuration selected)
 
-    DEFINES += HAVE_SLVIDEO
+    DEFINES += STEAM_LINK HAVE_SLVIDEO
     LIBS += -lSLVideo
 
-    SOURCES += streaming/video/sl.cpp
-    HEADERS += streaming/video/sl.h
+    SOURCES += \
+        streaming/video/slvid.cpp
+    HEADERS += \
+        streaming/video/slvid.h
 }
 win32:!winrt {
     message(DXVA2 renderer selected)

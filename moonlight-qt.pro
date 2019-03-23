@@ -21,4 +21,4 @@ CONFIG += debug_and_release
 
 # Run our compile tests
 load(configure)
-qtCompileTest(SLVideo)
+qtCompileTest(SL)
