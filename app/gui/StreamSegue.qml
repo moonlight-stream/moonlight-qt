@@ -94,16 +94,12 @@ Item {
         }
     }
 
-    // It's important that we don't call enable() here
-    // or it may interfere with the Session instance
-    // getting notified of initial connected gamepads.
-    SdlGamepadKeyNavigation {
-        id: gamepadKeyNav
-    }
-
     StackView.onDeactivating: {
         // Show the toolbar again when popped off the stack
         toolBar.visible = true
+
+        // Enable GUI gamepad usage now
+        SdlGamepadKeyNavigation.enable()
     }
 
     StackView.onActivated: {
@@ -133,9 +129,12 @@ Item {
             // in the hintText control itself to synchronize
             // with Session.exec() which requires no concurrent
             // gamepad usage.
-            hintText.text = gamepadKeyNav.getConnectedGamepads() > 0 ?
+            hintText.text = SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
                       "Tip: Press Start+Select+L1+R1 to disconnect your session" :
                       "Tip: Press Ctrl+Alt+Shift+Q to disconnect your session"
+
+            // Stop GUI gamepad usage now
+            SdlGamepadKeyNavigation.disable()
 
             // Run the streaming session to completion
             session.exec(Screen.virtualX, Screen.virtualY)
@@ -180,6 +179,10 @@ Item {
         onVisibleChanged: {
             if (!visible) {
                 Qt.quit()
+            }
+            else {
+                // Enable GUI gamepad usage now
+                SdlGamepadKeyNavigation.enable()
             }
         }
 

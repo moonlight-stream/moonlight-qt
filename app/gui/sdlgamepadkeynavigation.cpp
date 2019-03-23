@@ -247,17 +247,7 @@ void SdlGamepadKeyNavigation::setSettingsMode(bool settingsMode)
 
 int SdlGamepadKeyNavigation::getConnectedGamepads()
 {
-    if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
-                     SDL_GetError());
-        return 0;
-    }
-
-    // Applying mappings is necessary to ensure gamepad without
-    // a built-in mapping are properly counted.
-    MappingManager mappingManager;
-    mappingManager.applyMappings();
+    Q_ASSERT(m_Enabled);
 
     int count = 0;
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
@@ -266,6 +256,5 @@ int SdlGamepadKeyNavigation::getConnectedGamepads()
         }
     }
 
-    SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
     return count;
 }

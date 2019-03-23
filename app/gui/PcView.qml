@@ -7,7 +7,6 @@ import QtQuick.Window 2.2
 import ComputerModel 1.0
 
 import ComputerManager 1.0
-import SdlGamepadKeyNavigation 1.0
 
 GridView {
     property ComputerModel computerModel : createModel()
@@ -23,10 +22,6 @@ GridView {
     cellWidth: 350; cellHeight: 350;
     objectName: "Computers"
 
-    SdlGamepadKeyNavigation {
-        id: gamepadKeyNav
-    }
-
     Component.onCompleted: {
         // Don't show any highlighted item until interacting with them.
         // We do this here instead of onActivated to avoid losing the user's
@@ -35,14 +30,11 @@ GridView {
     }
 
     StackView.onActivated: {
-        gamepadKeyNav.enable()
-
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
     }
 
     StackView.onDeactivating: {
-        gamepadKeyNav.disable()
         ComputerManager.computerAddCompleted.disconnect(addComplete)
     }
 

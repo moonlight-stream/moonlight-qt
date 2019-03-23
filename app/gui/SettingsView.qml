@@ -29,17 +29,12 @@ Flickable {
         id: prefs
     }
 
-    SdlGamepadKeyNavigation {
-        id: gamepadKeyNav
-    }
-
     StackView.onActivated: {
-        gamepadKeyNav.setSettingsMode(true)
-        gamepadKeyNav.enable()
+        SdlGamepadKeyNavigation.setSettingsMode(true)
     }
 
     StackView.onDeactivating: {
-        gamepadKeyNav.disable()
+        SdlGamepadKeyNavigation.setSettingsMode(false)
         prefs.save()
     }
 

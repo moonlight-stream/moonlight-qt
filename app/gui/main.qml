@@ -8,6 +8,7 @@ import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
 import SystemProperties 1.0
+import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
@@ -17,10 +18,14 @@ ApplicationWindow {
     width: 1280
     height: 600
 
-    visibility: prefs.startWindowed ? "Windowed" : "Maximized"
-
     StreamingPreferences {
         id: prefs
+    }
+
+    visibility: prefs.startWindowed ? "Windowed" : "Maximized"
+
+    Component.onCompleted: {
+        SdlGamepadKeyNavigation.enable()
     }
 
     StackView {
