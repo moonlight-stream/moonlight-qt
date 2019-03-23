@@ -88,15 +88,16 @@ void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     // Construct the required font to render the overlay
     if (m_OverlayFonts[type] == nullptr) {
-        QByteArray fontPath = QDir::toNativeSeparators(Path::getDataFilePath("ModeSeven.ttf")).toUtf8();
-        if (fontPath.isEmpty()) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Unable to locate SDL overlay font");
+        QByteArray fontData = Path::readDataFile("ModeSeven.ttf");
+        if (fontData.isEmpty()) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to load SDL overlay font");
             return;
         }
 
-        m_OverlayFonts[type] = TTF_OpenFont(fontPath.data(),
-                                            Session::get()->getOverlayManager().getOverlayFontSize(type));
+        m_OverlayFonts[type] = TTF_OpenFontRW(SDL_RWFromConstMem(fontData.constData(), fontData.size()),
+                                              1,
+                                              Session::get()->getOverlayManager().getOverlayFontSize(type));
         if (m_OverlayFonts[type] == nullptr) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "TTF_OpenFont() failed: %s",

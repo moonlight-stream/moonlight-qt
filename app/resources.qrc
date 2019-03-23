@@ -16,4 +16,8 @@
         <file>res/moonlight.svg</file>
         <file>res/update.svg</file>
     </qresource>
+    <qresource prefix="/data">
+        <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>
+        <file alias="ModeSeven.ttf">ModeSeven.ttf</file>
+    </qresource>
 </RCC>

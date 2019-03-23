@@ -302,18 +302,6 @@ DEPENDPATH += $$PWD/../h264bitstream/h264bitstream
     DEPENDPATH += $$PWD/../AntiHooking
 }
 
-defineTest(copyToDestDir) {
-    files = $$1
-
-    for(FILE, files) {
-        !equals(PWD, $$OUT_PWD) {
-            QMAKE_POST_LINK += $$QMAKE_COPY $$shell_quote($$shell_path($$PWD/$$FILE)) $$shell_quote($$shell_path($$OUT_PWD)) $$escape_expand(\\n\\t)
-        }
-    }
-
-    export(QMAKE_POST_LINK)
-}
-
 unix:!macx: {
     isEmpty(PREFIX) {
         PREFIX = /usr/local
@@ -339,12 +327,6 @@ unix:!macx: {
     appdata.files = SDL_GameControllerDB/gamecontrollerdb.txt ModeSeven.ttf
     appdata.path = "$$PREFIX/$$DATADIR/Moonlight Game Streaming Project/Moonlight/"
 
-    CONFIG(debug, debug|release) {
-        # Copy the required data files into the application directory only for debug builds.
-        # Release builds will use the INSTALLS variable to place these in the correct folders.
-        copyToDestDir(SDL_GameControllerDB/gamecontrollerdb.txt ModeSeven.ttf)
-    }
-
     INSTALLS += target appdata desktop icons appstream
 }
 win32 {
@@ -352,9 +334,6 @@ win32 {
     QMAKE_TARGET_COMPANY = Moonlight Game Streaming Project
     QMAKE_TARGET_DESCRIPTION = Moonlight Game Streaming Client
     QMAKE_TARGET_PRODUCT = Moonlight
-
-    # Copy the required data files into the application directory
-    copyToDestDir(SDL_GameControllerDB/gamecontrollerdb.txt ModeSeven.ttf)
 
     CONFIG -= embed_manifest_exe
     QMAKE_LFLAGS += /MANIFEST:embed /MANIFESTINPUT:$${PWD}/Moonlight.exe.manifest
@@ -366,7 +345,7 @@ macx {
 
     QMAKE_INFO_PLIST = $$OUT_PWD/Info.plist
 
-    APP_BUNDLE_RESOURCES.files = moonlight.icns SDL_GameControllerDB/gamecontrollerdb.txt ModeSeven.ttf
+    APP_BUNDLE_RESOURCES.files = moonlight.icns
     APP_BUNDLE_RESOURCES.path = Contents/Resources
 
     APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true)

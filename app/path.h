@@ -9,6 +9,9 @@ public:
 
     static QString getBoxArtCacheDir();
 
+    static QByteArray readDataFile(QString fileName);
+
+    // Only safe to use directly for Qt classes
     static QString getDataFilePath(QString fileName);
 
     static void initialize(bool portable);

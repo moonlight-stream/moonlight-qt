@@ -21,6 +21,13 @@ QString Path::getBoxArtCacheDir()
     return s_BoxArtCacheDir;
 }
 
+QByteArray Path::readDataFile(QString fileName)
+{
+    QFile dataFile(getDataFilePath(fileName));
+    dataFile.open(QIODevice::ReadOnly);
+    return dataFile.readAll();
+}
+
 QString Path::getDataFilePath(QString fileName)
 {
     QString candidatePath;
@@ -28,33 +35,28 @@ QString Path::getDataFilePath(QString fileName)
     // Check the current directory first
     candidatePath = QDir(QDir::currentPath()).absoluteFilePath(fileName);
     if (QFile::exists(candidatePath)) {
+        qInfo() << "Found" << fileName << "at" << candidatePath;
         return candidatePath;
     }
 
     // Now check the data directories (for Linux, in particular)
     candidatePath = QStandardPaths::locate(QStandardPaths::DataLocation, fileName);
     if (!candidatePath.isEmpty() && QFile::exists(candidatePath)) {
+        qInfo() << "Found" << fileName << "at" << candidatePath;
         return candidatePath;
     }
 
     // Now try the directory of our app installation (for Windows, if current dir doesn't find it)
     candidatePath = QDir(QCoreApplication::applicationDirPath()).absoluteFilePath(fileName);
     if (QFile::exists(candidatePath)) {
+        qInfo() << "Found" << fileName << "at" << candidatePath;
         return candidatePath;
     }
 
-    // Now try the Resources folder in our app bundle for macOS
-    QDir dir = QDir(QCoreApplication::applicationDirPath());
-    dir.cdUp();
-    dir.cd("Resources");
-    dir.filePath(fileName);
-    candidatePath = dir.absoluteFilePath(fileName);
-    if (QFile::exists(candidatePath)) {
-        return candidatePath;
-    }
-
-    // Couldn't find it
-    return QString();
+    // Return the QRC embedded copy
+    candidatePath = ":/data/" + fileName;
+    qInfo() << "Found" << fileName << "at" << candidatePath;
+    return QString(candidatePath);
 }
 
 void Path::initialize(bool portable)

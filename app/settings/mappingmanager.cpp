@@ -54,15 +54,10 @@ void MappingManager::save()
 
 void MappingManager::applyMappings()
 {
-    QString mappingFile = Path::getDataFilePath("gamecontrollerdb.txt");
-    if (!mappingFile.isEmpty()) {
-        std::string mappingFileNative = QDir::toNativeSeparators(mappingFile).toStdString();
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Loading gamepad mappings from: %s",
-                    mappingFileNative.c_str());
-
-        int newMappings = SDL_GameControllerAddMappingsFromFile(mappingFileNative.c_str());
+    QByteArray mappingData = Path::readDataFile("gamecontrollerdb.txt");
+    if (!mappingData.isEmpty()) {
+        int newMappings = SDL_GameControllerAddMappingsFromRW(
+                    SDL_RWFromConstMem(mappingData.constData(), mappingData.size()), 1);
         if (newMappings < 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Error loading gamepad mappings: %s",
@@ -75,8 +70,8 @@ void MappingManager::applyMappings()
         }
     }
     else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "No gamepad mapping file found");
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to load gamepad mapping file");
     }
 
     QList<SdlGamepadMapping> mappings = m_Mappings.values();
