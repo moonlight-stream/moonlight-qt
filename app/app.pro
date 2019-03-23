@@ -60,15 +60,21 @@ macx {
 }
 
 unix:!macx {
-    CONFIG += link_pkgconfig soundio
+    CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 SDL2_ttf opus
 
-    # For libsoundio
-    packagesExist(libpulse) {
-        PKGCONFIG += libpulse
+    # SLAudio is used on Steam Link
+    !config_SL {
+        CONFIG += soundio
     }
-    packagesExist(alsa) {
-        PKGCONFIG += alsa
+
+    soundio {
+        packagesExist(libpulse) {
+            PKGCONFIG += libpulse
+        }
+        packagesExist(alsa) {
+            PKGCONFIG += alsa
+        }
     }
 
     packagesExist(libavcodec) {
@@ -208,13 +214,15 @@ libvdpau {
 config_SL {
     message(Steam Link build configuration selected)
 
-    DEFINES += STEAM_LINK HAVE_SLVIDEO
-    LIBS += -lSLVideo
+    DEFINES += STEAM_LINK HAVE_SLVIDEO HAVE_SLAUDIO
+    LIBS += -lSLVideo -lSLAudio
 
     SOURCES += \
-        streaming/video/slvid.cpp
+        streaming/video/slvid.cpp \
+        streaming/audio/renderers/slaud.cpp
     HEADERS += \
-        streaming/video/slvid.h
+        streaming/video/slvid.h \
+        streaming/audio/renderers/slaud.h
 }
 win32:!winrt {
     message(DXVA2 renderer selected)
@@ -270,7 +278,7 @@ else:unix: LIBS += -L$$OUT_PWD/../qmdnsengine/ -lqmdnsengine
 INCLUDEPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 DEPENDPATH += $$PWD/../qmdnsengine/qmdnsengine/src/include $$PWD/../qmdnsengine
 
-!winrt {
+soundio {
     win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../soundio/release/ -lsoundio
     else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../soundio/debug/ -lsoundio
     else:unix: LIBS += -L$$OUT_PWD/../soundio/ -lsoundio

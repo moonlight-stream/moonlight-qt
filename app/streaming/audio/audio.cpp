@@ -5,18 +5,24 @@
 #include "renderers/soundioaudiorenderer.h"
 #endif
 
+#ifdef HAVE_SLAUDIO
+#include "renderers/slaud.h"
+#endif
+
 #include "renderers/sdl.h"
 
 #include <Limelight.h>
 
 IAudioRenderer* Session::createAudioRenderer()
 {
-#ifdef HAVE_SOUNDIO
+#if defined(HAVE_SOUNDIO)
     if (qgetenv("ML_AUDIO") == "SDL") {
         return new SdlAudioRenderer();
     }
 
     return new SoundIoAudioRenderer();
+#elif defined(HAVE_SLAUDIO)
+    return new SLAudioRenderer();
 #else
     return new SdlAudioRenderer();
 #endif
