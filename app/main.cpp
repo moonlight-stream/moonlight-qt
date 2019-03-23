@@ -30,6 +30,7 @@
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
+#include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
@@ -361,6 +362,11 @@ int main(int argc, char *argv[])
                                                 [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                     return new AutoUpdateChecker();
                                                 });
+    qmlRegisterSingletonType<SystemProperties>("SystemProperties", 1, 0,
+                                               "SystemProperties",
+                                               [](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                   return new SystemProperties();
+                                               });
 
 #ifndef Q_OS_WINRT
     // Use the dense material dark theme by default

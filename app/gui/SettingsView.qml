@@ -4,6 +4,7 @@ import QtQuick.Controls 2.2
 import StreamingPreferences 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
+import SystemProperties 1.0
 
 Flickable {
     id: settingsPage
@@ -89,10 +90,10 @@ Flickable {
                                     // Some platforms have different desktop resolutions
                                     // and native resolutions (like macOS with Retina displays)
                                     if (displayResIndex == 0) {
-                                        screenRect = prefs.getDesktopResolution(displayIndex)
+                                        screenRect = SystemProperties.getDesktopResolution(displayIndex)
                                     }
                                     else {
-                                        screenRect = prefs.getNativeResolution(displayIndex)
+                                        screenRect = SystemProperties.getNativeResolution(displayIndex)
                                     }
 
                                     if (screenRect.width === 0) {
@@ -195,31 +196,28 @@ Flickable {
                         function createModel() {
                             var fpsListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
 
-                            // Get the max supported FPS on this system
-                            var max_fps = prefs.getMaximumStreamingFrameRate();
-
                             // Default entries
                             fpsListModel.append({"text": "30 FPS", "video_fps": "30"})
                             fpsListModel.append({"text": "60 FPS", "video_fps": "60"})
 
                             // Add unsupported FPS values that come before the display max FPS
                             if (prefs.unsupportedFps) {
-                                if (max_fps > 90) {
+                                if (SystemProperties.maximumStreamingFrameRate > 90) {
                                     fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
                                 }
-                                if (max_fps > 120) {
+                                if (SystemProperties.maximumStreamingFrameRate > 120) {
                                     fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
                                 }
                             }
 
                             // Use 64 as the cutoff for adding a separate option to
                             // handle wonky displays that report just over 60 Hz.
-                            if (max_fps > 64) {
+                            if (SystemProperties.maximumStreamingFrameRate > 64) {
                                 // Mark any FPS value greater than 120 as unsupported
                                 if (prefs.unsupportedFps && max_fps > 120) {
                                     fpsListModel.append({"text": max_fps+" FPS (Unsupported)", "video_fps": ""+max_fps})
                                 }
-                                else if (max_fps > 120) {
+                                else if (SystemProperties.maximumStreamingFrameRate > 120) {
                                     fpsListModel.append({"text": "120 FPS", "video_fps": "120"})
                                 }
                                 else {
@@ -229,10 +227,10 @@ Flickable {
 
                             // Add unsupported FPS values that come after the display max FPS
                             if (prefs.unsupportedFps) {
-                                if (max_fps < 90) {
+                                if (SystemProperties.maximumStreamingFrameRate < 90) {
                                     fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
                                 }
-                                if (max_fps < 120) {
+                                if (SystemProperties.maximumStreamingFrameRate < 120) {
                                     fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
                                 }
                             }

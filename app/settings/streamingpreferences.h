@@ -15,20 +15,6 @@ public:
 
     Q_INVOKABLE void save();
 
-    Q_INVOKABLE static bool hasAnyHardwareAcceleration();
-
-    Q_INVOKABLE static bool isRunningWayland();
-
-    Q_INVOKABLE static bool isWow64();
-
-    Q_INVOKABLE static int getMaximumStreamingFrameRate();
-
-    Q_INVOKABLE QRect getDesktopResolution(int displayIndex);
-
-    Q_INVOKABLE QRect getNativeResolution(int displayIndex);
-
-    Q_INVOKABLE QString getUnmappedGamepads();
-
     void reload();
 
     enum AudioConfig

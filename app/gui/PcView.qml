@@ -7,7 +7,6 @@ import QtQuick.Window 2.2
 import ComputerModel 1.0
 
 import ComputerManager 1.0
-import StreamingPreferences 1.0
 import SdlGamepadKeyNavigation 1.0
 
 GridView {
@@ -23,10 +22,6 @@ GridView {
     anchors.bottomMargin: 5
     cellWidth: 350; cellHeight: 350;
     objectName: "Computers"
-
-    StreamingPreferences {
-        id: prefs
-    }
 
     SdlGamepadKeyNavigation {
         id: gamepadKeyNav

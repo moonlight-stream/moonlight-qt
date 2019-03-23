@@ -7,6 +7,7 @@ import QtQuick.Window 2.2
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
+import SystemProperties 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
@@ -137,19 +138,18 @@ ApplicationWindow {
             // onAfterRendering call and potentially reenter this code.
             initialized = true;
 
-            if (prefs.isRunningWayland()) {
+            if (SystemProperties.isRunningWayland) {
                 waylandDialog.open()
             }
-            else if (prefs.isWow64()) {
+            else if (SystemProperties.isWow64) {
                 wow64Dialog.open()
             }
-            else if (!prefs.hasAnyHardwareAcceleration()) {
+            else if (!SystemProperties.hasHardwareAcceleration) {
                 noHwDecoderDialog.open()
             }
 
-            var unmappedGamepads = prefs.getUnmappedGamepads()
-            if (unmappedGamepads) {
-                unmappedGamepadDialog.unmappedGamepads = unmappedGamepads
+            if (SystemProperties.unmappedGamepads) {
+                unmappedGamepadDialog.unmappedGamepads = SystemProperties.unmappedGamepads
                 unmappedGamepadDialog.open()
             }
         }
