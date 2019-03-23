@@ -326,10 +326,7 @@ unix:!macx: {
     appstream.files = deploy/linux/com.moonlight_stream.Moonlight.appdata.xml
     appstream.path = $$PREFIX/$$DATADIR/metainfo/
 
-    appdata.files = SDL_GameControllerDB/gamecontrollerdb.txt ModeSeven.ttf
-    appdata.path = "$$PREFIX/$$DATADIR/Moonlight Game Streaming Project/Moonlight/"
-
-    INSTALLS += target appdata desktop icons appstream
+    INSTALLS += target desktop icons appstream
 }
 win32 {
     RC_ICONS = moonlight.ico
