@@ -28,10 +28,6 @@ public:
     bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
                                    int videoFormat, int width, int height, int frameRate);
 
-    static
-    int getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
-                               int videoFormat, int width, int height, int frameRate);
-
     static Session* get()
     {
         return s_ActiveSession;
@@ -64,7 +60,9 @@ private:
 
     void emitLaunchWarning(QString text);
 
-    int getDecoderCapabilities();
+    static
+    int getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
+                               int videoFormat, int width, int height, int frameRate);
 
     IAudioRenderer* createAudioRenderer();
 

@@ -289,12 +289,8 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
 {
     IVideoDecoder* decoder;
 
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-                     SDL_GetError());
-        return false;
-    }
+    // Video must already be initialized to use this function
+    SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
 
     SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
     if (!window) {
@@ -318,8 +314,6 @@ int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
     SDL_DestroyWindow(window);
-
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
     return caps;
 }
@@ -600,13 +594,6 @@ bool Session::validateLaunch()
         // Fail the launch, because we won't manage to get a decoder for the actual stream
         return false;
     }
-
-    // Add the capability flags from the chosen decoder/renderer
-    m_VideoCallbacks.capabilities |= getDecoderCapabilities(m_Preferences->videoDecoderSelection,
-                                                            m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
-                                                            m_StreamConfig.width,
-                                                            m_StreamConfig.height,
-                                                            m_StreamConfig.fps);
 
     return true;
 }
@@ -931,6 +918,14 @@ void Session::exec(int displayOriginX, int displayOriginY)
     if (!siGfeVersion.isEmpty()) {
         hostInfo.serverInfoGfeVersion = siGfeVersion.data();
     }
+
+    // Add the capability flags from the chosen decoder/renderer
+    // Requires SDL_INIT_VIDEO already done.
+    m_VideoCallbacks.capabilities |= getDecoderCapabilities(m_Preferences->videoDecoderSelection,
+                                                            m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
+                                                            m_StreamConfig.width,
+                                                            m_StreamConfig.height,
+                                                            m_StreamConfig.fps);
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks,
