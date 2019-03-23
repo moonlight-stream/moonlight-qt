@@ -16,7 +16,7 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
  - 5.1 surround sound audio
  - HEVC support for better image quality at reduced bandwidth
  - Keyboard and mouse support
- - Gamepad support with SDL gamepad mappings
+ - Gamepad support with force feedback for up to 4 players
  
 ## Downloads
 - [Windows and macOS](https://github.com/moonlight-stream/moonlight-qt/releases)
