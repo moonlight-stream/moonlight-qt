@@ -177,7 +177,7 @@ Item {
         id: errorDialog
 
         onVisibleChanged: {
-            if (!visible) {
+            if (!visible && quitAfter) {
                 Qt.quit()
             }
             else {
