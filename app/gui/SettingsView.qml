@@ -191,28 +191,30 @@ Flickable {
                         function createModel() {
                             var fpsListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
 
+                            var max_fps = SystemProperties.maximumStreamingFrameRate
+
                             // Default entries
                             fpsListModel.append({"text": "30 FPS", "video_fps": "30"})
                             fpsListModel.append({"text": "60 FPS", "video_fps": "60"})
 
                             // Add unsupported FPS values that come before the display max FPS
                             if (prefs.unsupportedFps) {
-                                if (SystemProperties.maximumStreamingFrameRate > 90) {
+                                if (max_fps > 90) {
                                     fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
                                 }
-                                if (SystemProperties.maximumStreamingFrameRate > 120) {
+                                if (max_fps > 120) {
                                     fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
                                 }
                             }
 
                             // Use 64 as the cutoff for adding a separate option to
                             // handle wonky displays that report just over 60 Hz.
-                            if (SystemProperties.maximumStreamingFrameRate > 64) {
+                            if (max_fps > 64) {
                                 // Mark any FPS value greater than 120 as unsupported
                                 if (prefs.unsupportedFps && max_fps > 120) {
                                     fpsListModel.append({"text": max_fps+" FPS (Unsupported)", "video_fps": ""+max_fps})
                                 }
-                                else if (SystemProperties.maximumStreamingFrameRate > 120) {
+                                else if (max_fps > 120) {
                                     fpsListModel.append({"text": "120 FPS", "video_fps": "120"})
                                 }
                                 else {
@@ -222,10 +224,10 @@ Flickable {
 
                             // Add unsupported FPS values that come after the display max FPS
                             if (prefs.unsupportedFps) {
-                                if (SystemProperties.maximumStreamingFrameRate < 90) {
+                                if (max_fps < 90) {
                                     fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
                                 }
-                                if (SystemProperties.maximumStreamingFrameRate < 120) {
+                                if (max_fps < 120) {
                                     fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
                                 }
                             }
