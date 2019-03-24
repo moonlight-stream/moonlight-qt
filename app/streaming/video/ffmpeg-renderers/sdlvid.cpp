@@ -197,11 +197,11 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             }
 
             if (type == Overlay::OverlayStatusUpdate) {
-                // Top right
+                // Bottom Left
                 int unused;
-                SDL_RenderGetLogicalSize(m_Renderer, &m_OverlayRects[type].x, &unused);
-                m_OverlayRects[type].x -= surface->w;
-                m_OverlayRects[type].y = 0;
+                SDL_RenderGetLogicalSize(m_Renderer, &unused, &m_OverlayRects[type].y);
+                m_OverlayRects[type].x = 0;
+                m_OverlayRects[type].y -= surface->h;
             }
             else if (type == Overlay::OverlayDebug) {
                 // Top left
