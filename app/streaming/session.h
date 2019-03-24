@@ -25,7 +25,8 @@ public:
     Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);
 
     static
-    bool isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
+    bool isHardwareDecodeAvailable(SDL_Window* window,
+                                   StreamingPreferences::VideoDecoderSelection vds,
                                    int videoFormat, int width, int height, int frameRate);
 
     static Session* get()
@@ -54,14 +55,15 @@ signals:
     void sessionFinished();
 
 private:
-    void initialize();
+    bool initialize();
 
-    bool validateLaunch();
+    bool validateLaunch(SDL_Window* testWindow);
 
     void emitLaunchWarning(QString text);
 
     static
-    int getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
+    int getDecoderCapabilities(SDL_Window* window,
+                               StreamingPreferences::VideoDecoderSelection vds,
                                int videoFormat, int width, int height, int frameRate);
 
     IAudioRenderer* createAudioRenderer();

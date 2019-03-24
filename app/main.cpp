@@ -308,15 +308,15 @@ int main(int argc, char *argv[])
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
 
-#ifdef STEAM_LINK
     // Steam Link requires that we initialize video before creating our
     // QGuiApplication in order to configure the framebuffer correctly.
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+    // It's fine to do on other platforms too, and it can save some time
+    // doing initialization and teardown of the video subsystem after streaming.
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) failed: %s",
                      SDL_GetError());
     }
-#endif
 
     QGuiApplication app(argc, argv);
 
@@ -437,12 +437,6 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
-
-    if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_TIMER) failed: %s",
-                     SDL_GetError());
-    }
 
     // Use atexit() to ensure SDL_Quit() is called. This avoids
     // racing with object destruction where SDL may be used.

@@ -244,30 +244,13 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     }
 }
 
-bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelection vds,
+bool Session::isHardwareDecodeAvailable(SDL_Window* window,
+                                        StreamingPreferences::VideoDecoderSelection vds,
                                         int videoFormat, int width, int height, int frameRate)
 {
     IVideoDecoder* decoder;
 
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
-    if (!window) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create window for hardware decode test: %s",
-                     SDL_GetError());
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return false;
-    }
-
     if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, true, decoder)) {
-        SDL_DestroyWindow(window);
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
     }
 
@@ -275,45 +258,22 @@ bool Session::isHardwareDecodeAvailable(StreamingPreferences::VideoDecoderSelect
 
     delete decoder;
 
-    // This must be called after the decoder is deleted, because
-    // the renderer may want to interact with the window
-    SDL_DestroyWindow(window);
-
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
-
     return ret;
 }
 
-int Session::getDecoderCapabilities(StreamingPreferences::VideoDecoderSelection vds,
+int Session::getDecoderCapabilities(SDL_Window* window,
+                                    StreamingPreferences::VideoDecoderSelection vds,
                                     int videoFormat, int width, int height, int frameRate)
 {
     IVideoDecoder* decoder;
 
-    // Video must already be initialized to use this function
-    SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
-
-    SDL_Window* window = SDL_CreateWindow("", 0, 0, width, height, SDL_WINDOW_HIDDEN);
-    if (!window) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create window for hardware decode test: %s",
-                     SDL_GetError());
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return false;
-    }
-
     if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, true, decoder)) {
-        SDL_DestroyWindow(window);
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
     }
 
     int caps = decoder->getDecoderCapabilities();
 
     delete decoder;
-
-    // This must be called after the decoder is deleted, because
-    // the renderer may want to interact with the window
-    SDL_DestroyWindow(window);
 
     return caps;
 }
@@ -350,8 +310,17 @@ Session::~Session()
     s_ActiveSessionSemaphore.release();
 }
 
-void Session::initialize()
+bool Session::initialize()
 {
+    // Create a hidden window to use for decoder initialization tests
+    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+    if (!testWindow) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create window for hardware decode test: %s",
+                     SDL_GetError());
+        return false;
+    }
+
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
     qInfo() << "Server GFE version:" << m_Computer->gfeVersion;
 
@@ -404,7 +373,8 @@ void Session::initialize()
     case StreamingPreferences::VCC_AUTO:
         // TODO: Determine if HEVC is better depending on the decoder
         m_StreamConfig.supportsHevc =
-                isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
+                isHardwareDecodeAvailable(testWindow,
+                                          m_Preferences->videoDecoderSelection,
                                           VIDEO_FORMAT_H265,
                                           m_StreamConfig.width,
                                           m_StreamConfig.height,
@@ -441,6 +411,15 @@ void Session::initialize()
         break;
     }
 
+    // Add the capability flags from the chosen decoder/renderer
+    // Requires m_StreamConfig.supportsHevc to be initialized
+    m_VideoCallbacks.capabilities |= getDecoderCapabilities(testWindow,
+                                                            m_Preferences->videoDecoderSelection,
+                                                            m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
+                                                            m_StreamConfig.width,
+                                                            m_StreamConfig.height,
+                                                            m_StreamConfig.fps);
+
     switch (m_Preferences->windowMode)
     {
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
@@ -451,6 +430,14 @@ void Session::initialize()
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
         break;
     }
+
+    // Check for validation errors/warnings and emit
+    // signals for them, if appropriate
+    bool ret = validateLaunch(testWindow);
+
+    SDL_DestroyWindow(testWindow);
+
+    return ret;
 }
 
 void Session::emitLaunchWarning(QString text)
@@ -469,7 +456,7 @@ void Session::emitLaunchWarning(QString text)
     }
 }
 
-bool Session::validateLaunch()
+bool Session::validateLaunch(SDL_Window* testWindow)
 {
     QStringList warningList;
 
@@ -489,7 +476,8 @@ bool Session::validateLaunch()
         bool hevcForced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
                 m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
 
-        if (!isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
+        if (!isHardwareDecodeAvailable(testWindow,
+                                       m_Preferences->videoDecoderSelection,
                                        VIDEO_FORMAT_H265,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
@@ -530,7 +518,8 @@ bool Session::validateLaunch()
             emitLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
                               "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
         }
-        else if (!isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
+        else if (!isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
                                             VIDEO_FORMAT_H265_MAIN10,
                                             m_StreamConfig.width,
                                             m_StreamConfig.height,
@@ -579,7 +568,8 @@ bool Session::validateLaunch()
     }
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
-            !isHardwareDecodeAvailable(m_Preferences->videoDecoderSelection,
+            !isHardwareDecodeAvailable(testWindow,
+                                       m_Preferences->videoDecoderSelection,
                                        m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
@@ -816,11 +806,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // Complete initialization in this deferred context to avoid
     // calling expensive functions in the constructor (during the
     // process of loading the StreamSegue).
-    initialize();
-
-    // Check for validation errors/warnings and emit
-    // signals for them, if appropriate
-    if (!validateLaunch()) {
+    if (!initialize()) {
         emit sessionFinished();
         return;
     }
@@ -891,18 +877,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
         return;
     }
 
-    SDL_assert(!SDL_WasInit(SDL_INIT_VIDEO));
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
-                     SDL_GetError());
-        delete m_InputHandler;
-        m_InputHandler = nullptr;
-        emit displayLaunchError(QString::fromLocal8Bit(SDL_GetError()));
-        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-        return;
-    }
-
     QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
     QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
 
@@ -919,14 +893,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
         hostInfo.serverInfoGfeVersion = siGfeVersion.data();
     }
 
-    // Add the capability flags from the chosen decoder/renderer
-    // Requires SDL_INIT_VIDEO already done.
-    m_VideoCallbacks.capabilities |= getDecoderCapabilities(m_Preferences->videoDecoderSelection,
-                                                            m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
-                                                            m_StreamConfig.width,
-                                                            m_StreamConfig.height,
-                                                            m_StreamConfig.fps);
-
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks,
                                 m_AudioDisabled ? nullptr : &k_AudioCallbacks,
@@ -936,7 +902,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
         // listener.
         delete m_InputHandler;
         m_InputHandler = nullptr;
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
@@ -960,7 +925,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
                      SDL_GetError());
         delete m_InputHandler;
         m_InputHandler = nullptr;
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
@@ -1276,8 +1240,6 @@ DispatchDeferredCleanup:
     if (iconSurface != nullptr) {
         SDL_FreeSurface(iconSurface);
     }
-    SDL_QuitSubSystem(SDL_INIT_VIDEO);
-    SDL_assert(!SDL_WasInit(SDL_INIT_VIDEO));
 
     // Cleanup can take a while, so dispatch it to a worker thread.
     // When it is complete, it will release our s_ActiveSessionSemaphore
