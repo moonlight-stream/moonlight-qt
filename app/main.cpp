@@ -289,7 +289,10 @@ int main(int argc, char *argv[])
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
 
-#ifdef Q_OS_WIN32
+    // The debug build of ANGLE on Qt 5.12.2 triggers all sorts of asserts
+    // even simply creating an empty Qt Quick window and then trying to close
+    // the program. Avoid using ANGLE for debug builds until the issue is fixed.
+#if defined(Q_OS_WIN32) && !defined(QT_DEBUG)
     if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
         // On Windows, use ANGLE so we don't have to load OpenGL
         // user-mode drivers into our app. OGL drivers (especially Intel)
