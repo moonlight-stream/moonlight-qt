@@ -685,11 +685,15 @@ Flickable {
                     font.pointSize: 12
                     checked: prefs.unsupportedFps
                     onCheckedChanged: {
-                        prefs.unsupportedFps = checked
+                        // This is called on init, so only do the work if we've
+                        // actually changed the value.
+                        if (prefs.unsupportedFps != checked) {
+                            prefs.unsupportedFps = checked
 
-                        // The selectable FPS values depend on whether
-                        // this option is enabled or not
-                        fpsComboBox.reinitialize()
+                            // The selectable FPS values depend on whether
+                            // this option is enabled or not
+                            fpsComboBox.reinitialize()
+                        }
                     }
                 }
 
@@ -699,16 +703,20 @@ Flickable {
                     font.pointSize: 12
                     checked: prefs.enableMdns
                     onCheckedChanged: {
-                        prefs.enableMdns = checked
+                        // This is called on init, so only do the work if we've
+                        // actually changed the value.
+                        if (prefs.enableMdns != checked) {
+                            prefs.enableMdns = checked
 
-                        // We must save the updated preference to ensure
-                        // ComputerManager can observe the change internally.
-                        prefs.save()
+                            // We must save the updated preference to ensure
+                            // ComputerManager can observe the change internally.
+                            prefs.save()
 
-                        // Restart polling so the mDNS change takes effect
-                        if (window.pollingActive) {
-                            ComputerManager.stopPollingAsync()
-                            ComputerManager.startPolling()
+                            // Restart polling so the mDNS change takes effect
+                            if (window.pollingActive) {
+                                ComputerManager.stopPollingAsync()
+                                ComputerManager.startPolling()
+                            }
                         }
                     }
                 }
