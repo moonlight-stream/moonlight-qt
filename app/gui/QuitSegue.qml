@@ -12,8 +12,6 @@ Item {
 
     property string stageText : "Quitting " + appName + "..."
 
-    anchors.fill: parent
-
     function quitAppCompleted(error)
     {
         // Display a failed dialog if we got an error

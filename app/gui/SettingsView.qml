@@ -9,7 +9,6 @@ import SystemProperties 1.0
 Flickable {
     id: settingsPage
     objectName: "Settings"
-    anchors.fill: parent
 
     contentWidth: settingsColumn1.width > settingsColumn2.width ? settingsColumn1.width : settingsColumn2.width
     contentHeight: settingsColumn1.height > settingsColumn2.height ? settingsColumn1.height : settingsColumn2.height

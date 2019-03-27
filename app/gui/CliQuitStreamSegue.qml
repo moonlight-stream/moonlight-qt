@@ -6,8 +6,6 @@ import ComputerManager 1.0
 import Session 1.0
 
 Item {
-    anchors.fill: parent
-
     function onSearchingComputer() {
         stageLabel.text = "Establishing connection to PC..."
     }

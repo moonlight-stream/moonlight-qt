@@ -13,8 +13,6 @@ Item {
     property string stageText : "Starting " + appName + "..."
     property bool quitAfter : false
 
-    anchors.fill: parent
-
     function stageStarting(stage)
     {
         // Update the spinner text

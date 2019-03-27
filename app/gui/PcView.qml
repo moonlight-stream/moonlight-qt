@@ -14,11 +14,10 @@ GridView {
     id: pcGrid
     focus: true
     activeFocusOnTab: true
-    anchors.fill: parent
-    anchors.leftMargin: (parent.width % (cellWidth + anchors.rightMargin)) / 2
-    anchors.topMargin: 20
-    anchors.rightMargin: 5
-    anchors.bottomMargin: 5
+    leftMargin: (parent.width % (cellWidth + rightMargin)) / 2
+    topMargin: 20
+    rightMargin: 5
+    bottomMargin: 5
     cellWidth: 350; cellHeight: 350;
     objectName: "Computers"
 

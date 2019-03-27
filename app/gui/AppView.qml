@@ -8,15 +8,15 @@ import ComputerManager 1.0
 GridView {
     property int computerIndex
     property AppModel appModel : createModel()
+    property bool activated
 
     id: appGrid
     focus: true
     activeFocusOnTab: true
-    anchors.fill: parent
-    anchors.leftMargin: (parent.width % (cellWidth + anchors.rightMargin)) / 2
-    anchors.topMargin: 20
-    anchors.rightMargin: 5
-    anchors.bottomMargin: 5
+    leftMargin: (parent.width % (cellWidth + rightMargin)) / 2
+    topMargin: 20
+    rightMargin: 5
+    bottomMargin: 5
     cellWidth: 225; cellHeight: 385;
 
     function computerLost()
@@ -34,10 +34,12 @@ GridView {
 
     StackView.onActivated: {
         appModel.computerLost.connect(computerLost)
+        activated = true
     }
 
     StackView.onDeactivating: {
         appModel.computerLost.disconnect(computerLost)
+        activated = false
     }
 
     function createModel()
@@ -237,6 +239,12 @@ GridView {
     }
 
     ScrollBar.vertical: ScrollBar {
+        // Manually hide the scrollbar to prevent it from being drawn on top
+        // of the StreamSegue during the transition. It can sometimes get stuck
+        // there since we're not consistently pumping the event loop while
+        // starting the stream.
+        visible: activated
+
         parent: appGrid.parent
         anchors {
             top: appGrid.top
