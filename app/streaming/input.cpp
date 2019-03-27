@@ -128,6 +128,9 @@ SdlInputHandler::~SdlInputHandler()
 
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
     SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
+
+    // Return background event handling to off
+    SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
 }
 
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)

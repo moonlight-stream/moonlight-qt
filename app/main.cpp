@@ -311,6 +311,11 @@ int main(int argc, char *argv[])
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
 
+    // Allow the display to sleep by default. We will manually use SDL_DisableScreenSaver()
+    // and SDL_EnableScreenSaver() when appropriate. This hint must be set before
+    // initializing the SDL video subsystem to have any effect.
+    SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
+
     // Steam Link requires that we initialize video before creating our
     // QGuiApplication in order to configure the framebuffer correctly.
     // It's fine to do on other platforms too, and it can save some time
@@ -319,7 +324,20 @@ int main(int argc, char *argv[])
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) failed: %s",
                      SDL_GetError());
+        return -1;
     }
+
+    // Use atexit() to ensure SDL_Quit() is called. This avoids
+    // racing with object destruction where SDL may be used.
+    atexit(SDL_Quit);
+
+    // Avoid the default behavior of changing the timer resolution to 1 ms.
+    // We don't want this all the time that Moonlight is open. We will set
+    // it manually when we start streaming.
+    SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
+
+    // Disable minimize on focus loss by default. Users seem to want this off by default.
+    SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
     QGuiApplication app(argc, argv);
 
@@ -440,18 +458,6 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
-
-    // Use atexit() to ensure SDL_Quit() is called. This avoids
-    // racing with object destruction where SDL may be used.
-    atexit(SDL_Quit);
-
-    // Avoid the default behavior of changing the timer resolution to 1 ms.
-    // We don't want this all the time that Moonlight is open. We will set
-    // it manually when we start streaming.
-    SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
-
-    // Disable minimize on focus loss by default. Users seem to want this off by default.
-    SDL_SetHintWithPriority(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0", SDL_HINT_DEFAULT);
 
     int err = app.exec();
 
