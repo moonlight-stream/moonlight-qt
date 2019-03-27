@@ -433,7 +433,7 @@ ApplicationWindow {
 
     Dialog {
         id: addPcDialog
-        property string label: "Enter the IP address of your GameStream PC"
+        property string label: "Enter the IP address of your GameStream PC:"
 
         standardButtons: StandardButton.Ok | StandardButton.Cancel
 
@@ -452,10 +452,12 @@ ApplicationWindow {
         ColumnLayout {
             Text {
                 text: addPcDialog.label
+                font.bold: true
             }
 
             TextField {
                 id: editText
+                color: "black"
                 Layout.fillWidth: true
             }
         }
