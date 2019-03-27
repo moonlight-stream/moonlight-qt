@@ -77,9 +77,7 @@ GridView {
         Image {
             id: pcIcon
             anchors.horizontalCenter: parent.horizontalCenter
-            source: {
-                model.addPc ? "qrc:/res/ic_add_to_queue_white_48px.svg" : "qrc:/res/ic_tv_white_48px.svg"
-            }
+            source: "qrc:/res/ic_tv_white_48px.svg"
             sourceSize {
                 width: 200
                 height: 200
@@ -92,7 +90,7 @@ GridView {
             anchors.horizontalCenter: pcIcon.horizontalCenter
             anchors.verticalCenter: pcIcon.verticalCenter
             anchors.verticalCenterOffset: -10
-            visible: !model.addPc && !model.statusUnknown && (!model.online || !model.paired)
+            visible: !model.statusUnknown && (!model.online || !model.paired)
             source: !model.online ? "qrc:/res/baseline-warning-24px.svg" : "qrc:/res/baseline-lock-24px.svg"
             sourceSize {
                 width: 75
@@ -107,7 +105,7 @@ GridView {
             anchors.verticalCenterOffset: -10
             width: 75
             height: 75
-            visible: !model.addPc && model.statusUnknown
+            visible: model.statusUnknown
         }
 
         Label {
@@ -136,15 +134,12 @@ GridView {
                 parentMenu: pcContextMenu
                 text: "Wake PC"
                 onTriggered: computerModel.wakeComputer(index)
-                visible: !model.addPc && !model.online && model.wakeable
+                visible: !model.online && model.wakeable
             }
         }
 
         onClicked: {
-            if (model.addPc) {
-                addPcDialog.open()
-            }
-            else if (model.online) {
+            if (model.online) {
                 if (model.paired) {
                     // go to game view
                     var component = Qt.createComponent("AppView.qml")
@@ -176,15 +171,13 @@ GridView {
         }
 
         onPressAndHold: {
-            if (!model.addPc) {
-                // popup() ensures the menu appears under the mouse cursor
-                if (pcContextMenu.popup) {
-                    pcContextMenu.popup()
-                }
-                else {
-                    // Qt 5.9 doesn't have popup()
-                    pcContextMenu.open()
-                }
+            // popup() ensures the menu appears under the mouse cursor
+            if (pcContextMenu.popup) {
+                pcContextMenu.popup()
+            }
+            else {
+                // Qt 5.9 doesn't have popup()
+                pcContextMenu.open()
             }
         }
 
@@ -197,11 +190,9 @@ GridView {
         }
 
         Keys.onMenuPressed: {
-            if (!model.addPc) {
-                // We must use open() here so the menu is positioned on
-                // the ItemDelegate and not where the mouse cursor is
-                pcContextMenu.open()
-            }
+            // We must use open() here so the menu is positioned on
+            // the ItemDelegate and not where the mouse cursor is
+            pcContextMenu.open()
         }
     }
 
@@ -243,37 +234,6 @@ GridView {
 
         // For keyboard/gamepad activation
         onAccepted: deletePc()
-    }
-
-    Dialog {
-        id: addPcDialog
-        property string label: "Enter the IP address of your GameStream PC"
-
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
-
-        onAccepted: {
-            if (editText.text) {
-                ComputerManager.addNewHost(editText.text, false)
-            }
-        }
-
-        onVisibleChanged: {
-            if (visible) {
-                editText.forceActiveFocus()
-            }
-        }
-
-        ColumnLayout {
-            Text {
-                id: addPcDialogLabel
-                text: addPcDialog.label
-            }
-
-            TextField {
-                id: editText
-                Layout.fillWidth: true
-            }
-        }
     }
 
     ScrollBar.vertical: ScrollBar {

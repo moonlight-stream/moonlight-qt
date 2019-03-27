@@ -22,18 +22,6 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return QVariant();
     }
 
-    if (index.row() == m_Computers.count()) {
-        // We insert a synthetic item at the end for the Add PC option
-        switch (role) {
-        case NameRole:
-            return "Add PC";
-        case AddPcRole:
-            return true;
-        default:
-            return QVariant();
-        }
-    }
-
     Q_ASSERT(index.row() < m_Computers.count());
 
     NvComputer* computer = m_Computers[index.row()];
@@ -50,8 +38,6 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return computer->currentGameId != 0;
     case WakeableRole:
         return !computer->macAddress.isEmpty();
-    case AddPcRole:
-        return false;
     case StatusUnknownRole:
         return computer->state == NvComputer::CS_UNKNOWN;
     default:
@@ -67,8 +53,7 @@ int ComputerModel::rowCount(const QModelIndex& parent) const
         return 0;
     }
 
-    // Add PC placeholder counts as 1
-    return m_Computers.count() + 1;
+    return m_Computers.count();
 }
 
 QHash<int, QByteArray> ComputerModel::roleNames() const
@@ -79,7 +64,6 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[OnlineRole] = "online";
     names[PairedRole] = "paired";
     names[BusyRole] = "busy";
-    names[AddPcRole] = "addPc";
     names[WakeableRole] = "wakeable";
     names[StatusUnknownRole] = "statusUnknown";
 

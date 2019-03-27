@@ -219,6 +219,33 @@ ApplicationWindow {
             }
 
             NavigableToolButton {
+                id: addPcButton
+                visible: stackView.currentItem.objectName === "Computers"
+
+                Image {
+                    source: "qrc:/res/ic_add_to_queue_white_48px.svg"
+                    anchors.centerIn: parent
+                    sourceSize {
+                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                    }
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: "Add a new PC manually"
+
+                onClicked: {
+                    addPcDialog.open()
+                }
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+            }
+
+            NavigableToolButton {
                 property string browserUrl: ""
 
                 id: updateButton
@@ -402,5 +429,35 @@ ApplicationWindow {
 
         // For keyboard/gamepad navigation
         onAccepted: Qt.quit()
+    }
+
+    Dialog {
+        id: addPcDialog
+        property string label: "Enter the IP address of your GameStream PC"
+
+        standardButtons: StandardButton.Ok | StandardButton.Cancel
+
+        onAccepted: {
+            if (editText.text) {
+                ComputerManager.addNewHost(editText.text, false)
+            }
+        }
+
+        onVisibleChanged: {
+            if (visible) {
+                editText.forceActiveFocus()
+            }
+        }
+
+        ColumnLayout {
+            Text {
+                text: addPcDialog.label
+            }
+
+            TextField {
+                id: editText
+                Layout.fillWidth: true
+            }
+        }
     }
 }
