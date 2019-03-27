@@ -248,16 +248,19 @@ GridView {
     Dialog {
         id: addPcDialog
         property string label: "Enter the IP address of your GameStream PC"
-        property string hint: "192.168.1.100"
-        property alias editText : editTextItem
 
         standardButtons: StandardButton.Ok | StandardButton.Cancel
-        onVisibleChanged: {
-            editTextItem.focus = true
-            editTextItem.selectAll()
-        }
+
         onAccepted: {
-            ComputerManager.addNewHost(editText.text, false)
+            if (editText.text) {
+                ComputerManager.addNewHost(editText.text, false)
+            }
+        }
+
+        onVisibleChanged: {
+            if (visible) {
+                editText.forceActiveFocus()
+            }
         }
 
         ColumnLayout {
@@ -265,15 +268,10 @@ GridView {
                 id: addPcDialogLabel
                 text: addPcDialog.label
             }
-            Rectangle {
-                implicitWidth: parent.parent.width
-                height: editTextItem.height
 
-                TextInput {
-                    id: editTextItem
-                    inputMethodHints: Qt.ImhPreferUppercase
-                    text: addPcDialog.hint
-                }
+            TextField {
+                id: editText
+                Layout.fillWidth: true
             }
         }
     }
