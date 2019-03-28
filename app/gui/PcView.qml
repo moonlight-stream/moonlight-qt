@@ -7,6 +7,7 @@ import QtQuick.Window 2.2
 import ComputerModel 1.0
 
 import ComputerManager 1.0
+import StreamingPreferences 1.0
 
 GridView {
     property ComputerModel computerModel : createModel()
@@ -65,6 +66,27 @@ GridView {
         model.initialize(ComputerManager)
         model.pairingCompleted.connect(pairingComplete)
         return model
+    }
+
+    Row {
+        anchors.centerIn: parent
+        spacing: 5
+        visible: pcGrid.count === 0
+
+        BusyIndicator {
+            id: searchSpinner
+            visible: StreamingPreferences.enableMdns
+        }
+
+        Label {
+            height: searchSpinner.height
+            elide: Label.ElideRight
+            text: StreamingPreferences.enableMdns ? "Searching for PCs with NVIDIA GameStream enabled..."
+                                                  : "Automatic PC discovery is disabled. Add your PC manually."
+            font.pointSize: 20
+            verticalAlignment: Text.AlignVCenter
+            wrapMode: Text.Wrap
+        }
     }
 
     model: computerModel

@@ -18,11 +18,7 @@ ApplicationWindow {
     width: 1280
     height: 600
 
-    StreamingPreferences {
-        id: prefs
-    }
-
-    visibility: prefs.startWindowed ? "Windowed" : "Maximized"
+    visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
 
     Component.onCompleted: {
         SdlGamepadKeyNavigation.enable()

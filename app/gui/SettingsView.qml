@@ -24,17 +24,15 @@ Flickable {
         }
     }
 
-    StreamingPreferences {
-        id: prefs
-    }
-
     StackView.onActivated: {
         SdlGamepadKeyNavigation.setSettingsMode(true)
     }
 
     StackView.onDeactivating: {
         SdlGamepadKeyNavigation.setSettingsMode(false)
-        prefs.save()
+
+        // Save the prefs so the Session can observe the changes
+        StreamingPreferences.save()
     }
 
     Column {
@@ -126,8 +124,8 @@ Flickable {
 
                             // load the saved width/height, and iterate through the ComboBox until a match is found
                             // and set it to that index.
-                            var saved_width = prefs.width
-                            var saved_height = prefs.height
+                            var saved_width = StreamingPreferences.width
+                            var saved_height = StreamingPreferences.height
                             currentIndex = 0
                             for (var i = 0; i < resolutionListModel.count; i++) {
                                 var el_width = parseInt(resolutionListModel.get(i).video_width);
@@ -176,12 +174,14 @@ Flickable {
                             var selectedHeight = parseInt(resolutionListModel.get(currentIndex).video_height)
 
                             // Only modify the bitrate if the values actually changed
-                            if (prefs.width !== selectedWidth || prefs.height !== selectedHeight) {
-                                prefs.width = selectedWidth
-                                prefs.height = selectedHeight
+                            if (StreamingPreferences.width !== selectedWidth || StreamingPreferences.height !== selectedHeight) {
+                                StreamingPreferences.width = selectedWidth
+                                StreamingPreferences.height = selectedHeight
 
-                                prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
-                                slider.value = prefs.bitrateKbps
+                                StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                          StreamingPreferences.height,
+                                                                                                          StreamingPreferences.fps);
+                                slider.value = StreamingPreferences.bitrateKbps
                             }
                         }
                     }
@@ -197,7 +197,7 @@ Flickable {
                             fpsListModel.append({"text": "60 FPS", "video_fps": "60"})
 
                             // Add unsupported FPS values that come before the display max FPS
-                            if (prefs.unsupportedFps) {
+                            if (StreamingPreferences.unsupportedFps) {
                                 if (max_fps > 90) {
                                     fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
                                 }
@@ -210,7 +210,7 @@ Flickable {
                             // handle wonky displays that report just over 60 Hz.
                             if (max_fps > 64) {
                                 // Mark any FPS value greater than 120 as unsupported
-                                if (prefs.unsupportedFps && max_fps > 120) {
+                                if (StreamingPreferences.unsupportedFps && max_fps > 120) {
                                     fpsListModel.append({"text": max_fps+" FPS (Unsupported)", "video_fps": ""+max_fps})
                                 }
                                 else if (max_fps > 120) {
@@ -222,7 +222,7 @@ Flickable {
                             }
 
                             // Add unsupported FPS values that come after the display max FPS
-                            if (prefs.unsupportedFps) {
+                            if (StreamingPreferences.unsupportedFps) {
                                 if (max_fps < 90) {
                                     fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
                                 }
@@ -237,7 +237,7 @@ Flickable {
                         function reinitialize() {
                             model = createModel()
 
-                            var saved_fps = prefs.fps
+                            var saved_fps = StreamingPreferences.fps
                             currentIndex = 0
                             for (var i = 0; i < model.count; i++) {
                                 var el_fps = parseInt(model.get(i).video_fps);
@@ -264,11 +264,13 @@ Flickable {
                             var selectedFps = parseInt(model.get(currentIndex).video_fps)
 
                             // Only modify the bitrate if the values actually changed
-                            if (prefs.fps !== selectedFps) {
-                                prefs.fps = selectedFps
+                            if (StreamingPreferences.fps !== selectedFps) {
+                                StreamingPreferences.fps = selectedFps
 
-                                prefs.bitrateKbps = prefs.getDefaultBitrate(prefs.width, prefs.height, prefs.fps);
-                                slider.value = prefs.bitrateKbps
+                                StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                          StreamingPreferences.height,
+                                                                                                          StreamingPreferences.fps);
+                                slider.value = StreamingPreferences.bitrateKbps
                             }
                         }
                     }
@@ -293,7 +295,7 @@ Flickable {
                 Slider {
                     id: slider
 
-                    value: prefs.bitrateKbps
+                    value: StreamingPreferences.bitrateKbps
 
                     stepSize: 500
                     from : 500
@@ -304,7 +306,7 @@ Flickable {
 
                     onValueChanged: {
                         bitrateTitle.text = "Video bitrate: " + (value / 1000.0) + " Mbps"
-                        prefs.bitrateKbps = value
+                        StreamingPreferences.bitrateKbps = value
                     }
                 }
 
@@ -319,7 +321,7 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        var savedWm = prefs.windowMode
+                        var savedWm = StreamingPreferences.windowMode
                         currentIndex = 0
                         for (var i = 0; i < windowModeListModel.count; i++) {
                              var thisWm = windowModeListModel.get(i).val;
@@ -350,7 +352,7 @@ Flickable {
                         }
                     }
                     onActivated: {
-                        prefs.windowMode = windowModeListModel.get(currentIndex).val
+                        StreamingPreferences.windowMode = windowModeListModel.get(currentIndex).val
                     }
 
                     ToolTip.delay: 1000
@@ -364,9 +366,9 @@ Flickable {
                     hoverEnabled: true
                     text: "V-Sync"
                     font.pointSize:  12
-                    checked: prefs.enableVsync
+                    checked: StreamingPreferences.enableVsync
                     onCheckedChanged: {
-                        prefs.enableVsync = checked
+                        StreamingPreferences.enableVsync = checked
                     }
 
                     ToolTip.delay: 1000
@@ -380,10 +382,10 @@ Flickable {
                     hoverEnabled: true
                     text: "Frame pacing"
                     font.pointSize:  12
-                    enabled: prefs.enableVsync
-                    checked: prefs.enableVsync && prefs.framePacing
+                    enabled: StreamingPreferences.enableVsync
+                    checked: StreamingPreferences.enableVsync && StreamingPreferences.framePacing
                     onCheckedChanged: {
-                        prefs.framePacing = checked
+                        StreamingPreferences.framePacing = checked
                     }
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -416,7 +418,7 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        var saved_audio = prefs.audioConfig
+                        var saved_audio = StreamingPreferences.audioConfig
                         currentIndex = 0
                         for (var i = 0; i < audioListModel.count; i++) {
                             var el_audio = audioListModel.get(i).val;
@@ -443,7 +445,7 @@ Flickable {
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
-                        prefs.audioConfig = audioListModel.get(currentIndex).val
+                        StreamingPreferences.audioConfig = audioListModel.get(currentIndex).val
                     }
                 }
 
@@ -465,9 +467,9 @@ Flickable {
                     id: startMaximizedCheck
                     text: "Maximize Moonlight window on startup"
                     font.pointSize: 12
-                    checked: !prefs.startWindowed
+                    checked: !StreamingPreferences.startWindowed
                     onCheckedChanged: {
-                        prefs.startWindowed = !checked
+                        StreamingPreferences.startWindowed = !checked
                     }
                 }
 
@@ -475,9 +477,9 @@ Flickable {
                     id: connectionWarningsCheck
                     text: "Show connection quality warnings"
                     font.pointSize: 12
-                    checked: prefs.connectionWarnings
+                    checked: StreamingPreferences.connectionWarnings
                     onCheckedChanged: {
-                        prefs.connectionWarnings = checked
+                        StreamingPreferences.connectionWarnings = checked
                     }
                 }
             }
@@ -505,9 +507,9 @@ Flickable {
                     id: singleControllerCheck
                     text: "Force gamepad #1 always present"
                     font.pointSize:  12
-                    checked: !prefs.multiController
+                    checked: !StreamingPreferences.multiController
                     onCheckedChanged: {
-                        prefs.multiController = !checked
+                        StreamingPreferences.multiController = !checked
                     }
 
                     ToolTip.delay: 1000
@@ -522,9 +524,9 @@ Flickable {
                     hoverEnabled: true
                     text: "Raw mouse input"
                     font.pointSize:  12
-                    checked: !prefs.mouseAcceleration
+                    checked: !StreamingPreferences.mouseAcceleration
                     onCheckedChanged: {
-                        prefs.mouseAcceleration = !checked
+                        StreamingPreferences.mouseAcceleration = !checked
                     }
 
                     ToolTip.delay: 1000
@@ -550,9 +552,9 @@ Flickable {
                     id: optimizeGameSettingsCheck
                     text: "Optimize game settings"
                     font.pointSize:  12
-                    checked: prefs.gameOptimizations
+                    checked: StreamingPreferences.gameOptimizations
                     onCheckedChanged: {
-                        prefs.gameOptimizations = checked
+                        StreamingPreferences.gameOptimizations = checked
                     }
                 }
 
@@ -560,9 +562,9 @@ Flickable {
                     id: audioPcCheck
                     text: "Play audio on host PC"
                     font.pointSize:  12
-                    checked: prefs.playAudioOnHost
+                    checked: StreamingPreferences.playAudioOnHost
                     onCheckedChanged: {
-                        prefs.playAudioOnHost = checked
+                        StreamingPreferences.playAudioOnHost = checked
                     }
                 }
             }
@@ -590,7 +592,7 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        var saved_vds = prefs.videoDecoderSelection
+                        var saved_vds = StreamingPreferences.videoDecoderSelection
                         currentIndex = 0
                         for (var i = 0; i < decoderListModel.count; i++) {
                             var el_vds = decoderListModel.get(i).val;
@@ -621,7 +623,7 @@ Flickable {
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
-                        prefs.videoDecoderSelection = decoderListModel.get(currentIndex).val
+                        StreamingPreferences.videoDecoderSelection = decoderListModel.get(currentIndex).val
                     }
                 }
 
@@ -636,7 +638,7 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        var saved_vcc = prefs.videoCodecConfig
+                        var saved_vcc = StreamingPreferences.videoCodecConfig
                         currentIndex = 0
                         for(var i = 0; i < codecListModel.count; i++) {
                             var el_vcc = codecListModel.get(i).val;
@@ -674,7 +676,7 @@ Flickable {
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
-                        prefs.videoCodecConfig = codecListModel.get(currentIndex).val
+                        StreamingPreferences.videoCodecConfig = codecListModel.get(currentIndex).val
                     }
                 }
 
@@ -682,12 +684,12 @@ Flickable {
                     id: unlockUnsupportedFps
                     text: "Unlock unsupported FPS options"
                     font.pointSize: 12
-                    checked: prefs.unsupportedFps
+                    checked: StreamingPreferences.unsupportedFps
                     onCheckedChanged: {
                         // This is called on init, so only do the work if we've
                         // actually changed the value.
-                        if (prefs.unsupportedFps != checked) {
-                            prefs.unsupportedFps = checked
+                        if (StreamingPreferences.unsupportedFps != checked) {
+                            StreamingPreferences.unsupportedFps = checked
 
                             // The selectable FPS values depend on whether
                             // this option is enabled or not
@@ -700,16 +702,16 @@ Flickable {
                     id: enableMdns
                     text: "Automatically find PCs on the local network (Recommended)"
                     font.pointSize: 12
-                    checked: prefs.enableMdns
+                    checked: StreamingPreferences.enableMdns
                     onCheckedChanged: {
                         // This is called on init, so only do the work if we've
                         // actually changed the value.
-                        if (prefs.enableMdns != checked) {
-                            prefs.enableMdns = checked
+                        if (StreamingPreferences.enableMdns != checked) {
+                            StreamingPreferences.enableMdns = checked
 
                             // We must save the updated preference to ensure
                             // ComputerManager can observe the change internally.
-                            prefs.save()
+                            StreamingPreferences.save()
 
                             // Restart polling so the mDNS change takes effect
                             if (window.pollingActive) {
@@ -724,9 +726,9 @@ Flickable {
                     id: quitAppAfter
                     text: "Quit app after quitting session"
                     font.pointSize: 12
-                    checked: prefs.quitAppAfter
+                    checked: StreamingPreferences.quitAppAfter
                     onCheckedChanged: {
-                        prefs.quitAppAfter = checked
+                        StreamingPreferences.quitAppAfter = checked
                     }
                 }
             }
