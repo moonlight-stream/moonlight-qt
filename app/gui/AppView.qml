@@ -30,6 +30,18 @@ GridView {
         // We do this here instead of onActivated to avoid losing the user's
         // selection when backing out of a different page of the app.
         currentIndex = -1
+
+        // HACK: If this is not Qt 5.12 (which has synchronousDrag),
+        // set anchors on creation. This will cause an anchor conflict
+        // with the parent StackView which breaks animation, but otherwise
+        // the grid will not be centered in the window.
+        if (this.synchronousDrag === undefined) {
+            anchors.fill = parent
+            anchors.leftMargin = leftMargin
+            anchors.rightMargin = rightMargin
+            anchors.topMargin = topMargin
+            anchors.bottomMargin = bottomMargin
+        }
     }
 
     StackView.onActivated: {
