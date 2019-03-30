@@ -21,8 +21,8 @@ Item {
 
     function stageFailed(stage, errorCode)
     {
+        // Display the error dialog after Session::exec() returns
         errorDialog.text = "Starting " + stage + " failed: Error " + errorCode
-        errorDialog.open()
     }
 
     function connectionStarted()
@@ -66,6 +66,9 @@ Item {
 
     function sessionFinished()
     {
+        // Enable GUI gamepad usage now
+        SdlGamepadKeyNavigation.enable()
+
         if (quitAfter) {
             if (errorDialog.text) {
                 // Quit when the error dialog is acknowledged
@@ -177,10 +180,6 @@ Item {
         onVisibleChanged: {
             if (!visible && quitAfter) {
                 Qt.quit()
-            }
-            else {
-                // Enable GUI gamepad usage now
-                SdlGamepadKeyNavigation.enable()
             }
         }
 
