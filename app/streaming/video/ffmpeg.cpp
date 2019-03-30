@@ -37,7 +37,7 @@ bool FFmpegVideoDecoder::isHardwareAccelerated()
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
-    return CAPABILITY_DIRECT_SUBMIT | m_Renderer->getDecoderCapabilities();
+    return m_Renderer->getDecoderCapabilities();
 }
 
 enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
