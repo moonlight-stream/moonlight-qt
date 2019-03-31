@@ -8,6 +8,7 @@
 #include <QNetworkProxyFactory>
 #include <QPalette>
 #include <QFont>
+#include <QCursor>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -363,6 +364,10 @@ int main(int argc, char *argv[])
         QFont fon("NotoSans");
         app.setFont(fon);
     }
+
+    // Move the mouse to the bottom right so it's invisible when using
+    // gamepad-only navigation.
+    QCursor().setPos(0xFFFF, 0xFFFF);
 #endif
 
     app.setWindowIcon(QIcon(":/res/moonlight.svg"));
