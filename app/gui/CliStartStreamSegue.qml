@@ -78,7 +78,7 @@ Item {
         }
     }
 
-    MessageDialog {
+    NavigableMessageDialog {
         id: quitAppDialog
         modality:Qt.WindowModal
         text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."

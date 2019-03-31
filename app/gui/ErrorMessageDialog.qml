@@ -3,7 +3,7 @@ import QtQuick.Dialogs 1.2
 
 import SystemProperties 1.0
 
-MessageDialog {
+NavigableMessageDialog {
     property string helpText
 
     informativeText: SystemProperties.hasBrowser ? helpText : ""

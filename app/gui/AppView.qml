@@ -214,7 +214,7 @@ GridView {
         }
     }
 
-    MessageDialog {
+    NavigableMessageDialog {
         id: quitAppDialog
         modality:Qt.WindowModal
         property string appName : ""

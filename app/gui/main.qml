@@ -230,7 +230,13 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Add a new PC manually"
+                ToolTip.text: "Add PC manually" + (newPcShortcut.nativeText ? (" ("+newPcShortcut.nativeText+")") : "")
+
+                Shortcut {
+                    id: newPcShortcut
+                    sequence: StandardKey.New
+                    onActivated: addPcButton.clicked()
+                }
 
                 onClicked: {
                     addPcDialog.open()
@@ -393,7 +399,7 @@ ApplicationWindow {
         }
     }
 
-    MessageDialog {
+    NavigableMessageDialog {
         id: wow64Dialog
         icon: StandardIcon.Warning
         standardButtons: StandardButton.Ok | StandardButton.Cancel
@@ -415,7 +421,7 @@ ApplicationWindow {
     }
 
     // This dialog appears when quitting via keyboard or gamepad button
-    MessageDialog {
+    NavigableMessageDialog {
         id: quitConfirmationDialog
         icon: StandardIcon.Warning
         standardButtons: StandardButton.Yes | StandardButton.No

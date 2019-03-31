@@ -238,7 +238,7 @@ GridView {
         }
     }
 
-    MessageDialog {
+    NavigableMessageDialog {
         id: pairDialog
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
@@ -250,7 +250,7 @@ GridView {
         }
     }
 
-    MessageDialog {
+    NavigableMessageDialog {
         id: deletePcDialog
         // don't allow edits to the rest of the window while open
         modality:Qt.WindowModal
