@@ -383,9 +383,7 @@ ApplicationWindow {
         text: "No functioning hardware accelerated H.264 video decoder was detected by Moonlight. " +
               "Your streaming performance may be severely degraded in this configuration."
         helpText: "Click the Help button for more information on solving this problem."
-        onHelp: {
-            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
-        }
+        helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems"
     }
 
     ErrorMessageDialog {
@@ -394,9 +392,7 @@ ApplicationWindow {
         text: "Moonlight does not support hardware acceleration on Wayland. Continuing on Wayland may result in poor streaming performance. " +
               "Please switch to an X session for optimal performance."
         helpText: "Click the Help button for more information."
-        onHelp: {
-            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems");
-        }
+        helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems"
     }
 
     NavigableMessageDialog {
@@ -415,9 +411,7 @@ ApplicationWindow {
         icon: StandardIcon.Warning
         text: "Moonlight detected gamepads without a mapping:\n" + unmappedGamepads
         helpText: "Click the Help button for information on how to map your gamepads."
-        onHelp: {
-            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping");
-        }
+        helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping"
     }
 
     // This dialog appears when quitting via keyboard or gamepad button

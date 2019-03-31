@@ -51,10 +51,6 @@ Item {
     ErrorMessageDialog {
         id: errorDialog
 
-        onHelp: {
-            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting");
-        }
-
         onVisibleChanged: {
             if (!visible) {
                 Qt.quit()

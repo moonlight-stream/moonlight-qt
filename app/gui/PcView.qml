@@ -231,11 +231,10 @@ GridView {
 
     ErrorMessageDialog {
         id: errorDialog
-        onHelp: {
-            // Using Setup-Guide here instead of Troubleshooting because it's likely that users
-            // will arrive here by forgetting to enable GameStream or not forwarding ports.
-            Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
-        }
+
+        // Using Setup-Guide here instead of Troubleshooting because it's likely that users
+        // will arrive here by forgetting to enable GameStream or not forwarding ports.
+        helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
     }
 
     NavigableMessageDialog {

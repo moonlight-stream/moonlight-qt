@@ -216,7 +216,6 @@ GridView {
 
     NavigableMessageDialog {
         id: quitAppDialog
-        modality:Qt.WindowModal
         property string appName : ""
         property bool segueToStream : false
         property string nextAppName: ""
