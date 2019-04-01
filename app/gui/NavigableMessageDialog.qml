@@ -7,10 +7,15 @@ import SystemProperties 1.0
 NavigableDialog {
     id: dialog
 
-    property alias text: dialogTextControl.dialogText
+    property alias text: dialogLabel.dialogText
 
     property string helpText
     property string helpUrl : "https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"
+
+    onOpened: {
+        // Force keyboard focus on the label so keyboard navigation works
+        dialogLabel.forceActiveFocus()
+    }
 
     RowLayout {
         spacing: 10
@@ -29,10 +34,9 @@ NavigableDialog {
         Label {
             property string dialogText
 
-            id: dialogTextControl
+            id: dialogLabel
             text: dialogText + (SystemProperties.hasBrowser ? (" " + helpText) : "")
             wrapMode: Text.WordWrap
-            focus: true
 
             // Cap the width so the dialog doesn't grow horizontally forever. This
             // will cause word wrap to kick in.

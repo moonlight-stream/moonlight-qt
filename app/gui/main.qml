@@ -424,6 +424,11 @@ ApplicationWindow {
 
         standardButtons: Dialog.Ok | Dialog.Cancel
 
+        onOpened: {
+            // Force keyboard focus on the textbox so keyboard navigation works
+            editText.forceActiveFocus()
+        }
+
         onAccepted: {
             if (editText.text) {
                 ComputerManager.addNewHost(editText.text, false)
