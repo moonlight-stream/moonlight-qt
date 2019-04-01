@@ -2,8 +2,6 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.2
 
-import SystemProperties 1.0
-
 NavigableDialog {
     id: dialog
 
@@ -11,6 +9,7 @@ NavigableDialog {
 
     property string helpText
     property string helpUrl : "https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"
+    property string helpTextSeparator : " "
 
     onOpened: {
         // Force keyboard focus on the label so keyboard navigation works
@@ -35,7 +34,7 @@ NavigableDialog {
             property string dialogText
 
             id: dialogLabel
-            text: dialogText + (SystemProperties.hasBrowser ? (" " + helpText) : "")
+            text: dialogText + ((helpText && (standardButtons & Dialog.Help)) ? (helpTextSeparator + helpText) : "")
             wrapMode: Text.WordWrap
 
             // Cap the width so the dialog doesn't grow horizontally forever. This

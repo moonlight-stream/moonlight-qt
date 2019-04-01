@@ -405,6 +405,7 @@ ApplicationWindow {
         id: unmappedGamepadDialog
         property string unmappedGamepads : ""
         text: "Moonlight detected gamepads without a mapping:\n" + unmappedGamepads
+        helpTextSeparator: "\n\n"
         helpText: "Click the Help button for information on how to map your gamepads."
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping"
     }
