@@ -50,10 +50,8 @@ Item {
     ErrorMessageDialog {
         id: errorDialog
 
-        onVisibleChanged: {
-            if (!visible) {
-                Qt.quit()
-            }
+        onClosed: {
+            Qt.quit()
         }
     }
 }

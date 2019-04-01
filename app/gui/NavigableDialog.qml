@@ -4,8 +4,10 @@ import QtQuick.Controls 2.2
 Dialog {
     property Item originalFocusItem
 
-    x: Math.round((window.width - width) / 2)
-    y: Math.round((window.height - height) / 2)
+    parent: overlay
+
+    x: Math.round((parent.width - width) / 2)
+    y: Math.round((parent.height - height) / 2)
 
     onAboutToShow: {
         originalFocusItem = window.activeFocusItem

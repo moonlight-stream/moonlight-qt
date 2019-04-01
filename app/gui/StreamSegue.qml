@@ -2,7 +2,6 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 import QtQuick.Window 2.2
 
-import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 
@@ -176,8 +175,8 @@ Item {
     ErrorMessageDialog {
         id: errorDialog
 
-        onVisibleChanged: {
-            if (!visible && quitAfter) {
+        onClosed: {
+            if (quitAfter) {
                 Qt.quit()
             }
         }

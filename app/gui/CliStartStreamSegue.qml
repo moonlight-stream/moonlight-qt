@@ -1,4 +1,3 @@
-import QtQml 2.2
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 
@@ -66,10 +65,8 @@ Item {
     ErrorMessageDialog {
         id: errorDialog
 
-        onVisibleChanged: {
-            if (!visible) {
-                Qt.quit();
-            }
+        onClosed: {
+            Qt.quit();
         }
     }
 
@@ -88,25 +85,6 @@ Item {
         }
 
         onAccepted: quitApp()
-
-        // Exit process if app quit is rejected (reacts also to closing of the
-        // dialog from title bar's close button).
-        // Note: this depends on undocumented behavior of visibleChanged()
-        // signal being emitted before yes() or accepted() has been emitted.
-        onVisibleChanged: {
-            if (!visible) {
-                quitTimer.start()
-            }
-        }
-        Component.onCompleted: {
-            yes.connect(quitTimer.stop)
-            accepted.connect(quitTimer.stop)
-        }
-    }
-
-    Timer {
-        id: quitTimer
-        interval: 100
-        onTriggered: Qt.quit()
+        onRejected: Qt.quit()
     }
 }
