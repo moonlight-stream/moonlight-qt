@@ -1,5 +1,4 @@
 import QtQuick 2.9
-import QtQuick.Dialogs 1.2
 import QtQuick.Controls 2.2
 
 import AppModel 1.0
@@ -221,7 +220,7 @@ GridView {
         property string nextAppName: ""
         property int nextAppIndex: 0
         text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
-        standardButtons: StandardButton.Yes | StandardButton.No
+        standardButtons: Dialog.Yes | Dialog.No
 
         function quitApp() {
             var component = Qt.createComponent("QuitSegue.qml")
@@ -243,9 +242,6 @@ GridView {
             appModel.quitRunningApp()
         }
 
-        onYes: quitApp()
-
-        // For keyboard/gamepad navigation
         onAccepted: quitApp()
     }
 

@@ -1,6 +1,5 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
-import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 
@@ -240,10 +239,9 @@ GridView {
     NavigableMessageDialog {
         id: pairDialog
         // don't allow edits to the rest of the window while open
-        modality:Qt.WindowModal
         property string pin : "0000"
         text:"Please enter " + pin + " on your GameStream PC. This dialog will close when pairing is completed."
-        standardButtons: StandardButton.Cancel
+        standardButtons: Dialog.Cancel
         onRejected: {
             // FIXME: We should interrupt pairing here
         }
@@ -252,19 +250,15 @@ GridView {
     NavigableMessageDialog {
         id: deletePcDialog
         // don't allow edits to the rest of the window while open
-        modality:Qt.WindowModal
         property int pcIndex : -1;
         text:"Are you sure you want to remove this PC?"
-        standardButtons: StandardButton.Yes | StandardButton.No
+        standardButtons: Dialog.Yes | Dialog.No
 
         function deletePc() {
             console.log("deleting PC pairing for PC at index: " + pcIndex)
             computerModel.deleteComputer(pcIndex);
         }
 
-        onYes: deletePc()
-
-        // For keyboard/gamepad activation
         onAccepted: deletePc()
     }
 

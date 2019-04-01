@@ -1,7 +1,6 @@
 import QtQml 2.2
 import QtQuick 2.0
 import QtQuick.Controls 2.2
-import QtQuick.Dialogs 1.2
 
 import ComputerManager 1.0
 
@@ -76,9 +75,8 @@ Item {
 
     NavigableMessageDialog {
         id: quitAppDialog
-        modality:Qt.WindowModal
         text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
-        standardButtons: StandardButton.Yes | StandardButton.No
+        standardButtons: Dialog.Yes | Dialog.No
         property string appName : ""
 
         function quitApp() {
@@ -89,9 +87,6 @@ Item {
             launcher.quitRunningApp()
         }
 
-        onYes: quitApp()
-
-        // For keyboard/gamepad navigation
         onAccepted: quitApp()
 
         // Exit process if app quit is rejected (reacts also to closing of the

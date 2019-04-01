@@ -342,18 +342,6 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    // Override the default palette to fix dialog rendering on Linux
-    // with QGnomePlatform loaded. Using setDesktopSettingsAware(false)
-    // also works but can cause crashes in some configurations.
-    //
-    // See the following issues:
-    // https://github.com/moonlight-stream/moonlight-qt/issues/161
-    // https://github.com/moonlight-stream/moonlight-qt/issues/185
-    // https://github.com/FedoraQt/QGnomePlatform/issues/42
-#ifdef Q_OS_LINUX
-    app.setPalette(QPalette(Qt::lightGray));
-#endif
-
 #ifdef STEAM_LINK
     // Qt 5.9 from the Steam Link SDK is not able to load any fonts
     // since the Steam Link doesn't include any of the ones it looks

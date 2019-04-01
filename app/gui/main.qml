@@ -1,6 +1,5 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
-import QtQuick.Dialogs 1.2
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 
@@ -379,7 +378,6 @@ ApplicationWindow {
 
     ErrorMessageDialog {
         id: noHwDecoderDialog
-        icon: StandardIcon.Warning
         text: "No functioning hardware accelerated H.264 video decoder was detected by Moonlight. " +
               "Your streaming performance may be severely degraded in this configuration."
         helpText: "Click the Help button for more information on solving this problem."
@@ -388,7 +386,6 @@ ApplicationWindow {
 
     ErrorMessageDialog {
         id: waylandDialog
-        icon: StandardIcon.Warning
         text: "Moonlight does not support hardware acceleration on Wayland. Continuing on Wayland may result in poor streaming performance. " +
               "Please switch to an X session for optimal performance."
         helpText: "Click the Help button for more information."
@@ -397,8 +394,7 @@ ApplicationWindow {
 
     NavigableMessageDialog {
         id: wow64Dialog
-        icon: StandardIcon.Warning
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        standardButtons: Dialog.Ok | Dialog.Cancel
         text: "This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance."
         onAccepted: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-qt/releases");
@@ -408,7 +404,6 @@ ApplicationWindow {
     ErrorMessageDialog {
         id: unmappedGamepadDialog
         property string unmappedGamepads : ""
-        icon: StandardIcon.Warning
         text: "Moonlight detected gamepads without a mapping:\n" + unmappedGamepads
         helpText: "Click the Help button for information on how to map your gamepads."
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping"
@@ -417,21 +412,17 @@ ApplicationWindow {
     // This dialog appears when quitting via keyboard or gamepad button
     NavigableMessageDialog {
         id: quitConfirmationDialog
-        icon: StandardIcon.Warning
-        standardButtons: StandardButton.Yes | StandardButton.No
+        standardButtons: Dialog.Yes | Dialog.No
         text: "Are you sure you want to quit?"
-
-        onYes: Qt.quit()
-
         // For keyboard/gamepad navigation
         onAccepted: Qt.quit()
     }
 
-    Dialog {
+    NavigableDialog {
         id: addPcDialog
         property string label: "Enter the IP address of your GameStream PC:"
 
-        standardButtons: StandardButton.Ok | StandardButton.Cancel
+        standardButtons: Dialog.Ok | Dialog.Cancel
 
         onAccepted: {
             if (editText.text) {
@@ -439,22 +430,20 @@ ApplicationWindow {
             }
         }
 
-        onVisibleChanged: {
-            if (visible) {
-                editText.forceActiveFocus()
-            }
-        }
-
         ColumnLayout {
-            Text {
+            Label {
                 text: addPcDialog.label
                 font.bold: true
             }
 
             TextField {
                 id: editText
-                color: "black"
                 Layout.fillWidth: true
+                focus: true
+
+                Keys.onReturnPressed: {
+                    addPcDialog.accept()
+                }
             }
         }
     }
