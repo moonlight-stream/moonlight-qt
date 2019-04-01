@@ -45,6 +45,10 @@ NavigableDialog {
             Keys.onReturnPressed: {
                 accept()
             }
+
+            Keys.onEscapePressed: {
+                reject()
+            }
         }
     }
 

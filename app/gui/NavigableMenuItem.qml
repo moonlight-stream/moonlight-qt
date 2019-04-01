@@ -11,6 +11,13 @@ MenuItem {
     height: visible ? implicitHeight : 0
     focusPolicy: visible ? Qt.TabFocus : Qt.NoFocus
 
+    onTriggered: {
+        // We must close the context menu first or
+        // it can steal focus from any dialogs that
+        // onTriggered may spawn.
+        parentMenu.close()
+    }
+
     Keys.onReturnPressed: {
         triggered()
     }

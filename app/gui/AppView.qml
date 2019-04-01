@@ -199,10 +199,7 @@ GridView {
             NavigableMenuItem {
                 parentMenu: appContextMenu
                 text: model.running ? "Resume Game" : "Launch Game"
-                onTriggered: {
-                    appContextMenu.close()
-                    launchOrResumeSelectedApp()
-                }
+                onTriggered: launchOrResumeSelectedApp()
             }
             NavigableMenuItem {
                 parentMenu: appContextMenu
