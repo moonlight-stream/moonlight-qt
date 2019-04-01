@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
+import QtQuick.Layouts 1.2
 
 import SystemProperties 1.0
 
@@ -11,7 +12,7 @@ NavigableDialog {
     property string helpText
     property string helpUrl : "https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"
 
-    Row {
+    RowLayout {
         spacing: 10
 
         Image {
@@ -33,7 +34,9 @@ NavigableDialog {
             wrapMode: Text.WordWrap
             focus: true
 
-            anchors.verticalCenter: parent.verticalCenter
+            // Cap the width so the dialog doesn't grow horizontally forever. This
+            // will cause word wrap to kick in.
+            Layout.maximumWidth: 400
 
             Keys.onReturnPressed: {
                 accept()
