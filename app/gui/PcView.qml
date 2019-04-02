@@ -12,11 +12,11 @@ GridView {
     id: pcGrid
     focus: true
     activeFocusOnTab: true
-    leftMargin: (parent.width % (cellWidth + rightMargin)) / 2
     topMargin: 20
-    rightMargin: 5
     bottomMargin: 5
-    cellWidth: 350; cellHeight: 350;
+    leftMargin: contentHeight > cellHeight && parent.width > cellWidth ? (parent.width % cellWidth) / 2 : 10
+    rightMargin: leftMargin
+    cellWidth: 310; cellHeight: 350;
     objectName: "Computers"
 
     Component.onCompleted: {
@@ -263,11 +263,9 @@ GridView {
     ScrollBar.vertical: ScrollBar {
         parent: pcGrid.parent
         anchors {
-            top: pcGrid.top
-            left: pcGrid.right
-            bottom: pcGrid.bottom
-
-            leftMargin: -10
+            top: parent.top
+            right: parent.right
+            bottom: parent.bottom
         }
     }
 }

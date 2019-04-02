@@ -12,10 +12,10 @@ GridView {
     id: appGrid
     focus: true
     activeFocusOnTab: true
-    leftMargin: (parent.width % (cellWidth + rightMargin)) / 2
     topMargin: 20
-    rightMargin: 5
     bottomMargin: 5
+    leftMargin: contentHeight > cellHeight && parent.width > cellWidth ? (parent.width % cellWidth) / 2 : 10
+    rightMargin: leftMargin
     cellWidth: 230; cellHeight: 297;
 
     function computerLost()
@@ -268,11 +268,9 @@ GridView {
 
         parent: appGrid.parent
         anchors {
-            top: appGrid.top
-            left: appGrid.right
-            bottom: appGrid.bottom
-
-            leftMargin: -10
+            top: parent.top
+            right: parent.right
+            bottom: parent.bottom
         }
     }
 }
