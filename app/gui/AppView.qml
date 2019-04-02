@@ -158,12 +158,12 @@ GridView {
             visible: appIcon.isPlaceholder
             text: model.name
             width: appIcon.width
-            height: model.running ? 150 : appIcon.height
+            height: model.running ? 175 : appIcon.height
             anchors.left: appIcon.left
             anchors.right: appIcon.right
             anchors.bottom: appIcon.bottom
             font.pointSize: 22
-            verticalAlignment: model.running ? Text.AlignTop : Text.AlignVCenter
+            verticalAlignment: Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             elide: Text.ElideRight
