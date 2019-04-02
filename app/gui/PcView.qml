@@ -9,15 +9,29 @@ import StreamingPreferences 1.0
 GridView {
     property ComputerModel computerModel : createModel()
 
+    // Prevent the margin from dropping below 10. By keeping a floor on the margin value
+    // this prevents a binding loop caused by the ternary condition changing and decreasing
+    // the margin size, thus causing it to change back.
+    property real horizontalMargin: Math.max(10,
+                                             contentHeight > cellHeight && parent.width > cellWidth ?
+                                                 (parent.width % cellWidth) / 2 : 0)
+
     id: pcGrid
     focus: true
     activeFocusOnTab: true
     topMargin: 20
     bottomMargin: 5
-    leftMargin: contentHeight > cellHeight && parent.width > cellWidth ? (parent.width % cellWidth) / 2 : 10
-    rightMargin: leftMargin
+    leftMargin: horizontalMargin
+    rightMargin: horizontalMargin
     cellWidth: 310; cellHeight: 350;
     objectName: "Computers"
+
+    onHorizontalMarginChanged: {
+        if (this.synchronousDrag === undefined) {
+            anchors.leftMargin = horizontalMargin
+            anchors.rightMargin = horizontalMargin
+        }
+    }
 
     Component.onCompleted: {
         // Don't show any highlighted item until interacting with them.
@@ -31,8 +45,6 @@ GridView {
         // the grid will not be centered in the window.
         if (this.synchronousDrag === undefined) {
             anchors.fill = parent
-            anchors.leftMargin = leftMargin
-            anchors.rightMargin = rightMargin
             anchors.topMargin = topMargin
             anchors.bottomMargin = bottomMargin
         }

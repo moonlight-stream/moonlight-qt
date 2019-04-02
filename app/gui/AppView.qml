@@ -9,19 +9,33 @@ GridView {
     property AppModel appModel : createModel()
     property bool activated
 
+    // Prevent the margin from dropping below 10. By keeping a floor on the margin value
+    // this prevents a binding loop caused by the ternary condition changing and decreasing
+    // the margin size, thus causing it to change back.
+    property real horizontalMargin: Math.max(10,
+                                             contentHeight > cellHeight && parent.width > cellWidth ?
+                                                 (parent.width % cellWidth) / 2 : 0)
+
     id: appGrid
     focus: true
     activeFocusOnTab: true
     topMargin: 20
     bottomMargin: 5
-    leftMargin: contentHeight > cellHeight && parent.width > cellWidth ? (parent.width % cellWidth) / 2 : 10
-    rightMargin: leftMargin
+    leftMargin: horizontalMargin
+    rightMargin: horizontalMargin
     cellWidth: 230; cellHeight: 297;
 
     function computerLost()
     {
         // Go back to the PC view on PC loss
         stackView.pop()
+    }
+
+    onHorizontalMarginChanged: {
+        if (this.synchronousDrag === undefined) {
+            anchors.leftMargin = horizontalMargin
+            anchors.rightMargin = horizontalMargin
+        }
     }
 
     Component.onCompleted: {
@@ -36,8 +50,6 @@ GridView {
         // the grid will not be centered in the window.
         if (this.synchronousDrag === undefined) {
             anchors.fill = parent
-            anchors.leftMargin = leftMargin
-            anchors.rightMargin = rightMargin
             anchors.topMargin = topMargin
             anchors.bottomMargin = bottomMargin
         }
