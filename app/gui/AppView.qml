@@ -16,7 +16,7 @@ GridView {
     topMargin: 20
     rightMargin: 5
     bottomMargin: 5
-    cellWidth: 225; cellHeight: 385;
+    cellWidth: 230; cellHeight: 297;
 
     function computerLost()
     {
@@ -63,26 +63,44 @@ GridView {
     model: appModel
 
     delegate: NavigableItemDelegate {
-        width: 200; height: 335;
+        width: 220; height: 287;
         grid: appGrid
 
         Image {
+            property bool isPlaceholder: false
+
             id: appIcon
             anchors.horizontalCenter: parent.horizontalCenter
-            y: 20
+            y: 10
             source: model.boxart
-            sourceSize {
-                width: 150
-                height: 200
+
+            onSourceSizeChanged: {
+                if ((width == 130 && height == 180) || // GFE 2.0 placeholder image
+                    (width == 628 && height == 888) || // GFE 3.0 placeholder image
+                    (width == 200 && height == 266))   // Our no_app_image.png
+                {
+                    isPlaceholder = true
+                }
+                else
+                {
+                    isPlaceholder = false
+                }
+
+                width = 200
+                height = 267
             }
-            width: sourceSize.width
-            height: sourceSize.height
-            fillMode: Image.Pad
+
+            // Display a tooltip with the full name if it's truncated
+            ToolTip.text: model.name
+            ToolTip.delay: 1000
+            ToolTip.timeout: 5000
+            ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText.visible || appNameText.truncated)
         }
 
         ToolButton {
             id: resumeButton
-            anchors.verticalCenterOffset: -50
+            anchors.horizontalCenterOffset: appIcon.isPlaceholder ? -47 : 0
+            anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : -60
             anchors.centerIn: appIcon
             visible: model.running
             implicitWidth: 125
@@ -109,7 +127,8 @@ GridView {
 
         ToolButton {
             id: quitButton
-            anchors.verticalCenterOffset: 50
+            anchors.horizontalCenterOffset: appIcon.isPlaceholder ? 47 : 0
+            anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : 60
             anchors.centerIn: appIcon
             visible: model.running
             implicitWidth: 125
@@ -136,20 +155,18 @@ GridView {
 
         Label {
             id: appNameText
+            visible: appIcon.isPlaceholder
             text: model.name
-            width: parent.width
-            height: 125
-            anchors.top: appIcon.bottom
+            width: appIcon.width
+            height: model.running ? 150 : appIcon.height
+            anchors.left: appIcon.left
+            anchors.right: appIcon.right
+            anchors.bottom: appIcon.bottom
             font.pointSize: 22
+            verticalAlignment: model.running ? Text.AlignTop : Text.AlignVCenter
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
             elide: Text.ElideRight
-
-            // Display a tooltip with the full name if it's truncated
-            ToolTip.text: model.name
-            ToolTip.delay: 1000
-            ToolTip.timeout: 5000
-            ToolTip.visible: (parent.hovered || parent.highlighted) && truncated
         }
 
         function launchOrResumeSelectedApp()
