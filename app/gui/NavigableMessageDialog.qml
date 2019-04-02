@@ -35,11 +35,13 @@ NavigableDialog {
 
             id: dialogLabel
             text: dialogText + ((helpText && (standardButtons & Dialog.Help)) ? (helpTextSeparator + helpText) : "")
-            wrapMode: Text.WordWrap
+            wrapMode: Text.Wrap
+            elide: Label.ElideRight
 
             // Cap the width so the dialog doesn't grow horizontally forever. This
             // will cause word wrap to kick in.
             Layout.maximumWidth: 400
+            Layout.maximumHeight: 400
 
             Keys.onReturnPressed: {
                 accept()
