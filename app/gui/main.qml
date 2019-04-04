@@ -15,13 +15,56 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 600
+    height: 700
+    flags: Qt.FramelessWindowHint | Qt.Window
 
     visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
 
     Component.onCompleted: {
         SdlGamepadKeyNavigation.enable()
     }
+
+    MouseArea {
+        id: rightResize
+        width: 5
+        anchors {
+            top: parent.top
+            bottom: bottomResize.top
+            right: parent.right
+        }
+        cursorShape:  Qt.SizeHorCursor
+
+        onPressed: {
+            previousX = mouseX
+        }
+
+        onMouseXChanged: {
+            var dx = mouseX - previousX
+            if (window.width + dx >= 1100)
+               {window.setWidth(window.width + dx)}
+        }
+    }
+
+    MouseArea {
+       id: bottomResize
+       height: 5
+       anchors {
+           bottom: parent.bottom
+           left: parent.left
+           right: parent.right
+       }
+       cursorShape: Qt.SizeVerCursor
+
+       onPressed: {
+           previousY = mouseY
+       }
+
+       onMouseYChanged: {
+           var dy = mouseY - previousY
+           if (window.height + dy >= 600)
+              {window.setHeight(window.height + dy)}
+       }
+   }
 
     StackView {
         id: stackView
@@ -175,6 +218,32 @@ ApplicationWindow {
         id: toolBar
         anchors.topMargin: 5
         anchors.bottomMargin: 5
+
+        MouseArea {
+            anchors.fill: parent;
+
+
+            onPressed: {
+                previousX = mouseX
+                previousY = mouseY
+            }
+
+            onPositionChanged: {
+                var dx = mouseX - previousX
+                var dy = mouseY - previousY
+                var new_x = window.x + dx
+                var new_y = window.y + dy
+                if (new_y <= 0 && window.visibility !== Window.Maximized)
+                    window.visibility = Window.Maximized
+                else
+                {
+                    if (window.visibility === Window.Maximized)
+                        window.visibility = Window.Windowed
+                    window.x = new_x
+                    window.y = new_y
+                }
+            }
+        }
 
         RowLayout {
             spacing: 20
