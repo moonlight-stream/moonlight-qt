@@ -53,6 +53,7 @@ GridView {
     StackView.onActivated: {
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
+        gamesBtn.checked = true
     }
 
     StackView.onDeactivating: {

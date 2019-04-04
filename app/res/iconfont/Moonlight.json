@@ -2,11 +2,19 @@
   "metadata": {
     "name": "Moonlight",
     "lastOpened": 0,
-    "created": 1554365987488
+    "created": 1554366077716
   },
   "iconSets": [
     {
       "selection": [
+        {
+          "order": 13,
+          "id": 12,
+          "name": "controller",
+          "prevSize": 32,
+          "code": 59659,
+          "tempChar": ""
+        },
         {
           "id": 1,
           "order": 2,
@@ -14,7 +22,7 @@
           "prevSize": 32,
           "code": 59648,
           "name": "add_game",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 2,
@@ -23,7 +31,7 @@
           "prevSize": 32,
           "code": 59649,
           "name": "back",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 3,
@@ -32,7 +40,7 @@
           "prevSize": 32,
           "code": 59650,
           "name": "close",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 4,
@@ -41,7 +49,7 @@
           "prevSize": 32,
           "code": 59651,
           "name": "games",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 5,
@@ -50,7 +58,7 @@
           "prevSize": 32,
           "code": 59652,
           "name": "help",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 6,
@@ -59,7 +67,7 @@
           "prevSize": 32,
           "code": 59653,
           "name": "logs",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 7,
@@ -68,7 +76,7 @@
           "prevSize": 32,
           "code": 59654,
           "name": "maximize",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 8,
@@ -77,7 +85,7 @@
           "prevSize": 32,
           "code": 59655,
           "name": "minimize",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 9,
@@ -86,7 +94,7 @@
           "prevSize": 32,
           "code": 59656,
           "name": "settings",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 10,
@@ -95,7 +103,7 @@
           "prevSize": 32,
           "code": 59657,
           "name": "update",
-          "tempChar": ""
+          "tempChar": ""
         },
         {
           "id": 11,
@@ -104,16 +112,35 @@
           "prevSize": 32,
           "code": 59658,
           "name": "windowize",
-          "tempChar": ""
+          "tempChar": ""
         }
       ],
       "id": 0,
       "metadata": {
-        "name": "icomoon"
+        "name": "icomoon",
+        "importSize": {
+          "width": 24,
+          "height": 24
+        }
       },
       "height": 1024,
       "prevSize": 32,
       "icons": [
+        {
+          "id": 11,
+          "paths": [
+            "M896 256h-768c-47.070 0.145-85.188 38.264-85.333 85.319l-0 0.014v341.333c0.145 47.070 38.264 85.188 85.319 85.333l0.014 0h768c47.070-0.145 85.188-38.264 85.333-85.319l0-0.014v-341.333c-0.145-47.070-38.264-85.188-85.319-85.333l-0.014-0zM469.333 554.667h-128v128h-85.333v-128h-128v-85.333h128v-128h85.333v128h128zM661.333 640c-35.346 0-64-28.654-64-64s28.654-64 64-64c35.346 0 64 28.654 64 64v0c0 35.346-28.654 64-64 64v0zM832 512c-35.346 0-64-28.654-64-64s28.654-64 64-64c35.346 0 64 28.654 64 64v0c0 35.346-28.654 64-64 64v0z"
+          ],
+          "attrs": [
+            {}
+          ],
+          "isMulticolor": false,
+          "isMulticolor2": false,
+          "grid": 0,
+          "tags": [
+            "controller"
+          ]
+        },
         {
           "id": 0,
           "paths": [
@@ -125,7 +152,8 @@
             "add_game"
           ],
           "defaultCode": 59648,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 1,
@@ -139,7 +167,8 @@
             "back"
           ],
           "defaultCode": 59649,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 2,
@@ -152,7 +181,8 @@
             "close"
           ],
           "defaultCode": 59650,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 3,
@@ -166,7 +196,8 @@
             "games"
           ],
           "defaultCode": 59651,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 4,
@@ -179,7 +210,8 @@
             "help"
           ],
           "defaultCode": 59652,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 5,
@@ -192,7 +224,8 @@
             "logs"
           ],
           "defaultCode": 59653,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 6,
@@ -205,7 +238,8 @@
             "maximize"
           ],
           "defaultCode": 59654,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 7,
@@ -218,7 +252,8 @@
             "minimize"
           ],
           "defaultCode": 59655,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 8,
@@ -231,7 +266,8 @@
             "settings"
           ],
           "defaultCode": 59656,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 9,
@@ -244,7 +280,8 @@
             "update"
           ],
           "defaultCode": 59657,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         },
         {
           "id": 10,
@@ -257,12 +294,14 @@
             "windowize"
           ],
           "defaultCode": 59658,
-          "grid": 0
+          "grid": 0,
+          "attrs": []
         }
-      ]
+      ],
+      "invisible": false,
+      "colorThemes": []
     }
   ],
-  "uid": -1,
   "preferences": {
     "showGlyphs": true,
     "showCodes": true,
@@ -289,5 +328,6 @@
       "bgColor": 16777215
     },
     "historySize": 50
-  }
+  },
+  "uid": -1
 }

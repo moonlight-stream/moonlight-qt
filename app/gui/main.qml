@@ -85,7 +85,195 @@ ApplicationWindow {
             Layout.maximumWidth: 70
             Layout.alignment: Qt.AlignLeft
             Material.background: Material.primary
-            //Material.elevation: 10
+
+            ButtonGroup {
+                buttons: column_sidebar.children
+            }
+
+            ColumnLayout{
+                id: column_sidebar
+                anchors.left: parent.left
+                anchors.right: parent.right
+                spacing: 20
+
+                NavigableMenuButton {
+                    id: gamesBtn
+                    Layout.topMargin: 30
+                    Layout.minimumHeight: 80
+                    Layout.minimumWidth: 80
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    checkable: true
+                    Material.foreground: "#C4B6B6"
+
+                    text: "\ue903"
+                    font.family: iconFont.name
+                    font.pointSize: 28
+
+                    onClicked: {
+                        navigateTo("qrc:/gui/PcView.qml", "Computers");
+                    }
+
+                    Keys.onRightPressed: {
+                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    }
+                }
+
+                NavigableMenuButton {
+                    id: settingsBtn
+                    Layout.minimumHeight: 80
+                    Layout.minimumWidth: 80
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    checkable: true
+                    Material.foreground: "#C4B6B6"
+
+                    text: "\ue908"
+                    font.family: iconFont.name
+                    font.pointSize: 28
+
+                    onClicked: {
+                        navigateTo("qrc:/gui/SettingsView.qml", "Settings");
+                    }
+
+                    Keys.onRightPressed: {
+                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    }
+                    Shortcut {
+                        id: settingsShortcut
+                        sequence: StandardKey.Preferences
+                        onActivated: settingsButton.clicked()
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Settings" + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
+                }
+
+                NavigableMenuButton {
+                    //TODO: Implement a log view then unhide this button
+                    id: logsBtn
+                    Layout.minimumHeight: 80
+                    Layout.minimumWidth: 80
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    checkable: true
+                    Material.foreground: "#C4B6B6"
+                    visible: false
+                    text: "\ue905"
+                    font.family: iconFont.name
+                    font.pointSize: 28
+
+                    onClicked: {
+                        navigateTo("qrc:/gui/LogView.qml", "Logs");
+                    }
+
+                    Keys.onRightPressed: {
+                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    }
+                }
+
+                NavigableMenuButton {
+                    // TODO: Implement gamepad mapping then unhide this button
+                    id: gamepadBtn
+                    Layout.minimumHeight: 80
+                    Layout.minimumWidth: 80
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    checkable: false
+                    visible: false
+                    Material.foreground: "#C4B6B6"
+
+                    text: "\ue90b"
+                    font.family: iconFont.name
+                    font.pointSize: 28
+
+                    onClicked: {
+
+                       navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
+
+                    }
+
+                    Keys.onRightPressed: {
+                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    }
+                }
+
+
+                NavigableMenuButton {
+                    id: helpBtn
+                    Layout.minimumHeight: 80
+                    Layout.minimumWidth: 80
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    checkable: false
+                    visible: SystemProperties.hasBrowser
+                    Material.foreground: "#C4B6B6"
+
+                    text: "\ue904"
+                    font.family: iconFont.name
+                    font.pointSize: 28
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Help" + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
+
+                    Shortcut {
+                        id: helpShortcut
+                        sequence: StandardKey.HelpContents
+                        onActivated: helpBtn.clicked()
+                    }
+
+
+                    // TODO need to make sure browser is brought to foreground.
+                    onClicked: {
+
+                       Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
+
+                    }
+
+                    Keys.onRightPressed: {
+                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    }
+                }
+            }
+
+            NavigableMenuButton {
+                property string browserUrl: ""
+
+                id: updateBtn
+                Layout.minimumHeight: 80
+                Layout.minimumWidth: 80
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                anchors.bottomMargin: 10
+                checkable: false
+                visible: false
+                Material.foreground: "#C4B6B6"
+
+                text: "\ue909"
+                font.family: iconFont.name
+                font.pointSize: 28
+
+                function updateAvailable(version, url)
+                {
+                    ToolTip.text = "Update available for Moonlight: Version " + version
+                    updateButton.browserUrl = url
+                    updateButton.visible = true
+                }
+
+                Component.onCompleted: {
+                    AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
+                    AutoUpdateChecker.start()
+                }
+
+                onClicked: {
+
+                   Qt.openUrlExternally(browserUrl);
+
+                }
+
+                Keys.onRightPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+            }
         }
 
         StackView {
@@ -340,7 +528,7 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
 
-            NavigableToolButton {
+           /* NavigableToolButton {
                 id: addPcButton
                 visible: stackView.currentItem.objectName === "Computers"
 
@@ -499,7 +687,7 @@ ApplicationWindow {
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
                 ToolTip.text: "Settings" + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
-            }
+            }*/
         }
     }
 

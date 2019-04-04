@@ -58,6 +58,7 @@ GridView {
     StackView.onActivated: {
         appModel.computerLost.connect(computerLost)
         activated = true
+        gamesBtn.checked = true
     }
 
     StackView.onDeactivating: {
