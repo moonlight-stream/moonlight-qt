@@ -23,6 +23,19 @@ ApplicationWindow {
 
     visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
 
+    background: Image {
+        id: backgroundImage
+        source: "qrc:/res/background.svg"
+        sourceSize.width: 1000
+        sourceSize.height: 1230
+        width: 200
+        height: 246
+        x: (parent.width - width + 65) / 2
+        y: (parent.height - height) / 2
+
+        visible: false
+    }
+
     FontLoader {
         id: iconFont;
         source: "qrc:/data/res/iconfont/iconfont.ttf"

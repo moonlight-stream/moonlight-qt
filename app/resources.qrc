@@ -20,6 +20,7 @@
         <file>res/dot-green.svg</file>
         <file>res/dot-red.svg</file>
         <file>res/logo.svg</file>
+        <file>res/background.svg</file>
     </qresource>
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>

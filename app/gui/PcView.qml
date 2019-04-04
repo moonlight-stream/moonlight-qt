@@ -54,10 +54,12 @@ GridView {
         // Setup signals on CM
         ComputerManager.computerAddCompleted.connect(addComplete)
         gamesBtn.checked = true
+        backgroundImage.visible = true
     }
 
     StackView.onDeactivating: {
         ComputerManager.computerAddCompleted.disconnect(addComplete)
+        backgroundImage.visible = false
     }
 
     function pairingComplete(error)

@@ -59,11 +59,13 @@ GridView {
         appModel.computerLost.connect(computerLost)
         activated = true
         gamesBtn.checked = true
+        backgroundImage.visible = true
     }
 
     StackView.onDeactivating: {
         appModel.computerLost.disconnect(computerLost)
         activated = false
+        backgroundImage.visible = false
     }
 
     function createModel()
