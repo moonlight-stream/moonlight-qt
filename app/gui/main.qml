@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
+import QtQuick.Controls.Material 2.2
 
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
@@ -78,6 +79,39 @@ ApplicationWindow {
         initialItem: initialView
         anchors.fill: parent
         focus: true
+
+        pushEnter: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to:1
+                    duration: 200
+                }
+            }
+         pushExit: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to:0
+                    duration: 200
+                }
+            }
+          popEnter: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to:1
+                    duration: 200
+                }
+            }
+           popExit: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to:0
+                    duration: 200
+                }
+            }
 
         onCurrentItemChanged: {
             // Ensure focus travels to the next view when going back
