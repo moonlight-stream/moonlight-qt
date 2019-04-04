@@ -74,82 +74,99 @@ ApplicationWindow {
        }
    }
 
-    StackView {
-        id: stackView
-        initialItem: initialView
+    RowLayout {
+        spacing: 0
         anchors.fill: parent
-        focus: true
 
-        pushEnter: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0
-                    to:1
-                    duration: 200
-                }
-            }
-         pushExit: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1
-                    to:0
-                    duration: 200
-                }
-            }
-          popEnter: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 0
-                    to:1
-                    duration: 200
-                }
-            }
-           popExit: Transition {
-                PropertyAnimation {
-                    property: "opacity"
-                    from: 1
-                    to:0
-                    duration: 200
-                }
-            }
-
-        onCurrentItemChanged: {
-            // Ensure focus travels to the next view when going back
-            if (currentItem) {
-                currentItem.forceActiveFocus()
-            }
+        ToolBar {
+            id: sidebar
+            Layout.fillHeight: true
+            Layout.minimumWidth: 70
+            Layout.maximumWidth: 70
+            Layout.alignment: Qt.AlignLeft
+            Material.background: Material.primary
+            //Material.elevation: 10
         }
 
-        Keys.onEscapePressed: {
-            if (depth > 1) {
-                stackView.pop()
-            }
-            else {
-                quitConfirmationDialog.open()
-            }
-        }
+        StackView {
+            id: stackView
+            initialItem: initialView
+            Layout.fillHeight: true
+            Layout.fillWidth: true
+            Layout.rightMargin: 10
+            Layout.bottomMargin: 5
+            focus: true
 
-        Keys.onBackPressed: {
-            if (depth > 1) {
-                stackView.pop()
-            }
-            else {
-                quitConfirmationDialog.open()
-            }
-        }
+            pushEnter: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 0
+                        to:1
+                        duration: 200
+                    }
+                }
+             pushExit: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 1
+                        to:0
+                        duration: 200
+                    }
+                }
+              popEnter: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 0
+                        to:1
+                        duration: 200
+                    }
+                }
+               popExit: Transition {
+                    PropertyAnimation {
+                        property: "opacity"
+                        from: 1
+                        to:0
+                        duration: 200
+                    }
+                }
 
-        Keys.onMenuPressed: {
-            settingsButton.clicked()
-        }
+            onCurrentItemChanged: {
+                // Ensure focus travels to the next view when going back
+                if (currentItem) {
+                    currentItem.forceActiveFocus()
+                }
+            }
 
-        // This is a keypress we've reserved for letting the
-        // SdlGamepadKeyNavigation object tell us to show settings
-        // when Menu is consumed by a focused control.
-        Keys.onHangupPressed: {
-            settingsButton.clicked()
+            Keys.onEscapePressed: {
+                if (depth > 1) {
+                    stackView.pop()
+                }
+                else {
+                    quitConfirmationDialog.open()
+                }
+            }
+
+            Keys.onBackPressed: {
+                if (depth > 1) {
+                    stackView.pop()
+                }
+                else {
+                    quitConfirmationDialog.open()
+                }
+            }
+
+            Keys.onMenuPressed: {
+                settingsButton.clicked()
+            }
+
+            // This is a keypress we've reserved for letting the
+            // SdlGamepadKeyNavigation object tell us to show settings
+            // when Menu is consumed by a focused control.
+            Keys.onHangupPressed: {
+                settingsButton.clicked()
+            }
         }
     }
-
     // This timer keeps us polling for 5 minutes of inactivity
     // to allow the user to work with Moonlight on a second display
     // while dealing with configuration issues. This will ensure
