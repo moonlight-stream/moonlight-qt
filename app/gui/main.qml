@@ -22,6 +22,11 @@ ApplicationWindow {
 
     visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
 
+    FontLoader {
+        id: iconFont;
+        source: "qrc:/data/res/iconfont/iconfont.ttf"
+    }
+
     Component.onCompleted: {
         SdlGamepadKeyNavigation.enable()
     }

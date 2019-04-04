@@ -21,5 +21,6 @@
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>
         <file alias="ModeSeven.ttf">ModeSeven.ttf</file>
+        <file>res/iconfont/iconfont.ttf</file>
     </qresource>
 </RCC>
