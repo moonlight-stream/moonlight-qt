@@ -571,6 +571,17 @@ Flickable {
             radius: 10
             }
 
+            label: Text {
+                       id: gamepadSettings
+                       text: qsTr("Gamepad settings")
+                       anchors.left: parent.left
+                       anchors.bottom:parent.top
+                       anchors.bottomMargin: 10
+                       font.pointSize: 14
+                       color: Material.accent
+
+                   }
+
             Column {
                 anchors.fill: parent
                 spacing: 5
