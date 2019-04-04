@@ -145,6 +145,8 @@ ApplicationWindow {
 
                     onClicked: {
                         navigateTo("qrc:/gui/SettingsView.qml", "Settings");
+                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                        checked = true
                     }
 
                     Keys.onRightPressed: {
@@ -356,7 +358,7 @@ ApplicationWindow {
                 }
 
                 Keys.onUpPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
                 }
 
                 Keys.onReturnPressed: {
@@ -364,7 +366,7 @@ ApplicationWindow {
                 }
 
                 Keys.onRightPressed: {
-                    nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
+                   stackView.currentItem.forceActiveFocus(Qt.TabFocus)
                 }
 
                 Keys.onLeftPressed: {
@@ -431,14 +433,14 @@ ApplicationWindow {
             }
 
             Keys.onMenuPressed: {
-                settingsButton.clicked()
+           gamesBtn.forceActiveFocus(Qt.TabFocus)
             }
 
             // This is a keypress we've reserved for letting the
             // SdlGamepadKeyNavigation object tell us to show settings
             // when Menu is consumed by a focused control.
             Keys.onHangupPressed: {
-                settingsButton.clicked()
+                gamesBtn.forceActiveFocus(Qt.TabFocus)
             }
         }
     }
@@ -743,6 +745,10 @@ ApplicationWindow {
 
                             onClicked: {
                                 close()
+                            }
+
+                            Keys.onDownPressed: {
+                                nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
                             }
                         }
                     }
