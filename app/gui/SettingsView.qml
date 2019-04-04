@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import QtQuick.Controls.Material 2.2
 
 import StreamingPreferences 1.0
 import ComputerManager 1.0
@@ -11,7 +12,7 @@ Flickable {
     objectName: "Settings"
 
     contentWidth: settingsColumn1.width > settingsColumn2.width ? settingsColumn1.width : settingsColumn2.width
-    contentHeight: settingsColumn1.height > settingsColumn2.height ? settingsColumn1.height : settingsColumn2.height
+    contentHeight: settingsColumn1.height > settingsColumn2.height ? settingsColumn1.height + settingsTitle.height + settingsColumn1.padding + settingsColumn1.anchors.topMargin : settingsColumn2.height + settingsTitle.height + settingsColumn2.padding + settingsColumn2.anchors.topMargin
 
     ScrollBar.vertical: ScrollBar {
         parent: settingsPage.parent
@@ -34,9 +35,26 @@ Flickable {
         // Save the prefs so the Session can observe the changes
         StreamingPreferences.save()
     }
+    Rectangle {
+        id: settingsTitle
+        anchors.top: parent.top
+        anchors.left: parent.left
+        anchors.right: parent.right
+        anchors.topMargin: 15
+        Text{
+            text: "Settings"
+            font.pointSize: 20
+            color: Material.accent
+            anchors.left: parent.left
+            anchors.leftMargin: 20
+        }
+    }
 
     Column {
-        padding: 10
+        anchors.top: settingsTitle.bottom
+        anchors.topMargin: 65
+        padding: 20
+        spacing: 50
         id: settingsColumn1
         width: settingsPage.width / 2 - padding
 
@@ -44,8 +62,23 @@ Flickable {
             id: basicSettingsGroupBox
             width: (parent.width - 2 * parent.padding)
             padding: 12
-            title: "<font color=\"skyblue\">Basic Settings</font>"
+            topPadding: 12
             font.pointSize: 12
+
+            background: Rectangle {
+            color: Material.primary
+            radius: 10
+            }
+
+            label: Text {
+                       id: titleBasicSettings
+                       text: qsTr("Basic settings")
+                       anchors.left: parent.left
+                       anchors.bottom:parent.top
+                       anchors.bottomMargin: 10
+                       font.pointSize: 14
+                       color: Material.accent
+            }
 
             Column {
                 anchors.fill: parent
@@ -400,8 +433,24 @@ Flickable {
             id: audioSettingsGroupBox
             width: (parent.width - 2 * parent.padding)
             padding: 12
-            title: "<font color=\"skyblue\">Audio Settings</font>"
+            topPadding: 12
             font.pointSize: 12
+
+            background: Rectangle {
+            color: Material.primary
+            radius: 10
+            }
+
+            label: Text {
+                       id: titleaudioSettings
+                       text: qsTr("Audio settings")
+                       anchors.left: parent.left
+                       anchors.bottom:parent.top
+                       anchors.bottomMargin: 10
+                       font.pointSize: 14
+                       color: Material.accent
+
+                   }
 
             Column {
                 anchors.fill: parent
@@ -456,8 +505,23 @@ Flickable {
             id: uiSettingsGroupBox
             width: (parent.width - 2 * parent.padding)
             padding: 12
-            title: "<font color=\"skyblue\">UI Settings</font>"
+            topPadding: 12
             font.pointSize: 12
+
+            background: Rectangle {
+            color: Material.primary
+            radius: 10
+            }
+
+            label: Text {
+                       id: titleuiSettings
+                       text: qsTr("UI settings")
+                       anchors.left: parent.left
+                       anchors.bottom:parent.top
+                       anchors.bottomMargin: 10
+                       font.pointSize: 14
+                       color: Material.accent
+                        }
 
             Column {
                 anchors.fill: parent
@@ -487,17 +551,25 @@ Flickable {
     }
 
     Column {
-        padding: 10
+        anchors.top: settingsTitle.bottom
+        anchors.topMargin: 65
         anchors.left: settingsColumn1.right
         id: settingsColumn2
         width: settingsPage.width / 2 - padding
+        spacing: 50
+        padding: 20
 
         GroupBox {
             id: gamepadSettingsGroupBox
             width: (parent.width - parent.padding)
             padding: 12
-            title: "<font color=\"skyblue\">Input Settings</font>"
+            topPadding: 12
             font.pointSize: 12
+
+            background: Rectangle {
+            color: Material.primary
+            radius: 10
+            }
 
             Column {
                 anchors.fill: parent
@@ -541,9 +613,23 @@ Flickable {
             id: hostSettingsGroupBox
             width: (parent.width - parent.padding)
             padding: 12
-            title: "<font color=\"skyblue\">Host Settings</font>"
+            topPadding: 12
             font.pointSize: 12
 
+            background: Rectangle {
+            color: Material.primary
+            radius: 10
+            }
+
+            label: Text {
+                       id: titlehostSettings
+                       text: qsTr("Host Settings")
+                       anchors.left: parent.left
+                       anchors.bottom:parent.top
+                       anchors.bottomMargin: 10
+                       font.pointSize: 14
+                       color: Material.accent
+                        }
             Column {
                 anchors.fill: parent
                 spacing: 5
@@ -574,8 +660,23 @@ Flickable {
             id: advancedSettingsGroupBox
             width: (parent.width - parent.padding)
             padding: 12
-            title: "<font color=\"skyblue\">Advanced Settings</font>"
+            topPadding: 12
             font.pointSize: 12
+
+            background: Rectangle {
+            color: Material.primary
+            radius: 10
+            }
+
+            label: Text {
+                       id: titleadvancedSettings
+                       text: qsTr("Advanced Settings")
+                       anchors.left: parent.left
+                       anchors.bottom:parent.top
+                       anchors.bottomMargin: 10
+                       font.pointSize: 14
+                       color: Material.accent
+                        }
 
             Column {
                 anchors.fill: parent
