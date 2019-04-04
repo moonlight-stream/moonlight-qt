@@ -285,6 +285,80 @@ ApplicationWindow {
             Layout.bottomMargin: 5
             focus: true
 
+            RoundButton {
+                id: addPcButton
+                visible: stackView.currentItem.objectName === "Computers"
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: 60
+                anchors.horizontalCenter: parent.horizontalCenter
+                width: 70
+                height: 70
+                z: 5
+                Material.foreground: Material.primary
+                Material.background: Material.accent
+                Material.elevation: 10
+
+                text: "\ue900"
+                font.family: iconFont.name
+                font.pointSize: 30
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: "Add a new PC manually"
+
+                Shortcut {
+                    id: newPcShortcut
+                    sequence: StandardKey.New
+                    onActivated: addPcButton.clicked()
+                    }
+
+                onVisualFocusChanged: {
+                    if (visualFocus)
+                    {Material.background = "#ABA7A7"}
+                    else if (!visualFocus)
+                    {Material.background = Material.accent}
+                }
+
+                onClicked: {
+                    addPcDialog.open();
+                    Material.foreground = Material.primary
+                    Material.background = Material.accent
+                }
+
+                onHoveredChanged: {
+                    if (hovered)
+                    {Material.background = "#ABA7A7"}
+                    else if (!hovered)
+                    {Material.background = Material.accent}
+                }
+
+                onPressedChanged: {
+                    if (pressed)
+                    {Material.background = "#E9E9E9"}
+                    else if (!pressed)
+                    {Material.background = Material.accent}
+                    else if (!pressed && hovered)
+                    {Material.background = "#ABA7A7"}
+                }
+
+                Keys.onUpPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+
+                Keys.onReturnPressed: {
+                    clicked()
+                }
+
+                Keys.onRightPressed: {
+                    nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
+                }
+
+                Keys.onLeftPressed: {
+                    nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+                }
+            }
+
             pushEnter: Transition {
                     PropertyAnimation {
                         property: "opacity"
