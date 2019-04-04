@@ -402,10 +402,19 @@ int main(int argc, char *argv[])
     }
 #endif
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_THEME")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Light");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_PRIMARY")) {
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", "#F5F5F5");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_ACCENT")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "Purple");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "#242257");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_BACKGROUND")) {
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_BACKGROUND", "#E9E9E9");
+    }
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_FOREGROUND")) {
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_FOREGROUND", "#242257");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
