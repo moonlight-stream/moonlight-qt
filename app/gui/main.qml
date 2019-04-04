@@ -462,8 +462,8 @@ ApplicationWindow {
 
     header: ToolBar {
         id: toolBar
-        anchors.topMargin: 5
-        anchors.bottomMargin: 5
+        height: 64
+        Material.primary: Material.accent
 
         MouseArea {
             anchors.fill: parent;
@@ -492,202 +492,175 @@ ApplicationWindow {
         }
 
         RowLayout {
-            spacing: 20
             anchors.fill: parent
 
-            NavigableToolButton {
-                // Only make the button visible if the user has navigated somewhere.
-                visible: stackView.depth > 1
+            Image {
+                id: logo_svg
+                source: "qrc:/res/logo.svg"
+                Layout.alignment: Qt.AlignLeft
+                Layout.leftMargin: (sidebar.width - width)/2
+                sourceSize.height: 45
+                sourceSize.width: 45
+                antialiasing: true
 
-                // FIXME: We're using an Image here rather than icon.source because
-                // icons don't work on Qt 5.9 LTS.
-                Image {
-                    source: "qrc:/res/arrow_left.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        // The icon should be square so use the height as the width too
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
 
-                onClicked: stackView.pop()
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
             }
 
-            Label {
-                id: titleLabel
-                text: stackView.currentItem.objectName
-                font.pointSize: 15
-                elide: Label.ElideRight
-                horizontalAlignment: Qt.AlignHCenter
-                verticalAlignment: Qt.AlignVCenter
+            Rectangle {
+                Layout.fillHeight: true
                 Layout.fillWidth: true
-            }
+                color: "transparent"
 
-           /* NavigableToolButton {
-                id: addPcButton
-                visible: stackView.currentItem.objectName === "Computers"
+                Rectangle {
+                    border.color: backBtn.activeFocus || backBtn.hovered ? "#F5F5F5" : "#242257"
+                    border.width: 1
+                    anchors.left: parent.left
+                    anchors.leftMargin: 30
+                    anchors.verticalCenter: parent.verticalCenter
+                    color: "transparent"
+                    radius: 24
 
-                Image {
-                    source: "qrc:/res/ic_add_to_queue_white_48px.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+
+                    height: backBtn.height * 0.8
+                    width: backBtn.width * 0.8
+
+                    NavigableToolButton {
+                        id: backBtn
+                        visible: stackView.depth > 1 && stackView.currentItem.objectName !== "Settings"
+                        Material.foreground: "#F5F5F5"
+                        anchors.centerIn: parent
+
+
+                        text: "\ue901"
+                        font.family: iconFont.name
+                        font.pointSize: 10
+
+
+
+                        onClicked: {
+                            stackView.pop()
+
+                        }
+                        Keys.onDownPressed: {
+                            stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                        }
                     }
                 }
 
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: "Add PC manually" + (newPcShortcut.nativeText ? (" ("+newPcShortcut.nativeText+")") : "")
 
-                Shortcut {
-                    id: newPcShortcut
-                    sequence: StandardKey.New
-                    onActivated: addPcButton.clicked()
+                Image {
+                    id:connectionIndicator
+                    source: stackView.currentItem.objectName != "Computers" && stackView.currentItem.objectName != "Settings" ? "qrc:/res/dot-green.svg" : "qrc:/res/dot-red.svg"
+                    sourceSize.height: 10
+                    sourceSize.width: 10
+                    width: 10
+                    height: 10
+                    smooth: true
+                    antialiasing: true
+
+
+                    anchors.top: connectionStatus.top
+                    anchors.right: connectionStatus.left
+                    anchors.rightMargin: 10
+                    anchors.topMargin: 10
                 }
 
-                onClicked: {
-                    addPcDialog.open()
-                }
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                Label {
+                    id: connectionStatus
+                    text: stackView.currentItem.objectName != "Computers" && stackView.currentItem.objectName != "Settings" ? stackView.currentItem.objectName : "not connected"
+                    font.pointSize: 15
+                    color: "#F5F5F5"
+                    anchors.verticalCenter: parent.verticalCenter
+                    x: (parent.width + controls.width + 50 - width)/2
                 }
             }
 
-            NavigableToolButton {
-                property string browserUrl: ""
+            Item {
+                id: controls
+                Layout.alignment: Qt.AlignRight
+                Layout.rightMargin: 30
 
-                id: updateButton
+                Layout.fillHeight: true
+                Layout.minimumWidth: 100
+                Layout.maximumWidth: 200
 
-                Image {
-                    source: "qrc:/res/update.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
+                RowLayout {
+                    anchors.fill: parent
+                    spacing: 0
+
+                    Rectangle {
+                        border.color: minimizeAppBtn.activeFocus || minimizeAppBtn.hovered ? "#F5F5F5" : "#242257"
+                        border.width: 1
+                        color: "transparent"
+                        radius: 24
+
+                        height: minimizeAppBtn.height * 0.8
+                        width: minimizeAppBtn.width * 0.8
+
+                        NavigableToolButton {
+                            id: minimizeAppBtn
+                            Material.foreground: "#F5F5F5"
+                            anchors.centerIn: parent
+
+                            text: "\ue907"
+                            font.family: iconFont.name
+                            font.pointSize: 10
+
+                            onClicked: {
+                                showMinimized();
+                            }
+                        }
                     }
-                }
 
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
+                    Rectangle {
+                        border.color: resizeAppBtn.activeFocus || resizeAppBtn.hovered ? "#F5F5F5" : "#242257"
+                        border.width: 1
+                        color: "transparent"
+                        radius: 24
 
-                // Invisible until we get a callback notifying us that
-                // an update is available
-                visible: false
+                        height: resizeAppBtn.height * 0.8
+                        width: resizeAppBtn.width * 0.8
 
-                onClicked: Qt.openUrlExternally(browserUrl);
+                        NavigableToolButton {
+                            id: resizeAppBtn
+                            Material.foreground: "#F5F5F5"
+                            anchors.centerIn: parent
 
-                function updateAvailable(version, url)
-                {
-                    ToolTip.text = "Update available for Moonlight: Version " + version
-                    updateButton.browserUrl = url
-                    updateButton.visible = true
-                }
+                            text: window.visibility < 3 ? "\ue906" : "\ue90a"
+                            font.family: iconFont.name
+                            font.pointSize: 10
 
-                Component.onCompleted: {
-                    AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
-                    AutoUpdateChecker.start()
-                }
+                            onClicked: {
+                                window.visibility < 3 ? showMaximized() : showNormal()
+                            }
+                        }
+                    }
 
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                    Rectangle {
+                        border.color: closeAppBtn.activeFocus || closeAppBtn.hovered ? "#F5F5F5" : "#242257"
+                        border.width: 1
+                        color: "transparent"
+                        radius: 24
+
+                        height: closeAppBtn.height * 0.8
+                        width: closeAppBtn.width * 0.8
+
+                        NavigableToolButton {
+                            id: closeAppBtn
+                            Material.foreground: "#F5F5F5"
+                            anchors.centerIn: parent
+
+                            text: "\ue902"
+                            font.family: iconFont.name
+                            font.pointSize: 10
+
+                            onClicked: {
+                                close()
+                            }
+                        }
+                    }
                 }
             }
-
-            NavigableToolButton {
-                id: helpButton
-                visible: SystemProperties.hasBrowser
-
-                Image {
-                    source: "qrc:/res/question_mark.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: "Help" + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
-
-                Shortcut {
-                    id: helpShortcut
-                    sequence: StandardKey.HelpContents
-                    onActivated: helpButton.clicked()
-                }
-
-                // TODO need to make sure browser is brought to foreground.
-                onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
-            }
-
-            NavigableToolButton {
-                // TODO: Implement gamepad mapping then unhide this button
-                visible: false
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: "Gamepad Mapper"
-
-                Image {
-                    source: "qrc:/res/ic_videogame_asset_white_48px.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
-
-                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
-            }
-
-            NavigableToolButton {
-                id: settingsButton
-
-                Image {
-                    source: "qrc:/res/settings.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
-
-                onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
-
-                Shortcut {
-                    id: settingsShortcut
-                    sequence: StandardKey.Preferences
-                    onActivated: settingsButton.clicked()
-                }
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: "Settings" + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
-            }*/
         }
     }
 

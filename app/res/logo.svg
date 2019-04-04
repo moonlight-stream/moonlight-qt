@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="45" height="45" viewBox="0 0 45 45">
+  <g id="logo" transform="translate(-1403.463 -526.51)">
+    <g id="logo-2" data-name="logo" transform="translate(1320.463 529.51)">
+      <g id="Gruppe_53" data-name="Gruppe 53" transform="translate(68 -4)">
+        <g id="moonlight" transform="translate(15 1)">
+          <circle id="Ellipse_1" data-name="Ellipse 1" cx="22.5" cy="22.5" r="22.5" fill="#242257"/>
+          <path id="Pfad_1" data-name="Pfad 1" d="M18.5,0A18.5,18.5,0,1,1,0,18.5,18.5,18.5,0,0,1,18.5,0Z" transform="translate(4.037 3.99)" fill="#fff"/>
+          <path id="Pfad_1-2" data-name="Pfad 1" d="M77.422,76.327H94.108V74.779H77.422l11.806-11.8-1.093-1.093-11.806,11.8V57H74.78V73.685l-11.806-11.8-1.093,1.093,11.806,11.8H57v1.548H73.687l-11.806,11.8,1.093,1.093L74.78,77.42V94.106h1.548V77.42l11.806,11.8,1.093-1.093Z" transform="translate(-53.053 -53.05)" fill="#242257" fill-rule="evenodd"/>
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
