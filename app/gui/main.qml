@@ -127,7 +127,9 @@ ApplicationWindow {
                     }
 
                     Keys.onRightPressed: {
+
                         stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+
                     }
                 }
 
@@ -145,7 +147,6 @@ ApplicationWindow {
 
                     onClicked: {
                         navigateTo("qrc:/gui/SettingsView.qml", "Settings");
-                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
                         checked = true
                     }
 
@@ -155,7 +156,7 @@ ApplicationWindow {
                     Shortcut {
                         id: settingsShortcut
                         sequence: StandardKey.Preferences
-                        onActivated: settingsButton.clicked()
+                        onActivated: settingsBtn.clicked()
                     }
 
                     ToolTip.delay: 1000

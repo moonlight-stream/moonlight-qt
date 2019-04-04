@@ -24,7 +24,12 @@ Flickable {
             leftMargin: -10
         }
     }
+    onActiveFocusChanged: {
 
+        if (activeFocus) {
+        resolutionComboBox.forceActiveFocus(Qt.TabFocus)
+        }
+    }
     StackView.onActivated: {
         SdlGamepadKeyNavigation.setSettingsMode(true)
     }
@@ -47,7 +52,10 @@ Flickable {
             color: Material.accent
             anchors.left: parent.left
             anchors.leftMargin: 20
+
         }
+
+
     }
 
     Column {
