@@ -198,9 +198,9 @@ GridView {
             stackView.push(segue)
         }
 
-        onClicked: {
+        Keys.onReturnPressed: {
             if (model.running) {
-                // This will primarily be keyboard/gamepad driven so use
+                // This will be keyboard/gamepad driven so use
                 // open() instead of popup()
                 appContextMenu.open()
             }
@@ -211,7 +211,7 @@ GridView {
 
         Keys.onMenuPressed: {
             if (model.running) {
-                // This will primarily be keyboard/gamepad driven so use
+                // This will be keyboard/gamepad driven so use
                 // open() instead of popup()
                 appContextMenu.open()
             }
