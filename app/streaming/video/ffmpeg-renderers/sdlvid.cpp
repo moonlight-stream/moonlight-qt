@@ -143,6 +143,14 @@ bool SdlRenderer::initialize(SDL_Window* window,
         }
     }
 
+#ifdef Q_OS_WIN32
+    // We render on a different thread than the main thread which is handling window
+    // messages. Without D3DCREATE_MULTITHREADED, this can cause a deadlock by blocking
+    // on a window message being processed while the main thread is blocked waiting for
+    // the render thread to finish.
+    SDL_SetHintWithPriority(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1", SDL_HINT_OVERRIDE);
+#endif
+
     m_Renderer = SDL_CreateRenderer(window, -1, rendererFlags);
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
