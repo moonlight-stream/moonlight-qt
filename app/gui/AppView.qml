@@ -198,14 +198,24 @@ GridView {
             stackView.push(segue)
         }
 
+        onClicked: {
+            // Only allow clicking on the box art for non-running games.
+            // For running games, buttons will appear to resume or quit which
+            // will handle starting the game and clicks on the box art will
+            // be ignored.
+            if (!model.running) {
+                launchOrResumeSelectedApp()
+            }
+        }
+
         Keys.onReturnPressed: {
+            // Open the app context menu if activated via the gamepad or keyboard
+            // for running games. If the game isn't running, the above onClicked
+            // method will handle the launch.
             if (model.running) {
                 // This will be keyboard/gamepad driven so use
                 // open() instead of popup()
                 appContextMenu.open()
-            }
-            else {
-                launchOrResumeSelectedApp()
             }
         }
 
