@@ -11,6 +11,8 @@ import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
+    property int previousX
+    property int previousY
 
     id: window
     visible: true
