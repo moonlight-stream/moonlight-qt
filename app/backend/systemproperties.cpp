@@ -2,10 +2,13 @@
 
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
+#include <QQuickStyle>
 
 SystemProperties::SystemProperties()
 {
     isRunningWayland = qgetenv("XDG_SESSION_TYPE") == "wayland";
+
+    applicationStyle = QQuickStyle::name();
 
 #ifdef Q_OS_WIN32
     isWow64 = QSysInfo::currentCpuArchitecture() != QSysInfo::buildCpuArchitecture();

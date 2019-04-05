@@ -25,9 +25,10 @@ ApplicationWindow {
 
     background: Image {
         id: backgroundImage
-        source: "qrc:/res/background.svg"
+        source: Material.theme === Material.Light && SystemProperties.applicationStyle === "Material" ? "qrc:/res/background.svg" : "qrc:/res/background_dark.svg"
         sourceSize.width: 1000
         sourceSize.height: 1230
+        antialiasing: true
         width: 200
         height: 246
         x: (parent.width - width + 65) / 2
@@ -43,8 +44,8 @@ ApplicationWindow {
 
     Component.onCompleted: {
 
-        if (Material.primary == "#f5f5f5") {Material.primary = "#F5F5F5"} else {Material.primary = "#373737"}                 //Hack for UWP compatibility
-        if (Material.foreground == "#242257") {Material.foreground = "#242257" } else {Material.foreground = "#FFFFFF"}       //Hack for UWP compatibility
+        if (SystemProperties.applicationStyle !== "Material") {Material.primary = "#373737"}        //Hack for UWP compatibility
+        if (SystemProperties.applicationStyle !== "Material") {Material.foreground = "#FFFFFF"}     //Hack for UWP compatibility
 
         SdlGamepadKeyNavigation.enable()
     }
@@ -263,9 +264,9 @@ ApplicationWindow {
                 id: updateBtn
                 Layout.minimumHeight: 70
                 Layout.minimumWidth: 70
-                anchors.bottom: parent.bottom
+                anchors.bottom: themeSwitch.top
                 anchors.horizontalCenter: parent.horizontalCenter
-                anchors.bottomMargin: 10
+                anchors.bottomMargin: 20
                 checkable: false
                 visible: false
 
@@ -295,6 +296,49 @@ ApplicationWindow {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
                 }
             }
+
+            Switch {
+
+                id: themeSwitch
+                anchors.bottom: parent.bottom
+                anchors.horizontalCenter: parent.horizontalCenter
+                activeFocusOnTab: true
+                visible: SystemProperties.applicationStyle === "Material"
+
+                onCheckedChanged: {
+                    if (checked)
+                        {window.Material.primary = "#373737"
+                          window.Material.accent = "#e6e6e6"
+                          window.Material.background = "#616161"
+                          window.Material.foreground = "#FFFFFF"
+                          window.Material.theme = "Dark"
+                        }
+                    else if (!checked)
+                        {window.Material.primary = "#F5F5F5"
+                         window.Material.accent = "#242257"
+                         window.Material.background = "#e0e0e0"
+                         window.Material.foreground = "#242257"
+                         window.Material.theme = "Light"
+                       }
+                    }
+
+                Keys.onRightPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+
+                Keys.onReturnPressed: {
+                    clicked()
+                    checked ? checked = false : checked = true
+                }
+
+                Keys.onDownPressed: {
+                    nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
+                }
+
+                Keys.onUpPressed: {
+                    nextItemInFocusChain(false).forceActiveFocus(Qt.TabFocus)
+                }
+            }
         }
 
         StackView {
@@ -315,14 +359,13 @@ ApplicationWindow {
                 width: 70
                 height: 70
                 z: 5
-                Material.foreground: Material.primary
-                Material.background: Material.accent
+                Material.background: Material.theme === Material.Light ? "#9e9e9e" : "#909090"
+                Material.foreground: "#242257"
                 Material.elevation: 10
 
                 text: "\ue900"
                 font.family: iconFont.name
                 font.pointSize: 30
-
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
@@ -334,33 +377,8 @@ ApplicationWindow {
                     onActivated: addPcButton.clicked()
                     }
 
-                onVisualFocusChanged: {
-                    if (visualFocus)
-                    {Material.background = "#9e9e9e"}
-                    else if (!visualFocus)
-                    {Material.background = Material.accent}
-                }
-
                 onClicked: {
                     addPcDialog.open();
-                    Material.foreground = Material.primary
-                    Material.background = Material.accent
-                }
-
-                onHoveredChanged: {
-                    if (hovered)
-                    {Material.background = "#9e9e9e"}
-                    else if (!hovered)
-                    {Material.background = Material.accent}
-                }
-
-                onPressedChanged: {
-                    if (pressed)
-                    {Material.background = "#bdbdbd"}
-                    else if (!pressed)
-                    {Material.background = Material.accent}
-                    else if (!pressed && hovered)
-                    {Material.background = "#9e9e9e"}
                 }
 
                 Keys.onUpPressed: {
@@ -381,37 +399,37 @@ ApplicationWindow {
             }
 
             pushEnter: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 0
-                        to:1
-                        duration: 200
-                    }
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to:1
+                    duration: 200
                 }
-             pushExit: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 1
-                        to:0
-                        duration: 200
-                    }
+            }
+            pushExit: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to:0
+                    duration: 200
                 }
-              popEnter: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 0
-                        to:1
-                        duration: 200
-                    }
+            }
+            popEnter: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 0
+                    to:1
+                    duration: 200
                 }
-               popExit: Transition {
-                    PropertyAnimation {
-                        property: "opacity"
-                        from: 1
-                        to:0
-                        duration: 200
-                    }
+            }
+            popExit: Transition {
+                PropertyAnimation {
+                    property: "opacity"
+                    from: 1
+                    to:0
+                    duration: 200
                 }
+            }
 
             onCurrentItemChanged: {
                 // Ensure focus travels to the next view when going back
@@ -662,8 +680,8 @@ ApplicationWindow {
             Item {
                 id: controls
                 Layout.fillHeight: true
-                Layout.minimumWidth: 150
-                Layout.maximumWidth: 200
+                Layout.minimumWidth: SystemProperties.applicationStyle === "Material" ? 150 : 180 //UWP Hack
+                Layout.maximumWidth: 180
 
                 RowLayout {
                     anchors.fill: parent
