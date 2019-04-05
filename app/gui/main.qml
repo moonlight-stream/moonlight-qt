@@ -304,8 +304,10 @@ ApplicationWindow {
                 anchors.horizontalCenter: parent.horizontalCenter
                 activeFocusOnTab: true
                 visible: SystemProperties.applicationStyle === "Material"
-
+                checked: StreamingPreferences.darkMode
                 onCheckedChanged: {
+                    StreamingPreferences.darkMode = checked
+
                     if (checked)
                         {window.Material.primary = "#373737"
                           window.Material.accent = "#e6e6e6"
@@ -320,6 +322,8 @@ ApplicationWindow {
                          window.Material.foreground = "#242257"
                          window.Material.theme = "Light"
                        }
+
+                    StreamingPreferences.save()
                     }
 
                 Keys.onRightPressed: {
