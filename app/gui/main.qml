@@ -19,7 +19,7 @@ ApplicationWindow {
     visible: true
     width: 1280
     height: 700
-    flags: Qt.FramelessWindowHint | Qt.Window
+    flags: Qt.FramelessWindowHint | Qt.Window   
 
     visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
 
@@ -94,19 +94,22 @@ ApplicationWindow {
         ToolBar {
             id: sidebar
             Layout.fillHeight: true
+            Layout.alignment: Qt.AlignHCenter
             Layout.minimumWidth: 70
             Layout.maximumWidth: 70
-            Layout.alignment: Qt.AlignLeft
+
             Material.background: Material.primary
+            Material.foreground: Material.theme === Material.Light ? "#9e9e9e" : "#909090"
 
             ButtonGroup {
-                buttons: column_sidebar.children
+                buttons: buttons_sidebar.children
             }
 
-            ColumnLayout{
-                id: column_sidebar
+            ColumnLayout {
+                id: buttons_sidebar
                 anchors.left: parent.left
                 anchors.right: parent.right
+                height: 100
                 spacing: 20
 
                 NavigableMenuButton {
@@ -116,7 +119,7 @@ ApplicationWindow {
                     Layout.minimumWidth: 80
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: true
-                    Material.foreground: "#C4B6B6"
+
 
                     text: "\ue903"
                     font.family: iconFont.name
@@ -139,11 +142,12 @@ ApplicationWindow {
                     Layout.minimumWidth: 80
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: true
-                    Material.foreground: "#C4B6B6"
+
 
                     text: "\ue908"
                     font.family: iconFont.name
                     font.pointSize: 28
+
 
                     onClicked: {
                         navigateTo("qrc:/gui/SettingsView.qml", "Settings");
@@ -172,7 +176,7 @@ ApplicationWindow {
                     Layout.minimumWidth: 80
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: true
-                    Material.foreground: "#C4B6B6"
+
                     visible: false
                     text: "\ue905"
                     font.family: iconFont.name
@@ -195,7 +199,6 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: false
                     visible: false
-                    Material.foreground: "#C4B6B6"
 
                     text: "\ue90b"
                     font.family: iconFont.name
@@ -220,7 +223,6 @@ ApplicationWindow {
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: false
                     visible: SystemProperties.hasBrowser
-                    Material.foreground: "#C4B6B6"
 
                     text: "\ue904"
                     font.family: iconFont.name
@@ -262,7 +264,6 @@ ApplicationWindow {
                 anchors.bottomMargin: 10
                 checkable: false
                 visible: false
-                Material.foreground: "#C4B6B6"
 
                 text: "\ue909"
                 font.family: iconFont.name
@@ -331,7 +332,7 @@ ApplicationWindow {
 
                 onVisualFocusChanged: {
                     if (visualFocus)
-                    {Material.background = "#ABA7A7"}
+                    {Material.background = "#9e9e9e"}
                     else if (!visualFocus)
                     {Material.background = Material.accent}
                 }
@@ -344,18 +345,18 @@ ApplicationWindow {
 
                 onHoveredChanged: {
                     if (hovered)
-                    {Material.background = "#ABA7A7"}
+                    {Material.background = "#9e9e9e"}
                     else if (!hovered)
                     {Material.background = Material.accent}
                 }
 
                 onPressedChanged: {
                     if (pressed)
-                    {Material.background = "#E9E9E9"}
+                    {Material.background = "#bdbdbd"}
                     else if (!pressed)
                     {Material.background = Material.accent}
                     else if (!pressed && hovered)
-                    {Material.background = "#ABA7A7"}
+                    {Material.background = "#9e9e9e"}
                 }
 
                 Keys.onUpPressed: {
@@ -553,7 +554,9 @@ ApplicationWindow {
     header: ToolBar {
         id: toolBar
         height: 64
-        Material.primary: Material.accent
+        Material.primary: "#242257"
+        Material.theme: Material.Dark
+
 
         MouseArea {
             anchors.fill: parent;
@@ -583,60 +586,44 @@ ApplicationWindow {
 
         RowLayout {
             anchors.fill: parent
+            spacing: 0
 
             Image {
                 id: logo_svg
                 source: "qrc:/res/logo.svg"
-                Layout.alignment: Qt.AlignLeft
+                Layout.alignment: Qt.AlignHCenter && Qt.AlignVCenter
                 Layout.leftMargin: (sidebar.width - width)/2
                 sourceSize.height: 45
                 sourceSize.width: 45
                 antialiasing: true
 
-
             }
 
-            Rectangle {
+            Item {
+                id: centerHeader
                 Layout.fillHeight: true
                 Layout.fillWidth: true
-                color: "transparent"
 
-                Rectangle {
-                    border.color: backBtn.activeFocus || backBtn.hovered ? "#F5F5F5" : "#242257"
-                    border.width: 1
+                 NavigableToolButton {
+                    id: backBtn
+                    visible: stackView.depth > 1 && stackView.currentItem.objectName && stackView.currentItem.objectName !== "Settings"
+                    Material.foreground: "#F5F5F5"
                     anchors.left: parent.left
                     anchors.leftMargin: 30
                     anchors.verticalCenter: parent.verticalCenter
-                    color: "transparent"
-                    radius: 24
 
+                    text: "\ue901"
+                    font.family: iconFont.name
+                    font.pointSize: 10
 
-                    height: backBtn.height * 0.8
-                    width: backBtn.width * 0.8
+                    onClicked: {
+                        stackView.pop()
 
-                    NavigableToolButton {
-                        id: backBtn
-                        visible: stackView.depth > 1 && stackView.currentItem.objectName !== "Settings"
-                        Material.foreground: "#F5F5F5"
-                        anchors.centerIn: parent
-
-
-                        text: "\ue901"
-                        font.family: iconFont.name
-                        font.pointSize: 10
-
-
-
-                        onClicked: {
-                            stackView.pop()
-
-                        }
-                        Keys.onDownPressed: {
-                            stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                        }
+                    }
+                    Keys.onDownPressed: {
+                        stackView.currentItem.forceActiveFocus(Qt.TabFocus)
                     }
                 }
-
 
                 Image {
                     id:connectionIndicator
@@ -647,7 +634,7 @@ ApplicationWindow {
                     height: 10
                     smooth: true
                     antialiasing: true
-
+                    visible: stackView.currentItem.objectName
 
                     anchors.top: connectionStatus.top
                     anchors.right: connectionStatus.left
@@ -660,97 +647,64 @@ ApplicationWindow {
                     text: stackView.currentItem.objectName != "Computers" && stackView.currentItem.objectName != "Settings" ? stackView.currentItem.objectName : "not connected"
                     font.pointSize: 15
                     color: "#F5F5F5"
+                    visible: stackView.currentItem.objectName
                     anchors.verticalCenter: parent.verticalCenter
-                    x: (parent.width + controls.width + 50 - width)/2
+                    x: (parent.width + controls.width + connectionIndicator.width + connectionIndicator.anchors.rightMargin - width)/2
                 }
             }
 
             Item {
                 id: controls
-                Layout.alignment: Qt.AlignRight
-                Layout.rightMargin: 30
-
                 Layout.fillHeight: true
-                Layout.minimumWidth: 100
-                Layout.maximumWidth: 200
+                Layout.minimumWidth: 150
+                Layout.maximumWidth: 150
 
                 RowLayout {
                     anchors.fill: parent
                     spacing: 0
 
-                    Rectangle {
-                        border.color: minimizeAppBtn.activeFocus || minimizeAppBtn.hovered ? "#F5F5F5" : "#242257"
-                        border.width: 1
-                        color: "transparent"
-                        radius: 24
+                    NavigableToolButton {
+                        id: minimizeAppBtn
+                        Material.foreground: "#F5F5F5"
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "\ue907"
+                        font.family: iconFont.name
+                        font.pointSize: 10
 
-                        height: minimizeAppBtn.height * 0.8
-                        width: minimizeAppBtn.width * 0.8
-
-                        NavigableToolButton {
-                            id: minimizeAppBtn
-                            Material.foreground: "#F5F5F5"
-                            anchors.centerIn: parent
-
-                            text: "\ue907"
-                            font.family: iconFont.name
-                            font.pointSize: 10
-
-                            onClicked: {
-                                showMinimized();
-                            }
+                        onClicked: {
+                            showMinimized();
                         }
                     }
 
-                    Rectangle {
-                        border.color: resizeAppBtn.activeFocus || resizeAppBtn.hovered ? "#F5F5F5" : "#242257"
-                        border.width: 1
-                        color: "transparent"
-                        radius: 24
+                    NavigableToolButton {
+                        id: resizeAppBtn
+                        Material.foreground: "#F5F5F5"
+                        Layout.alignment: Qt.AlignHCenter
 
-                        height: resizeAppBtn.height * 0.8
-                        width: resizeAppBtn.width * 0.8
+                        text: window.visibility < 3 ? "\ue906" : "\ue90a"
+                        font.family: iconFont.name
+                        font.pointSize: 10
 
-                        NavigableToolButton {
-                            id: resizeAppBtn
-                            Material.foreground: "#F5F5F5"
-                            anchors.centerIn: parent
-
-                            text: window.visibility < 3 ? "\ue906" : "\ue90a"
-                            font.family: iconFont.name
-                            font.pointSize: 10
-
-                            onClicked: {
-                                window.visibility < 3 ? showMaximized() : showNormal()
-                            }
+                        onClicked: {
+                            window.visibility < 3 ? showMaximized() : showNormal()
                         }
                     }
 
-                    Rectangle {
-                        border.color: closeAppBtn.activeFocus || closeAppBtn.hovered ? "#F5F5F5" : "#242257"
-                        border.width: 1
-                        color: "transparent"
-                        radius: 24
+                    NavigableToolButton {
+                        id: closeAppBtn
+                        Material.foreground: "#F5F5F5"
+                        Layout.alignment: Qt.AlignHCenter
+                        text: "\ue902"
+                        font.family: iconFont.name
+                        font.pointSize: 10
 
-                        height: closeAppBtn.height * 0.8
-                        width: closeAppBtn.width * 0.8
+                        onClicked: {
+                            close()
+                        }
 
-                        NavigableToolButton {
-                            id: closeAppBtn
-                            Material.foreground: "#F5F5F5"
-                            anchors.centerIn: parent
+                        Keys.onDownPressed: {
+                            nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
 
-                            text: "\ue902"
-                            font.family: iconFont.name
-                            font.pointSize: 10
-
-                            onClicked: {
-                                close()
-                            }
-
-                            Keys.onDownPressed: {
-                                nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
-                            }
                         }
                     }
                 }

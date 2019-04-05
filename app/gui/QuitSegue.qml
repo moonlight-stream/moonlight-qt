@@ -33,7 +33,7 @@ Item {
 
     StackView.onActivated: {
         // Hide the toolbar before we start loading
-        toolBar.visible = false
+        //toolBar.visible = false //Breaks frameless Window
 
         // Connect the quit completion signal
         ComputerManager.quitAppCompleted.connect(quitAppCompleted)
@@ -41,7 +41,7 @@ Item {
 
     StackView.onDeactivating: {
         // Show the toolbar again
-        toolBar.visible = true
+        //toolBar.visible = true //Breaks Framelesswindow
 
         // Disconnect the signal
         ComputerManager.quitAppCompleted.disconnect(quitAppCompleted)

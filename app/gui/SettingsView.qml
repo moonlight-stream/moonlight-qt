@@ -49,7 +49,7 @@ Flickable {
         Text{
             text: "Settings"
             font.pointSize: 20
-            color: Material.accent
+            color: Material.foreground
             anchors.left: parent.left
             anchors.leftMargin: 20
 
@@ -75,7 +75,7 @@ Flickable {
 
             background: Rectangle {
             color: Material.primary
-            radius: 10
+            radius: 5
             }
 
             label: Text {
@@ -85,7 +85,7 @@ Flickable {
                        anchors.bottom:parent.top
                        anchors.bottomMargin: 10
                        font.pointSize: 14
-                       color: Material.accent
+                       color: Material.foreground
             }
 
             Column {
@@ -446,7 +446,7 @@ Flickable {
 
             background: Rectangle {
             color: Material.primary
-            radius: 10
+            radius: 5
             }
 
             label: Text {
@@ -456,7 +456,7 @@ Flickable {
                        anchors.bottom:parent.top
                        anchors.bottomMargin: 10
                        font.pointSize: 14
-                       color: Material.accent
+                       color: Material.foreground
 
                    }
 
@@ -518,7 +518,7 @@ Flickable {
 
             background: Rectangle {
             color: Material.primary
-            radius: 10
+            radius: 5
             }
 
             label: Text {
@@ -528,7 +528,7 @@ Flickable {
                        anchors.bottom:parent.top
                        anchors.bottomMargin: 10
                        font.pointSize: 14
-                       color: Material.accent
+                       color: Material.foreground
                         }
 
             Column {
@@ -576,7 +576,7 @@ Flickable {
 
             background: Rectangle {
             color: Material.primary
-            radius: 10
+            radius: 5
             }
 
             label: Text {
@@ -586,7 +586,7 @@ Flickable {
                        anchors.bottom:parent.top
                        anchors.bottomMargin: 10
                        font.pointSize: 14
-                       color: Material.accent
+                       color: Material.foreground
 
                    }
 
@@ -637,7 +637,7 @@ Flickable {
 
             background: Rectangle {
             color: Material.primary
-            radius: 10
+            radius: 5
             }
 
             label: Text {
@@ -647,7 +647,7 @@ Flickable {
                        anchors.bottom:parent.top
                        anchors.bottomMargin: 10
                        font.pointSize: 14
-                       color: Material.accent
+                       color: Material.foreground
                         }
             Column {
                 anchors.fill: parent
@@ -684,7 +684,7 @@ Flickable {
 
             background: Rectangle {
             color: Material.primary
-            radius: 10
+            radius: 5
             }
 
             label: Text {
@@ -694,7 +694,7 @@ Flickable {
                        anchors.bottom:parent.top
                        anchors.bottomMargin: 10
                        font.pointSize: 14
-                       color: Material.accent
+                       color: Material.foreground
                         }
 
             Column {

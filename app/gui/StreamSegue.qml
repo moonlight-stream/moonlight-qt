@@ -95,7 +95,7 @@ Item {
 
     StackView.onDeactivating: {
         // Show the toolbar again when popped off the stack
-        toolBar.visible = true
+        //toolBar.visible = true // Breaks frameless window
 
         // Enable GUI gamepad usage now
         SdlGamepadKeyNavigation.enable()
@@ -103,7 +103,7 @@ Item {
 
     StackView.onActivated: {
         // Hide the toolbar before we start loading
-        toolBar.visible = false
+        //toolBar.visible = false //Breaks frameless window
 
         // Hook up our signals
         session.stageStarting.connect(stageStarting)

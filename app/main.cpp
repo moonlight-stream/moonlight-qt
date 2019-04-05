@@ -405,16 +405,16 @@ int main(int argc, char *argv[])
         qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Light");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_PRIMARY")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", "#F5F5F5");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_PRIMARY", "#F5F5F5"); //#F5F5F5 #373737
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_ACCENT")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "#242257");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "#242257"); //#242257 #e0badb
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_BACKGROUND")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_BACKGROUND", "#E9E9E9");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_BACKGROUND", "#e0e0e0"); //#e0e0e0 #616161
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_FOREGROUND")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_FOREGROUND", "#242257");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_FOREGROUND", "#242257"); //#242257 #FFFFFF
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
