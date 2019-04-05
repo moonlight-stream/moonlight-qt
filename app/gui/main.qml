@@ -662,7 +662,7 @@ ApplicationWindow {
             Item {
                 id: controls
                 Layout.fillHeight: true
-                Layout.minimumWidth: 200
+                Layout.minimumWidth: 150
                 Layout.maximumWidth: 200
 
                 RowLayout {
