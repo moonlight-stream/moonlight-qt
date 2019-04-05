@@ -391,16 +391,10 @@ int main(int argc, char *argv[])
                                                    });
 
 #ifndef Q_OS_WINRT
-    // Use the dense material dark theme by default
+    // Use the light material dark theme by default
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
         qputenv("QT_QUICK_CONTROLS_STYLE", "Material");
     }
-#else
-    // Use universal dark on WinRT
-    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
-        qputenv("QT_QUICK_CONTROLS_STYLE", "Universal");
-    }
-#endif
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_THEME")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Light");
     }
@@ -419,9 +413,17 @@ int main(int argc, char *argv[])
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
     }
+
+#else
+    // Use universal dark on WinRT
+    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
+        qputenv("QT_QUICK_CONTROLS_STYLE", "Universal");
+    }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_UNIVERSAL_THEME")) {
         qputenv("QT_QUICK_CONTROLS_UNIVERSAL_THEME", "Dark");
     }
+#endif
+
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_1_STYLE")) {
         qputenv("QT_QUICK_CONTROLS_1_STYLE", "Base");
     }

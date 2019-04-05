@@ -46,6 +46,7 @@ Flickable {
         anchors.left: parent.left
         anchors.right: parent.right
         anchors.topMargin: 15
+
         Text{
             text: "Settings"
             font.pointSize: 20
@@ -54,8 +55,6 @@ Flickable {
             anchors.leftMargin: 20
 
         }
-
-
     }
 
     Column {

@@ -19,7 +19,7 @@ ApplicationWindow {
     visible: true
     width: 1280
     height: 700
-    flags: Qt.FramelessWindowHint | Qt.Window   
+    flags: Qt.FramelessWindowHint | Qt.Window
 
     visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
 
@@ -42,6 +42,10 @@ ApplicationWindow {
     }
 
     Component.onCompleted: {
+
+        if (Material.primary == "#f5f5f5") {Material.primary = "#F5F5F5"} else {Material.primary = "#373737"}                 //Hack for UWP compatibility
+        if (Material.foreground == "#242257") {Material.foreground = "#242257" } else {Material.foreground = "#FFFFFF"}       //Hack for UWP compatibility
+
         SdlGamepadKeyNavigation.enable()
     }
 
@@ -115,8 +119,8 @@ ApplicationWindow {
                 NavigableMenuButton {
                     id: gamesBtn
                     Layout.topMargin: 30
-                    Layout.minimumHeight: 80
-                    Layout.minimumWidth: 80
+                    Layout.minimumHeight: 70
+                    Layout.minimumWidth: 70
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: true
 
@@ -138,8 +142,8 @@ ApplicationWindow {
 
                 NavigableMenuButton {
                     id: settingsBtn
-                    Layout.minimumHeight: 80
-                    Layout.minimumWidth: 80
+                    Layout.minimumHeight: 70
+                    Layout.minimumWidth: 70
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: true
 
@@ -172,8 +176,8 @@ ApplicationWindow {
                 NavigableMenuButton {
                     //TODO: Implement a log view then unhide this button
                     id: logsBtn
-                    Layout.minimumHeight: 80
-                    Layout.minimumWidth: 80
+                    Layout.minimumHeight: 70
+                    Layout.minimumWidth: 70
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: true
 
@@ -194,8 +198,8 @@ ApplicationWindow {
                 NavigableMenuButton {
                     // TODO: Implement gamepad mapping then unhide this button
                     id: gamepadBtn
-                    Layout.minimumHeight: 80
-                    Layout.minimumWidth: 80
+                    Layout.minimumHeight: 70
+                    Layout.minimumWidth: 70
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: false
                     visible: false
@@ -218,8 +222,8 @@ ApplicationWindow {
 
                 NavigableMenuButton {
                     id: helpBtn
-                    Layout.minimumHeight: 80
-                    Layout.minimumWidth: 80
+                    Layout.minimumHeight: 70
+                    Layout.minimumWidth: 70
                     anchors.horizontalCenter: parent.horizontalCenter
                     checkable: false
                     visible: SystemProperties.hasBrowser
@@ -257,8 +261,8 @@ ApplicationWindow {
                 property string browserUrl: ""
 
                 id: updateBtn
-                Layout.minimumHeight: 80
-                Layout.minimumWidth: 80
+                Layout.minimumHeight: 70
+                Layout.minimumWidth: 70
                 anchors.bottom: parent.bottom
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottomMargin: 10
@@ -611,6 +615,8 @@ ApplicationWindow {
                     anchors.left: parent.left
                     anchors.leftMargin: 30
                     anchors.verticalCenter: parent.verticalCenter
+                    Layout.maximumHeight: 60
+                    Layout.maximumWidth: 60
 
                     text: "\ue901"
                     font.family: iconFont.name
@@ -656,8 +662,8 @@ ApplicationWindow {
             Item {
                 id: controls
                 Layout.fillHeight: true
-                Layout.minimumWidth: 150
-                Layout.maximumWidth: 150
+                Layout.minimumWidth: 200
+                Layout.maximumWidth: 200
 
                 RowLayout {
                     anchors.fill: parent
@@ -667,6 +673,9 @@ ApplicationWindow {
                         id: minimizeAppBtn
                         Material.foreground: "#F5F5F5"
                         Layout.alignment: Qt.AlignHCenter
+                        Layout.maximumHeight: 60
+                        Layout.maximumWidth: 60
+
                         text: "\ue907"
                         font.family: iconFont.name
                         font.pointSize: 10
@@ -680,6 +689,8 @@ ApplicationWindow {
                         id: resizeAppBtn
                         Material.foreground: "#F5F5F5"
                         Layout.alignment: Qt.AlignHCenter
+                        Layout.maximumHeight: 60
+                        Layout.maximumWidth: 60
 
                         text: window.visibility < 3 ? "\ue906" : "\ue90a"
                         font.family: iconFont.name
@@ -694,6 +705,9 @@ ApplicationWindow {
                         id: closeAppBtn
                         Material.foreground: "#F5F5F5"
                         Layout.alignment: Qt.AlignHCenter
+                        Layout.maximumHeight: 60
+                        Layout.maximumWidth: 60
+
                         text: "\ue902"
                         font.family: iconFont.name
                         font.pointSize: 10
