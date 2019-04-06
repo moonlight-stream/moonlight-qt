@@ -129,7 +129,7 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
     {
     case CONN_STATUS_POOR:
         if (s_ActiveSession->m_StreamConfig.bitrate > 5000) {
-            strcpy(s_ActiveSession->m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Slow connection to PC\nReduce bitrate");
+            strcpy(s_ActiveSession->m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Slow connection to PC\nReduce your bitrate");
         }
         else {
             strcpy(s_ActiveSession->m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Poor connection to PC");
