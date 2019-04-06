@@ -161,6 +161,8 @@ signals:
     void quitAppCompleted(QVariant error);
 
 private slots:
+    void handleAboutToQuit();
+
     void handleComputerStateChanged(NvComputer* computer);
 
     void handleMdnsServiceResolved(MdnsPendingComputer* computer, const QHostAddress& address);

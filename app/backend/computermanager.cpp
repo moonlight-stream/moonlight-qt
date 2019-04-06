@@ -7,6 +7,7 @@
 
 #include <QThread>
 #include <QThreadPool>
+#include <QCoreApplication>
 
 #define SER_HOSTS "hosts"
 
@@ -161,6 +162,13 @@ ComputerManager::ComputerManager(QObject *parent)
         m_KnownHosts[computer->uuid] = computer;
     }
     settings.endArray();
+
+    // To quit in a timely manner, we must block additional requests
+    // after we receive the aboutToQuit() signal. This is neccessary
+    // because NvHTTP uses aboutToQuit() to abort requests in progres
+    // while quitting, however this is a one time signal - additional
+    // requests would not be aborted and block termination.
+    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()), this, SLOT(handleAboutToQuit()));
 }
 
 ComputerManager::~ComputerManager()
@@ -341,6 +349,17 @@ void ComputerManager::deleteHost(NvComputer* computer)
     // Punt to a worker thread to avoid stalling the
     // UI while waiting for the polling thread to die
     QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(this, computer));
+}
+
+void ComputerManager::handleAboutToQuit()
+{
+    QWriteLocker lock(&m_Lock);
+
+    // Interrupt polling threads immediately, so they
+    // avoid making additional requests while quitting
+    for (ComputerPollingEntry* entry : m_PollEntries) {
+        entry->interrupt();
+    }
 }
 
 class PendingPairingTask : public QObject, public QRunnable
