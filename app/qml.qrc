@@ -17,5 +17,6 @@
         <file>gui/ErrorMessageDialog.qml</file>
         <file>gui/NavigableMessageDialog.qml</file>
         <file>gui/NavigableDialog.qml</file>
+        <file>gui/CenteredGridView.qml</file>
     </qresource>
 </RCC>

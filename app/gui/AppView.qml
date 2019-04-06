@@ -4,25 +4,16 @@ import QtQuick.Controls 2.2
 import AppModel 1.0
 import ComputerManager 1.0
 
-GridView {
+CenteredGridView {
     property int computerIndex
     property AppModel appModel : createModel()
     property bool activated
-
-    // Prevent the margin from dropping below 10. By keeping a floor on the margin value
-    // this prevents a binding loop caused by the ternary condition changing and decreasing
-    // the margin size, thus causing it to change back.
-    property real horizontalMargin: Math.max(10,
-                                             contentHeight > cellHeight && parent.width > cellWidth ?
-                                                 (parent.width % cellWidth) / 2 : 0)
 
     id: appGrid
     focus: true
     activeFocusOnTab: true
     topMargin: 20
     bottomMargin: 5
-    leftMargin: horizontalMargin
-    rightMargin: horizontalMargin
     cellWidth: 230; cellHeight: 297;
 
     function computerLost()
@@ -31,28 +22,11 @@ GridView {
         stackView.pop()
     }
 
-    onHorizontalMarginChanged: {
-        if (this.synchronousDrag === undefined) {
-            anchors.leftMargin = horizontalMargin
-            anchors.rightMargin = horizontalMargin
-        }
-    }
-
     Component.onCompleted: {
         // Don't show any highlighted item until interacting with them.
         // We do this here instead of onActivated to avoid losing the user's
         // selection when backing out of a different page of the app.
         currentIndex = -1
-
-        // HACK: If this is not Qt 5.12 (which has synchronousDrag),
-        // set anchors on creation. This will cause an anchor conflict
-        // with the parent StackView which breaks animation, but otherwise
-        // the grid will not be centered in the window.
-        if (this.synchronousDrag === undefined) {
-            anchors.fill = parent
-            anchors.topMargin = topMargin
-            anchors.bottomMargin = bottomMargin
-        }
     }
 
     StackView.onActivated: {
