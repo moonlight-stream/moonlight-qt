@@ -401,7 +401,7 @@ private:
                break;
            }
         } catch (const GfeHttpResponseException& e) {
-            emit pairingCompleted(m_Computer, e.toQString());
+            emit pairingCompleted(m_Computer, "GeForce Experience returned error: " + e.toQString());
         } catch (const QtNetworkReplyException& e) {
             emit pairingCompleted(m_Computer, e.toQString());
         }
