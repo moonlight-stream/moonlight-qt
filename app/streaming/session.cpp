@@ -866,7 +866,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     } catch (const GfeHttpResponseException& e) {
         delete m_InputHandler;
         m_InputHandler = nullptr;
-        emit displayLaunchError(e.toQString());
+        emit displayLaunchError("GeForce Experience returned error: " + e.toQString());
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     } catch (const QtNetworkReplyException& e) {

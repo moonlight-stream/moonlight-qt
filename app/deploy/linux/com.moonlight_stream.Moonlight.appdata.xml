@@ -33,6 +33,26 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.10.0" date="2019-04-07">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Redesigned App Grid with larger game artwork and less blank space</li>
+					<li>Redesigned UI dialogs using Material Design</li>
+					<li>Added a connection warning overlay (which can be disabled in settings)</li>
+					<li>Streaming window no longer minimizes when it loses focus in full-screen mode</li>
+					<li>The Steam Link device is now a supported platform</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed several bugs that could cause UI hangs or lag</li>
+					<li>Fixed rumble support on gamepads with limited rumble motor control</li>
+					<li>Fixed increased memory usage if the software renderer gets delayed</li>
+					<li>Fixed crashes on certain desktop configurations when loading the UI</li>
+					<li>Fixed handling of pairing certificates with a bogus date</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.9.1" date="2019-02-17">
 			<description>
 				<p>New features:</p>
