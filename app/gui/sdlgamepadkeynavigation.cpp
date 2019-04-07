@@ -91,6 +91,12 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
 
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
+        case SDL_QUIT:
+            // SDL may send us a quit event since we initialize
+            // the video subsystem on startup. If we get one,
+            // forward it on for Qt to take care of.
+            QCoreApplication::instance()->quit();
+            break;
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
         {
