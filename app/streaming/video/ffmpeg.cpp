@@ -32,7 +32,8 @@
 
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
-    return m_HwDecodeCfg != nullptr;
+    return m_HwDecodeCfg != nullptr ||
+            (m_VideoDecoderCtx->codec->capabilities & AV_CODEC_CAP_HARDWARE) != 0;
 }
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
