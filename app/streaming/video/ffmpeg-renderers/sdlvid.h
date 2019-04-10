@@ -20,6 +20,7 @@ public:
     virtual int getDecoderCapabilities() override;
     virtual FramePacingConstraint getFramePacingConstraint() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+    virtual bool isRenderThreadSupported() override;
 
 private:
     void renderOverlay(Overlay::OverlayType type);

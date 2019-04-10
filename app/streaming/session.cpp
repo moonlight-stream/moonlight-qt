@@ -1019,25 +1019,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Quit event received");
             goto DispatchDeferredCleanup;
-        case SDL_USEREVENT: {
-            SDL_Event nextEvent;
 
+        case SDL_USEREVENT:
             SDL_assert(event.user.code == SDL_CODE_FRAME_READY);
-
-            // Drop any earlier frames
-            while (SDL_PeepEvents(&nextEvent,
-                                  1,
-                                  SDL_GETEVENT,
-                                  SDL_USEREVENT,
-                                  SDL_USEREVENT) == 1) {
-                m_VideoDecoder->dropFrame(&event.user);
-                event = nextEvent;
-            }
-
-            // Render the last frame
-            m_VideoDecoder->renderFrame(&event.user);
+            m_VideoDecoder->renderFrameOnMainThread();
             break;
-        }
 
         case SDL_WINDOWEVENT:
             // Capture mouse cursor when user actives the window by clicking on

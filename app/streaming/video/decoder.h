@@ -40,19 +40,5 @@ public:
     virtual bool isHardwareAccelerated() = 0;
     virtual int getDecoderCapabilities() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
-    virtual void renderFrame(SDL_UserEvent* event) = 0;
-    virtual void dropFrame(SDL_UserEvent* event) = 0;
-
-    virtual void queueFrame(void* data1 = nullptr,
-                            void* data2 = nullptr)
-    {
-        SDL_Event event;
-
-        event.type = SDL_USEREVENT;
-        event.user.code = SDL_CODE_FRAME_READY;
-        event.user.data1 = data1;
-        event.user.data2 = data2;
-
-        SDL_PushEvent(&event);
-    }
+    virtual void renderFrameOnMainThread() = 0;
 };

@@ -251,6 +251,12 @@ IFFmpegRenderer::FramePacingConstraint VDPAURenderer::getFramePacingConstraint()
     return PACING_ANY;
 }
 
+bool VDPAURenderer::isRenderThreadSupported()
+{
+    // renderFrame() may be called outside of the main thread
+    return true;
+}
+
 void VDPAURenderer::renderFrame(AVFrame* frame)
 {
     VdpStatus status;

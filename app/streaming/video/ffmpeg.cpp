@@ -630,14 +630,8 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     return DR_OK;
 }
 
-// Called on main thread
-void FFmpegVideoDecoder::renderFrame(SDL_UserEvent*)
+void FFmpegVideoDecoder::renderFrameOnMainThread()
 {
-    SDL_assert(false);
+    m_Pacer->renderOnMainThread();
 }
 
-// Called on main thread
-void FFmpegVideoDecoder::dropFrame(SDL_UserEvent*)
-{
-    SDL_assert(false);
-}

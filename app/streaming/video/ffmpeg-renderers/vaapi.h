@@ -41,6 +41,7 @@ public:
     virtual bool needsTestFrame();
     virtual int getDecoderCapabilities();
     virtual FramePacingConstraint getFramePacingConstraint();
+    virtual bool isRenderThreadSupported();
 
 private:
     int m_WindowSystem;

@@ -779,6 +779,12 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 }
 
+bool DXVA2Renderer::isRenderThreadSupported()
+{
+    // renderFrame() may be called outside of the main thread
+    return true;
+}
+
 void DXVA2Renderer::renderFrame(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);

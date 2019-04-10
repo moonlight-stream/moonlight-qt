@@ -23,8 +23,7 @@ public:
     virtual bool isHardwareAccelerated() override;
     virtual int getDecoderCapabilities() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
-    virtual void renderFrame(SDL_UserEvent* event) override;
-    virtual void dropFrame(SDL_UserEvent* event) override;
+    virtual void renderFrameOnMainThread() override;
 
     virtual IFFmpegRenderer* getRenderer();
 

@@ -182,6 +182,12 @@ IFFmpegRenderer::FramePacingConstraint VAAPIRenderer::getFramePacingConstraint()
     return PACING_ANY;
 }
 
+bool VAAPIRenderer::isRenderThreadSupported()
+{
+    // renderFrame() may be called outside of the main thread
+    return true;
+}
+
 void
 VAAPIRenderer::renderFrame(AVFrame* frame)
 {

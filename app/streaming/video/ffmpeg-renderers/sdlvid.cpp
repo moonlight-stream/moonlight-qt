@@ -62,7 +62,7 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
     /* Nothing to do */
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using SDL software renderer");
+                "Using SDL renderer");
 
     return true;
 }
@@ -124,6 +124,24 @@ void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
                                                               1000);
         SDL_AtomicSetPtr((void**)&m_OverlaySurfaces[type], surface);
     }
+}
+
+bool SdlRenderer::isRenderThreadSupported()
+{
+    SDL_RendererInfo info;
+    SDL_GetRendererInfo(m_Renderer, &info);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "SDL renderer backend: %s",
+                info.name);
+
+    if (info.name != QString("direct3d")) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL renderer backend requires main thread rendering");
+        return false;
+    }
+
+    return true;
 }
 
 bool SdlRenderer::initialize(SDL_Window* window,

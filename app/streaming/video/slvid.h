@@ -22,8 +22,7 @@ public:
     virtual int submitDecodeUnit(PDECODE_UNIT du);
 
     // Unused since rendering is done directly from the decode thread
-    virtual void renderFrame(SDL_UserEvent*) {}
-    virtual void dropFrame(SDL_UserEvent*) {}
+    virtual void renderFrameOnMainThread() {}
 
 private:
     CSLVideoContext* m_VideoContext;

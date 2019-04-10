@@ -296,6 +296,12 @@ public:
         return PACING_FORCE_ON;
     }
 
+    virtual bool isRenderThreadSupported() override
+    {
+        // renderFrame() may be called outside of the main thread
+        return true;
+    }
+
 private:
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;

@@ -27,6 +27,7 @@ public:
     virtual bool needsTestFrame() = 0;
     virtual int getDecoderCapabilities() = 0;
     virtual FramePacingConstraint getFramePacingConstraint() = 0;
+    virtual bool isRenderThreadSupported() = 0;
 
     // IOverlayRenderer
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
