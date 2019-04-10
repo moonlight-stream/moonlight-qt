@@ -26,6 +26,7 @@ private:
 
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
+    QByteArray m_FontData;
     TTF_Font* m_OverlayFonts[Overlay::OverlayMax];
     SDL_Surface* m_OverlaySurfaces[Overlay::OverlayMax];
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
