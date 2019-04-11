@@ -32,6 +32,7 @@
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/systemproperties.h"
+#include "backend/i3windowmanager.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
@@ -404,6 +405,11 @@ int main(int argc, char *argv[])
                                                    [](QQmlEngine*, QJSEngine*) -> QObject* {
                                                        return new StreamingPreferences();
                                                    });
+    qmlRegisterSingletonType<I3WindowManager>("I3WindowManager", 1, 0,
+                                              "I3WindowManager",
+                                              [](QQmlEngine*, QJSEngine*) -> QObject * {
+                                                  return new I3WindowManager();
+                                              });
 
 #ifndef Q_OS_WINRT
     // Use the dense material dark theme by default

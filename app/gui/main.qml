@@ -7,6 +7,7 @@ import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
 import SystemProperties 1.0
+import I3WindowManager 1.0
 import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
@@ -138,6 +139,8 @@ ApplicationWindow {
             // onAfterRendering call and potentially reenter this code.
             initialized = true;
 
+            I3WindowManager.start()
+
             if (SystemProperties.isWow64) {
                 wow64Dialog.open()
             }
@@ -170,6 +173,25 @@ ApplicationWindow {
         else {
             // Create a new item
             stackView.push(url)
+        }
+    }
+
+    function hideWindow()
+    {
+
+        if (SystemProperties.isRunningWayland && I3WindowManager.isRunningI3) {
+            I3WindowManager.hideWindow()
+        } else {
+            window.visible = false
+        }
+    }
+
+    function showWindow()
+    {
+        if (SystemProperties.isRunningWayland && I3WindowManager.isRunningI3) {
+            I3WindowManager.showWindow()
+        } else {
+            window.visible = true
         }
     }
 

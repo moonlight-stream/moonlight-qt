@@ -32,7 +32,7 @@ Item {
         hintText.visible = false
 
         // Hide the window now that streaming has begun
-        window.visible = false
+        window.hideWindow()
     }
 
     function displayLaunchError(text)
@@ -59,7 +59,7 @@ Item {
         stackView.replace(stackView.currentItem, component.createObject(stackView, {"appName": appName}), StackView.Immediate)
 
         // Show the Qt window again to show quit segue
-        window.visible = true
+        window.showWindow()
     }
 
     function sessionFinished()
@@ -82,7 +82,7 @@ Item {
             stackView.pop()
 
             // Show the Qt window again after streaming
-            window.visible = true
+            window.showWindow()
 
             // Display any launch errors. We do this after
             // the Qt UI is visible again to prevent losing
