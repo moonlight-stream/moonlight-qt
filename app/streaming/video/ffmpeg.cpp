@@ -32,12 +32,13 @@
 
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
-    return m_HwDecodeCfg != nullptr;
+    return m_HwDecodeCfg != nullptr ||
+            (m_VideoDecoderCtx->codec->capabilities & AV_CODEC_CAP_HARDWARE) != 0;
 }
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
-    return m_Renderer->getDecoderCapabilities();
+    return m_BackendRenderer->getDecoderCapabilities();
 }
 
 enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
@@ -65,7 +66,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
     : m_VideoDecoderCtx(nullptr),
       m_DecodeBuffer(1024 * 1024, 0),
       m_HwDecodeCfg(nullptr),
-      m_Renderer(nullptr),
+      m_BackendRenderer(nullptr),
+      m_FrontendRenderer(nullptr),
       m_ConsecutiveFailedDecodes(0),
       m_Pacer(nullptr),
       m_LastFrameNumber(0),
@@ -94,9 +96,9 @@ FFmpegVideoDecoder::~FFmpegVideoDecoder()
     av_log_set_level(AV_LOG_INFO);
 }
 
-IFFmpegRenderer* FFmpegVideoDecoder::getRenderer()
+IFFmpegRenderer* FFmpegVideoDecoder::getBackendRenderer()
 {
-    return m_Renderer;
+    return m_BackendRenderer;
 }
 
 void FFmpegVideoDecoder::reset()
@@ -115,8 +117,14 @@ void FFmpegVideoDecoder::reset()
         Session::get()->getOverlayManager().setOverlayRenderer(nullptr);
     }
 
-    delete m_Renderer;
-    m_Renderer = nullptr;
+    // If we have a separate frontend renderer, free that first
+    if (m_FrontendRenderer != m_BackendRenderer) {
+        delete m_FrontendRenderer;
+        m_FrontendRenderer = nullptr;
+    }
+
+    delete m_BackendRenderer;
+    m_BackendRenderer = nullptr;
 
     if (!m_TestOnly) {
         logVideoStats(m_GlobalVideoStats, "Global video stats");
@@ -127,35 +135,46 @@ void FFmpegVideoDecoder::reset()
     }
 }
 
-bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* window,
-                                                int videoFormat, int width, int height,
-                                                int maxFps, bool enableFramePacing, bool testFrame)
+bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params)
+{
+    m_FrontendRenderer = m_BackendRenderer;
+
+    // Determine whether the frontend renderer prefers frame pacing
+    auto vsyncConstraint = m_FrontendRenderer->getFramePacingConstraint();
+    if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_OFF && params->enableFramePacing) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Frame pacing is forcefully disabled by the frontend renderer");
+        params->enableFramePacing = false;
+    }
+    else if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_ON && !params->enableFramePacing) {
+        // FIXME: This duplicates logic in Session.cpp
+        int displayHz = StreamUtils::getDisplayRefreshRate(params->window);
+        if (displayHz + 5 >= params->frameRate) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Frame pacing is forcefully enabled by the frontend renderer");
+            params->enableFramePacing = true;
+        }
+    }
+
+    return true;
+}
+
+bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame)
 {
     // In test-only mode, we should only see test frames
     SDL_assert(!m_TestOnly || testFrame);
 
-    auto vsyncConstraint = m_Renderer->getFramePacingConstraint();
-    if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_OFF && enableFramePacing) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Frame pacing is forcefully disabled by the active renderer");
-        enableFramePacing = false;
-    }
-    else if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_ON && !enableFramePacing) {
-        // FIXME: This duplicates logic in Session.cpp
-        int displayHz = StreamUtils::getDisplayRefreshRate(window);
-        if (displayHz + 5 >= maxFps) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Frame pacing is forcefully enabled by the active renderer");
-            enableFramePacing = true;
-        }
+    // Create the frontend renderer based on the capabilities of the backend renderer
+    if (!createFrontendRenderer(params)) {
+        return false;
     }
 
-    m_StreamFps = maxFps;
+    m_StreamFps = params->frameRate;
 
     // Don't bother initializing Pacer if we're not actually going to render
     if (!testFrame) {
-        m_Pacer = new Pacer(m_Renderer, &m_ActiveWndVideoStats);
-        if (!m_Pacer->initialize(window, maxFps, enableFramePacing)) {
+        m_Pacer = new Pacer(m_FrontendRenderer, &m_ActiveWndVideoStats);
+        if (!m_Pacer->initialize(params->window, params->frameRate, params->enableFramePacing)) {
             return false;
         }
     }
@@ -175,7 +194,7 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
     m_VideoDecoderCtx->flags2 |= AV_CODEC_FLAG2_SHOW_ALL;
 
     // Enable slice multi-threading for software decoding
-    if (!m_HwDecodeCfg) {
+    if (!isHardwareAccelerated()) {
         m_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
         m_VideoDecoderCtx->thread_count = qMin(MAX_SLICES, SDL_GetCPUCount());
     }
@@ -185,13 +204,13 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
     }
 
     // Setup decoding parameters
-    m_VideoDecoderCtx->width = width;
-    m_VideoDecoderCtx->height = height;
+    m_VideoDecoderCtx->width = params->width;
+    m_VideoDecoderCtx->height = params->height;
     m_VideoDecoderCtx->pix_fmt = AV_PIX_FMT_YUV420P; // FIXME: HDR
     m_VideoDecoderCtx->get_format = ffGetFormat;
 
-    // Allow the renderer to attach data to this decoder
-    if (!m_Renderer->prepareDecoderContext(m_VideoDecoderCtx)) {
+    // Allow the backend renderer to attach data to this decoder
+    if (!m_BackendRenderer->prepareDecoderContext(m_VideoDecoderCtx)) {
         return false;
     }
 
@@ -206,7 +225,7 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to open decoder for format: %x",
-                     videoFormat);
+                     params->videoFormat);
         return false;
     }
 
@@ -216,7 +235,7 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
     // now to see if things will actually work when the video stream
     // comes in.
     if (testFrame) {
-        if (videoFormat & VIDEO_FORMAT_MASK_H264) {
+        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
             m_Pkt.data = (uint8_t*)k_H264TestFrame;
             m_Pkt.size = sizeof(k_H264TestFrame);
         }
@@ -235,8 +254,8 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
         }
     }
     else {
-        if ((videoFormat & VIDEO_FORMAT_MASK_H264) &&
-                !(m_Renderer->getDecoderCapabilities() & CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC)) {
+        if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
+                !(m_BackendRenderer->getDecoderCapabilities() & CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Using H.264 SPS fixup");
             m_NeedsSpsFixup = true;
@@ -245,8 +264,8 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, SDL_Window* wi
             m_NeedsSpsFixup = false;
         }
 
-        // Tell overlay manager to use this renderer
-        Session::get()->getOverlayManager().setOverlayRenderer(m_Renderer);
+        // Tell overlay manager to use this frontend renderer
+        Session::get()->getOverlayManager().setOverlayRenderer(m_FrontendRenderer);
     }
 
     return true;
@@ -360,25 +379,17 @@ IFFmpegRenderer* FFmpegVideoDecoder::createAcceleratedRenderer(const AVCodecHWCo
     }
 }
 
-bool FFmpegVideoDecoder::initialize(
-        StreamingPreferences::VideoDecoderSelection vds,
-        SDL_Window* window,
-        int videoFormat,
-        int width,
-        int height,
-        int maxFps,
-        bool enableVsync,
-        bool enableFramePacing)
+bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 {
     AVCodec* decoder;
 
     // Increase log level until the first frame is decoded
     av_log_set_level(AV_LOG_DEBUG);
 
-    if (videoFormat & VIDEO_FORMAT_MASK_H264) {
+    if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
         decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
     }
-    else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
+    else if (params->videoFormat & VIDEO_FORMAT_MASK_H265) {
         decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
     }
     else {
@@ -389,20 +400,20 @@ bool FFmpegVideoDecoder::initialize(
     if (!decoder) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to find decoder for format: %x",
-                     videoFormat);
+                     params->videoFormat);
         return false;
     }
 
     for (int i = 0;; i++) {
         const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
-        if (!config || vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
+        if (!config || params->vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
             // No matching hardware acceleration support.
             // This is not an error.
             m_HwDecodeCfg = nullptr;
-            m_Renderer = new SdlRenderer();
-            if (vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
-                    m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                    completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, m_TestOnly)) {
+            m_BackendRenderer = new SdlRenderer();
+            if (params->vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
+                    m_BackendRenderer->initialize(params) &&
+                    completeInitialization(decoder, params, m_TestOnly)) {
                 return true;
             }
             else {
@@ -411,27 +422,27 @@ bool FFmpegVideoDecoder::initialize(
             }
         }
 
-        m_Renderer = createAcceleratedRenderer(config);
-        if (!m_Renderer) {
+        m_BackendRenderer = createAcceleratedRenderer(config);
+        if (!m_BackendRenderer) {
             continue;
         }
 
         m_HwDecodeCfg = config;
         // Initialize the hardware codec and submit a test frame if the renderer needs it
-        if (m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, m_TestOnly || m_Renderer->needsTestFrame())) {
+        if (m_BackendRenderer->initialize(params) &&
+                completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame())) {
             if (m_TestOnly) {
                 // This decoder is only for testing capabilities, so don't bother
                 // creating a usable renderer
                 return true;
             }
 
-            if (m_Renderer->needsTestFrame()) {
+            if (m_BackendRenderer->needsTestFrame()) {
                 // The test worked, so now let's initialize it for real
                 reset();
-                if ((m_Renderer = createAcceleratedRenderer(config)) != nullptr &&
-                        m_Renderer->initialize(window, videoFormat, width, height, maxFps, enableVsync) &&
-                        completeInitialization(decoder, window, videoFormat, width, height, maxFps, enableFramePacing, false)) {
+                if ((m_BackendRenderer = createAcceleratedRenderer(config)) != nullptr &&
+                        m_BackendRenderer->initialize(params) &&
+                        completeInitialization(decoder, params, false)) {
                     return true;
                 }
                 else {
@@ -630,14 +641,8 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     return DR_OK;
 }
 
-// Called on main thread
-void FFmpegVideoDecoder::renderFrame(SDL_UserEvent*)
+void FFmpegVideoDecoder::renderFrameOnMainThread()
 {
-    SDL_assert(false);
+    m_Pacer->renderOnMainThread();
 }
 
-// Called on main thread
-void FFmpegVideoDecoder::dropFrame(SDL_UserEvent*)
-{
-    SDL_assert(false);
-}

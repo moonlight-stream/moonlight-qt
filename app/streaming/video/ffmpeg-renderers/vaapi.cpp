@@ -29,19 +29,19 @@ VAAPIRenderer::~VAAPIRenderer()
 }
 
 bool
-VAAPIRenderer::initialize(SDL_Window* window, int, int width, int height, int, bool)
+VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
     SDL_SysWMinfo info;
 
-    m_VideoWidth = width;
-    m_VideoHeight = height;
+    m_VideoWidth = params->width;
+    m_VideoHeight = params->height;
 
-    SDL_GetWindowSize(window, &m_DisplayWidth, &m_DisplayHeight);
+    SDL_GetWindowSize(params->window, &m_DisplayWidth, &m_DisplayHeight);
 
     SDL_VERSION(&info.version);
 
-    if (!SDL_GetWindowWMInfo(window, &info)) {
+    if (!SDL_GetWindowWMInfo(params->window, &info)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_GetWindowWMInfo() failed: %s",
                      SDL_GetError());
@@ -180,6 +180,12 @@ VAAPIRenderer::getDecoderCapabilities()
 IFFmpegRenderer::FramePacingConstraint VAAPIRenderer::getFramePacingConstraint()
 {
     return PACING_ANY;
+}
+
+bool VAAPIRenderer::isRenderThreadSupported()
+{
+    // renderFrame() may be called outside of the main thread
+    return true;
 }
 
 void

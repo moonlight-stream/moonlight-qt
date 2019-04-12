@@ -26,8 +26,14 @@ public:
 
     void vsyncCallback(int timeUntilNextVsyncMillis);
 
+    void renderOnMainThread();
+
 private:
     static int renderThread(void* context);
+
+    void enqueueFrameForRenderingAndUnlock(AVFrame* frame);
+
+    void renderLastFrameAndUnlock();
 
     void renderFrame(AVFrame* frame);
 

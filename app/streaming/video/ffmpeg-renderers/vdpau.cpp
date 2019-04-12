@@ -54,14 +54,14 @@ VDPAURenderer::~VDPAURenderer()
     }
 }
 
-bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height, int, bool)
+bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
     VdpStatus status;
     SDL_SysWMinfo info;
 
-    m_VideoWidth = width;
-    m_VideoHeight = height;
+    m_VideoWidth = params->width;
+    m_VideoHeight = params->height;
 
     err = av_hwdevice_ctx_create(&m_HwContext,
                                  AV_HWDEVICE_TYPE_VDPAU,
@@ -93,11 +93,11 @@ bool VDPAURenderer::initialize(SDL_Window* window, int, int width, int height, i
     GET_PROC_ADDRESS(VDP_FUNC_ID_VIDEO_SURFACE_GET_PARAMETERS, &m_VdpVideoSurfaceGetParameters);
     GET_PROC_ADDRESS(VDP_FUNC_ID_GET_INFORMATION_STRING, &m_VdpGetInformationString);
 
-    SDL_GetWindowSize(window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
+    SDL_GetWindowSize(params->window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
 
     SDL_VERSION(&info.version);
 
-    if (!SDL_GetWindowWMInfo(window, &info)) {
+    if (!SDL_GetWindowWMInfo(params->window, &info)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_GetWindowWMInfo() failed: %s",
                      SDL_GetError());
@@ -249,6 +249,12 @@ int VDPAURenderer::getDecoderCapabilities()
 IFFmpegRenderer::FramePacingConstraint VDPAURenderer::getFramePacingConstraint()
 {
     return PACING_ANY;
+}
+
+bool VDPAURenderer::isRenderThreadSupported()
+{
+    // renderFrame() may be called outside of the main thread
+    return true;
 }
 
 void VDPAURenderer::renderFrame(AVFrame* frame)

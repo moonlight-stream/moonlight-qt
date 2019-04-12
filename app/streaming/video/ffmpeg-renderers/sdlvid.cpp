@@ -9,7 +9,8 @@
 
 SdlRenderer::SdlRenderer()
     : m_Renderer(nullptr),
-      m_Texture(nullptr)
+      m_Texture(nullptr),
+      m_FontData(Path::readDataFile("ModeSeven.ttf"))
 {
     SDL_assert(TTF_WasInit() == 0);
     if (TTF_Init() != 0) {
@@ -61,7 +62,7 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
     /* Nothing to do */
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using SDL software renderer");
+                "Using SDL renderer");
 
     return true;
 }
@@ -88,14 +89,14 @@ void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     // Construct the required font to render the overlay
     if (m_OverlayFonts[type] == nullptr) {
-        QByteArray fontData = Path::readDataFile("ModeSeven.ttf");
-        if (fontData.isEmpty()) {
+        if (m_FontData.isEmpty()) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Unable to load SDL overlay font");
+                         "SDL overlay font failed to load");
             return;
         }
 
-        m_OverlayFonts[type] = TTF_OpenFontRW(SDL_RWFromConstMem(fontData.constData(), fontData.size()),
+        // m_FontData must stay around until the font is closed
+        m_OverlayFonts[type] = TTF_OpenFontRW(SDL_RWFromConstMem(m_FontData.constData(), m_FontData.size()),
                                               1,
                                               Session::get()->getOverlayManager().getOverlayFontSize(type));
         if (m_OverlayFonts[type] == nullptr) {
@@ -125,20 +126,33 @@ void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 }
 
-bool SdlRenderer::initialize(SDL_Window* window,
-                             int,
-                             int width,
-                             int height,
-                             int,
-                             bool enableVsync)
+bool SdlRenderer::isRenderThreadSupported()
+{
+    SDL_RendererInfo info;
+    SDL_GetRendererInfo(m_Renderer, &info);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "SDL renderer backend: %s",
+                info.name);
+
+    if (info.name != QString("direct3d")) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL renderer backend requires main thread rendering");
+        return false;
+    }
+
+    return true;
+}
+
+bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 {
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
 
-    if ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+    if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
         // In full-screen exclusive mode, we enable V-sync if requested. For other modes, Windows and Mac
         // have compositors that make rendering tear-free. Linux compositor varies by distro and user
         // configuration but doesn't seem feasible to detect here.
-        if (enableVsync) {
+        if (params->enableVsync) {
             rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
         }
     }
@@ -151,7 +165,7 @@ bool SdlRenderer::initialize(SDL_Window* window,
     SDL_SetHintWithPriority(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1", SDL_HINT_OVERRIDE);
 #endif
 
-    m_Renderer = SDL_CreateRenderer(window, -1, rendererFlags);
+    m_Renderer = SDL_CreateRenderer(params->window, -1, rendererFlags);
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
@@ -161,7 +175,7 @@ bool SdlRenderer::initialize(SDL_Window* window,
 
     // The window may be smaller than the stream size, so ensure our
     // logical rendering surface size is equal to the stream size
-    SDL_RenderSetLogicalSize(m_Renderer, width, height);
+    SDL_RenderSetLogicalSize(m_Renderer, params->width, params->height);
 
     // Draw a black frame until the video stream starts rendering
     SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -171,8 +185,8 @@ bool SdlRenderer::initialize(SDL_Window* window,
     m_Texture = SDL_CreateTexture(m_Renderer,
                                   SDL_PIXELFORMAT_YV12,
                                   SDL_TEXTUREACCESS_STREAMING,
-                                  width,
-                                  height);
+                                  params->width,
+                                  params->height);
     if (!m_Texture) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
@@ -233,6 +247,32 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
 
 void SdlRenderer::renderFrame(AVFrame* frame)
 {
+    int err;
+    AVFrame* swFrame = nullptr;
+
+    if (frame->hw_frames_ctx != nullptr) {
+        // If we are acting as the frontend for a hardware
+        // accelerated decoder, we'll need to read the frame
+        // back to render it.
+
+        swFrame = av_frame_alloc();
+        if (swFrame == nullptr) {
+            return;
+        }
+
+        swFrame->width = frame->width;
+        swFrame->height = frame->height;
+        swFrame->format = AV_PIX_FMT_YUV420P;
+
+        err = av_hwframe_transfer_data(swFrame, frame, 0);
+        if (err != 0) {
+            av_frame_free(&swFrame);
+            return;
+        }
+
+        frame = swFrame;
+    }
+
     SDL_UpdateYUVTexture(m_Texture, nullptr,
                          frame->data[0],
                          frame->linesize[0],
@@ -252,4 +292,8 @@ void SdlRenderer::renderFrame(AVFrame* frame)
     }
 
     SDL_RenderPresent(m_Renderer);
+
+    if (swFrame != nullptr) {
+        av_frame_free(&swFrame);
+    }
 }

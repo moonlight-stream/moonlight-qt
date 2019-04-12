@@ -107,7 +107,7 @@ bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context)
 
 int DXVA2Renderer::ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int)
 {
-    DXVA2Renderer* me = (DXVA2Renderer*)((FFmpegVideoDecoder*)context->opaque)->getRenderer();
+    DXVA2Renderer* me = (DXVA2Renderer*)((FFmpegVideoDecoder*)context->opaque)->getBackendRenderer();
 
     frame->buf[0] = av_buffer_pool_get(me->m_Pool);
     if (!frame->buf[0]) {
@@ -649,11 +649,11 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     return true;
 }
 
-bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, int height, int, bool enableVsync)
+bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 {
-    m_VideoFormat = videoFormat;
-    m_VideoWidth = width;
-    m_VideoHeight = height;
+    m_VideoFormat = params->videoFormat;
+    m_VideoWidth = params->width;
+    m_VideoHeight = params->height;
 
     RtlZeroMemory(&m_Desc, sizeof(m_Desc));
 
@@ -682,7 +682,7 @@ bool DXVA2Renderer::initialize(SDL_Window* window, int videoFormat, int width, i
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
     m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
 
-    if (!initializeDevice(window, enableVsync)) {
+    if (!initializeDevice(params->window, params->enableVsync)) {
         return false;
     }
 
@@ -777,6 +777,12 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         SDL_assert(false);
         break;
     }
+}
+
+bool DXVA2Renderer::isRenderThreadSupported()
+{
+    // renderFrame() may be called outside of the main thread
+    return true;
 }
 
 void DXVA2Renderer::renderFrame(AVFrame *frame)

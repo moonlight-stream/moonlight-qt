@@ -49,10 +49,30 @@ cp $SOURCE_ROOT/libs/mac/lib/*.dylib $BUILD_FOLDER/app/Moonlight.app/Contents/li
 echo Creating app bundle
 EXTRA_ARGS=
 if [ "$BUILD_CONFIG" == "Debug" ]; then EXTRA_ARGS="$EXTRA_ARGS -use-debug-libs"; fi
-if [ "$SIGNING_KEY" != "" ]; then EXTRA_ARGS="$EXTRA_ARGS -codesign=$SIGNING_KEY"; fi
 echo Extra deployment arguments: $EXTRA_ARGS
 macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
 
+if [ "$SIGNING_KEY" != "" ]; then
+  echo Signing app bundle
+  codesign --force --deep --options runtime --timestamp --sign $SIGNING_KEY $BUILD_FOLDER/app/Moonlight.app || fail "Signing failed!"
+fi
+
 echo Creating DMG
 create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER || fail "create-dmg failed!"
+
+if [ "$NOTARY_USERNAME" != "" ] && [ "$NOTARY_PASSWORD" != "" ]; then
+  echo Uploading to App Notary service
+  xcrun altool -t osx -f $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg --primary-bundle-id com.moonlight-stream.Moonlight --notarize-app --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider $SIGNING_KEY || fail "Notary submission failed"
+  
+  echo Waiting 5 minutes for notarization to complete
+  sleep 300
+
+  echo Getting notarization status
+  xcrun altool -t osx --notarization-history 0 --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider $SIGNING_KEY || fail "Unable to fetch notarization history!"
+
+  echo Stapling notary ticket to DMG
+  xcrun stapler staple -v $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg || fail "Notary ticket stapling failed!"
+fi
+
 mv $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg $INSTALLER_FOLDER/Moonlight-$VERSION.dmg
+echo Build successful

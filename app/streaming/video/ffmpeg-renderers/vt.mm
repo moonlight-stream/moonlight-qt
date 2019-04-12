@@ -106,16 +106,11 @@ public:
         CFRelease(sampleBuffer);
     }
 
-    virtual bool initialize(SDL_Window* window,
-                            int videoFormat,
-                            int,
-                            int,
-                            int,
-                            bool) override
+    virtual bool initialize(PDECODER_PARAMETERS params) override
     {
         int err;
 
-        if (videoFormat & VIDEO_FORMAT_MASK_H264) {
+        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
             // Prior to 10.13, we'll just assume everything has
             // H.264 support and fail open to allow VT decode.
     #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -133,7 +128,7 @@ public:
                             "Assuming H.264 HW decode on < macOS 10.13");
             }
         }
-        else if (videoFormat & VIDEO_FORMAT_MASK_H265) {
+        else if (params->videoFormat & VIDEO_FORMAT_MASK_H265) {
     #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
             if (__builtin_available(macOS 10.13, *)) {
                 if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)) {
@@ -156,7 +151,7 @@ public:
 
         SDL_VERSION(&info.version);
 
-        if (!SDL_GetWindowWMInfo(window, &info)) {
+        if (!SDL_GetWindowWMInfo(params->window, &info)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "SDL_GetWindowWMInfo() failed: %s",
                         SDL_GetError());
@@ -294,6 +289,12 @@ public:
         // rendering with AVSampleBufferDisplay layer. Running without
         // the V-Sync source leads to massive stuttering.
         return PACING_FORCE_ON;
+    }
+
+    virtual bool isRenderThreadSupported() override
+    {
+        // renderFrame() may be called outside of the main thread
+        return true;
     }
 
 private:

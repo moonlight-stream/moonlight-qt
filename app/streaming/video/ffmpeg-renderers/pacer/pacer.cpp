@@ -61,6 +61,24 @@ Pacer::~Pacer()
     }
 }
 
+void Pacer::renderOnMainThread()
+{
+    // Ignore this call for renderers that work on a dedicated render thread
+    if (m_RenderThread != nullptr) {
+        return;
+    }
+
+    m_FrameQueueLock.lock();
+
+    if (!m_RenderQueue.isEmpty()) {
+        // Releases m_FrameQueueLock
+        renderLastFrameAndUnlock();
+    }
+    else {
+        m_FrameQueueLock.unlock();
+    }
+}
+
 int Pacer::renderThread(void* context)
 {
     Pacer* me = reinterpret_cast<Pacer*>(context);
@@ -87,32 +105,59 @@ int Pacer::renderThread(void* context)
             break;
         }
 
-        // Dequeue the most recent frame for rendering and free the others.
+        // Render the latest frame and discard the others
         // NB: m_FrameQueueLock still held here!
-        AVFrame* lastFrame = nullptr;
-        while (!me->m_RenderQueue.isEmpty()) {
-            if (lastFrame != nullptr) {
-                // Don't hold the frame queue lock across av_frame_free(),
-                // since it could need to talk to the GPU driver. This is safe
-                // because we're guaranteed that the queue will not shrink during
-                // this time (and so dequeue() below will always get something).
-                me->m_FrameQueueLock.unlock();
-                av_frame_free(&lastFrame);
-                me->m_VideoStats->pacerDroppedFrames++;
-                me->m_FrameQueueLock.lock();
-            }
-
-            lastFrame = me->m_RenderQueue.dequeue();
-        }
-
-        // Release the frame queue lock before rendering
-        me->m_FrameQueueLock.unlock();
-
-        // Render and free the mot current frame
-        me->renderFrame(lastFrame);
+        me->renderLastFrameAndUnlock();
     }
 
     return 0;
+}
+
+void Pacer::enqueueFrameForRenderingAndUnlock(AVFrame *frame)
+{
+    dropFrameForEnqueue(m_RenderQueue);
+    m_RenderQueue.enqueue(frame);
+
+    m_FrameQueueLock.unlock();
+
+    if (m_RenderThread != nullptr) {
+        m_RenderQueueNotEmpty.wakeOne();
+    }
+    else {
+        SDL_Event event;
+
+        // For main thread rendering, we'll push an event to trigger a callback
+        event.type = SDL_USEREVENT;
+        event.user.code = SDL_CODE_FRAME_READY;
+        SDL_PushEvent(&event);
+    }
+}
+
+// Caller must hold m_FrameQueueLock
+void Pacer::renderLastFrameAndUnlock()
+{
+    // Dequeue the most recent frame for rendering and free the others.
+    AVFrame* lastFrame = nullptr;
+    while (!m_RenderQueue.isEmpty()) {
+        if (lastFrame != nullptr) {
+            // Don't hold the frame queue lock across av_frame_free(),
+            // since it could need to talk to the GPU driver. This is safe
+            // because we're guaranteed that the queue will not shrink during
+            // this time (and so dequeue() below will always get something).
+            m_FrameQueueLock.unlock();
+            av_frame_free(&lastFrame);
+            m_VideoStats->pacerDroppedFrames++;
+            m_FrameQueueLock.lock();
+        }
+
+        lastFrame = m_RenderQueue.dequeue();
+    }
+
+    // Release the frame queue lock before rendering
+    m_FrameQueueLock.unlock();
+
+    // Render and free the mot current frame
+    renderFrame(lastFrame);
 }
 
 // Called in an arbitrary thread by the IVsyncSource on V-sync
@@ -172,10 +217,7 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
     }
 
     // Place the first frame on the render queue
-    dropFrameForEnqueue(m_RenderQueue);
-    m_RenderQueue.enqueue(m_PacingQueue.dequeue());
-    m_FrameQueueLock.unlock();
-    m_RenderQueueNotEmpty.wakeOne();
+    enqueueFrameForRenderingAndUnlock(m_PacingQueue.dequeue());
 }
 
 bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
@@ -211,7 +253,9 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     m_DisplayFps, m_MaxVideoFps);
     }
 
-    m_RenderThread = SDL_CreateThread(Pacer::renderThread, "Pacer Render Thread", this);
+    if (m_VsyncRenderer->isRenderThreadSupported()) {
+        m_RenderThread = SDL_CreateThread(Pacer::renderThread, "Pacer Render Thread", this);
+    }
 
     return true;
 }
@@ -283,16 +327,10 @@ void Pacer::submitFrame(AVFrame* frame)
     if (m_VsyncSource != nullptr) {
         dropFrameForEnqueue(m_PacingQueue);
         m_PacingQueue.enqueue(frame);
-    }
-    else {
-        dropFrameForEnqueue(m_RenderQueue);
-        m_RenderQueue.enqueue(frame);
-    }
-    m_FrameQueueLock.unlock();
-    if (m_VsyncSource != nullptr) {
+        m_FrameQueueLock.unlock();
         m_PacingQueueNotEmpty.wakeOne();
     }
     else {
-        m_RenderQueueNotEmpty.wakeOne();
+        enqueueFrameForRenderingAndUnlock(frame);
     }
 }
