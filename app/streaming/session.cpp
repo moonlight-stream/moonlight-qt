@@ -143,19 +143,28 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
     }
 }
 
-#define CALL_INITIALIZE(dec) (dec)->initialize(vds, window, videoFormat, width, height, frameRate, enableVsync, enableFramePacing)
-
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
                             int frameRate, bool enableVsync, bool enableFramePacing, bool testOnly, IVideoDecoder*& chosenDecoder)
 {
+    DECODER_PARAMETERS params;
+
+    params.width = width;
+    params.height = height;
+    params.frameRate = frameRate;
+    params.videoFormat = videoFormat;
+    params.window = window;
+    params.enableVsync = enableVsync;
+    params.enableFramePacing = enableFramePacing;
+    params.vds = vds;
+
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "V-sync %s",
                 enableVsync ? "enabled" : "disabled");
 
 #ifdef HAVE_SLVIDEO
     chosenDecoder = new SLVideoDecoder(testOnly);
-    if (CALL_INITIALIZE(chosenDecoder)) {
+    if (chosenDecoder->initialize(&params)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SLVideo video decoder chosen");
         return true;
@@ -170,7 +179,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 
 #ifdef HAVE_FFMPEG
     chosenDecoder = new FFmpegVideoDecoder(testOnly);
-    if (CALL_INITIALIZE(chosenDecoder)) {
+    if (chosenDecoder->initialize(&params)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "FFmpeg-based video decoder chosen");
         return true;

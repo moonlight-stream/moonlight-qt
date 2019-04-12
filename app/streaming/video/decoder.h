@@ -26,17 +26,22 @@ typedef struct _VIDEO_STATS {
     uint32_t measurementStartTimestamp;
 } VIDEO_STATS, *PVIDEO_STATS;
 
+typedef struct _DECODER_PARAMETERS {
+    SDL_Window* window;
+    StreamingPreferences::VideoDecoderSelection vds;
+
+    int videoFormat;
+    int width;
+    int height;
+    int frameRate;
+    bool enableVsync;
+    bool enableFramePacing;
+} DECODER_PARAMETERS, *PDECODER_PARAMETERS;
+
 class IVideoDecoder {
 public:
     virtual ~IVideoDecoder() {}
-    virtual bool initialize(StreamingPreferences::VideoDecoderSelection vds,
-                            SDL_Window* window,
-                            int videoFormat,
-                            int width,
-                            int height,
-                            int frameRate,
-                            bool enableVsync,
-                            bool enableFramePacing) = 0;
+    virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool isHardwareAccelerated() = 0;
     virtual int getDecoderCapabilities() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;

@@ -32,17 +32,15 @@ SLVideoDecoder::getDecoderCapabilities()
 }
 
 bool
-SLVideoDecoder::initialize(StreamingPreferences::VideoDecoderSelection vds,
-                           SDL_Window*,
-                           int videoFormat, int, int, int frameRate, bool, bool)
+SLVideoDecoder::initialize(PDECODER_PARAMETERS params)
 {
     // SLVideo only supports hardware decoding
-    if (vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
+    if (params->vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
         return false;
     }
 
     // SLVideo only supports H.264
-    if (videoFormat != VIDEO_FORMAT_H264) {
+    if (params->videoFormat != VIDEO_FORMAT_H264) {
         return false;
     }
 
@@ -61,7 +59,7 @@ SLVideoDecoder::initialize(StreamingPreferences::VideoDecoderSelection vds,
         return false;
     }
 
-    SLVideo_SetStreamTargetFramerate(m_VideoStream, frameRate, 1);
+    SLVideo_SetStreamTargetFramerate(m_VideoStream, params->frameRate, 1);
 
     return true;
 }

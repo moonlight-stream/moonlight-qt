@@ -12,31 +12,24 @@ class FFmpegVideoDecoder : public IVideoDecoder {
 public:
     FFmpegVideoDecoder(bool testOnly);
     virtual ~FFmpegVideoDecoder() override;
-    virtual bool initialize(StreamingPreferences::VideoDecoderSelection vds,
-                            SDL_Window* window,
-                            int videoFormat,
-                            int width,
-                            int height,
-                            int maxFps,
-                            bool enableVsync,
-                            bool enableFramePacing) override;
+    virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool isHardwareAccelerated() override;
     virtual int getDecoderCapabilities() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
     virtual void renderFrameOnMainThread() override;
 
-    virtual IFFmpegRenderer* getRenderer();
+    virtual IFFmpegRenderer* getBackendRenderer();
 
 private:
-    bool completeInitialization(AVCodec* decoder, SDL_Window* window,
-                                int videoFormat, int width, int height,
-                                int maxFps, bool enableFramePacing, bool testFrame);
+    bool completeInitialization(AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame);
 
     void stringifyVideoStats(VIDEO_STATS& stats, char* output);
 
     void logVideoStats(VIDEO_STATS& stats, const char* title);
 
     void addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst);
+
+    bool createFrontendRenderer(PDECODER_PARAMETERS params);
 
     IFFmpegRenderer* createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg);
 
@@ -52,7 +45,8 @@ private:
     AVCodecContext* m_VideoDecoderCtx;
     QByteArray m_DecodeBuffer;
     const AVCodecHWConfig* m_HwDecodeCfg;
-    IFFmpegRenderer* m_Renderer;
+    IFFmpegRenderer* m_BackendRenderer;
+    IFFmpegRenderer* m_FrontendRenderer;
     int m_ConsecutiveFailedDecodes;
     Pacer* m_Pacer;
     VIDEO_STATS m_ActiveWndVideoStats;

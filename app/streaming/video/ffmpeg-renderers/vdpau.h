@@ -13,12 +13,7 @@ class VDPAURenderer : public IFFmpegRenderer
 public:
     VDPAURenderer();
     virtual ~VDPAURenderer();
-    virtual bool initialize(SDL_Window* window,
-                            int videoFormat,
-                            int width,
-                            int height,
-                            int maxFps,
-                            bool enableVsync);
+    virtual bool initialize(PDECODER_PARAMETERS params);
     virtual bool prepareDecoderContext(AVCodecContext* context);
     virtual void renderFrame(AVFrame* frame);
     virtual bool needsTestFrame();

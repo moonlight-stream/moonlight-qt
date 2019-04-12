@@ -2,6 +2,7 @@
 
 #include <SDL.h>
 
+#include "streaming/video/decoder.h"
 #include "streaming/video/overlaymanager.h"
 
 extern "C" {
@@ -16,12 +17,7 @@ public:
         PACING_ANY
     };
 
-    virtual bool initialize(SDL_Window* window,
-                            int videoFormat,
-                            int width,
-                            int height,
-                            int maxFps,
-                            bool enableVsync) = 0;
+    virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
     virtual bool needsTestFrame() = 0;

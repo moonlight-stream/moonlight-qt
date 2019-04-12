@@ -8,12 +8,7 @@ class SdlRenderer : public IFFmpegRenderer {
 public:
     SdlRenderer();
     virtual ~SdlRenderer() override;
-    virtual bool initialize(SDL_Window* window,
-                            int videoFormat,
-                            int width,
-                            int height,
-                            int maxFps,
-                            bool enableVsync) override;
+    virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
