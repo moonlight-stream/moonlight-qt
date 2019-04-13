@@ -34,6 +34,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
+    virtual bool isDirectRenderingSupported() override;
 
 private:
     int m_WindowSystem;
@@ -41,11 +42,6 @@ private:
 
 #ifdef HAVE_LIBVA_X11
     Window m_XWindow;
-#endif
-
-#ifdef HAVE_LIBVA_WAYLAND
-    struct wl_surface* m_WaylandSurface;
-    struct wl_display* m_WaylandDisplay;
 #endif
 
     int m_VideoWidth;

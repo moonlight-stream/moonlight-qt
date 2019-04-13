@@ -137,7 +137,18 @@ void FFmpegVideoDecoder::reset()
 
 bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params)
 {
-    m_FrontendRenderer = m_BackendRenderer;
+    if (m_BackendRenderer->isDirectRenderingSupported()) {
+        // The backend renderer can render to the display
+        m_FrontendRenderer = m_BackendRenderer;
+    }
+    else {
+        // The backend renderer cannot directly render to the display, so
+        // we will create an SDL renderer to draw the frames.
+        m_FrontendRenderer = new SdlRenderer();
+        if (!m_FrontendRenderer->initialize(params)) {
+            return false;
+        }
+    }
 
     // Determine whether the frontend renderer prefers frame pacing
     auto vsyncConstraint = m_FrontendRenderer->getFramePacingConstraint();

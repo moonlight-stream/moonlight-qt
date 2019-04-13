@@ -76,8 +76,6 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     }
     else if (info.subsystem == SDL_SYSWM_WAYLAND) {
 #ifdef HAVE_LIBVA_WAYLAND
-        m_WaylandSurface = info.info.wl.surface;
-        m_WaylandDisplay = info.info.wl.display;
         vaDeviceContext->display = vaGetDisplayWl(info.info.wl.display);
         if (!vaDeviceContext->display) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -171,6 +169,14 @@ VAAPIRenderer::needsTestFrame()
     return true;
 }
 
+bool
+VAAPIRenderer::isDirectRenderingSupported()
+{
+    // Many Wayland renderers don't support YUV surfaces, so use
+    // another frontend renderer to draw our frames.
+    return m_WindowSystem == SDL_SYSWM_X11;
+}
+
 void
 VAAPIRenderer::renderFrame(AVFrame* frame)
 {
@@ -201,27 +207,10 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 #endif
     }
     else if (m_WindowSystem == SDL_SYSWM_WAYLAND) {
-#ifdef HAVE_LIBVA_WAYLAND
-        struct wl_buffer* buffer;
-        VAStatus status;
-
-        status = vaGetSurfaceBufferWl(vaDeviceContext->display,
-                                      surface,
-                                      VA_FRAME_PICTURE,
-                                      &buffer);
-        if (status == VA_STATUS_SUCCESS) {
-            wl_surface_attach(m_WaylandSurface, buffer, 0, 0);
-            wl_surface_damage(m_WaylandSurface, dst.x, dst.y, dst.w, dst.h);
-
-            wl_display_flush(m_WaylandDisplay);
-            wl_surface_commit(m_WaylandSurface);
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "vaGetSurfaceBufferWl failed(): %d",
-                         status);
-        }
-#endif
+        // We don't support direct rendering on Wayland, so we should
+        // never get called there. Many common Wayland compositors don't
+        // support YUV surfaces, so direct rendering would fail.
+        SDL_assert(false);
     }
     else {
         // We don't accept anything else in initialize().

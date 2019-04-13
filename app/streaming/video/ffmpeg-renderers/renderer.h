@@ -41,6 +41,11 @@ public:
         return true;
     }
 
+    virtual bool isDirectRenderingSupported() {
+        // The renderer can render directly to the display
+        return true;
+    }
+
     // IOverlayRenderer
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing
