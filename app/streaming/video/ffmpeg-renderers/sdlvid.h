@@ -11,9 +11,7 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context) override;
     virtual void renderFrame(AVFrame* frame) override;
-    virtual bool needsTestFrame() override;
     virtual int getDecoderCapabilities() override;
-    virtual FramePacingConstraint getFramePacingConstraint() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool isRenderThreadSupported() override;
 

@@ -278,23 +278,12 @@ public:
         return true;
     }
 
-    virtual int getDecoderCapabilities() override
-    {
-        return 0;
-    }
-
     virtual IFFmpegRenderer::FramePacingConstraint getFramePacingConstraint() override
     {
         // This renderer is inherently tied to V-sync due how we're
         // rendering with AVSampleBufferDisplay layer. Running without
         // the V-Sync source leads to massive stuttering.
         return PACING_FORCE_ON;
-    }
-
-    virtual bool isRenderThreadSupported() override
-    {
-        // renderFrame() may be called outside of the main thread
-        return true;
     }
 
 private:

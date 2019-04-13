@@ -12,14 +12,11 @@ class VDPAURenderer : public IFFmpegRenderer
 {
 public:
     VDPAURenderer();
-    virtual ~VDPAURenderer();
-    virtual bool initialize(PDECODER_PARAMETERS params);
-    virtual bool prepareDecoderContext(AVCodecContext* context);
-    virtual void renderFrame(AVFrame* frame);
-    virtual bool needsTestFrame();
-    virtual int getDecoderCapabilities();
-    virtual FramePacingConstraint getFramePacingConstraint();
-    virtual bool isRenderThreadSupported();
+    virtual ~VDPAURenderer() override;
+    virtual bool initialize(PDECODER_PARAMETERS params) override;
+    virtual bool prepareDecoderContext(AVCodecContext* context) override;
+    virtual void renderFrame(AVFrame* frame) override;
+    virtual bool needsTestFrame() override;
 
 private:
     uint32_t m_VideoWidth, m_VideoHeight;

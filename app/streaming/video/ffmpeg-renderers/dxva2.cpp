@@ -704,23 +704,6 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     return true;
 }
 
-bool DXVA2Renderer::needsTestFrame()
-{
-    // We validate the DXVA2 profiles are supported
-    // in initialize() so no test frame is required
-    return false;
-}
-
-int DXVA2Renderer::getDecoderCapabilities()
-{
-    return 0;
-}
-
-IFFmpegRenderer::FramePacingConstraint DXVA2Renderer::getFramePacingConstraint()
-{
-    return PACING_ANY;
-}
-
 void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     HRESULT hr;
@@ -777,12 +760,6 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         SDL_assert(false);
         break;
     }
-}
-
-bool DXVA2Renderer::isRenderThreadSupported()
-{
-    // renderFrame() may be called outside of the main thread
-    return true;
 }
 
 void DXVA2Renderer::renderFrame(AVFrame *frame)

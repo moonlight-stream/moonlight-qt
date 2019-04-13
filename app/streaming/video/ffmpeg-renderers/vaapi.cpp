@@ -171,23 +171,6 @@ VAAPIRenderer::needsTestFrame()
     return true;
 }
 
-int
-VAAPIRenderer::getDecoderCapabilities()
-{
-    return 0;
-}
-
-IFFmpegRenderer::FramePacingConstraint VAAPIRenderer::getFramePacingConstraint()
-{
-    return PACING_ANY;
-}
-
-bool VAAPIRenderer::isRenderThreadSupported()
-{
-    // renderFrame() may be called outside of the main thread
-    return true;
-}
-
 void
 VAAPIRenderer::renderFrame(AVFrame* frame)
 {

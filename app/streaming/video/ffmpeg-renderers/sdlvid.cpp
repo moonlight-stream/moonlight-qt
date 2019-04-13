@@ -67,22 +67,11 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
     return true;
 }
 
-bool SdlRenderer::needsTestFrame()
-{
-    // This renderer should always work
-    return false;
-}
-
 int SdlRenderer::getDecoderCapabilities()
 {
     // The FFmpeg CPU decoder can handle reference frame invalidation,
     // but only for H.264.
     return CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
-}
-
-IFFmpegRenderer::FramePacingConstraint SdlRenderer::getFramePacingConstraint()
-{
-    return PACING_ANY;
 }
 
 void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)

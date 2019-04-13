@@ -241,22 +241,6 @@ bool VDPAURenderer::needsTestFrame()
     return true;
 }
 
-int VDPAURenderer::getDecoderCapabilities()
-{
-    return 0;
-}
-
-IFFmpegRenderer::FramePacingConstraint VDPAURenderer::getFramePacingConstraint()
-{
-    return PACING_ANY;
-}
-
-bool VDPAURenderer::isRenderThreadSupported()
-{
-    // renderFrame() may be called outside of the main thread
-    return true;
-}
-
 void VDPAURenderer::renderFrame(AVFrame* frame)
 {
     VdpStatus status;
