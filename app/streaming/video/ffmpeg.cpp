@@ -217,7 +217,7 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
     // Setup decoding parameters
     m_VideoDecoderCtx->width = params->width;
     m_VideoDecoderCtx->height = params->height;
-    m_VideoDecoderCtx->pix_fmt = AV_PIX_FMT_YUV420P; // FIXME: HDR
+    m_VideoDecoderCtx->pix_fmt = m_FrontendRenderer->getPreferredPixelFormat(params->videoFormat);
     m_VideoDecoderCtx->get_format = ffGetFormat;
 
     // Allow the backend renderer to attach data to this decoder
@@ -361,7 +361,7 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
     }
 }
 
-IFFmpegRenderer* FFmpegVideoDecoder::createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg)
+IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg)
 {
     if (!(hwDecodeCfg->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
         return nullptr;
@@ -415,31 +415,21 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // Look for the first matching hwaccel
     for (int i = 0;; i++) {
         const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
         if (!config || params->vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
-            // No matching hardware acceleration support.
-            // This is not an error.
-            m_HwDecodeCfg = nullptr;
-            m_BackendRenderer = new SdlRenderer();
-            if (params->vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
-                    m_BackendRenderer->initialize(params) &&
-                    completeInitialization(decoder, params, m_TestOnly)) {
-                return true;
-            }
-            else {
-                reset();
-                return false;
-            }
+            // No remaing hwaccel options or software decoding requested
+            break;
         }
 
-        m_BackendRenderer = createAcceleratedRenderer(config);
+        m_BackendRenderer = createHwAccelRenderer(config);
         if (!m_BackendRenderer) {
             continue;
         }
 
-        m_HwDecodeCfg = config;
         // Initialize the hardware codec and submit a test frame if the renderer needs it
+        m_HwDecodeCfg = config;
         if (m_BackendRenderer->initialize(params) &&
                 completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame())) {
             if (m_TestOnly) {
@@ -451,7 +441,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             if (m_BackendRenderer->needsTestFrame()) {
                 // The test worked, so now let's initialize it for real
                 reset();
-                if ((m_BackendRenderer = createAcceleratedRenderer(config)) != nullptr &&
+                if ((m_BackendRenderer = createHwAccelRenderer(config)) != nullptr &&
                         m_BackendRenderer->initialize(params) &&
                         completeInitialization(decoder, params, false)) {
                     return true;
@@ -471,6 +461,20 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             // Failed to initialize or test frame failed, so keep looking
             reset();
         }
+    }
+
+    // We must fall back to a non-hardware accelerated decoder as
+    // all other possibilities have been exhausted.
+    m_HwDecodeCfg = nullptr;
+    m_BackendRenderer = new SdlRenderer();
+    if (params->vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
+            m_BackendRenderer->initialize(params) &&
+            completeInitialization(decoder, params, m_TestOnly)) {
+        return true;
+    }
+    else {
+        reset();
+        return false;
     }
 }
 

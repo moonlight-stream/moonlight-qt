@@ -46,6 +46,12 @@ public:
         return true;
     }
 
+    virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) {
+        // Planar YUV 4:2:0
+        SDL_assert(videoFormat != VIDEO_FORMAT_H265_MAIN10);
+        return AV_PIX_FMT_YUV420P;
+    }
+
     // IOverlayRenderer
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing

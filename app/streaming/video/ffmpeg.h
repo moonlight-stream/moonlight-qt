@@ -31,7 +31,7 @@ private:
 
     bool createFrontendRenderer(PDECODER_PARAMETERS params);
 
-    IFFmpegRenderer* createAcceleratedRenderer(const AVCodecHWConfig* hwDecodeCfg);
+    IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg);
 
     void reset();
 
