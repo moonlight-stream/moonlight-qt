@@ -94,6 +94,11 @@ unix:!macx {
         packagesExist(vdpau) {
             CONFIG += libvdpau
         }
+
+        packagesExist(mmal) {
+            PKGCONFIG += mmal
+            CONFIG += mmal
+        }
     }
 }
 win32 {
@@ -212,6 +217,13 @@ libvdpau {
     DEFINES += HAVE_LIBVDPAU
     SOURCES += streaming/video/ffmpeg-renderers/vdpau.cpp
     HEADERS += streaming/video/ffmpeg-renderers/vdpau.h
+}
+mmal {
+    message(MMAL renderer selected)
+
+    DEFINES += HAVE_MMAL
+    SOURCES += streaming/video/ffmpeg-renderers/mmal.cpp
+    HEADERS += streaming/video/ffmpeg-renderers/mmal.h
 }
 config_SL {
     message(Steam Link build configuration selected)

@@ -23,6 +23,10 @@
 #include "ffmpeg-renderers/vdpau.h"
 #endif
 
+#ifdef HAVE_MMAL
+#include "ffmpeg-renderers/mmal.h"
+#endif
+
 // This is gross but it allows us to use sizeof()
 #include "ffmpeg_videosamples.cpp"
 
@@ -462,6 +466,23 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             reset();
         }
     }
+
+#ifdef HAVE_MMAL
+    if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
+        (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE)) {
+        AVCodec* mmalDecoder = avcodec_find_decoder_by_name("h264_mmal");
+        if (mmalDecoder) {
+            m_BackendRenderer = new MmalRenderer();
+            if (m_BackendRenderer->initialize(params) &&
+                completeInitialization(mmalDecoder, params, m_TestOnly)) {
+                return true;
+            }
+            else {
+                reset();
+            }
+        }
+    }
+#endif
 
     // We must fall back to a non-hardware accelerated decoder as
     // all other possibilities have been exhausted.
