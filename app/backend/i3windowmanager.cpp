@@ -8,6 +8,7 @@
 
 #include "i3windowmanager.h"
 
+#ifdef HAVE_I3IPC
 uint64_t find_focused_id(const i3ipc::container_t& container)
 {
     if (container.focused && container.name.compare("Moonlight") == 0) {
@@ -21,6 +22,8 @@ uint64_t find_focused_id(const i3ipc::container_t& container)
     }
     return 0;
 }
+#endif
+
 I3WindowManager::I3WindowManager()
     : isRunningI3(false)
 {
@@ -56,6 +59,7 @@ void I3WindowManager::hideWindow()
 
 void I3WindowManager::showWindow()
 {
+#ifdef HAVE_I3IPC
     if (!isRunningI3) {
         return;
     }
@@ -64,4 +68,5 @@ void I3WindowManager::showWindow()
         conn.send_command(QString("[con_id=%1] move scratchpad, scratchpad show").arg(appId).toUtf8().constData());
     } catch (i3ipc::invalid_reply_payload_error &err) {
     }
+#endif
 }
