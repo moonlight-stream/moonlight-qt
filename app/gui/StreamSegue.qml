@@ -139,6 +139,9 @@ Item {
 
             // Run the streaming session to completion
             session.exec(Screen.virtualX, Screen.virtualY)
+
+            // Show the Qt window again after streaming
+            window.showWindow()
         }
 
         sourceComponent: Item {}

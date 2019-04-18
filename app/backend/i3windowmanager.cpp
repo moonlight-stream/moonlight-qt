@@ -32,7 +32,6 @@ void I3WindowManager::start()
     try {
         i3ipc::connection conn;
         appId = find_focused_id(*conn.get_tree());
-        qInfo() << "appid: " << appId;
         conn.send_command(QString("[con_id=%1] floating enable").arg(appId).toUtf8().constData());
         isRunningI3 = true;
     } catch (i3ipc::errno_error &err) {

@@ -17,7 +17,6 @@ public:
 
 private:
     bool isRunningI3;
-    QString mark;
     quint64 appId;
 };
 

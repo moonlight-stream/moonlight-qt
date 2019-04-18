@@ -931,8 +931,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
         return;
     }
 
-    // Pump the message loop to update the UI
-    emit connectionStarted();
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     int x, y, width, height;
@@ -998,6 +996,9 @@ void Session::exec(int displayOriginX, int displayOriginY)
         // Enter full screen
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
+
+    // Pump the message loop to update the UI
+    emit connectionStarted();
 
 #ifndef QT_DEBUG
     // Capture the mouse by default on release builds only.
