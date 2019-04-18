@@ -58,6 +58,7 @@ macx {
 unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 SDL2_ttf opus
+    INCLUDEPATH += $$PWD/../libs/unix/include
 
     # SLAudio is used on Steam Link
     !config_SL {
@@ -103,14 +104,7 @@ unix:!macx {
     }
 
     packagesExist(jsoncpp sigc++-2.0) {
-        DEFINES += HAVE_I3IPC
-
-        INCLUDEPATH += $$PWD/../libs/unix/include
-        SOURCES += \
-            $$PWD/../libs/unix/src/i3ipc++/ipc.cpp \
-            $$PWD/../libs/unix/src/i3ipc++/ipc-util.cpp
-
-        PKGCONFIG += sigc++-2.0 jsoncpp
+        CONFIG += i3ipc
     }
 }
 win32 {
@@ -155,7 +149,8 @@ SOURCES += \
     settings/mappingmanager.cpp \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
-    backend/systemproperties.cpp
+    backend/systemproperties.cpp \
+    backend/i3windowmanager.cpp
 
 HEADERS += \
     utils.h \
@@ -183,7 +178,8 @@ HEADERS += \
     settings/mappingmanager.h \
     gui/sdlgamepadkeynavigation.h \
     streaming/video/overlaymanager.h \
-    backend/systemproperties.h
+    backend/systemproperties.h \
+    backend/i3windowmanager.h
 
 # Platform-specific renderers and decoders
 ffmpeg {
@@ -285,6 +281,14 @@ soundio {
     DEFINES += HAVE_SOUNDIO SOUNDIO_STATIC_LIBRARY
     SOURCES += streaming/audio/renderers/soundioaudiorenderer.cpp
     HEADERS += streaming/audio/renderers/soundioaudiorenderer.h
+}
+i3ipc {
+    message(i3ipc++ IPC helper selected)
+    DEFINES += HAVE_I3IPC
+    SOURCES += \
+        $$PWD/../libs/unix/src/i3ipc++/ipc.cpp \
+        $$PWD/../libs/unix/src/i3ipc++/ipc-util.cpp
+    PKGCONFIG += sigc++-2.0 jsoncpp
 }
 
 RESOURCES += \
