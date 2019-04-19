@@ -413,9 +413,6 @@ int main(int argc, char *argv[])
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_UNIVERSAL_THEME")) {
         qputenv("QT_QUICK_CONTROLS_UNIVERSAL_THEME", "Dark");
     }
-    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_1_STYLE")) {
-        qputenv("QT_QUICK_CONTROLS_1_STYLE", "Base");
-    }
 
     QQmlApplicationEngine engine;
     QString initialView;
