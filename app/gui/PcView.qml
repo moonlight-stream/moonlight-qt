@@ -14,7 +14,7 @@ CenteredGridView {
     activeFocusOnTab: true
     topMargin: 20
     bottomMargin: 5
-    cellWidth: 310; cellHeight: 350;
+    cellWidth: 310; cellHeight: 330;
     objectName: "Computers"
 
     Component.onCompleted: {
@@ -87,7 +87,7 @@ CenteredGridView {
     model: computerModel
 
     delegate: NavigableItemDelegate {
-        width: 300; height: 300;
+        width: 300; height: 320;
         grid: pcGrid
 
         Image {
@@ -130,9 +130,11 @@ CenteredGridView {
 
             width: parent.width
             anchors.top: pcIcon.bottom
+            anchors.bottom: parent.bottom
             font.pointSize: 36
             horizontalAlignment: Text.AlignHCenter
             wrapMode: Text.Wrap
+            elide: Text.ElideRight
         }
 
         NavigableMenu {
