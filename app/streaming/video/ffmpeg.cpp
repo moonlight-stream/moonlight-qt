@@ -124,11 +124,11 @@ void FFmpegVideoDecoder::reset()
     // If we have a separate frontend renderer, free that first
     if (m_FrontendRenderer != m_BackendRenderer) {
         delete m_FrontendRenderer;
-        m_FrontendRenderer = nullptr;
     }
 
     delete m_BackendRenderer;
-    m_BackendRenderer = nullptr;
+
+    m_FrontendRenderer = m_BackendRenderer = nullptr;
 
     if (!m_TestOnly) {
         logVideoStats(m_GlobalVideoStats, "Global video stats");
