@@ -29,7 +29,7 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 
 ### Windows-specific Build Requirements
 * Windows 7 or later
-* [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2015 or later (Community edition is fine)
+* [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2017 (Community edition is fine)
 * Select MSVC Desktop toolchain during Qt installation
 * [DirectX SDK](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
