@@ -61,9 +61,9 @@ CenteredGridView {
             source: model.boxart
 
             onSourceSizeChanged: {
-                if ((width == 130 && height == 180) || // GFE 2.0 placeholder image
-                    (width == 628 && height == 888) || // GFE 3.0 placeholder image
-                    (width == 200 && height == 266))   // Our no_app_image.png
+                if ((sourceSize.width == 130 && sourceSize.height == 180) || // GFE 2.0 placeholder image
+                    (sourceSize.width == 628 && sourceSize.height == 888) || // GFE 3.0 placeholder image
+                    (sourceSize.width == 200 && sourceSize.height == 266))   // Our no_app_image.png
                 {
                     isPlaceholder = true
                 }
