@@ -394,6 +394,50 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     }
 }
 
+bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
+                                               PDECODER_PARAMETERS params,
+                                               const AVCodecHWConfig* hwConfig,
+                                               std::function<IFFmpegRenderer*()> createRendererFunc)
+{
+    m_BackendRenderer = createRendererFunc();
+    m_HwDecodeCfg = hwConfig;
+
+    if (m_BackendRenderer != nullptr &&
+            m_BackendRenderer->initialize(params) &&
+            completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame())) {
+        if (m_TestOnly) {
+            // This decoder is only for testing capabilities, so don't bother
+            // creating a usable renderer
+            return true;
+        }
+
+        if (m_BackendRenderer->needsTestFrame()) {
+            // The test worked, so now let's initialize it for real
+            reset();
+            if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
+                    m_BackendRenderer->initialize(params) &&
+                    completeInitialization(decoder, params, false)) {
+                return true;
+            }
+            else {
+                SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                "Decoder failed to initialize after successful test");
+                reset();
+            }
+        }
+        else {
+            // No test required. Good to go now.
+            return true;
+        }
+    }
+    else {
+        // Failed to initialize or test frame failed, so keep looking
+        reset();
+    }
+
+    return false;
+}
+
 bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 {
     AVCodec* decoder;
@@ -427,76 +471,35 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             break;
         }
 
-        m_BackendRenderer = createHwAccelRenderer(config);
-        if (!m_BackendRenderer) {
-            continue;
-        }
-
         // Initialize the hardware codec and submit a test frame if the renderer needs it
-        m_HwDecodeCfg = config;
-        if (m_BackendRenderer->initialize(params) &&
-                completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame())) {
-            if (m_TestOnly) {
-                // This decoder is only for testing capabilities, so don't bother
-                // creating a usable renderer
-                return true;
-            }
-
-            if (m_BackendRenderer->needsTestFrame()) {
-                // The test worked, so now let's initialize it for real
-                reset();
-                if ((m_BackendRenderer = createHwAccelRenderer(config)) != nullptr &&
-                        m_BackendRenderer->initialize(params) &&
-                        completeInitialization(decoder, params, false)) {
-                    return true;
-                }
-                else {
-                    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Decoder failed to initialize after successful test");
-                    reset();
-                }
-            }
-            else {
-                // No test required. Good to go now.
-                return true;
-            }
-        }
-        else {
-            // Failed to initialize or test frame failed, so keep looking
-            reset();
+        if (tryInitializeRenderer(decoder, params, config,
+                                  [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config); })) {
+            return true;
         }
     }
 
 #ifdef HAVE_MMAL
+    // MMAL is a non-hwaccel hardware decoder for the Raspberry Pi
     if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
         (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE)) {
         AVCodec* mmalDecoder = avcodec_find_decoder_by_name("h264_mmal");
-        if (mmalDecoder) {
-            m_BackendRenderer = new MmalRenderer();
-            if (m_BackendRenderer->initialize(params) &&
-                completeInitialization(mmalDecoder, params, m_TestOnly)) {
-                return true;
-            }
-            else {
-                reset();
-            }
+        if (mmalDecoder != nullptr &&
+                tryInitializeRenderer(decoder, params, nullptr,
+                                      []() -> IFFmpegRenderer* { return new MmalRenderer(); })) {
+            return true;
         }
     }
 #endif
 
     // We must fall back to a non-hardware accelerated decoder as
     // all other possibilities have been exhausted.
-    m_HwDecodeCfg = nullptr;
-    m_BackendRenderer = new SdlRenderer();
-    if (params->vds != StreamingPreferences::VDS_FORCE_HARDWARE &&
-            m_BackendRenderer->initialize(params) &&
-            completeInitialization(decoder, params, m_TestOnly)) {
+    if (tryInitializeRenderer(decoder, params, nullptr,
+                              []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
         return true;
     }
-    else {
-        reset();
-        return false;
-    }
+
+    // No decoder worked
+    return false;
 }
 
 void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)

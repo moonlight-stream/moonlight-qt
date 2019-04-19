@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include "decoder.h"
 #include "ffmpeg-renderers/renderer.h"
 #include "ffmpeg-renderers/pacer/pacer.h"
@@ -31,7 +33,12 @@ private:
 
     bool createFrontendRenderer(PDECODER_PARAMETERS params);
 
-    IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg);
+    bool tryInitializeRenderer(AVCodec* decoder,
+                               PDECODER_PARAMETERS params,
+                               const AVCodecHWConfig* hwConfig,
+                               std::function<IFFmpegRenderer*()> createRendererFunc);
+
+    static IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg);
 
     void reset();
 
