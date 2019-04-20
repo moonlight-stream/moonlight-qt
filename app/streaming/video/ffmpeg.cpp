@@ -463,39 +463,45 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // Look for the first matching hwaccel
-    for (int i = 0;; i++) {
-        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
-        if (!config || params->vds == StreamingPreferences::VDS_FORCE_SOFTWARE) {
-            // No remaing hwaccel options or software decoding requested
-            break;
+    // Look for a hardware decoder first unless software-only
+    if (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE) {
+        // Look for the first matching hwaccel hardware decoder
+        for (int i = 0;; i++) {
+            const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
+            if (!config) {
+                // No remaing hwaccel options
+                break;
+            }
+
+            // Initialize the hardware codec and submit a test frame if the renderer needs it
+            if (tryInitializeRenderer(decoder, params, config,
+                                      [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config); })) {
+                return true;
+            }
         }
 
-        // Initialize the hardware codec and submit a test frame if the renderer needs it
-        if (tryInitializeRenderer(decoder, params, config,
-                                  [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config); })) {
-            return true;
-        }
-    }
+        // Continue with special non-hwaccel hardware decoders
 
 #ifdef HAVE_MMAL
-    // MMAL is a non-hwaccel hardware decoder for the Raspberry Pi
-    if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
-        (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE)) {
-        AVCodec* mmalDecoder = avcodec_find_decoder_by_name("h264_mmal");
-        if (mmalDecoder != nullptr &&
-                tryInitializeRenderer(decoder, params, nullptr,
-                                      []() -> IFFmpegRenderer* { return new MmalRenderer(); })) {
+        // MMAL is the decoder for the Raspberry Pi
+        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
+            AVCodec* mmalDecoder = avcodec_find_decoder_by_name("h264_mmal");
+            if (mmalDecoder != nullptr &&
+                    tryInitializeRenderer(mmalDecoder, params, nullptr,
+                                          []() -> IFFmpegRenderer* { return new MmalRenderer(); })) {
+                return true;
+            }
+        }
+#endif
+    }
+
+    // Fallback to software if no matching hardware decoder was found
+    // and if software fallback is allowed
+    if (params->vds != StreamingPreferences::VDS_FORCE_HARDWARE) {
+        if (tryInitializeRenderer(decoder, params, nullptr,
+                                  []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
             return true;
         }
-    }
-#endif
-
-    // We must fall back to a non-hardware accelerated decoder as
-    // all other possibilities have been exhausted.
-    if (tryInitializeRenderer(decoder, params, nullptr,
-                              []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
-        return true;
     }
 
     // No decoder worked
