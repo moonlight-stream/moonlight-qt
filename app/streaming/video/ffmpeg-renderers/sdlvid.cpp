@@ -7,9 +7,15 @@
 
 #include <Limelight.h>
 
+const std::vector<int> SdlRenderer::k_SwFormats({
+    AV_PIX_FMT_YUV420P,
+    AV_PIX_FMT_NV12
+});
+
 SdlRenderer::SdlRenderer()
     : m_Renderer(nullptr),
       m_Texture(nullptr),
+      m_SwPixelFormat(AV_PIX_FMT_YUV420P),
       m_FontData(Path::readDataFile("ModeSeven.ttf"))
 {
     SDL_assert(TTF_WasInit() == 0);
@@ -171,18 +177,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_RenderClear(m_Renderer);
     SDL_RenderPresent(m_Renderer);
 
-    m_Texture = SDL_CreateTexture(m_Renderer,
-                                  SDL_PIXELFORMAT_YV12,
-                                  SDL_TEXTUREACCESS_STREAMING,
-                                  params->width,
-                                  params->height);
-    if (!m_Texture) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateRenderer() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
 #ifdef Q_OS_WIN32
     // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
     // When focus is lost, the window is minimized then immediately restored without
@@ -251,24 +245,94 @@ void SdlRenderer::renderFrame(AVFrame* frame)
 
         swFrame->width = frame->width;
         swFrame->height = frame->height;
-        swFrame->format = AV_PIX_FMT_YUV420P;
+        swFrame->format = m_SwPixelFormat;
 
         err = av_hwframe_transfer_data(swFrame, frame, 0);
         if (err != 0) {
-            av_frame_free(&swFrame);
-            return;
+            // Try to find a supported format
+            for (int i = 0; i < k_SwFormats.size(); i++) {
+                swFrame->format = k_SwFormats.at(i);
+                err = av_hwframe_transfer_data(swFrame, frame, 0);
+                if (err == 0) {
+                    // The format was supported. Use that automatically in the future.
+                    m_SwPixelFormat = swFrame->format;
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Selected read-back format: %d",
+                                m_SwPixelFormat);
+                    break;
+                }
+            }
+        }
+
+        if (err != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwframe_transfer_data() failed: %d",
+                         err);
+            goto Exit;
         }
 
         frame = swFrame;
     }
 
-    SDL_UpdateYUVTexture(m_Texture, nullptr,
-                         frame->data[0],
-                         frame->linesize[0],
-                         frame->data[1],
-                         frame->linesize[1],
-                         frame->data[2],
-                         frame->linesize[2]);
+    if (m_Texture == nullptr) {
+        Uint32 sdlFormat;
+
+        switch (frame->format)
+        {
+        case AV_PIX_FMT_YUV420P:
+            sdlFormat = SDL_PIXELFORMAT_YV12;
+            break;
+        case AV_PIX_FMT_NV12:
+            sdlFormat = SDL_PIXELFORMAT_NV12;
+            break;
+        default:
+            SDL_assert(false);
+            goto Exit;
+        }
+
+        m_Texture = SDL_CreateTexture(m_Renderer,
+                                      sdlFormat,
+                                      SDL_TEXTUREACCESS_STREAMING,
+                                      frame->width,
+                                      frame->height);
+        if (!m_Texture) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_CreateTexture() failed: %s",
+                         SDL_GetError());
+            goto Exit;
+        }
+    }
+
+    if (frame->format == AV_PIX_FMT_YUV420P) {
+        SDL_UpdateYUVTexture(m_Texture, nullptr,
+                             frame->data[0],
+                             frame->linesize[0],
+                             frame->data[1],
+                             frame->linesize[1],
+                             frame->data[2],
+                             frame->linesize[2]);
+    }
+    else {
+        char* pixels;
+        int pitch;
+
+        err = SDL_LockTexture(m_Texture, nullptr, (void**)&pixels, &pitch);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_LockTexture() failed: %s",
+                         SDL_GetError());
+            goto Exit;
+        }
+
+        memcpy(pixels,
+               frame->data[0],
+               frame->linesize[0] * frame->height);
+        memcpy(pixels + (frame->linesize[0] * frame->height),
+               frame->data[1],
+               frame->linesize[1] * frame->height / 2);
+
+        SDL_UnlockTexture(m_Texture);
+    }
 
     SDL_RenderClear(m_Renderer);
 
@@ -282,6 +346,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
 
     SDL_RenderPresent(m_Renderer);
 
+Exit:
     if (swFrame != nullptr) {
         av_frame_free(&swFrame);
     }

@@ -20,10 +20,13 @@ private:
 
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
+    int m_SwPixelFormat;
     QByteArray m_FontData;
     TTF_Font* m_OverlayFonts[Overlay::OverlayMax];
     SDL_Surface* m_OverlaySurfaces[Overlay::OverlayMax];
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
+
+    static const std::vector<int> k_SwFormats;
 };
 
