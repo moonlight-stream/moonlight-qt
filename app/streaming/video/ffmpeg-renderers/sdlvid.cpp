@@ -250,7 +250,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
         err = av_hwframe_transfer_data(swFrame, frame, 0);
         if (err != 0) {
             // Try to find a supported format
-            for (int i = 0; i < k_SwFormats.size(); i++) {
+            for (uint32_t i = 0; i < k_SwFormats.size(); i++) {
                 swFrame->format = k_SwFormats.at(i);
                 err = av_hwframe_transfer_data(swFrame, frame, 0);
                 if (err == 0) {
