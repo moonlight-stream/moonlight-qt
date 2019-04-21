@@ -99,6 +99,11 @@ unix:!macx {
             PKGCONFIG += mmal
             CONFIG += mmal
         }
+
+        packagesExist(libdrm) {
+            PKGCONFIG += libdrm
+            CONFIG += libdrm
+        }
     }
 }
 win32 {
@@ -224,6 +229,13 @@ mmal {
     DEFINES += HAVE_MMAL
     SOURCES += streaming/video/ffmpeg-renderers/mmal.cpp
     HEADERS += streaming/video/ffmpeg-renderers/mmal.h
+}
+libdrm {
+    message(DRM renderer selected)
+
+    DEFINES += HAVE_DRM
+    SOURCES += streaming/video/ffmpeg-renderers/drm.cpp
+    HEADERS += streaming/video/ffmpeg-renderers/drm.h
 }
 config_SL {
     message(Steam Link build configuration selected)

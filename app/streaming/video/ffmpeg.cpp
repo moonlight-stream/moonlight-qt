@@ -27,6 +27,10 @@
 #include "ffmpeg-renderers/mmal.h"
 #endif
 
+#ifdef HAVE_DRM
+#include "ffmpeg-renderers/drm.h"
+#endif
+
 // This is gross but it allows us to use sizeof()
 #include "ffmpeg_videosamples.cpp"
 
@@ -491,6 +495,24 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                                           []() -> IFFmpegRenderer* { return new MmalRenderer(); })) {
                 return true;
             }
+        }
+#endif
+
+#ifdef HAVE_DRM
+        // RKMPP is a hardware accelerated decoder that outputs DRI PRIME buffers
+        AVCodec* rkmppDecoder;
+
+        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
+            rkmppDecoder = avcodec_find_decoder_by_name("h264_rkmpp");
+        }
+        else {
+            rkmppDecoder = avcodec_find_decoder_by_name("hevc_rkmpp");
+        }
+
+        if (rkmppDecoder != nullptr &&
+                tryInitializeRenderer(rkmppDecoder, params, nullptr,
+                                      []() -> IFFmpegRenderer* { return new DrmRenderer(); })) {
+            return true;
         }
 #endif
     }
