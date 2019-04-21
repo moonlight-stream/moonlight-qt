@@ -8,11 +8,7 @@ unix:!macx {
     TARGET = Moonlight
 }
 
-# Support debug and release builds from command line for CI
-CONFIG += debug_and_release
-
-# Ensure symbols are always generated
-CONFIG += force_debug_info
+include(../globaldefs.pri)
 
 # Precompile QML files to avoid writing qmlcache on portable versions.
 # Since this binds the app against the Qt runtime version, we will only

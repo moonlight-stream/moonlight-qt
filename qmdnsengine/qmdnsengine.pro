@@ -4,11 +4,17 @@ QT += network
 TARGET = qmdnsengine
 TEMPLATE = lib
 
-# Support debug and release builds from command line for CI
-CONFIG += debug_and_release
+# Build a static library
+CONFIG += staticlib
 
-# Ensure symbols are always generated
-CONFIG += force_debug_info
+# Disable warnings
+CONFIG += warn_off
+
+# C++11 is required to build
+CONFIG += c++11
+
+# Include global qmake defs
+include(../globaldefs.pri)
 
 QMDNSE_DIR = $$PWD/qmdnsengine/src
 DEFINES += \
@@ -66,5 +72,3 @@ SOURCES += \
 INCLUDEPATH += \
     $$QMDNSE_DIR/include \
     $$PWD/qmdnsengine
-
-CONFIG += warn_off staticlib c++11

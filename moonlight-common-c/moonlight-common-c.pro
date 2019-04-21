@@ -9,11 +9,14 @@ QT -= core gui
 TARGET = moonlight-common-c
 TEMPLATE = lib
 
-# Support debug and release builds from command line for CI
-CONFIG += debug_and_release
+# Build a static library
+CONFIG += staticlib
 
-# Ensure symbols are always generated
-CONFIG += force_debug_info
+# Disable warnings
+CONFIG += warn_off
+
+# Include global qmake defs
+include(../globaldefs.pri)
 
 win32 {
     INCLUDEPATH += $$PWD/../libs/windows/include
@@ -65,7 +68,6 @@ INCLUDEPATH += \
     $$RS_DIR \
     $$ENET_DIR/include \
     $$COMMON_C_DIR/src
-CONFIG += warn_off staticlib
 DEFINES += HAS_SOCKLEN_T
 
 CONFIG(debug, debug|release) {

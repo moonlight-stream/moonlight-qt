@@ -9,14 +9,14 @@ QT       -= core gui
 TARGET = soundio
 TEMPLATE = lib
 
-# Support debug and release builds from command line for CI
-CONFIG += debug_and_release
-
-# Ensure symbols are always generated
-CONFIG += force_debug_info
-
 # Build a static library
 CONFIG += staticlib
+
+# Disable warnings
+CONFIG += warn_off
+
+# Include global qmake defs
+include(../globaldefs.pri)
 
 # Force MSVC to compile C as C++ for atomic support
 *-msvc {
@@ -27,9 +27,6 @@ CONFIG += staticlib
 *-g++ {
     QMAKE_CFLAGS += -std=gnu99
 }
-
-# Disable warnings
-CONFIG += warn_off
 
 unix:!macx {
     CONFIG += link_pkgconfig
@@ -42,11 +39,6 @@ unix:!macx {
         PKGCONFIG += alsa
         CONFIG += alsa
     }
-}
-
-CONFIG(release, debug|release) {
-    # Disable asserts on release builds
-    DEFINES += NDEBUG
 }
 
 DEFINES += \

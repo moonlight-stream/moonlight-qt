@@ -10,17 +10,14 @@ QT       -= core gui
 TARGET = h264bitstream
 TEMPLATE = lib
 
-# Support debug and release builds from command line for CI
-CONFIG += debug_and_release
-
-# Ensure symbols are always generated
-CONFIG += force_debug_info
-
 # Build a static library
 CONFIG += staticlib
 
 # Disable warnings
 CONFIG += warn_off
+
+# Include global qmake defs
+include(../globaldefs.pri)
 
 # Older GCC versions defaulted to GNU89
 *-g++ {
