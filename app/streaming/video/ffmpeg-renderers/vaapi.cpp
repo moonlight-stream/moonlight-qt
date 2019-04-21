@@ -114,11 +114,12 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 "Driver: %s",
                 vendorString ? vendorString : "<unknown>");
 
-    // AMD's Gallium VAAPI driver has a nasty memory leak
-    // that causes memory to be leaked for each submitted frame.
-    // The Flatpak runtime has a VDPAU driver in place that works
-    // well, so use that instead on AMD systems.
-    if (vendorString && qgetenv("FORCE_VAAPI") != "1") {
+    // AMD's Gallium VAAPI driver has a nasty memory leak that causes memory
+    // to be leaked for each submitted frame. The Flatpak runtime has a VDPAU
+    // driver in place that works well, so use that instead on AMD systems. If
+    // we're using Wayland, we have no choice but to use VAAPI because VDPAU
+    // is only supported under X11.
+    if (vendorString && qgetenv("FORCE_VAAPI") != "1" && m_WindowSystem == SDL_SYSWM_X11) {
         QString vendorStr(vendorString);
         if (vendorStr.contains("AMD", Qt::CaseInsensitive) ||
                 vendorStr.contains("Radeon", Qt::CaseInsensitive)) {
