@@ -314,16 +314,23 @@ int main(int argc, char *argv[])
     // initializing the SDL video subsystem to have any effect.
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
 
-    // Steam Link requires that we initialize video before creating our
-    // QGuiApplication in order to configure the framebuffer correctly.
-    // It's fine to do on other platforms too, and it can save some time
-    // doing initialization and teardown of the video subsystem after streaming.
-    if (SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) != 0) {
+    if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_InitSubSystem(SDL_INIT_VIDEO | SDL_INIT_TIMER) failed: %s",
+                     "SDL_InitSubSystem(SDL_INIT_TIMER) failed: %s",
                      SDL_GetError());
         return -1;
     }
+
+#ifdef STEAM_LINK
+    // Steam Link requires that we initialize video before creating our
+    // QGuiApplication in order to configure the framebuffer correctly.
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return -1;
+    }
+#endif
 
     // Use atexit() to ensure SDL_Quit() is called. This avoids
     // racing with object destruction where SDL may be used.

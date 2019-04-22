@@ -51,6 +51,13 @@ void SystemProperties::querySdlVideoInfo()
     // Never let the maximum drop below 60 FPS
     maximumStreamingFrameRate = 60;
 
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return;
+    }
+
     SDL_DisplayMode bestMode;
     for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
         SDL_DisplayMode desktopMode;
@@ -91,6 +98,7 @@ void SystemProperties::querySdlVideoInfo()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create window for hardware decode test: %s",
                      SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return;
     }
 
@@ -101,4 +109,6 @@ void SystemProperties::querySdlVideoInfo()
                                                1920, 1080, 60);
 
     SDL_DestroyWindow(testWindow);
+
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }

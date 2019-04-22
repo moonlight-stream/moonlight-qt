@@ -321,12 +321,20 @@ Session::~Session()
 
 bool Session::initialize()
 {
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
     // Create a hidden window to use for decoder initialization tests
     SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
     if (!testWindow) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create window for hardware decode test: %s",
                      SDL_GetError());
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         return false;
     }
 
@@ -446,7 +454,12 @@ bool Session::initialize()
 
     SDL_DestroyWindow(testWindow);
 
-    return ret;
+    if (!ret) {
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        return false;
+    }
+
+    return true;
 }
 
 void Session::emitLaunchWarning(QString text)
@@ -875,12 +888,14 @@ void Session::exec(int displayOriginX, int displayOriginY)
     } catch (const GfeHttpResponseException& e) {
         delete m_InputHandler;
         m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         emit displayLaunchError("GeForce Experience returned error: " + e.toQString());
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     } catch (const QtNetworkReplyException& e) {
         delete m_InputHandler;
         m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         emit displayLaunchError(e.toQString());
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
@@ -911,6 +926,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         // listener.
         delete m_InputHandler;
         m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
@@ -934,6 +950,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                      SDL_GetError());
         delete m_InputHandler;
         m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
@@ -1235,6 +1252,8 @@ DispatchDeferredCleanup:
     if (iconSurface != nullptr) {
         SDL_FreeSurface(iconSurface);
     }
+
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
 
     // Cleanup can take a while, so dispatch it to a worker thread.
     // When it is complete, it will release our s_ActiveSessionSemaphore
