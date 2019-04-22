@@ -1,11 +1,14 @@
 #include "systemproperties.h"
 
+#include <QGuiApplication>
+
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
 
 SystemProperties::SystemProperties()
 {
     isRunningWayland = qgetenv("XDG_SESSION_TYPE") == "wayland";
+    isRunningXWayland = qgetenv("XDG_SESSION_TYPE") == "wayland" && QGuiApplication::platformName() == "xcb";
 
 #ifdef Q_OS_WIN32
     isWow64 = QSysInfo::currentCpuArchitecture() != QSysInfo::buildCpuArchitecture();

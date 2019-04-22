@@ -346,6 +346,17 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+    // After the QGuiApplication is created, the platform stuff will be initialized
+    // and we can set the SDL video driver to match Qt.
+    if (qgetenv("XDG_SESSION_TYPE") == "wayland" && QGuiApplication::platformName() == "xcb") {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected XWayland. This will probably break hardware decoding! Try running with QT_QPA_PLATFORM=wayland or switch to X11.");
+    }
+    else if (QGuiApplication::platformName().startsWith("wayland")) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Detected Wayland. Performance may be worse than X11.");
+        qputenv("SDL_VIDEODRIVER", "wayland");
+    }
+
 #ifdef STEAM_LINK
     // Qt 5.9 from the Steam Link SDK is not able to load any fonts
     // since the Steam Link doesn't include any of the ones it looks

@@ -138,14 +138,16 @@ ApplicationWindow {
             // onAfterRendering call and potentially reenter this code.
             initialized = true;
 
-            if (SystemProperties.isRunningWayland) {
-                waylandDialog.open()
-            }
-            else if (SystemProperties.isWow64) {
+            if (SystemProperties.isWow64) {
                 wow64Dialog.open()
             }
             else if (!SystemProperties.hasHardwareAcceleration) {
-                noHwDecoderDialog.open()
+                if (SystemProperties.isRunningXWayland) {
+                    xWaylandDialog.open()
+                }
+                else {
+                    noHwDecoderDialog.open()
+                }
             }
 
             if (SystemProperties.unmappedGamepads) {
@@ -385,9 +387,9 @@ ApplicationWindow {
     }
 
     ErrorMessageDialog {
-        id: waylandDialog
-        text: "Moonlight does not support hardware acceleration on Wayland. Continuing on Wayland may result in poor streaming performance. " +
-              "Please switch to an X session for optimal performance."
+        id: xWaylandDialog
+        text: "Hardware acceleration doesn't work on XWayland. Continuing on XWayland may result in poor streaming performance. " +
+              "Try running with QT_QPA_PLATFORM=wayland or switch to X11."
         helpText: "Click the Help button for more information."
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems"
     }
