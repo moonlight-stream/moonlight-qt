@@ -127,6 +127,12 @@ echo Deploying Qt dependencies
 windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
 if !ERRORLEVEL! NEQ 0 goto Error
 
+echo Generating QML cache
+for /r "%DEPLOY_FOLDER%" %%f in (*.qml) do (
+    qmlcachegen.exe %%f
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
+
 echo Harvesting files for WiX
 "%WIX%\bin\heat" dir %DEPLOY_FOLDER% -srd -sfrag -ag -sw5150 -cg MoonlightDependencies -var var.SourceDir -dr INSTALLFOLDER -out %BUILD_FOLDER%\Dependencies.wxs
 if !ERRORLEVEL! NEQ 0 goto Error
