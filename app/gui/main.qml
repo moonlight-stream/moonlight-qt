@@ -421,6 +421,29 @@ ApplicationWindow {
         onAccepted: Qt.quit()
     }
 
+    // HACK: This belongs in StreamSegue but keeping a dialog around after the parent
+    // dies can trigger bugs in Qt 5.12 that cause the app to crash. For now, we will
+    // host this dialog in a QML component that is never destroyed.
+    //
+    // To repro: Start a stream, cut the network connection to trigger the "Connection
+    // terminated" dialog, wait until the app grid times out back to the PC grid, then
+    // try to dismiss the dialog.
+    ErrorMessageDialog {
+        id: streamSegueErrorDialog
+
+        property bool quitAfter: false
+
+        onClosed: {
+            if (quitAfter) {
+                Qt.quit()
+            }
+
+            // StreamSegue assumes its dialog will be re-created each time we
+            // start streaming, so fake it by wiping out the text each time.
+            text = ""
+        }
+    }
+
     NavigableDialog {
         id: addPcDialog
         property string label: "Enter the IP address of your GameStream PC:"

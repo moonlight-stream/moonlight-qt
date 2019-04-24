@@ -20,7 +20,7 @@ Item {
     function stageFailed(stage, errorCode)
     {
         // Display the error dialog after Session::exec() returns
-        errorDialog.text = "Starting " + stage + " failed: Error " + errorCode
+        streamSegueErrorDialog.text = "Starting " + stage + " failed: Error " + errorCode
     }
 
     function connectionStarted()
@@ -38,7 +38,7 @@ Item {
     function displayLaunchError(text)
     {
         // Display the error dialog after Session::exec() returns
-        errorDialog.text = text
+        streamSegueErrorDialog.text = text
     }
 
     function displayLaunchWarning(text)
@@ -68,9 +68,10 @@ Item {
         SdlGamepadKeyNavigation.enable()
 
         if (quitAfter) {
-            if (errorDialog.text) {
+            if (streamSegueErrorDialog.text) {
                 // Quit when the error dialog is acknowledged
-                errorDialog.open()
+                streamSegueErrorDialog.quitAfter = quitAfter
+                streamSegueErrorDialog.open()
             }
             else {
                 // Quit immediately
@@ -87,8 +88,9 @@ Item {
             // the Qt UI is visible again to prevent losing
             // focus on the dialog which would impact gamepad
             // users.
-            if (errorDialog.text) {
-                errorDialog.open()
+            if (streamSegueErrorDialog.text) {
+                streamSegueErrorDialog.quitAfter = quitAfter
+                streamSegueErrorDialog.open()
             }
         }
     }
@@ -170,15 +172,5 @@ Item {
         verticalAlignment: Text.AlignVCenter
 
         wrapMode: Text.Wrap
-    }
-
-    ErrorMessageDialog {
-        id: errorDialog
-
-        onClosed: {
-            if (quitAfter) {
-                Qt.quit()
-            }
-        }
     }
 }
