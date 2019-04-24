@@ -124,14 +124,16 @@ copy %SOURCE_ROOT%\app\SDL_GameControllerDB\gamecontrollerdb.txt %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Deploying Qt dependencies
-windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
+windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-qmltooling %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Generating QML cache
-for /r "%DEPLOY_FOLDER%" %%f in (*.qml) do (
-    qmlcachegen.exe %%f
-    if !ERRORLEVEL! NEQ 0 goto Error
-)
+forfiles /m *.qml /s /c "cmd /c qmlcachegen.exe @path"
+if !ERRORLEVEL! NEQ 0 goto Error
+
+echo Deleting original QML files
+forfiles /m *.qml /s /c "cmd /c del @path"
+if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Harvesting files for WiX
 "%WIX%\bin\heat" dir %DEPLOY_FOLDER% -srd -sfrag -ag -sw5150 -cg MoonlightDependencies -var var.SourceDir -dr INSTALLFOLDER -out %BUILD_FOLDER%\Dependencies.wxs
