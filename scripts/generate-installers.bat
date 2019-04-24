@@ -128,11 +128,11 @@ windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\ap
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Generating QML cache
-forfiles /m *.qml /s /c "cmd /c qmlcachegen.exe @path"
+forfiles /p %DEPLOY_FOLDER% /m *.qml /s /c "cmd /c qmlcachegen.exe @path"
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Deleting original QML files
-forfiles /m *.qml /s /c "cmd /c del @path"
+forfiles /p %DEPLOY_FOLDER% /m *.qml /s /c "cmd /c del @path"
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Harvesting files for WiX
