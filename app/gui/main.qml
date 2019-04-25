@@ -175,28 +175,21 @@ ApplicationWindow {
 
     header: ToolBar {
         id: toolBar
+        height: 60
         anchors.topMargin: 5
         anchors.bottomMargin: 5
 
         RowLayout {
             spacing: 20
+            anchors.leftMargin: 10
+            anchors.rightMargin: 10
             anchors.fill: parent
 
             NavigableToolButton {
                 // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1
 
-                // FIXME: We're using an Image here rather than icon.source because
-                // icons don't work on Qt 5.9 LTS.
-                Image {
-                    source: "qrc:/res/arrow_left.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        // The icon should be square so use the height as the width too
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
+                iconSource: "qrc:/res/arrow_left.svg"
 
                 onClicked: stackView.pop()
 
@@ -219,14 +212,7 @@ ApplicationWindow {
                 id: addPcButton
                 visible: stackView.currentItem.objectName === "Computers"
 
-                Image {
-                    source: "qrc:/res/ic_add_to_queue_white_48px.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
+                iconSource:  "qrc:/res/ic_add_to_queue_white_48px.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -253,14 +239,7 @@ ApplicationWindow {
 
                 id: updateButton
 
-                Image {
-                    source: "qrc:/res/update.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
+                iconSource: "qrc:/res/update.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -293,14 +272,7 @@ ApplicationWindow {
                 id: helpButton
                 visible: SystemProperties.hasBrowser
 
-                Image {
-                    source: "qrc:/res/question_mark.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
+                iconSource: "qrc:/res/question_mark.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -330,14 +302,7 @@ ApplicationWindow {
                 ToolTip.visible: hovered
                 ToolTip.text: "Gamepad Mapper"
 
-                Image {
-                    source: "qrc:/res/ic_videogame_asset_white_48px.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
+                iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
 
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
 
@@ -349,14 +314,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: settingsButton
 
-                Image {
-                    source: "qrc:/res/settings.svg"
-                    anchors.centerIn: parent
-                    sourceSize {
-                        width: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                        height: toolBar.height - toolBar.anchors.bottomMargin - toolBar.anchors.topMargin
-                    }
-                }
+                iconSource:  "qrc:/res/settings.svg"
 
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
 
