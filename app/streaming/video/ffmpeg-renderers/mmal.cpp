@@ -125,6 +125,13 @@ enum AVPixelFormat MmalRenderer::getPreferredPixelFormat(int videoFormat)
     return AV_PIX_FMT_MMAL;
 }
 
+bool MmalRenderer::needsTestFrame()
+{
+    // We won't be able to decode if the GPU memory is 64 MB or lower,
+    // so we must test before allowing the decoder to be used.
+    return true;
+}
+
 void MmalRenderer::renderFrame(AVFrame* frame)
 {
     MMAL_BUFFER_HEADER_T* buffer = (MMAL_BUFFER_HEADER_T*)frame->data[3];
