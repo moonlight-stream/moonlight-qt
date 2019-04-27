@@ -17,8 +17,6 @@
 - (void) stageComplete:(const char*)stageName;
 - (void) stageFailed:(const char*)stageName withError:(long)errorCode;
 - (void) launchFailed:(NSString*)message;
-- (void) displayMessage:(const char*)message;
-- (void) displayTransientMessage:(const char*)message;
 - (void) rumble:(unsigned short)controllerNumber lowFreqMotor:(unsigned short)lowFreqMotor highFreqMotor:(unsigned short)highFreqMotor;
 
 @end

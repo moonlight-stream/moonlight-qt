@@ -258,14 +258,6 @@
     });
 }
 
-- (void) displayMessage:(const char*)message {
-    Log(LOG_I, @"Display message: %s", message);
-}
-
-- (void) displayTransientMessage:(const char*)message {
-    Log(LOG_I, @"Display transient message: %s", message);
-}
-
 - (void)rumble:(unsigned short)controllerNumber lowFreqMotor:(unsigned short)lowFreqMotor highFreqMotor:(unsigned short)highFreqMotor {
     Log(LOG_I, @"Rumble on gamepad %d: %04x %04x", controllerNumber, lowFreqMotor, highFreqMotor);
     
