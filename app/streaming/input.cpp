@@ -652,41 +652,60 @@ Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
 
 void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
 {
-    GamepadState* state = findStateForGamepad(event->which);
+    SDL_JoystickID gameControllerId = event->which;
+    GamepadState* state = findStateForGamepad(gameControllerId);
     if (state == NULL) {
         return;
     }
 
-    switch (event->axis)
-    {
-        case SDL_CONTROLLER_AXIS_LEFTX:
-            state->lsX = event->value;
+    // Batch all pending axis motion events for this gamepad to save CPU time
+    SDL_Event nextEvent;
+    for (;;) {
+        switch (event->axis)
+        {
+            case SDL_CONTROLLER_AXIS_LEFTX:
+                state->lsX = event->value;
+                break;
+            case SDL_CONTROLLER_AXIS_LEFTY:
+                // Signed values have one more negative value than
+                // positive value, so inverting the sign on -32768
+                // could actually cause the value to overflow and
+                // wrap around to be negative again. Avoid that by
+                // capping the value at 32767.
+                state->lsY = -qMax(event->value, (short)-32767);
+                break;
+            case SDL_CONTROLLER_AXIS_RIGHTX:
+                state->rsX = event->value;
+                break;
+            case SDL_CONTROLLER_AXIS_RIGHTY:
+                state->rsY = -qMax(event->value, (short)-32767);
+                break;
+            case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
+                state->lt = (unsigned char)(event->value * 255UL / 32767);
+                break;
+            case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
+                state->rt = (unsigned char)(event->value * 255UL / 32767);
+                break;
+            default:
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Unhandled controller axis: %d",
+                            event->axis);
+                return;
+        }
+
+        // Check for another event to batch with
+        if (SDL_PeepEvents(&nextEvent, 1, SDL_PEEKEVENT, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERAXISMOTION) <= 0) {
             break;
-        case SDL_CONTROLLER_AXIS_LEFTY:
-            // Signed values have one more negative value than
-            // positive value, so inverting the sign on -32768
-            // could actually cause the value to overflow and
-            // wrap around to be negative again. Avoid that by
-            // capping the value at 32767.
-            state->lsY = -qMax(event->value, (short)-32767);
+        }
+
+        event = &nextEvent.caxis;
+        if (event->which != gameControllerId) {
+            // Stop batching if a different gamepad interrupts us
             break;
-        case SDL_CONTROLLER_AXIS_RIGHTX:
-            state->rsX = event->value;
-            break;
-        case SDL_CONTROLLER_AXIS_RIGHTY:
-            state->rsY = -qMax(event->value, (short)-32767);
-            break;
-        case SDL_CONTROLLER_AXIS_TRIGGERLEFT:
-            state->lt = (unsigned char)(event->value * 255UL / 32767);
-            break;
-        case SDL_CONTROLLER_AXIS_TRIGGERRIGHT:
-            state->rt = (unsigned char)(event->value * 255UL / 32767);
-            break;
-        default:
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Unhandled controller axis: %d",
-                        event->axis);
-            return;
+        }
+
+        // Remove the next event to batch
+        SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERAXISMOTION);
     }
 
     sendGamepadState(state);
