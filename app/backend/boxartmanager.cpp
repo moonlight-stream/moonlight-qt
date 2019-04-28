@@ -89,10 +89,9 @@ QUrl BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
 
 void BoxArtManager::handleBoxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image)
 {
-    if (image.isEmpty()) {
-        image = QUrl("qrc:/res/no_app_image.png");
+    if (!image.isEmpty()) {
+        emit boxArtLoadComplete(computer, app, image);
     }
-    emit boxArtLoadComplete(computer, app, image);
 }
 
 QUrl BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, int appId)
