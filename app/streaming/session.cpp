@@ -1037,7 +1037,13 @@ void Session::exec(int displayOriginX, int displayOriginY)
         // blocks this thread too long for high polling rate mice and high
         // refresh rate displays.
         if (!SDL_PollEvent(&event)) {
+#ifndef STEAM_LINK
             SDL_Delay(1);
+#else
+            // Waking every 1 ms to process input is too much for the low performance
+            // ARM core in the Steam Link, so we will wait 10 ms instead.
+            SDL_Delay(10);
+#endif
             continue;
         }
         switch (event.type) {
