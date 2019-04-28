@@ -111,8 +111,11 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
 {
     int samplesDecoded;
 
-    // Set this thread to high priority to reduce
-    // the chance of missing our sample delivery time
+#ifndef STEAM_LINK
+    // Set this thread to high priority to reduce the chance of missing
+    // our sample delivery time. On Steam Link, this causes starvation
+    // of other threads due to severely restricted CPU time available,
+    // so we will skip it on that platform.
     if (s_ActiveSession->m_AudioSampleCount == 0) {
         if (SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH) < 0) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -120,6 +123,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
                         SDL_GetError());
         }
     }
+#endif
 
     // See if we need to drop this sample
     if (s_ActiveSession->m_DropAudioEndTime != 0) {

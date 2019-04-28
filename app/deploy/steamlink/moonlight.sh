@@ -5,5 +5,9 @@
 # pairing data will be lost each reboot.
 HOME=/usr/local/moonlight
 
+# Renice PE_Single_CPU which seems to host A/V stuff
+renice -10 -p $(pidof PE_Single_CPU)
+
+# Renice Moonlight itself to avoid preemption by background tasks
 # Write output to a logfile in /tmp
-exec ./bin/moonlight > /tmp/moonlight.log
+exec nice -n -10 ./bin/moonlight > /tmp/moonlight.log

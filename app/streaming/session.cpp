@@ -49,7 +49,12 @@ AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
     nullptr,
     Session::arCleanup,
     Session::arDecodeAndPlaySample,
-    CAPABILITY_DIRECT_SUBMIT
+    CAPABILITY_DIRECT_SUBMIT |
+#ifdef STEAM_LINK
+    CAPABILITY_SLOW_OPUS_DECODER
+#else
+    0
+#endif
 };
 
 Session* Session::s_ActiveSession;
