@@ -4,7 +4,7 @@ SLVideoDecoder::SLVideoDecoder(bool)
     : m_VideoContext(nullptr),
       m_VideoStream(nullptr)
 {
-
+    SLVideo_SetLogFunction(SLVideoDecoder::slLogCallback, nullptr);
 }
 
 SLVideoDecoder::~SLVideoDecoder()
@@ -107,4 +107,31 @@ SLVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     }
 
     return DR_OK;
+}
+
+void SLVideoDecoder::slLogCallback(void *context, ESLVideoLog logLevel, const char *message)
+{
+    SDL_LogPriority priority;
+
+    switch (logLevel)
+    {
+    case k_ESLVideoLogError:
+        priority = SDL_LOG_PRIORITY_ERROR;
+        break;
+    case k_ESLVideoLogWarning:
+        priority = SDL_LOG_PRIORITY_WARN;
+        break;
+    case k_ESLVideoLogInfo:
+        priority = SDL_LOG_PRIORITY_INFO;
+        break;
+    default:
+    case k_ESLVideoLogDebug:
+        priority = SDL_LOG_PRIORITY_DEBUG;
+        break;
+    }
+
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION,
+                   priority,
+                   "SLVideo: %s",
+                   message);
 }

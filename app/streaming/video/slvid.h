@@ -18,6 +18,8 @@ public:
     virtual void renderFrameOnMainThread() {}
 
 private:
+    static void slLogCallback(void* context, ESLVideoLog logLevel, const char* message);
+
     CSLVideoContext* m_VideoContext;
     CSLVideoStream* m_VideoStream;
 };

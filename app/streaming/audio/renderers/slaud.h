@@ -15,6 +15,8 @@ public:
     virtual bool submitAudio(short* audioBuffer, int audioSize);
 
 private:
+    static void slLogCallback(void* context, ESLAudioLog logLevel, const char* message);
+
     CSLAudioContext* m_AudioContext;
     CSLAudioStream* m_AudioStream;
 };

@@ -6,6 +6,7 @@ SLAudioRenderer::SLAudioRenderer()
     : m_AudioContext(nullptr),
       m_AudioStream(nullptr)
 {
+    SLAudio_SetLogFunction(SLAudioRenderer::slLogCallback, nullptr);
 }
 
 bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig)
@@ -55,4 +56,31 @@ bool SLAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
     }
 
     return true;
+}
+
+void SLAudioRenderer::slLogCallback(void *context, ESLAudioLog logLevel, const char *message)
+{
+    SDL_LogPriority priority;
+
+    switch (logLevel)
+    {
+    case k_ESLAudioLogError:
+        priority = SDL_LOG_PRIORITY_ERROR;
+        break;
+    case k_ESLAudioLogWarning:
+        priority = SDL_LOG_PRIORITY_WARN;
+        break;
+    case k_ESLAudioLogInfo:
+        priority = SDL_LOG_PRIORITY_INFO;
+        break;
+    default:
+    case k_ESLAudioLogDebug:
+        priority = SDL_LOG_PRIORITY_DEBUG;
+        break;
+    }
+
+    SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION,
+                   priority,
+                   "SLAudio: %s",
+                   message);
 }
