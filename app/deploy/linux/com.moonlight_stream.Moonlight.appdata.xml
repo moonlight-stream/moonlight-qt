@@ -33,6 +33,23 @@
 	</screenshots>
 
 	<releases>
+		<release version="0.10.1" date="2019-04-28">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Video performance optimizations</li>
+					<li>VAAPI support on Wayland</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed a crash when attempting to dismiss the connection terminated dialog</li>
+					<li>Fixed a crash when using the overlay on the software decoder</li>
+					<li>Fixed software decoder not displaying output in some cases</li>
+					<li>Fixed some minor UI issues on the PC grid</li>
+					<li>Improved visibility of toolbar highlights</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.10.0" date="2019-04-07">
 			<description>
 				<p>New features:</p>
