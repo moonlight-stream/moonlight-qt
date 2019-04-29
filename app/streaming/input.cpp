@@ -58,6 +58,14 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
                             prefs.mouseAcceleration ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 
+#ifdef Q_OS_DARWIN
+    // SDL 2.0.9 on macOS has a broken HIDAPI mapping for the older Xbox One S
+    // firmware, so we have to disable HIDAPI for Xbox gamepads on macOS.
+    // https://github.com/moonlight-stream/moonlight-qt/issues/133
+    // https://bugzilla.libsdl.org/show_bug.cgi?id=4395
+    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX, "0");
+#endif
+
     // We must initialize joystick explicitly before gamecontroller in order
     // to ensure we receive gamecontroller attach events for gamepads where
     // SDL doesn't have a built-in mapping. By starting joystick first, we
