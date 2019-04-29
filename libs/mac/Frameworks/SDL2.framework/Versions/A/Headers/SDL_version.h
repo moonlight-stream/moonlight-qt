@@ -59,7 +59,7 @@ typedef struct SDL_version
 */
 #define SDL_MAJOR_VERSION   2
 #define SDL_MINOR_VERSION   0
-#define SDL_PATCHLEVEL      8
+#define SDL_PATCHLEVEL      9
 
 /**
  *  \brief Macro to determine SDL version program was compiled against.
