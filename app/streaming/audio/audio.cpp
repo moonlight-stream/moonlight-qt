@@ -143,19 +143,22 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     s_ActiveSession->m_AudioSampleCount++;
 
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
+        int desiredSize = sizeof(short) * SAMPLES_PER_FRAME * s_ActiveSession->m_AudioConfig.channelCount;
+        void* buffer = s_ActiveSession->m_AudioRenderer->getAudioBuffer(&desiredSize);
+        if (buffer == nullptr) {
+            return;
+        }
+
         samplesDecoded = opus_multistream_decode(s_ActiveSession->m_OpusDecoder,
                                                  (unsigned char*)sampleData,
                                                  sampleLength,
-                                                 s_ActiveSession->m_OpusDecodeBuffer,
-                                                 SAMPLES_PER_FRAME,
+                                                 (short*)buffer,
+                                                 desiredSize / sizeof(short) / s_ActiveSession->m_AudioConfig.channelCount,
                                                  0);
         if (samplesDecoded > 0) {
-            if (!s_ActiveSession->m_AudioRenderer->submitAudio(s_ActiveSession->m_OpusDecodeBuffer,
-                                                               static_cast<int>(
-                                                                   sizeof(short) *
-                                                                   samplesDecoded *
-                                                                   s_ActiveSession->m_AudioConfig.channelCount))) {
-
+            SDL_assert(desiredSize >= sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount);
+            desiredSize = sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount;
+            if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredSize)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Reinitializing audio renderer after failure");
 

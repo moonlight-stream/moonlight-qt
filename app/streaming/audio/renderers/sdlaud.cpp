@@ -6,7 +6,8 @@
 #include <QtGlobal>
 
 SdlAudioRenderer::SdlAudioRenderer()
-    : m_AudioDevice(0)
+    : m_AudioDevice(0),
+      m_AudioBuffer(nullptr)
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
@@ -37,7 +38,13 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to open audio device: %s",
                      SDL_GetError());
-        SDL_QuitSubSystem(SDL_INIT_AUDIO);
+        return false;
+    }
+
+    m_AudioBuffer = malloc(SAMPLES_PER_FRAME * sizeof(short) * opusConfig->channelCount);
+    if (m_AudioBuffer == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to allocate audio buffer");
         return false;
     }
 
@@ -65,13 +72,22 @@ SdlAudioRenderer::~SdlAudioRenderer()
         SDL_CloseAudioDevice(m_AudioDevice);
     }
 
+    if (m_AudioBuffer != nullptr) {
+        free(m_AudioBuffer);
+    }
+
     SDL_QuitSubSystem(SDL_INIT_AUDIO);
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 }
 
-bool SdlAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
+void* SdlAudioRenderer::getAudioBuffer(int*)
 {
-    if (SDL_QueueAudio(m_AudioDevice, audioBuffer, audioSize) < 0) {
+    return m_AudioBuffer;
+}
+
+bool SdlAudioRenderer::submitAudio(int bytesWritten)
+{
+    if (SDL_QueueAudio(m_AudioDevice, m_AudioBuffer, bytesWritten) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to queue audio sample: %s",
                      SDL_GetError());

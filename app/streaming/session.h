@@ -148,7 +148,6 @@ private:
     int m_ActiveVideoFrameRate;
 
     OpusMSDecoder* m_OpusDecoder;
-    short m_OpusDecodeBuffer[MAX_CHANNELS * SAMPLES_PER_FRAME];
     IAudioRenderer* m_AudioRenderer;
     OPUS_MULTISTREAM_CONFIGURATION m_AudioConfig;
     int m_AudioSampleCount;

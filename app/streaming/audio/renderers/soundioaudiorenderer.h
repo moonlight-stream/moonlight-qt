@@ -13,7 +13,9 @@ public:
 
     virtual bool prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* opusConfig);
 
-    virtual bool submitAudio(short* audioBuffer, int audioSize);
+    virtual void* getAudioBuffer(int* size);
+
+    virtual bool submitAudio(int bytesWritten);
 
 private:
     int scoreChannelLayout(const struct SoundIoChannelLayout* layout, const OPUS_MULTISTREAM_CONFIGURATION* opusConfig);

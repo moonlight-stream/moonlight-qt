@@ -284,7 +284,20 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
     return true;
 }
 
-bool SoundIoAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
+void* SoundIoAudioRenderer::getAudioBuffer(int* size)
+{
+    // We must always write a full frame of audio. If we don't,
+    // the reader will get out of sync with the writer and our
+    // channels will get all mixed up. To ensure this is always
+    // the case, round our bytes free down to the next multiple
+    // of our frame size.
+    int bytesFree = soundio_ring_buffer_free_count(m_RingBuffer);
+    int bytesPerFrame = m_OpusChannelCount * m_OutputStream->bytes_per_sample;
+    *size = qMin(*size, (bytesFree / bytesPerFrame) * bytesPerFrame);
+    return soundio_ring_buffer_write_ptr(m_RingBuffer);
+}
+
+bool SoundIoAudioRenderer::submitAudio(int bytesWritten)
 {
     if (m_Errored) {
         return false;
@@ -293,16 +306,8 @@ bool SoundIoAudioRenderer::submitAudio(short* audioBuffer, int audioSize)
     // Flush events to update with new device arrivals
     soundio_flush_events(m_SoundIo);
 
-    // We must always write a full frame of audio. If we don't,
-    // the reader will get out of sync with the writer and our
-    // channels will get all mixed up. To ensure this is always
-    // the case, round our bytes free down to the next multiple
-    // of our frame size.
-    int bytesFree = soundio_ring_buffer_free_count(m_RingBuffer);
-    int bytesPerFrame = m_OpusChannelCount * m_OutputStream->bytes_per_sample;
-    int bytesToWrite = qMin(audioSize, (bytesFree / bytesPerFrame) * bytesPerFrame);
-    memcpy(soundio_ring_buffer_write_ptr(m_RingBuffer), audioBuffer, bytesToWrite);
-    soundio_ring_buffer_advance_write_ptr(m_RingBuffer, bytesToWrite);
+    // Advance the write pointer
+    soundio_ring_buffer_advance_write_ptr(m_RingBuffer, bytesWritten);
 
     return true;
 }
