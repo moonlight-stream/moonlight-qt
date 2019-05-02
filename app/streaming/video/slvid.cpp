@@ -109,7 +109,7 @@ SLVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     return DR_OK;
 }
 
-void SLVideoDecoder::slLogCallback(void *context, ESLVideoLog logLevel, const char *message)
+void SLVideoDecoder::slLogCallback(void*, ESLVideoLog logLevel, const char *message)
 {
     SDL_LogPriority priority;
 

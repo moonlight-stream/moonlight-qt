@@ -21,5 +21,8 @@ private:
 
     CSLAudioContext* m_AudioContext;
     CSLAudioStream* m_AudioStream;
+
+    char* m_AudioBuffer;
     int m_AudioBufferSize;
+    int m_AudioBufferBytesFilled;
 };

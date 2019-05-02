@@ -9,7 +9,9 @@
 
 SLAudioRenderer::SLAudioRenderer()
     : m_AudioContext(nullptr),
-      m_AudioStream(nullptr)
+      m_AudioStream(nullptr),
+      m_AudioBuffer(nullptr),
+      m_AudioBufferBytesFilled(0)
 {
     SLAudio_SetLogFunction(SLAudioRenderer::slLogCallback, nullptr);
 }
@@ -23,7 +25,7 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
         return false;
     }
 
-    m_AudioBufferSize = SAMPLES_PER_FRAME * sizeof(short) * opusConfig->channelCount;
+    m_AudioBufferSize = SAMPLES_PER_FRAME * sizeof(short) * opusConfig->channelCount * FRAMES_PER_SUBMISSION;
     m_AudioStream = SLAudio_CreateStream(m_AudioContext,
                                          opusConfig->sampleRate,
                                          opusConfig->channelCount,
@@ -43,12 +45,29 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
 
 void* SLAudioRenderer::getAudioBuffer(int* size)
 {
-    SDL_assert(*size == m_AudioBufferSize);
-    return SLAudio_BeginFrame(m_AudioStream);
+    SDL_assert(*size == m_AudioBufferSize / FRAMES_PER_SUBMISSION);
+
+    if (m_AudioBuffer == nullptr) {
+        m_AudioBufferBytesFilled = 0;
+        m_AudioBuffer = (char*)SLAudio_BeginFrame(m_AudioStream);
+        if (m_AudioBuffer == nullptr) {
+            return nullptr;
+        }
+    }
+
+    return (void*)&m_AudioBuffer[m_AudioBufferBytesFilled];
 }
 
 SLAudioRenderer::~SLAudioRenderer()
 {
+    if (m_AudioBuffer != nullptr) {
+        // We had a buffer in flight when we quit. Just in case
+        // SLAudio doesn't handle this properly, we'll zero and submit
+        // it just to be safe.
+        memset(m_AudioBuffer, 0, m_AudioBufferSize);
+        SLAudio_SubmitFrame(m_AudioStream);
+    }
+
     if (m_AudioStream != nullptr) {
         SLAudio_FreeStream(m_AudioStream);
     }
@@ -58,13 +77,22 @@ SLAudioRenderer::~SLAudioRenderer()
     }
 }
 
-bool SLAudioRenderer::submitAudio(int)
+bool SLAudioRenderer::submitAudio(int bytesWritten)
 {
-    SLAudio_SubmitFrame(m_AudioStream);
+    m_AudioBufferBytesFilled += bytesWritten;
+
+    // Submit the buffer when it's full
+    SDL_assert(m_AudioBufferBytesFilled <= m_AudioBufferSize);
+    if (m_AudioBufferBytesFilled == m_AudioBufferSize) {
+        SLAudio_SubmitFrame(m_AudioStream);
+        m_AudioBuffer = nullptr;
+        m_AudioBufferBytesFilled = 0;
+    }
+
     return true;
 }
 
-void SLAudioRenderer::slLogCallback(void *context, ESLAudioLog logLevel, const char *message)
+void SLAudioRenderer::slLogCallback(void*, ESLAudioLog logLevel, const char *message)
 {
     SDL_LogPriority priority;
 
