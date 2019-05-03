@@ -9,7 +9,8 @@
 
 const std::vector<int> SdlRenderer::k_SwFormats({
     AV_PIX_FMT_YUV420P,
-    AV_PIX_FMT_NV12
+    AV_PIX_FMT_NV12,
+    AV_PIX_FMT_NV21
 });
 
 SdlRenderer::SdlRenderer()
@@ -284,6 +285,9 @@ void SdlRenderer::renderFrame(AVFrame* frame)
             break;
         case AV_PIX_FMT_NV12:
             sdlFormat = SDL_PIXELFORMAT_NV12;
+            break;
+        case AV_PIX_FMT_NV21:
+            sdlFormat = SDL_PIXELFORMAT_NV21;
             break;
         default:
             SDL_assert(false);
