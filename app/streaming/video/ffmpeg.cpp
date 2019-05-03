@@ -620,9 +620,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Add some extra space in case we need to do an SPS fixup
         requiredBufferSize += MAX_SPS_EXTRA_SIZE;
     }
-    if (requiredBufferSize + AV_INPUT_BUFFER_PADDING_SIZE > m_DecodeBuffer.length()) {
-        m_DecodeBuffer = QByteArray(requiredBufferSize + AV_INPUT_BUFFER_PADDING_SIZE, 0);
-    }
+
+    // Ensure the decoder buffer is large enough
+    m_DecodeBuffer.reserve(requiredBufferSize + AV_INPUT_BUFFER_PADDING_SIZE);
 
     int offset = 0;
     while (entry != nullptr) {
