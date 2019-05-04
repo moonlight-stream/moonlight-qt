@@ -344,6 +344,9 @@ int main(int argc, char *argv[])
     // Disable minimize on focus loss by default. Users seem to want this off by default.
     SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
+    // Allow thread naming
+    SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "0");
+
     QGuiApplication app(argc, argv);
 
     // After the QGuiApplication is created, the platform stuff will be initialized

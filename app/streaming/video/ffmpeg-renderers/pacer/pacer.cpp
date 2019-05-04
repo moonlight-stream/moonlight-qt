@@ -254,7 +254,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
     }
 
     if (m_VsyncRenderer->isRenderThreadSupported()) {
-        m_RenderThread = SDL_CreateThread(Pacer::renderThread, "Pacer Render Thread", this);
+        m_RenderThread = SDL_CreateThread(Pacer::renderThread, "PacerRender", this);
     }
 
     return true;

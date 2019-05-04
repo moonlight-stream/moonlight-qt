@@ -18,7 +18,7 @@ NullThreadedVsyncSource::~NullThreadedVsyncSource()
 bool NullThreadedVsyncSource::initialize(SDL_Window*, int displayFps)
 {
     m_DisplayFps = displayFps;
-    m_Thread = SDL_CreateThread(vsyncThread, "Null Vsync Thread", this);
+    m_Thread = SDL_CreateThread(vsyncThread, "NullVsync", this);
     if (m_Thread == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to create DX V-sync thread: %s",

@@ -61,7 +61,7 @@ bool DxVsyncSource::initialize(SDL_Window* window, int displayFps)
 
     m_Window = info.info.win.window;
 
-    m_Thread = SDL_CreateThread(vsyncThread, "DX Vsync Thread", this);
+    m_Thread = SDL_CreateThread(vsyncThread, "DXVsync", this);
     if (m_Thread == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to create DX V-sync thread: %s",
