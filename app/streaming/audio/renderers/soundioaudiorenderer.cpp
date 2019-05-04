@@ -260,7 +260,7 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
     m_RingBuffer = soundio_ring_buffer_create(m_SoundIo,
                                               m_OutputStream->bytes_per_sample *
                                               m_OpusChannelCount *
-                                              SAMPLES_PER_FRAME *
+                                              opusConfig->samplesPerFrame *
                                               packetsToBuffer);
     if (m_RingBuffer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

@@ -31,7 +31,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     // frames contain a non-power of 2 number of samples,
     // so the slop would require buffering another full frame.
     // Specifying non-Po2 seems to work for our supported platforms.
-    want.samples = SAMPLES_PER_FRAME;
+    want.samples = opusConfig->samplesPerFrame;
 
     m_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
     if (m_AudioDevice == 0) {
@@ -41,7 +41,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
         return false;
     }
 
-    m_AudioBuffer = malloc(SAMPLES_PER_FRAME * sizeof(short) * opusConfig->channelCount);
+    m_AudioBuffer = malloc(opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount);
     if (m_AudioBuffer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to allocate audio buffer");

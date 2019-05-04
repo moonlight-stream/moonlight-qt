@@ -41,6 +41,7 @@ bool Session::testAudio(int audioConfiguration)
     // the renderer the channel count and sample rate.
     OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
     opusConfig.sampleRate = 48000;
+    opusConfig.samplesPerFrame = 240;
 
     switch (audioConfiguration)
     {
@@ -143,7 +144,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     s_ActiveSession->m_AudioSampleCount++;
 
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
-        int desiredSize = sizeof(short) * SAMPLES_PER_FRAME * s_ActiveSession->m_AudioConfig.channelCount;
+        int desiredSize = sizeof(short) * s_ActiveSession->m_AudioConfig.samplesPerFrame * s_ActiveSession->m_AudioConfig.channelCount;
         void* buffer = s_ActiveSession->m_AudioRenderer->getAudioBuffer(&desiredSize);
         if (buffer == nullptr) {
             return;
