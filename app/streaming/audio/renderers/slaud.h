@@ -22,5 +22,7 @@ private:
     CSLAudioContext* m_AudioContext;
     CSLAudioStream* m_AudioStream;
 
+    void* m_AudioBuffer;
     int m_AudioBufferSize;
+    int m_FrameDuration;
 };

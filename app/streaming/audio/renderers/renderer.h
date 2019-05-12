@@ -2,9 +2,6 @@
 
 #include <Limelight.h>
 
-#define MAX_CHANNELS 6
-#define SAMPLES_PER_FRAME 240
-
 class IAudioRenderer
 {
 public:

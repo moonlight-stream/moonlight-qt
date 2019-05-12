@@ -156,16 +156,22 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
                                                  (short*)buffer,
                                                  desiredSize / sizeof(short) / s_ActiveSession->m_AudioConfig.channelCount,
                                                  0);
+
+        // Update desiredSize with the number of bytes actually populated by the decoding operation
         if (samplesDecoded > 0) {
             SDL_assert(desiredSize >= sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount);
             desiredSize = sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount;
-            if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredSize)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Reinitializing audio renderer after failure");
+        }
+        else {
+            desiredSize = 0;
+        }
 
-                delete s_ActiveSession->m_AudioRenderer;
-                s_ActiveSession->m_AudioRenderer = nullptr;
-            }
+        if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredSize)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Reinitializing audio renderer after failure");
+
+            delete s_ActiveSession->m_AudioRenderer;
+            s_ActiveSession->m_AudioRenderer = nullptr;
         }
     }
 

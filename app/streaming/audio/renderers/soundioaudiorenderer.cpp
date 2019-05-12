@@ -303,6 +303,11 @@ bool SoundIoAudioRenderer::submitAudio(int bytesWritten)
         return false;
     }
 
+    if (bytesWritten == 0) {
+        // Nothing to do
+        return true;
+    }
+
     // Flush events to update with new device arrivals
     soundio_flush_events(m_SoundIo);
 

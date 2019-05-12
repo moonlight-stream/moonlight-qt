@@ -4,7 +4,8 @@
 
 SLAudioRenderer::SLAudioRenderer()
     : m_AudioContext(nullptr),
-      m_AudioStream(nullptr)
+      m_AudioStream(nullptr),
+      m_AudioBuffer(nullptr)
 {
     SLAudio_SetLogFunction(SLAudioRenderer::slLogCallback, nullptr);
 }
@@ -18,6 +19,7 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
         return false;
     }
 
+    m_FrameDuration = opusConfig->samplesPerFrame / 48;
     m_AudioBufferSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
     m_AudioStream = SLAudio_CreateStream(m_AudioContext,
                                          opusConfig->sampleRate,
@@ -31,7 +33,8 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using SLAudio renderer");
+                "Using SLAudio renderer with %d ms frames",
+                m_FrameDuration);
 
     return true;
 }
@@ -39,11 +42,21 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
 void* SLAudioRenderer::getAudioBuffer(int* size)
 {
     SDL_assert(*size == m_AudioBufferSize);
-    return SLAudio_BeginFrame(m_AudioStream);
+
+    if (m_AudioBuffer == nullptr) {
+        m_AudioBuffer = SLAudio_BeginFrame(m_AudioStream);
+    }
+
+    return m_AudioBuffer;
 }
 
 SLAudioRenderer::~SLAudioRenderer()
 {
+    if (m_AudioBuffer != nullptr) {
+        memset(m_AudioBuffer, 0, m_AudioBufferSize);
+        SLAudio_SubmitFrame(m_AudioStream);
+    }
+
     if (m_AudioStream != nullptr) {
         SLAudio_FreeStream(m_AudioStream);
     }
@@ -53,9 +66,24 @@ SLAudioRenderer::~SLAudioRenderer()
     }
 }
 
-bool SLAudioRenderer::submitAudio(int)
+bool SLAudioRenderer::submitAudio(int bytesWritten)
 {
-    SLAudio_SubmitFrame(m_AudioStream);
+    if (bytesWritten == 0) {
+        // This buffer will be reused next time
+        return true;
+    }
+
+    // Only allow up to 40 ms of queued audio
+    if (LiGetPendingAudioFrames() * m_FrameDuration < 40) {
+        SLAudio_SubmitFrame(m_AudioStream);
+        m_AudioBuffer = nullptr;
+    }
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Too many queued audio frames: %d",
+                    LiGetPendingAudioFrames());
+    }
+
     return true;
 }
 
