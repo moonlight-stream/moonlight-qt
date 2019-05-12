@@ -3,10 +3,6 @@
 
 #include "nullthreadedvsyncsource.h"
 
-#ifdef Q_OS_DARWIN
-#include "displaylinkvsyncsource.h"
-#endif
-
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -230,9 +226,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     "Frame pacing active: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
 
-    #if defined(Q_OS_DARWIN)
-        m_VsyncSource = DisplayLinkVsyncSourceFactory::createVsyncSource(this);
-    #elif defined(Q_OS_WIN32)
+    #if defined(Q_OS_WIN32)
         // Don't use D3DKMTWaitForVerticalBlankEvent() on Windows 7, because
         // it blocks during other concurrent DX operations (like actually rendering).
         if (IsWindows8OrGreater()) {

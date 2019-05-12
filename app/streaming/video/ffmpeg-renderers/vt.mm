@@ -22,13 +22,24 @@ public:
         : m_HwContext(nullptr),
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
-          m_StreamView(nullptr)
+          m_StreamView(nullptr),
+          m_DisplayLink(nullptr)
     {
         SDL_zero(m_OverlayTextFields);
     }
 
     virtual ~VTRenderer() override
     {
+        if (m_DisplayLink != nullptr) {
+            // Wake up the renderer in case it is waiting for v-sync
+            SDL_LockMutex(m_VsyncMutex);
+            SDL_CondSignal(m_VsyncPassed);
+            SDL_UnlockMutex(m_VsyncMutex);
+
+            CVDisplayLinkStop(m_DisplayLink);
+            CVDisplayLinkRelease(m_DisplayLink);
+        }
+
         if (m_HwContext != nullptr) {
             av_buffer_unref(&m_HwContext);
         }
@@ -46,6 +57,85 @@ public:
         if (m_StreamView != nullptr) {
             [m_StreamView removeFromSuperview];
         }
+    }
+
+    static
+    CGDirectDisplayID
+    getDisplayID(NSScreen* screen)
+    {
+        NSNumber* screenNumber = [screen deviceDescription][@"NSScreenNumber"];
+        return [screenNumber unsignedIntValue];
+    }
+
+    static
+    CVReturn
+    displayLinkOutputCallback(
+        CVDisplayLinkRef displayLink,
+        const CVTimeStamp* /* now */,
+        const CVTimeStamp* /* vsyncTime */,
+        CVOptionFlags,
+        CVOptionFlags*,
+        void *displayLinkContext)
+    {
+        auto me = reinterpret_cast<VTRenderer*>(displayLinkContext);
+
+        SDL_assert(displayLink == me->m_DisplayLink);
+
+        SDL_LockMutex(me->m_VsyncMutex);
+        SDL_CondSignal(me->m_VsyncPassed);
+        SDL_UnlockMutex(me->m_VsyncMutex);
+
+        return kCVReturnSuccess;
+    }
+
+    bool initializeVsyncCallback(SDL_SysWMinfo* info)
+    {
+        NSScreen* screen = [info->info.cocoa.window screen];
+        CVReturn status;
+        if (screen == nullptr) {
+            // Window not visible on any display, so use a
+            // CVDisplayLink that can work with all active displays.
+            // When we become visible, we'll recreate ourselves
+            // and associate with the new screen.
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "NSWindow is not visible on any display");
+            status = CVDisplayLinkCreateWithActiveCGDisplays(&m_DisplayLink);
+        }
+        else {
+            CGDirectDisplayID displayId;
+            displayId = getDisplayID(screen);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "NSWindow on display: %x",
+                        displayId);
+            status = CVDisplayLinkCreateWithCGDisplay(displayId, &m_DisplayLink);
+        }
+        if (status != kCVReturnSuccess) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create CVDisplayLink: %d",
+                         status);
+            return false;
+        }
+
+        status = CVDisplayLinkSetOutputCallback(m_DisplayLink, displayLinkOutputCallback, this);
+        if (status != kCVReturnSuccess) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CVDisplayLinkSetOutputCallback() failed: %d",
+                         status);
+            return false;
+        }
+
+        status = CVDisplayLinkStart(m_DisplayLink);
+        if (status != kCVReturnSuccess) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CVDisplayLinkStart() failed: %d",
+                         status);
+            return false;
+        }
+
+        m_VsyncMutex = SDL_CreateMutex();
+        m_VsyncPassed = SDL_CreateCond();
+
+        return true;
     }
 
     // Caller frees frame after we return
@@ -104,6 +194,13 @@ public:
         [m_DisplayLayer enqueueSampleBuffer:sampleBuffer];
 
         CFRelease(sampleBuffer);
+
+        if (m_DisplayLink != nullptr) {
+            // Vsync is enabled, so wait for a swap before returning
+            SDL_LockMutex(m_VsyncMutex);
+            SDL_CondWait(m_VsyncPassed, m_VsyncMutex);
+            SDL_UnlockMutex(m_VsyncMutex);
+        }
     }
 
     virtual bool initialize(PDECODER_PARAMETERS params) override
@@ -189,6 +286,12 @@ public:
                         "av_hwdevice_ctx_create() failed for VT decoder: %d",
                         err);
             return false;
+        }
+
+        if (params->enableVsync) {
+            if (!initializeVsyncCallback(&info)) {
+                return false;
+            }
         }
 
         return true;
@@ -278,20 +381,15 @@ public:
         return true;
     }
 
-    virtual IFFmpegRenderer::FramePacingConstraint getFramePacingConstraint() override
-    {
-        // This renderer is inherently tied to V-sync due how we're
-        // rendering with AVSampleBufferDisplay layer. Running without
-        // the V-Sync source leads to massive stuttering.
-        return PACING_FORCE_ON;
-    }
-
 private:
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
     NSView* m_StreamView;
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
+    CVDisplayLinkRef m_DisplayLink;
+    SDL_mutex* m_VsyncMutex;
+    SDL_cond* m_VsyncPassed;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {

@@ -261,12 +261,10 @@ macx {
     message(VideoToolbox renderer selected)
 
     SOURCES += \
-        streaming/video/ffmpeg-renderers/vt.mm \
-        streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.mm
+        streaming/video/ffmpeg-renderers/vt.mm
 
     HEADERS += \
-        streaming/video/ffmpeg-renderers/vt.h \
-        streaming/video/ffmpeg-renderers/pacer/displaylinkvsyncsource.h
+        streaming/video/ffmpeg-renderers/vt.h
 }
 soundio {
     message(libsoundio audio renderer selected)
