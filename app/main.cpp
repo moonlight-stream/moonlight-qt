@@ -344,8 +344,12 @@ int main(int argc, char *argv[])
     // Disable minimize on focus loss by default. Users seem to want this off by default.
     SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
-    // Allow thread naming
+#ifdef QT_DEBUG
+    // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
+    // when throwing the exceptions, so we don't enable it for release builds out
+    // of caution.
     SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "0");
+#endif
 
     QGuiApplication app(argc, argv);
 
