@@ -130,6 +130,11 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
         return;
     }
 
+    if (s_ActiveSession->m_MouseEmulationRefCount > 0) {
+        // Don't display the overlay if mouse emulation is already using it
+        return;
+    }
+
     switch (connectionStatus)
     {
     case CONN_STATUS_POOR:
@@ -307,6 +312,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
       m_InputHandler(nullptr),
       m_InputHandlerLock(0),
+      m_MouseEmulationRefCount(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
@@ -822,6 +828,22 @@ void Session::toggleFullscreen()
 
         // Reposition the window when the resize is complete
         m_PendingWindowedTransition = true;
+    }
+}
+
+void Session::notifyMouseEmulationMode(bool enabled)
+{
+    m_MouseEmulationRefCount += enabled ? 1 : -1;
+    SDL_assert(m_MouseEmulationRefCount >= 0);
+
+    // We re-use the status update overlay for mouse mode notification
+    if (m_MouseEmulationRefCount > 0) {
+        strcpy(m_OverlayManager.getOverlayText(Overlay::OverlayStatusUpdate), "Gamepad mouse mode active\nLong press Start to deactivate");
+        m_OverlayManager.setOverlayTextUpdated(Overlay::OverlayStatusUpdate);
+        m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, true);
+    }
+    else {
+        m_OverlayManager.setOverlayState(Overlay::OverlayStatusUpdate, false);
     }
 }
 

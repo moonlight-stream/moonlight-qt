@@ -77,6 +77,8 @@ private:
 
     void toggleFullscreen();
 
+    void notifyMouseEmulationMode(bool enabled);
+
     void updateOptimalWindowDisplayMode();
 
     static
@@ -141,6 +143,7 @@ private:
     bool m_UnexpectedTermination;
     SdlInputHandler* m_InputHandler;
     SDL_SpinLock m_InputHandlerLock;
+    int m_MouseEmulationRefCount;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;

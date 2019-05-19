@@ -5,6 +5,7 @@
 #include "path.h"
 
 #include <QtGlobal>
+#include <QtMath>
 #include <QDir>
 
 #define VK_0 0x30
@@ -35,10 +36,10 @@
 #define MOUSE_EMULATION_POLLING_INTERVAL 50
 
 // Determines how fast the mouse will move each interval
-#define MOUSE_EMULATION_MOTION_MULTIPLIER 6
+#define MOUSE_EMULATION_MOTION_MULTIPLIER 4
 
 // Determines the maximum motion amount before allowing movement
-#define MOUSE_EMULATION_DEADZONE 3
+#define MOUSE_EMULATION_DEADZONE 2
 
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
@@ -127,7 +128,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
 SdlInputHandler::~SdlInputHandler()
 {
     for (int i = 0; i < MAX_GAMEPADS; i++) {
-        SDL_RemoveTimer(m_GamepadState[i].mouseEmulationTimer);
+        if (m_GamepadState[i].mouseEmulationTimer != 0) {
+            Session::get()->notifyMouseEmulationMode(false);
+            SDL_RemoveTimer(m_GamepadState[i].mouseEmulationTimer);
+        }
         if (m_GamepadState[i].haptic != nullptr) {
             SDL_HapticClose(m_GamepadState[i].haptic);
         }
@@ -691,13 +695,9 @@ Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param
     float deltaX;
     float deltaY;
 
-    // Produce a base vector for mouse movement
-    deltaX = rawX / 32766.0f * MOUSE_EMULATION_MOTION_MULTIPLIER;
-    deltaY = rawY / 32766.0f * MOUSE_EMULATION_MOTION_MULTIPLIER;
-
-    // Move faster as the stick moves further from center
-    deltaX *= qAbs(deltaX);
-    deltaY *= qAbs(deltaY);
+    // Produce a base vector for mouse movement with increased speed as we deviate further from center
+    deltaX = qPow(rawX / 32766.0f * MOUSE_EMULATION_MOTION_MULTIPLIER, 3);
+    deltaY = qPow(rawY / 32766.0f * MOUSE_EMULATION_MOTION_MULTIPLIER, 3);
 
     // Enforce deadzones
     deltaX = qAbs(deltaX) > MOUSE_EMULATION_DEADZONE ? deltaX - MOUSE_EMULATION_DEADZONE : 0;
@@ -768,7 +768,10 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
         SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_CONTROLLERAXISMOTION, SDL_CONTROLLERAXISMOTION);
     }
 
-    sendGamepadState(state);
+    // Only send the gamepad state to the host if it's not in mouse emulation mode
+    if (state->mouseEmulationTimer == 0) {
+        sendGamepadState(state);
+    }
 }
 
 void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* event)
@@ -779,6 +782,8 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
     }
 
     if (event->state == SDL_PRESSED) {
+        state->buttons |= k_ButtonMap[event->button];
+
         if (event->button == SDL_CONTROLLER_BUTTON_START) {
             state->lastStartDownTime = SDL_GetTicks();
         }
@@ -804,23 +809,30 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
             else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
                 LiSendScrollEvent(-1);
             }
-
-            return;
         }
     }
     else {
+        state->buttons &= ~k_ButtonMap[event->button];
+
         if (event->button == SDL_CONTROLLER_BUTTON_START) {
             if (SDL_GetTicks() - state->lastStartDownTime > MOUSE_EMULATION_LONG_PRESS_TIME) {
                 if (state->mouseEmulationTimer != 0) {
                     SDL_RemoveTimer(state->mouseEmulationTimer);
                     state->mouseEmulationTimer = 0;
+
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Mouse emulation deactivated");
+                    Session::get()->notifyMouseEmulationMode(false);
                 }
                 else {
+                    // Send the start button up event to the host, since we won't do it below
+                    sendGamepadState(state);
+
                     state->mouseEmulationTimer = SDL_AddTimer(MOUSE_EMULATION_POLLING_INTERVAL, SdlInputHandler::mouseEmulationTimerCallback, state);
+
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                 "Mouse emulation active");
+                    Session::get()->notifyMouseEmulationMode(true);
                 }
             }
         }
@@ -840,16 +852,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
             else if (event->button == SDL_CONTROLLER_BUTTON_RIGHTSHOULDER) {
                 LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_X2);
             }
-
-            return;
         }
-    }
-
-    if (event->state == SDL_PRESSED) {
-        state->buttons |= k_ButtonMap[event->button];
-    }
-    else {
-        state->buttons &= ~k_ButtonMap[event->button];
     }
 
     // Handle Start+Select+L1+R1 as a gamepad quit combo
@@ -869,7 +872,10 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         return;
     }
 
-    sendGamepadState(state);
+    // Only send the gamepad state to the host if it's not in mouse emulation mode
+    if (state->mouseEmulationTimer == 0) {
+        sendGamepadState(state);
+    }
 }
 
 void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
@@ -974,7 +980,11 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
     else if (event->type == SDL_CONTROLLERDEVICEREMOVED) {
         state = findStateForGamepad(event->which);
         if (state != NULL) {
-            SDL_RemoveTimer(state->mouseEmulationTimer);
+            if (state->mouseEmulationTimer != 0) {
+                Session::get()->notifyMouseEmulationMode(false);
+                SDL_RemoveTimer(state->mouseEmulationTimer);
+            }
+
             SDL_GameControllerClose(state->controller);
             if (state->haptic != nullptr) {
                 SDL_HapticClose(state->haptic);
