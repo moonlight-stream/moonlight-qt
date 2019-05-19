@@ -13,6 +13,9 @@ struct GamepadState {
     int hapticEffectId;
     short index;
 
+    SDL_TimerID mouseEmulationTimer;
+    uint32_t lastStartDownTime;
+
     short buttons;
     short lsX, lsY;
     short rsX, rsY;
@@ -81,6 +84,9 @@ private:
 
     static
     Uint32 mouseMoveTimerCallback(Uint32 interval, void* param);
+
+    static
+    Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
 
     bool m_MultiController;
     SDL_TimerID m_MouseMoveTimer;
