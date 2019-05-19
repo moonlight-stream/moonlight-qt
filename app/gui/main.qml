@@ -19,10 +19,6 @@ ApplicationWindow {
 
     visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
 
-    Component.onCompleted: {
-        SdlGamepadKeyNavigation.enable()
-    }
-
     StackView {
         id: stackView
         initialItem: initialView

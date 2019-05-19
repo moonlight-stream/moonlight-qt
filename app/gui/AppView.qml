@@ -3,6 +3,7 @@ import QtQuick.Controls 2.2
 
 import AppModel 1.0
 import ComputerManager 1.0
+import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
     property int computerIndex
@@ -32,6 +33,11 @@ CenteredGridView {
     StackView.onActivated: {
         appModel.computerLost.connect(computerLost)
         activated = true
+
+        // Highlight the first item if a gamepad is connected
+        if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
+            currentIndex = 0
+        }
     }
 
     StackView.onDeactivating: {

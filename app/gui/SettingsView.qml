@@ -28,6 +28,11 @@ Flickable {
         // This enables Tab and BackTab based navigation rather than arrow keys.
         // It is required to shift focus between controls on the settings page.
         SdlGamepadKeyNavigation.setUiNavMode(true)
+
+        // Highlight the first item if a gamepad is connected
+        if (SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
+            resolutionComboBox.forceActiveFocus(Qt.TabFocus)
+        }
     }
 
     StackView.onDeactivating: {
