@@ -31,13 +31,16 @@ public:
     virtual ~VTRenderer() override
     {
         if (m_DisplayLink != nullptr) {
-            // Wake up the renderer in case it is waiting for v-sync
-            SDL_LockMutex(m_VsyncMutex);
-            SDL_CondSignal(m_VsyncPassed);
-            SDL_UnlockMutex(m_VsyncMutex);
-
             CVDisplayLinkStop(m_DisplayLink);
             CVDisplayLinkRelease(m_DisplayLink);
+        }
+
+        if (m_VsyncPassed != nullptr) {
+            SDL_DestroyCond(m_VsyncPassed);
+        }
+
+        if (m_VsyncMutex != nullptr) {
+            SDL_DestroyMutex(m_VsyncMutex);
         }
 
         if (m_HwContext != nullptr) {
@@ -57,14 +60,6 @@ public:
         if (m_StreamView != nullptr) {
             [m_StreamView removeFromSuperview];
         }
-    }
-
-    static
-    CGDirectDisplayID
-    getDisplayID(NSScreen* screen)
-    {
-        NSNumber* screenNumber = [screen deviceDescription][@"NSScreenNumber"];
-        return [screenNumber unsignedIntValue];
     }
 
     static
@@ -102,8 +97,7 @@ public:
             status = CVDisplayLinkCreateWithActiveCGDisplays(&m_DisplayLink);
         }
         else {
-            CGDirectDisplayID displayId;
-            displayId = getDisplayID(screen);
+            CGDirectDisplayID displayId = [[screen deviceDescription][@"NSScreenNumber"] unsignedIntValue];
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "NSWindow on display: %x",
                         displayId);
@@ -198,7 +192,10 @@ public:
         if (m_DisplayLink != nullptr) {
             // Vsync is enabled, so wait for a swap before returning
             SDL_LockMutex(m_VsyncMutex);
-            SDL_CondWait(m_VsyncPassed, m_VsyncMutex);
+            if (SDL_CondWaitTimeout(m_VsyncPassed, m_VsyncMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "V-sync wait timed out after 100 ms");
+            }
             SDL_UnlockMutex(m_VsyncMutex);
         }
     }
