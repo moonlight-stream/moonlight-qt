@@ -94,6 +94,12 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     MappingManager mappingManager;
     mappingManager.applyMappings();
 
+    // Flush gamepad arrival and departure events which may be queued before
+    // starting the gamecontroller subsystem again. This prevents us from
+    // receiving duplicate arrival and departure events for the same gamepad.
+    SDL_FlushEvent(SDL_CONTROLLERDEVICEADDED);
+    SDL_FlushEvent(SDL_CONTROLLERDEVICEREMOVED);
+
     // We need to reinit this each time, since you only get
     // an initial set of gamepad arrival events once per init.
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
@@ -905,6 +911,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         i = 0;
 
         for (; i < MAX_GAMEPADS; i++) {
+            SDL_assert(m_GamepadState[i].controller != controller);
             if (m_GamepadState[i].controller == NULL) {
                 // Found an empty slot
                 break;
