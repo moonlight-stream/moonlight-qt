@@ -156,7 +156,7 @@ bool NvComputer::wake()
 
     const quint16 WOL_PORTS[] = {
         7, 9, // Standard WOL ports
-        47998, 47999, 48000, // Ports opened by GFE
+        47998, 47999, 48000, 48002, 48010, // Ports opened by GFE
     };
 
     // Create the WoL payload
