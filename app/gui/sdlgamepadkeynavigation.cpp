@@ -10,7 +10,7 @@
 
 SdlGamepadKeyNavigation::SdlGamepadKeyNavigation()
     : m_Enabled(false),
-      m_SettingsMode(false),
+      m_UiNavMode(false),
       m_LastAxisNavigationEventTime(0)
 {
     m_PollingTimer = new QTimer(this);
@@ -106,7 +106,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
 
             switch (event.cbutton.button) {
             case SDL_CONTROLLER_BUTTON_DPAD_UP:
-                if (m_SettingsMode) {
+                if (m_UiNavMode) {
                     // Back-tab
                     sendKey(type, Qt::Key_Tab, Qt::ShiftModifier);
                 }
@@ -115,7 +115,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
                 }
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_DOWN:
-                if (m_SettingsMode) {
+                if (m_UiNavMode) {
                     sendKey(type, Qt::Key_Tab);
                 }
                 else {
@@ -124,24 +124,12 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_LEFT:
                 sendKey(type, Qt::Key_Left);
-                if (m_SettingsMode) {
-                    // Some settings controls respond to left/right (like the slider)
-                    // and others respond to up/down (like combo boxes). They seem to
-                    // be mutually exclusive though so let's just send both.
-                    sendKey(type, Qt::Key_Up);
-                }
                 break;
             case SDL_CONTROLLER_BUTTON_DPAD_RIGHT:
                 sendKey(type, Qt::Key_Right);
-                if (m_SettingsMode) {
-                    // Some settings controls respond to left/right (like the slider)
-                    // and others respond to up/down (like combo boxes). They seem to
-                    // be mutually exclusive though so let's just send both.
-                    sendKey(type, Qt::Key_Down);
-                }
                 break;
             case SDL_CONTROLLER_BUTTON_A:
-                if (m_SettingsMode) {
+                if (m_UiNavMode) {
                     sendKey(type, Qt::Key_Space);
                 }
                 else {
@@ -183,7 +171,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
             // Do nothing
         }
         else if (leftY < -30000) {
-            if (m_SettingsMode) {
+            if (m_UiNavMode) {
                 // Back-tab
                 sendKey(QEvent::Type::KeyPress, Qt::Key_Tab, Qt::ShiftModifier);
                 sendKey(QEvent::Type::KeyRelease, Qt::Key_Tab, Qt::ShiftModifier);
@@ -196,7 +184,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
             m_LastAxisNavigationEventTime = SDL_GetTicks();
         }
         else if (leftY > 30000) {
-            if (m_SettingsMode) {
+            if (m_UiNavMode) {
                 sendKey(QEvent::Type::KeyPress, Qt::Key_Tab);
                 sendKey(QEvent::Type::KeyRelease, Qt::Key_Tab);
             }
@@ -210,27 +198,11 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
         else if (leftX < -30000) {
             sendKey(QEvent::Type::KeyPress, Qt::Key_Left);
             sendKey(QEvent::Type::KeyRelease, Qt::Key_Left);
-            if (m_SettingsMode) {
-                // Some settings controls respond to left/right (like the slider)
-                // and others respond to up/down (like combo boxes). They seem to
-                // be mutually exclusive though so let's just send both.
-                sendKey(QEvent::Type::KeyPress, Qt::Key_Up);
-                sendKey(QEvent::Type::KeyRelease, Qt::Key_Up);
-            }
-
             m_LastAxisNavigationEventTime = SDL_GetTicks();
         }
         else if (leftX > 30000) {
             sendKey(QEvent::Type::KeyPress, Qt::Key_Right);
             sendKey(QEvent::Type::KeyRelease, Qt::Key_Right);
-            if (m_SettingsMode) {
-                // Some settings controls respond to left/right (like the slider)
-                // and others respond to up/down (like combo boxes). They seem to
-                // be mutually exclusive though so let's just send both.
-                sendKey(QEvent::Type::KeyPress, Qt::Key_Down);
-                sendKey(QEvent::Type::KeyRelease, Qt::Key_Down);
-            }
-
             m_LastAxisNavigationEventTime = SDL_GetTicks();
         }
     }
@@ -246,9 +218,9 @@ void SdlGamepadKeyNavigation::sendKey(QEvent::Type type, Qt::Key key, Qt::Keyboa
     }
 }
 
-void SdlGamepadKeyNavigation::setSettingsMode(bool settingsMode)
+void SdlGamepadKeyNavigation::setUiNavMode(bool uiNavMode)
 {
-    m_SettingsMode = settingsMode;
+    m_UiNavMode = uiNavMode;
 }
 
 int SdlGamepadKeyNavigation::getConnectedGamepads()

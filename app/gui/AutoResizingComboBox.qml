@@ -1,6 +1,8 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 
+import SdlGamepadKeyNavigation 1.0
+
 // https://stackoverflow.com/questions/45029968/how-do-i-set-the-combobox-width-to-fit-the-largest-item
 ComboBox {
     property int textWidth
@@ -27,5 +29,14 @@ ComboBox {
             textWidth = Math.max(textMetrics.width, textWidth)
             textWidth = Math.max(popupMetrics.width, textWidth)
         }
+    }
+
+    popup.onAboutToShow: {
+        // Switch to normal navigation for combo boxes
+        SdlGamepadKeyNavigation.setUiNavMode(false)
+    }
+
+    popup.onAboutToHide: {
+        SdlGamepadKeyNavigation.setUiNavMode(true)
     }
 }

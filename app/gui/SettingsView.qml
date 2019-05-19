@@ -25,11 +25,13 @@ Flickable {
     }
 
     StackView.onActivated: {
-        SdlGamepadKeyNavigation.setSettingsMode(true)
+        // This enables Tab and BackTab based navigation rather than arrow keys.
+        // It is required to shift focus between controls on the settings page.
+        SdlGamepadKeyNavigation.setUiNavMode(true)
     }
 
     StackView.onDeactivating: {
-        SdlGamepadKeyNavigation.setSettingsMode(false)
+        SdlGamepadKeyNavigation.setUiNavMode(false)
 
         // Save the prefs so the Session can observe the changes
         StreamingPreferences.save()

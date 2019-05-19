@@ -18,7 +18,7 @@ public:
 
     Q_INVOKABLE void disable();
 
-    Q_INVOKABLE void setSettingsMode(bool settingsMode);
+    Q_INVOKABLE void setUiNavMode(bool settingsMode);
 
     Q_INVOKABLE int getConnectedGamepads();
 
@@ -32,6 +32,6 @@ private:
     QTimer* m_PollingTimer;
     QList<SDL_GameController*> m_Gamepads;
     bool m_Enabled;
-    bool m_SettingsMode;
+    bool m_UiNavMode;
     Uint32 m_LastAxisNavigationEventTime;
 };
