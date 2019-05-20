@@ -162,6 +162,14 @@ SdlInputHandler::~SdlInputHandler()
 
     // Return background event handling to off
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "0");
+
+#ifdef STEAM_LINK
+    // Hide SDL's cursor on Steam Link after quitting the stream.
+    // FIXME: We should also do this for other situations where SDL
+    // and Qt will draw their own mouse cursors like KMSDRM or RPi
+    // video backends.
+    SDL_ShowCursor(SDL_DISABLE);
+#endif
 }
 
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
