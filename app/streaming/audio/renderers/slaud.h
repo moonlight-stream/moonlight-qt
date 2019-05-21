@@ -25,4 +25,5 @@ private:
     void* m_AudioBuffer;
     int m_AudioBufferSize;
     int m_FrameDuration;
+    int m_MaxQueuedAudioMs;
 };

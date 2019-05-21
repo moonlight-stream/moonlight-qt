@@ -49,11 +49,13 @@ AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
     nullptr,
     Session::arCleanup,
     Session::arDecodeAndPlaySample,
-    CAPABILITY_DIRECT_SUBMIT |
-#ifdef STEAM_LINK
-    CAPABILITY_SLOW_OPUS_DECODER
+#ifndef STEAM_LINK
+    CAPABILITY_DIRECT_SUBMIT
 #else
-    0
+    // We cannot use direct submit for Steam Link because the
+    // SLAudio renderer needs to look at the audio backlog to
+    // cap latency since playback is a blocking operation.
+    CAPABILITY_SLOW_OPUS_DECODER
 #endif
 };
 

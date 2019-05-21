@@ -19,6 +19,10 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
         return false;
     }
 
+    // This number is pretty conservative (especially for surround), but
+    // it's hard to avoid since we get crushed by CPU limitations.
+    m_MaxQueuedAudioMs = 40 * opusConfig->channelCount / 2;
+
     m_FrameDuration = opusConfig->samplesPerFrame / 48;
     m_AudioBufferSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
     m_AudioStream = SLAudio_CreateStream(m_AudioContext,
@@ -73,8 +77,7 @@ bool SLAudioRenderer::submitAudio(int bytesWritten)
         return true;
     }
 
-    // Only allow up to 40 ms of queued audio
-    if (LiGetPendingAudioFrames() * m_FrameDuration < 40) {
+    if (LiGetPendingAudioFrames() * m_FrameDuration < m_MaxQueuedAudioMs) {
         SLAudio_SubmitFrame(m_AudioStream);
         m_AudioBuffer = nullptr;
     }
