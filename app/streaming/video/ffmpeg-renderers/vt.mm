@@ -23,7 +23,9 @@ public:
           m_DisplayLayer(nullptr),
           m_FormatDesc(nullptr),
           m_StreamView(nullptr),
-          m_DisplayLink(nullptr)
+          m_DisplayLink(nullptr),
+          m_VsyncMutex(nullptr),
+          m_VsyncPassed(nullptr)
     {
         SDL_zero(m_OverlayTextFields);
     }
@@ -118,6 +120,11 @@ public:
             return false;
         }
 
+        // The CVDisplayLink callback uses these, so we must initialize them before
+        // starting the callbacks.
+        m_VsyncMutex = SDL_CreateMutex();
+        m_VsyncPassed = SDL_CreateCond();
+
         status = CVDisplayLinkStart(m_DisplayLink);
         if (status != kCVReturnSuccess) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -125,9 +132,6 @@ public:
                          status);
             return false;
         }
-
-        m_VsyncMutex = SDL_CreateMutex();
-        m_VsyncPassed = SDL_CreateCond();
 
         return true;
     }
