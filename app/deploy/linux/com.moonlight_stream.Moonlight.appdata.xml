@@ -33,6 +33,25 @@
 	</screenshots>
 
 	<releases>
+		<release version="1.0.0" date="2019-05-21">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Mouse mode for gamepads (Press and hold Start to toggle)</li>
+					<li>Improved gamepad UI navigation</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed duplicate non-working gamepads appearing on the host</li>
+					<li>Fixed excessive frame queue delay on macOS</li>
+					<li>Fixed excessive audio latency on Steam Link</li>
+					<li>Fixed hiding mouse cursor after streaming on Steam Link</li>
+					<li>Fixed incorrect receive time stats on 32-bit platforms</li>
+					<li>Added UDP ports 48002 and 48010 for Wake-on-LAN</li>
+					<li>Updated included gamepad mappings</li>
+				</ul>
+			</description>
+		</release>
 		<release version="0.10.1" date="2019-04-28">
 			<description>
 				<p>New features:</p>
