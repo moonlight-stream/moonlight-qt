@@ -33,6 +33,14 @@
 	</screenshots>
 
 	<releases>
+		<release version="1.0.1" date="2019-05-27">
+			<description>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed broken video on GeForce Experience 3.19</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.0.0" date="2019-05-21">
 			<description>
 				<p>New features:</p>
