@@ -16,11 +16,21 @@
 IAudioRenderer* Session::createAudioRenderer()
 {
 #if defined(HAVE_SOUNDIO)
+#ifdef Q_OS_LINUX
+    // Default is SDL with libsoundio as an alternate
+    if (qgetenv("ML_AUDIO") == "libsoundio") {
+        return new SoundIoAudioRenderer();
+    }
+
+    return new SdlAudioRenderer();
+#else
+    // Default is libsoundio with SDL as an alternate
     if (qgetenv("ML_AUDIO") == "SDL") {
         return new SdlAudioRenderer();
     }
 
     return new SoundIoAudioRenderer();
+#endif
 #elif defined(HAVE_SLAUDIO)
     return new SLAudioRenderer();
 #else
