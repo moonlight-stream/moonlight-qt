@@ -442,11 +442,11 @@ bool Session::initialize()
 
     switch (m_Preferences->windowMode)
     {
+    default:
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
         break;
     case StreamingPreferences::WM_FULLSCREEN:
-    default:
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
         break;
     }
