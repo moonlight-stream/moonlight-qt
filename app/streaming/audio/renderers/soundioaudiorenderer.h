@@ -17,6 +17,8 @@ public:
 
     virtual bool submitAudio(int bytesWritten);
 
+    virtual int getCapabilities();
+
 private:
     int scoreChannelLayout(const struct SoundIoChannelLayout* layout, const OPUS_MULTISTREAM_CONFIGURATION* opusConfig);
 

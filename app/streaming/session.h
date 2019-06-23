@@ -72,6 +72,8 @@ private:
 
     bool testAudio(int audioConfiguration);
 
+    int getAudioRendererCapabilities();
+
     void getWindowDimensions(int& x, int& y,
                              int& width, int& height);
 
@@ -129,6 +131,7 @@ private:
     StreamingPreferences* m_Preferences;
     STREAM_CONFIGURATION m_StreamConfig;
     DECODER_RENDERER_CALLBACKS m_VideoCallbacks;
+    AUDIO_RENDERER_CALLBACKS m_AudioCallbacks;
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
@@ -158,7 +161,6 @@ private:
 
     Overlay::OverlayManager m_OverlayManager;
 
-    static AUDIO_RENDERER_CALLBACKS k_AudioCallbacks;
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
     static QSemaphore s_ActiveSessionSemaphore;

@@ -16,6 +16,8 @@ public:
 
     virtual bool submitAudio(int bytesWritten);
 
+    virtual int getCapabilities();
+
 private:
     static void slLogCallback(void* context, ESLAudioLog logLevel, const char* message);
 

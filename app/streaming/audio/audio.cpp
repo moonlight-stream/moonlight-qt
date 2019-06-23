@@ -28,6 +28,22 @@ IAudioRenderer* Session::createAudioRenderer()
 #endif
 }
 
+int Session::getAudioRendererCapabilities()
+{
+    IAudioRenderer* audioRenderer;
+
+    audioRenderer = createAudioRenderer();
+    if (audioRenderer == nullptr) {
+        return 0;
+    }
+
+    int caps = audioRenderer->getCapabilities();
+
+    delete audioRenderer;
+
+    return caps;
+}
+
 bool Session::testAudio(int audioConfiguration)
 {
     IAudioRenderer* audioRenderer;

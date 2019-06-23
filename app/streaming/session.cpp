@@ -43,22 +43,6 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clConnectionStatusUpdate
 };
 
-AUDIO_RENDERER_CALLBACKS Session::k_AudioCallbacks = {
-    Session::arInit,
-    nullptr,
-    nullptr,
-    Session::arCleanup,
-    Session::arDecodeAndPlaySample,
-#ifndef STEAM_LINK
-    CAPABILITY_DIRECT_SUBMIT
-#else
-    // We cannot use direct submit for Steam Link because the
-    // SLAudio renderer needs to look at the audio backlog to
-    // cap latency since playback is a blocking operation.
-    CAPABILITY_SLOW_OPUS_DECODER
-#endif
-};
-
 Session* Session::s_ActiveSession;
 QSemaphore Session::s_ActiveSessionSemaphore(1);
 
@@ -364,6 +348,12 @@ bool Session::initialize()
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Encoder configured for %d slices per frame",
                 slices);
+
+    LiInitializeAudioCallbacks(&m_AudioCallbacks);
+    m_AudioCallbacks.init = arInit;
+    m_AudioCallbacks.cleanup = arCleanup;
+    m_AudioCallbacks.decodeAndPlaySample = arDecodeAndPlaySample;
+    m_AudioCallbacks.capabilities = getAudioRendererCapabilities();
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
     m_StreamConfig.width = m_Preferences->width;
@@ -948,7 +938,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks,
-                                m_AudioDisabled ? nullptr : &k_AudioCallbacks,
+                                m_AudioDisabled ? nullptr : &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
     if (err != 0) {
         // We already displayed an error dialog in the stage failure

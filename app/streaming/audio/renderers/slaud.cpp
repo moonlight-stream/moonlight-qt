@@ -90,6 +90,11 @@ bool SLAudioRenderer::submitAudio(int bytesWritten)
     return true;
 }
 
+int SLAudioRenderer::getCapabilities()
+{
+    return CAPABILITY_SLOW_OPUS_DECODER;
+}
+
 void SLAudioRenderer::slLogCallback(void*, ESLAudioLog logLevel, const char *message)
 {
     SDL_LogPriority priority;

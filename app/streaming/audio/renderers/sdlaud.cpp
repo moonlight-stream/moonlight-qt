@@ -100,3 +100,8 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
 
     return true;
 }
+
+int SdlAudioRenderer::getCapabilities()
+{
+    return CAPABILITY_DIRECT_SUBMIT;
+}

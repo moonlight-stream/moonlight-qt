@@ -317,6 +317,11 @@ bool SoundIoAudioRenderer::submitAudio(int bytesWritten)
     return true;
 }
 
+int SoundIoAudioRenderer::getCapabilities()
+{
+    return CAPABILITY_DIRECT_SUBMIT;
+}
+
 void SoundIoAudioRenderer::sioErrorCallback(SoundIoOutStream* stream, int err)
 {
     auto me = reinterpret_cast<SoundIoAudioRenderer*>(stream->userdata);

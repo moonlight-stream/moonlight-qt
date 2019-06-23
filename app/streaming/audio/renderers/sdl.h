@@ -16,6 +16,8 @@ public:
 
     virtual bool submitAudio(int bytesWritten);
 
+    virtual int getCapabilities();
+
 private:
     SDL_AudioDeviceID m_AudioDevice;
     void* m_AudioBuffer;

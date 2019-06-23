@@ -13,4 +13,6 @@ public:
 
     // Return false if an unrecoverable error has occurred and the renderer must be reinitialized
     virtual bool submitAudio(int bytesWritten) = 0;
+
+    virtual int getCapabilities() = 0;
 };
