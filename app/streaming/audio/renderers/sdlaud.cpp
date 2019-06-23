@@ -33,6 +33,9 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     // Specifying non-Po2 seems to work for our supported platforms.
     want.samples = opusConfig->samplesPerFrame;
 
+    m_FrameSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
+    m_FrameDurationMs = opusConfig->samplesPerFrame / 48;
+
     m_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
     if (m_AudioDevice == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -41,7 +44,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
         return false;
     }
 
-    m_AudioBuffer = malloc(opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount);
+    m_AudioBuffer = malloc(m_FrameSize);
     if (m_AudioBuffer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to allocate audio buffer");
@@ -92,6 +95,18 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
         return true;
     }
 
+    // Don't queue if there's already more than 30 ms of audio data waiting
+    // in Moonlight's audio queue.
+    if (LiGetPendingAudioFrames() * m_FrameDurationMs > 30) {
+        return true;
+    }
+
+    // Provide backpressure on the queue to ensure too many frames don't build up
+    // in SDL's audio queue.
+    while (SDL_GetQueuedAudioSize(m_AudioDevice) / m_FrameSize > 10) {
+        SDL_Delay(1);
+    }
+
     if (SDL_QueueAudio(m_AudioDevice, m_AudioBuffer, bytesWritten) < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to queue audio sample: %s",
@@ -103,5 +118,6 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
 
 int SdlAudioRenderer::getCapabilities()
 {
-    return CAPABILITY_DIRECT_SUBMIT;
+    // Direct submit can't be used because we use LiGetPendingAudioFrames()
+    return 0;
 }
