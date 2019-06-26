@@ -1,8 +1,10 @@
 ---
 name: Bug report
-about: Create a report to help us address broken functionality
+about: Create a report to help us address issues in Moonlight
 
 ---
+**READ ME FIRST!**
+This issue tracker is not the right place to ask for troubleshooting help if you're not able to connect or stream at all. For those requests, please use the #pc-help channel on our Discord server where there are many more people who can help (or direct you back here if it looks like a Moonlight bug after all). https://discord.gg/MySTSdq
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -15,6 +17,9 @@ If applicable, add screenshots to help explain your problem. If the issue is rel
 
 **Affected games**
 List the games you've tried that exhibit the issue. To see if the issue is game-specific, try streaming Steam Big Picture with Moonlight and see if the issue persists there.
+
+**Other Moonlight clients**
+- Does the issue occur when using Moonlight on iOS or Android?
 
 **Moonlight settings (please complete the following information)**
 - Have any settings been adjusted from defaults?
