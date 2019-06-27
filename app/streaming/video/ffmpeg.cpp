@@ -6,6 +6,7 @@
 #include <h264_stream.h>
 
 #include "ffmpeg-renderers/sdlvid.h"
+#include "ffmpeg-renderers/cuda.h"
 
 #ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
@@ -369,31 +370,49 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
     }
 }
 
-IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg)
+IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass)
 {
     if (!(hwDecodeCfg->methods & AV_CODEC_HW_CONFIG_METHOD_HW_DEVICE_CTX)) {
         return nullptr;
     }
 
-    // Look for acceleration types we support
-    switch (hwDecodeCfg->device_type) {
+    // First pass using our top-tier hwaccel implementations
+    if (pass == 0) {
+        switch (hwDecodeCfg->device_type) {
 #ifdef Q_OS_WIN32
-    case AV_HWDEVICE_TYPE_DXVA2:
-        return new DXVA2Renderer();
+        case AV_HWDEVICE_TYPE_DXVA2:
+            return new DXVA2Renderer();
 #endif
 #ifdef Q_OS_DARWIN
-    case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-        return VTRendererFactory::createRenderer();
+        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
+            return VTRendererFactory::createRenderer();
 #endif
 #ifdef HAVE_LIBVA
-    case AV_HWDEVICE_TYPE_VAAPI:
-        return new VAAPIRenderer();
+        case AV_HWDEVICE_TYPE_VAAPI:
+            return new VAAPIRenderer();
 #endif
 #ifdef HAVE_LIBVDPAU
-    case AV_HWDEVICE_TYPE_VDPAU:
-        return new VDPAURenderer();
+        case AV_HWDEVICE_TYPE_VDPAU:
+            return new VDPAURenderer();
 #endif
-    default:
+        default:
+            return nullptr;
+        }
+    }
+    // Second pass for our second-tier hwaccel implementations
+    else if (pass == 1) {
+        switch (hwDecodeCfg->device_type) {
+        case AV_HWDEVICE_TYPE_CUDA:
+            // CUDA should only be used if all other options fail, since it requires
+            // read-back of frames. This should only be used for the NVIDIA+Wayland case
+            // with VDPAU covering the NVIDIA+X11 scenario.
+            return new CUDARenderer();
+        default:
+            return nullptr;
+        }
+    }
+    else {
+        SDL_assert(false);
         return nullptr;
     }
 }
@@ -469,7 +488,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
     // Look for a hardware decoder first unless software-only
     if (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE) {
-        // Look for the first matching hwaccel hardware decoder
+        // Look for the first matching hwaccel hardware decoder (pass 0)
         for (int i = 0;; i++) {
             const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
             if (!config) {
@@ -479,7 +498,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
             // Initialize the hardware codec and submit a test frame if the renderer needs it
             if (tryInitializeRenderer(decoder, params, config,
-                                      [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config); })) {
+                                      [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, 0); })) {
                 return true;
             }
         }
@@ -515,6 +534,22 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             return true;
         }
 #endif
+
+        // Look for the first matching hwaccel hardware decoder (pass 1)
+        // This picks up "second-tier" hwaccels like CUDA.
+        for (int i = 0;; i++) {
+            const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
+            if (!config) {
+                // No remaing hwaccel options
+                break;
+            }
+
+            // Initialize the hardware codec and submit a test frame if the renderer needs it
+            if (tryInitializeRenderer(decoder, params, config,
+                                      [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, 1); })) {
+                return true;
+            }
+        }
     }
 
     // Fallback to software if no matching hardware decoder was found
