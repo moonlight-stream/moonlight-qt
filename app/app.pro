@@ -182,6 +182,7 @@ ffmpeg {
     SOURCES += \
         streaming/video/ffmpeg.cpp \
         streaming/video/ffmpeg-renderers/sdlvid.cpp \
+        streaming/video/ffmpeg-renderers/cuda.cpp \
         streaming/video/ffmpeg-renderers/pacer/pacer.cpp \
         streaming/video/ffmpeg-renderers/pacer/nullthreadedvsyncsource.cpp
 
@@ -189,6 +190,7 @@ ffmpeg {
         streaming/video/ffmpeg.h \
         streaming/video/ffmpeg-renderers/renderer.h \
         streaming/video/ffmpeg-renderers/sdlvid.h \
+        streaming/video/ffmpeg-renderers/cuda.h \
         streaming/video/ffmpeg-renderers/pacer/pacer.h \
         streaming/video/ffmpeg-renderers/pacer/nullthreadedvsyncsource.h
 }
