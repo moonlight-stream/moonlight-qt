@@ -7,16 +7,10 @@
 
 #include <Limelight.h>
 
-const std::vector<int> SdlRenderer::k_SwFormats({
-    AV_PIX_FMT_YUV420P,
-    AV_PIX_FMT_NV12,
-    AV_PIX_FMT_NV21
-});
-
 SdlRenderer::SdlRenderer()
     : m_Renderer(nullptr),
       m_Texture(nullptr),
-      m_SwPixelFormat(AV_PIX_FMT_YUV420P),
+      m_SwPixelFormat(AV_PIX_FMT_NONE),
       m_FontData(Path::readDataFile("ModeSeven.ttf"))
 {
     SDL_assert(TTF_WasInit() == 0);
@@ -239,6 +233,18 @@ void SdlRenderer::renderFrame(AVFrame* frame)
         // accelerated decoder, we'll need to read the frame
         // back to render it.
 
+        // Find the native read-back format
+        if (m_SwPixelFormat == AV_PIX_FMT_NONE) {
+            auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+
+            m_SwPixelFormat = hwFrameCtx->sw_format;
+            SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Selected read-back format: %d",
+                        m_SwPixelFormat);
+        }
+
         swFrame = av_frame_alloc();
         if (swFrame == nullptr) {
             return;
@@ -249,22 +255,6 @@ void SdlRenderer::renderFrame(AVFrame* frame)
         swFrame->format = m_SwPixelFormat;
 
         err = av_hwframe_transfer_data(swFrame, frame, 0);
-        if (err != 0) {
-            // Try to find a supported format
-            for (uint32_t i = 0; i < k_SwFormats.size(); i++) {
-                swFrame->format = k_SwFormats.at(i);
-                err = av_hwframe_transfer_data(swFrame, frame, 0);
-                if (err == 0) {
-                    // The format was supported. Use that automatically in the future.
-                    m_SwPixelFormat = swFrame->format;
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Selected read-back format: %d",
-                                m_SwPixelFormat);
-                    break;
-                }
-            }
-        }
-
         if (err != 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "av_hwframe_transfer_data() failed: %d",
