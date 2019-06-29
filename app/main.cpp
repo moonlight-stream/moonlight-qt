@@ -309,6 +309,18 @@ int main(int argc, char *argv[])
     // Register custom metatypes for use in signals
     qRegisterMetaType<NvApp>("NvApp");
 
+    SDL_version compileVersion;
+    SDL_VERSION(&compileVersion);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Compiled with SDL %d.%d.%d",
+                compileVersion.major, compileVersion.minor, compileVersion.patch);
+
+    SDL_version runtimeVersion;
+    SDL_GetVersion(&runtimeVersion);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Running with SDL %d.%d.%d",
+                runtimeVersion.major, runtimeVersion.minor, compileVersion.patch);
+
     // Allow the display to sleep by default. We will manually use SDL_DisableScreenSaver()
     // and SDL_EnableScreenSaver() when appropriate. This hint must be set before
     // initializing the SDL video subsystem to have any effect.
