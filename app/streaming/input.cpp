@@ -71,9 +71,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
                             prefs.mouseAcceleration ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_DARWIN) && !SDL_VERSION_ATLEAST(2, 0, 10)
     // SDL 2.0.9 on macOS has a broken HIDAPI mapping for the older Xbox One S
-    // firmware, so we have to disable HIDAPI for Xbox gamepads on macOS.
+    // firmware, so we have to disable HIDAPI for Xbox gamepads on macOS until
+    // SDL 2.0.10 where the bug is fixed.
     // https://github.com/moonlight-stream/moonlight-qt/issues/133
     // https://bugzilla.libsdl.org/show_bug.cgi?id=4395
     SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX, "0");
@@ -1113,6 +1114,21 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
 void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
 {
     int fingerIndex = -1;
+
+#if SDL_VERSION_ATLEAST(2, 0, 10)
+    if (SDL_GetTouchDeviceType(event->touchId) != SDL_TOUCH_DEVICE_DIRECT) {
+        // Ignore anything that isn't a touchscreen. We may get callbacks
+        // for trackpads, but we want to handle those in the mouse path.
+        return;
+    }
+#elif defined(Q_OS_DARWIN)
+    // SDL2 sends touch events from trackpads by default on
+    // macOS. This totally screws our actual mouse handling,
+    // so we must explicitly ignore touch events on macOS
+    // until SDL 2.0.10 where we have SDL_GetTouchDeviceType()
+    // to tell them apart.
+    return;
+#endif
 
     // Observations on Windows 10: x and y appear to be relative to 0,0 of the window client area.
     // Although SDL documentation states they are 0.0 - 1.0 float values, they can actually be higher
