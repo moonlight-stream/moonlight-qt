@@ -328,6 +328,16 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
+                        // Set the recommended option based on the OS
+                        for (var i = 0; i < windowModeListModel.count; i++) {
+                             var thisWm = windowModeListModel.get(i).val;
+                             if (thisWm === StreamingPreferences.recommendedFullScreenMode) {
+                                 windowModeListModel.get(i).text += " (Recommended)"
+                                 windowModeListModel.move(i, 0, 1);
+                                 break
+                             }
+                        }
+
                         var savedWm = StreamingPreferences.windowMode
                         currentIndex = 0
                         for (var i = 0; i < windowModeListModel.count; i++) {
@@ -346,7 +356,7 @@ Flickable {
                     model: ListModel {
                         id: windowModeListModel
                         ListElement {
-                            text: "Full-screen (Recommended)"
+                            text: "Full-screen"
                             val: StreamingPreferences.WM_FULLSCREEN
                         }
                         ListElement {

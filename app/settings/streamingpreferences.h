@@ -68,6 +68,7 @@ public:
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
+    Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
 
     // Directly accessible members for preferences
     int width;
@@ -89,6 +90,7 @@ public:
     VideoCodecConfig videoCodecConfig;
     VideoDecoderSelection videoDecoderSelection;
     WindowMode windowMode;
+    WindowMode recommendedFullScreenMode;
 
 signals:
     void displayModeChanged();

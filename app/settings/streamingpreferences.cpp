@@ -34,6 +34,12 @@ void StreamingPreferences::reload()
 {
     QSettings settings;
 
+#ifdef Q_OS_DARWIN
+    recommendedFullScreenMode = WindowMode::WM_FULLSCREEN_DESKTOP;
+#else
+    recommendedFullScreenMode = WindowMode::WM_FULLSCREEN;
+#endif
+
     width = settings.value(SER_WIDTH, 1280).toInt();
     height = settings.value(SER_HEIGHT, 720).toInt();
     fps = settings.value(SER_FPS, 60).toInt();
@@ -58,7 +64,7 @@ void StreamingPreferences::reload()
     windowMode = static_cast<WindowMode>(settings.value(SER_WINDOWMODE,
                                                         // Try to load from the old preference value too
                                                         static_cast<int>(settings.value(SER_FULLSCREEN, true).toBool() ?
-                                                                             WindowMode::WM_FULLSCREEN : WindowMode::WM_WINDOWED)).toInt());
+                                                                             recommendedFullScreenMode : WindowMode::WM_WINDOWED)).toInt());
 }
 
 void StreamingPreferences::save()
