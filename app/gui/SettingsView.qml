@@ -567,6 +567,22 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: "When checked, mouse input is not accelerated or scaled by the OS before passing to Moonlight"
                 }
+
+                CheckBox {
+                    id: gamepadMouseCheck
+                    hoverEnabled: true
+                    text: "Gamepad mouse mode support"
+                    font.pointSize:  12
+                    checked: StreamingPreferences.gamepadMouse
+                    onCheckedChanged: {
+                        StreamingPreferences.gamepadMouse = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "When enabled, holding the Start button will toggle mouse mode"
+                }
             }
         }
 

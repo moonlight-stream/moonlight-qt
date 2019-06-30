@@ -89,6 +89,7 @@ private:
     Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
 
     bool m_MultiController;
+    bool m_GamepadMouse;
     SDL_TimerID m_MouseMoveTimer;
     SDL_atomic_t m_MouseDeltaX;
     SDL_atomic_t m_MouseDeltaY;

@@ -51,6 +51,7 @@ const int SdlInputHandler::k_ButtonMap[] = {
 
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int streamWidth, int streamHeight)
     : m_MultiController(prefs.multiController),
+      m_GamepadMouse(prefs.gamepadMouse),
       m_MouseMoveTimer(0),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
@@ -839,7 +840,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
                                 "Mouse emulation deactivated");
                     Session::get()->notifyMouseEmulationMode(false);
                 }
-                else {
+                else if (m_GamepadMouse) {
                     // Send the start button up event to the host, since we won't do it below
                     sendGamepadState(state);
 
