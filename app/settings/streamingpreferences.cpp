@@ -23,6 +23,7 @@
 #define SER_STARTWINDOWED "startwindowed"
 #define SER_FRAMEPACING "framepacing"
 #define SER_CONNWARNINGS "connwarnings"
+#define SER_RICHPRESENCE "richpresence"
 
 StreamingPreferences::StreamingPreferences(QObject *parent)
     : QObject(parent)
@@ -55,6 +56,7 @@ void StreamingPreferences::reload()
     startWindowed = settings.value(SER_STARTWINDOWED, false).toBool();
     framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     connectionWarnings = settings.value(SER_CONNWARNINGS, true).toBool();
+    richPresence = settings.value(SER_RICHPRESENCE, true).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -86,6 +88,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_STARTWINDOWED, startWindowed);
     settings.setValue(SER_FRAMEPACING, framePacing);
     settings.setValue(SER_CONNWARNINGS, connectionWarnings);
+    settings.setValue(SER_RICHPRESENCE, richPresence);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));

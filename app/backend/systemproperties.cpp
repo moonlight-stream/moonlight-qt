@@ -22,6 +22,12 @@ SystemProperties::SystemProperties()
     hasBrowser = false;
 #endif
 
+#ifdef HAVE_DISCORD
+    hasDiscordIntegration = true;
+#else
+    hasDiscordIntegration = false;
+#endif
+
     unmappedGamepads = SdlInputHandler::getUnmappedGamepads();
 
     // Populate data that requires talking to SDL. We do it all in one shot

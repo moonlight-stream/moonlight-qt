@@ -108,6 +108,10 @@ win32 {
 }
 win32:!winrt {
     CONFIG += soundio
+
+    # Discord RPC for rich presence
+    LIBS += -ldiscord-rpc
+    DEFINES += HAVE_DISCORD
 }
 macx {
     LIBS += -lssl -lcrypto -lavcodec.58 -lavutil.56 -lopus -framework SDL2 -framework SDL2_ttf
@@ -128,6 +132,7 @@ SOURCES += \
     backend/nvpairingmanager.cpp \
     backend/computermanager.cpp \
     backend/boxartmanager.cpp \
+    backend/richpresencemanager.cpp \
     cli/commandlineparser.cpp \
     cli/quitstream.cpp \
     cli/startstream.cpp \
@@ -155,6 +160,7 @@ HEADERS += \
     backend/nvpairingmanager.h \
     backend/computermanager.h \
     backend/boxartmanager.h \
+    backend/richpresencemanager.h \
     cli/commandlineparser.h \
     cli/quitstream.h \
     cli/startstream.h \

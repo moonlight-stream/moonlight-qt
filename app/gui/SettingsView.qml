@@ -499,6 +499,22 @@ Flickable {
                         StreamingPreferences.connectionWarnings = checked
                     }
                 }
+
+                CheckBox {
+                    visible: SystemProperties.hasDiscordIntegration
+                    id: discordPresenceCheck
+                    text: "Discord Rich Presence integration"
+                    font.pointSize: 12
+                    checked: StreamingPreferences.richPresence
+                    onCheckedChanged: {
+                        StreamingPreferences.richPresence = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "Updates your Discord status to display the name of the game you're streaming."
+                }
             }
         }
     }

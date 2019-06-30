@@ -1,6 +1,7 @@
 #include "session.h"
 #include "settings/streamingpreferences.h"
 #include "streaming/streamutils.h"
+#include "backend/richpresencemanager.h"
 
 #include <Limelight.h>
 #include <SDL.h>
@@ -1047,6 +1048,9 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // (m_UnexpectedTermination is set back to true).
     m_UnexpectedTermination = false;
 
+    // Start rich presence to indicate we're in game
+    RichPresenceManager presence(prefs, m_App.name);
+
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
@@ -1063,6 +1067,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
             // ARM core in the Steam Link, so we will wait 10 ms instead.
             SDL_Delay(10);
 #endif
+            presence.runCallbacks();
             continue;
         }
         switch (event.type) {
