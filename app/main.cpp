@@ -319,7 +319,7 @@ int main(int argc, char *argv[])
     SDL_GetVersion(&runtimeVersion);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Running with SDL %d.%d.%d",
-                runtimeVersion.major, runtimeVersion.minor, compileVersion.patch);
+                runtimeVersion.major, runtimeVersion.minor, runtimeVersion.patch);
 
     // Allow the display to sleep by default. We will manually use SDL_DisableScreenSaver()
     // and SDL_EnableScreenSaver() when appropriate. This hint must be set before
