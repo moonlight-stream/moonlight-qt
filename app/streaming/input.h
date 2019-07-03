@@ -64,6 +64,10 @@ public:
 
     void raiseAllKeys();
 
+    bool isCaptureActive();
+
+    void setCaptureActive(bool active);
+
     static
     QString getUnmappedGamepads();
 
@@ -96,6 +100,7 @@ private:
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<short> m_KeysDown;
+    bool m_FakeCaptureActive;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
     float m_CumulativeDelta[MAX_FINGERS];

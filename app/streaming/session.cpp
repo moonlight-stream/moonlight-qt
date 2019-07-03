@@ -1101,12 +1101,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
                     SDL_GetWindowPosition(m_Window, &x, &y);
                     SDL_GetWindowSize(m_Window, &width, &height);
                     if (mouseX > x && mouseX < x+width && mouseY > y && mouseY < y+height) {
-                        SDL_SetRelativeMouseMode(SDL_TRUE);
+                        m_InputHandler->setCaptureActive(true);
                     }
                 }
             }
 #endif
-
 
             if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                 // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
@@ -1114,7 +1113,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 // Doing this while the window is full-screen breaks the transition out of FS
                 // (desktop and exclusive), so we must check for that before releasing mouse capture.
                 if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN)) {
-                    SDL_SetRelativeMouseMode(SDL_FALSE);
+                    m_InputHandler->setCaptureActive(false);
                 }
 
                 // Raise all keys that are currently pressed. If we don't do this, certain keys
@@ -1247,7 +1246,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
 DispatchDeferredCleanup:
     // Uncapture the mouse and hide the window immediately,
     // so we can return to the Qt GUI ASAP.
-    SDL_SetRelativeMouseMode(SDL_FALSE);
+    m_InputHandler->setCaptureActive(false);
     SDL_EnableScreenSaver();
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
 

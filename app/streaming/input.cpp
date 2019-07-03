@@ -53,6 +53,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     : m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_MouseMoveTimer(0),
+      m_FakeCaptureActive(false),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
@@ -213,7 +214,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                         "Detected mouse capture toggle combo (SDLK)");
 
             // Stop handling future input
-            SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+            setCaptureActive(!isCaptureActive());
 
             // Force raise all keys to ensure they aren't stuck,
             // since we won't get their key up events.
@@ -261,7 +262,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                         "Detected mouse capture toggle combo (scancode)");
 
             // Stop handling future input
-            SDL_SetRelativeMouseMode((SDL_bool)!SDL_GetRelativeMouseMode());
+            setCaptureActive(!isCaptureActive());
 
             // Force raise all keys to ensure they aren't stuck,
             // since we won't get their key up events.
@@ -294,7 +295,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
     }
 
-    if (!SDL_GetRelativeMouseMode()) {
+    if (!isCaptureActive()) {
         // Not capturing
         return;
     }
@@ -540,11 +541,11 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
     // the pressed event was consumed by this code).
     if (event->button == SDL_BUTTON_LEFT &&
             event->state == SDL_RELEASED &&
-            !SDL_GetRelativeMouseMode()) {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
+            !isCaptureActive()) {
+        setCaptureActive(true);
         return;
     }
-    else if (!SDL_GetRelativeMouseMode()) {
+    else if (!isCaptureActive()) {
         // Not capturing
         return;
     }
@@ -585,7 +586,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
 
 void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 {
-    if (!SDL_GetRelativeMouseMode()) {
+    if (!isCaptureActive()) {
         // Not capturing
         return;
     }
@@ -602,7 +603,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 
 void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 {
-    if (!SDL_GetRelativeMouseMode()) {
+    if (!isCaptureActive()) {
         // Not capturing
         return;
     }
@@ -1297,6 +1298,35 @@ void SdlInputHandler::raiseAllKeys()
     }
 
     m_KeysDown.clear();
+}
+
+bool SdlInputHandler::isCaptureActive()
+{
+    if (SDL_GetRelativeMouseMode()) {
+        return true;
+    }
+
+    // Some platforms don't support SDL_SetRelativeMouseMode
+    return m_FakeCaptureActive;
+}
+
+void SdlInputHandler::setCaptureActive(bool active)
+{
+    if (active) {
+        // Try to activate SDL's relative mouse mode
+        if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
+            // Relative mouse mode didn't work, so we'll use fake capture
+            SDL_ShowCursor(SDL_DISABLE);
+            m_FakeCaptureActive = true;
+        }
+    }
+    else if (m_FakeCaptureActive) {
+        SDL_ShowCursor(SDL_ENABLE);
+        m_FakeCaptureActive = false;
+    }
+    else {
+        SDL_SetRelativeMouseMode(SDL_FALSE);
+    }
 }
 
 QString SdlInputHandler::getUnmappedGamepads()
