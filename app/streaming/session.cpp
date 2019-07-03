@@ -1024,7 +1024,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // This prevents the mouse from becoming trapped inside
     // Moonlight when it's halted at a debug break.
     if (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED) {
-        SDL_SetRelativeMouseMode(SDL_TRUE);
+        m_InputHandler->setCaptureActive(true);
     }
 #endif
 
