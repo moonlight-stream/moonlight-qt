@@ -75,7 +75,7 @@ void IdentityManager::createCredentials(QSettings& settings)
                                -1, -1, 0);
     X509_set_issuer_name(cert, name);
 
-    X509_sign(cert, pk, EVP_sha1());
+    X509_sign(cert, pk, EVP_sha256());
 
     BIO* biokey = BIO_new(BIO_s_mem());
     THROW_BAD_ALLOC_IF_NULL(biokey);
