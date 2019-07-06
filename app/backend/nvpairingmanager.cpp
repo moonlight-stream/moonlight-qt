@@ -256,7 +256,9 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     challengeResponse.append(reinterpret_cast<char*>(asnSignature->data), asnSignature->length);
     challengeResponse.append(clientSecretData);
 
-    QByteArray encryptedChallengeResponseHash = encrypt(QCryptographicHash::hash(challengeResponse, hashAlgo), &encKey);
+    QByteArray paddedHash = QCryptographicHash::hash(challengeResponse, hashAlgo);
+    paddedHash.resize(32);
+    QByteArray encryptedChallengeResponseHash = encrypt(paddedHash, &encKey);
     QString respXml = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
                                                     "pair",
                                                     "devicename=roth&updateState=1&serverchallengeresp=" +
