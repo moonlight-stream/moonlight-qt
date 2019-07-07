@@ -198,7 +198,7 @@ VAAPIRenderer::prepareDecoderContext(AVCodecContext* context)
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using VAAPI accelerated renderer on %s",
-                m_WindowSystem == SDL_SYSWM_X11 ? "X11" : "Wayland");
+                SDL_GetCurrentVideoDriver());
 
     return true;
 }
