@@ -22,6 +22,9 @@ extern "C" {
 #ifdef HAVE_LIBVA_WAYLAND
 #include <va/va_wayland.h>
 #endif
+#ifdef HAVE_LIBVA_DRM
+#include <va/va_drm.h>
+#endif
 #include <libavutil/hwcontext_vaapi.h>
 }
 
@@ -39,6 +42,7 @@ public:
 private:
     int m_WindowSystem;
     AVBufferRef* m_HwContext;
+    int m_DrmFd;
 
 #ifdef HAVE_LIBVA_X11
     Window m_XWindow;

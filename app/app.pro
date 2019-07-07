@@ -84,6 +84,9 @@ unix:!macx {
             packagesExist(libva-wayland) {
                 CONFIG += libva-wayland
             }
+            packagesExist(libva-drm) {
+                CONFIG += libva-drm
+            }
             CONFIG += libva
         }
 
@@ -215,6 +218,12 @@ libva-wayland {
 
     PKGCONFIG += libva-wayland
     DEFINES += HAVE_LIBVA_WAYLAND
+}
+libva-wayland {
+    message(VAAPI DRM support enabled)
+
+    PKGCONFIG += libva-drm
+    DEFINES += HAVE_LIBVA_DRM
 }
 libvdpau {
     message(VDPAU renderer selected)

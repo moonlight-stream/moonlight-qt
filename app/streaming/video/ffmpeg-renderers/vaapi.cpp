@@ -5,8 +5,12 @@
 
 #include <SDL_syswm.h>
 
+#include <unistd.h>
+#include <fcntl.h>
+
 VAAPIRenderer::VAAPIRenderer()
-    : m_HwContext(nullptr)
+    : m_HwContext(nullptr),
+      m_DrmFd(-1)
 {
 
 }
@@ -25,6 +29,10 @@ VAAPIRenderer::~VAAPIRenderer()
         if (display) {
             vaTerminate(display);
         }
+    }
+
+    if (m_DrmFd != -1) {
+        close(m_DrmFd);
     }
 }
 
@@ -85,6 +93,39 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 #else
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Moonlight not compiled with VAAPI Wayland support!");
+        return false;
+#endif
+    }
+    // TODO: Upstream a better solution for SDL_GetWindowWMInfo on KMSDRM
+    else if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
+#ifdef HAVE_LIBVA_DRM
+        const char* device = SDL_getenv("DRM_DEV");
+
+        if (device == nullptr) {
+            device = "/dev/dri/card0";
+        }
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Opening DRM device: %s",
+                    device);
+
+        m_DrmFd = open(device, O_RDWR | O_CLOEXEC);
+        if (m_DrmFd < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to open DRM device: %d",
+                         errno);
+            return false;
+        }
+
+        vaDeviceContext->display = vaGetDisplayDRM(m_DrmFd);
+        if (!vaDeviceContext->display) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to open DRM display for VAAPI");
+            return false;
+        }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI DRM support!");
         return false;
 #endif
     }
