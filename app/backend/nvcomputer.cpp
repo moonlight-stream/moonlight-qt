@@ -10,6 +10,7 @@
 #define SER_LOCALADDR "localaddress"
 #define SER_REMOTEADDR "remoteaddress"
 #define SER_MANUALADDR "manualaddress"
+#define SER_IPV6ADDR "ipv6address"
 #define SER_APPLIST "apps"
 #define SER_SRVCERT "srvcert"
 
@@ -24,6 +25,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->macAddress = settings.value(SER_MAC).toByteArray();
     this->localAddress = settings.value(SER_LOCALADDR).toString();
     this->remoteAddress = settings.value(SER_REMOTEADDR).toString();
+    this->ipv6Address = settings.value(SER_IPV6ADDR).toString();
     this->manualAddress = settings.value(SER_MANUALADDR).toString();
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
 
@@ -63,6 +65,7 @@ void NvComputer::serialize(QSettings& settings)
     settings.setValue(SER_MAC, macAddress);
     settings.setValue(SER_LOCALADDR, localAddress);
     settings.setValue(SER_REMOTEADDR, remoteAddress);
+    settings.setValue(SER_IPV6ADDR, ipv6Address);
     settings.setValue(SER_MANUALADDR, manualAddress);
     settings.setValue(SER_SRVCERT, serverCert.toPem());
 
@@ -237,6 +240,7 @@ QVector<QString> NvComputer::uniqueAddresses()
     uniqueAddressList.append(activeAddress);
     uniqueAddressList.append(localAddress);
     uniqueAddressList.append(remoteAddress);
+    uniqueAddressList.append(ipv6Address);
     uniqueAddressList.append(manualAddress);
 
     // Prune duplicates (always giving precedence to the first)
@@ -296,6 +300,7 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED_AND_NONEMPTY(macAddress);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(localAddress);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(remoteAddress);
+    ASSIGN_IF_CHANGED_AND_NONEMPTY(ipv6Address);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(manualAddress);
     ASSIGN_IF_CHANGED(pairState);
     ASSIGN_IF_CHANGED(serverCodecModeSupport);

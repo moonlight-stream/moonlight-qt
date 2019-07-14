@@ -13,6 +13,7 @@
 #include <QReadWriteLock>
 #include <QSettings>
 #include <QRunnable>
+#include <QTimer>
 
 class MdnsPendingComputer : public QObject
 {
@@ -25,8 +26,8 @@ public:
         : m_Hostname(service.hostname()),
           m_Resolver(server, m_Hostname, cache)
     {
-        connect(&m_Resolver, SIGNAL(resolved(QHostAddress)),
-                this, SLOT(handleResolved(QHostAddress)));
+        connect(&m_Resolver, &QMdnsEngine::Resolver::resolved,
+                this, &MdnsPendingComputer::handleResolvedAddress);
     }
 
     QString hostname()
@@ -35,20 +36,31 @@ public:
     }
 
 private slots:
-    void handleResolved(const QHostAddress& address)
+    void handleResolvedTimeout()
     {
-        if (address.protocol() == QAbstractSocket::IPv4Protocol) {
-            m_Resolver.disconnect();
-            emit resolvedv4(this, address);
+        Q_ASSERT(!m_Addresses.isEmpty());
+        emit resolvedHost(this, m_Addresses);
+    }
+
+    void handleResolvedAddress(const QHostAddress& address)
+    {
+        qInfo() << "Resolved" << hostname() << "to" << address;
+        m_Addresses.push_back(address);
+
+        // Now that we got an address, start a timer to wait for more
+        // addresses to come in before reporting them
+        if (m_Addresses.count() == 1) {
+            QTimer::singleShot(1000, this, SLOT(handleResolvedTimeout()));
         }
     }
 
 signals:
-    void resolvedv4(MdnsPendingComputer*, const QHostAddress&);
+    void resolvedHost(MdnsPendingComputer*,QVector<QHostAddress>&);
 
 private:
     QByteArray m_Hostname;
     QMdnsEngine::Resolver m_Resolver;
+    QVector<QHostAddress> m_Addresses;
 };
 
 class ComputerPollingEntry
@@ -140,7 +152,7 @@ public:
 
     Q_INVOKABLE void stopPollingAsync();
 
-    Q_INVOKABLE void addNewHost(QString address, bool mdns);
+    Q_INVOKABLE void addNewHost(QString address, bool mdns, QHostAddress mdnsIpv6Address = QHostAddress());
 
     void pairHost(NvComputer* computer, QString pin);
 
@@ -165,10 +177,12 @@ private slots:
 
     void handleComputerStateChanged(NvComputer* computer);
 
-    void handleMdnsServiceResolved(MdnsPendingComputer* computer, const QHostAddress& address);
+    void handleMdnsServiceResolved(MdnsPendingComputer* computer, QVector<QHostAddress>& addresses);
 
 private:
     void saveHosts();
+
+    QHostAddress getBestGlobalAddressV6(QVector<QHostAddress>& addresses);
 
     void startPollingComputer(NvComputer* computer);
 

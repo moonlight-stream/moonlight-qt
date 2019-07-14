@@ -39,11 +39,18 @@ void ComputerSeeker::onComputerUpdated(NvComputer *computer)
 bool ComputerSeeker::matchComputer(NvComputer *computer) const
 {
     QString value = m_ComputerName.toLower();
-    return computer->name.toLower() == value ||
-           computer->localAddress.toLower() == value ||
-           computer->remoteAddress.toLower() == value ||
-           computer->manualAddress.toLower() == value ||
-           computer->uuid.toLower() == value;
+
+    if (computer->name.toLower() == value || computer->uuid.toLower() == value) {
+        return true;
+    }
+
+    for (const QString& addr : computer->uniqueAddresses()) {
+        if (addr.toLower() == value) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool ComputerSeeker::isOnline(NvComputer *computer) const

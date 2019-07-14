@@ -64,6 +64,7 @@ public:
     // Persisted traits
     QString localAddress;
     QString remoteAddress;
+    QString ipv6Address;
     QString manualAddress;
     QByteArray macAddress;
     QString name;

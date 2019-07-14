@@ -216,6 +216,42 @@ void ComputerManager::saveHosts()
     settings.endArray();
 }
 
+QHostAddress ComputerManager::getBestGlobalAddressV6(QVector<QHostAddress> &addresses)
+{
+    for (const QHostAddress& address : addresses) {
+        if (address.protocol() == QAbstractSocket::IPv6Protocol) {
+            if (address.isInSubnet(QHostAddress("fe80::"), 10)) {
+                // Link-local
+                continue;
+            }
+
+            if (address.isInSubnet(QHostAddress("fec0::"), 10)) {
+                qInfo() << "Ignoring site-local address:" << address;
+                continue;
+            }
+
+            if (address.isInSubnet(QHostAddress("fc00::"), 7)) {
+                qInfo() << "Ignoring ULA:" << address;
+                continue;
+            }
+
+            if (address.isInSubnet(QHostAddress("2002::"), 16)) {
+                qInfo() << "Ignoring 6to4 address:" << address;
+                continue;
+            }
+
+            if (address.isInSubnet(QHostAddress("2001::"), 32)) {
+                qInfo() << "Ignoring Teredo address:" << address;
+                continue;
+            }
+
+            return address;
+        }
+    }
+
+    return QHostAddress();
+}
+
 void ComputerManager::startPolling()
 {
     QWriteLocker lock(&m_Lock);
@@ -234,8 +270,8 @@ void ComputerManager::startPolling()
             qInfo() << "Discovered mDNS host:" << service.hostname();
 
             MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, &m_MdnsCache, service);
-            connect(pendingComputer, SIGNAL(resolvedv4(MdnsPendingComputer*,QHostAddress)),
-                    this, SLOT(handleMdnsServiceResolved(MdnsPendingComputer*,QHostAddress)));
+            connect(pendingComputer, &MdnsPendingComputer::resolvedHost,
+                    this, &ComputerManager::handleMdnsServiceResolved);
             m_PendingResolution.append(pendingComputer);
         });
     }
@@ -277,11 +313,39 @@ void ComputerManager::startPollingComputer(NvComputer* computer)
 }
 
 void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
-                                                const QHostAddress& address)
+                                                QVector<QHostAddress>& addresses)
 {
-    qInfo() << "Resolved" << computer->hostname() << "to" << address.toString();
+    QHostAddress v6Global = getBestGlobalAddressV6(addresses);
+    bool added = false;
 
-    addNewHost(address.toString(), true);
+    // Add the host using the IPv4 address
+    for (const QHostAddress& address : addresses) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol) {
+            // NB: We don't just call addNewHost() here with v6Global because the IPv6
+            // address may not be reachable (if the user hasn't installed the IPv6 helper yet
+            // or if this host lacks outbound IPv6 capability). We want to add IPv6 even if
+            // it's not currently reachable.
+            addNewHost(address.toString(), true, v6Global);
+            added = true;
+            break;
+        }
+    }
+
+    if (!added) {
+        // If we get here, there wasn't an IPv4 address so we'll do it v6-only
+        for (const QHostAddress& address : addresses) {
+            if (address.protocol() == QAbstractSocket::IPv6Protocol) {
+                // Use a link-local or site-local address for the "local address"
+                if (address.isInSubnet(QHostAddress("fe80::"), 10) ||
+                        address.isInSubnet(QHostAddress("fec0::"), 10) ||
+                        address.isInSubnet(QHostAddress("fc00::"), 7)) {
+                    addNewHost(address.toString(), true, v6Global);
+                    added = true;
+                    break;
+                }
+            }
+        }
+    }
 
     m_PendingResolution.removeOne(computer);
     computer->deleteLater();
@@ -508,9 +572,10 @@ class PendingAddTask : public QObject, public QRunnable
     Q_OBJECT
 
 public:
-    PendingAddTask(ComputerManager* computerManager, QString address, bool mdns)
+    PendingAddTask(ComputerManager* computerManager, QString address, QHostAddress mdnsIpv6Address, bool mdns)
         : m_ComputerManager(computerManager),
           m_Address(address),
+          m_MdnsIpv6Address(mdnsIpv6Address),
           m_Mdns(mdns)
     {
         connect(this, &PendingAddTask::computerAddCompleted,
@@ -560,7 +625,7 @@ private:
     {
         NvHTTP http(m_Address, QSslCertificate());
 
-        qInfo() << "Processing new PC at" << m_Address << "from" << (m_Mdns ? "mDNS" : "user");
+        qInfo() << "Processing new PC at" << m_Address << "from" << (m_Mdns ? "mDNS" : "user") << m_MdnsIpv6Address;
 
         // Perform initial serverinfo fetch over HTTP since we don't know which cert to use
         QString serverInfo = fetchServerInfo(http);
@@ -605,6 +670,11 @@ private:
             }
             else {
                 qWarning() << "STUN failed to get WAN address:" << err;
+            }
+
+            if (!m_MdnsIpv6Address.isNull()) {
+                Q_ASSERT(m_MdnsIpv6Address.protocol() == QAbstractSocket::IPv6Protocol);
+                newComputer->ipv6Address = m_MdnsIpv6Address.toString();
             }
         }
         else {
@@ -657,14 +727,15 @@ private:
 
     ComputerManager* m_ComputerManager;
     QString m_Address;
+    QHostAddress m_MdnsIpv6Address;
     bool m_Mdns;
 };
 
-void ComputerManager::addNewHost(QString address, bool mdns)
+void ComputerManager::addNewHost(QString address, bool mdns, QHostAddress mdnsIpv6Address)
 {
     // Punt to a worker thread to avoid stalling the
     // UI while waiting for serverinfo query to complete
-    PendingAddTask* addTask = new PendingAddTask(this, address, mdns);
+    PendingAddTask* addTask = new PendingAddTask(this, address, mdnsIpv6Address, mdns);
     QThreadPool::globalInstance()->start(addTask);
 }
 
