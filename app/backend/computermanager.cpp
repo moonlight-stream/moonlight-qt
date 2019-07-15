@@ -662,14 +662,16 @@ private:
         if (m_Mdns) {
             newComputer->localAddress = m_Address;
 
-            // Get the WAN IP address using STUN if we're on mDNS
-            quint32 addr;
-            int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &addr);
-            if (err == 0) {
-                newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
-            }
-            else {
-                qWarning() << "STUN failed to get WAN address:" << err;
+            // Get the WAN IP address using STUN if we're on mDNS over IPv4
+            if (QHostAddress(newComputer->localAddress).protocol() == QAbstractSocket::IPv4Protocol) {
+                quint32 addr;
+                int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &addr);
+                if (err == 0) {
+                    newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
+                }
+                else {
+                    qWarning() << "STUN failed to get WAN address:" << err;
+                }
             }
 
             if (!m_MdnsIpv6Address.isNull()) {

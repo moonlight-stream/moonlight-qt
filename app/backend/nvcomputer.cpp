@@ -132,7 +132,12 @@ NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serv
                 mode2.width * mode2.height * mode2.refreshRate;
     });
 
+    // We can get an IPv4 loopback address if we're using the GS IPv6 Forwarder
     this->localAddress = NvHTTP::getXmlString(serverInfo, "LocalIP");
+    if (this->localAddress.startsWith("127.")) {
+        this->localAddress = QString();
+    }
+
     this->remoteAddress = NvHTTP::getXmlString(serverInfo, "ExternalIP");
     this->pairState = NvHTTP::getXmlString(serverInfo, "PairStatus") == "1" ?
                 PS_PAIRED : PS_NOT_PAIRED;
