@@ -350,12 +350,6 @@ bool Session::initialize()
                 "Encoder configured for %d slices per frame",
                 slices);
 
-    LiInitializeAudioCallbacks(&m_AudioCallbacks);
-    m_AudioCallbacks.init = arInit;
-    m_AudioCallbacks.cleanup = arCleanup;
-    m_AudioCallbacks.decodeAndPlaySample = arDecodeAndPlaySample;
-    m_AudioCallbacks.capabilities = getAudioRendererCapabilities();
-
     LiInitializeStreamConfiguration(&m_StreamConfig);
     m_StreamConfig.width = m_Preferences->width;
     m_StreamConfig.height = m_Preferences->height;
@@ -384,6 +378,12 @@ bool Session::initialize()
         m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
         break;
     }
+
+    LiInitializeAudioCallbacks(&m_AudioCallbacks);
+    m_AudioCallbacks.init = arInit;
+    m_AudioCallbacks.cleanup = arCleanup;
+    m_AudioCallbacks.decodeAndPlaySample = arDecodeAndPlaySample;
+    m_AudioCallbacks.capabilities = getAudioRendererCapabilities(m_StreamConfig.audioConfiguration);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Audio configuration: %d",

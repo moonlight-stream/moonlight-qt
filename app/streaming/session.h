@@ -66,13 +66,11 @@ private:
                                StreamingPreferences::VideoDecoderSelection vds,
                                int videoFormat, int width, int height, int frameRate);
 
-    IAudioRenderer* createAudioRenderer();
-
-    int detectAudioConfiguration();
+    IAudioRenderer* createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
     bool testAudio(int audioConfiguration);
 
-    int getAudioRendererCapabilities();
+    int getAudioRendererCapabilities(int audioConfiguration);
 
     void getWindowDimensions(int& x, int& y,
                              int& width, int& height);

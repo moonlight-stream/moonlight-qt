@@ -13,36 +13,87 @@
 
 #include <Limelight.h>
 
-IAudioRenderer* Session::createAudioRenderer()
-{
-#if defined(HAVE_SOUNDIO)
-#ifdef Q_OS_LINUX
-    // Default is SDL with libsoundio as an alternate
-    if (qgetenv("ML_AUDIO") == "libsoundio") {
-        return new SoundIoAudioRenderer();
-    }
-
-    return new SdlAudioRenderer();
-#else
-    // Default is libsoundio with SDL as an alternate
-    if (qgetenv("ML_AUDIO") == "SDL") {
-        return new SdlAudioRenderer();
-    }
-
-    return new SoundIoAudioRenderer();
-#endif
-#elif defined(HAVE_SLAUDIO)
-    return new SLAudioRenderer();
-#else
-    return new SdlAudioRenderer();
-#endif
+#define TRY_INIT_RENDERER(renderer, opusConfig)        \
+{                                                      \
+    IAudioRenderer* __renderer = new renderer();       \
+    if (__renderer->prepareForPlayback(opusConfig))    \
+        return __renderer;                             \
+    delete __renderer;                                 \
 }
 
-int Session::getAudioRendererCapabilities()
+IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATION opusConfig)
 {
-    IAudioRenderer* audioRenderer;
+    // Handle explicit ML_AUDIO setting and fail if the requested backend fails
+    QString mlAudio = qgetenv("ML_AUDIO").toLower();
+    if (mlAudio == "sdl") {
+        TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
+        return nullptr;
+    }
+#ifdef HAVE_SOUNDIO
+    else if (mlAudio == "libsoundio") {
+        TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
+        return nullptr;
+    }
+#endif
+#if defined(HAVE_SLAUDIO)
+    else if (mlAudio == "slaudio") {
+        TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
+        return nullptr;
+    }
+#endif
+    else if (!mlAudio.isEmpty()) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unknown audio backend: %s",
+                     SDL_getenv("ML_AUDIO"));
+        return nullptr;
+    }
 
-    audioRenderer = createAudioRenderer();
+    // -------------- Automatic backend selection below this line ---------------
+
+#if defined(HAVE_SLAUDIO)
+    // Steam Link should always have SLAudio
+    TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
+#endif
+
+#ifdef Q_OS_LINUX
+    // Linux defaults to SDL and fall backs to libsoundio
+    TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
+#ifdef HAVE_SOUNDIO
+    TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
+#endif
+#else
+    // Windows and macOS default to libsoundio and fall back to SDL
+#ifdef HAVE_SOUNDIO
+    TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
+#endif
+    TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
+#endif
+
+    return nullptr;
+}
+
+int Session::getAudioRendererCapabilities(int audioConfiguration)
+{
+    // Build a fake OPUS_MULTISTREAM_CONFIGURATION to give
+    // the renderer the channel count and sample rate.
+    OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
+    opusConfig.sampleRate = 48000;
+    opusConfig.samplesPerFrame = 240;
+
+    switch (audioConfiguration)
+    {
+    case AUDIO_CONFIGURATION_STEREO:
+        opusConfig.channelCount = 2;
+        break;
+    case AUDIO_CONFIGURATION_51_SURROUND:
+        opusConfig.channelCount = 6;
+        break;
+    default:
+        SDL_assert(false);
+        return 0;
+    }
+
+    IAudioRenderer* audioRenderer = createAudioRenderer(&opusConfig);
     if (audioRenderer == nullptr) {
         return 0;
     }
@@ -56,13 +107,6 @@ int Session::getAudioRendererCapabilities()
 
 bool Session::testAudio(int audioConfiguration)
 {
-    IAudioRenderer* audioRenderer;
-
-    audioRenderer = createAudioRenderer();
-    if (audioRenderer == nullptr) {
-        return false;
-    }
-
     // Build a fake OPUS_MULTISTREAM_CONFIGURATION to give
     // the renderer the channel count and sample rate.
     OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
@@ -82,11 +126,14 @@ bool Session::testAudio(int audioConfiguration)
         return false;
     }
 
-    bool ret = audioRenderer->prepareForPlayback(&opusConfig);
+    IAudioRenderer* audioRenderer = createAudioRenderer(&opusConfig);
+    if (audioRenderer == nullptr) {
+        return false;
+    }
 
     delete audioRenderer;
 
-    return ret;
+    return true;
 }
 
 int Session::arInit(int /* audioConfiguration */,
@@ -111,9 +158,8 @@ int Session::arInit(int /* audioConfiguration */,
         return -1;
     }
 
-    s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer();
-    if (!s_ActiveSession->m_AudioRenderer->prepareForPlayback(opusConfig)) {
-        delete s_ActiveSession->m_AudioRenderer;
+    s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer(opusConfig);
+    if (s_ActiveSession->m_AudioRenderer == nullptr) {
         opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
         return -2;
     }
@@ -211,11 +257,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
         // so we return to real-time playback and don't accumulate latency.
         Uint32 audioReinitStartTime = SDL_GetTicks();
 
-        s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer();
-        if (!s_ActiveSession->m_AudioRenderer->prepareForPlayback(&s_ActiveSession->m_AudioConfig)) {
-            delete s_ActiveSession->m_AudioRenderer;
-            s_ActiveSession->m_AudioRenderer = nullptr;
-        }
+        s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer(&s_ActiveSession->m_AudioConfig);
 
         Uint32 audioReinitStopTime = SDL_GetTicks();
 
