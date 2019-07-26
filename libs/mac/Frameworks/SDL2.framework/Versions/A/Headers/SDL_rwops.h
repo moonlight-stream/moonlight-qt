@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -176,19 +176,48 @@ extern DECLSPEC void SDLCALL SDL_FreeRW(SDL_RWops * area);
 #define RW_SEEK_END 2       /**< Seek relative to the end of data */
 
 /**
- *  \name Read/write macros
- *
- *  Macros to easily read and write from an SDL_RWops structure.
+ *  Return the size of the file in this rwops, or -1 if unknown
  */
-/* @{ */
-#define SDL_RWsize(ctx)         (ctx)->size(ctx)
-#define SDL_RWseek(ctx, offset, whence) (ctx)->seek(ctx, offset, whence)
-#define SDL_RWtell(ctx)         (ctx)->seek(ctx, 0, RW_SEEK_CUR)
-#define SDL_RWread(ctx, ptr, size, n)   (ctx)->read(ctx, ptr, size, n)
-#define SDL_RWwrite(ctx, ptr, size, n)  (ctx)->write(ctx, ptr, size, n)
-#define SDL_RWclose(ctx)        (ctx)->close(ctx)
-/* @} *//* Read/write macros */
+extern DECLSPEC Sint64 SDLCALL SDL_RWsize(SDL_RWops *context);
 
+/**
+ *  Seek to \c offset relative to \c whence, one of stdio's whence values:
+ *  RW_SEEK_SET, RW_SEEK_CUR, RW_SEEK_END
+ *
+ *  \return the final offset in the data stream, or -1 on error.
+ */
+extern DECLSPEC Sint64 SDLCALL SDL_RWseek(SDL_RWops *context,
+                                          Sint64 offset, int whence);
+
+/**
+ *  Return the current offset in the data stream, or -1 on error.
+ */
+extern DECLSPEC Sint64 SDLCALL SDL_RWtell(SDL_RWops *context);
+
+/**
+ *  Read up to \c maxnum objects each of size \c size from the data
+ *  stream to the area pointed at by \c ptr.
+ *
+ *  \return the number of objects read, or 0 at error or end of file.
+ */
+extern DECLSPEC size_t SDLCALL SDL_RWread(SDL_RWops *context,
+                                          void *ptr, size_t size, size_t maxnum);
+
+/**
+ *  Write exactly \c num objects each of size \c size from the area
+ *  pointed at by \c ptr to data stream.
+ *
+ *  \return the number of objects written, or 0 at error or end of file.
+ */
+extern DECLSPEC size_t SDLCALL SDL_RWwrite(SDL_RWops *context,
+                                           const void *ptr, size_t size, size_t num);
+
+/**
+ *  Close and free an allocated SDL_RWops structure.
+ *
+ *  \return 0 if successful or -1 on write error when flushing data.
+ */
+extern DECLSPEC int SDLCALL SDL_RWclose(SDL_RWops *context);
 
 /**
  *  Load all the data from an SDL data stream.
@@ -209,9 +238,17 @@ extern DECLSPEC void *SDLCALL SDL_LoadFile_RW(SDL_RWops * src, size_t *datasize,
 /**
  *  Load an entire file.
  *
- *  Convenience macro.
+ *  The data is allocated with a zero byte at the end (null terminated)
+ *
+ *  If \c datasize is not NULL, it is filled with the size of the data read.
+ *
+ *  If \c freesrc is non-zero, the stream will be closed after being read.
+ *
+ *  The data should be freed with SDL_free().
+ *
+ *  \return the data, or NULL if there was an error.
  */
-#define SDL_LoadFile(file, datasize)   SDL_LoadFile_RW(SDL_RWFromFile(file, "rb"), datasize, 1)
+extern DECLSPEC void *SDLCALL SDL_LoadFile(const char *file, size_t *datasize);
 
 /**
  *  \name Read endian functions

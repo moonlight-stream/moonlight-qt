@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -162,12 +162,29 @@ extern DECLSPEC void SDLCALL SDL_MemoryBarrierAcquireFunction(void);
 #define SDL_MemoryBarrierRelease()   __asm__ __volatile__ ("dmb ish" : : : "memory")
 #define SDL_MemoryBarrierAcquire()   __asm__ __volatile__ ("dmb ish" : : : "memory")
 #elif defined(__GNUC__) && defined(__arm__)
-#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7S__)
+#if 0 /* defined(__LINUX__) || defined(__ANDROID__) */
+/* Information from:
+   https://chromium.googlesource.com/chromium/chromium/+/trunk/base/atomicops_internals_arm_gcc.h#19
+
+   The Linux kernel provides a helper function which provides the right code for a memory barrier,
+   hard-coded at address 0xffff0fa0
+*/
+typedef void (*SDL_KernelMemoryBarrierFunc)();
+#define SDL_MemoryBarrierRelease()	((SDL_KernelMemoryBarrierFunc)0xffff0fa0)()
+#define SDL_MemoryBarrierAcquire()	((SDL_KernelMemoryBarrierFunc)0xffff0fa0)()
+#elif 0 /* defined(__QNXNTO__) */
+#include <sys/cpuinline.h>
+
+#define SDL_MemoryBarrierRelease()   __cpu_membarrier()
+#define SDL_MemoryBarrierAcquire()   __cpu_membarrier()
+#else
+#if defined(__ARM_ARCH_7__) || defined(__ARM_ARCH_7A__) || defined(__ARM_ARCH_7EM__) || defined(__ARM_ARCH_7R__) || defined(__ARM_ARCH_7M__) || defined(__ARM_ARCH_7S__) || defined(__ARM_ARCH_8A__)
 #define SDL_MemoryBarrierRelease()   __asm__ __volatile__ ("dmb ish" : : : "memory")
 #define SDL_MemoryBarrierAcquire()   __asm__ __volatile__ ("dmb ish" : : : "memory")
 #elif defined(__ARM_ARCH_6__) || defined(__ARM_ARCH_6J__) || defined(__ARM_ARCH_6K__) || defined(__ARM_ARCH_6T2__) || defined(__ARM_ARCH_6Z__) || defined(__ARM_ARCH_6ZK__) || defined(__ARM_ARCH_5TE__)
 #ifdef __thumb__
 /* The mcr instruction isn't available in thumb mode, use real functions */
+#define SDL_MEMORY_BARRIER_USES_FUNCTION
 #define SDL_MemoryBarrierRelease()   SDL_MemoryBarrierReleaseFunction()
 #define SDL_MemoryBarrierAcquire()   SDL_MemoryBarrierAcquireFunction()
 #else
@@ -177,6 +194,7 @@ extern DECLSPEC void SDLCALL SDL_MemoryBarrierAcquireFunction(void);
 #else
 #define SDL_MemoryBarrierRelease()   __asm__ __volatile__ ("" : : : "memory")
 #define SDL_MemoryBarrierAcquire()   __asm__ __volatile__ ("" : : : "memory")
+#endif /* __LINUX__ || __ANDROID__ */
 #endif /* __GNUC__ && __arm__ */
 #else
 #if (defined(__SUNPRO_C) && (__SUNPRO_C >= 0x5120))

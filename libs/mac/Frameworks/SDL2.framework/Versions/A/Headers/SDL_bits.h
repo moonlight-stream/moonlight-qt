@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -99,6 +99,15 @@ SDL_MostSignificantBitIndex32(Uint32 x)
 
     return msbIndex;
 #endif
+}
+
+SDL_FORCE_INLINE SDL_bool
+SDL_HasExactlyOneBitSet32(Uint32 x)
+{
+    if (x && !(x & (x - 1))) {
+        return SDL_TRUE;
+    }
+    return SDL_FALSE;
 }
 
 /* Ends C function definitions when using C++ */
