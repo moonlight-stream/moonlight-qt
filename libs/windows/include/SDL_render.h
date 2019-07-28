@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -835,6 +835,148 @@ extern DECLSPEC int SDLCALL SDL_RenderCopyEx(SDL_Renderer * renderer,
                                            const SDL_Point *center,
                                            const SDL_RendererFlip flip);
 
+
+/**
+ *  \brief Draw a point on the current rendering target.
+ *
+ *  \param renderer The renderer which should draw a point.
+ *  \param x The x coordinate of the point.
+ *  \param y The y coordinate of the point.
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderDrawPointF(SDL_Renderer * renderer,
+                                                 float x, float y);
+
+/**
+ *  \brief Draw multiple points on the current rendering target.
+ *
+ *  \param renderer The renderer which should draw multiple points.
+ *  \param points The points to draw
+ *  \param count The number of points to draw
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderDrawPointsF(SDL_Renderer * renderer,
+                                                  const SDL_FPoint * points,
+                                                  int count);
+
+/**
+ *  \brief Draw a line on the current rendering target.
+ *
+ *  \param renderer The renderer which should draw a line.
+ *  \param x1 The x coordinate of the start point.
+ *  \param y1 The y coordinate of the start point.
+ *  \param x2 The x coordinate of the end point.
+ *  \param y2 The y coordinate of the end point.
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderDrawLineF(SDL_Renderer * renderer,
+                                                float x1, float y1, float x2, float y2);
+
+/**
+ *  \brief Draw a series of connected lines on the current rendering target.
+ *
+ *  \param renderer The renderer which should draw multiple lines.
+ *  \param points The points along the lines
+ *  \param count The number of points, drawing count-1 lines
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderDrawLinesF(SDL_Renderer * renderer,
+                                                const SDL_FPoint * points,
+                                                int count);
+
+/**
+ *  \brief Draw a rectangle on the current rendering target.
+ *
+ *  \param renderer The renderer which should draw a rectangle.
+ *  \param rect A pointer to the destination rectangle, or NULL to outline the entire rendering target.
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderDrawRectF(SDL_Renderer * renderer,
+                                               const SDL_FRect * rect);
+
+/**
+ *  \brief Draw some number of rectangles on the current rendering target.
+ *
+ *  \param renderer The renderer which should draw multiple rectangles.
+ *  \param rects A pointer to an array of destination rectangles.
+ *  \param count The number of rectangles.
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderDrawRectsF(SDL_Renderer * renderer,
+                                                 const SDL_FRect * rects,
+                                                 int count);
+
+/**
+ *  \brief Fill a rectangle on the current rendering target with the drawing color.
+ *
+ *  \param renderer The renderer which should fill a rectangle.
+ *  \param rect A pointer to the destination rectangle, or NULL for the entire
+ *              rendering target.
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderFillRectF(SDL_Renderer * renderer,
+                                                const SDL_FRect * rect);
+
+/**
+ *  \brief Fill some number of rectangles on the current rendering target with the drawing color.
+ *
+ *  \param renderer The renderer which should fill multiple rectangles.
+ *  \param rects A pointer to an array of destination rectangles.
+ *  \param count The number of rectangles.
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderFillRectsF(SDL_Renderer * renderer,
+                                                 const SDL_FRect * rects,
+                                                 int count);
+
+/**
+ *  \brief Copy a portion of the texture to the current rendering target.
+ *
+ *  \param renderer The renderer which should copy parts of a texture.
+ *  \param texture The source texture.
+ *  \param srcrect   A pointer to the source rectangle, or NULL for the entire
+ *                   texture.
+ *  \param dstrect   A pointer to the destination rectangle, or NULL for the
+ *                   entire rendering target.
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderCopyF(SDL_Renderer * renderer,
+                                            SDL_Texture * texture,
+                                            const SDL_Rect * srcrect,
+                                            const SDL_FRect * dstrect);
+
+/**
+ *  \brief Copy a portion of the source texture to the current rendering target, rotating it by angle around the given center
+ *
+ *  \param renderer The renderer which should copy parts of a texture.
+ *  \param texture The source texture.
+ *  \param srcrect   A pointer to the source rectangle, or NULL for the entire
+ *                   texture.
+ *  \param dstrect   A pointer to the destination rectangle, or NULL for the
+ *                   entire rendering target.
+ *  \param angle    An angle in degrees that indicates the rotation that will be applied to dstrect, rotating it in a clockwise direction
+ *  \param center   A pointer to a point indicating the point around which dstrect will be rotated (if NULL, rotation will be done around dstrect.w/2, dstrect.h/2).
+ *  \param flip     An SDL_RendererFlip value stating which flipping actions should be performed on the texture
+ *
+ *  \return 0 on success, or -1 on error
+ */
+extern DECLSPEC int SDLCALL SDL_RenderCopyExF(SDL_Renderer * renderer,
+                                            SDL_Texture * texture,
+                                            const SDL_Rect * srcrect,
+                                            const SDL_FRect * dstrect,
+                                            const double angle,
+                                            const SDL_FPoint *center,
+                                            const SDL_RendererFlip flip);
+
 /**
  *  \brief Read pixels from the current rendering target.
  *
@@ -875,6 +1017,31 @@ extern DECLSPEC void SDLCALL SDL_DestroyTexture(SDL_Texture * texture);
  *  \sa SDL_CreateRenderer()
  */
 extern DECLSPEC void SDLCALL SDL_DestroyRenderer(SDL_Renderer * renderer);
+
+/**
+ *  \brief Force the rendering context to flush any pending commands to the
+ *         underlying rendering API.
+ *
+ *  You do not need to (and in fact, shouldn't) call this function unless
+ *  you are planning to call into OpenGL/Direct3D/Metal/whatever directly
+ *  in addition to using an SDL_Renderer.
+ *
+ *  This is for a very-specific case: if you are using SDL's render API,
+ *  you asked for a specific renderer backend (OpenGL, Direct3D, etc),
+ *  you set SDL_HINT_RENDER_BATCHING to "1", and you plan to make
+ *  OpenGL/D3D/whatever calls in addition to SDL render API calls. If all of
+ *  this applies, you should call SDL_RenderFlush() between calls to SDL's
+ *  render API and the low-level API you're using in cooperation.
+ *
+ *  In all other cases, you can ignore this function. This is only here to
+ *  get maximum performance out of a specific situation. In all other cases,
+ *  SDL will do the right thing, perhaps at a performance loss.
+ *
+ *  This function is first available in SDL 2.0.10, and is not needed in
+ *  2.0.9 and earlier, as earlier versions did not queue rendering commands
+ *  at all, instead flushing them to the OS immediately.
+ */
+extern DECLSPEC int SDLCALL SDL_RenderFlush(SDL_Renderer * renderer);
 
 
 /**

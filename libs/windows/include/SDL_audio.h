@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -420,23 +420,56 @@ extern DECLSPEC void SDLCALL SDL_PauseAudioDevice(SDL_AudioDeviceID dev,
 /* @} *//* Pause audio functions */
 
 /**
- *  This function loads a WAVE from the data source, automatically freeing
- *  that source if \c freesrc is non-zero.  For example, to load a WAVE file,
- *  you could do:
+ *  \brief Load the audio data of a WAVE file into memory
+ *
+ *  Loading a WAVE file requires \c src, \c spec, \c audio_buf and \c audio_len
+ *  to be valid pointers. The entire data portion of the file is then loaded
+ *  into memory and decoded if necessary.
+ *
+ *  If \c freesrc is non-zero, the data source gets automatically closed and
+ *  freed before the function returns.
+ *
+ *  Supported are RIFF WAVE files with the formats PCM (8, 16, 24, and 32 bits),
+ *  IEEE Float (32 bits), Microsoft ADPCM and IMA ADPCM (4 bits), and A-law and
+ *  µ-law (8 bits). Other formats are currently unsupported and cause an error.
+ *
+ *  If this function succeeds, the pointer returned by it is equal to \c spec
+ *  and the pointer to the audio data allocated by the function is written to
+ *  \c audio_buf and its length in bytes to \c audio_len. The \ref SDL_AudioSpec
+ *  members \c freq, \c channels, and \c format are set to the values of the
+ *  audio data in the buffer. The \c samples member is set to a sane default and
+ *  all others are set to zero.
+ *
+ *  It's necessary to use SDL_FreeWAV() to free the audio data returned in
+ *  \c audio_buf when it is no longer used.
+ *
+ *  Because of the underspecification of the Waveform format, there are many
+ *  problematic files in the wild that cause issues with strict decoders. To
+ *  provide compatibility with these files, this decoder is lenient in regards
+ *  to the truncation of the file, the fact chunk, and the size of the RIFF
+ *  chunk. The hints SDL_HINT_WAVE_RIFF_CHUNK_SIZE, SDL_HINT_WAVE_TRUNCATION,
+ *  and SDL_HINT_WAVE_FACT_CHUNK can be used to tune the behavior of the
+ *  loading process.
+ *
+ *  Any file that is invalid (due to truncation, corruption, or wrong values in
+ *  the headers), too big, or unsupported causes an error. Additionally, any
+ *  critical I/O error from the data source will terminate the loading process
+ *  with an error. The function returns NULL on error and in all cases (with the
+ *  exception of \c src being NULL), an appropriate error message will be set.
+ *
+ *  It is required that the data source supports seeking.
+ *
+ *  Example:
  *  \code
  *      SDL_LoadWAV_RW(SDL_RWFromFile("sample.wav", "rb"), 1, ...);
  *  \endcode
  *
- *  If this function succeeds, it returns the given SDL_AudioSpec,
- *  filled with the audio data format of the wave data, and sets
- *  \c *audio_buf to a malloc()'d buffer containing the audio data,
- *  and sets \c *audio_len to the length of that audio buffer, in bytes.
- *  You need to free the audio buffer with SDL_FreeWAV() when you are
- *  done with it.
- *
- *  This function returns NULL and sets the SDL error message if the
- *  wave file cannot be opened, uses an unknown data format, or is
- *  corrupt.  Currently raw and MS-ADPCM WAVE files are supported.
+ *  \param src The data source with the WAVE data
+ *  \param freesrc A integer value that makes the function close the data source if non-zero
+ *  \param spec A pointer filled with the audio format of the audio data
+ *  \param audio_buf A pointer filled with the audio data allocated by the function
+ *  \param audio_len A pointer filled with the length of the audio data buffer in bytes
+ *  \return NULL on error, or non-NULL on success.
  */
 extern DECLSPEC SDL_AudioSpec *SDLCALL SDL_LoadWAV_RW(SDL_RWops * src,
                                                       int freesrc,

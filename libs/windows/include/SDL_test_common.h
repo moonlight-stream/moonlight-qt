@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -140,14 +140,20 @@ SDLTest_CommonState *SDLTest_CommonCreateState(char **argv, Uint32 flags);
  */
 int SDLTest_CommonArg(SDLTest_CommonState * state, int index);
 
+
 /**
- * \brief Returns common usage information
+ * \brief Logs command line usage info.
  *
- * \param state The common state describing the test window to create.
+ * This logs the appropriate command line options for the subsystems in use
+ *  plus other common options, and then any application-specific options.
+ *  This uses the SDL_Log() function and splits up output to be friendly to
+ *  80-character-wide terminals.
  *
- * \returns String with usage information
+ * \param state The common state describing the test window for the app.
+ * \param argv0 argv[0], as passed to main/SDL_main.
+ * \param options an array of strings for application specific options. The last element of the array should be NULL.
  */
-const char *SDLTest_CommonUsage(SDLTest_CommonState * state);
+void SDLTest_CommonLogUsage(SDLTest_CommonState * state, const char *argv0, const char **options);
 
 /**
  * \brief Open test window.
@@ -157,6 +163,17 @@ const char *SDLTest_CommonUsage(SDLTest_CommonState * state);
  * \returns True if initialization succeeded, false otherwise
  */
 SDL_bool SDLTest_CommonInit(SDLTest_CommonState * state);
+
+/**
+ * \brief Easy argument handling when test app doesn't need any custom args.
+ *
+ * \param state The common state describing the test window to create.
+ * \param argc argc, as supplied to SDL_main
+ * \param argv argv, as supplied to SDL_main
+ *
+ * \returns False if app should quit, true otherwise.
+ */
+SDL_bool SDLTest_CommonDefaultArgs(SDLTest_CommonState * state, const int argc, char **argv);
 
 /**
  * \brief Common event handler for test windows.

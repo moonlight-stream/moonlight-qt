@@ -98,8 +98,8 @@ typedef VkSurfaceKHR SDL_vulkanSurface; /* for compatibility with Tizen */
  *        applications to link with libvulkan (and historically MoltenVK was
  *        provided as a static library). If it is not found then, on macOS, SDL
  *        will attempt to load \c vulkan.framework/vulkan, \c libvulkan.1.dylib,
- *        \c MoltenVK.framework/MoltenVK and \c libMoltenVK.dylib in that order.
- *        On iOS SDL will attempt to load \c libMoltenVK.dylib. Applications
+ *        followed by \c libvulkan.dylib, in that order.
+ *        On iOS SDL will attempt to load \c libvulkan.dylib only. Applications
  *        using a dynamic framework or .dylib must ensure it is included in its
  *        application bundle.
  *
@@ -153,7 +153,7 @@ extern DECLSPEC void SDLCALL SDL_Vulkan_UnloadLibrary(void);
  *  is smaller than the number of required extensions, \c SDL_FALSE will be
  *  returned instead of \c SDL_TRUE, to indicate that not all the required
  *  extensions were returned.
- * 
+ *
  *  \note If \c window is not NULL, it will be checked against its creation
  *        flags to ensure that the Vulkan flag is present. This parameter
  *        will be removed in a future major release.

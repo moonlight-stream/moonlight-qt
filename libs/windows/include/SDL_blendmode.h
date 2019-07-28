@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -90,12 +90,12 @@ typedef enum
 /**
  *  \brief Create a custom blend mode, which may or may not be supported by a given renderer
  *
- *  \param srcColorFactor
- *  \param dstColorFactor
- *  \param colorOperation
- *  \param srcAlphaFactor
- *  \param dstAlphaFactor
- *  \param alphaOperation
+ *  \param srcColorFactor source color factor
+ *  \param dstColorFactor destination color factor
+ *  \param colorOperation color operation
+ *  \param srcAlphaFactor source alpha factor
+ *  \param dstAlphaFactor destination alpha factor
+ *  \param alphaOperation alpha operation
  *
  *  The result of the blend mode operation will be:
  *      dstRGB = dstRGB * dstColorFactor colorOperation srcRGB * srcColorFactor

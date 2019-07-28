@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2018 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -34,16 +34,16 @@
 #include "SDL_version.h"
 
 /**
- *  \file SDL_syswm.h
+ *  \brief SDL_syswm.h
  *
  *  Your application has access to a special type of event ::SDL_SYSWMEVENT,
  *  which contains window-manager specific information and arrives whenever
  *  an unhandled window event occurs.  This event is ignored by default, but
  *  you can enable it with SDL_EventState().
  */
-#ifdef SDL_PROTOTYPES_ONLY
 struct SDL_SysWMinfo;
-#else
+
+#if !defined(SDL_PROTOTYPES_ONLY)
 
 #if defined(SDL_VIDEO_DRIVER_WINDOWS)
 #ifndef WIN32_LEAN_AND_MEAN
@@ -103,6 +103,8 @@ typedef void *EGLSurface;
 #if defined(SDL_VIDEO_DRIVER_VIVANTE)
 #include "SDL_egl.h"
 #endif
+#endif /* SDL_PROTOTYPES_ONLY */
+
 
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
@@ -110,6 +112,7 @@ typedef void *EGLSurface;
 extern "C" {
 #endif
 
+#if !defined(SDL_PROTOTYPES_ONLY)
 /**
  *  These are the various supported windowing subsystems
  */
@@ -122,7 +125,7 @@ typedef enum
     SDL_SYSWM_COCOA,
     SDL_SYSWM_UIKIT,
     SDL_SYSWM_WAYLAND,
-    SDL_SYSWM_MIR,
+    SDL_SYSWM_MIR,  /* no longer available, left for API/ABI compatibility. Remove in 2.1! */
     SDL_SYSWM_WINRT,
     SDL_SYSWM_ANDROID,
     SDL_SYSWM_VIVANTE,
@@ -257,11 +260,11 @@ struct SDL_SysWMinfo
             struct wl_shell_surface *shell_surface; /**< Wayland shell_surface (window manager handle) */
         } wl;
 #endif
-#if defined(SDL_VIDEO_DRIVER_MIR)
+#if defined(SDL_VIDEO_DRIVER_MIR)  /* no longer available, left for API/ABI compatibility. Remove in 2.1! */
         struct
         {
-            struct MirConnection *connection;  /**< Mir display server connection */
-            struct MirSurface *surface;  /**< Mir surface */
+            void *connection;  /**< Mir display server connection */
+            void *surface;  /**< Mir surface */
         } mir;
 #endif
 
