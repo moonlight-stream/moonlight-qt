@@ -156,6 +156,10 @@ public:
 
     void setServerCert(QSslCertificate serverCert);
 
+    void setAddress(QString address);
+
+    QString address();
+
     static
     QVector<int>
     parseQuad(QString quad);

@@ -18,17 +18,14 @@
 #define QUIT_TIMEOUT_MS 30000
 
 NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
-    m_Address(address),
     m_ServerCert(serverCert)
 {
-    Q_ASSERT(!address.isEmpty());
-
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
-    m_BaseUrlHttp.setHost(address);
-    m_BaseUrlHttps.setHost(address);
     m_BaseUrlHttp.setPort(47989);
     m_BaseUrlHttps.setPort(47984);
+
+    setAddress(address);
 
     // Never use a proxy server
     QNetworkProxy noProxy(QNetworkProxy::NoProxy);
@@ -40,6 +37,21 @@ NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
 void NvHTTP::setServerCert(QSslCertificate serverCert)
 {
     m_ServerCert = serverCert;
+}
+
+void NvHTTP::setAddress(QString address)
+{
+    Q_ASSERT(!address.isEmpty());
+
+    m_Address = address;
+
+    m_BaseUrlHttp.setHost(address);
+    m_BaseUrlHttps.setHost(address);
+}
+
+QString NvHTTP::address()
+{
+    return m_Address;
 }
 
 QVector<int>

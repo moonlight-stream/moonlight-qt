@@ -629,12 +629,17 @@ private:
 
         // Perform initial serverinfo fetch over HTTP since we don't know which cert to use
         QString serverInfo = fetchServerInfo(http);
+        if (serverInfo.isEmpty() && !m_MdnsIpv6Address.isNull()) {
+            // Retry using the global IPv6 address if the IPv4 or link-local IPv6 address fails
+            http.setAddress(m_MdnsIpv6Address.toString());
+            serverInfo = fetchServerInfo(http);
+        }
         if (serverInfo.isEmpty()) {
             return;
         }
 
         // Create initial newComputer using HTTP serverinfo with no pinned cert
-        NvComputer* newComputer = new NvComputer(m_Address, serverInfo, QSslCertificate());
+        NvComputer* newComputer = new NvComputer(http.address(), serverInfo, QSslCertificate());
 
         // Check if we have a record of this host UUID to pull the pinned cert
         NvComputer* existingComputer;
@@ -654,7 +659,7 @@ private:
             }
 
             // Update the polled computer with the HTTPS information
-            NvComputer httpsComputer(m_Address, serverInfo, QSslCertificate());
+            NvComputer httpsComputer(http.address(), serverInfo, QSslCertificate());
             newComputer->update(httpsComputer);
         }
 
