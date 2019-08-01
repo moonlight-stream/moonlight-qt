@@ -665,7 +665,12 @@ private:
 
         // Update addresses depending on the context
         if (m_Mdns) {
-            newComputer->localAddress = m_Address;
+            // Only update local address if we actually reached the PC via this address.
+            // If we reached it via the IPv6 address after the local address failed,
+            // don't store the non-working local address.
+            if (http.address() == m_Address) {
+                newComputer->localAddress = m_Address;
+            }
 
             // Get the WAN IP address using STUN if we're on mDNS over IPv4
             if (QHostAddress(newComputer->localAddress).protocol() == QAbstractSocket::IPv4Protocol) {
