@@ -213,6 +213,15 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
     m_VideoDecoderCtx->flags |= AV_CODEC_FLAG_OUTPUT_CORRUPT;
     m_VideoDecoderCtx->flags2 |= AV_CODEC_FLAG2_SHOW_ALL;
 
+    // Report decoding errors to allow us to request a key frame
+    //
+    // With HEVC streams, FFmpeg can drop a frame (hwaccel->start_frame() fails)
+    // without telling us. Since we have an infinite GOP length, this causes artifacts
+    // on screen that persist for a long time. It's easy to cause this condition
+    // by using NVDEC and delaying 100 ms randomly in the render path so the decoder
+    // runs out of output buffers.
+    m_VideoDecoderCtx->err_recognition = AV_EF_EXPLODE;
+
     // Enable slice multi-threading for software decoding
     if (!isHardwareAccelerated()) {
         m_VideoDecoderCtx->thread_type = FF_THREAD_SLICE;
