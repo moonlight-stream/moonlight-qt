@@ -8,6 +8,7 @@ matrix:
     - os: osx
       osx_image: xcode10.2
       compiler: clang
+      env: TRAVIS_TARGET=osx
       addons:
         homebrew:
           packages:
@@ -16,6 +17,17 @@ matrix:
       sudo: required
       dist: xenial
       compiler: gcc
+      env: TRAVIS_TARGET=steamlink
+      addons:
+        apt:
+          packages:
+            - libc6:i386
+            - libstdc++6:i386
+    - os: linux
+      sudo: required
+      dist: xenial
+      compiler: gcc
+      env: TRAVIS_TARGET=linux
       addons:
         apt:
           sources:
@@ -37,20 +49,23 @@ matrix:
             - libvdpau-dev
 
 install:
-    - '[ "$TRAVIS_OS_NAME" != osx ] || brew link --force qt'
-    - if [[ "$TRAVIS_OS_NAME" = "osx" ]]; then nvm use node && npm install --global create-dmg; fi
-    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_VER=2.0.9 && wget https://www.libsdl.org/release/SDL2-$SDL2_VER.tar.gz && tar -xvf SDL2-$SDL2_VER.tar.gz && cd SDL2-$SDL2_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi
-    - if [[ "$TRAVIS_OS_NAME" = "linux" ]]; then export SDL2_TTF_VER=2.0.15 && wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$SDL2_TTF_VER.tar.gz && tar -xvf SDL2_ttf-$SDL2_TTF_VER.tar.gz && cd SDL2_ttf-$SDL2_TTF_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi
+    - '[ "$TRAVIS_TARGET" != osx ] || brew link --force qt'
+    - if [[ "$TRAVIS_TARGET" = "osx" ]]; then nvm use node && npm install --global create-dmg; fi
+    - if [[ "$TRAVIS_TARGET" = "linux" ]]; then export SDL2_VER=2.0.9 && wget https://www.libsdl.org/release/SDL2-$SDL2_VER.tar.gz && tar -xvf SDL2-$SDL2_VER.tar.gz && cd SDL2-$SDL2_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi
+    - if [[ "$TRAVIS_TARGET" = "linux" ]]; then export SDL2_TTF_VER=2.0.15 && wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$SDL2_TTF_VER.tar.gz && tar -xvf SDL2_ttf-$SDL2_TTF_VER.tar.gz && cd SDL2_ttf-$SDL2_TTF_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi
+    - if [[ "$TRAVIS_TARGET" = "steamlink" ]]; then git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk; fi
 
 before_script:
-    - '[ "$TRAVIS_OS_NAME" != "linux" ] || source /opt/qt59/bin/qt59-env.sh'
-    - qmake -v
-    - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
-    - '[[ "$TRAVIS_OS_NAME" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
-    - '[ "$TRAVIS_OS_NAME" != osx ]                          || export QMAKESPEC=macx-clang'
+    - '[ "$TRAVIS_TARGET" != "linux" ] || source /opt/qt59/bin/qt59-env.sh'
+    - '[ "$TRAVIS_TARGET" = "steamlink" ] || qmake -v'
+    - '[[ "$TRAVIS_TARGET" != linux || "$CXX" != clang++ ]] || export QMAKESPEC=linux-clang'
+    - '[[ "$TRAVIS_TARGET" != linux || "$CXX" != g++     ]] || export QMAKESPEC=linux-g++'
+    - '[ "$TRAVIS_TARGET" != osx ]                          || export QMAKESPEC=macx-clang'
+    - '[ "$TRAVIS_TARGET" != "steamlink" ]                  || export STEAMLINK_SDK_PATH=$HOME/steamlink-sdk'
 
 script:
-    - '[ "$TRAVIS_OS_NAME" != "linux" ] || qmake moonlight-qt.pro -spec $QMAKESPEC'
-    - '[ "$TRAVIS_OS_NAME" != "linux" ] || make -j$(nproc) debug'
-    - '[ "$TRAVIS_OS_NAME" != "linux" ] || make -j$(nproc) release'
-    - '[ "$TRAVIS_OS_NAME" != "osx" ] || scripts/generate-dmg.sh Release'
+    - '[ "$TRAVIS_TARGET" != "linux" ] || qmake moonlight-qt.pro -spec $QMAKESPEC'
+    - '[ "$TRAVIS_TARGET" != "linux" ] || make -j$(nproc) debug'
+    - '[ "$TRAVIS_TARGET" != "linux" ] || make -j$(nproc) release'
+    - '[ "$TRAVIS_TARGET" != "osx" ] || scripts/generate-dmg.sh Release'
+    - '[ "$TRAVIS_TARGET" != "steamlink" ] || scripts/build-steamlink-app.sh'
