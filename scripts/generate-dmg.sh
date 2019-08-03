@@ -54,7 +54,16 @@ if [ "$SIGNING_KEY" != "" ]; then
 fi
 
 echo Creating DMG
-create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER || fail "create-dmg failed!"
+if [ "$SIGNING_KEY" != "" ]; then
+  create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER --identity=$SIGNING_KEY || fail "create-dmg failed!"
+else
+  create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER
+  case $? in
+    0) ;;
+    2) ;;
+    *) fail "create-dmg failed!";;
+  esac
+fi
 
 if [ "$NOTARY_USERNAME" != "" ] && [ "$NOTARY_PASSWORD" != "" ]; then
   echo Uploading to App Notary service
