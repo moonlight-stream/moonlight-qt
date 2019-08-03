@@ -111,18 +111,6 @@ echo Copying DLL dependencies
 copy %SOURCE_ROOT%\libs\windows\lib\%ARCH%\*.dll %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
-rem AppVeyor doesn't have Qt 5.12.4 or Qt 5.13 yet, so it still requires OpenSSL 1.0.2.
-rem Since we don't have those in our tree anymore, get them from the build environment.
-if /i "%APPVEYOR%"=="true" (
-    echo Copying OpenSSL 1.0.2 for AppVeyor builds
-    if /i "%ARCH%"=="x86" (
-        copy C:\OpenSSL-Win32\*.dll %DEPLOY_FOLDER%
-    ) else (
-        copy C:\OpenSSL-Win64\*.dll %DEPLOY_FOLDER%
-    )
-    if !ERRORLEVEL! NEQ 0 goto Error
-)
-
 echo Copying AntiHooking.dll
 copy %BUILD_FOLDER%\AntiHooking\%BUILD_CONFIG%\AntiHooking.dll %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
