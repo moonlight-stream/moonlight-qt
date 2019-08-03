@@ -386,14 +386,18 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
             (me->m_OpusChannelCount * stream->bytes_per_sample);
     int bytesRead = 0;
 
-    // Clamp framesLeft to frameCountMax
-    framesLeft = qMin(framesLeft, frameCountMax);
-
     // Ensure we always write at least a buffer, even if it's silence, to avoid
     // busy looping when no audio data is available while libsoundio tries to keep
     // us from starving the output device.
     frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * k_MinSampleLengthSec));
+
+    // Clamp frameCountMax to minSampleLen * 4 to stop our latency from growing if audio packets lag.
+    // This makes sure that we never increase our latency far beyond what the sink is consuming.
+    frameCountMax = qMin(frameCountMax, (int)(stream->sample_rate * k_MinSampleLengthSec) * 4);
     frameCountMin = qMin(frameCountMin, frameCountMax);
+
+    // Clamp framesLeft to frameCountMax
+    framesLeft = qMin(framesLeft, frameCountMax);
 
     // Track latency on queueing-based backends
     if (me->m_SoundIo->current_backend != SoundIoBackendCoreAudio && me->m_SoundIo->current_backend != SoundIoBackendJack) {
