@@ -21,13 +21,18 @@ class MdnsPendingComputer : public QObject
 
 public:
     explicit MdnsPendingComputer(QMdnsEngine::Server* server,
-                                 QMdnsEngine::Cache* cache,
                                  const QMdnsEngine::Service& service)
         : m_Hostname(service.hostname()),
-          m_Resolver(server, m_Hostname, cache)
+          m_Server(server),
+          m_Resolver(nullptr)
     {
-        connect(&m_Resolver, &QMdnsEngine::Resolver::resolved,
-                this, &MdnsPendingComputer::handleResolvedAddress);
+        // Start resolving
+        resolve();
+    }
+
+    virtual ~MdnsPendingComputer()
+    {
+        delete m_Resolver;
     }
 
     QString hostname()
@@ -38,28 +43,39 @@ public:
 private slots:
     void handleResolvedTimeout()
     {
-        Q_ASSERT(!m_Addresses.isEmpty());
-        emit resolvedHost(this, m_Addresses);
+        if (m_Addresses.isEmpty()) {
+            // Try again
+            qInfo() << "Resolving" << hostname() << "timed out. Retrying...";
+            resolve();
+        }
+        else {
+            Q_ASSERT(!m_Addresses.isEmpty());
+            emit resolvedHost(this, m_Addresses);
+        }
     }
 
     void handleResolvedAddress(const QHostAddress& address)
     {
         qInfo() << "Resolved" << hostname() << "to" << address;
         m_Addresses.push_back(address);
-
-        // Now that we got an address, start a timer to wait for more
-        // addresses to come in before reporting them
-        if (m_Addresses.count() == 1) {
-            QTimer::singleShot(1000, this, SLOT(handleResolvedTimeout()));
-        }
     }
 
 signals:
     void resolvedHost(MdnsPendingComputer*,QVector<QHostAddress>&);
 
 private:
+    void resolve()
+    {
+        delete m_Resolver;
+        m_Resolver = new QMdnsEngine::Resolver(m_Server, m_Hostname);
+        connect(m_Resolver, &QMdnsEngine::Resolver::resolved,
+                this, &MdnsPendingComputer::handleResolvedAddress);
+        QTimer::singleShot(2000, this, SLOT(handleResolvedTimeout()));
+    }
+
     QByteArray m_Hostname;
-    QMdnsEngine::Resolver m_Resolver;
+    QMdnsEngine::Server* m_Server;
+    QMdnsEngine::Resolver* m_Resolver;
     QVector<QHostAddress> m_Addresses;
 };
 

@@ -269,7 +269,7 @@ void ComputerManager::startPolling()
                 this, [this](const QMdnsEngine::Service& service) {
             qInfo() << "Discovered mDNS host:" << service.hostname();
 
-            MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, &m_MdnsCache, service);
+            MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, service);
             connect(pendingComputer, &MdnsPendingComputer::resolvedHost,
                     this, &ComputerManager::handleMdnsServiceResolved);
             m_PendingResolution.append(pendingComputer);
