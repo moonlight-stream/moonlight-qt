@@ -33,6 +33,26 @@
 	</screenshots>
 
 	<releases>
+		<release version="1.1.0" date="2019-08-05">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added support for NVDEC for NVIDIA GPUs on Wayland</li>
+					<li>Added an option to disable gamepad mouse mode for games that require holding the Start button</li>
+					<li>Added automatic detection of IPv6 addresses for Internet streaming over IPv6 networks</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Improved speed and reliability of automatic PC detection on the local network</li>
+					<li>Fixed audio latency increasing under certain network conditions</li>
+					<li>Fixed 5.1 surround sound sometimes causing no audio to play when streaming over the Internet</li>
+					<li>Fixed graceful termination of games not being detected properly on GFE 3.19</li>
+					<li>Fixed several audio issues on Linux by switching back to SDL for audio</li>
+					<li>Changed client certificate signature algorithm from SHA-1 to SHA-256 for Debian Buster compatibility</li>
+					<li>Updated included gamepad mappings</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.0.1" date="2019-05-27">
 			<description>
 				<p>Bugfixes:</p>
