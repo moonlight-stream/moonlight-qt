@@ -68,13 +68,6 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
     return true;
 }
 
-int SdlRenderer::getDecoderCapabilities()
-{
-    // The FFmpeg CPU decoder can handle reference frame invalidation,
-    // but only for H.264.
-    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_AVC;
-}
-
 void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     // Construct the required font to render the overlay
