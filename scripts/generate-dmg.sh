@@ -8,7 +8,7 @@ fail()
 }
 
 if [ "$BUILD_CONFIG" != "Debug" ] && [ "$BUILD_CONFIG" != "Release" ]; then
-  fail "Invalid build configuration"
+  fail "Invalid build configuration - expected 'Debug' or 'Release'"
 fi
 
 [ "$SIGNING_KEY" == "" ] || git diff-index --quiet HEAD -- || fail "Signed release builds must not have unstaged changes!"

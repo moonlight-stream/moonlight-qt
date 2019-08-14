@@ -1,7 +1,7 @@
-rem Run from Qt command prompt with working directory set to root of repo
-
-setlocal enableDelayedExpansion
 @echo off
+setlocal enableDelayedExpansion
+
+rem Run from Qt command prompt with working directory set to root of repo
 
 set BUILD_CONFIG=%1
 set ARCH=%2
@@ -25,7 +25,7 @@ if /I "%BUILD_CONFIG%"=="debug" (
                 exit /b 1
             )
         ) else (
-            echo Invalid build configuration
+            echo Invalid build configuration - expected 'debug' or 'release'
             exit /b 1
         )
     )
@@ -33,7 +33,7 @@ if /I "%BUILD_CONFIG%"=="debug" (
 
 if /I "%ARCH%" NEQ "x86" (
     if /I "%ARCH%" NEQ "x64" (
-        echo Invalid build architecture
+        echo Invalid build architecture - expected 'x86' or 'x64'
         exit /b 1
     )
 )
