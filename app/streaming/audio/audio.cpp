@@ -55,8 +55,9 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
 #endif
 
-#ifdef Q_OS_LINUX
-    // Linux defaults to SDL and fall backs to libsoundio
+#if !defined(Q_OS_WIN32) && !defined(Q_OS_DARWIN)
+    // Linux defaults to SDL due to persistent glitching issues under libsoundio.
+    // Platforms that libsoundio doesn't support also default to SDL.
     TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
 #ifdef HAVE_SOUNDIO
     TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
