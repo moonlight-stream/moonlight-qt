@@ -38,11 +38,7 @@ if /I "%ARCH%" NEQ "x86" (
     )
 )
 
-set VS_PATH=%ProgramFiles(x86)%\Microsoft Visual Studio\2017\Community
 set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 1B3C676E831A94EC0327C3347EB32C68C26B3A67 /v
-
-call "%VS_PATH%\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
-if !ERRORLEVEL! NEQ 0 goto Error
 
 set BUILD_ROOT=%cd%\build
 set SOURCE_ROOT=%cd%
@@ -51,6 +47,16 @@ set DEPLOY_FOLDER=%BUILD_ROOT%\deploy-%ARCH%-%BUILD_CONFIG%
 set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%ARCH%-%BUILD_CONFIG%
 set SYMBOLS_FOLDER=%BUILD_ROOT%\symbols-%ARCH%-%BUILD_CONFIG%
 set /p VERSION=<%SOURCE_ROOT%\app\version.txt
+
+rem Find Visual Studio and run vcvarsall.bat
+set VSWHERE="%SOURCE_ROOT%\scripts\vswhere.exe"
+for /f "usebackq delims=" %%i in (`%VSWHERE% -latest -property installationPath`) do (
+    call "%%i\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
+)
+if !ERRORLEVEL! NEQ 0 goto Error
+
+rem Find VC redistributable DLLs
+for /f "usebackq delims=" %%i in (`%VSWHERE% -latest -find VC\Redist\MSVC\*\%ARCH%\Microsoft.VC*.CRT`) do set VC_REDIST_DLL_PATH=%%i
 
 echo Cleaning output directories
 rmdir /s /q %DEPLOY_FOLDER%
@@ -164,7 +170,6 @@ if "%SIGN%"=="1" (
 )
 
 echo Building bundle
-set VCREDIST_INSTALLER=%VCToolsRedistDir%vcredist_%ARCH%.exe
 rem Bundles are always x86 binaries
 msbuild %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86
 if !ERRORLEVEL! NEQ 0 goto Error
@@ -187,7 +192,8 @@ ren %INSTALLER_FOLDER%\MoonlightSetup.exe MoonlightSetup-%ARCH%-%VERSION%.exe
 echo Building portable package
 rem This must be done after WiX harvesting and signing, since the VCRT dlls are MS signed
 rem and should not be harvested for inclusion in the full installer
-copy "%VCToolsRedistDir%%ARCH%\Microsoft.VC141.CRT\*.dll" %DEPLOY_FOLDER%
+copy "%VC_REDIST_DLL_PATH%\*.dll" %DEPLOY_FOLDER%
+if !ERRORLEVEL! NEQ 0 goto Error
 rem This file tells Moonlight that it's a portable installation
 echo. > %DEPLOY_FOLDER%\portable.dat
 if !ERRORLEVEL! NEQ 0 goto Error
