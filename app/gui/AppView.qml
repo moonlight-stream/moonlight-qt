@@ -151,6 +151,8 @@ CenteredGridView {
             text: model.name
             width: appIcon.width
             height: model.running ? 175 : appIcon.height
+            leftPadding: 20
+            rightPadding: 20
             anchors.left: appIcon.left
             anchors.right: appIcon.right
             anchors.bottom: appIcon.bottom
