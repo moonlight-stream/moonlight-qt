@@ -21,6 +21,7 @@ RichPresenceManager::RichPresenceManager(StreamingPreferences& prefs, QString ga
         DiscordRichPresence discordPresence = {};
         discordPresence.state = stateStr.data();
         discordPresence.startTimestamp = time(nullptr);
+        discordPresence.largeImageKey = "icon";
         Discord_UpdatePresence(&discordPresence);
     }
 #endif
