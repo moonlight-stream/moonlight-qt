@@ -33,6 +33,19 @@
 	</screenshots>
 
 	<releases>
+		<release version="1.1.1" date="2019-09-29">
+			<description>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Improved reliability of public IP address detection</li>
+					<li>Fixed connecting to a host PC with multiple network connections</li>
+					<li>Fixed a hang after exiting a full-screen stream with GNOME on Wayland</li>
+					<li>Fixed gamepad hotplugging</li>
+					<li>Updated to SDL 2.0.10</li>
+					<li>Updated to Qt 5.13.1</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.1.0" date="2019-08-05">
 			<description>
 				<p>New features:</p>
