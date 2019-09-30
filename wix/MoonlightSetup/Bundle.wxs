@@ -17,21 +17,6 @@
       <![CDATA[VersionNT >= v6.1]]>
     </bal:Condition>
 
-    <!-- https://stackoverflow.com/questions/46637094/how-can-i-find-the-upgrade-code-for-an-installed-msi-file -->
-    <?if $(env.ARCH) ~= x86 ?>
-      <util:ProductSearch Id="Find_VCRedist_x86"
-                          UpgradeCode="{C78B8E51-0C65-377E-85D1-282F689FE505}"
-                          Result="state"
-                          Variable="VCRedist_Present" />
-    <?elseif $(env.ARCH) ~= x64 ?>
-      <util:ProductSearch Id="Find_VCRedist_x64"
-                          UpgradeCode="{9B0BAA88-E15F-3A1F-ACC0-B206E9DDF71C}"
-                          Result="state"
-                          Variable="VCRedist_Present" />
-    <?else ?>
-      <?error Bad ARCH value ?>
-    <?endif ?>
-
     <?if $(env.ARCH) ~= x64 ?>
       <bal:Condition Message="This Moonlight installer requires a 64-bit (x64) OS. Please download the 32-bit (x86) installer.">
         VersionNT64
@@ -83,7 +68,6 @@
       <ExePackage Cache="no"
                   PerMachine="yes"
                   Permanent="yes"
-                  InstallCondition="VCRedist_Present = 2"
                   Vital="yes"
                   Compressed="yes"
                   SourceFile="$(env.VCToolsRedistDir)vcredist_$(env.ARCH).exe"
