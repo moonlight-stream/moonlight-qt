@@ -239,7 +239,7 @@ ApplicationWindow {
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
-                ToolTip.visible: hovered
+                ToolTip.visible: hovered || visible
 
                 // Invisible until we get a callback notifying us that
                 // an update is available
