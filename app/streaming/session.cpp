@@ -1024,7 +1024,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // This prevents the mouse from becoming trapped inside
     // Moonlight when it's halted at a debug break.
     if (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED) {
-        m_InputHandler->setCaptureActive(true);
+        // HACK: This doesn't work on Wayland until we render a frame, so
+        // just don't do it for now.
+        if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
+            m_InputHandler->setCaptureActive(true);
+        }
     }
 #endif
 
@@ -1267,6 +1271,25 @@ DispatchDeferredCleanup:
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
     SDL_AtomicUnlock(&m_DecoderLock);
+
+    if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+        // HACK: SDL (as of 2.0.10) has a bug that causes Mutter not to destroy the window
+        // surface when in full-screen unless we render more frames after we request
+        // to exit full-screen. The amount of frames required is variable but 500 ms
+        // of frames seems sufficient in my testing.
+        SDL_SetWindowFullscreen(m_Window, 0);
+        SDL_Renderer* renderer = SDL_CreateRenderer(m_Window, -1, SDL_RENDERER_PRESENTVSYNC);
+        if (renderer != nullptr) {
+            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+            for (int i = 0; i < 10; i++)
+            {
+                SDL_RenderClear(renderer);
+                SDL_RenderPresent(renderer);
+                SDL_Delay(50);
+            }
+            SDL_DestroyRenderer(renderer);
+        }
+    }
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
