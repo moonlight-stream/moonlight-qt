@@ -235,6 +235,12 @@ CenteredGridView {
 
     NavigableMessageDialog {
         id: pairDialog
+
+        // Pairing dialog must be modal to prevent double-clicks from triggering
+        // pairing twice
+        modal: true
+        closePolicy: Popup.CloseOnEscape
+
         // don't allow edits to the rest of the window while open
         property string pin : "0000"
         text:"Please enter " + pin + " on your GameStream PC. This dialog will close when pairing is completed."
