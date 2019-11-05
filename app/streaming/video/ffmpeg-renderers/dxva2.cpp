@@ -382,9 +382,6 @@ bool DXVA2Renderer::isDecoderBlacklisted()
     HRESULT hr;
     bool result = false;
 
-    // TODO: Update for HEVC Main10
-    SDL_assert(m_VideoFormat != VIDEO_FORMAT_H265_MAIN10);
-
     if (qgetenv("DXVA2_DISABLE_DECODER_BLACKLIST") == "1") {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "DXVA2 decoder blacklist is disabled");
@@ -432,6 +429,15 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                                     "GPU blacklisted for HEVC due to hybrid decode");
                         result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
                         break;
+                    case 0x1900: // Skylake
+                        // Blacklist these for HEVC Main10 to avoid hybrid decode.
+                        // Regular HEVC Main is fine though.
+                        if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "GPU blacklisted for HEVC Main10 due to hybrid decode");
+                            result = false;
+                            break;
+                        }
                     default:
                         // Intel drivers from before late-2017 had a bug that caused some strange artifacts
                         // when decoding HEVC. Avoid HEVC on drivers prior to build 4836 which I confirmed
@@ -545,6 +551,8 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         d3dpp.BackBufferWidth = currentMode.Width;
         d3dpp.BackBufferHeight = currentMode.Height;
         d3dpp.FullScreen_RefreshRateInHz = currentMode.RefreshRate;
+
+        // TODO: Need to select 10-bit color format for HDR
         d3dpp.BackBufferFormat = currentMode.Format;
     }
     else {
@@ -680,7 +688,13 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     m_Desc.SampleFormat.VideoPrimaries = DXVA2_VideoPrimaries_Unknown;
     m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
-    m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
+
+    if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        m_Desc.Format = (D3DFORMAT)MAKEFOURCC('P','0','1','0');
+    }
+    else {
+        m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
+    }
 
     if (!initializeDevice(params->window, params->enableVsync)) {
         return false;

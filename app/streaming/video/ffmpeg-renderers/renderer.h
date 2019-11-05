@@ -47,9 +47,14 @@ public:
     }
 
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) {
-        // Planar YUV 4:2:0
-        SDL_assert(videoFormat != VIDEO_FORMAT_H265_MAIN10);
-        return AV_PIX_FMT_YUV420P;
+        if (videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+            // 10-bit YUV 4:2:0
+            return AV_PIX_FMT_P010;
+        }
+        else {
+            // Planar YUV 4:2:0
+            return AV_PIX_FMT_YUV420P;
+        }
     }
 
     // IOverlayRenderer
