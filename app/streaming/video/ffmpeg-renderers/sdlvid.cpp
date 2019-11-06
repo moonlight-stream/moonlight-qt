@@ -131,6 +131,11 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 {
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
 
+    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        // SDL doesn't support rendering YUV 10-bit textures yet
+        return false;
+    }
+
     if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
         // In full-screen exclusive mode, we enable V-sync if requested. For other modes, Windows and Mac
         // have compositors that make rendering tear-free. Linux compositor varies by distro and user
