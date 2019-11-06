@@ -1,9 +1,7 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/ic_remove_circle_outline_white_48px.svg</file>
-        <file>res/ic_remove_from_queue_white_48px.svg</file>
         <file>res/ic_videogame_asset_white_48px.svg</file>
-        <file>res/ic_tv_white_48px.svg</file>
+        <file>res/desktop_windows-48px.svg</file>
         <file>res/ic_add_to_queue_white_48px.svg</file>
         <file>res/baseline-lock-24px.svg</file>
         <file>res/baseline-play_circle_filled_white-48px.svg</file>
