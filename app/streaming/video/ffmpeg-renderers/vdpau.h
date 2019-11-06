@@ -33,7 +33,8 @@ private:
     int m_NextSurfaceIndex;
 
 #define OUTPUT_SURFACE_FORMAT_COUNT 2
-    static const VdpRGBAFormat k_OutputFormats[OUTPUT_SURFACE_FORMAT_COUNT];
+    static const VdpRGBAFormat k_OutputFormats8Bit[OUTPUT_SURFACE_FORMAT_COUNT];
+    static const VdpRGBAFormat k_OutputFormats10Bit[OUTPUT_SURFACE_FORMAT_COUNT];
 
     VdpGetErrorString* m_VdpGetErrorString;
     VdpPresentationQueueTargetDestroy* m_VdpPresentationQueueTargetDestroy;

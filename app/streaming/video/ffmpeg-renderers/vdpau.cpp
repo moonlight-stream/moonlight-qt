@@ -12,9 +12,14 @@
 #define GET_PROC_ADDRESS(id, func) status = vdpauCtx->get_proc_address(m_Device, id, (void**)func); \
                                    BAIL_ON_FAIL(status, id)
 
-const VdpRGBAFormat VDPAURenderer::k_OutputFormats[] = {
+const VdpRGBAFormat VDPAURenderer::k_OutputFormats8Bit[] = {
     VDP_RGBA_FORMAT_B8G8R8A8,
     VDP_RGBA_FORMAT_R8G8B8A8
+};
+
+const VdpRGBAFormat VDPAURenderer::k_OutputFormats10Bit[] = {
+    VDP_RGBA_FORMAT_B10G10R10A2,
+    VDP_RGBA_FORMAT_R10G10B10A2
 };
 
 VDPAURenderer::VDPAURenderer()
@@ -143,7 +148,11 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     for (int i = 0; i < OUTPUT_SURFACE_FORMAT_COUNT; i++) {
         VdpBool supported;
         uint32_t maxWidth, maxHeight;
-        status = m_VdpOutputSurfaceQueryCapabilities(m_Device, k_OutputFormats[i],
+        VdpRGBAFormat candidateFormat =
+                params->videoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+                    k_OutputFormats10Bit[i] : k_OutputFormats8Bit[i];
+
+        status = m_VdpOutputSurfaceQueryCapabilities(m_Device, candidateFormat,
                                                      &supported, &maxWidth, &maxHeight);
         if (status != VDP_STATUS_OK) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -154,7 +163,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 
         if (supported) {
             if (m_DisplayWidth <= maxWidth && m_DisplayHeight <= maxHeight) {
-                m_OutputSurfaceFormat = k_OutputFormats[i];
+                m_OutputSurfaceFormat = candidateFormat;
                 foundFormat = true;
                 break;
             }
