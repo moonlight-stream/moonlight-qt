@@ -14,6 +14,7 @@
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import <dispatch/dispatch.h>
+#import <Metal/Metal.h>
 
 class VTRenderer : public IFFmpegRenderer
 {
@@ -233,6 +234,52 @@ public:
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                 "No HW accelerated HEVC decode via VT");
                     return false;
+                }
+
+                // HEVC Main10 requires more extensive checks because there's no
+                // simple API to check for Main10 hardware decoding, and if we don't
+                // have it, we'll silently get software decoding with horrible performance.
+                if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+                #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+                    if (__builtin_available(macOS 10.14, *)) {
+                        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+                        if (device == nullptr) {
+                            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Unable to get default Metal device");
+                            return false;
+                        }
+
+                        // Exclude all GPUs earlier than macOSGPUFamily2
+                        // https://developer.apple.com/documentation/metal/mtlfeatureset/mtlfeatureset_macos_gpufamily2_v1
+                        if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
+                            if ([device.name containsString:@"Intel"]) {
+                                // 500-series Intel GPUs are Skylake and don't support Main10 hardware decoding
+                                if ([device.name containsString:@" 5"]) {
+                                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                                "No HEVC Main10 support on Skylake iGPU");
+                                    return false;
+                                }
+                            }
+                            else if ([device.name containsString:@"AMD"]) {
+                                // FirePro D, M200, and M300 series GPUs don't support Main10 hardware decoding
+                                if ([device.name containsString:@"FirePro D"] ||
+                                        [device.name containsString:@" M2"] ||
+                                        [device.name containsString:@" M3"]) {
+                                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                                "No HEVC Main10 support on AMD GPUs until Polaris");
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    else
+            #endif
+                    {
+                        // Fail closed for HEVC Main10 if we're not on 10.14+
+                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                    "No HEVC Main10 support on < macOS 10.14");
+                        return false;
+                    }
                 }
             }
             else
