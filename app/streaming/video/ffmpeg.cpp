@@ -264,13 +264,24 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
     // now to see if things will actually work when the video stream
     // comes in.
     if (testFrame) {
-        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
+        switch (params->videoFormat) {
+        case VIDEO_FORMAT_H264:
             m_Pkt.data = (uint8_t*)k_H264TestFrame;
             m_Pkt.size = sizeof(k_H264TestFrame);
-        }
-        else {
-            m_Pkt.data = (uint8_t*)k_HEVCTestFrame;
-            m_Pkt.size = sizeof(k_HEVCTestFrame);
+            break;
+        case VIDEO_FORMAT_H265:
+            m_Pkt.data = (uint8_t*)k_HEVCMainTestFrame;
+            m_Pkt.size = sizeof(k_HEVCMainTestFrame);
+            break;
+        case VIDEO_FORMAT_H265_MAIN10:
+            m_Pkt.data = (uint8_t*)k_HEVCMain10TestFrame;
+            m_Pkt.size = sizeof(k_HEVCMain10TestFrame);
+            break;
+        default:
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "No test frame for format: %x",
+                         params->videoFormat);
+            return false;
         }
 
         err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
