@@ -258,7 +258,7 @@ void Pacer::renderFrame(AVFrame* frame)
 {
     // Count time spent in Pacer's queues
     Uint32 beforeRender = SDL_GetTicks();
-    m_VideoStats->totalPacerTime += beforeRender - frame->pts;
+    m_VideoStats->totalPacerTime += beforeRender - frame->pkt_dts;
 
     // Render it
     m_VsyncRenderer->renderFrame(frame);

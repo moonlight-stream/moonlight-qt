@@ -731,8 +731,11 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Restore default log level after a successful decode
         av_log_set_level(AV_LOG_INFO);
 
+        // Store the presentation time
+        frame->pts = du->presentationTimeMs;
+
         // Capture a frame timestamp to measuring pacing delay
-        frame->pts = SDL_GetTicks();
+        frame->pkt_dts = SDL_GetTicks();
 
         // Count time in avcodec_send_packet() and avcodec_receive_frame()
         // as time spent decoding
