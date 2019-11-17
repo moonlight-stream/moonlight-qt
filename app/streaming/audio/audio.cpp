@@ -145,29 +145,34 @@ int Session::arInit(int /* audioConfiguration */,
 
     SDL_memcpy(&s_ActiveSession->m_AudioConfig, opusConfig, sizeof(*opusConfig));
 
+    s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer(&s_ActiveSession->m_AudioConfig);
+    if (s_ActiveSession->m_AudioRenderer == nullptr) {
+        return -2;
+    }
+
+    // Allow the chosen renderer to remap Opus channels as needed to ensure proper output
+    s_ActiveSession->m_AudioRenderer->remapChannels(&s_ActiveSession->m_AudioConfig);
+
+    // Create the Opus decoder with the renderer's preferred channel mapping
     s_ActiveSession->m_OpusDecoder =
-            opus_multistream_decoder_create(opusConfig->sampleRate,
-                                            opusConfig->channelCount,
-                                            opusConfig->streams,
-                                            opusConfig->coupledStreams,
-                                            opusConfig->mapping,
+            opus_multistream_decoder_create(s_ActiveSession->m_AudioConfig.sampleRate,
+                                            s_ActiveSession->m_AudioConfig.channelCount,
+                                            s_ActiveSession->m_AudioConfig.streams,
+                                            s_ActiveSession->m_AudioConfig.coupledStreams,
+                                            s_ActiveSession->m_AudioConfig.mapping,
                                             &error);
     if (s_ActiveSession->m_OpusDecoder == NULL) {
+        delete s_ActiveSession->m_AudioRenderer;
+        s_ActiveSession->m_AudioRenderer = nullptr;
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create decoder: %d",
                      error);
         return -1;
     }
 
-    s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer(opusConfig);
-    if (s_ActiveSession->m_AudioRenderer == nullptr) {
-        opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
-        return -2;
-    }
-
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Audio stream has %d channels",
-                opusConfig->channelCount);
+                s_ActiveSession->m_AudioConfig.channelCount);
 
     return 0;
 }

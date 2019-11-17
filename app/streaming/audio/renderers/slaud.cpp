@@ -43,6 +43,29 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
     return true;
 }
 
+#define SWAP_CHANNEL(i, j) \
+    tmp = opusConfig->mapping[i]; \
+    opusConfig->mapping[i] = opusConfig->mapping[j]; \
+    opusConfig->mapping[j] = tmp
+
+void SLAudioRenderer::remapChannels(POPUS_MULTISTREAM_CONFIGURATION opusConfig) {
+    unsigned char tmp;
+
+    if (opusConfig->channelCount == 6) {
+        // The Moonlight's default channel order is FL,FR,C,LFE,RL,RR
+        // SLAudio expects FL,C,FR,RL,RR,LFE so we swap the channels around to match
+
+        // Swap FR and C - now FL,C,FR,LFE,RL,RR
+        SWAP_CHANNEL(1, 2);
+
+        // Swap LFE and RR - now FL,C,FR,RR,RL,LFE
+        SWAP_CHANNEL(3, 5);
+
+        // Swap RR and RL - now FL,C,FR,RL,RR,LFE
+        SWAP_CHANNEL(4, 5);
+    }
+}
+
 void* SLAudioRenderer::getAudioBuffer(int* size)
 {
     SDL_assert(*size == m_AudioBufferSize);
