@@ -62,7 +62,7 @@ void SLAudioRenderer::remapChannels(POPUS_MULTISTREAM_CONFIGURATION opusConfig) 
         SWAP_CHANNEL(3, 5);
 
         // Swap RR and RL - now FL,C,FR,RL,RR,LFE
-        SWAP_CHANNEL(4, 5);
+        SWAP_CHANNEL(3, 4);
     }
 }
 
