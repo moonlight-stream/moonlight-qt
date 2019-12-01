@@ -34,7 +34,6 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     want.samples = opusConfig->samplesPerFrame;
 
     m_FrameSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
-    m_FrameDurationMs = opusConfig->samplesPerFrame / 48;
 
     m_AudioDevice = SDL_OpenAudioDevice(NULL, 0, &want, &have, 0);
     if (m_AudioDevice == 0) {
@@ -97,7 +96,7 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
 
     // Don't queue if there's already more than 30 ms of audio data waiting
     // in Moonlight's audio queue.
-    if (LiGetPendingAudioFrames() * m_FrameDurationMs > 30) {
+    if (LiGetPendingAudioDuration() > 30) {
         return true;
     }
 
@@ -118,6 +117,6 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
 
 int SdlAudioRenderer::getCapabilities()
 {
-    // Direct submit can't be used because we use LiGetPendingAudioFrames()
-    return 0;
+    // Direct submit can't be used because we use LiGetPendingAudioDuration()
+    return CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
 }

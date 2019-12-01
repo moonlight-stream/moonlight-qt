@@ -21,6 +21,5 @@ public:
 private:
     SDL_AudioDeviceID m_AudioDevice;
     void* m_AudioBuffer;
-    int m_FrameDurationMs;
     int m_FrameSize;
 };
