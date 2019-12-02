@@ -36,9 +36,7 @@ private:
     struct SoundIoOutStream* m_OutputStream;
     struct SoundIoRingBuffer* m_RingBuffer;
     struct SoundIoChannelLayout m_EffectiveLayout;
+    double m_AudioPacketDuration;
     double m_Latency;
     bool m_Errored;
-
-    static const double k_RawSampleLengthSec;
-    static const double k_MinSampleLengthSec;
 };

@@ -4,29 +4,13 @@
 
 #include <QtGlobal>
 
-// GFE sends us packets in 5 ms chunks
-const double SoundIoAudioRenderer::k_RawSampleLengthSec = 0.005;
-
-#ifdef Q_OS_LINUX
-// PulseAudio and ALSA require more than just 5 ms samples
-// for some reason, so write a minimum of 25 ms each time to
-// prevent underruns on Bluetooth.
-// https://github.com/moonlight-stream/moonlight-qt/issues/147
-// https://github.com/moonlight-stream/moonlight-qt/issues/157
-const double SoundIoAudioRenderer::k_MinSampleLengthSec = 0.025;
-#else
-// This determines the size of the buffers we'll
-// get from CoreAudio. It is also the minimum
-// size that we will write when called to fill a buffer.
-const double SoundIoAudioRenderer::k_MinSampleLengthSec = k_RawSampleLengthSec;
-#endif
-
 SoundIoAudioRenderer::SoundIoAudioRenderer()
     : m_OpusChannelCount(0),
       m_SoundIo(nullptr),
       m_Device(nullptr),
       m_OutputStream(nullptr),
       m_RingBuffer(nullptr),
+      m_AudioPacketDuration(0),
       m_Latency(0),
       m_Errored(false)
 {
@@ -172,9 +156,11 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
         return false;
     }
 
+    m_AudioPacketDuration = (opusConfig->samplesPerFrame / (opusConfig->sampleRate / 1000)) / 1000.0;
+
     m_OutputStream->format = SoundIoFormatS16NE;
     m_OutputStream->sample_rate = opusConfig->sampleRate;
-    m_OutputStream->software_latency = k_MinSampleLengthSec;
+    m_OutputStream->software_latency = m_AudioPacketDuration;
     m_OutputStream->name = "Moonlight";
     m_OutputStream->userdata = this;
     m_OutputStream->error_callback = sioErrorCallback;
@@ -237,25 +223,21 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
 
     int packetsToBuffer;
 
-#ifdef Q_OS_LINUX
-    // PulseAudio and ALSA need the large buffer (see comment on k_MinSampleLengthSec),
-    // so we need a buffer at least double that size to allow packets to arrive
-    // while we're writing to the sink.
-    packetsToBuffer = (int)(k_MinSampleLengthSec / k_RawSampleLengthSec) * 2;
-#else
     if (m_SoundIo->current_backend == SoundIoBackendWasapi) {
         // 15 ms buffer seems to be fine for WASAPI
-        packetsToBuffer = 3;
+        packetsToBuffer = (int)ceil(0.015 / m_AudioPacketDuration);
     }
     else {
         // 30 ms buffer on CoreAudio to avoid glitching on macOS
-        packetsToBuffer = 6;
+        packetsToBuffer = (int)ceil(0.030 / m_AudioPacketDuration);
     }
-#endif
+
+    // Always buffer at least 2 packets
+    packetsToBuffer = qMax(2, packetsToBuffer);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio buffer size: %d packets",
-                packetsToBuffer);
+                "Audio buffer size: %f seconds",
+                packetsToBuffer * m_AudioPacketDuration);
 
     m_RingBuffer = soundio_ring_buffer_create(m_SoundIo,
                                               m_OutputStream->bytes_per_sample *
@@ -319,7 +301,7 @@ bool SoundIoAudioRenderer::submitAudio(int bytesWritten)
 
 int SoundIoAudioRenderer::getCapabilities()
 {
-    return CAPABILITY_DIRECT_SUBMIT;
+    return CAPABILITY_DIRECT_SUBMIT | CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
 }
 
 void SoundIoAudioRenderer::sioErrorCallback(SoundIoOutStream* stream, int err)
@@ -389,11 +371,11 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
     // Ensure we always write at least a buffer, even if it's silence, to avoid
     // busy looping when no audio data is available while libsoundio tries to keep
     // us from starving the output device.
-    frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * k_MinSampleLengthSec));
+    frameCountMin = qMax(frameCountMin, (int)(stream->sample_rate * me->m_AudioPacketDuration));
 
-    // Clamp frameCountMax to minSampleLen * 4 to stop our latency from growing if audio packets lag.
+    // Clamp frameCountMax to at least 2 packets or 20 ms to stop our latency from growing if audio packets lag.
     // This makes sure that we never increase our latency far beyond what the sink is consuming.
-    frameCountMax = qMin(frameCountMax, (int)(stream->sample_rate * k_MinSampleLengthSec) * 4);
+    frameCountMax = qMin(frameCountMax, (int)(stream->sample_rate * qMax(me->m_AudioPacketDuration * 2, 0.020)));
     frameCountMin = qMin(frameCountMin, frameCountMax);
 
     // Clamp framesLeft to frameCountMax
