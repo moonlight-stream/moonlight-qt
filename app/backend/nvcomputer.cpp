@@ -274,7 +274,7 @@ bool NvComputer::isReachableOverVpn()
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                     qInfo() << "MTU is" << nic.maximumTransmissionUnit();
-                    if (nic.maximumTransmissionUnit() < 1500) {
+                    if (nic.maximumTransmissionUnit() != 0 && nic.maximumTransmissionUnit() < 1500) {
                         // Treat MTUs under 1500 as likely VPNs
                         return true;
                     }
