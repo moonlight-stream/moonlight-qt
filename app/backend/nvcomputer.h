@@ -29,6 +29,9 @@ public:
     bool
     wake();
 
+    bool
+    isReachableOverVpn();
+
     QVector<QString>
     uniqueAddresses();
 

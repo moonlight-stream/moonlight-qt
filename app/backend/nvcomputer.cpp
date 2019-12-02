@@ -3,6 +3,7 @@
 #include <QUdpSocket>
 #include <QHostInfo>
 #include <QNetworkInterface>
+#include <QNetworkProxy>
 
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
@@ -235,6 +236,60 @@ bool NvComputer::wake()
     }
 
     return success;
+}
+
+bool NvComputer::isReachableOverVpn()
+{
+    if (activeAddress.isEmpty()) {
+        return false;
+    }
+
+    QTcpSocket s;
+
+    s.setProxy(QNetworkProxy::NoProxy);
+    s.connectToHost(activeAddress, 47984);
+    if (s.waitForConnected(3000)) {
+        Q_ASSERT(!s.localAddress().isNull());
+
+        for (const QNetworkInterface& nic : QNetworkInterface::allInterfaces()) {
+            // Ensure the interface is up
+            if ((nic.flags() & QNetworkInterface::IsUp) == 0) {
+                continue;
+            }
+
+            for (const QNetworkAddressEntry& addr : nic.addressEntries()) {
+                if (addr.ip() == s.localAddress()) {
+                    qInfo() << "Found matching interface:" << nic.humanReadableName() << nic.type() << nic.flags();
+
+                    if (nic.flags() & QNetworkInterface::IsPointToPoint) {
+                        // Treat point-to-point links as likely VPNs
+                        return true;
+                    }
+
+                    if (nic.type() == QNetworkInterface::Virtual ||
+                            nic.type() == QNetworkInterface::Ppp) {
+                        // Treat PPP and virtual interfaces as likely VPNs
+                        return true;
+                    }
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+                    qInfo() << "MTU is" << nic.maximumTransmissionUnit();
+                    if (nic.maximumTransmissionUnit() < 1500) {
+                        // Treat MTUs under 1500 as likely VPNs
+                        return true;
+                    }
+#endif
+
+                    // Didn't meet any of our VPN heuristics
+                    return false;
+                }
+            }
+        }
+    }
+    else {
+        // If we fail to connect, just pretend that it's not a VPN
+        return false;
+    }
 }
 
 QVector<QString> NvComputer::uniqueAddresses()
