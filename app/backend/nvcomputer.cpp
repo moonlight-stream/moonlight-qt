@@ -259,12 +259,11 @@ bool NvComputer::isReachableOverVpn()
 
             for (const QNetworkAddressEntry& addr : nic.addressEntries()) {
                 if (addr.ip() == s.localAddress()) {
-                    qInfo() << "Found matching interface:" << nic.humanReadableName() << nic.type() << nic.flags();
+                    qInfo() << "Found matching interface:" << nic.humanReadableName() << nic.flags();
 
-                    if (nic.flags() & QNetworkInterface::IsPointToPoint) {
-                        // Treat point-to-point links as likely VPNs
-                        return true;
-                    }
+#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
+                    qInfo() << "Interface Type:" << nic.type();
+                    qInfo() << "Interface MTU:" << nic.maximumTransmissionUnit();
 
                     if (nic.type() == QNetworkInterface::Virtual ||
                             nic.type() == QNetworkInterface::Ppp) {
@@ -272,13 +271,16 @@ bool NvComputer::isReachableOverVpn()
                         return true;
                     }
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
-                    qInfo() << "MTU is" << nic.maximumTransmissionUnit();
                     if (nic.maximumTransmissionUnit() != 0 && nic.maximumTransmissionUnit() < 1500) {
                         // Treat MTUs under 1500 as likely VPNs
                         return true;
                     }
 #endif
+
+                    if (nic.flags() & QNetworkInterface::IsPointToPoint) {
+                        // Treat point-to-point links as likely VPNs
+                        return true;
+                    }
 
                     // Didn't meet any of our VPN heuristics
                     return false;
