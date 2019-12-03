@@ -287,6 +287,9 @@ bool NvComputer::isReachableOverVpn()
                 }
             }
         }
+
+        qWarning() << "No match found for address:" << s.localAddress();
+        return false;
     }
     else {
         // If we fail to connect, just pretend that it's not a VPN
