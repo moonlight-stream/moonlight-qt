@@ -159,6 +159,12 @@ if "%SIGN%"=="1" (
     if !ERRORLEVEL! NEQ 0 goto Error
 )
 
+if "%ML_SYMBOL_STORE%" NEQ "" (
+    echo Publishing binaries to symbol store: %ML_SYMBOL_STORE%
+    symstore add /r /f %DEPLOY_FOLDER%\*.* /s %ML_SYMBOL_STORE% /t Moonlight
+    if !ERRORLEVEL! NEQ 0 goto Error
+)
+
 echo Building MSI
 msbuild %SOURCE_ROOT%\wix\Moonlight\Moonlight.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
