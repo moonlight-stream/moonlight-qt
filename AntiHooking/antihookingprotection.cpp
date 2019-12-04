@@ -151,6 +151,29 @@ private:
         // https://github.com/moonlight-stream/moonlight-qt/issues/235
         L"nvdlist.dll",
         L"nvdlistx.dll",
+
+        // In some unknown circumstances, RTSS tries to hook in the middle of an instruction, leaving garbage
+        // code inside d3d9.dll that causes a crash when executed:
+        //
+        // 0:000> u
+        // d3d9!D3D9GetCurrentOwnershipMode+0x5d:
+        // 00007ff8`95b95861 9b              wait
+        // 00007ff8`95b95862 a7              cmps    dword ptr [rsi],dword ptr [rdi]   <--- crash happens here
+        // 00007ff8`95b95863 ff              ???
+        // 00007ff8`95b95864 bfe8ca8a00      mov     edi,8ACAE8h
+        // 00007ff8`95b95869 00eb            add     bl,ch
+        // 00007ff8`95b9586b f1              ???
+        // 00007ff8`95b9586c b808000000      mov     eax,8
+        // 00007ff8`95b95871 ebe6            jmp     d3d9!D3D9GetCurrentOwnershipMode+0x55 (00007ff8`95b95859)
+        //
+        // Disassembling starting at the exact address of the attempted hook yields the intended jmp instruction
+        //
+        // 0:000> u d3d9!D3D9GetCurrentOwnershipMode+0x5c:
+        // 00007ff8`95b95860 e99ba7ffbf      jmp     00007ff8`55b90000
+        //
+        // Since the RTSS OSD doesn't even work with DXVA2, we'll just block the hooks entirely.
+        L"RTSSHooks.dll",
+        L"RTSSHooks64.dll",
     };
 };
 
