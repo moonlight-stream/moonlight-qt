@@ -301,7 +301,8 @@ bool SoundIoAudioRenderer::submitAudio(int bytesWritten)
 
 int SoundIoAudioRenderer::getCapabilities()
 {
-    return CAPABILITY_DIRECT_SUBMIT | CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION;
+    // TODO: Tweak buffer sizes then re-enable arbitrary audio duration
+    return CAPABILITY_DIRECT_SUBMIT /* | CAPABILITY_SUPPORTS_ARBITRARY_AUDIO_DURATION */;
 }
 
 void SoundIoAudioRenderer::sioErrorCallback(SoundIoOutStream* stream, int err)
