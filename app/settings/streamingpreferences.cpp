@@ -25,6 +25,9 @@
 #define SER_CONNWARNINGS "connwarnings"
 #define SER_RICHPRESENCE "richpresence"
 #define SER_GAMEPADMOUSE "gamepadmouse"
+#define SER_DEFAULTVER "defaultver"
+
+#define CURRENT_DEFAULT_VER 1
 
 StreamingPreferences::StreamingPreferences(QObject *parent)
     : QObject(parent)
@@ -35,6 +38,8 @@ StreamingPreferences::StreamingPreferences(QObject *parent)
 void StreamingPreferences::reload()
 {
     QSettings settings;
+
+    int defaultVer = settings.value(SER_DEFAULTVER, 0).toInt();
 
 #ifdef Q_OS_DARWIN
     recommendedFullScreenMode = WindowMode::WM_FULLSCREEN_DESKTOP;
@@ -69,6 +74,16 @@ void StreamingPreferences::reload()
                                                         // Try to load from the old preference value too
                                                         static_cast<int>(settings.value(SER_FULLSCREEN, true).toBool() ?
                                                                              recommendedFullScreenMode : WindowMode::WM_WINDOWED)).toInt());
+
+    // Perform default settings updates as required based on last default version
+    if (defaultVer == 0) {
+#ifdef Q_OS_DARWIN
+        // Update window mode setting on macOS from full-screen (old default) to borderless windowed (new default)
+        if (windowMode == WindowMode::WM_FULLSCREEN) {
+            windowMode = WindowMode::WM_FULLSCREEN_DESKTOP;
+        }
+#endif
+    }
 }
 
 void StreamingPreferences::save()
@@ -96,6 +111,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
     settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
+    settings.setValue(SER_DEFAULTVER, CURRENT_DEFAULT_VER);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
