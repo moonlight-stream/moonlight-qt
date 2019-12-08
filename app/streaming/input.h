@@ -8,10 +8,13 @@
 struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
+    short index;
+
+#if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_Haptic* haptic;
     int hapticMethod;
     int hapticEffectId;
-    short index;
+#endif
 
     SDL_TimerID mouseEmulationTimer;
     uint32_t lastStartDownTime;

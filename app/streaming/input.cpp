@@ -112,12 +112,14 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
                      SDL_GetError());
     }
 
+#if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_assert(!SDL_WasInit(SDL_INIT_HAPTIC));
     if (SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_HAPTIC) failed: %s",
                      SDL_GetError());
     }
+#endif
 
     // Initialize the gamepad mask with currently attached gamepads to avoid
     // causing gamepads to unexpectedly disappear and reappear on the host
@@ -141,9 +143,11 @@ SdlInputHandler::~SdlInputHandler()
             Session::get()->notifyMouseEmulationMode(false);
             SDL_RemoveTimer(m_GamepadState[i].mouseEmulationTimer);
         }
+#if !SDL_VERSION_ATLEAST(2, 0, 9)
         if (m_GamepadState[i].haptic != nullptr) {
             SDL_HapticClose(m_GamepadState[i].haptic);
         }
+#endif
         if (m_GamepadState[i].controller != nullptr) {
             SDL_GameControllerClose(m_GamepadState[i].controller);
         }
@@ -154,8 +158,10 @@ SdlInputHandler::~SdlInputHandler()
     SDL_RemoveTimer(m_RightButtonReleaseTimer);
     SDL_RemoveTimer(m_DragTimer);
 
+#if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);
     SDL_assert(!SDL_WasInit(SDL_INIT_HAPTIC));
+#endif
 
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
@@ -947,6 +953,8 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
 
         state->controller = controller;
         state->jsId = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(state->controller));
+
+#if !SDL_VERSION_ATLEAST(2, 0, 9)
         state->haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(state->controller));
         state->hapticEffectId = -1;
         state->hapticMethod = GAMEPAD_HAPTIC_METHOD_NONE;
@@ -965,6 +973,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                 state->hapticMethod = GAMEPAD_HAPTIC_METHOD_LEFTRIGHT;
             }
         }
+#endif
 
         SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(SDL_GameControllerGetJoystick(state->controller)),
                                   guidStr, sizeof(guidStr));
@@ -1004,9 +1013,12 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             }
 
             SDL_GameControllerClose(state->controller);
+
+#if !SDL_VERSION_ATLEAST(2, 0, 9)
             if (state->haptic != nullptr) {
                 SDL_HapticClose(state->haptic);
             }
+#endif
 
             // Remove this from the gamepad mask in MC-mode
             if (m_MultiController) {
@@ -1067,6 +1079,11 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
         return;
     }
 
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        SDL_GameControllerRumble(m_GamepadState[controllerNumber].controller, lowFreqMotor, highFreqMotor, 30000);
+    }
+#else
     // Check if the controller supports haptics (and if the controller exists at all)
     SDL_Haptic* haptic = m_GamepadState[controllerNumber].haptic;
     if (haptic == nullptr) {
@@ -1110,7 +1127,7 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
                                             GAMEPAD_HAPTIC_SIMPLE_LOWFREQ_MOTOR_WEIGHT*lowFreqMotor) / 65535.0),
                              SDL_HAPTIC_INFINITY);
     }
-
+#endif
 }
 
 void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
