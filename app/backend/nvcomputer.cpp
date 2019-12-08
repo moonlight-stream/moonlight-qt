@@ -259,7 +259,7 @@ bool NvComputer::isReachableOverVpn()
 
             for (const QNetworkAddressEntry& addr : nic.addressEntries()) {
                 if (addr.ip() == s.localAddress()) {
-                    qInfo() << "Found matching interface:" << nic.humanReadableName() << nic.flags();
+                    qInfo() << "Found matching interface:" << nic.humanReadableName() << nic.hardwareAddress() << nic.flags();
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 11, 0)
                     qInfo() << "Interface Type:" << nic.type();
@@ -278,7 +278,23 @@ bool NvComputer::isReachableOverVpn()
 #endif
 
                     if (nic.flags() & QNetworkInterface::IsPointToPoint) {
-                        // Treat point-to-point links as likely VPNs
+                        // Treat point-to-point links as likely VPNs.
+                        // This check detects OpenVPN on Unix-like OSes.
+                        return true;
+                    }
+
+                    if (nic.hardwareAddress().startsWith("00:FF", Qt::CaseInsensitive)) {
+                        // OpenVPN TAP interfaces have a MAC address starting with 00:FF on Windows
+                        return true;
+                    }
+
+                    if (nic.humanReadableName().startsWith("ZeroTier")) {
+                        // ZeroTier interfaces always start with "ZeroTier"
+                        return true;
+                    }
+
+                    if (nic.humanReadableName().contains("VPN")) {
+                        // This one is just a final heuristic if all else fails
                         return true;
                     }
 
