@@ -44,6 +44,7 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool isHardwareAccelerated() = 0;
     virtual int getDecoderCapabilities() = 0;
+    virtual int getDecoderColorspace() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual void renderFrameOnMainThread() = 0;
 };

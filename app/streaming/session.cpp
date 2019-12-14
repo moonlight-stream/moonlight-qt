@@ -284,6 +284,8 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 
     m_VideoCallbacks.capabilities |= decoder->getDecoderCapabilities();
 
+    m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
+
     delete decoder;
 
     return true;

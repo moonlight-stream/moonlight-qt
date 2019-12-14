@@ -31,6 +31,12 @@ SLVideoDecoder::getDecoderCapabilities()
     return 0;
 }
 
+int
+SLVideoDecoder::getDecoderColorspace()
+{
+    return COLORSPACE_REC_709;
+}
+
 bool
 SLVideoDecoder::initialize(PDECODER_PARAMETERS params)
 {

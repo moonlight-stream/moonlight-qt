@@ -31,6 +31,11 @@ public:
         return 0;
     }
 
+    virtual int getDecoderColorspace() {
+        // Rec 601 is default
+        return COLORSPACE_REC_601;
+    }
+
     virtual FramePacingConstraint getFramePacingConstraint() {
         // No pacing preference
         return PACING_ANY;

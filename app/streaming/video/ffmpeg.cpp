@@ -50,6 +50,11 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
     return m_BackendRenderer->getDecoderCapabilities();
 }
 
+int FFmpegVideoDecoder::getDecoderColorspace()
+{
+    return m_FrontendRenderer->getDecoderColorspace();
+}
+
 enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
                                                    const enum AVPixelFormat* pixFmts)
 {

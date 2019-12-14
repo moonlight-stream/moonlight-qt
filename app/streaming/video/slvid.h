@@ -12,6 +12,7 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params);
     virtual bool isHardwareAccelerated();
     virtual int getDecoderCapabilities();
+    virtual int getDecoderColorspace();
     virtual int submitDecodeUnit(PDECODE_UNIT du);
 
     // Unused since rendering is done directly from the decode thread

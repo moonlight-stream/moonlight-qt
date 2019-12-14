@@ -17,6 +17,7 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool isHardwareAccelerated() override;
     virtual int getDecoderCapabilities() override;
+    virtual int getDecoderColorspace() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
     virtual void renderFrameOnMainThread() override;
 
