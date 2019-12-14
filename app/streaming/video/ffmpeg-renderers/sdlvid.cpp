@@ -282,6 +282,18 @@ void SdlRenderer::renderFrame(AVFrame* frame)
             goto Exit;
         }
 
+        switch (frame->colorspace)
+        {
+        case AVCOL_SPC_BT709:
+            SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT709);
+            break;
+        case AVCOL_SPC_BT470BG:
+        case AVCOL_SPC_SMPTE170M:
+        default:
+            SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
+            break;
+        }
+
         m_Texture = SDL_CreateTexture(m_Renderer,
                                       sdlFormat,
                                       SDL_TEXTUREACCESS_STREAMING,
