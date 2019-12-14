@@ -41,6 +41,10 @@
 // Determines the maximum motion amount before allowing movement
 #define MOUSE_EMULATION_DEADZONE 2
 
+// Haptic capabilities (in addition to those from SDL_HapticQuery())
+#define ML_HAPTIC_GC_RUMBLE      (1U << 16)
+#define ML_HAPTIC_SIMPLE_RUMBLE  (1U << 17)
+
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
     BACK_FLAG, SPECIAL_FLAG, PLAY_FLAG,
@@ -911,6 +915,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         SDL_GameController* controller;
         const char* mapping;
         char guidStr[33];
+        uint32_t hapticCaps;
 
         controller = SDL_GameControllerOpen(event->which);
         if (controller == NULL) {
@@ -954,11 +959,20 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         state->controller = controller;
         state->jsId = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(state->controller));
 
-#if !SDL_VERSION_ATLEAST(2, 0, 9)
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+        // Perform a no-op rumble to see if haptics are supported
+        hapticCaps = SDL_GameControllerRumble(controller, 0, 0, 0) == 0 ?
+                        ML_HAPTIC_GC_RUMBLE : 0;
+#else
         state->haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(state->controller));
         state->hapticEffectId = -1;
         state->hapticMethod = GAMEPAD_HAPTIC_METHOD_NONE;
         if (state->haptic != nullptr) {
+            // Query for supported haptic effects
+            hapticCaps = SDL_HapticQuery(state->haptic);
+            hapticCaps |= SDL_HapticRumbleSupported(state->haptic) ?
+                            ML_HAPTIC_SIMPLE_RUMBLE : 0;
+
             if ((SDL_HapticQuery(state->haptic) & SDL_HAPTIC_LEFTRIGHT) == 0) {
                 if (SDL_HapticRumbleSupported(state->haptic)) {
                     if (SDL_HapticRumbleInit(state->haptic) == 0) {
@@ -973,6 +987,9 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                 state->hapticMethod = GAMEPAD_HAPTIC_METHOD_LEFTRIGHT;
             }
         }
+        else {
+            hapticCaps = 0;
+        }
 #endif
 
         SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(SDL_GameControllerGetJoystick(state->controller)),
@@ -980,10 +997,11 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         mapping = SDL_GameControllerMapping(state->controller);
         name = SDL_GameControllerName(state->controller);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Gamepad %d (player %d) is: %s (%s -> %s)",
+                    "Gamepad %d (player %d) is: %s (haptic capabilities: 0x%x) (mapping: %s -> %s)",
                     i,
                     state->index,
                     name != nullptr ? name : "<null>",
+                    hapticCaps,
                     guidStr,
                     mapping != nullptr ? mapping : "<null>");
         if (mapping != nullptr) {
