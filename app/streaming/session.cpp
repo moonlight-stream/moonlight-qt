@@ -267,21 +267,26 @@ bool Session::isHardwareDecodeAvailable(SDL_Window* window,
     return ret;
 }
 
-int Session::getDecoderCapabilities(SDL_Window* window,
-                                    StreamingPreferences::VideoDecoderSelection vds,
-                                    int videoFormat, int width, int height, int frameRate)
+bool Session::populateDecoderProperties(SDL_Window* window)
 {
     IVideoDecoder* decoder;
 
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, true, decoder)) {
+    if (!chooseDecoder(m_Preferences->videoDecoderSelection,
+                       window,
+                       m_StreamConfig.enableHdr ? VIDEO_FORMAT_H265_MAIN10 :
+                            (m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264),
+                       m_StreamConfig.width,
+                       m_StreamConfig.height,
+                       m_StreamConfig.fps,
+                       true, false, true, decoder)) {
         return false;
     }
 
-    int caps = decoder->getDecoderCapabilities();
+    m_VideoCallbacks.capabilities |= decoder->getDecoderCapabilities();
 
     delete decoder;
 
-    return caps;
+    return true;
 }
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
@@ -430,15 +435,6 @@ bool Session::initialize()
         break;
     }
 
-    // Add the capability flags from the chosen decoder/renderer
-    // Requires m_StreamConfig.supportsHevc to be initialized
-    m_VideoCallbacks.capabilities |= getDecoderCapabilities(testWindow,
-                                                            m_Preferences->videoDecoderSelection,
-                                                            m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
-                                                            m_StreamConfig.width,
-                                                            m_StreamConfig.height,
-                                                            m_StreamConfig.fps);
-
     switch (m_Preferences->windowMode)
     {
     default:
@@ -453,6 +449,12 @@ bool Session::initialize()
     // Check for validation errors/warnings and emit
     // signals for them, if appropriate
     bool ret = validateLaunch(testWindow);
+
+    if (ret) {
+        // Populate decoder-dependent properties.
+        // Must be done after validateLaunch() since m_StreamConfig is finalized.
+        ret = populateDecoderProperties(testWindow);
+    }
 
     SDL_DestroyWindow(testWindow);
 
@@ -500,13 +502,14 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         bool hevcForced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
                 m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
 
-        if (!isHardwareDecodeAvailable(testWindow,
-                                       m_Preferences->videoDecoderSelection,
-                                       VIDEO_FORMAT_H265,
-                                       m_StreamConfig.width,
-                                       m_StreamConfig.height,
-                                       m_StreamConfig.fps) &&
-                m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO) {
+        if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
+                m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Already checked in initialize()
+                !isHardwareDecodeAvailable(testWindow,
+                                           m_Preferences->videoDecoderSelection,
+                                           VIDEO_FORMAT_H265,
+                                           m_StreamConfig.width,
+                                           m_StreamConfig.height,
+                                           m_StreamConfig.fps)) {
             if (hevcForced) {
                 emitLaunchWarning("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.");
             }
@@ -592,6 +595,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     }
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
+            !m_StreamConfig.enableHdr && // HEVC Main10 was already checked for hardware decode support above
             !isHardwareDecodeAvailable(testWindow,
                                        m_Preferences->videoDecoderSelection,
                                        m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,

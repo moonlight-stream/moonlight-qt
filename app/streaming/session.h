@@ -61,10 +61,7 @@ private:
 
     void emitLaunchWarning(QString text);
 
-    static
-    int getDecoderCapabilities(SDL_Window* window,
-                               StreamingPreferences::VideoDecoderSelection vds,
-                               int videoFormat, int width, int height, int frameRate);
+    bool populateDecoderProperties(SDL_Window* window);
 
     IAudioRenderer* createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
