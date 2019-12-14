@@ -127,6 +127,16 @@ bool SdlRenderer::isRenderThreadSupported()
     return true;
 }
 
+int SdlRenderer::getDecoderCapabilities()
+{
+    // Slice up to 4 times for parallel decode, once slice per core
+    int slices = qMin(MAX_SLICES, SDL_GetCPUCount());
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Encoder configured for %d slices per frame",
+                slices);
+    return CAPABILITY_SLICES_PER_FRAME(slices);
+}
+
 bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 {
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;

@@ -282,7 +282,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
         return false;
     }
 
-    m_VideoCallbacks.capabilities |= decoder->getDecoderCapabilities();
+    m_VideoCallbacks.capabilities = decoder->getDecoderCapabilities();
 
     m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
 
@@ -349,13 +349,6 @@ bool Session::initialize()
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
     m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
-
-    // Slice up to 4 times for parallel decode, once slice per core
-    int slices = qMin(MAX_SLICES, SDL_GetCPUCount());
-    m_VideoCallbacks.capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Encoder configured for %d slices per frame",
-                slices);
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
     m_StreamConfig.width = m_Preferences->width;
