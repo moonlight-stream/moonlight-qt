@@ -245,7 +245,11 @@ ApplicationWindow {
                 // an update is available
                 visible: false
 
-                onClicked: Qt.openUrlExternally(browserUrl);
+                onClicked: {
+                    if (SystemProperties.hasBrowser) {
+                        Qt.openUrlExternally(browserUrl);
+                    }
+                }
 
                 function updateAvailable(version, url)
                 {

@@ -20,6 +20,8 @@ private slots:
 private:
     void parseStringToVersionQuad(QString& string, QVector<int>& version);
 
+    QString getPlatform();
+
     QVector<int> m_CurrentVersionQuad;
     QNetworkAccessManager m_Nam;
 };

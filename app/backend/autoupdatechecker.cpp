@@ -28,7 +28,7 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
 
 void AutoUpdateChecker::start()
 {
-#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN) // Only run update checker on platforms without auto-update
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN) || defined(STEAM_LINK) // Only run update checker on platforms without auto-update
     // We'll get a callback when this is finished
     QUrl url("https://moonlight-stream.org/updates/qt.json");
     m_Nam.get(QNetworkRequest(url));
@@ -41,6 +41,15 @@ void AutoUpdateChecker::parseStringToVersionQuad(QString& string, QVector<int>& 
     for (const QString& component : list) {
         version.append(component.toInt());
     }
+}
+
+QString AutoUpdateChecker::getPlatform()
+{
+#ifdef STEAM_LINK
+    return QStringLiteral("steamlink");
+#else
+    return QSysInfo::productType();
+#endif
 }
 
 void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
@@ -88,7 +97,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                 }
 
                 if (updateObj["arch"] == QSysInfo::buildCpuArchitecture() &&
-                        updateObj["platform"] == QSysInfo::productType()) {
+                        updateObj["platform"] == getPlatform()) {
                     qDebug() << "Found update manifest match for current platform";
 
                     QString latestVersion = updateObj["version"].toString();
@@ -137,7 +146,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
         }
 
         qWarning() << "No entry in update manifest found for current platform: "
-                   << QSysInfo::buildCpuArchitecture() << QSysInfo::productType();
+                   << QSysInfo::buildCpuArchitecture() << getPlatform();
     }
     else {
         qWarning() << "Update checking failed with error: " << reply->error();
