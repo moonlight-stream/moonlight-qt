@@ -270,6 +270,11 @@ void SdlRenderer::renderFrame(AVFrame* frame)
             goto Exit;
         }
 
+        // av_hwframe_transfer_data() can nuke frame metadata,
+        // so anything other than width, height, and format must
+        // be set *after* calling av_hwframe_transfer_data().
+        swFrame->colorspace = frame->colorspace;
+
         frame = swFrame;
     }
 
