@@ -65,6 +65,7 @@ SLVideoDecoder::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    SLVideo_SetStreamVideoTransferMatrix(m_VideoStream, k_ESLVideoTransferMatrix_BT709);
     SLVideo_SetStreamTargetFramerate(m_VideoStream, params->frameRate, 1);
 
     return true;
