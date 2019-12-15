@@ -38,6 +38,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
     virtual bool isDirectRenderingSupported() override;
+    virtual int getDecoderColorspace() override;
 
 private:
     int m_WindowSystem;

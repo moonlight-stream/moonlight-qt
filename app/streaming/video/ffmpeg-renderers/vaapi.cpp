@@ -219,6 +219,13 @@ VAAPIRenderer::isDirectRenderingSupported()
     return m_WindowSystem == SDL_SYSWM_X11;
 }
 
+int VAAPIRenderer::getDecoderColorspace()
+{
+    // Gallium drivers don't support Rec 709 yet - https://gitlab.freedesktop.org/mesa/mesa/issues/1915
+    // Intel-vaapi-driver defaults to Rec 601 - https://github.com/intel/intel-vaapi-driver/blob/021bcb79d1bd873bbd9fbca55f40320344bab866/src/i965_output_dri.c#L186
+    return COLORSPACE_REC_601;
+}
+
 void
 VAAPIRenderer::renderFrame(AVFrame* frame)
 {
@@ -238,6 +245,27 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 
     if (m_WindowSystem == SDL_SYSWM_X11) {
 #ifdef HAVE_LIBVA_X11
+        unsigned int flags = 0;
+
+        // NB: Not all VAAPI drivers respect these flags. Many drivers
+        // just ignore them and do the color conversion as Rec 601.
+        switch (frame->colorspace) {
+        case AVCOL_SPC_BT709:
+            flags |= VA_SRC_BT709;
+            break;
+        case AVCOL_SPC_BT470BG:
+        case AVCOL_SPC_SMPTE170M:
+            flags |= VA_SRC_BT601;
+            break;
+        case AVCOL_SPC_SMPTE240M:
+            flags |= VA_SRC_SMPTE_240;
+            break;
+        default:
+            // Unknown colorspace
+            SDL_assert(false);
+            break;
+        }
+
         vaPutSurface(vaDeviceContext->display,
                      surface,
                      m_XWindow,
@@ -245,7 +273,7 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
                      m_VideoWidth, m_VideoHeight,
                      dst.x, dst.y,
                      dst.w, dst.h,
-                     NULL, 0, 0);
+                     NULL, 0, flags);
 #endif
     }
     else if (m_WindowSystem == SDL_SYSWM_WAYLAND) {
