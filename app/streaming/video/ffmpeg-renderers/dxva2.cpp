@@ -776,6 +776,20 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 }
 
+int DXVA2Renderer::getDecoderColorspace()
+{
+    if (isDXVideoProcessorAPIBlacklisted()) {
+        // StretchRect() assumes Rec 601 on Intel GPUs
+        return COLORSPACE_REC_601;
+    }
+    else {
+        // VideoProcessBlt() *should* properly handle whatever, since
+        // we provide colorspace information. However, AMD GPUs seem to
+        // always assume Rec 709, so we'll use that as our default.
+        return COLORSPACE_REC_709;
+    }
+}
+
 void DXVA2Renderer::renderFrame(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
