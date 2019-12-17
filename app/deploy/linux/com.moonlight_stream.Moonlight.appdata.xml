@@ -33,6 +33,19 @@
 	</screenshots>
 
 	<releases>
+		<release version="1.2.0" date="2019-12-16">
+			<description>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed RTSP handshake error on certain networks</li>
+					<li>Improved performance when streaming over a VPN</li>
+					<li>Fixed rumble not working on certain gamepads</li>
+					<li>Improved H.264 encoding efficiency</li>
+					<li>Fixed pairing error when double-clicking on an unpaired PC</li>
+					<li>Updated included SDL gamepad mappings</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.1.1" date="2019-09-29">
 			<description>
 				<p>Bugfixes:</p>
