@@ -9,6 +9,7 @@
 #include <QPalette>
 #include <QFont>
 #include <QCursor>
+#include <QElapsedTimer>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -52,7 +53,7 @@
 #endif
 
 #ifdef USE_CUSTOM_LOGGER
-static QTime s_LoggerTime;
+static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stdout);
 static QMutex s_LoggerLock;
 #ifdef LOG_TO_FILE
