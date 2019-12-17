@@ -17,6 +17,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
+    virtual int getDecoderColorspace() override;
 
 private:
     uint32_t m_VideoWidth, m_VideoHeight;

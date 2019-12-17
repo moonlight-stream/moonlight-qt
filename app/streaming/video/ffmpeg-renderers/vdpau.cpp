@@ -250,6 +250,15 @@ bool VDPAURenderer::needsTestFrame()
     return true;
 }
 
+int VDPAURenderer::getDecoderColorspace()
+{
+    // VDPAU defaults to Rec 601.
+    // https://http.download.nvidia.com/XFree86/vdpau/doxygen/html/group___vdp_video_mixer.html#ga65580813e9045d94b739ed2bb8b62b46
+    //
+    // AMD and Nvidia GPUs both correctly process Rec 601, so let's not try our luck using a non-default colorspace.
+    return COLORSPACE_REC_601;
+}
+
 void VDPAURenderer::renderFrame(AVFrame* frame)
 {
     VdpStatus status;
