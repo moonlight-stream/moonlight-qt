@@ -11,13 +11,20 @@ if [ "$BUILD_CONFIG" != "Debug" ] && [ "$BUILD_CONFIG" != "Release" ]; then
   fail "Invalid build configuration - expected 'Debug' or 'Release'"
 fi
 
-[ "$SIGNING_KEY" == "" ] || git diff-index --quiet HEAD -- || fail "Signed release builds must not have unstaged changes!"
-
 BUILD_ROOT=$PWD/build
 SOURCE_ROOT=$PWD
 BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
 VERSION=`cat $SOURCE_ROOT/app/version.txt`
+
+if [ "$SIGNING_PROVIDER_SHORTNAME" == "" ]; then
+  SIGNING_PROVIDER_SHORTNAME=$SIGNING_IDENTITY
+fi
+if [ "$SIGNING_IDENTITY" == "" ]; then
+  SIGNING_IDENTITY=$SIGNING_PROVIDER_SHORTNAME
+fi
+
+[ "$SIGNING_IDENTITY" == "" ] || git diff-index --quiet HEAD -- || fail "Signed release builds must not have unstaged changes!"
 
 echo Cleaning output directories
 rm -rf $BUILD_FOLDER
@@ -48,14 +55,14 @@ if [ "$BUILD_CONFIG" == "Debug" ]; then EXTRA_ARGS="$EXTRA_ARGS -use-debug-libs"
 echo Extra deployment arguments: $EXTRA_ARGS
 macdeployqt $BUILD_FOLDER/app/Moonlight.app $EXTRA_ARGS -qmldir=$SOURCE_ROOT/app/gui -appstore-compliant || fail "macdeployqt failed!"
 
-if [ "$SIGNING_KEY" != "" ]; then
+if [ "$SIGNING_IDENTITY" != "" ]; then
   echo Signing app bundle
-  codesign --force --deep --options runtime --timestamp --sign $SIGNING_KEY $BUILD_FOLDER/app/Moonlight.app || fail "Signing failed!"
+  codesign --force --deep --options runtime --timestamp --sign "$SIGNING_IDENTITY" $BUILD_FOLDER/app/Moonlight.app || fail "Signing failed!"
 fi
 
 echo Creating DMG
-if [ "$SIGNING_KEY" != "" ]; then
-  create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER --identity=$SIGNING_KEY || fail "create-dmg failed!"
+if [ "$SIGNING_IDENTITY" != "" ]; then
+  create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER --identity="$SIGNING_IDENTITY" || fail "create-dmg failed!"
 else
   create-dmg $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER
   case $? in
@@ -67,13 +74,13 @@ fi
 
 if [ "$NOTARY_USERNAME" != "" ] && [ "$NOTARY_PASSWORD" != "" ]; then
   echo Uploading to App Notary service
-  xcrun altool -t osx -f $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg --primary-bundle-id com.moonlight-stream.Moonlight --notarize-app --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider $SIGNING_KEY || fail "Notary submission failed"
+  xcrun altool -t osx -f $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg --primary-bundle-id com.moonlight-stream.Moonlight --notarize-app --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider "$SIGNING_PROVIDER_SHORTNAME" || fail "Notary submission failed"
   
   echo Waiting 5 minutes for notarization to complete
   sleep 300
 
   echo Getting notarization status
-  xcrun altool -t osx --notarization-history 0 --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider $SIGNING_KEY || fail "Unable to fetch notarization history!"
+  xcrun altool -t osx --notarization-history 0 --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider "$SIGNING_PROVIDER_SHORTNAME" || fail "Unable to fetch notarization history!"
 
   echo Stapling notary ticket to DMG
   xcrun stapler staple -v $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg || fail "Notary ticket stapling failed!"
