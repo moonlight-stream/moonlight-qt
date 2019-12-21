@@ -454,8 +454,10 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Add our client certificate
     request.setSslConfiguration(IdentityManager::get()->getSslConfig());
 
-    // HACK: Set reachability to work around QTBUG-80947
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+    // HACK: Set network accessibility to work around QTBUG-80947
     m_Nam.setNetworkAccessible(QNetworkAccessManager::Accessible);
+#endif
 
     QNetworkReply* reply = m_Nam.get(request);
 
