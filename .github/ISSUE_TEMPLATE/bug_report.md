@@ -1,6 +1,6 @@
 ---
 name: Bug report
-about: Create a report to help us address issues in Moonlight
+about: Ask for help on Discord before reporting a bug
 
 ---
 **READ ME FIRST!**
