@@ -12,6 +12,7 @@
 #include <QtEndian>
 #include <QNetworkProxy>
 
+#define FAST_FAIL_TIMEOUT_MS 2000
 #define REQUEST_TIMEOUT_MS 5000
 #define LAUNCH_TIMEOUT_MS 120000
 #define RESUME_TIMEOUT_MS 30000
@@ -92,7 +93,7 @@ NvHTTP::getCurrentGame(QString serverInfo)
 }
 
 QString
-NvHTTP::getServerInfo(NvLogLevel logLevel)
+NvHTTP::getServerInfo(NvLogLevel logLevel, bool fastFail)
 {
     QString serverInfo;
 
@@ -106,7 +107,7 @@ NvHTTP::getServerInfo(NvLogLevel logLevel)
             serverInfo = openConnectionToString(m_BaseUrlHttps,
                                                 "serverinfo",
                                                 nullptr,
-                                                REQUEST_TIMEOUT_MS,
+                                                fastFail ? FAST_FAIL_TIMEOUT_MS : REQUEST_TIMEOUT_MS,
                                                 logLevel);
             // Throws if the request failed
             verifyResponseStatus(serverInfo);
@@ -119,7 +120,7 @@ NvHTTP::getServerInfo(NvLogLevel logLevel)
                 serverInfo = openConnectionToString(m_BaseUrlHttp,
                                                     "serverinfo",
                                                     nullptr,
-                                                    REQUEST_TIMEOUT_MS,
+                                                    fastFail ? FAST_FAIL_TIMEOUT_MS : REQUEST_TIMEOUT_MS,
                                                     logLevel);
                 verifyResponseStatus(serverInfo);
             }
@@ -136,7 +137,7 @@ NvHTTP::getServerInfo(NvLogLevel logLevel)
         serverInfo = openConnectionToString(m_BaseUrlHttp,
                                             "serverinfo",
                                             nullptr,
-                                            REQUEST_TIMEOUT_MS,
+                                            fastFail ? FAST_FAIL_TIMEOUT_MS : REQUEST_TIMEOUT_MS,
                                             logLevel);
         verifyResponseStatus(serverInfo);
     }

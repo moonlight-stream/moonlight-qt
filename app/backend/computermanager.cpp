@@ -32,7 +32,7 @@ private:
 
         QString serverInfo;
         try {
-            serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::NVLL_NONE);
+            serverInfo = http.getServerInfo(NvHTTP::NvLogLevel::NVLL_NONE, true);
         } catch (...) {
             return false;
         }
@@ -84,7 +84,7 @@ private:
             bool stateChanged = false;
             bool online = false;
             bool wasOnline = m_Computer->state == NvComputer::CS_ONLINE;
-            for (int i = 0; i < TRIES_BEFORE_OFFLINING && !online; i++) {
+            for (int i = 0; i < (wasOnline ? TRIES_BEFORE_OFFLINING : 1) && !online; i++) {
                 for (auto& address : m_Computer->uniqueAddresses()) {
                     if (isInterruptionRequested()) {
                         return;

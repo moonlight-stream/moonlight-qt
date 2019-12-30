@@ -131,7 +131,7 @@ public:
     getCurrentGame(QString serverInfo);
 
     QString
-    getServerInfo(NvLogLevel logLevel);
+    getServerInfo(NvLogLevel logLevel, bool fastFail = false);
 
     static
     void
