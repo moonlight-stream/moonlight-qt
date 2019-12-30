@@ -413,6 +413,10 @@ ApplicationWindow {
             editText.forceActiveFocus()
         }
 
+        onClosed: {
+            editText.clear()
+        }
+
         onAccepted: {
             if (editText.text) {
                 ComputerManager.addNewHost(editText.text, false)
