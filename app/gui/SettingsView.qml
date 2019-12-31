@@ -708,20 +708,17 @@ Flickable {
                             val: StreamingPreferences.VCC_AUTO
                         }
                         ListElement {
-                            text: "Force H.264"
+                            text: "H.264"
                             val: StreamingPreferences.VCC_FORCE_H264
                         }
                         ListElement {
-                            text: "Force HEVC"
+                            text: "HEVC (H.265)"
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
-                        // HDR seems to be broken in GFE 3.14.1, and even when that's fixed
-                        // we'll probably need to gate this feature on OS support in our
-                        // renderers.
-                        /* ListElement {
-                            text: "Force HEVC HDR"
+                        ListElement {
+                            text: "HEVC HDR (Experimental)"
                             val: StreamingPreferences.VCC_FORCE_HEVC_HDR
-                        } */
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

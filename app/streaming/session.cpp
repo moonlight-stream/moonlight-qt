@@ -482,7 +482,13 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     QStringList warningList;
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
-        emitLaunchWarning("Your settings selection to force software decoding may cause poor streaming performance.");
+        if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR) {
+            emitLaunchWarning("HDR is not supported with software decoding.");
+            m_StreamConfig.enableHdr = false;
+        }
+        else {
+            emitLaunchWarning("Your settings selection to force software decoding may cause poor streaming performance.");
+        }
     }
 
     if (m_Preferences->unsupportedFps && m_StreamConfig.fps > 60) {
