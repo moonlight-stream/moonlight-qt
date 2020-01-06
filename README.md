@@ -25,10 +25,9 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 - [Flatpak (for other Linux distros)](https://flathub.org/apps/details/com.moonlight_stream.Moonlight)
 
 ## Building
-### General Build Requirements
-* Qt 5.9 SDK or later
 
-### Windows-specific Build Requirements
+### Windows Build Requirements
+* Qt 5.12.4 SDK or later
 * Windows 7 or later
 * [Visual Studio](https://visualstudio.microsoft.com/downloads/) 2017 (Community edition is fine)
 * Select MSVC Desktop toolchain during Qt installation
@@ -36,17 +35,19 @@ You can follow development on our [Discord server](https://discord.gg/6ERtzFY).
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
 * [WiX Toolset](http://wixtoolset.org/releases/) v3.11 or later (only if building installers for non-development PCs)
 
-### Mac-specific Build Requirements
-* macOS Sierra (10.12) or later
-* Xcode 10
+### macOS Build Requirements
+* Qt 5.14 SDK or later
+* macOS High Sierra (10.13) or later
+* Xcode 11
 * [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
 
-### Linux-specific Build Requirements
+### Linux/Unix Build Requirements
+* Qt 5.9 SDK or later
 * GCC or Clang
 * Install your distro equivalents of: `openssl-devel qt5-devel SDL2-devel ffmpeg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel SDL2_ttf-devel`
 * FFmpeg 4.0 is required to build. If your distro doesn't package FFmpeg 4.0, you can build and install it from source on http://ffmpeg.org/
 
-### Steam Link-specific Build Requirements
+### Steam Link Build Requirements
 * [Steam Link SDK](https://github.com/ValveSoftware/steamlink-sdk) cloned on your build system
 * STEAMLINK_SDK_PATH environment variable set to the Steam Link SDK path
 
