@@ -543,20 +543,41 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 #endif
 
 #ifdef HAVE_DRM
-        // RKMPP is a hardware accelerated decoder that outputs DRI PRIME buffers
-        AVCodec* rkmppDecoder;
+        {
+            // RKMPP is a hardware accelerated decoder that outputs DRI PRIME buffers
+            AVCodec* rkmppDecoder;
 
-        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
-            rkmppDecoder = avcodec_find_decoder_by_name("h264_rkmpp");
-        }
-        else {
-            rkmppDecoder = avcodec_find_decoder_by_name("hevc_rkmpp");
-        }
+            if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
+                rkmppDecoder = avcodec_find_decoder_by_name("h264_rkmpp");
+            }
+            else {
+                rkmppDecoder = avcodec_find_decoder_by_name("hevc_rkmpp");
+            }
 
-        if (rkmppDecoder != nullptr &&
-                tryInitializeRenderer(rkmppDecoder, params, nullptr,
-                                      []() -> IFFmpegRenderer* { return new DrmRenderer(); })) {
-            return true;
+            if (rkmppDecoder != nullptr &&
+                    tryInitializeRenderer(rkmppDecoder, params, nullptr,
+                                          []() -> IFFmpegRenderer* { return new DrmRenderer(); })) {
+                return true;
+            }
+        }
+#endif
+
+#ifdef Q_OS_LINUX
+        {
+            AVCodec* v4l2Decoder;
+
+            if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
+                v4l2Decoder = avcodec_find_decoder_by_name("h264_v4l2m2m");
+            }
+            else {
+                v4l2Decoder = avcodec_find_decoder_by_name("hevc_v4l2m2m");
+            }
+
+            if (v4l2Decoder != nullptr &&
+                    tryInitializeRenderer(v4l2Decoder, params, nullptr,
+                                          []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
+                return true;
+            }
         }
 #endif
 
