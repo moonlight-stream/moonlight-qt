@@ -30,6 +30,8 @@
 #include <QSvgRenderer>
 #include <QPainter>
 #include <QImage>
+#include <QGuiApplication>
+#include <QCursor>
 
 CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clStageStarting,
@@ -1057,6 +1059,9 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // Disable the screen saver
     SDL_DisableScreenSaver();
 
+    // Hide the mouse cursor (relevant on EGLFS/KMSDRM systems)
+    QGuiApplication::setOverrideCursor(QCursor(Qt::BlankCursor));
+
     // Set timer resolution to 1 ms on Windows for greater
     // sleep precision and more accurate callback timing.
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "1");
@@ -1269,6 +1274,7 @@ DispatchDeferredCleanup:
     m_InputHandler->setCaptureActive(false);
     SDL_EnableScreenSaver();
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
+    QGuiApplication::restoreOverrideCursor();
 
     // Raise any keys that are still down
     m_InputHandler->raiseAllKeys();
