@@ -669,6 +669,12 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 
 bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 {
+    // Don't use DXVA2 for HDR10. While it can render 10-bit color, it doesn't support
+    // the HDR colorspace and HDR display metadata required to enable HDR mode properly.
+    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        return false;
+    }
+
     m_VideoFormat = params->videoFormat;
     m_VideoWidth = params->width;
     m_VideoHeight = params->height;

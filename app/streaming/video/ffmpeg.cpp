@@ -9,6 +9,7 @@
 
 #ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
+#include "ffmpeg-renderers/d3d11va.h"
 #endif
 
 #ifdef Q_OS_DARWIN
@@ -599,8 +600,13 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     if (pass == 0) {
         switch (hwDecodeCfg->device_type) {
 #ifdef Q_OS_WIN32
+        // DXVA2 appears in the hwaccel list before D3D11VA, so we will implicitly
+        // prefer it. When we want to switch to D3D11VA by default, we'll need to
+        // move it into the second pass set below.
         case AV_HWDEVICE_TYPE_DXVA2:
             return new DXVA2Renderer();
+        case AV_HWDEVICE_TYPE_D3D11VA:
+            return new D3D11VARenderer();
 #endif
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:

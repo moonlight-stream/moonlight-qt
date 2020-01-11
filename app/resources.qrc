@@ -59,5 +59,7 @@
         <file alias="egl_opaque.vert">shaders/egl_opaque.vert</file>
         <file alias="egl_overlay.frag">shaders/egl_overlay.frag</file>
         <file alias="egl_overlay.vert">shaders/egl_overlay.vert</file>
+        <file alias="d3d11_vertex.fxc">shaders/d3d11_vertex.fxc</file>
+        <file alias="d3d11_overlay_pixel.fxc">shaders/d3d11_overlay_pixel.fxc</file>
     </qresource>
 </RCC>
