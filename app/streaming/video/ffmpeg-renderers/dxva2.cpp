@@ -546,14 +546,33 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     d3dpp.hDeviceWindow = info.info.win.window;
     d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
 
+    if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        // Verify 10-bit A2R10G10B10 color support. This is only available
+        // as a display format in full-screen exclusive mode on DX9.
+        hr = d3d9ex->CheckDeviceType(adapterIndex,
+                                     D3DDEVTYPE_HAL,
+                                     D3DFMT_A2R10G10B10,
+                                     D3DFMT_A2R10G10B10,
+                                     FALSE);
+        if (FAILED(hr)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "GPU/driver doesn't support A2R10G10B10");
+            return false;
+        }
+    }
+
     if ((windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
         d3dpp.Windowed = false;
         d3dpp.BackBufferWidth = currentMode.Width;
         d3dpp.BackBufferHeight = currentMode.Height;
         d3dpp.FullScreen_RefreshRateInHz = currentMode.RefreshRate;
 
-        // TODO: Need to select 10-bit color format for HDR
-        d3dpp.BackBufferFormat = currentMode.Format;
+        if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+            d3dpp.BackBufferFormat = currentMode.Format = D3DFMT_A2R10G10B10;
+        }
+        else {
+            d3dpp.BackBufferFormat = currentMode.Format;
+        }
     }
     else {
         d3dpp.Windowed = true;
