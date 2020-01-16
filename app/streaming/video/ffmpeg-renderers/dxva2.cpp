@@ -557,6 +557,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         if (FAILED(hr)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "GPU/driver doesn't support A2R10G10B10");
+            d3d9ex->Release();
             return false;
         }
     }
