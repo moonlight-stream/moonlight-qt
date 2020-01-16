@@ -321,6 +321,9 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     if (event->keysym.mod & KMOD_SHIFT) {
         modifiers |= MODIFIER_SHIFT;
     }
+    if (event->keysym.mod & KMOD_GUI) {
+        modifiers |= MODIFIER_META;
+    }
 
     // Set keycode. We explicitly use scancode here because GFE will try to correct
     // for AZERTY layouts on the host but it depends on receiving VK_ values matching
@@ -461,6 +464,16 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_RALT:
                 keyCode = 0xA5;
                 break;
+            // Until we can fully capture these on Windows, we should avoid
+            // passing them through to the host.
+            #ifndef Q_OS_WIN
+            case SDL_SCANCODE_LGUI:
+                keyCode = 0x5B;
+                break;
+            case SDL_SCANCODE_RGUI:
+                keyCode = 0x5C;
+                break;
+            #endif
             case SDL_SCANCODE_AC_BACK:
                 keyCode = 0xA6;
                 break;
