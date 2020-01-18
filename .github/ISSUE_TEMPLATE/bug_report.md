@@ -4,7 +4,7 @@ about: Ask for help on Discord before reporting a bug
 
 ---
 **READ ME FIRST!**
-This issue tracker is not the right place to ask for troubleshooting help if you're not able to connect or stream at all. For those requests, please use the #pc-help channel on our Discord server where there are many more people who can help (or direct you back here if it looks like a Moonlight bug after all). https://discord.gg/MySTSdq
+This issue tracker is not the right place to ask for troubleshooting help if you're not able to connect or stream at all. For those requests, please use the #pc-help channel on our Discord server where there are many more people who can help (or direct you back here if it looks like a Moonlight bug after all). https://moonlight-stream.org/discord
 
 **Describe the bug**
 A clear and concise description of what the bug is.
