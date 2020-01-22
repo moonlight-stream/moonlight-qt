@@ -137,7 +137,17 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     SDL_AtomicSet(&m_MouseDeltaX, 0);
     SDL_AtomicSet(&m_MouseDeltaY, 0);
 
-    m_MouseMoveTimer = SDL_AddTimer(MOUSE_POLLING_INTERVAL, SdlInputHandler::mouseMoveTimerCallback, this);
+    Uint32 pollingInterval = QString(qgetenv("MOUSE_POLLING_INTERVAL")).toUInt();
+    if (pollingInterval == 0) {
+        pollingInterval = MOUSE_POLLING_INTERVAL;
+    }
+    else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using custom mouse polling interval: %u ms",
+                    pollingInterval);
+    }
+
+    m_MouseMoveTimer = SDL_AddTimer(pollingInterval, SdlInputHandler::mouseMoveTimerCallback, this);
 }
 
 SdlInputHandler::~SdlInputHandler()
