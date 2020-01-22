@@ -90,6 +90,7 @@ public:
     bool connectionWarnings;
     bool richPresence;
     bool gamepadMouse;
+    int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
     VideoDecoderSelection videoDecoderSelection;

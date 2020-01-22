@@ -942,17 +942,28 @@ void Session::exec(int displayOriginX, int displayOriginY)
         hostInfo.serverInfoGfeVersion = siGfeVersion.data();
     }
 
-    // isReachableOverVpn() does network I/O, so we only attempt to check
-    // VPN reachability if we've already contacted the PC successfully
-    if (m_Computer->isReachableOverVpn()) {
-        // It looks like our route to this PC is over a VPN.
-        // Treat it as remote even if the target address is in RFC 1918 address space.
-        m_StreamConfig.streamingRemotely = STREAM_CFG_REMOTE;
-        m_StreamConfig.packetSize = 1024;
+    if (m_Preferences->packetSize != 0) {
+        // Override default packet size and remote streaming detection
+        // NB: Using STREAM_CFG_AUTO will cap our packet size at 1024 for remote hosts.
+        m_StreamConfig.streamingRemotely = STREAM_CFG_LOCAL;
+        m_StreamConfig.packetSize = m_Preferences->packetSize;
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using custom packet size: %d bytes",
+                    m_Preferences->packetSize);
     }
     else {
-        m_StreamConfig.streamingRemotely = STREAM_CFG_AUTO;
-        m_StreamConfig.packetSize = 1392;
+        // isReachableOverVpn() does network I/O, so we only attempt to check
+        // VPN reachability if we've already contacted the PC successfully
+        if (m_Computer->isReachableOverVpn()) {
+            // It looks like our route to this PC is over a VPN.
+            // Treat it as remote even if the target address is in RFC 1918 address space.
+            m_StreamConfig.streamingRemotely = STREAM_CFG_REMOTE;
+            m_StreamConfig.packetSize = 1024;
+        }
+        else {
+            m_StreamConfig.streamingRemotely = STREAM_CFG_AUTO;
+            m_StreamConfig.packetSize = 1392;
+        }
     }
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
