@@ -47,7 +47,18 @@ bool FFmpegVideoDecoder::isHardwareAccelerated()
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
-    return m_BackendRenderer->getDecoderCapabilities();
+    int capabilities = m_BackendRenderer->getDecoderCapabilities();
+
+    if (!isHardwareAccelerated()) {
+        // Slice up to 4 times for parallel CPU decoding, once slice per core
+        int slices = qMin(MAX_SLICES, SDL_GetCPUCount());
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Encoder configured for %d slices per frame",
+                    slices);
+        capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
+    }
+
+    return capabilities;
 }
 
 int FFmpegVideoDecoder::getDecoderColorspace()
