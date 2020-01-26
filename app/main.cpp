@@ -431,6 +431,9 @@ int main(int argc, char *argv[])
                                                        return new StreamingPreferences();
                                                    });
 
+    // Create the identity manager on the main thread
+    IdentityManager::get();
+
 #ifndef Q_OS_WINRT
     // Use the dense material dark theme by default
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
