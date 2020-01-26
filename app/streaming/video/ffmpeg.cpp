@@ -520,10 +520,60 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
 
 bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 {
-    AVCodec* decoder;
-
     // Increase log level until the first frame is decoded
     av_log_set_level(AV_LOG_DEBUG);
+
+    // First try decoders that the user has manually specified via environment variables.
+    // These must output surfaces in one of the formats that the SDL renderer supports,
+    // which is currently:
+    // - AV_PIX_FMT_YUV420P (preferred)
+    // - AV_PIX_FMT_NV12
+    // - AV_PIX_FMT_NV21
+    // These formats should cover most/all decoders that output in a standard YUV format.
+    {
+        QString h264DecoderHint = qgetenv("H264_DECODER_HINT");
+        if (!h264DecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_H264)) {
+            QByteArray decoderString = h264DecoderHint.toLocal8Bit();
+            AVCodec* customAvcDecoder = avcodec_find_decoder_by_name(decoderString.constData());
+
+            if (customAvcDecoder != nullptr &&
+                    tryInitializeRenderer(customAvcDecoder, params, nullptr,
+                                          []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using custom H.264 decoder (H264_DECODER_HINT): %s",
+                            decoderString.constData());
+                return true;
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Custom H.264 decoder (H264_DECODER_HINT) failed to load: %s",
+                             decoderString.constData());
+            }
+        }
+    }
+    {
+        QString hevcDecoderHint = qgetenv("HEVC_DECODER_HINT");
+        if (!hevcDecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_H265)) {
+            QByteArray decoderString = hevcDecoderHint.toLocal8Bit();
+            AVCodec* customHevcDecoder = avcodec_find_decoder_by_name(decoderString.constData());
+
+            if (customHevcDecoder != nullptr &&
+                    tryInitializeRenderer(customHevcDecoder, params, nullptr,
+                                          []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using custom HEVC decoder (HEVC_DECODER_HINT): %s",
+                            decoderString.constData());
+                return true;
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Custom HEVC decoder (HEVC_DECODER_HINT) failed to load: %s",
+                             decoderString.constData());
+            }
+        }
+    }
+
+    AVCodec* decoder;
 
     if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
         decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
