@@ -311,17 +311,6 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
             return false;
         }
 
-        // Most FFmpeg decoders process input using a "push" model.
-        // We'll see those fail here if the format is not supported.
-        err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
-        if (err < 0) {
-            char errorstring[512];
-            av_strerror(err, errorstring, sizeof(errorstring));
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Test decode failed: %s", errorstring);
-            return false;
-        }
-
         AVFrame* frame = av_frame_alloc();
         if (!frame) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -329,9 +318,34 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
             return false;
         }
 
-        // A few FFmpeg decoders (h264_mmal) process here using a "pull" model.
-        // Those decoders will fail here if the format is not supported.
-        err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
+        // Some decoders won't output on the first frame, so we'll submit
+        // a few test frames if we get an EAGAIN error.
+        for (int retries = 0; retries < 5; retries++) {
+            // Most FFmpeg decoders process input using a "push" model.
+            // We'll see those fail here if the format is not supported.
+            err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
+            if (err < 0) {
+                av_frame_free(&frame);
+                char errorstring[512];
+                av_strerror(err, errorstring, sizeof(errorstring));
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Test decode failed: %s", errorstring);
+                return false;
+            }
+
+            // A few FFmpeg decoders (h264_mmal) process here using a "pull" model.
+            // Those decoders will fail here if the format is not supported.
+            err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
+            if (err == AVERROR(EAGAIN)) {
+                // Wait a little while to let the hardware work
+                SDL_Delay(100);
+            }
+            else {
+                // Done!
+                break;
+            }
+        }
+
         av_frame_free(&frame);
         if (err < 0) {
             char errorstring[512];
