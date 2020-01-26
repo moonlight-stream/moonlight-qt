@@ -127,6 +127,21 @@ bool SdlRenderer::isRenderThreadSupported()
     return true;
 }
 
+bool SdlRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
+{
+    // Remember to keep this in sync with SdlRenderer::renderFrame()!
+    switch (pixelFormat)
+    {
+    case AV_PIX_FMT_YUV420P:
+    case AV_PIX_FMT_NV12:
+    case AV_PIX_FMT_NV21:
+        return true;
+
+    default:
+        return false;
+    }
+}
+
 bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 {
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
@@ -271,6 +286,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
     if (m_Texture == nullptr) {
         Uint32 sdlFormat;
 
+        // Remember to keep this in sync with SdlRenderer::isPixelFormatSupported()!
         switch (frame->format)
         {
         case AV_PIX_FMT_YUV420P:

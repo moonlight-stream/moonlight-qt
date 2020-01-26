@@ -63,6 +63,7 @@ private:
 
     int m_LastFrameNumber;
     int m_StreamFps;
+    int m_VideoFormat;
     bool m_NeedsSpsFixup;
     bool m_TestOnly;
 

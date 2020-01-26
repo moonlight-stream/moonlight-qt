@@ -73,7 +73,7 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
     const enum AVPixelFormat *p;
 
     for (p = pixFmts; *p != -1; p++) {
-        // Only match our hardware decoding codec or SW pixel
+        // Only match our hardware decoding codec or preferred SW pixel
         // format (if not using hardware decoding). It's crucial
         // to override the default get_format() which will try
         // to gracefully fall back to software decode and break us.
@@ -81,6 +81,15 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
                    decoder->m_HwDecodeCfg->pix_fmt :
                    context->pix_fmt)) {
             return *p;
+        }
+    }
+
+    // Failed to match the preferred pixel formats. Try non-preferred options for non-hwaccel decoders.
+    if (decoder->m_HwDecodeCfg == nullptr) {
+        for (p = pixFmts; *p != -1; p++) {
+            if (decoder->m_FrontendRenderer->isPixelFormatSupported(decoder->m_VideoFormat, *p)) {
+                return *p;
+            }
         }
     }
 
@@ -97,6 +106,7 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_Pacer(nullptr),
       m_LastFrameNumber(0),
       m_StreamFps(0),
+      m_VideoFormat(0),
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly)
 {
@@ -206,6 +216,7 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
     }
 
     m_StreamFps = params->frameRate;
+    m_VideoFormat = params->videoFormat;
 
     // Don't bother initializing Pacer if we're not actually going to render
     if (!testFrame) {

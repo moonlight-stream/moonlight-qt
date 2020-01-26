@@ -62,6 +62,11 @@ public:
         }
     }
 
+    virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) {
+        // By default, we only support the preferred pixel format
+        return getPreferredPixelFormat(videoFormat) == pixelFormat;
+    }
+
     // IOverlayRenderer
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing

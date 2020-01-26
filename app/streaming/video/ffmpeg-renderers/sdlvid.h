@@ -13,6 +13,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool isRenderThreadSupported() override;
+    virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
 
 private:
     void renderOverlay(Overlay::OverlayType type);
