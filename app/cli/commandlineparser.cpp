@@ -172,20 +172,31 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
     parser.addPositionalArgument("action", "Action to execute", "<action>");
     parser.parse(args);
     auto posArgs = parser.positionalArguments();
-    QString action = posArgs.isEmpty() ? QString() : posArgs.first().toLower();
 
-    if (action == "") {
+    if (posArgs.isEmpty()) {
         // This method will not return and terminates the process if --version
         // or --help is specified
         parser.handleHelpAndVersionOptions();
         parser.handleUnknownOptions();
         return NormalStartRequested;
-    } else if (action == "quit") {
-        return QuitRequested;
-    } else if (action == "stream") {
-        return StreamRequested;
-    } else {
-        parser.showError(QString("Invalid action: %1").arg(action));
+    }
+    else {
+        // If users supply arguments that accept values prior to the "quit"
+        // or "stream" positional arguments, we will not be able to correctly
+        // parse the value out of the input because this QCommandLineParser
+        // doesn't know about all of the options that "quit" and "stream"
+        // commands can accept. To work around this issue, we just look
+        // for "quit" or "stream" positional arguments anywhere.
+        for (int i = 0; i < posArgs.size(); i++) {
+            QString action = posArgs.at(i).toLower();
+            if (action == "quit") {
+                return QuitRequested;
+            } else if (action == "stream") {
+                return StreamRequested;
+            }
+        }
+
+        parser.showError(QString("Invalid action"));
     }
 }
 
