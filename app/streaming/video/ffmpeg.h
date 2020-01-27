@@ -61,6 +61,9 @@ private:
     VIDEO_STATS m_LastWndVideoStats;
     VIDEO_STATS m_GlobalVideoStats;
 
+    int m_FramesIn;
+    int m_FramesOut;
+
     int m_LastFrameNumber;
     int m_StreamFps;
     int m_VideoFormat;

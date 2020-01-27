@@ -104,6 +104,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_FrontendRenderer(nullptr),
       m_ConsecutiveFailedDecodes(0),
       m_Pacer(nullptr),
+      m_FramesIn(0),
+      m_FramesOut(0),
       m_LastFrameNumber(0),
       m_StreamFps(0),
       m_VideoFormat(0),
@@ -864,6 +866,8 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         return DR_NEED_IDR;
     }
 
+    m_FramesIn++;
+
     AVFrame* frame = av_frame_alloc();
     if (!frame) {
         // Failed to allocate a frame but we did submit,
@@ -875,6 +879,8 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
     if (err == 0) {
+        m_FramesOut++;
+
         // Reset failed decodes count if we reached this far
         m_ConsecutiveFailedDecodes = 0;
 
@@ -890,6 +896,11 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Count time in avcodec_send_packet() and avcodec_receive_frame()
         // as time spent decoding
         m_ActiveWndVideoStats.totalDecodeTime += SDL_GetTicks() - beforeDecode;
+
+        // Also count the frame-to-frame delay if the decoder is delaying frames
+        // until a subsequent frame is submitted.
+        m_ActiveWndVideoStats.totalDecodeTime += (m_FramesIn - m_FramesOut) * (1000 / m_StreamFps);
+
         m_ActiveWndVideoStats.decodedFrames++;
 
         // Queue the frame for rendering (or render now if pacer is disabled)
