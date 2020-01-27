@@ -671,6 +671,23 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
 #ifdef Q_OS_LINUX
         {
+            AVCodec* nvmpiDecoder;
+
+            if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
+                nvmpiDecoder = avcodec_find_decoder_by_name("h264_nvmpi");
+            }
+            else {
+                nvmpiDecoder = avcodec_find_decoder_by_name("hevc_nvmpi");
+            }
+
+            if (nvmpiDecoder != nullptr &&
+                    tryInitializeRenderer(nvmpiDecoder, params, nullptr,
+                                          []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
+                return true;
+            }
+        }
+
+        {
             AVCodec* v4l2Decoder;
 
             if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
