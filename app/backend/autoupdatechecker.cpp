@@ -29,7 +29,7 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
 void AutoUpdateChecker::start()
 {
 #if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN) || defined(STEAM_LINK) // Only run update checker on platforms without auto-update
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && !defined(QT_NO_BEARERMANAGEMENT)
     // HACK: Set network accessibility to work around QTBUG-80947
     m_Nam.setNetworkAccessible(QNetworkAccessManager::Accessible);
 #endif
