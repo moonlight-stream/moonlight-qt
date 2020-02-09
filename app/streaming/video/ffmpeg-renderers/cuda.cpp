@@ -28,7 +28,7 @@ bool CUDARenderer::initialize(PDECODER_PARAMETERS)
     return true;
 }
 
-bool CUDARenderer::prepareDecoderContext(AVCodecContext* context)
+bool CUDARenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
     context->hw_device_ctx = av_buffer_ref(m_HwContext);
 

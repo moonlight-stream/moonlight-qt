@@ -12,7 +12,7 @@ public:
     MmalRenderer();
     virtual ~MmalRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
-    virtual bool prepareDecoderContext(AVCodecContext* context) override;
+    virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual bool needsTestFrame() override;

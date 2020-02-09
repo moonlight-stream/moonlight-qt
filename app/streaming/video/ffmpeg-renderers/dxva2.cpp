@@ -80,7 +80,7 @@ AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, int)
     return NULL;
 }
 
-bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context)
+bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
     // m_DXVAContext.workaround and report_id already initialized elsewhere
     m_DXVAContext.decoder = m_Decoder;

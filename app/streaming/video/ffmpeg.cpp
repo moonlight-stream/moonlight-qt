@@ -267,8 +267,10 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
     m_VideoDecoderCtx->pix_fmt = m_FrontendRenderer->getPreferredPixelFormat(params->videoFormat);
     m_VideoDecoderCtx->get_format = ffGetFormat;
 
+    AVDictionary* options = nullptr;
+
     // Allow the backend renderer to attach data to this decoder
-    if (!m_BackendRenderer->prepareDecoderContext(m_VideoDecoderCtx)) {
+    if (!m_BackendRenderer->prepareDecoderContext(m_VideoDecoderCtx, &options)) {
         return false;
     }
 
@@ -279,7 +281,8 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
     SDL_assert(m_VideoDecoderCtx->opaque == nullptr);
     m_VideoDecoderCtx->opaque = this;
 
-    int err = avcodec_open2(m_VideoDecoderCtx, decoder, nullptr);
+    int err = avcodec_open2(m_VideoDecoderCtx, decoder, &options);
+    av_dict_free(&options);
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to open decoder for format: %x",

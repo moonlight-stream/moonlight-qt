@@ -225,7 +225,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     return true;
 }
 
-bool VDPAURenderer::prepareDecoderContext(AVCodecContext* context)
+bool VDPAURenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
     context->hw_device_ctx = av_buffer_ref(m_HwContext);
 

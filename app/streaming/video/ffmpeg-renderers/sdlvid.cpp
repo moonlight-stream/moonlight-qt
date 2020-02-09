@@ -58,7 +58,7 @@ SdlRenderer::~SdlRenderer()
     }
 }
 
-bool SdlRenderer::prepareDecoderContext(AVCodecContext*)
+bool SdlRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
 {
     /* Nothing to do */
 

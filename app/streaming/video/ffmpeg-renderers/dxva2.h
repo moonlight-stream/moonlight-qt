@@ -17,7 +17,7 @@ public:
     DXVA2Renderer();
     virtual ~DXVA2Renderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
-    virtual bool prepareDecoderContext(AVCodecContext* context) override;
+    virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual int getDecoderColorspace() override;

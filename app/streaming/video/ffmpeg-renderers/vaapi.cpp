@@ -192,7 +192,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 }
 
 bool
-VAAPIRenderer::prepareDecoderContext(AVCodecContext* context)
+VAAPIRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
     context->hw_device_ctx = av_buffer_ref(m_HwContext);
 

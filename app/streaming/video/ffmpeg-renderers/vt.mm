@@ -410,7 +410,7 @@ public:
         }
     }
 
-    virtual bool prepareDecoderContext(AVCodecContext* context) override
+    virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override
     {
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
 

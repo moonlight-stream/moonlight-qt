@@ -33,7 +33,7 @@ DrmRenderer::~DrmRenderer()
     }
 }
 
-bool DrmRenderer::prepareDecoderContext(AVCodecContext*)
+bool DrmRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
 {
     /* Nothing to do */
 

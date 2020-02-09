@@ -22,7 +22,7 @@ MmalRenderer::~MmalRenderer()
     }
 }
 
-bool MmalRenderer::prepareDecoderContext(AVCodecContext*)
+bool MmalRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
 {
     /* Nothing to do */
 

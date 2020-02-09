@@ -18,7 +18,7 @@ public:
     };
 
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
-    virtual bool prepareDecoderContext(AVCodecContext* context) = 0;
+    virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
 
     virtual bool needsTestFrame() {
