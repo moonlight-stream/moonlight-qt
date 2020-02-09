@@ -1,4 +1,5 @@
 #include "systemproperties.h"
+#include "utils.h"
 
 #include <QGuiApplication>
 
@@ -7,8 +8,8 @@
 
 SystemProperties::SystemProperties()
 {
-    isRunningWayland = qgetenv("XDG_SESSION_TYPE") == "wayland";
-    isRunningXWayland = qgetenv("XDG_SESSION_TYPE") == "wayland" && QGuiApplication::platformName() == "xcb";
+    isRunningWayland = WMUtils::isRunningWayland();
+    isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
 
 #ifdef Q_OS_WIN32
     isWow64 = QSysInfo::currentCpuArchitecture() != QSysInfo::buildCpuArchitecture();
@@ -27,6 +28,8 @@ SystemProperties::SystemProperties()
 #else
     hasDiscordIntegration = false;
 #endif
+
+    hasWindowManager = WMUtils::isRunningWindowManager();
 
     unmappedGamepads = SdlInputHandler::getUnmappedGamepads();
 

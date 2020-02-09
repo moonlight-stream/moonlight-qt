@@ -10,7 +10,7 @@
 
 bool WMUtils::isRunningX11()
 {
-#ifdef HAS_WAYLAND
+#ifdef HAS_X11
     Display* display = XOpenDisplay(nullptr);
     if (display != nullptr) {
         XCloseDisplay(display);

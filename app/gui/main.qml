@@ -17,7 +17,7 @@ ApplicationWindow {
     width: 1280
     height: 600
 
-    visibility: StreamingPreferences.startWindowed ? "Windowed" : "Maximized"
+    visibility: (SystemProperties.hasWindowManager && StreamingPreferences.startWindowed) ? "Windowed" : "Maximized"
 
     StackView {
         id: stackView

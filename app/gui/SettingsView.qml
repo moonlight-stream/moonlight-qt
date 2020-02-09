@@ -88,7 +88,7 @@ Flickable {
 
                                     // Some platforms have different desktop resolutions
                                     // and native resolutions (like macOS with Retina displays)
-                                    if (displayResIndex == 0) {
+                                    if (displayResIndex === 0) {
                                         screenRect = SystemProperties.getDesktopResolution(displayIndex)
                                     }
                                     else {
@@ -338,19 +338,24 @@ Flickable {
                              }
                         }
 
-                        var savedWm = StreamingPreferences.windowMode
                         currentIndex = 0
-                        for (var i = 0; i < windowModeListModel.count; i++) {
-                             var thisWm = windowModeListModel.get(i).val;
-                             if (savedWm === thisWm) {
-                                 currentIndex = i
-                                 break
-                             }
+
+                        if (SystemProperties.hasWindowManager) {
+                            var savedWm = StreamingPreferences.windowMode
+                            for (var i = 0; i < windowModeListModel.count; i++) {
+                                 var thisWm = windowModeListModel.get(i).val;
+                                 if (savedWm === thisWm) {
+                                     currentIndex = i
+                                     break
+                                 }
+                            }
                         }
+
                         activated(currentIndex)
                     }
 
                     id: windowModeComboBox
+                    enabled: SystemProperties.hasWindowManager
                     hoverEnabled: true
                     textRole: "text"
                     model: ListModel {
@@ -484,7 +489,8 @@ Flickable {
                     id: startMaximizedCheck
                     text: "Maximize Moonlight window on startup"
                     font.pointSize: 12
-                    checked: !StreamingPreferences.startWindowed
+                    enabled: SystemProperties.hasWindowManager
+                    checked: !StreamingPreferences.startWindowed || !SystemProperties.hasWindowManager
                     onCheckedChanged: {
                         StreamingPreferences.startWindowed = !checked
                     }
