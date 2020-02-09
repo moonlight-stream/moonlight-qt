@@ -340,7 +340,7 @@ Flickable {
 
                         currentIndex = 0
 
-                        if (SystemProperties.hasWindowManager) {
+                        if (SystemProperties.hasWindowManager && !SystemProperties.rendererAlwaysFullScreen) {
                             var savedWm = StreamingPreferences.windowMode
                             for (var i = 0; i < windowModeListModel.count; i++) {
                                  var thisWm = windowModeListModel.get(i).val;
@@ -355,7 +355,7 @@ Flickable {
                     }
 
                     id: windowModeComboBox
-                    enabled: SystemProperties.hasWindowManager
+                    enabled: SystemProperties.hasWindowManager && !SystemProperties.rendererAlwaysFullScreen
                     hoverEnabled: true
                     textRole: "text"
                     model: ListModel {

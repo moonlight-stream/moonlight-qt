@@ -11,6 +11,7 @@ public:
     virtual ~SLVideoDecoder();
     virtual bool initialize(PDECODER_PARAMETERS params);
     virtual bool isHardwareAccelerated();
+    virtual bool isAlwaysFullScreen();
     virtual int getDecoderCapabilities();
     virtual int getDecoderColorspace();
     virtual int submitDecodeUnit(PDECODE_UNIT du);

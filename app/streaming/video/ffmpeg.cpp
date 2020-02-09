@@ -45,6 +45,11 @@ bool FFmpegVideoDecoder::isHardwareAccelerated()
             (m_VideoDecoderCtx->codec->capabilities & AV_CODEC_CAP_HARDWARE) != 0;
 }
 
+bool FFmpegVideoDecoder::isAlwaysFullScreen()
+{
+    return m_BackendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+}
+
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
     int capabilities = m_BackendRenderer->getDecoderCapabilities();
@@ -184,23 +189,6 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params)
         m_FrontendRenderer = new SdlRenderer();
         if (!m_FrontendRenderer->initialize(params)) {
             return false;
-        }
-    }
-
-    // Determine whether the frontend renderer prefers frame pacing
-    auto vsyncConstraint = m_FrontendRenderer->getFramePacingConstraint();
-    if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_OFF && params->enableFramePacing) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Frame pacing is forcefully disabled by the frontend renderer");
-        params->enableFramePacing = false;
-    }
-    else if (vsyncConstraint == IFFmpegRenderer::PACING_FORCE_ON && !params->enableFramePacing) {
-        // FIXME: This duplicates logic in Session.cpp
-        int displayHz = StreamUtils::getDisplayRefreshRate(params->window);
-        if (displayHz + 5 >= params->frameRate) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Frame pacing is forcefully enabled by the frontend renderer");
-            params->enableFramePacing = true;
         }
     }
 

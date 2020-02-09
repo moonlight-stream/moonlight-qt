@@ -127,6 +127,12 @@ enum AVPixelFormat MmalRenderer::getPreferredPixelFormat(int videoFormat)
     return AV_PIX_FMT_MMAL;
 }
 
+int MmalRenderer::getRendererAttributes()
+{
+    // This renderer can only draw in full-screen
+    return RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+}
+
 bool MmalRenderer::needsTestFrame()
 {
     // We won't be able to decode if the GPU memory is 64 MB or lower,

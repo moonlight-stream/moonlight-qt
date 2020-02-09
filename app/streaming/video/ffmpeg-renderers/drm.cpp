@@ -194,6 +194,12 @@ enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int)
     return AV_PIX_FMT_DRM_PRIME;
 }
 
+int DrmRenderer::getRendererAttributes()
+{
+    // This renderer can only draw in full-screen
+    return RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+}
+
 void DrmRenderer::renderFrame(AVFrame* frame)
 {
     AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];

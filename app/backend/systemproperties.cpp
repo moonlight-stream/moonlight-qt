@@ -114,11 +114,7 @@ void SystemProperties::querySdlVideoInfo()
         return;
     }
 
-    hasHardwareAcceleration =
-            Session::isHardwareDecodeAvailable(testWindow,
-                                               StreamingPreferences::VDS_AUTO,
-                                               VIDEO_FORMAT_H264,
-                                               1920, 1080, 60);
+    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen);
 
     SDL_DestroyWindow(testWindow);
 

@@ -9,14 +9,10 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+#define RENDERER_ATTRIBUTE_FULLSCREEN_ONLY 0x01
+
 class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:
-    enum FramePacingConstraint {
-        PACING_FORCE_OFF,
-        PACING_FORCE_ON,
-        PACING_ANY
-    };
-
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
@@ -31,14 +27,14 @@ public:
         return 0;
     }
 
+    virtual int getRendererAttributes() {
+        // No special attributes by default
+        return 0;
+    }
+
     virtual int getDecoderColorspace() {
         // Rec 601 is default
         return COLORSPACE_REC_601;
-    }
-
-    virtual FramePacingConstraint getFramePacingConstraint() {
-        // No pacing preference
-        return PACING_ANY;
     }
 
     virtual bool isRenderThreadSupported() {

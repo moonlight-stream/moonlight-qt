@@ -25,9 +25,8 @@ public:
     Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);
 
     static
-    bool isHardwareDecodeAvailable(SDL_Window* window,
-                                   StreamingPreferences::VideoDecoderSelection vds,
-                                   int videoFormat, int width, int height, int frameRate);
+    void getDecoderInfo(SDL_Window* window,
+                       bool& isHardwareAccelerated, bool& isFullScreenOnly);
 
     static Session* get()
     {
@@ -77,6 +76,11 @@ private:
     void notifyMouseEmulationMode(bool enabled);
 
     void updateOptimalWindowDisplayMode();
+
+    static
+    bool isHardwareDecodeAvailable(SDL_Window* window,
+                                   StreamingPreferences::VideoDecoderSelection vds,
+                                   int videoFormat, int width, int height, int frameRate);
 
     static
     bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,

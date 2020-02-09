@@ -25,6 +25,11 @@ SLVideoDecoder::isHardwareAccelerated()
     return true;
 }
 
+bool SLVideoDecoder::isAlwaysFullScreen()
+{
+    return true;
+}
+
 int
 SLVideoDecoder::getDecoderCapabilities()
 {
