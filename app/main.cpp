@@ -347,6 +347,12 @@ int main(int argc, char *argv[])
     // initializing the SDL video subsystem to have any effect.
     SDL_SetHint(SDL_HINT_VIDEO_ALLOW_SCREENSAVER, "1");
 
+    // For SDL backends that support it, use double buffering instead of triple buffering
+    // to save a frame of latency. This doesn't matter for MMAL or DRM renderers since they
+    // are drawing directly to the screen without involving SDL, but it may matter for other
+    // future KMSDRM platforms that use SDL for rendering.
+    SDL_SetHint(SDL_HINT_VIDEO_DOUBLE_BUFFER, "1");
+
     if (SDL_InitSubSystem(SDL_INIT_TIMER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_TIMER) failed: %s",
