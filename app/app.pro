@@ -104,6 +104,16 @@ unix:!macx {
             CONFIG += libdrm
         }
     }
+
+    packagesExist(wayland-client) {
+        DEFINES += HAS_WAYLAND
+        PKGCONFIG += wayland-client
+    }
+
+    packagesExist(x11) {
+        DEFINES += HAS_X11
+        PKGCONFIG += x11
+    }
 }
 win32 {
     LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ld3dx9
@@ -148,7 +158,8 @@ SOURCES += \
     settings/mappingmanager.cpp \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
-    backend/systemproperties.cpp
+    backend/systemproperties.cpp \
+    wm.cpp
 
 HEADERS += \
     utils.h \

@@ -29,6 +29,7 @@
 #include "cli/startstream.h"
 #include "cli/commandlineparser.h"
 #include "path.h"
+#include "utils.h"
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
 #include "backend/autoupdatechecker.h"
@@ -287,7 +288,10 @@ int main(int argc, char *argv[])
 
     // Avoid using High DPI on EGLFS. It breaks font rendering.
     // https://bugreports.qt.io/browse/QTBUG-64377
-    if (QGuiApplication::platformName() != "eglfs") {
+    //
+    // NB: We can't use QGuiApplication::platformName() here because it is only
+    // set once the QGuiApplication is created, which is too late to enable High DPI :(
+    if (WMUtils::isRunningWindowManager()) {
         // Enable High DPI support
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
