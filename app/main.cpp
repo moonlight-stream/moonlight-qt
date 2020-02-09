@@ -411,6 +411,17 @@ int main(int argc, char *argv[])
     // Move the mouse to the bottom right so it's invisible when using
     // gamepad-only navigation.
     QCursor().setPos(0xFFFF, 0xFFFF);
+#elif defined(Q_OS_LINUX) && (defined(__arm__) || defined(__aarch64__))
+    if (qgetenv("SDL_VIDEO_GL_DRIVER").isEmpty() && QGuiApplication::platformName() == "eglfs") {
+        // Look for Raspberry Pi GLES libraries. SDL needs some help finding the correct
+        // libraries for the KMSDRM backend if not compiled with the RPI backend enabled.
+        if (SDL_LoadObject("libbrcmGLESv2.so") != nullptr) {
+            qputenv("SDL_VIDEO_GL_DRIVER", "libbrcmGLESv2.so");
+        }
+        else if (SDL_LoadObject("/opt/vc/lib/libbrcmGLESv2.so") != nullptr) {
+            qputenv("SDL_VIDEO_GL_DRIVER", "/opt/vc/lib/libbrcmGLESv2.so");
+        }
+    }
 #endif
 
     app.setWindowIcon(QIcon(":/res/moonlight.svg"));
