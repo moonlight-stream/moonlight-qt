@@ -285,13 +285,17 @@ int main(int argc, char *argv[])
     AntiHookingDummyImport();
 #endif
 
-    // Enable High DPI support
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    // Avoid using High DPI on EGLFS. It breaks font rendering.
+    // https://bugreports.qt.io/browse/QTBUG-64377
+    if (QGuiApplication::platformName() != "eglfs") {
+        // Enable High DPI support
+        QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
-    // Enable fractional High DPI scaling on Qt 5.14 and later
-    QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
+        // Enable fractional High DPI scaling on Qt 5.14 and later
+        QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 #endif
+    }
 
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
