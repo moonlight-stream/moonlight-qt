@@ -7,6 +7,7 @@
 #include <QtGlobal>
 #include <QtMath>
 #include <QDir>
+#include <QGuiApplication>
 
 #define VK_0 0x30
 #define VK_A 0x41
@@ -228,8 +229,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             SDL_PushEvent(&event);
             return;
         }
-        // Check for the unbind combo (Ctrl+Alt+Shift+Z)
-        else if (event->keysym.sym == SDLK_z) {
+        // Check for the unbind combo (Ctrl+Alt+Shift+Z) unless on EGLFS which has no window manager
+        else if (event->keysym.sym == SDLK_z && QGuiApplication::platformName() != "eglfs") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected mouse capture toggle combo (SDLK)");
 
@@ -241,7 +242,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
-        else if (event->keysym.sym == SDLK_x) {
+        else if (event->keysym.sym == SDLK_x && QGuiApplication::platformName() != "eglfs") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected full-screen toggle combo (SDLK)");
             Session::s_ActiveSession->toggleFullscreen();
@@ -277,7 +278,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             return;
         }
         // Check for the unbind combo (Ctrl+Alt+Shift+Z)
-        else if (event->keysym.scancode == SDL_SCANCODE_Z) {
+        else if (event->keysym.scancode == SDL_SCANCODE_Z && QGuiApplication::platformName() != "eglfs") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected mouse capture toggle combo (scancode)");
 
@@ -289,8 +290,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
-        // Check for the full-screen combo (Ctrl+Alt+Shift+X)
-        else if (event->keysym.scancode == SDL_SCANCODE_X) {
+        // Check for the full-screen combo (Ctrl+Alt+Shift+X) unless on EGLFS which has no window manager
+        else if (event->keysym.scancode == SDL_SCANCODE_X && QGuiApplication::platformName() != "eglfs") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected full-screen toggle combo (scancode)");
             Session::s_ActiveSession->toggleFullscreen();
