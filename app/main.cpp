@@ -300,6 +300,12 @@ int main(int argc, char *argv[])
         QGuiApplication::setHighDpiScaleFactorRoundingPolicy(Qt::HighDpiScaleFactorRoundingPolicy::PassThrough);
 #endif
     }
+    else {
+        if (qgetenv("QT_QPA_PLATFORM").isEmpty()) {
+            qInfo() << "Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.";
+            qputenv("QT_QPA_PLATFORM", "eglfs");
+        }
+    }
 
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
