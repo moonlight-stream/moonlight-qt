@@ -10,6 +10,7 @@
 #include <QFont>
 #include <QCursor>
 #include <QElapsedTimer>
+#include <QFile>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -301,10 +302,17 @@ int main(int argc, char *argv[])
 #endif
     }
     else {
+#ifndef STEAM_LINK
         if (qgetenv("QT_QPA_PLATFORM").isEmpty()) {
             qInfo() << "Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.";
             qputenv("QT_QPA_PLATFORM", "eglfs");
+
+            if (!QFile("/dev/dri").exists()) {
+                qWarning() << "Unable to find a KMSDRM display device!";
+                qWarning() << "On Raspberry Pi 2 and 3, you must enable the fake or full KMS driver in raspi-config to use Moonlight outside of the GUI environment.";
+            }
         }
+#endif
     }
 
     // This avoids using the default keychain for SSL, which may cause
