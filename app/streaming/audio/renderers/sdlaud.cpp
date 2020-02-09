@@ -4,12 +4,42 @@
 #include <SDL.h>
 
 #include <QtGlobal>
+#include <QFile>
+#include <QTextStream>
 
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
       m_AudioBuffer(nullptr)
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
+
+#ifdef HAVE_MMAL
+    // HACK: PulseAudio on Raspberry Pi suffers from horrible underruns,
+    // so switch to ALSA if we detect that we're on a Pi. We need to
+    // actually set a bogus PULSE_SERVER so it doesn't try to get smart on us
+    // and find PA anyway. SDL_AUDIODRIVER=pulseaudio can override this logic.
+    if (qgetenv("SDL_AUDIODRIVER").toLower() != "pulseaudio") {
+        QFile file("/proc/cpuinfo");
+        if (file.open(QIODevice::ReadOnly | QFile::Text)) {
+            QTextStream textStream(&file);
+            if (textStream.readAll().contains("Raspberry Pi")) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding PulseAudio on Raspberry Pi");
+
+                qputenv("PULSE_SERVER", "");
+                if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "ALSA failed; falling back to default");
+                    qunsetenv("PULSE_SERVER");
+                }
+                else {
+                    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+                }
+            }
+        }
+    }
+#endif
+
     if (SDL_InitSubSystem(SDL_INIT_AUDIO) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_AUDIO) failed: %s",
