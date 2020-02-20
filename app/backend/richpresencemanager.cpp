@@ -24,6 +24,9 @@ RichPresenceManager::RichPresenceManager(StreamingPreferences& prefs, QString ga
         discordPresence.largeImageKey = "icon";
         Discord_UpdatePresence(&discordPresence);
     }
+#else
+    Q_UNUSED(prefs)
+    Q_UNUSED(gameName)
 #endif
 }
 
