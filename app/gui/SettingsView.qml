@@ -10,6 +10,8 @@ Flickable {
     id: settingsPage
     objectName: "Settings"
 
+    boundsBehavior: Flickable.OvershootBounds
+
     contentWidth: settingsColumn1.width > settingsColumn2.width ? settingsColumn1.width : settingsColumn2.width
     contentHeight: settingsColumn1.height > settingsColumn2.height ? settingsColumn1.height : settingsColumn2.height
 

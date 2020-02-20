@@ -38,4 +38,6 @@ GridView {
 
         updateMargins()
     }
+
+    boundsBehavior: Flickable.OvershootBounds
 }
