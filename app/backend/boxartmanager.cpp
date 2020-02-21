@@ -71,10 +71,10 @@ private:
 
 QUrl BoxArtManager::loadBoxArt(NvComputer* computer, NvApp& app)
 {
-    // Try to open the cached file
-    QString cacheFilePath = getFilePathForBoxArt(computer, app.id);
-    if (QFile::exists(cacheFilePath)) {
-        return QUrl::fromLocalFile(cacheFilePath);
+    // Try to open the cached file if it exists and contains data
+    QFile cacheFile(getFilePathForBoxArt(computer, app.id));
+    if (cacheFile.exists() && cacheFile.size() > 0) {
+        return QUrl::fromLocalFile(cacheFile.fileName());
     }
 
     // If we get here, we need to fetch asynchronously.
@@ -108,6 +108,10 @@ QUrl BoxArtManager::loadBoxArtFromNetwork(NvComputer* computer, int appId)
     if (!image.isNull()) {
         if (image.save(cachePath)) {
             return QUrl::fromLocalFile(cachePath);
+        }
+        else {
+            // A failed save() may leave a zero byte file. Make sure that's removed.
+            QFile(cachePath).remove();
         }
     }
 
