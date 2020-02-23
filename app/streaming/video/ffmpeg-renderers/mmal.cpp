@@ -89,7 +89,7 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
         dr.alpha = 255;
 
         dr.set |= MMAL_DISPLAY_SET_FULLSCREEN;
-        dr.fullscreen = (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN) != 0;
+        dr.fullscreen = true;
 
         {
             SDL_Rect src, dst;
