@@ -20,6 +20,7 @@ public:
     Q_PROPERTY(bool hasDiscordIntegration MEMBER hasDiscordIntegration CONSTANT)
     Q_PROPERTY(QString unmappedGamepads MEMBER unmappedGamepads NOTIFY unmappedGamepadsChanged)
     Q_PROPERTY(int maximumStreamingFrameRate MEMBER maximumStreamingFrameRate CONSTANT)
+    Q_PROPERTY(QSize maximumResolution MEMBER maximumResolution CONSTANT)
 
     Q_INVOKABLE QRect getDesktopResolution(int displayIndex);
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
@@ -40,6 +41,7 @@ private:
     bool hasDiscordIntegration;
     QString unmappedGamepads;
     int maximumStreamingFrameRate;
+    QSize maximumResolution;
     QList<QRect> monitorDesktopResolutions;
     QList<QRect> monitorNativeResolutions;
 };

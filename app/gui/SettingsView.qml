@@ -131,6 +131,20 @@ Flickable {
                                 }
                             }
 
+                            // Prune resolutions that are over the decoder's maximum
+                            var max_pixels = SystemProperties.maximumResolution.width * SystemProperties.maximumResolution.height;
+                            if (max_pixels > 0) {
+                                for (var j = 0; j < resolutionComboBox.count; j++) {
+                                    var existing_width = parseInt(resolutionListModel.get(j).video_width);
+                                    var existing_height = parseInt(resolutionListModel.get(j).video_height);
+
+                                    if (existing_width * existing_height > max_pixels) {
+                                        resolutionListModel.remove(j)
+                                        j--
+                                    }
+                                }
+                            }
+
                             // load the saved width/height, and iterate through the ComboBox until a match is found
                             // and set it to that index.
                             var saved_width = StreamingPreferences.width

@@ -134,8 +134,8 @@ enum AVPixelFormat MmalRenderer::getPreferredPixelFormat(int videoFormat)
 
 int MmalRenderer::getRendererAttributes()
 {
-    // This renderer can only draw in full-screen
-    return RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+    // This renderer can only draw in full-screen and maxes out at 1080p
+    return RENDERER_ATTRIBUTE_FULLSCREEN_ONLY | RENDERER_ATTRIBUTE_1080P_MAX;
 }
 
 bool MmalRenderer::needsTestFrame()

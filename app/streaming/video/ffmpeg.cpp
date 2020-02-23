@@ -71,6 +71,17 @@ int FFmpegVideoDecoder::getDecoderColorspace()
     return m_FrontendRenderer->getDecoderColorspace();
 }
 
+QSize FFmpegVideoDecoder::getDecoderMaxResolution()
+{
+    if (m_BackendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_1080P_MAX) {
+        return QSize(1920, 1080);
+    }
+    else {
+        // No known maximum
+        return QSize(0, 0);
+    }
+}
+
 enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
                                                    const enum AVPixelFormat* pixFmts)
 {

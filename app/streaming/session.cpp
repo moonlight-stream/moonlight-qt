@@ -253,7 +253,7 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
 }
 
 void Session::getDecoderInfo(SDL_Window* window,
-                             bool& isHardwareAccelerated, bool& isFullScreenOnly)
+                             bool& isHardwareAccelerated, bool& isFullScreenOnly, QSize& maxResolution)
 {
     IVideoDecoder* decoder;
 
@@ -266,6 +266,7 @@ void Session::getDecoderInfo(SDL_Window* window,
 
     isHardwareAccelerated = decoder->isHardwareAccelerated();
     isFullScreenOnly = decoder->isAlwaysFullScreen();
+    maxResolution = decoder->getDecoderMaxResolution();
 
     delete decoder;
 }

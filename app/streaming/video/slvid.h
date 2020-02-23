@@ -14,6 +14,7 @@ public:
     virtual bool isAlwaysFullScreen();
     virtual int getDecoderCapabilities();
     virtual int getDecoderColorspace();
+    virtual QSize getDecoderMaxResolution();
     virtual int submitDecodeUnit(PDECODE_UNIT du);
 
     // Unused since rendering is done directly from the decode thread

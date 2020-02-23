@@ -10,6 +10,7 @@ extern "C" {
 }
 
 #define RENDERER_ATTRIBUTE_FULLSCREEN_ONLY 0x01
+#define RENDERER_ATTRIBUTE_1080P_MAX 0x02
 
 class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:

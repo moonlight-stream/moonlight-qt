@@ -114,7 +114,7 @@ void SystemProperties::querySdlVideoInfo()
         return;
     }
 
-    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen);
+    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, maximumResolution);
 
     SDL_DestroyWindow(testWindow);
 

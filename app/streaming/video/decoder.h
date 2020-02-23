@@ -46,6 +46,7 @@ public:
     virtual bool isAlwaysFullScreen() = 0;
     virtual int getDecoderCapabilities() = 0;
     virtual int getDecoderColorspace() = 0;
+    virtual QSize getDecoderMaxResolution() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual void renderFrameOnMainThread() = 0;
 };
