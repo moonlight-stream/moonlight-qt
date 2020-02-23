@@ -22,11 +22,16 @@ MmalRenderer::~MmalRenderer()
     }
 }
 
-bool MmalRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary** options)
+bool MmalRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** options)
 {
     // FFmpeg defaults this to 10 which is too large to fit in the default 64 MB VRAM split.
     // Reducing to 2 seems to work fine for our bitstreams (max of 1 buffered frame needed).
     av_dict_set_int(options, "extra_buffers", 2, 0);
+
+    // MMAL seems to dislike certain initial width and height values, but it seems okay
+    // with getting zero for the width and height. We'll zero them all the time to be safe.
+    context->width = 0;
+    context->height = 0;
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using MMAL renderer");
