@@ -74,7 +74,12 @@ void logToLoggerStream(QString& message)
         return;
     }
     else if (s_LogLinesWritten == MAX_LOG_LINES) {
-        s_LoggerStream << "Log size limit reached!" << Qt::endl;
+        s_LoggerStream << "Log size limit reached!";
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+        s_LoggerStream << Qt::endl;
+#else
+        s_LoggerStream << endl;
+#endif
         s_LogLimitReached = true;
         return;
     }
