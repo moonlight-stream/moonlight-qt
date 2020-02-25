@@ -391,6 +391,11 @@ int main(int argc, char *argv[])
     // Disable minimize on focus loss by default. Users seem to want this off by default.
     SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
+    // SDL 2.0.12 changes the default behavior to use the button label rather than the button
+    // position as most other software does. Set this back to 0 to stay consistent with prior
+    // releases of Moonlight.
+    SDL_SetHint("SDL_GAMECONTROLLER_USE_BUTTON_LABELS", "0");
+
 #ifdef QT_DEBUG
     // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
     // when throwing the exceptions, so we don't enable it for release builds out
