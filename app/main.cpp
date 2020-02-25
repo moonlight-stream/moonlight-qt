@@ -303,7 +303,7 @@ int main(int argc, char *argv[])
     }
     else {
 #ifndef STEAM_LINK
-        if (qgetenv("QT_QPA_PLATFORM").isEmpty()) {
+        if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
             qInfo() << "Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.";
             qputenv("QT_QPA_PLATFORM", "eglfs");
 

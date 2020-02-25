@@ -209,9 +209,10 @@ void ComputerManager::saveHosts()
 
     settings.remove(SER_HOSTS);
     settings.beginWriteArray(SER_HOSTS);
-    for (int i = 0; i < m_KnownHosts.count(); i++) {
-        settings.setArrayIndex(i);
-        m_KnownHosts.value(m_KnownHosts.keys()[i])->serialize(settings);
+    int i = 0;
+    for (const NvComputer* computer : m_KnownHosts) {
+        settings.setArrayIndex(i++);
+        computer->serialize(settings);
     }
     settings.endArray();
 }

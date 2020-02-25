@@ -33,10 +33,10 @@ public:
     isReachableOverVpn();
 
     QVector<QString>
-    uniqueAddresses();
+    uniqueAddresses() const;
 
     void
-    serialize(QSettings& settings);
+    serialize(QSettings& settings) const;
 
     enum PairState
     {
@@ -76,5 +76,5 @@ public:
     QVector<NvApp> appList;
 
     // Synchronization
-    QReadWriteLock lock;
+    mutable QReadWriteLock lock;
 };
