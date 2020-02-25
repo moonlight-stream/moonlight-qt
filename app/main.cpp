@@ -314,7 +314,7 @@ int main(int argc, char *argv[])
 
             if (!QFile("/dev/dri").exists()) {
                 qWarning() << "Unable to find a KMSDRM display device!";
-                qWarning() << "On Raspberry Pi 2 and 3, you must enable the 'fake KMS' driver in raspi-config to use Moonlight outside of the GUI environment.";
+                qWarning() << "On the Raspberry Pi, you must enable the 'fake KMS' driver in raspi-config to use Moonlight outside of the GUI environment.";
             }
         }
 #endif
@@ -435,10 +435,10 @@ int main(int argc, char *argv[])
     // Move the mouse to the bottom right so it's invisible when using
     // gamepad-only navigation.
     QCursor().setPos(0xFFFF, 0xFFFF);
-#elif defined(Q_OS_LINUX) && (defined(__arm__) || defined(__aarch64__))
+#elif !SDL_VERSION_ATLEAST(2, 0, 11) && defined(Q_OS_LINUX) && (defined(__arm__) || defined(__aarch64__))
     if (qgetenv("SDL_VIDEO_GL_DRIVER").isEmpty() && QGuiApplication::platformName() == "eglfs") {
-        // Look for Raspberry Pi GLES libraries. SDL needs some help finding the correct
-        // libraries for the KMSDRM backend if not compiled with the RPI backend enabled.
+        // Look for Raspberry Pi GLES libraries. SDL 2.0.10 and earlier needs some help finding
+        // the correct libraries for the KMSDRM backend if not compiled with the RPI backend enabled.
         if (SDL_LoadObject("libbrcmGLESv2.so") != nullptr) {
             qputenv("SDL_VIDEO_GL_DRIVER", "libbrcmGLESv2.so");
         }
