@@ -1083,11 +1083,13 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // This prevents the mouse from becoming trapped inside
     // Moonlight when it's halted at a debug break.
     if (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED) {
+#if !SDL_VERSION_ATLEAST(2, 0, 11)
         // HACK: This doesn't work on Wayland until we render a frame, so
-        // just don't do it for now.
+        // just don't do it for now. This bug is fixed in SDL 2.0.11.
         if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
             m_InputHandler->setCaptureActive(true);
         }
+#endif
     }
 #endif
 
