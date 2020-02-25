@@ -1086,10 +1086,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
 #if !SDL_VERSION_ATLEAST(2, 0, 11)
         // HACK: This doesn't work on Wayland until we render a frame, so
         // just don't do it for now. This bug is fixed in SDL 2.0.11.
-        if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
+        if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0)
+#endif
+        {
             m_InputHandler->setCaptureActive(true);
         }
-#endif
     }
 #endif
 
