@@ -41,7 +41,7 @@ public:
 signals:
     void stageStarting(QString stage);
 
-    void stageFailed(QString stage, long errorCode);
+    void stageFailed(QString stage, int errorCode);
 
     void connectionStarted();
 
@@ -93,10 +93,10 @@ private:
     void clStageStarting(int stage);
 
     static
-    void clStageFailed(int stage, long errorCode);
+    void clStageFailed(int stage, int errorCode);
 
     static
-    void clConnectionTerminated(long errorCode);
+    void clConnectionTerminated(int errorCode);
 
     static
     void clLogMessage(const char* format, ...);

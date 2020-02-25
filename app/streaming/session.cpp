@@ -58,7 +58,7 @@ void Session::clStageStarting(int stage)
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
-void Session::clStageFailed(int stage, long errorCode)
+void Session::clStageFailed(int stage, int errorCode)
 {
     // We know this is called on the same thread as LiStartConnection()
     // which happens to be the main thread, so it's cool to interact
@@ -67,7 +67,7 @@ void Session::clStageFailed(int stage, long errorCode)
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
-void Session::clConnectionTerminated(long errorCode)
+void Session::clConnectionTerminated(int errorCode)
 {
     // Display the termination dialog if this was not intended
     if (errorCode != 0) {
@@ -76,7 +76,7 @@ void Session::clConnectionTerminated(long errorCode)
     }
 
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "Connection terminated: %ld",
+                 "Connection terminated: %d",
                  errorCode);
 
     // Push a quit event to the main loop
