@@ -1,4 +1,5 @@
 #include "nvcomputer.h"
+#include "utils.h"
 
 #include <QUdpSocket>
 #include <QHostInfo>
@@ -229,7 +230,7 @@ bool NvComputer::wake()
                     success = true;
                 }
                 else {
-                    qWarning() << "Send failed:" << sock.error();
+                    qWarning() << "Send failed:" << QSOCK_GET_ERROR(&sock);
                 }
             }
         }
