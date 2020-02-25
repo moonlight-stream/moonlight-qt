@@ -39,8 +39,6 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clStageFailed,
     nullptr,
     Session::clConnectionTerminated,
-    nullptr,
-    nullptr,
     Session::clLogMessage,
     Session::clRumble,
     Session::clConnectionStatusUpdate
