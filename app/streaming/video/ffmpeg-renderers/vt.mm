@@ -357,10 +357,10 @@ public:
 
             switch (type) {
             case Overlay::OverlayDebug:
-                [m_OverlayTextFields[type] setAlignment:NSLeftTextAlignment];
+                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
                 break;
             case Overlay::OverlayStatusUpdate:
-                [m_OverlayTextFields[type] setAlignment:NSRightTextAlignment];
+                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentRight];
                 break;
             default:
                 break;
