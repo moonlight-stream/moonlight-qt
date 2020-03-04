@@ -974,6 +974,13 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         state = &m_GamepadState[i];
         if (m_MultiController) {
             state->index = i;
+
+#if SDL_VERSION_ATLEAST(2, 0, 12)
+            // This will change indicators on the controller to show the assigned
+            // player index. For Xbox 360 controllers, that means updating the LED
+            // ring to light up the corresponding quadrant for this player.
+            SDL_GameControllerSetPlayerIndex(controller, state->index);
+#endif
         }
         else {
             // Always player 1 in single controller mode
