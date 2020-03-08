@@ -999,8 +999,10 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         state->jsId = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(state->controller));
 
 #if SDL_VERSION_ATLEAST(2, 0, 9)
-        // Perform a no-op rumble to see if haptics are supported
-        hapticCaps = SDL_GameControllerRumble(controller, 0, 0, 0) == 0 ?
+        // Perform a tiny rumble to see if haptics are supported.
+        // NB: We cannot use zeros for rumble intensity or SDL will not actually call the JS driver
+        // and we'll get a (potentially false) success value returned.
+        hapticCaps = SDL_GameControllerRumble(controller, 1, 1, 1) == 0 ?
                         ML_HAPTIC_GC_RUMBLE : 0;
 #else
         state->haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(state->controller));
