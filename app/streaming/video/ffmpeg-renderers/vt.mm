@@ -229,7 +229,7 @@ public:
             break;
         case AVCOL_SPC_SMPTE170M:
             if (m_ColorSpace == nullptr) {
-                m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
+                m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
             }
             CVBufferSetAttachment(pixBuf,
                                   kCVImageBufferYCbCrMatrixKey,
@@ -521,8 +521,8 @@ public:
 
     int getDecoderColorspace() override
     {
-        // macOS seems to handle Rec 709 best
-        return COLORSPACE_REC_709;
+        // macOS seems to handle Rec 601 best
+        return COLORSPACE_REC_601;
     }
 
 private:
