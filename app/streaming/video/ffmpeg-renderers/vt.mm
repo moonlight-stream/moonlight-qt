@@ -25,6 +25,7 @@ public:
           m_FormatDesc(nullptr),
           m_StreamView(nullptr),
           m_DisplayLink(nullptr),
+          m_ColorSpace(nullptr),
           m_VsyncMutex(nullptr),
           m_VsyncPassed(nullptr)
     {
@@ -52,6 +53,10 @@ public:
 
         if (m_FormatDesc != nullptr) {
             CFRelease(m_FormatDesc);
+        }
+
+        if (m_ColorSpace != nullptr) {
+            CGColorSpaceRelease(m_ColorSpace);
         }
 
         for (int i = 0; i < Overlay::OverlayMax; i++) {
@@ -152,6 +157,91 @@ public:
             event.type = SDL_RENDER_TARGETS_RESET;
             SDL_PushEvent(&event);
             return;
+        }
+
+        // Strip the attachments added by VT. They are likely wrong.
+        CVBufferRemoveAllAttachments(pixBuf);
+
+        CVBufferSetAttachment(pixBuf,
+                              kCVImageBufferChromaSubsamplingKey,
+                              kCVImageBufferChromaSubsampling_420,
+                              kCVAttachmentMode_ShouldPropagate);
+
+        switch (frame->color_primaries) {
+        case AVCOL_PRI_BT709:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferColorPrimariesKey,
+                                  kCVImageBufferColorPrimaries_ITU_R_709_2,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCOL_PRI_SMPTE170M:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferColorPrimariesKey,
+                                  kCVImageBufferColorPrimaries_SMPTE_C,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCOL_PRI_BT2020:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferColorPrimariesKey,
+                                  kCVImageBufferColorPrimaries_ITU_R_2020,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        default:
+            break;
+        }
+
+        switch (frame->color_trc) {
+        case AVCOL_TRC_BT709:
+        case AVCOL_TRC_SMPTE170M:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferTransferFunctionKey,
+                                  kCVImageBufferTransferFunction_ITU_R_709_2,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCOL_TRC_BT2020_10:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferTransferFunctionKey,
+                                  kCVImageBufferTransferFunction_ITU_R_2020,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        default:
+            break;
+        }
+
+        switch (frame->colorspace) {
+        case AVCOL_SPC_BT709:
+            if (m_ColorSpace == nullptr) {
+                m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
+            }
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferYCbCrMatrixKey,
+                                  kCVImageBufferYCbCrMatrix_ITU_R_709_2,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCOL_SPC_BT2020_NCL:
+            if (m_ColorSpace == nullptr) {
+                m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
+            }
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferYCbCrMatrixKey,
+                                  kCVImageBufferYCbCrMatrix_ITU_R_2020,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCOL_SPC_SMPTE170M:
+            if (m_ColorSpace == nullptr) {
+                m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
+            }
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferYCbCrMatrixKey,
+                                  kCVImageBufferYCbCrMatrix_ITU_R_601_4,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        default:
+            break;
+        }
+
+        if (m_ColorSpace != nullptr) {
+            CVBufferSetAttachment(pixBuf, kCVImageBufferCGColorSpaceKey, m_ColorSpace, kCVAttachmentMode_ShouldPropagate);
         }
 
         // If the format has changed or doesn't exist yet, construct it with the
@@ -429,6 +519,12 @@ public:
         return true;
     }
 
+    int getDecoderColorspace() override
+    {
+        // macOS seems to handle Rec 709 best
+        return COLORSPACE_REC_709;
+    }
+
 private:
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;
@@ -436,6 +532,7 @@ private:
     NSView* m_StreamView;
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
     CVDisplayLinkRef m_DisplayLink;
+    CGColorSpaceRef m_ColorSpace;
     SDL_mutex* m_VsyncMutex;
     SDL_cond* m_VsyncPassed;
 };
