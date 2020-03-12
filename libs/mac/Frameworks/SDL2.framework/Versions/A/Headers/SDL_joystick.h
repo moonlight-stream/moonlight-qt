@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -192,7 +192,12 @@ extern DECLSPEC SDL_Joystick *SDLCALL SDL_JoystickOpen(int device_index);
 /**
  * Return the SDL_Joystick associated with an instance id.
  */
-extern DECLSPEC SDL_Joystick *SDLCALL SDL_JoystickFromInstanceID(SDL_JoystickID joyid);
+extern DECLSPEC SDL_Joystick *SDLCALL SDL_JoystickFromInstanceID(SDL_JoystickID instance_id);
+
+/**
+ * Return the SDL_Joystick associated with a player index.
+ */
+extern DECLSPEC SDL_Joystick *SDLCALL SDL_JoystickFromPlayerIndex(int player_index);
 
 /**
  *  Return the name for this currently opened joystick.
@@ -206,6 +211,11 @@ extern DECLSPEC const char *SDLCALL SDL_JoystickName(SDL_Joystick * joystick);
  *  For XInput controllers this returns the XInput user index.
  */
 extern DECLSPEC int SDLCALL SDL_JoystickGetPlayerIndex(SDL_Joystick * joystick);
+
+/**
+ *  Set the player index of an opened joystick
+ */
+extern DECLSPEC void SDLCALL SDL_JoystickSetPlayerIndex(SDL_Joystick * joystick, int player_index);
 
 /**
  *  Return the GUID for this opened joystick

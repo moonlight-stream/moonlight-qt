@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -408,6 +408,8 @@ extern DECLSPEC int SDLCALL SDL_abs(int x);
 
 extern DECLSPEC int SDLCALL SDL_isdigit(int x);
 extern DECLSPEC int SDLCALL SDL_isspace(int x);
+extern DECLSPEC int SDLCALL SDL_isupper(int x);
+extern DECLSPEC int SDLCALL SDL_islower(int x);
 extern DECLSPEC int SDLCALL SDL_toupper(int x);
 extern DECLSPEC int SDLCALL SDL_tolower(int x);
 
@@ -415,11 +417,14 @@ extern DECLSPEC void *SDLCALL SDL_memset(SDL_OUT_BYTECAP(len) void *dst, int c, 
 
 #define SDL_zero(x) SDL_memset(&(x), 0, sizeof((x)))
 #define SDL_zerop(x) SDL_memset((x), 0, sizeof(*(x)))
+#define SDL_zeroa(x) SDL_memset((x), 0, sizeof((x)))
 
 /* Note that memset() is a byte assignment and this is a 32-bit assignment, so they're not directly equivalent. */
 SDL_FORCE_INLINE void SDL_memset4(void *dst, Uint32 val, size_t dwords)
 {
-#if defined(__GNUC__) && defined(i386)
+#ifdef __APPLE__
+    memset_pattern4(dst, &val, dwords * 4);
+#elif defined(__GNUC__) && defined(i386)
     int u0, u1, u2;
     __asm__ __volatile__ (
         "cld \n\t"
@@ -450,11 +455,14 @@ extern DECLSPEC void *SDLCALL SDL_memcpy(SDL_OUT_BYTECAP(len) void *dst, SDL_IN_
 extern DECLSPEC void *SDLCALL SDL_memmove(SDL_OUT_BYTECAP(len) void *dst, SDL_IN_BYTECAP(len) const void *src, size_t len);
 extern DECLSPEC int SDLCALL SDL_memcmp(const void *s1, const void *s2, size_t len);
 
-extern DECLSPEC wchar_t *SDLCALL SDL_wcsdup(const wchar_t *wstr);
 extern DECLSPEC size_t SDLCALL SDL_wcslen(const wchar_t *wstr);
 extern DECLSPEC size_t SDLCALL SDL_wcslcpy(SDL_OUT_Z_CAP(maxlen) wchar_t *dst, const wchar_t *src, size_t maxlen);
 extern DECLSPEC size_t SDLCALL SDL_wcslcat(SDL_INOUT_Z_CAP(maxlen) wchar_t *dst, const wchar_t *src, size_t maxlen);
+extern DECLSPEC wchar_t *SDLCALL SDL_wcsdup(const wchar_t *wstr);
+extern DECLSPEC wchar_t *SDLCALL SDL_wcsstr(const wchar_t *haystack, const wchar_t *needle);
+
 extern DECLSPEC int SDLCALL SDL_wcscmp(const wchar_t *str1, const wchar_t *str2);
+extern DECLSPEC int SDLCALL SDL_wcsncmp(const wchar_t *str1, const wchar_t *str2, size_t maxlen);
 
 extern DECLSPEC size_t SDLCALL SDL_strlen(const char *str);
 extern DECLSPEC size_t SDLCALL SDL_strlcpy(SDL_OUT_Z_CAP(maxlen) char *dst, const char *src, size_t maxlen);
@@ -467,6 +475,7 @@ extern DECLSPEC char *SDLCALL SDL_strlwr(char *str);
 extern DECLSPEC char *SDLCALL SDL_strchr(const char *str, int c);
 extern DECLSPEC char *SDLCALL SDL_strrchr(const char *str, int c);
 extern DECLSPEC char *SDLCALL SDL_strstr(const char *haystack, const char *needle);
+extern DECLSPEC char *SDLCALL SDL_strtokr(char *s1, const char *s2, char **saveptr);
 extern DECLSPEC size_t SDLCALL SDL_utf8strlen(const char *str);
 
 extern DECLSPEC char *SDLCALL SDL_itoa(int value, char *str, int radix);
@@ -581,6 +590,7 @@ extern DECLSPEC char *SDLCALL SDL_iconv_string(const char *tocode,
 #define SDL_strchr strchr
 #define SDL_strrchr strrchr
 #define SDL_strstr strstr
+#define SDL_strtokr strtok_r
 #define SDL_strcmp strcmp
 #define SDL_strncmp strncmp
 #define SDL_strcasecmp strcasecmp

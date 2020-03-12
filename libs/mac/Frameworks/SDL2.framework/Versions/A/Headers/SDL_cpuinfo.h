@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -73,8 +73,8 @@
 #      define __ARM_NEON 1 /* Set __ARM_NEON so that it can be used elsewhere, at compile time */
 #    endif
 #    if defined (_M_ARM64)
-#      include <armintr.h>
-#      include <arm_neon.h>
+#      include <arm64intr.h>
+#      include <arm64_neon.h>
 #      define __ARM_NEON 1 /* Set __ARM_NEON so that it can be used elsewhere, at compile time */
 #    endif
 #  endif
@@ -185,6 +185,11 @@ extern DECLSPEC SDL_bool SDLCALL SDL_HasAVX2(void);
  *  This function returns true if the CPU has AVX-512F (foundation) features.
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_HasAVX512F(void);
+
+/**
+ *  This function returns true if the CPU has ARM SIMD (ARMv6) features.
+ */
+extern DECLSPEC SDL_bool SDLCALL SDL_HasARMSIMD(void);
 
 /**
  *  This function returns true if the CPU has NEON (ARM SIMD) features.

@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -84,6 +84,16 @@ typedef struct SDL_RendererInfo
     int max_texture_width;      /**< The maximum texture width */
     int max_texture_height;     /**< The maximum texture height */
 } SDL_RendererInfo;
+
+/**
+ *  \brief The scaling mode for a texture.
+ */
+typedef enum
+{
+    SDL_ScaleModeNearest, /**< nearest pixel sampling */
+    SDL_ScaleModeLinear,  /**< linear filtering */
+    SDL_ScaleModeBest     /**< anisotropic filtering */
+} SDL_ScaleMode;
 
 /**
  *  \brief The access pattern allowed for a texture.
@@ -367,6 +377,35 @@ extern DECLSPEC int SDLCALL SDL_GetTextureBlendMode(SDL_Texture * texture,
                                                     SDL_BlendMode *blendMode);
 
 /**
+ *  \brief Set the scale mode used for texture scale operations.
+ *
+ *  \param texture The texture to update.
+ *  \param scaleMode ::SDL_ScaleMode to use for texture scaling.
+ *
+ *  \return 0 on success, or -1 if the texture is not valid.
+ *
+ *  \note If the scale mode is not supported, the closest supported mode is
+ *        chosen.
+ *
+ *  \sa SDL_GetTextureScaleMode()
+ */
+extern DECLSPEC int SDLCALL SDL_SetTextureScaleMode(SDL_Texture * texture,
+                                                    SDL_ScaleMode scaleMode);
+
+/**
+ *  \brief Get the scale mode used for texture scale operations.
+ *
+ *  \param texture   The texture to query.
+ *  \param scaleMode A pointer filled in with the current scale mode.
+ *
+ *  \return 0 on success, or -1 if the texture is not valid.
+ *
+ *  \sa SDL_SetTextureScaleMode()
+ */
+extern DECLSPEC int SDLCALL SDL_GetTextureScaleMode(SDL_Texture * texture,
+                                                    SDL_ScaleMode *scaleMode);
+
+/**
  *  \brief Update the given texture rectangle with new pixel data.
  *
  *  \param texture   The texture to update
@@ -431,9 +470,30 @@ extern DECLSPEC int SDLCALL SDL_LockTexture(SDL_Texture * texture,
                                             void **pixels, int *pitch);
 
 /**
+ *  \brief Lock a portion of the texture for write-only pixel access.
+ *         Expose it as a SDL surface.
+ *
+ *  \param texture   The texture to lock for access, which was created with
+ *                   ::SDL_TEXTUREACCESS_STREAMING.
+ *  \param rect      A pointer to the rectangle to lock for access. If the rect
+ *                   is NULL, the entire texture will be locked.
+ *  \param surface   This is filled in with a SDL surface representing the locked area
+ *                   Surface is freed internally after calling SDL_UnlockTexture or SDL_DestroyTexture.
+ *
+ *  \return 0 on success, or -1 if the texture is not valid or was not created with ::SDL_TEXTUREACCESS_STREAMING.
+ *
+ *  \sa SDL_UnlockTexture()
+ */
+extern DECLSPEC int SDLCALL SDL_LockTextureToSurface(SDL_Texture *texture,
+                                            const SDL_Rect *rect,
+                                            SDL_Surface **surface);
+
+/**
  *  \brief Unlock a texture, uploading the changes to video memory, if needed.
+ *         If SDL_LockTextureToSurface() was called for locking, the SDL surface is freed.
  *
  *  \sa SDL_LockTexture()
+ *  \sa SDL_LockTextureToSurface()
  */
 extern DECLSPEC void SDLCALL SDL_UnlockTexture(SDL_Texture * texture);
 
@@ -558,8 +618,8 @@ extern DECLSPEC void SDLCALL SDL_RenderGetViewport(SDL_Renderer * renderer,
  *  \brief Set the clip rectangle for the current target.
  *
  *  \param renderer The renderer for which clip rectangle should be set.
- *  \param rect   A pointer to the rectangle to set as the clip rectangle, or
- *                NULL to disable clipping.
+ *  \param rect   A pointer to the rectangle to set as the clip rectangle,
+ *                relative to the viewport, or NULL to disable clipping.
  *
  *  \return 0 on success, or -1 on error
  *

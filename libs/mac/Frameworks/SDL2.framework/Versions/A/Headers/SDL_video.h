@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -96,7 +96,6 @@ typedef struct SDL_Window SDL_Window;
  */
 typedef enum
 {
-    /* !!! FIXME: change this to name = (1<<x). */
     SDL_WINDOW_FULLSCREEN = 0x00000001,         /**< fullscreen window */
     SDL_WINDOW_OPENGL = 0x00000002,             /**< window usable with OpenGL context */
     SDL_WINDOW_SHOWN = 0x00000004,              /**< window is visible */

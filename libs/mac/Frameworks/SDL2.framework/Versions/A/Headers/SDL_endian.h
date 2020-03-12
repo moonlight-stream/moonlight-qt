@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -42,10 +42,13 @@
 #ifdef __linux__
 #include <endian.h>
 #define SDL_BYTEORDER  __BYTE_ORDER
-#else /* __linux__ */
+#elif defined(__OpenBSD__)
+#include <endian.h>
+#define SDL_BYTEORDER  BYTE_ORDER
+#else
 #if defined(__hppa__) || \
     defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || \
-    (defined(__MIPS__) && defined(__MISPEB__)) || \
+    (defined(__MIPS__) && defined(__MIPSEB__)) || \
     defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || \
     defined(__sparc__)
 #define SDL_BYTEORDER   SDL_BIG_ENDIAN

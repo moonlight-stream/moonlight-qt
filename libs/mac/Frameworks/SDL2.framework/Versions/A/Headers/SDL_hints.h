@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2019 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -165,6 +165,21 @@ extern "C" {
 #define SDL_HINT_VIDEO_ALLOW_SCREENSAVER    "SDL_VIDEO_ALLOW_SCREENSAVER"
 
 /**
+ * \brief A variable controlling whether the graphics context is externally managed.
+ *
+ * This variable can be set to the following values:
+ *  "0"         - SDL will manage graphics contexts that are attached to windows.
+ *  "1"         - Disable graphics context management on windows.
+ *
+ * By default SDL will manage OpenGL contexts in certain situations. For example, on Android the
+ * context will be automatically saved and restored when pausing the application. Additionally, some
+ * platforms will assume usage of OpenGL if Vulkan isn't used. Setting this to "1" will prevent this
+ * behavior, which is desireable when the application manages the graphics context, such as
+ * an externally managed OpenGL context or attaching a Vulkan surface to the window.
+ */
+#define SDL_HINT_VIDEO_EXTERNAL_CONTEXT    "SDL_VIDEO_EXTERNAL_CONTEXT"
+
+/**
  *  \brief  A variable controlling whether the X11 VidMode extension should be used.
  *
  *  This variable can be set to the following values:
@@ -198,6 +213,12 @@ extern "C" {
 #define SDL_HINT_VIDEO_X11_XRANDR           "SDL_VIDEO_X11_XRANDR"
 
 /**
+ *  \brief  A variable forcing the visual ID chosen for new X11 windows
+ *
+ */
+#define SDL_HINT_VIDEO_X11_WINDOW_VISUALID      "SDL_VIDEO_X11_WINDOW_VISUALID"
+
+/**
  *  \brief  A variable controlling whether the X11 _NET_WM_PING protocol should be supported.
  *
  *  This variable can be set to the following values:
@@ -222,6 +243,17 @@ extern "C" {
  * 
  */
 #define SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR "SDL_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR"
+
+/**
+ * \brief A variable controlling whether X11 should use GLX or EGL by default
+ *
+ * This variable can be set to the following values:
+ * "0" - Use GLX
+ * "1" - Use EGL
+ *
+ * By default SDL will use GLX when both are present.
+ */
+#define SDL_HINT_VIDEO_X11_FORCE_EGL "SDL_VIDEO_X11_FORCE_EGL"
 
 /**
  *  \brief  A variable controlling whether the window frame and title bar are interactive when the cursor is hidden 
@@ -437,6 +469,24 @@ extern "C" {
 #define SDL_HINT_XINPUT_USE_OLD_JOYSTICK_MAPPING "SDL_XINPUT_USE_OLD_JOYSTICK_MAPPING"
 
 /**
+ *  \brief  A variable that overrides the automatic controller type detection
+ *
+ *  The variable should be comma separated entries, in the form: VID/PID=type
+ *
+ *  The VID and PID should be hexadecimal with exactly 4 digits, e.g. 0x00fd
+ *
+ *  The type should be one of:
+ *      Xbox360
+ *      XboxOne
+ *      PS3
+ *      PS4
+ *      SwitchPro
+ *
+ *  This hint affects what driver is used, and must be set before calling SDL_Init(SDL_INIT_GAMECONTROLLER)
+ */
+#define SDL_HINT_GAMECONTROLLERTYPE "SDL_GAMECONTROLLERTYPE"
+
+/**
  *  \brief  A variable that lets you manually hint extra gamecontroller db entries.
  *
  *  The variable should be newline delimited rows of gamecontroller config data, see SDL_gamecontroller.h
@@ -481,6 +531,29 @@ extern "C" {
  *  file will be loaded and interpreted as the value of the variable.
  */
 #define SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT "SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT"
+
+/**
+ *  \brief  If set, game controller face buttons report their values according to their labels instead of their positional layout.
+ * 
+ *  For example, on Nintendo Switch controllers, normally you'd get:
+ *
+ *      (Y)
+ *  (X)     (B)
+ *      (A)
+ *
+ *  but if this hint is set, you'll get:
+ *
+ *      (X)
+ *  (Y)     (A)
+ *      (B)
+ *
+ *  The variable can be set to the following values:
+ *    "0"       - Report the face buttons by position, as though they were on an Xbox controller.
+ *    "1"       - Report the face buttons by label instead of position
+ *
+ *  The default value is "1".  This hint may be set at any time.
+ */
+#define SDL_HINT_GAMECONTROLLER_USE_BUTTON_LABELS "SDL_GAMECONTROLLER_USE_BUTTON_LABELS"
 
 /**
  *  \brief  A variable that lets you enable joystick (and gamecontroller) events even when your app is in the background.
@@ -564,6 +637,17 @@ extern "C" {
  *  The default is the value of SDL_HINT_JOYSTICK_HIDAPI
  */
 #define SDL_HINT_JOYSTICK_HIDAPI_XBOX   "SDL_JOYSTICK_HIDAPI_XBOX"
+
+/**
+ *  \brief  A variable controlling whether the HIDAPI driver for Nintendo GameCube controllers should be used.
+ *
+ *  This variable can be set to the following values:
+ *    "0"       - HIDAPI driver is not used
+ *    "1"       - HIDAPI driver is used
+ *
+ *  The default is the value of SDL_HINT_JOYSTICK_HIDAPI
+ */
+#define SDL_HINT_JOYSTICK_HIDAPI_GAMECUBE "SDL_JOYSTICK_HIDAPI_GAMECUBE"
 
 /**
  *  \brief  A variable that controls whether Steam Controllers should be exposed using the SDL joystick and game controller APIs
@@ -1173,6 +1257,20 @@ extern "C" {
  *    "ignore"      - Ignore fact chunk entirely (default)
  */
 #define SDL_HINT_WAVE_FACT_CHUNK   "SDL_WAVE_FACT_CHUNK"
+
+/*
+ *  \brief Override for SDL_GetDisplayUsableBounds()
+ *
+ *  If set, this hint will override the expected results for
+ *  SDL_GetDisplayUsableBounds() for display index 0. Generally you don't want
+ *  to do this, but this allows an embedded system to request that some of the
+ *  screen be reserved for other uses when paired with a well-behaved
+ *  application.
+ *
+ *  The contents of this hint must be 4 comma-separated integers, the first
+ *  is the bounds x, then y, width and height, in that order.
+ */
+#define SDL_HINT_DISPLAY_USABLE_BOUNDS "SDL_DISPLAY_USABLE_BOUNDS"
 
 /**
  *  \brief  An enumeration of hint priorities
