@@ -483,9 +483,9 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_RALT:
                 keyCode = 0xA5;
                 break;
-            // Until we can fully capture these on Windows, we should avoid
-            // passing them through to the host.
-            #ifndef Q_OS_WIN
+            // Until we can fully capture these on all platforms (without conflicting with
+            // OS-provided shortcuts), we should avoid passing them through to the host.
+            #if 0
             case SDL_SCANCODE_LGUI:
                 keyCode = 0x5B;
                 break;
