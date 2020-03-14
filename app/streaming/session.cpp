@@ -1076,18 +1076,20 @@ void Session::exec(int displayOriginX, int displayOriginY)
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 
+    bool needsFirstEnterCapture = false;
+
 #ifndef QT_DEBUG
     // Capture the mouse by default on release builds only.
     // This prevents the mouse from becoming trapped inside
     // Moonlight when it's halted at a debug break.
     if (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED) {
-#if !SDL_VERSION_ATLEAST(2, 0, 11)
-        // HACK: This doesn't work on Wayland until we render a frame, so
-        // just don't do it for now. This bug is fixed in SDL 2.0.11.
-        if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0)
-#endif
-        {
+        // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
+        // event where it seems to work consistently on GNOME.
+        if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
             m_InputHandler->setCaptureActive(true);
+        }
+        else {
+            needsFirstEnterCapture = true;
         }
     }
 #endif
@@ -1188,6 +1190,12 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 // Raise all keys that are currently pressed. If we don't do this, certain keys
                 // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
                 m_InputHandler->raiseAllKeys();
+            }
+
+            // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed
+            if (needsFirstEnterCapture && event.window.event == SDL_WINDOWEVENT_ENTER) {
+                m_InputHandler->setCaptureActive(true);
+                needsFirstEnterCapture = false;
             }
 
             // We want to recreate the decoder for resizes (full-screen toggles) and the initial shown event.
