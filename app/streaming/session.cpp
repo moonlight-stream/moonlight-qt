@@ -1015,6 +1015,13 @@ void Session::exec(int displayOriginX, int displayOriginY)
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);
 
+#ifdef STEAM_LINK
+    // We need a little delay before creating the window or we will trigger some kind
+    // of graphics driver bug on Steam Link that causes a jagged overlay to appear in
+    // the top right corner randomly.
+    SDL_Delay(500);
+#endif
+
     m_Window = SDL_CreateWindow("Moonlight",
                                 x,
                                 y,
