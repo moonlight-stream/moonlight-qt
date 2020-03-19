@@ -140,13 +140,22 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     VAStatus status;
     status = vaInitialize(vaDeviceContext->display, &major, &minor);
     if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
-        // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
-        // even though the correct driver is still i965. If we hit this path, we'll
-        // explicitly try i965 to handle this case.
-        vaSetDriverName(vaDeviceContext->display, const_cast<char*>("i965"));
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Attempting fallback to i965 VA driver");
-        status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                    "Default VAAPI driver failed - trying fallback drivers");
+        if (status != VA_STATUS_SUCCESS) {
+            // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
+            // It should be picked by default on those platforms, but that doesn't
+            // always seem to be the case for some reason.
+            vaSetDriverName(vaDeviceContext->display, const_cast<char*>("iHD"));
+            status = vaInitialize(vaDeviceContext->display, &major, &minor);
+        }
+        if (status != VA_STATUS_SUCCESS) {
+            // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
+            // even though the correct driver is still i965. If we hit this path, we'll
+            // explicitly try i965 to handle this case.
+            vaSetDriverName(vaDeviceContext->display, const_cast<char*>("i965"));
+            status = vaInitialize(vaDeviceContext->display, &major, &minor);
+        }
     }
     if (status != VA_STATUS_SUCCESS) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
