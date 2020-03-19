@@ -81,7 +81,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Desired audio buffer: %u samples (%lu bytes)",
+                "Desired audio buffer: %u samples (%zu bytes)",
                 want.samples,
                 want.samples * sizeof(short) * want.channels);
 

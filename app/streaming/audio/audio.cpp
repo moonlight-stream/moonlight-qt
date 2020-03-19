@@ -237,7 +237,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
 
         // Update desiredSize with the number of bytes actually populated by the decoding operation
         if (samplesDecoded > 0) {
-            SDL_assert(desiredSize >= sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount);
+            SDL_assert(desiredSize >= (int)(sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount));
             desiredSize = sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount;
         }
         else {
