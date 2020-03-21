@@ -329,6 +329,12 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         return;
     }
 
+    if (event->repeat) {
+        // Ignore repeat key down events
+        SDL_assert(event->state == SDL_PRESSED);
+        return;
+    }
+
     // Set modifier flags
     modifiers = 0;
     if (event->keysym.mod & KMOD_CTRL) {
