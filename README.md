@@ -6,8 +6,7 @@ Moonlight also has mobile versions for [Android](https://github.com/moonlight-st
 
 You can follow development on our [Discord server](https://moonlight-stream.org/discord).
 
- [![Windows AppVeyor Status](https://ci.appveyor.com/api/projects/status/glj5cxqwy2w3bglv/branch/master?svg=true)](https://ci.appveyor.com/project/cgutman/moonlight-qt/branch/master)
- [![Mac and Linux Travis CI Status](https://travis-ci.org/moonlight-stream/moonlight-qt.svg?branch=master)](https://travis-ci.org/moonlight-stream/moonlight-qt)
+ [![AppVeyor Build Status](https://ci.appveyor.com/api/projects/status/glj5cxqwy2w3bglv/branch/master?svg=true)](https://ci.appveyor.com/project/cgutman/moonlight-qt/branch/master)
  [![Downloads](https://img.shields.io/github/downloads/moonlight-stream/moonlight-qt/total)](https://github.com/moonlight-stream/moonlight-qt/releases)
 
 ## Features
