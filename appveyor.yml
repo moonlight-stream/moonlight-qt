@@ -14,7 +14,7 @@ environment:
       ARCH: x86
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
       BUILD_TARGET: steamlink
-    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu
+    - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
       BUILD_TARGET: linux
 
 install:
@@ -22,9 +22,13 @@ install:
   - sh: '[ "$BUILD_TARGET" != macos ] || npm install --global create-dmg'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || sudo apt install -y libc6:i386 libstdc++6:i386'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo add-apt-repository ppa:savoury1/multimedia'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo add-apt-repository ppa:savoury1/ffmpeg4'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt install -y qt5-default qtbase5-dev qtquickcontrols2-5-dev libqt5svg5-dev libgl1-mesa-dev libegl1-mesa-dev libxkbcommon-dev wayland-protocols libopus-dev libva-dev libvdpau-dev libsdl2-dev qtdeclarative5-dev libssl-dev libsdl2-ttf-dev libavcodec-dev libavutil-dev'
+  - sh: '[ "$BUILD_TARGET" != linux ] || sudo add-apt-repository ppa:beineri/opt-qt-5.14.1-xenial'
+  - sh: '[ "$BUILD_TARGET" != linux ] || sudo add-apt-repository ppa:jonathonf/ffmpeg-4'
+  - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt update'
+  - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt install -y qt514base qt514quickcontrols2 qt514svg libgbm-dev libdrm-dev libfreetype6-dev libasound2-dev libdbus-1-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libglu1-mesa-dev libibus-1.0-dev libpulse-dev libudev-dev libx11-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev libxv-dev libxxf86vm-dev wayland-protocols libopus-dev libavcodec-dev libavutil-dev libva-dev libvdpau-dev'
+  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export SDL2_VER=2.0.12 && wget https://www.libsdl.org/release/SDL2-$SDL2_VER.tar.gz && tar -xvf SDL2-$SDL2_VER.tar.gz && cd SDL2-$SDL2_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi'
+  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export SDL2_TTF_VER=2.0.15 && wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$SDL2_TTF_VER.tar.gz && tar -xvf SDL2_ttf-$SDL2_TTF_VER.tar.gz && cd SDL2_ttf-$SDL2_TTF_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi'
+  - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then mkdir $HOME/bin && wget -O $HOME/bin/linuxdeployqt https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage && chmod a+x $HOME/bin/linuxdeployqt; fi'
 
 before_build:
   - 'git submodule update --init --recursive'
@@ -35,9 +39,8 @@ before_build:
 build_script:
   - cmd: 'scripts\generate-installers.bat Debug %ARCH%'
   - cmd: 'scripts\generate-installers.bat Release %ARCH%'
-  - sh: '[ "$BUILD_TARGET" != linux ] || qmake moonlight-qt.pro -spec linux-g++'
-  - sh: '[ "$BUILD_TARGET" != linux ] || make -j$(nproc) debug'
-  - sh: '[ "$BUILD_TARGET" != linux ] || make -j$(nproc) release'
+  - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt514/bin/qt514-env.sh'
+  - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
   - sh: '[ "$BUILD_TARGET" != macos ] || scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
@@ -47,5 +50,6 @@ after_build:
   - cmd: 'appveyor PushArtifact build\symbols-%ARCH%-Release\MoonlightDebuggingSymbols-%ARCH%-%VERSION%.zip -FileName MoonlightDebuggingSymbols-%ARCH%-r%APPVEYOR_BUILD_NUMBER%.zip'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$VERSION.zip -FileName Moonlight-SteamLink-r$APPVEYOR_BUILD_NUMBER.zip'
   - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/Moonlight-$VERSION.dmg -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER.dmg'
+  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/Moonlight-$VERSION-x86_64.AppImage -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
 
 deploy: off

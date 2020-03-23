@@ -22,8 +22,10 @@
 #include "streaming/video/ffmpeg.h"
 #endif
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32)
 #include "antihookingprotection.h"
+#elif defined(Q_OS_LINUX)
+#include <openssl/ssl.h>
 #endif
 
 #include "cli/quitstream.h"
@@ -286,10 +288,15 @@ int main(int argc, char *argv[])
     SetUnhandledExceptionFilter(UnhandledExceptionHandler);
 #endif
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32)
     // Force AntiHooking.dll to be statically imported and loaded
     // by ntdll by calling a dummy function.
     AntiHookingDummyImport();
+#elif defined(Q_OS_LINUX)
+    // Force libssl.so to be directly linked to our binary, so
+    // linuxdeployqt can find it and include it in our AppImage.
+    // QtNetwork will pull it in via dlopen().
+    SSL_free(nullptr);
 #endif
 
     // Avoid using High DPI on EGLFS. It breaks font rendering.
