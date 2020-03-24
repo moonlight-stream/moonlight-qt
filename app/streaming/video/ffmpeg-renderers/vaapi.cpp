@@ -138,25 +138,57 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 
     int major, minor;
     VAStatus status;
-    status = vaInitialize(vaDeviceContext->display, &major, &minor);
-    if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Default VAAPI driver failed - trying fallback drivers");
-        if (status != VA_STATUS_SUCCESS) {
-            // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
-            // It should be picked by default on those platforms, but that doesn't
-            // always seem to be the case for some reason.
-            vaSetDriverName(vaDeviceContext->display, const_cast<char*>("iHD"));
-            status = vaInitialize(vaDeviceContext->display, &major, &minor);
+
+    for (;;) {
+        status = vaInitialize(vaDeviceContext->display, &major, &minor);
+        if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Trying fallback VAAPI driver names");
+            if (status != VA_STATUS_SUCCESS) {
+                // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
+                // It should be picked by default on those platforms, but that doesn't
+                // always seem to be the case for some reason.
+                vaSetDriverName(vaDeviceContext->display, const_cast<char*>("iHD"));
+                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+            }
+            if (status != VA_STATUS_SUCCESS) {
+                // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
+                // even though the correct driver is still i965. If we hit this path, we'll
+                // explicitly try i965 to handle this case.
+                vaSetDriverName(vaDeviceContext->display, const_cast<char*>("i965"));
+                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+            }
         }
-        if (status != VA_STATUS_SUCCESS) {
-            // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
-            // even though the correct driver is still i965. If we hit this path, we'll
-            // explicitly try i965 to handle this case.
-            vaSetDriverName(vaDeviceContext->display, const_cast<char*>("i965"));
-            status = vaInitialize(vaDeviceContext->display, &major, &minor);
+
+        if (status == VA_STATUS_SUCCESS) {
+            // Success!
+            break;
+        }
+
+        if (qEnvironmentVariableIsEmpty("LIBVA_DRIVERS_PATH")) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Trying fallback VAAPI driver paths");
+
+            qputenv("LIBVA_DRIVERS_PATH",
+        #if Q_PROCESSOR_WORDSIZE == 8
+                    "/usr/lib64/dri:" // Fedora x86_64
+                    "/usr/lib64/va/drivers:" // Gentoo x86_64
+        #endif
+                    "/usr/lib/dri:" // Arch i386 & x86_64, Fedora i386
+                    "/usr/lib/va/drivers:" // Gentoo i386
+        #if defined(Q_PROCESSOR_X86_64)
+                    "/usr/lib/x86_64-linux-gnu/dri:" // Ubuntu/Debian x86_64
+        #elif defined(Q_PROCESSOR_X86_32)
+                    "/usr/lib/i386-linux-gnu/dri:" // Ubuntu/Debian i386
+        #endif
+                    );
+        }
+        else {
+            // Give up
+            break;
         }
     }
+
     if (status != VA_STATUS_SUCCESS) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to initialize VAAPI: %d",
