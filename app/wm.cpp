@@ -1,3 +1,5 @@
+#include <QtGlobal>
+
 #include "utils.h"
 
 #ifdef HAS_X11

@@ -1,5 +1,4 @@
 #include "autoupdatechecker.h"
-#include "utils.h"
 
 #include <QNetworkReply>
 #include <QJsonDocument>
@@ -62,7 +61,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
 {
     Q_ASSERT(reply->isFinished());
 
-    if (QNETREPLY_GET_ERROR(reply) == QNetworkReply::NoError) {
+    if (reply->error() == QNetworkReply::NoError) {
         QTextStream stream(reply);
         stream.setCodec("UTF-8");
 
@@ -155,7 +154,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                    << QSysInfo::buildCpuArchitecture() << getPlatform();
     }
     else {
-        qWarning() << "Update checking failed with error: " << QNETREPLY_GET_ERROR(reply);
+        qWarning() << "Update checking failed with error: " << reply->error();
         reply->deleteLater();
     }
 }

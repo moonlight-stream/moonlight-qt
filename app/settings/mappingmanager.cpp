@@ -26,7 +26,13 @@ MappingManager::MappingManager()
     settings.endArray();
 
     // Finally load mappings from SDL_HINT_GAMECONTROLLERCONFIG
-    QStringList sdlMappings = QString::fromLocal8Bit(SDL_GetHint(SDL_HINT_GAMECONTROLLERCONFIG)).split('\n', QString::SkipEmptyParts);
+    QStringList sdlMappings =
+            QString::fromLocal8Bit(SDL_GetHint(SDL_HINT_GAMECONTROLLERCONFIG))
+        #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
+            .split('\n', Qt::SkipEmptyParts);
+        #else
+            .split('\n', QString::SkipEmptyParts);
+        #endif
     for (QString sdlMapping : sdlMappings) {
         SdlGamepadMapping mapping(sdlMapping);
         addMapping(mapping);

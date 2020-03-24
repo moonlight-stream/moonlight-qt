@@ -1,5 +1,4 @@
 #include "nvhttp.h"
-#include "utils.h"
 #include <Limelight.h>
 
 #include <QDebug>
@@ -489,26 +488,26 @@ NvHTTP::openConnection(QUrl baseUrl,
     m_Nam.clearAccessCache();
 
     // Handle error
-    if (QNETREPLY_GET_ERROR(reply) != QNetworkReply::NoError)
+    if (reply->error() != QNetworkReply::NoError)
     {
         if (logLevel >= NvLogLevel::NVLL_ERROR) {
-            qWarning() << command << " request failed with error " << QNETREPLY_GET_ERROR(reply);
+            qWarning() << command << " request failed with error " << reply->error();
         }
 
-        if (QNETREPLY_GET_ERROR(reply) == QNetworkReply::SslHandshakeFailedError) {
+        if (reply->error() == QNetworkReply::SslHandshakeFailedError) {
             // This will trigger falling back to HTTP for the serverinfo query
             // then pairing again to get the updated certificate.
             GfeHttpResponseException exception(401, "Server certificate mismatch");
             delete reply;
             throw exception;
         }
-        else if (QNETREPLY_GET_ERROR(reply) == QNetworkReply::OperationCanceledError) {
+        else if (reply->error() == QNetworkReply::OperationCanceledError) {
             QtNetworkReplyException exception(QNetworkReply::TimeoutError, "Request timed out");
             delete reply;
             throw exception;
         }
         else {
-            QtNetworkReplyException exception(QNETREPLY_GET_ERROR(reply), reply->errorString());
+            QtNetworkReplyException exception(reply->error(), reply->errorString());
             delete reply;
             throw exception;
         }
