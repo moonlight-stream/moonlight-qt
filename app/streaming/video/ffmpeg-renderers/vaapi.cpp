@@ -138,25 +138,39 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 
     int major, minor;
     VAStatus status;
+    bool setPathVar = false;
 
     for (;;) {
         status = vaInitialize(vaDeviceContext->display, &major, &minor);
         if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Trying fallback VAAPI driver names");
+
+            // It would be nice to use vaSetDriverName() here, but there's no way to unset
+            // it and get back to the default driver selection logic once we've overridden
+            // the driver name using that API. As a result, we must use LIBVA_DRIVER_NAME.
+
             if (status != VA_STATUS_SUCCESS) {
                 // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
                 // It should be picked by default on those platforms, but that doesn't
                 // always seem to be the case for some reason.
-                vaSetDriverName(vaDeviceContext->display, const_cast<char*>("iHD"));
+                qputenv("LIBVA_DRIVER_NAME", "iHD");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
             }
+
             if (status != VA_STATUS_SUCCESS) {
                 // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
                 // even though the correct driver is still i965. If we hit this path, we'll
                 // explicitly try i965 to handle this case.
-                vaSetDriverName(vaDeviceContext->display, const_cast<char*>("i965"));
+                qputenv("LIBVA_DRIVER_NAME", "i965");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
+            }
+
+            if (status != VA_STATUS_SUCCESS) {
+                // Unset LIBVA_DRIVER_NAME if none of the drivers we tried worked. This ensures
+                // we will get a fresh start using the default driver selection behavior after
+                // setting LIBVA_DRIVERS_PATH in the code below.
+                qunsetenv("LIBVA_DRIVER_NAME");
             }
         }
 
@@ -182,8 +196,15 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                     "/usr/lib/i386-linux-gnu/dri:" // Ubuntu/Debian i386
         #endif
                     );
+           setPathVar = true;
         }
         else {
+            if (setPathVar) {
+                // Unset LIBVA_DRIVERS_PATH if we set it ourselves
+                // and we didn't find any working VAAPI drivers.
+                qunsetenv("LIBVA_DRIVERS_PATH");
+            }
+
             // Give up
             break;
         }
