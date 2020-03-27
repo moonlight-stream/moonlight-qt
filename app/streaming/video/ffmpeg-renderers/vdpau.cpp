@@ -64,6 +64,21 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     int err;
     VdpStatus status;
     SDL_SysWMinfo info;
+    static const char* driverPathsToTry[] = {
+    #if Q_PROCESSOR_WORDSIZE == 8
+        "/usr/lib64",
+        "/usr/lib64/vdpau", // Fedora x86_64
+    #endif
+        "/usr/lib",
+        "/usr/lib/vdpau", // Fedora i386
+    #if defined(Q_PROCESSOR_X86_64)
+        "/usr/lib/x86_64-linux-gnu",
+        "/usr/lib/x86_64-linux-gnu/vdpau", // Ubuntu/Debian x86_64
+    #elif defined(Q_PROCESSOR_X86_32)
+        "/usr/lib/i386-linux-gnu",
+        "/usr/lib/i386-linux-gnu/vdpau", // Ubuntu/Debian i386
+    #endif
+    };
 
     m_VideoWidth = params->width;
     m_VideoHeight = params->height;
@@ -71,6 +86,32 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     err = av_hwdevice_ctx_create(&m_HwContext,
                                  AV_HWDEVICE_TYPE_VDPAU,
                                  nullptr, nullptr, 0);
+
+    if (err < 0 && qEnvironmentVariableIsEmpty("VDPAU_DRIVER_PATH")) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Trying fallback VDPAU driver paths");
+
+        // Unlike libva, libvdpau doesn't support multiple paths in
+        // their VDPAU_DRIVER_PATH variable, so we must try them all
+        // one at a time.
+        for (auto& driverPath : driverPathsToTry) {
+            qputenv("VDPAU_DRIVER_PATH", driverPath);
+            err = av_hwdevice_ctx_create(&m_HwContext,
+                                         AV_HWDEVICE_TYPE_VDPAU,
+                                         nullptr, nullptr, 0);
+            if (err == 0) {
+                // Success!
+                break;
+            }
+        }
+
+        if (err < 0) {
+            // Unset VDPAU_DRIVER_PATH if we set it ourselves
+            // and we didn't find any working VDPAU drivers.
+            qunsetenv("VDPAU_DRIVER_PATH");
+        }
+    }
+
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to create VDPAU context: %d",
