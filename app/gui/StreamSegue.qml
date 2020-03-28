@@ -117,7 +117,20 @@ Item {
         session.sessionFinished.connect(sessionFinished)
 
         // Kick off the stream
+        spinnerTimer.start()
         streamLoader.active = true
+    }
+
+    Timer {
+        id: spinnerTimer
+
+        // Display the spinner appearance a bit to allow us to reach
+        // the code in Session.exec() that pumps the event loop.
+        // If we display it immediately, it will briefly hang in the
+        // middle of the animation on Windows, which looks very
+        // obviously broken.
+        interval: 100
+        onTriggered: stageSpinner.running = true
     }
 
     Loader {
@@ -150,6 +163,7 @@ Item {
 
         BusyIndicator {
             id: stageSpinner
+            running: false
         }
 
         Label {
