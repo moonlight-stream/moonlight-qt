@@ -1,6 +1,7 @@
 #include <QString>
 
 #include "vaapi.h"
+#include "utils.h"
 #include <streaming/streamutils.h>
 
 #include <SDL_syswm.h>
@@ -286,8 +287,10 @@ bool
 VAAPIRenderer::isDirectRenderingSupported()
 {
     // Many Wayland renderers don't support YUV surfaces, so use
-    // another frontend renderer to draw our frames.
-    return m_WindowSystem == SDL_SYSWM_X11;
+    // another frontend renderer to draw our frames. The iHD VAAPI
+    // driver can initialize on XWayland but it crashes in vaPutSurface()
+    // so we must also not directly render on XWayland either.
+    return m_WindowSystem == SDL_SYSWM_X11 && !WMUtils::isRunningWayland();
 }
 
 int VAAPIRenderer::getDecoderColorspace()
