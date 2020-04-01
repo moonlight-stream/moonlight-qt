@@ -80,19 +80,7 @@ int Session::getAudioRendererCapabilities(int audioConfiguration)
     OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
     opusConfig.sampleRate = 48000;
     opusConfig.samplesPerFrame = 240;
-
-    switch (audioConfiguration)
-    {
-    case AUDIO_CONFIGURATION_STEREO:
-        opusConfig.channelCount = 2;
-        break;
-    case AUDIO_CONFIGURATION_51_SURROUND:
-        opusConfig.channelCount = 6;
-        break;
-    default:
-        SDL_assert(false);
-        return 0;
-    }
+    opusConfig.channelCount = CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(audioConfiguration);
 
     IAudioRenderer* audioRenderer = createAudioRenderer(&opusConfig);
     if (audioRenderer == nullptr) {
@@ -113,19 +101,7 @@ bool Session::testAudio(int audioConfiguration)
     OPUS_MULTISTREAM_CONFIGURATION opusConfig = {};
     opusConfig.sampleRate = 48000;
     opusConfig.samplesPerFrame = 240;
-
-    switch (audioConfiguration)
-    {
-    case AUDIO_CONFIGURATION_STEREO:
-        opusConfig.channelCount = 2;
-        break;
-    case AUDIO_CONFIGURATION_51_SURROUND:
-        opusConfig.channelCount = 6;
-        break;
-    default:
-        SDL_assert(false);
-        return false;
-    }
+    opusConfig.channelCount = CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(audioConfiguration);
 
     IAudioRenderer* audioRenderer = createAudioRenderer(&opusConfig);
     if (audioRenderer == nullptr) {

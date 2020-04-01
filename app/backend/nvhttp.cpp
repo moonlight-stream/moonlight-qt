@@ -145,30 +145,6 @@ NvHTTP::getServerInfo(NvLogLevel logLevel, bool fastFail)
     return serverInfo;
 }
 
-static QString
-getSurroundAudioInfoString(int audioConfig)
-{
-    int channelMask;
-    int channelCount;
-
-    switch (audioConfig)
-    {
-    case AUDIO_CONFIGURATION_STEREO:
-        channelCount = 2;
-        channelMask = 0x3;
-        break;
-    case AUDIO_CONFIGURATION_51_SURROUND:
-        channelCount = 6;
-        channelMask = 0xFC;
-        break;
-    default:
-        Q_ASSERT(false);
-        return 0;
-    }
-
-    return QString::number(channelMask << 16 | channelCount);
-}
-
 void
 NvHTTP::launchApp(int appId,
                   PSTREAM_CONFIGURATION streamConfig,
@@ -198,7 +174,8 @@ NvHTTP::launchApp(int appId,
                                        "&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" :
                                         "")+
                                    "&localAudioPlayMode="+QString::number(localAudio ? 1 : 0)+
-                                   "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration)+
+                                   "&surroundAudioInfo="+QString::number(CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration) << 16 |
+                                                                         CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration))+
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
                                    "&gcmap="+QString::number(gamepadMask),
                                    LAUNCH_TIMEOUT_MS);
@@ -220,7 +197,8 @@ NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
                                    "resume",
                                    "rikey="+QString(QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex())+
                                    "&rikeyid="+QString::number(riKeyId)+
-                                   "&surroundAudioInfo="+getSurroundAudioInfoString(streamConfig->audioConfiguration),
+                                   "&surroundAudioInfo="+QString::number(CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration) << 16 |
+                                                                         CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration)),
                                    RESUME_TIMEOUT_MS);
 
     // Throws if the request failed

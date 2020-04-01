@@ -389,10 +389,10 @@ bool Session::initialize()
     switch (m_Preferences->audioConfig)
     {
     case StreamingPreferences::AC_STEREO:
-        m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
+        m_StreamConfig.audioConfiguration = MAKE_AUDIO_CONFIGURATION(2, 0x3);
         break;
     case StreamingPreferences::AC_51_SURROUND:
-        m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
+        m_StreamConfig.audioConfiguration = MAKE_AUDIO_CONFIGURATION(6, 0xFC);
         break;
     }
 
@@ -605,12 +605,14 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     // Test if audio works at the specified audio configuration
     bool audioTestPassed = testAudio(m_StreamConfig.audioConfiguration);
 
-    // Gracefully degrade to stereo if 5.1 doesn't work
-    if (!audioTestPassed && m_StreamConfig.audioConfiguration == AUDIO_CONFIGURATION_51_SURROUND) {
-        audioTestPassed = testAudio(AUDIO_CONFIGURATION_STEREO);
+    // Gracefully degrade to stereo if surround sound doesn't work
+    if (!audioTestPassed && CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration) > 2) {
+        int fallbackAudioConfig = MAKE_AUDIO_CONFIGURATION(2, 0x3);
+
+        audioTestPassed = testAudio(fallbackAudioConfig);
         if (audioTestPassed) {
-            m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
-            emitLaunchWarning("5.1 surround sound is not supported by the current audio device.");
+            m_StreamConfig.audioConfiguration = fallbackAudioConfig;
+            emitLaunchWarning("Your selected surround sound setting is not supported by the current audio device.");
         }
     }
 
