@@ -252,6 +252,7 @@ StreamCommandLineParser::StreamCommandLineParser()
     m_AudioConfigMap = {
         {"stereo",       StreamingPreferences::AC_STEREO},
         {"5.1-surround", StreamingPreferences::AC_51_SURROUND},
+        {"7.1-surround", StreamingPreferences::AC_71_SURROUND},
     };
     m_VideoCodecMap = {
         {"auto",  StreamingPreferences::VCC_AUTO},

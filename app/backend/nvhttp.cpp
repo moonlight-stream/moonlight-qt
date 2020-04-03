@@ -174,8 +174,7 @@ NvHTTP::launchApp(int appId,
                                        "&hdrMode=1&clientHdrCapVersion=0&clientHdrCapSupportedFlagsInUint32=0&clientHdrCapMetaDataId=NV_STATIC_METADATA_TYPE_1&clientHdrCapDisplayData=0x0x0x0x0x0x0x0x0x0x0" :
                                         "")+
                                    "&localAudioPlayMode="+QString::number(localAudio ? 1 : 0)+
-                                   "&surroundAudioInfo="+QString::number(CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration) << 16 |
-                                                                         CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration))+
+                                   "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration))+
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
                                    "&gcmap="+QString::number(gamepadMask),
                                    LAUNCH_TIMEOUT_MS);
@@ -197,8 +196,7 @@ NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
                                    "resume",
                                    "rikey="+QString(QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex())+
                                    "&rikeyid="+QString::number(riKeyId)+
-                                   "&surroundAudioInfo="+QString::number(CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration) << 16 |
-                                                                         CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration)),
+                                   "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration)),
                                    RESUME_TIMEOUT_MS);
 
     // Throws if the request failed
