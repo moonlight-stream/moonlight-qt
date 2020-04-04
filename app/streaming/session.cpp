@@ -406,8 +406,11 @@ bool Session::initialize()
     m_AudioCallbacks.capabilities = getAudioRendererCapabilities(m_StreamConfig.audioConfiguration);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio configuration: %d",
-                m_StreamConfig.audioConfiguration);
+                "Audio channel count: %d",
+                CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio channel mask: %X",
+                CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
 
     switch (m_Preferences->videoCodecConfig)
     {
