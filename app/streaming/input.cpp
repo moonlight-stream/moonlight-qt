@@ -260,6 +260,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
+        // Check for overlay combo (Ctrl+Alt+Shift+S)
         else if (event->keysym.sym == SDLK_s) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected stats toggle combo (SDLK)");
