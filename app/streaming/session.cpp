@@ -1318,7 +1318,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
             m_InputHandler->handleMouseButtonEvent(&event.button);
             break;
         case SDL_MOUSEMOTION:
-            m_InputHandler->handleMouseMotionEvent(&event.motion);
+            m_InputHandler->handleMouseMotionEvent(m_Window, &event.motion);
             break;
         case SDL_MOUSEWHEEL:
             m_InputHandler->handleMouseWheelEvent(&event.wheel);
@@ -1340,7 +1340,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
         case SDL_FINGERUP:
-            m_InputHandler->handleTouchFingerEvent(&event.tfinger);
+            m_InputHandler->handleTouchFingerEvent(m_Window, &event.tfinger);
             break;
         }
     }

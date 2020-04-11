@@ -3,6 +3,7 @@
 #include "streaming/session.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
+#include "streamutils.h"
 
 #include <QtGlobal>
 #include <QtMath>
@@ -65,7 +66,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_DragButton(0),
       m_NumFingersDown(0),
       m_StreamWidth(streamWidth),
-      m_StreamHeight(streamHeight)
+      m_StreamHeight(streamHeight),
+      m_AbsoluteMouseMode(false)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -250,6 +252,21 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
+        // Check for the mouse mode combo (Ctrl+Alt+Shift+M) unless on EGLFS which has no window manager
+        else if (event->keysym.sym == SDLK_m && QGuiApplication::platformName() != "eglfs") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected mouse mode toggle combo (SDLK)");
+
+            // Uncapture input
+            setCaptureActive(false);
+
+            // Toggle mouse mode
+            m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
+
+            // Recapture input
+            setCaptureActive(true);
+            return;
+        }
         else if (event->keysym.sym == SDLK_x && QGuiApplication::platformName() != "eglfs") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected full-screen toggle combo (SDLK)");
@@ -308,6 +325,21 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             // Force raise all keys just be safe across this full-screen/windowed
             // transition just in case key events get lost.
             raiseAllKeys();
+            return;
+        }
+        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+M) unless on EGLFS which has no window manager
+        else if (event->keysym.scancode == SDL_SCANCODE_M && QGuiApplication::platformName() != "eglfs") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected mouse mode toggle combo (scancode)");
+
+            // Uncapture input
+            setCaptureActive(false);
+
+            // Toggle mouse mode
+            m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
+
+            // Recapture input
+            setCaptureActive(true);
             return;
         }
         else if (event->keysym.scancode == SDL_SCANCODE_S) {
@@ -633,7 +665,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
                            button);
 }
 
-void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
+void SdlInputHandler::handleMouseMotionEvent(SDL_Window* window, SDL_MouseMotionEvent* event)
 {
     if (!isCaptureActive()) {
         // Not capturing
@@ -644,10 +676,36 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         return;
     }
 
-    // Batch until the next mouse polling window or we'll get awful
-    // input lag everything except GFE 3.14 and 3.15.
-    SDL_AtomicAdd(&m_MouseDeltaX, event->xrel);
-    SDL_AtomicAdd(&m_MouseDeltaY, event->yrel);
+    if (m_AbsoluteMouseMode) {
+        SDL_Rect src, dst;
+
+        src.x = src.y = 0;
+        src.w = m_StreamWidth;
+        src.h = m_StreamHeight;
+
+        dst.x = dst.y = 0;
+        SDL_GetWindowSize(window, &dst.w, &dst.h);
+
+        // Use the stream and window sizes to determine the video region
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // Ignore motion outside the video region
+        if (event->x < dst.x || event->y < dst.y ||
+                event->x > dst.x + dst.w || event->y > dst.y + dst.h) {
+            return;
+        }
+
+        // Send the mouse position update with coordinates relative to
+        // the video region.
+        LiSendMousePositionEvent(event->x - dst.x, event->y - dst.y,
+                                 dst.w, dst.h);
+    }
+    else {
+        // Batch until the next mouse polling window or we'll get awful
+        // input lag everything except GFE 3.14 and 3.15.
+        SDL_AtomicAdd(&m_MouseDeltaX, event->xrel);
+        SDL_AtomicAdd(&m_MouseDeltaY, event->yrel);
+    }
 }
 
 void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
@@ -1196,7 +1254,7 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
 #endif
 }
 
-void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
+void SdlInputHandler::handleTouchFingerEvent(SDL_Window*, SDL_TouchFingerEvent* event)
 {
     int fingerIndex = -1;
 
@@ -1396,8 +1454,8 @@ bool SdlInputHandler::isCaptureActive()
 void SdlInputHandler::setCaptureActive(bool active)
 {
     if (active) {
-        // Try to activate SDL's relative mouse mode
-        if (SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
+        // If we're in relative mode, try to activate SDL's relative mouse mode
+        if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
             // Relative mouse mode didn't work, so we'll use fake capture
             SDL_ShowCursor(SDL_DISABLE);
             m_FakeCaptureActive = true;

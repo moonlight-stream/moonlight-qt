@@ -47,7 +47,7 @@ public:
 
     void handleMouseButtonEvent(SDL_MouseButtonEvent* event);
 
-    void handleMouseMotionEvent(SDL_MouseMotionEvent* event);
+    void handleMouseMotionEvent(SDL_Window* window, SDL_MouseMotionEvent* event);
 
     void handleMouseWheelEvent(SDL_MouseWheelEvent* event);
 
@@ -61,7 +61,7 @@ public:
 
     void rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor);
 
-    void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
+    void handleTouchFingerEvent(SDL_Window* window, SDL_TouchFingerEvent* event);
 
     int getAttachedGamepadMask();
 
@@ -114,6 +114,7 @@ private:
     int m_NumFingersDown;
     int m_StreamWidth;
     int m_StreamHeight;
+    bool m_AbsoluteMouseMode;
 
     static const int k_ButtonMap[];
 };
