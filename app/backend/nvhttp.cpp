@@ -163,10 +163,7 @@ NvHTTP::launchApp(int appId,
                                    "appid="+QString::number(appId)+
                                    "&mode="+QString::number(streamConfig->width)+"x"+
                                    QString::number(streamConfig->height)+"x"+
-                                   // Using an FPS value over 60 causes SOPS to default to 720p60,
-                                   // so force it to 60 when starting. This won't impact our ability
-                                   // to get > 60 FPS while actually streaming though.
-                                   QString::number(streamConfig->fps > 60 ? 60 : streamConfig->fps)+
+                                   QString::number(streamConfig->fps)+
                                    "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
                                    "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
                                    "&rikeyid="+QString::number(riKeyId)+
