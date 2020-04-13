@@ -389,10 +389,13 @@ bool Session::initialize()
     switch (m_Preferences->audioConfig)
     {
     case StreamingPreferences::AC_STEREO:
-        m_StreamConfig.audioConfiguration = MAKE_AUDIO_CONFIGURATION(2, 0x3);
+        m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
         break;
     case StreamingPreferences::AC_51_SURROUND:
-        m_StreamConfig.audioConfiguration = MAKE_AUDIO_CONFIGURATION(6, 0xFC);
+        m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_51_SURROUND;
+        break;
+    case StreamingPreferences::AC_71_SURROUND:
+        m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_71_SURROUND;
         break;
     }
 
@@ -403,8 +406,11 @@ bool Session::initialize()
     m_AudioCallbacks.capabilities = getAudioRendererCapabilities(m_StreamConfig.audioConfiguration);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio configuration: %d",
-                m_StreamConfig.audioConfiguration);
+                "Audio channel count: %d",
+                CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio channel mask: %X",
+                CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
 
     switch (m_Preferences->videoCodecConfig)
     {
@@ -607,11 +613,9 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 
     // Gracefully degrade to stereo if surround sound doesn't work
     if (!audioTestPassed && CHANNEL_COUNT_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration) > 2) {
-        int fallbackAudioConfig = MAKE_AUDIO_CONFIGURATION(2, 0x3);
-
-        audioTestPassed = testAudio(fallbackAudioConfig);
+        audioTestPassed = testAudio(AUDIO_CONFIGURATION_STEREO);
         if (audioTestPassed) {
-            m_StreamConfig.audioConfiguration = fallbackAudioConfig;
+            m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
             emitLaunchWarning("Your selected surround sound setting is not supported by the current audio device.");
         }
     }
@@ -625,6 +629,18 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     // Check for unmapped gamepads
     if (!SdlInputHandler::getUnmappedGamepads().isEmpty()) {
         emitLaunchWarning("An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this.");
+    }
+
+    // NVENC will fail to initialize when using dimensions over 4096 and H.264.
+    if (m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) {
+        if (m_Computer->maxLumaPixelsHEVC == 0) {
+            emit displayLaunchError("Your host PC's GPU doesn't support streaming video resolutions over 4K.");
+            return false;
+        }
+        else if (!m_StreamConfig.supportsHevc) {
+            emit displayLaunchError("Video resolutions over 4K are only supported by the HEVC codec.");
+            return false;
+        }
     }
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
@@ -927,6 +943,18 @@ void Session::exec(int displayOriginX, int displayOriginY)
             enableGameOptimizations = prefs.gameOptimizations;
             break;
         }
+    }
+
+    if (prefs.fps > 60) {
+        // Using SOPS with FPS values over 60 causes GFE to fall back
+        // to 720p60. On previous GFE versions, we could avoid this by
+        // forcing the FPS value to 60 when launching the stream, but
+        // now on GFE 3.20.3 that seems to trigger some sort of
+        // frame rate limiter that locks the game to 60 FPS.
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Disabling SOPS for %d FPS stream",
+                    prefs.fps);
+        enableGameOptimizations = false;
     }
 
     try {
@@ -1302,7 +1330,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
             m_InputHandler->handleMouseButtonEvent(&event.button);
             break;
         case SDL_MOUSEMOTION:
-            m_InputHandler->handleMouseMotionEvent(&event.motion);
+            m_InputHandler->handleMouseMotionEvent(m_Window, &event.motion);
             break;
         case SDL_MOUSEWHEEL:
             m_InputHandler->handleMouseWheelEvent(&event.wheel);
@@ -1324,7 +1352,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
         case SDL_FINGERUP:
-            m_InputHandler->handleTouchFingerEvent(&event.tfinger);
+            m_InputHandler->handleTouchFingerEvent(m_Window, &event.tfinger);
             break;
         }
     }

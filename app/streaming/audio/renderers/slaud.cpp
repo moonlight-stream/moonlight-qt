@@ -42,26 +42,26 @@ bool SLAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* o
     return true;
 }
 
-#define SWAP_CHANNEL(i, j) \
-    tmp = opusConfig->mapping[i]; \
-    opusConfig->mapping[i] = opusConfig->mapping[j]; \
-    opusConfig->mapping[j] = tmp
-
 void SLAudioRenderer::remapChannels(POPUS_MULTISTREAM_CONFIGURATION opusConfig) {
-    unsigned char tmp;
+    OPUS_MULTISTREAM_CONFIGURATION originalConfig = *opusConfig;
 
-    if (opusConfig->channelCount == 6) {
-        // The Moonlight's default channel order is FL,FR,C,LFE,RL,RR
-        // SLAudio expects FL,C,FR,RL,RR,LFE so we swap the channels around to match
+    // The Moonlight's default channel order is FL,FR,C,LFE,RL,RR,SL,SR
+    // SLAudio expects FL,C,FR,RL,RR,(SL,SR),LFE for 5.1/7.1 so we swap the channels around to match
 
-        // Swap FR and C - now FL,C,FR,LFE,RL,RR
-        SWAP_CHANNEL(1, 2);
+    if (opusConfig->channelCount == 3 || opusConfig->channelCount >= 6) {
+        // Swap FR and C
+        opusConfig->mapping[1] = originalConfig.mapping[2];
+        opusConfig->mapping[2] = originalConfig.mapping[1];
+    }
 
-        // Swap LFE and RR - now FL,C,FR,RR,RL,LFE
-        SWAP_CHANNEL(3, 5);
+    if (opusConfig->channelCount >= 6) {
+        // SLAudio expects the LFE channel at the end
+        opusConfig->mapping[opusConfig->channelCount - 1] = originalConfig.mapping[3];
 
-        // Swap RR and RL - now FL,C,FR,RL,RR,LFE
-        SWAP_CHANNEL(3, 4);
+        // Slide the other channels down
+        memcpy(&opusConfig->mapping[3],
+               &originalConfig.mapping[4],
+               opusConfig->channelCount - 4);
     }
 }
 

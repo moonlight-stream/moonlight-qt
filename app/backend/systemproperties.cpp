@@ -77,7 +77,14 @@ void SystemProperties::querySdlVideoInfo()
 
         err = SDL_GetDesktopDisplayMode(displayIndex, &desktopMode);
         if (err == 0) {
-            monitorDesktopResolutions.insert(displayIndex, QRect(0, 0, desktopMode.w, desktopMode.h));
+            if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
+                monitorDesktopResolutions.insert(displayIndex, QRect(0, 0, desktopMode.w, desktopMode.h));
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping resolution over 8K: %dx%d",
+                            desktopMode.w, desktopMode.h);
+            }
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -86,7 +93,14 @@ void SystemProperties::querySdlVideoInfo()
         }
 
         if (StreamUtils::getRealDesktopMode(displayIndex, &desktopMode)) {
-            monitorNativeResolutions.insert(displayIndex, QRect(0, 0, desktopMode.w, desktopMode.h));
+            if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
+                monitorNativeResolutions.insert(displayIndex, QRect(0, 0, desktopMode.w, desktopMode.h));
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping resolution over 8K: %dx%d",
+                            desktopMode.w, desktopMode.h);
+            }
 
             // Start at desktop mode and work our way up
             bestMode = desktopMode;

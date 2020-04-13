@@ -480,6 +480,10 @@ Flickable {
                             text: "5.1 surround sound"
                             val: StreamingPreferences.AC_51_SURROUND
                         }
+                        ListElement {
+                            text: "7.1 surround sound"
+                            val: StreamingPreferences.AC_71_SURROUND
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

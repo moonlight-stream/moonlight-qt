@@ -131,10 +131,15 @@ private:
     static LoadLibraryExWFunc s_RealLoadLibraryExW;
 
     static constexpr LPCWSTR k_BlacklistedDlls[] = {
-        // This DLL shipped with ASUS Sonic Radar 3 improperly handles
-        // D3D9 exclusive fullscreen in a way that causes CreateDeviceEx()
-        // to deadlock. https://github.com/moonlight-stream/moonlight-qt/issues/102
-        L"NahimicOSD.dll",
+        // These A-Volute DLLs shipped with various audio driver packages improperly handle
+        // D3D9 exclusive fullscreen in a way that causes CreateDeviceEx() to deadlock.
+        // https://github.com/moonlight-stream/moonlight-qt/issues/102
+        L"NahimicOSD.dll", // ASUS Sonic Radar 3
+        L"SSAudioOSD.dll", // SteelSeries headsets
+        L"SS2OSD.dll", // ASUS Sonic Studio 2
+        L"Nahimic2OSD.dll",
+        L"NahimicMSIOSD.dll",
+        L"nhAsusPhoebusOSD.dll" // ASUS Phoebus
 
         // This DLL has been seen in several crash reports. Some Googling
         // suggests it's highly unstable and causes issues in many games.

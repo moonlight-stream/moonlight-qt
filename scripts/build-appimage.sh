@@ -27,7 +27,7 @@ mkdir $INSTALLER_FOLDER
 
 echo Configuring the project
 pushd $BUILD_FOLDER
-qmake $SOURCE_ROOT/moonlight-qt.pro PREFIX=$DEPLOY_FOLDER/usr || fail "Qmake failed!"
+qmake $SOURCE_ROOT/moonlight-qt.pro PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
 popd
 
 echo Compiling Moonlight in $BUILD_CONFIG configuration

@@ -72,11 +72,17 @@ int SoundIoAudioRenderer::scoreChannelLayout(const struct SoundIoChannelLayout* 
                 score++;
                 break;
 
-            // Score layouts using the back L/R as higher
-            // value than those using side L/R.
             case SoundIoChannelIdBackLeft:
             case SoundIoChannelIdBackRight:
-                score += 2;
+                if (opusConfig->channelCount == 6) {
+                    // Score back channels higher in 5.1 mode to
+                    // discourage selection of side channel layouts.
+                    score += 2;
+                }
+                else {
+                    // Score back channels normally for 7.1 mode
+                    score++;
+                }
                 break;
 
             default:
@@ -211,13 +217,25 @@ bool SoundIoAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATI
 
     m_EffectiveLayout = m_OutputStream->layout;
     for (int i = 0; i < m_EffectiveLayout.channel_count; i++) {
-        // Fixup the layout to use back L/R so our channel position
-        // logic in sioWriteCallback() works.
-        if (m_EffectiveLayout.channels[i] == SoundIoChannelIdSideLeft) {
-            m_EffectiveLayout.channels[i] = SoundIoChannelIdBackLeft;
+        if (opusConfig->channelCount == 6) {
+            // For 5.1, replace side L/R with back L/R so our channel position
+            // logic in sioWriteCallback() works.
+            if (m_EffectiveLayout.channels[i] == SoundIoChannelIdSideLeft) {
+                m_EffectiveLayout.channels[i] = SoundIoChannelIdBackLeft;
+            }
+            if (m_EffectiveLayout.channels[i] == SoundIoChannelIdSideRight) {
+                m_EffectiveLayout.channels[i] = SoundIoChannelIdBackRight;
+            }
         }
-        if (m_EffectiveLayout.channels[i] == SoundIoChannelIdSideRight) {
-            m_EffectiveLayout.channels[i] = SoundIoChannelIdBackRight;
+        else if (opusConfig->channelCount == 8) {
+            // For 5.1, replace side L/R with LOC/ROC so our channel position
+            // logic in sioWriteCallback() works.
+            if (m_EffectiveLayout.channels[i] == SoundIoChannelIdSideLeft) {
+                m_EffectiveLayout.channels[i] = SoundIoChannelIdFrontLeftCenter;
+            }
+            if (m_EffectiveLayout.channels[i] == SoundIoChannelIdSideRight) {
+                m_EffectiveLayout.channels[i] = SoundIoChannelIdFrontRightCenter;
+            }
         }
     }
 
@@ -411,9 +429,8 @@ void SoundIoAudioRenderer::sioWriteCallback(SoundIoOutStream* stream, int frameC
 
         for (int frame = 0; frame < frameCount; frame++) {
             for (int ch = 0; ch < me->m_EffectiveLayout.channel_count; ch++) {
-                // SoundIoChannelId - 1 happens to match Moonlight's channel layout.
-                // For side L/R, this logic depends on us fixing those up
-                // in m_EffectiveLayout to back L/R.
+                // SoundIoChannelId - 1 happens to match Moonlight's channel layout
+                // after we've applied our fixups to m_EffectiveLayout for 5.1 and 7.1.
                 int readPtrChannel = me->m_EffectiveLayout.channels[ch] - 1;
 
                 if (frame >= framesLeft || readPtrChannel >= me->m_OpusChannelCount) {

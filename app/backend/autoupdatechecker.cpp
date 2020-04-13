@@ -28,7 +28,7 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
 
 void AutoUpdateChecker::start()
 {
-#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN) || defined(STEAM_LINK) // Only run update checker on platforms without auto-update
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN) || defined(STEAM_LINK) || defined(APP_IMAGE) // Only run update checker on platforms without auto-update
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && QT_VERSION < QT_VERSION_CHECK(5, 14, 2) && !defined(QT_NO_BEARERMANAGEMENT)
     // HACK: Set network accessibility to work around QTBUG-80947
     m_Nam.setNetworkAccessible(QNetworkAccessManager::Accessible);
@@ -50,8 +50,10 @@ void AutoUpdateChecker::parseStringToVersionQuad(QString& string, QVector<int>& 
 
 QString AutoUpdateChecker::getPlatform()
 {
-#ifdef STEAM_LINK
+#if defined(STEAM_LINK)
     return QStringLiteral("steamlink");
+#elif defined(APP_IMAGE)
+    return QStringLiteral("appimage");
 #else
     return QSysInfo::productType();
 #endif
