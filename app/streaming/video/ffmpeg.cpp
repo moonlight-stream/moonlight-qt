@@ -32,6 +32,10 @@
 #include "ffmpeg-renderers/drm.h"
 #endif
 
+#ifdef HAVE_EGL
+#include "ffmpeg-renderers/eglvid.h"
+#endif
+
 // This is gross but it allows us to use sizeof()
 #include "ffmpeg_videosamples.cpp"
 
@@ -195,6 +199,15 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params)
         m_FrontendRenderer = m_BackendRenderer;
     }
     else {
+#ifdef HAVE_EGL
+        if (m_BackendRenderer->canExportEGL()) {
+            m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
+            if (m_FrontendRenderer->initialize(params)) {
+                return true;
+            }
+            delete m_FrontendRenderer;
+        }
+#endif
         // The backend renderer cannot directly render to the display, so
         // we will create an SDL renderer to draw the frames.
         m_FrontendRenderer = new SdlRenderer();

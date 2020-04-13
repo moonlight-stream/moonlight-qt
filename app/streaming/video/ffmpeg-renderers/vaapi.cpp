@@ -5,6 +5,9 @@
 #include <streaming/streamutils.h>
 
 #include <SDL_syswm.h>
+#ifdef HAVE_EGL
+#include <SDL_egl.h>
+#endif
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -14,7 +17,11 @@ VAAPIRenderer::VAAPIRenderer()
       m_DrmFd(-1),
       m_BlacklistedForDirectRendering(false)
 {
-
+#ifdef HAVE_EGL
+    m_PrimeDescriptor.num_layers = 0;
+    m_PrimeDescriptor.num_objects = 0;
+    m_EGLExtDmaBuf = false;
+#endif
 }
 
 VAAPIRenderer::~VAAPIRenderer()
@@ -442,3 +449,106 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
         SDL_assert(false);
     }
 }
+
+#ifdef HAVE_EGL
+
+bool
+VAAPIRenderer::canExportEGL() {
+    return true;
+}
+
+bool
+VAAPIRenderer::initializeEGL(EGLDisplay,
+                             const EGLExtensions &ext) {
+    if (!ext.isSupported("EGL_EXT_image_dma_buf_import")) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "VAAPI-EGL: DMABUF unsupported");
+        return false;
+    }
+    m_EGLExtDmaBuf = ext.isSupported("EGL_EXT_image_dma_buf_import_modifiers");
+    return true;
+}
+
+ssize_t
+VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
+                               EGLImage images[EGL_MAX_PLANES]) {
+    ssize_t count = 0;
+    auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+    AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)hwFrameCtx->device_ctx->hwctx;
+
+    VASurfaceID surface_id = (VASurfaceID)(uintptr_t)frame->data[3];
+    VAStatus st = vaExportSurfaceHandle(vaDeviceContext->display,
+                                        surface_id,
+                                        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+                                        VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS,
+                                        &m_PrimeDescriptor);
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaExportSurfaceHandle failed: %d", st);
+        return -1;
+    }
+
+    SDL_assert(m_PrimeDescriptor.num_layers <= EGL_MAX_PLANES);
+
+    st = vaSyncSurface(vaDeviceContext->display, surface_id);
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaSyncSurface failed: %d", st);
+        goto sync_fail;
+    }
+
+    for (size_t i = 0; i < m_PrimeDescriptor.num_layers; ++i) {
+        const auto &layer = m_PrimeDescriptor.layers[i];
+        const auto &object = m_PrimeDescriptor.objects[layer.object_index[0]];
+
+        EGLAttrib attribs[17] = {
+            EGL_LINUX_DRM_FOURCC_EXT, (EGLint)layer.drm_format,
+            EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
+            EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
+            EGL_DMA_BUF_PLANE0_FD_EXT, object.fd,
+            EGL_DMA_BUF_PLANE0_OFFSET_EXT, (EGLint)layer.offset[0],
+            EGL_DMA_BUF_PLANE0_PITCH_EXT, (EGLint)layer.pitch[0],
+            EGL_NONE,
+        };
+        if (m_EGLExtDmaBuf) {
+            const EGLAttrib extra[] = {
+                EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
+                (EGLint)object.drm_format_modifier,
+                EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT,
+                (EGLint)(object.drm_format_modifier >> 32),
+                EGL_NONE,
+            };
+            memcpy((void *)(&attribs[12]), (void *)extra, sizeof (extra));
+        }
+        images[i] = eglCreateImage(dpy, EGL_NO_CONTEXT,
+                                   EGL_LINUX_DMA_BUF_EXT,
+                                   nullptr, attribs);
+        if (!images[i]) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "eglCreateImage() Failed: %d", eglGetError());
+            goto create_image_fail;
+        }
+        ++count;
+    }
+    return count;
+
+create_image_fail:
+    m_PrimeDescriptor.num_layers = count;
+sync_fail:
+    freeEGLImages(dpy, images);
+    return -1;
+}
+
+void
+VAAPIRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
+    for (size_t i = 0; i < m_PrimeDescriptor.num_layers; ++i) {
+        eglDestroyImage(dpy, images[i]);
+    }
+    for (size_t i = 0; i < m_PrimeDescriptor.num_objects; ++i) {
+        close(m_PrimeDescriptor.objects[i].fd);
+    }
+    m_PrimeDescriptor.num_layers = 0;
+    m_PrimeDescriptor.num_objects = 0;
+}
+
+#endif
