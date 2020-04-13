@@ -1,4 +1,5 @@
 #include "sdlgamepadkeynavigation.h"
+#include <iostream>
 
 #include <QKeyEvent>
 #include <QGuiApplication>
@@ -53,12 +54,7 @@ void SdlGamepadKeyNavigation::enable()
 
     // Open all currently attached game controllers
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
-        if (SDL_IsGameController(i)) {
-            SDL_GameController* gc = SDL_GameControllerOpen(i);
-            if (gc != nullptr) {
-                m_Gamepads.append(gc);
-            }
-        }
+        openGameController(i);
     }
 
     // Poll every 50 ms for a new joystick event
@@ -75,15 +71,67 @@ void SdlGamepadKeyNavigation::disable()
 
     m_PollingTimer->stop();
 
-    while (!m_Gamepads.isEmpty()) {
-        SDL_GameControllerClose(m_Gamepads[0]);
-        m_Gamepads.removeAt(0);
+    while (!m_GamepadMap.isEmpty()) {
+        closeGameController(m_GamepadMap.firstKey(), m_GamepadMap.first());
     }
 
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 
     m_Enabled = false;
 }
+
+bool SdlGamepadKeyNavigation::openGameController(int joystickIndex)
+{
+    if (SDL_IsGameController(joystickIndex)) {
+        SDL_GameController *gc = SDL_GameControllerOpen(joystickIndex);
+        if (gc != nullptr) {
+            SDL_Joystick *js = SDL_GameControllerGetJoystick(gc);
+            if (js != nullptr) {
+                SDL_JoystickID joystickInstanceId = SDL_JoystickInstanceID(js);
+                return mapGameController(joystickInstanceId, gc);
+            }
+        }
+    }
+
+    return false;
+}
+
+bool SdlGamepadKeyNavigation::closeGameController(SDL_JoystickID joystickInstanceId)
+{
+   auto item = m_GamepadMap.find(joystickInstanceId);
+   if (item != m_GamepadMap.end() && item.key() == joystickInstanceId) {
+        return closeGameController(joystickInstanceId, item.value());
+   }
+    return false;
+}
+
+bool SdlGamepadKeyNavigation::closeGameController(SDL_JoystickID joystickInstanceId, SDL_GameController *gc)
+{
+    SDL_GameControllerClose(gc);
+    return unMapGameController(joystickInstanceId);
+}
+
+bool SdlGamepadKeyNavigation::mapGameController(SDL_JoystickID joystickInstanceId, SDL_GameController *gc)
+{
+    if (gc != nullptr) {
+        if (joystickInstanceId != -1) {
+            std::cout << "adding joystick with InstanceId: " << joystickInstanceId << std::endl;
+
+            m_GamepadMap.insert(joystickInstanceId, gc);
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool SdlGamepadKeyNavigation::unMapGameController(SDL_JoystickID joystickInstanceId)
+{
+    std::cout << "removing joystick with InstanceId: " << joystickInstanceId << std::endl;
+
+    return m_GamepadMap.remove(joystickInstanceId) > 0;
+}
+
 
 void SdlGamepadKeyNavigation::onPollingTimerFired()
 {
@@ -155,16 +203,22 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
             break;
         }
         case SDL_CONTROLLERDEVICEADDED:
-            SDL_GameController* gc = SDL_GameControllerOpen(event.cdevice.which);
-            if (gc != nullptr) {
-                m_Gamepads.append(gc);
-            }
+            // NOTE: According to the documentation,
+            // the 'which' property is the joystick device index for the ADDED event.
+            openGameController(event.cdevice.which);
+            break;
+        case SDL_CONTROLLERDEVICEREMOVED:
+            // NOTE: According to the documentation,
+            // the 'which' property is instance id for the REMOVED event.
+            unMapGameController(event.cdevice.which);
             break;
         }
     }
 
     // Handle analog sticks by polling
-    for (auto gc : m_Gamepads) {
+    QMap<Sint32, SDL_GameController*>::const_iterator i = m_GamepadMap.constBegin();
+    while (i != m_GamepadMap.constEnd()) {
+        auto gc = i.value();
         short leftX = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTX);
         short leftY = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_LEFTY);
         if (SDL_GetTicks() - m_LastAxisNavigationEventTime < AXIS_NAVIGATION_REPEAT_DELAY) {
@@ -205,6 +259,8 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
             sendKey(QEvent::Type::KeyRelease, Qt::Key_Right);
             m_LastAxisNavigationEventTime = SDL_GetTicks();
         }
+
+        ++i;
     }
 }
 

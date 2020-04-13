@@ -2,6 +2,7 @@
 
 #include <QTimer>
 #include <QEvent>
+#include <QMap>
 
 #include <SDL.h>
 
@@ -25,12 +26,22 @@ public:
 private:
     void sendKey(QEvent::Type type, Qt::Key key, Qt::KeyboardModifiers modifiers = Qt::NoModifier);
 
+    bool mapGameController(SDL_JoystickID joystickInstanceId, SDL_GameController *gc);
+
+    bool unMapGameController(SDL_JoystickID joystickInstanceId);
+
+    bool openGameController(int joystickIndex);
+
+    bool closeGameController(SDL_JoystickID joystickInstanceId);
+
+    bool closeGameController(SDL_JoystickID joystickInstanceId, SDL_GameController *gc);
+
 private slots:
     void onPollingTimerFired();
 
 private:
     QTimer* m_PollingTimer;
-    QList<SDL_GameController*> m_Gamepads;
+    QMap<SDL_JoystickID, SDL_GameController*> m_GamepadMap;
     bool m_Enabled;
     bool m_UiNavMode;
     Uint32 m_LastAxisNavigationEventTime;
