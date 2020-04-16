@@ -1,5 +1,4 @@
 #include "sdlgamepadkeynavigation.h"
-#include <iostream>
 
 #include <QKeyEvent>
 #include <QGuiApplication>
@@ -115,8 +114,6 @@ bool SdlGamepadKeyNavigation::mapGameController(SDL_JoystickID joystickInstanceI
 {
     if (gc != nullptr) {
         if (joystickInstanceId != -1) {
-            std::cout << "adding joystick with InstanceId: " << joystickInstanceId << std::endl;
-
             m_GamepadMap.insert(joystickInstanceId, gc);
             return true;
         }
@@ -127,8 +124,6 @@ bool SdlGamepadKeyNavigation::mapGameController(SDL_JoystickID joystickInstanceI
 
 bool SdlGamepadKeyNavigation::unMapGameController(SDL_JoystickID joystickInstanceId)
 {
-    std::cout << "removing joystick with InstanceId: " << joystickInstanceId << std::endl;
-
     return m_GamepadMap.remove(joystickInstanceId) > 0;
 }
 
