@@ -190,6 +190,10 @@ HEADERS += \
     streaming/video/overlaymanager.h \
     backend/systemproperties.h
 
+unix:contains(QT_ARCH, arm64) {
+  DEFINES += ARM64
+}
+
 # Platform-specific renderers and decoders
 ffmpeg {
     message(FFmpeg decoder selected)

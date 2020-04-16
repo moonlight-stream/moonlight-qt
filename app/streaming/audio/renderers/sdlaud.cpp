@@ -13,16 +13,20 @@ SdlAudioRenderer::SdlAudioRenderer()
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 
-#ifdef HAVE_MMAL
+#if defined(HAVE_MMAL) || defined(ARM64)
     // HACK: PulseAudio on Raspberry Pi suffers from horrible underruns,
     // so switch to ALSA if we detect that we're on a Pi. We need to
     // actually set a bogus PULSE_SERVER so it doesn't try to get smart on us
     // and find PA anyway. SDL_AUDIODRIVER=pulseaudio can override this logic.
+    //
+    // On L4T (and possibly every ARM64 Linux distro) PulseAudio keeps crashing
+    // after using it for a while so, by default, fall back to ALSA on ARM64 
     if (qgetenv("SDL_AUDIODRIVER").toLower() != "pulseaudio") {
         QFile file("/proc/cpuinfo");
         if (file.open(QIODevice::ReadOnly | QFile::Text)) {
             QTextStream textStream(&file);
-            if (textStream.readAll().contains("Raspberry Pi")) {
+            QString cpuInfo = textStream.readAll();
+            if (cpuInfo.contains("Raspberry Pi") || cpuInfo.contains("ARMv8")) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Avoiding PulseAudio on Raspberry Pi");
 
