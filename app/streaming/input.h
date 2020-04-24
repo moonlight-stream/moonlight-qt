@@ -81,13 +81,7 @@ private:
     void sendGamepadState(GamepadState* state);
 
     static
-    Uint32 releaseLeftButtonTimerCallback(Uint32 interval, void* param);
-
-    static
-    Uint32 releaseRightButtonTimerCallback(Uint32 interval, void* param);
-
-    static
-    Uint32 dragTimerCallback(Uint32 interval, void* param);
+    Uint32 longPressTimerCallback(Uint32 interval, void* param);
 
     static
     Uint32 mouseMoveTimerCallback(Uint32 interval, void* param);
@@ -105,13 +99,9 @@ private:
     QSet<short> m_KeysDown;
     bool m_FakeCaptureActive;
 
-    SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
-    float m_CumulativeDelta[MAX_FINGERS];
-    SDL_TimerID m_LeftButtonReleaseTimer;
-    SDL_TimerID m_RightButtonReleaseTimer;
-    SDL_TimerID m_DragTimer;
-    char m_DragButton;
-    int m_NumFingersDown;
+    SDL_TouchFingerEvent m_LastTouchDownEvent;
+    SDL_TouchFingerEvent m_LastTouchUpEvent;
+    SDL_TimerID m_LongPressTimer;
     int m_StreamWidth;
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
