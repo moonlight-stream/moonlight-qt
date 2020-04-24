@@ -296,7 +296,10 @@ NvHTTP::verifyResponseStatus(QString xml)
     {
         if (xmlReader.name() == "root")
         {
-            int statusCode = xmlReader.attributes().value("status_code").toInt();
+            // Status code can be 0xFFFFFFFF in some rare cases on GFE 3.20.3, and
+            // QString::toInt() will fail in that case, so use QString::toUInt()
+            // and cast the result to an int instead.
+            int statusCode = (int)xmlReader.attributes().value("status_code").toUInt();
             if (statusCode == 200)
             {
                 // Successful
