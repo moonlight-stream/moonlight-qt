@@ -583,7 +583,8 @@ Flickable {
                     hoverEnabled: true
                     text: "Optimize mouse for remote desktop instead of games"
                     font.pointSize:  12
-                    checked: StreamingPreferences.absoluteMouseMode
+                    enabled: SystemProperties.hasWindowManager
+                    checked: StreamingPreferences.absoluteMouseMode && SystemProperties.hasWindowManager
                     onCheckedChanged: {
                         StreamingPreferences.absoluteMouseMode = checked
                     }
