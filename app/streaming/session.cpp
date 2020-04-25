@@ -1115,11 +1115,13 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     bool needsFirstEnterCapture = false;
 
+    // Capture the mouse in relative mode by default on release builds only.
+    // This prevents the mouse from becoming trapped inside Moonlight when
+    // it's halted at a debug break.
 #ifndef QT_DEBUG
-    // Capture the mouse by default on release builds only.
-    // This prevents the mouse from becoming trapped inside
-    // Moonlight when it's halted at a debug break.
-    if (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED) {
+    if (prefs.absoluteMouseMode)
+#endif
+    {
         // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
         // event where it seems to work consistently on GNOME.
         if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
@@ -1129,7 +1131,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
             needsFirstEnterCapture = true;
         }
     }
-#endif
 
     // Stop text input. SDL enables it by default
     // when we initialize the video subsystem, but this
