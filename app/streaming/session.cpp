@@ -1131,7 +1131,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // Capture the mouse in relative mode by default on release builds only.
     // This prevents the mouse from becoming trapped inside Moonlight when
     // it's halted at a debug break.
-#ifndef QT_DEBUG
+#ifdef QT_DEBUG
     if (prefs.absoluteMouseMode)
 #endif
     {
