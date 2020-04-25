@@ -312,6 +312,12 @@ NvHTTP::verifyResponseStatus(QString xml)
                     // 401 is expected for unpaired PCs when we fetch serverinfo over HTTPS
                     qWarning() << "Request failed:" << statusCode << statusMessage;
                 }
+                if (statusCode == -1 && statusMessage == "Invalid") {
+                    // Special case handling an audio capture error which GFE doesn't
+                    // provide any useful status message for.
+                    statusCode = 418;
+                    statusMessage = "Missing audio capture device. Reinstalling GeForce Experience should resolve this error.";
+                }
                 throw GfeHttpResponseException(statusCode, statusMessage);
             }
         }
