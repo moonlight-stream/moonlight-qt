@@ -354,11 +354,6 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
     }
 
-    if (!isCaptureActive()) {
-        // Not capturing
-        return;
-    }
-
     if (event->repeat) {
         // Ignore repeat key down events
         SDL_assert(event->state == SDL_PRESSED);
