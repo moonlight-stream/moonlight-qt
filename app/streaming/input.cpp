@@ -1386,7 +1386,7 @@ void SdlInputHandler::notifyFocusLost(SDL_Window* window)
     // This lets user to interact with our window's title bar and with the buttons in it.
     // Doing this while the window is full-screen breaks the transition out of FS
     // (desktop and exclusive), so we must check for that before releasing mouse capture.
-    if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN)) {
+    if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) && !m_AbsoluteMouseMode) {
         setCaptureActive(false);
     }
 
