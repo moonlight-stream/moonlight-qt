@@ -863,10 +863,18 @@ void Session::toggleFullscreen()
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
 
     if (fullScreen) {
+        if (m_FullScreenFlag == SDL_WINDOW_FULLSCREEN) {
+            // Confine the cursor to the window
+            SDL_SetWindowGrab(m_Window, SDL_TRUE);
+        }
+
         SDL_SetWindowResizable(m_Window, SDL_FALSE);
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
     else {
+        // Unconfine the cursor
+        SDL_SetWindowGrab(m_Window, SDL_FALSE);
+
         SDL_SetWindowFullscreen(m_Window, 0);
         SDL_SetWindowResizable(m_Window, SDL_TRUE);
 
@@ -1106,6 +1114,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
         SDL_SetWindowResizable(m_Window, SDL_TRUE);
     }
     else {
+        if (m_FullScreenFlag == SDL_WINDOW_FULLSCREEN) {
+            // Confine the cursor to the window
+            SDL_SetWindowGrab(m_Window, SDL_TRUE);
+        }
+
         // Update the window display mode based on our current monitor
         updateOptimalWindowDisplayMode();
 
@@ -1362,6 +1375,7 @@ DispatchDeferredCleanup:
     // Uncapture the mouse and hide the window immediately,
     // so we can return to the Qt GUI ASAP.
     m_InputHandler->setCaptureActive(false);
+    SDL_SetWindowGrab(m_Window, SDL_FALSE);
     SDL_EnableScreenSaver();
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "0");
     if (QGuiApplication::platformName() == "eglfs") {
