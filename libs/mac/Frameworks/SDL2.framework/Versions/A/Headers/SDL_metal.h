@@ -55,18 +55,13 @@ typedef void *SDL_MetalView;
  *  On macOS, this does *not* associate a MTLDevice with the CAMetalLayer on its
  *  own. It is up to user code to do that.
  *
- *  The returned handle can be casted directly to a NSView or UIView, and the
- *  CAMetalLayer can be accessed from the view's 'layer' property.
+ *  The returned handle can be casted directly to a NSView or UIView.
+ *  To access the backing CAMetalLayer, call SDL_Metal_GetLayer().
  *
- *  \code
- *  SDL_MetalView metalview = SDL_Metal_CreateView(window);
- *  UIView *uiview = (__bridge UIView *)metalview;
- *  CAMetalLayer *metallayer = (CAMetalLayer *)uiview.layer;
- *  // [...]
- *  SDL_Metal_DestroyView(metalview);
- *  \endcode
+ *  \note \a window must be created with the SDL_WINDOW_METAL flag.
  *
  *  \sa SDL_Metal_DestroyView
+ *  \sa SDL_Metal_GetLayer
  */
 extern DECLSPEC SDL_MetalView SDLCALL SDL_Metal_CreateView(SDL_Window * window);
 
@@ -79,6 +74,37 @@ extern DECLSPEC SDL_MetalView SDLCALL SDL_Metal_CreateView(SDL_Window * window);
  *  \sa SDL_Metal_CreateView
  */
 extern DECLSPEC void SDLCALL SDL_Metal_DestroyView(SDL_MetalView view);
+
+/**
+ *  \brief Get a pointer to the backing CAMetalLayer for the given view.
+ *
+ *  \sa SDL_MetalCreateView
+ */
+extern DECLSPEC void *SDLCALL SDL_Metal_GetLayer(SDL_MetalView view);
+
+/**
+ *  \brief Get the size of a window's underlying drawable in pixels (for use
+ *         with setting viewport, scissor & etc).
+ *
+ *  \param window   SDL_Window from which the drawable size should be queried
+ *  \param w        Pointer to variable for storing the width in pixels,
+ *                  may be NULL
+ *  \param h        Pointer to variable for storing the height in pixels,
+ *                  may be NULL
+ *
+ * This may differ from SDL_GetWindowSize() if we're rendering to a high-DPI
+ * drawable, i.e. the window was created with SDL_WINDOW_ALLOW_HIGHDPI on a
+ * platform with high-DPI support (Apple calls this "Retina"), and not disabled
+ * by the \c SDL_HINT_VIDEO_HIGHDPI_DISABLED hint.
+ *
+ *  \note On macOS high-DPI support must be enabled for an application by
+ *        setting NSHighResolutionCapable to true in its Info.plist.
+ *
+ *  \sa SDL_GetWindowSize()
+ *  \sa SDL_CreateWindow()
+ */
+extern DECLSPEC void SDLCALL SDL_Metal_GetDrawableSize(SDL_Window* window, int *w,
+                                                       int *h);
 
 /* @} *//* Metal support functions */
 
