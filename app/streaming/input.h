@@ -67,6 +67,10 @@ public:
 
     void raiseAllKeys();
 
+    void notifyFocusGained(SDL_Window* window);
+
+    void notifyFocusLost(SDL_Window* window);
+
     bool isCaptureActive();
 
     void setCaptureActive(bool active);

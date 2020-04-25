@@ -1350,6 +1350,51 @@ void SdlInputHandler::raiseAllKeys()
     m_KeysDown.clear();
 }
 
+void SdlInputHandler::notifyFocusGained(SDL_Window* window)
+{
+    // Capture mouse cursor when user actives the window by clicking on
+    // window's client area (borders and title bar excluded).
+    // Without this you would have to click the window twice (once to
+    // activate it, second time to enable capture). With this you need to
+    // click it only once.
+    //
+    // On Linux, the button press event is delivered after the focus gain
+    // so this is not neccessary (and leads to a click sent to the host
+    // when focusing the window by clicking).
+    //
+    // By excluding window's borders and title bar out, lets user still
+    // interact with them without mouse capture kicking in.
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
+    if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+        int x, y, width, height;
+        SDL_GetWindowPosition(window, &x, &y);
+        SDL_GetWindowSize(window, &width, &height);
+        if (mouseX > x && mouseX < x+width && mouseY > y && mouseY < y+height) {
+            setCaptureActive(true);
+        }
+    }
+#else
+    Q_UNUSED(window);
+#endif
+}
+
+void SdlInputHandler::notifyFocusLost(SDL_Window* window)
+{
+    // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
+    // This lets user to interact with our window's title bar and with the buttons in it.
+    // Doing this while the window is full-screen breaks the transition out of FS
+    // (desktop and exclusive), so we must check for that before releasing mouse capture.
+    if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN)) {
+        setCaptureActive(false);
+    }
+
+    // Raise all keys that are currently pressed. If we don't do this, certain keys
+    // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
+    raiseAllKeys();
+}
+
 bool SdlInputHandler::isCaptureActive()
 {
     if (SDL_GetRelativeMouseMode()) {
