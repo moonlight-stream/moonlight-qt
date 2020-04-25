@@ -1,6 +1,7 @@
 #include "sdlvid.h"
 
 #include "streaming/session.h"
+#include "streaming/streamutils.h"
 #include "path.h"
 
 #include <QDir>
@@ -176,9 +177,18 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // The window may be smaller than the stream size, so ensure our
-    // logical rendering surface size is equal to the stream size
-    SDL_RenderSetLogicalSize(m_Renderer, params->width, params->height);
+    // Calculate the video region size, scaling to fill the window while
+    // preserving the aspect ratio of the video stream.
+    SDL_Rect src, dst;
+    src.x = src.y = 0;
+    src.w = params->width;
+    src.h = params->height;
+    dst.x = dst.y = 0;
+    SDL_GetWindowSize(params->window, &dst.w, &dst.h);
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    // Ensure the viewport is set to the desired video region
+    SDL_RenderSetViewport(m_Renderer, &dst);
 
     // Draw a black frame until the video stream starts rendering
     SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
