@@ -19,7 +19,7 @@
 #define SER_UNSUPPORTEDFPS "unsupportedfps"
 #define SER_MDNS "mdns"
 #define SER_QUITAPPAFTER "quitAppAfter"
-#define SER_MOUSEACCELERATION "mouseacceleration"
+#define SER_ABSMOUSEMODE "mouseacceleration"
 #define SER_STARTWINDOWED "startwindowed"
 #define SER_FRAMEPACING "framepacing"
 #define SER_CONNWARNINGS "connwarnings"
@@ -59,7 +59,7 @@ void StreamingPreferences::reload()
     unsupportedFps = settings.value(SER_UNSUPPORTEDFPS, false).toBool();
     enableMdns = settings.value(SER_MDNS, true).toBool();
     quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
-    mouseAcceleration = settings.value(SER_MOUSEACCELERATION, false).toBool();
+    absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, false).toBool();
     startWindowed = settings.value(SER_STARTWINDOWED, false).toBool();
     framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     connectionWarnings = settings.value(SER_CONNWARNINGS, true).toBool();
@@ -103,7 +103,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_UNSUPPORTEDFPS, unsupportedFps);
     settings.setValue(SER_MDNS, enableMdns);
     settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
-    settings.setValue(SER_MOUSEACCELERATION, mouseAcceleration);
+    settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);
     settings.setValue(SER_STARTWINDOWED, startWindowed);
     settings.setValue(SER_FRAMEPACING, framePacing);
     settings.setValue(SER_CONNWARNINGS, connectionWarnings);

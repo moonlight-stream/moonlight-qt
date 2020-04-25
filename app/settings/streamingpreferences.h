@@ -61,7 +61,7 @@ public:
     Q_PROPERTY(bool unsupportedFps MEMBER unsupportedFps NOTIFY unsupportedFpsChanged)
     Q_PROPERTY(bool enableMdns MEMBER enableMdns NOTIFY enableMdnsChanged)
     Q_PROPERTY(bool quitAppAfter MEMBER quitAppAfter NOTIFY quitAppAfterChanged)
-    Q_PROPERTY(bool mouseAcceleration MEMBER mouseAcceleration NOTIFY mouseAccelerationChanged)
+    Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
     Q_PROPERTY(bool startWindowed MEMBER startWindowed NOTIFY startWindowedChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
     Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)
@@ -85,7 +85,7 @@ public:
     bool unsupportedFps;
     bool enableMdns;
     bool quitAppAfter;
-    bool mouseAcceleration;
+    bool absoluteMouseMode;
     bool startWindowed;
     bool framePacing;
     bool connectionWarnings;
@@ -108,7 +108,7 @@ signals:
     void unsupportedFpsChanged();
     void enableMdnsChanged();
     void quitAppAfterChanged();
-    void mouseAccelerationChanged();
+    void absoluteMouseModeChanged();
     void audioConfigChanged();
     void videoCodecConfigChanged();
     void videoDecoderSelectionChanged();

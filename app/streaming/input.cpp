@@ -66,17 +66,17 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),
-      m_AbsoluteMouseMode(false)
+      m_AbsoluteMouseMode(prefs.absoluteMouseMode)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
 
-    // If mouse acceleration is enabled, use relative mode warp (which
+    // If absolute mouse mode is enabled, use relative mode warp (which
     // is via normal motion events that are influenced by mouse acceleration).
     // Otherwise, we'll use raw input capture which is straight from the device
     // without modification by the OS.
     SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-                            prefs.mouseAcceleration ? "1" : "0",
+                            prefs.absoluteMouseMode ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 
 #if defined(Q_OS_DARWIN) && !SDL_VERSION_ATLEAST(2, 0, 10)
