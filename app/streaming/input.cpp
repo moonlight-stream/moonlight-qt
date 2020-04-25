@@ -686,16 +686,12 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_Window* window, SDL_MouseMotion
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-        // Ignore motion outside the video region
-        if (event->x < dst.x || event->y < dst.y ||
-                event->x > dst.x + dst.w || event->y > dst.y + dst.h) {
-            return;
-        }
+        // Clamp motion to the video region
+        short x = qMin(qMax(event->x - dst.x, 0), dst.w);
+        short y = qMin(qMax(event->y - dst.y, 0), dst.h);
 
-        // Send the mouse position update with coordinates relative to
-        // the video region.
-        LiSendMousePositionEvent(event->x - dst.x, event->y - dst.y,
-                                 dst.w, dst.h);
+        // Send the mouse position update
+        LiSendMousePositionEvent(x, y, dst.w, dst.h);
     }
     else {
         // Batch until the next mouse polling window or we'll get awful
@@ -752,7 +748,7 @@ void SdlInputHandler::sendGamepadState(GamepadState* state)
                                state->rsY);
 }
 
-Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void *param)
+Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void*)
 {
     // Raise the left click and start a right click
     LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
