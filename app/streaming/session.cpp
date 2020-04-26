@@ -517,6 +517,10 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 {
     QStringList warningList;
 
+    if (m_Preferences->absoluteMouseMode && !m_App.isAppCollectorGame) {
+        emitLaunchWarning("Your selection to enable remote desktop mouse mode may cause problems in games.");
+    }
+
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
         if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR) {
             emitLaunchWarning("HDR is not supported with software decoding.");

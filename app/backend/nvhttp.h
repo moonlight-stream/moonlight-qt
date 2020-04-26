@@ -24,6 +24,7 @@ public:
     int id;
     QString name;
     bool hdrSupported;
+    bool isAppCollectorGame;
 };
 
 Q_DECLARE_METATYPE(NvApp)

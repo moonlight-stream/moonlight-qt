@@ -281,6 +281,9 @@ NvHTTP::getAppList()
             else if (name == "IsHdrSupported") {
                 apps.last().hdrSupported = xmlReader.readElementText() == "1";
             }
+            else if (name == "IsAppCollectorGame") {
+                apps.last().isAppCollectorGame = xmlReader.readElementText() == "1";
+            }
         }
     }
 
