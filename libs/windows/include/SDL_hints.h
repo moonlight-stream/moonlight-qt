@@ -315,6 +315,17 @@ extern "C" {
 #define SDL_HINT_MOUSE_RELATIVE_SPEED_SCALE    "SDL_MOUSE_RELATIVE_SPEED_SCALE"
 
 /**
+ *  \brief  A variable controlling whether relative mouse motion is affected by renderer scaling
+ *
+ *  This variable can be set to the following values:
+ *    "0"       - Relative motion is unaffected by DPI or renderer's logical size
+ *    "1"       - Relative motion is scaled according to DPI scaling and logical size
+ *
+ *  By default relative mouse deltas are affected by DPI and renderer scaling
+ */
+#define SDL_HINT_MOUSE_RELATIVE_SCALING "SDL_MOUSE_RELATIVE_SCALING"
+
+/**
  *  \brief  A variable controlling whether relative mouse mode is implemented using mouse warping
  *
  *  This variable can be set to the following values:
@@ -634,9 +645,22 @@ extern "C" {
  *    "0"       - HIDAPI driver is not used
  *    "1"       - HIDAPI driver is used
  *
- *  The default is the value of SDL_HINT_JOYSTICK_HIDAPI
+ *  The default is "0" on Windows, otherwise the value of SDL_HINT_JOYSTICK_HIDAPI
  */
 #define SDL_HINT_JOYSTICK_HIDAPI_XBOX   "SDL_JOYSTICK_HIDAPI_XBOX"
+
+ /**
+  *  \brief  A variable controlling whether the HIDAPI driver for XBox controllers on Windows should pull correlated
+  *      data from XInput.
+  *
+  *  This variable can be set to the following values:
+  *    "0"       - HIDAPI Xbox driver will only use HIDAPI data
+  *    "1"       - HIDAPI Xbox driver will also pull data from XInput, providing better trigger axes, guide button
+  *                presses, and rumble support
+  *
+  *  The default is "1".  This hint applies to any joysticks opened after setting the hint.
+  */
+#define SDL_HINT_JOYSTICK_HIDAPI_CORRELATE_XINPUT   "SDL_JOYSTICK_HIDAPI_CORRELATE_XINPUT"
 
 /**
  *  \brief  A variable controlling whether the HIDAPI driver for Nintendo GameCube controllers should be used.
@@ -660,6 +684,15 @@ extern "C" {
  */
 #define SDL_HINT_ENABLE_STEAM_CONTROLLERS "SDL_ENABLE_STEAM_CONTROLLERS"
 
+ /**
+  *  \brief  A variable controlling whether the RAWINPUT joystick drivers should be used for better handling XInput-capable devices.
+  *
+  *  This variable can be set to the following values:
+  *    "0"       - RAWINPUT drivers are not used
+  *    "1"       - RAWINPUT drivers are used (the default)
+  *
+  */
+#define SDL_HINT_JOYSTICK_RAWINPUT "SDL_JOYSTICK_RAWINPUT"
 
 /**
  *  \brief If set to "0" then never set the top most bit on a SDL Window, even if the video mode expects it.
@@ -997,7 +1030,8 @@ extern "C" {
 /**
  *  \brief Tell SDL not to catch the SIGINT or SIGTERM signals.
  *
- * This hint only applies to Unix-like platforms.
+ * This hint only applies to Unix-like platforms, and should set before
+ * any calls to SDL_Init()
  *
  * The variable can be set to the following values:
  *   "0"       - SDL will install a SIGINT and SIGTERM handler, and when it

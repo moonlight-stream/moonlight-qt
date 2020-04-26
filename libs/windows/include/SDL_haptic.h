@@ -336,6 +336,23 @@ typedef struct _SDL_Haptic SDL_Haptic;
  */
 #define SDL_HAPTIC_SPHERICAL  2
 
+/**
+ *  \brief Uses first axis only.
+ *  For some device with only one axis (steering wheel,...),
+ *  SDL_HAPTIC_CARTESIAN does not work. SDL_HAPTIC_FIRST_AXIS can be used in 
+ *  this case.
+ *  Using SDL_HAPTIC_FIRST_AXIS is equivalent to :
+ *  \code
+ *  SDL_HapticDirection direction;
+ *  direction.type = SDL_HAPTIC_CARTESIAN;
+ *  direction.dir[0] = 1;
+ *  direction.dir[1] = 0;
+ *  direction.dir[2] = 0;
+ *  \endcode
+ *  \sa SDL_HapticDirection
+ */
+#define SDL_HAPTIC_FIRST_AXIS 3
+
 /* @} *//* Direction encodings */
 
 /* @} *//* Haptic features */
@@ -444,6 +461,7 @@ typedef struct _SDL_Haptic SDL_Haptic;
  *  \sa SDL_HAPTIC_POLAR
  *  \sa SDL_HAPTIC_CARTESIAN
  *  \sa SDL_HAPTIC_SPHERICAL
+ *  \sa SDL_HAPTIC_FIRST_AXIS
  *  \sa SDL_HapticEffect
  *  \sa SDL_HapticNumAxes
  */

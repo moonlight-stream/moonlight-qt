@@ -37,9 +37,45 @@ extern "C" {
 #endif
 
 /* Public functions */
-/* SDL_SetError() unconditionally returns -1. */
+
+
+/**
+ *  \brief Set the error message for the current thread
+ *
+ *  \return -1, there is no error handling for this function
+ */
 extern DECLSPEC int SDLCALL SDL_SetError(SDL_PRINTF_FORMAT_STRING const char *fmt, ...) SDL_PRINTF_VARARG_FUNC(1);
+
+/**
+ *  \brief Get the last error message that was set
+ *
+ * SDL API functions may set error messages and then succeed, so you should
+ * only use the error value if a function fails.
+ * 
+ * This returns a pointer to a static buffer for convenience and should not
+ * be called by multiple threads simultaneously.
+ *
+ *  \return a pointer to the last error message that was set
+ */
 extern DECLSPEC const char *SDLCALL SDL_GetError(void);
+
+/**
+ *  \brief Get the last error message that was set for the current thread
+ *
+ * SDL API functions may set error messages and then succeed, so you should
+ * only use the error value if a function fails.
+ * 
+ *  \param errstr A buffer to fill with the last error message that was set
+ *                for the current thread
+ *  \param maxlen The size of the buffer pointed to by the errstr parameter
+ *
+ *  \return errstr
+ */
+extern DECLSPEC char * SDLCALL SDL_GetErrorMsg(char *errstr, int maxlen);
+
+/**
+ *  \brief Clear the error message for the current thread
+ */
 extern DECLSPEC void SDLCALL SDL_ClearError(void);
 
 /**
