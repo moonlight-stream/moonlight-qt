@@ -41,6 +41,9 @@ public:
     virtual int getDecoderColorspace() override;
 
 private:
+    bool validateDriver(VADisplay display);
+    VADisplay openDisplay(SDL_Window* window);
+
     int m_WindowSystem;
     AVBufferRef* m_HwContext;
     int m_DrmFd;

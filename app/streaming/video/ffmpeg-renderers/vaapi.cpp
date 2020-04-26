@@ -38,24 +38,135 @@ VAAPIRenderer::~VAAPIRenderer()
 }
 
 bool
+VAAPIRenderer::validateDriver(VADisplay display)
+{
+    const char* vendorString = vaQueryVendorString(display);
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Validating VAAPI driver: %s",
+                vendorString ? vendorString : "<unknown>");
+
+    if (isDirectRenderingSupported()) {
+        int entrypointCount;
+        VAEntrypoint entrypoints[vaMaxNumEntrypoints(display)];
+        VAStatus status = vaQueryConfigEntrypoints(display, VAProfileNone, entrypoints, &entrypointCount);
+        if (status == VA_STATUS_SUCCESS) {
+            for (int i = 0; i < entrypointCount; i++) {
+                // Without VAEntrypointVideoProc support, the driver will crash inside vaPutSurface()
+                if (entrypoints[i] == VAEntrypointVideoProc) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "VAEntrypointVideoProc is supported");
+                    return true;
+                }
+            }
+        }
+
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "VAAPI driver doesn't support VAEntrypointVideoProc!");
+        return false;
+    }
+    else {
+        // Indirect rendering can use any driver
+        return true;
+    }
+}
+
+VADisplay
+VAAPIRenderer::openDisplay(SDL_Window* window)
+{
+    SDL_SysWMinfo info;
+    VADisplay display;
+
+    SDL_VERSION(&info.version);
+
+    if (!SDL_GetWindowWMInfo(window, &info)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetWindowWMInfo() failed: %s",
+                     SDL_GetError());
+        return nullptr;
+    }
+
+    m_WindowSystem = info.subsystem;
+    if (info.subsystem == SDL_SYSWM_X11) {
+        m_XWindow = info.info.x11.window;
+#ifdef HAVE_LIBVA_X11
+        display = vaGetDisplay(info.info.x11.display);
+        if (display == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to open X11 display for VAAPI");
+            return nullptr;
+        }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI X11 support!");
+        return nullptr;
+#endif
+    }
+    else if (info.subsystem == SDL_SYSWM_WAYLAND) {
+#ifdef HAVE_LIBVA_WAYLAND
+        display = vaGetDisplayWl(info.info.wl.display);
+        if (display == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to open Wayland display for VAAPI");
+            return nullptr;
+        }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI Wayland support!");
+        return nullptr;
+#endif
+    }
+    // TODO: Upstream a better solution for SDL_GetWindowWMInfo on KMSDRM
+    else if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
+#ifdef HAVE_LIBVA_DRM
+        if (m_DrmFd < 0) {
+            const char* device = SDL_getenv("DRM_DEV");
+
+            if (device == nullptr) {
+                device = "/dev/dri/card0";
+            }
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Opening DRM device: %s",
+                        device);
+
+            m_DrmFd = open(device, O_RDWR | O_CLOEXEC);
+            if (m_DrmFd < 0) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to open DRM device: %d",
+                             errno);
+                return nullptr;
+            }
+        }
+
+        display = vaGetDisplayDRM(m_DrmFd);
+        if (display == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to open DRM display for VAAPI");
+            return nullptr;
+        }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI DRM support!");
+        return nullptr;
+#endif
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unsupported VAAPI rendering subsystem: %d",
+                     info.subsystem);
+        return nullptr;
+    }
+}
+
+bool
 VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
-    SDL_SysWMinfo info;
 
     m_VideoWidth = params->width;
     m_VideoHeight = params->height;
 
     SDL_GetWindowSize(params->window, &m_DisplayWidth, &m_DisplayHeight);
-
-    SDL_VERSION(&info.version);
-
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
 
     m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VAAPI);
     if (!m_HwContext) {
@@ -67,73 +178,9 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
 
-    m_WindowSystem = info.subsystem;
-    if (info.subsystem == SDL_SYSWM_X11) {
-#ifdef HAVE_LIBVA_X11
-        m_XWindow = info.info.x11.window;
-        vaDeviceContext->display = vaGetDisplay(info.info.x11.display);
-        if (!vaDeviceContext->display) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Unable to open X11 display for VAAPI");
-            return false;
-        }
-#else
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Moonlight not compiled with VAAPI X11 support!");
-        return false;
-#endif
-    }
-    else if (info.subsystem == SDL_SYSWM_WAYLAND) {
-#ifdef HAVE_LIBVA_WAYLAND
-        vaDeviceContext->display = vaGetDisplayWl(info.info.wl.display);
-        if (!vaDeviceContext->display) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Unable to open Wayland display for VAAPI");
-            return false;
-        }
-#else
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Moonlight not compiled with VAAPI Wayland support!");
-        return false;
-#endif
-    }
-    // TODO: Upstream a better solution for SDL_GetWindowWMInfo on KMSDRM
-    else if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
-#ifdef HAVE_LIBVA_DRM
-        const char* device = SDL_getenv("DRM_DEV");
-
-        if (device == nullptr) {
-            device = "/dev/dri/card0";
-        }
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Opening DRM device: %s",
-                    device);
-
-        m_DrmFd = open(device, O_RDWR | O_CLOEXEC);
-        if (m_DrmFd < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to open DRM device: %d",
-                         errno);
-            return false;
-        }
-
-        vaDeviceContext->display = vaGetDisplayDRM(m_DrmFd);
-        if (!vaDeviceContext->display) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Unable to open DRM display for VAAPI");
-            return false;
-        }
-#else
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Moonlight not compiled with VAAPI DRM support!");
-        return false;
-#endif
-    }
-    else {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Unsupported VAAPI rendering subsystem: %d",
-                     info.subsystem);
+    vaDeviceContext->display = openDisplay(params->window);
+    if (vaDeviceContext->display == nullptr) {
+        // openDisplay() logs the error
         return false;
     }
 
@@ -143,6 +190,11 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 
     for (;;) {
         status = vaInitialize(vaDeviceContext->display, &major, &minor);
+        if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
+            vaTerminate(vaDeviceContext->display);
+            vaDeviceContext->display = openDisplay(params->window);
+            status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
+        }
         if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Trying fallback VAAPI driver names");
@@ -157,6 +209,11 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // always seem to be the case for some reason.
                 qputenv("LIBVA_DRIVER_NAME", "iHD");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
+                    vaTerminate(vaDeviceContext->display);
+                    vaDeviceContext->display = openDisplay(params->window);
+                    status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
+                }
             }
 
             if (status != VA_STATUS_SUCCESS) {
@@ -165,6 +222,11 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // explicitly try i965 to handle this case.
                 qputenv("LIBVA_DRIVER_NAME", "i965");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
+                    vaTerminate(vaDeviceContext->display);
+                    vaDeviceContext->display = openDisplay(params->window);
+                    status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
+                }
             }
 
             if (status != VA_STATUS_SUCCESS) {
