@@ -231,6 +231,18 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
             }
 
             if (status != VA_STATUS_SUCCESS) {
+                // The RadeonSI driver is compatible with XWayland but can't be detected by libva
+                // so try it too if all else fails.
+                qputenv("LIBVA_DRIVER_NAME", "radeonsi");
+                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
+                    vaTerminate(vaDeviceContext->display);
+                    vaDeviceContext->display = openDisplay(params->window);
+                    status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
+                }
+            }
+
+            if (status != VA_STATUS_SUCCESS) {
                 // Unset LIBVA_DRIVER_NAME if none of the drivers we tried worked. This ensures
                 // we will get a fresh start using the default driver selection behavior after
                 // setting LIBVA_DRIVERS_PATH in the code below.
