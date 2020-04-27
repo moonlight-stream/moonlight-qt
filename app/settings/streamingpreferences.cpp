@@ -60,7 +60,7 @@ void StreamingPreferences::reload()
     enableMdns = settings.value(SER_MDNS, true).toBool();
     quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
     absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, false).toBool();
-    startWindowed = settings.value(SER_STARTWINDOWED, false).toBool();
+    startWindowed = settings.value(SER_STARTWINDOWED, true).toBool();
     framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     connectionWarnings = settings.value(SER_CONNWARNINGS, true).toBool();
     richPresence = settings.value(SER_RICHPRESENCE, true).toBool();
