@@ -1140,11 +1140,22 @@ void Session::exec(int displayOriginX, int displayOriginY)
 #endif
     {
         // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
-        // event where it seems to work consistently on GNOME.
+        // event where it seems to work consistently on GNOME. This doesn't work for
+        // XWayland though.
         if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
-            m_InputHandler->setCaptureActive(true);
+            // We know we aren't running on native Wayland now, but
+            // we still may be running on XWayland.
+            if (!WMUtils::isRunningWayland()) {
+                // Neither Wayland or XWayland: capture now
+                m_InputHandler->setCaptureActive(true);
+            }
+            else {
+                // XWayland: mouse capture doesn't work reliably, so let the user
+                // engage the mouse capture via clicking or using the hotkey.
+            }
         }
         else {
+            // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
             needsFirstEnterCapture = true;
         }
     }
