@@ -293,8 +293,8 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     // to be leaked for each submitted frame. The Flatpak runtime has a VDPAU
     // driver in place that works well, so use that instead on AMD systems. If
     // we're using Wayland, we have no choice but to use VAAPI because VDPAU
-    // is only supported under X11.
-    if (vendorString && qgetenv("FORCE_VAAPI") != "1" && m_WindowSystem == SDL_SYSWM_X11) {
+    // is only supported under X11 or XWayland.
+    if (vendorString && qgetenv("FORCE_VAAPI") != "1" && !WMUtils::isRunningWayland()) {
         QString vendorStr(vendorString);
         if (vendorStr.contains("AMD", Qt::CaseInsensitive) ||
                 vendorStr.contains("Radeon", Qt::CaseInsensitive)) {
