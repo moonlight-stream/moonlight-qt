@@ -157,6 +157,8 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
                      info.subsystem);
         return nullptr;
     }
+
+    return display;
 }
 
 bool
