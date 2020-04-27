@@ -11,7 +11,8 @@
 
 VAAPIRenderer::VAAPIRenderer()
     : m_HwContext(nullptr),
-      m_DrmFd(-1)
+      m_DrmFd(-1),
+      m_BlacklistedForDirectRendering(false)
 {
 
 }
@@ -285,6 +286,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 major, minor);
 
     const char* vendorString = vaQueryVendorString(vaDeviceContext->display);
+    QString vendorStr(vendorString);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Driver: %s",
                 vendorString ? vendorString : "<unknown>");
@@ -294,8 +296,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     // driver in place that works well, so use that instead on AMD systems. If
     // we're using Wayland, we have no choice but to use VAAPI because VDPAU
     // is only supported under X11 or XWayland.
-    if (vendorString && qgetenv("FORCE_VAAPI") != "1" && !WMUtils::isRunningWayland()) {
-        QString vendorStr(vendorString);
+    if (qgetenv("FORCE_VAAPI") != "1" && !WMUtils::isRunningWayland()) {
         if (vendorStr.contains("AMD", Qt::CaseInsensitive) ||
                 vendorStr.contains("Radeon", Qt::CaseInsensitive)) {
             // Fail and let VDPAU pick this up
@@ -303,6 +304,12 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                         "Avoiding VAAPI on AMD driver");
             return false;
         }
+    }
+
+    if (WMUtils::isRunningWayland()) {
+        // The iHD VAAPI driver can initialize on XWayland but it crashes in
+        // vaPutSurface() so we must also not directly render on XWayland.
+        m_BlacklistedForDirectRendering = vendorStr.contains("iHD");
     }
 
     // This will populate the driver_quirks
@@ -349,10 +356,8 @@ bool
 VAAPIRenderer::isDirectRenderingSupported()
 {
     // Many Wayland renderers don't support YUV surfaces, so use
-    // another frontend renderer to draw our frames. The iHD VAAPI
-    // driver can initialize on XWayland but it crashes in vaPutSurface()
-    // so we must also not directly render on XWayland either.
-    return m_WindowSystem == SDL_SYSWM_X11 && !WMUtils::isRunningWayland();
+    // another frontend renderer to draw our frames.
+    return m_WindowSystem == SDL_SYSWM_X11 && !m_BlacklistedForDirectRendering;
 }
 
 int VAAPIRenderer::getDecoderColorspace()
