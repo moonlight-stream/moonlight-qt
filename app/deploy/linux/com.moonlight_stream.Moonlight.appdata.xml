@@ -35,6 +35,30 @@
 	</screenshots>
 
 	<releases>
+		<release version="2.0.0" date="2020-04-28">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Remote desktop-optimized mouse mode which doesn't require capturing the mouse cursor</li>
+					<li>Touchscreen input now directly controls the mouse cursor</li>
+					<li>7.1 surround sound support</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Improved performance on some lossy networks</li>
+					<li>Fixed disconnect delay when streaming from GeForce Experience 3.20.3.63</li>
+					<li>Fixed frame rate not exceeding 60 when streaming from GeForce Experience 3.20.3.63</li>
+					<li>Fixed parsing of command-line options when passing flags prior to the action</li>
+					<li>Fixed an issue that may cause excessive mDNS network traffic while Moonlight is running</li>
+					<li>Fixed hardware decoding on Intel GPUs running Mesa 20.0 and/or the Iris driver</li>
+					<li>Fixed hardware decoding on Comet Lake and later Intel GPUs using the iHD VA-API driver</li>
+					<li>Fixed hardware decoding on AMD Radeon GPUs with XWayland</li>
+					<li>Fixed a crash when using the iHD VA-API driver on Wayland</li>
+					<li>Fixed delay after exiting the stream on Wayland</li>
+					<li>Updated included gamepad mappings</li>
+				</ul>
+			</description>
+		</release>
 		<release version="1.2.0" date="2019-12-17">
 			<description>
 				<p>Bugfixes:</p>
