@@ -20,6 +20,10 @@
 #define VK_NUMPAD0 0x60
 #endif
 
+// Until we can fully capture these on all platforms (without conflicting with
+// OS-provided shortcuts), we should avoid passing them through to the host.
+//#define ENABLE_META
+
 #define MOUSE_POLLING_INTERVAL 5
 
 // How long the fingers must be stationary to start a right click
@@ -371,9 +375,11 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     if (event->keysym.mod & KMOD_SHIFT) {
         modifiers |= MODIFIER_SHIFT;
     }
+#ifdef ENABLE_META
     if (event->keysym.mod & KMOD_GUI) {
         modifiers |= MODIFIER_META;
     }
+#endif
 
     // Set keycode. We explicitly use scancode here because GFE will try to correct
     // for AZERTY layouts on the host but it depends on receiving VK_ values matching
@@ -514,9 +520,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_RALT:
                 keyCode = 0xA5;
                 break;
-            // Until we can fully capture these on all platforms (without conflicting with
-            // OS-provided shortcuts), we should avoid passing them through to the host.
-            #if 0
+            #ifdef ENABLE_META
             case SDL_SCANCODE_LGUI:
                 keyCode = 0x5B;
                 break;
