@@ -43,11 +43,13 @@ public:
 
     ~SdlInputHandler();
 
+    void setWindow(SDL_Window* window);
+
     void handleKeyEvent(SDL_KeyboardEvent* event);
 
     void handleMouseButtonEvent(SDL_MouseButtonEvent* event);
 
-    void handleMouseMotionEvent(SDL_Window* window, SDL_MouseMotionEvent* event);
+    void handleMouseMotionEvent(SDL_MouseMotionEvent* event);
 
     void handleMouseWheelEvent(SDL_MouseWheelEvent* event);
 
@@ -61,15 +63,15 @@ public:
 
     void rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor);
 
-    void handleTouchFingerEvent(SDL_Window* window, SDL_TouchFingerEvent* event);
+    void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
     int getAttachedGamepadMask();
 
     void raiseAllKeys();
 
-    void notifyFocusGained(SDL_Window* window);
+    void notifyFocusGained();
 
-    void notifyFocusLost(SDL_Window* window);
+    void notifyFocusLost();
 
     bool isCaptureActive();
 
@@ -93,6 +95,7 @@ private:
     static
     Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
 
+    SDL_Window* m_Window;
     bool m_MultiController;
     bool m_GamepadMouse;
     SDL_TimerID m_MouseMoveTimer;

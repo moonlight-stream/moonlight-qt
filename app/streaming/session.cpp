@@ -1081,6 +1081,8 @@ void Session::exec(int displayOriginX, int displayOriginY)
         return;
     }
 
+    m_InputHandler->setWindow(m_Window);
+
     QSvgRenderer svgIconRenderer(QString(":/res/moonlight.svg"));
     QImage svgImage(ICON_SIZE, ICON_SIZE, QImage::Format_RGBA8888);
     svgImage.fill(0);
@@ -1220,10 +1222,10 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
         case SDL_WINDOWEVENT:
             if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-                m_InputHandler->notifyFocusGained(m_Window);
+                m_InputHandler->notifyFocusGained();
             }
             else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
-                m_InputHandler->notifyFocusLost(m_Window);
+                m_InputHandler->notifyFocusLost();
             }
 
             // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed
@@ -1327,7 +1329,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
             m_InputHandler->handleMouseButtonEvent(&event.button);
             break;
         case SDL_MOUSEMOTION:
-            m_InputHandler->handleMouseMotionEvent(m_Window, &event.motion);
+            m_InputHandler->handleMouseMotionEvent(&event.motion);
             break;
         case SDL_MOUSEWHEEL:
             m_InputHandler->handleMouseWheelEvent(&event.wheel);
@@ -1349,7 +1351,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
         case SDL_FINGERDOWN:
         case SDL_FINGERMOTION:
         case SDL_FINGERUP:
-            m_InputHandler->handleTouchFingerEvent(m_Window, &event.tfinger);
+            m_InputHandler->handleTouchFingerEvent(&event.tfinger);
             break;
         }
     }

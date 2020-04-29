@@ -207,6 +207,11 @@ SdlInputHandler::~SdlInputHandler()
 #endif
 }
 
+void SdlInputHandler::setWindow(SDL_Window *window)
+{
+    m_Window = window;
+}
+
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
     short keyCode;
@@ -659,7 +664,7 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
                            button);
 }
 
-void SdlInputHandler::handleMouseMotionEvent(SDL_Window* window, SDL_MouseMotionEvent* event)
+void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 {
     if (!isCaptureActive()) {
         // Not capturing
@@ -678,7 +683,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_Window* window, SDL_MouseMotion
         src.h = m_StreamHeight;
 
         dst.x = dst.y = 0;
-        SDL_GetWindowSize(window, &dst.w, &dst.h);
+        SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
 
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
@@ -1223,7 +1228,7 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
 #endif
 }
 
-void SdlInputHandler::handleTouchFingerEvent(SDL_Window* window, SDL_TouchFingerEvent* event)
+void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
 {
 #if SDL_VERSION_ATLEAST(2, 0, 10)
     if (SDL_GetTouchDeviceType(event->touchId) != SDL_TOUCH_DEVICE_DIRECT) {
@@ -1259,7 +1264,7 @@ void SdlInputHandler::handleTouchFingerEvent(SDL_Window* window, SDL_TouchFinger
     SDL_Rect src, dst;
     int windowWidth, windowHeight;
 
-    SDL_GetWindowSize(window, &windowWidth, &windowHeight);
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
 
     src.x = src.y = 0;
     src.w = m_StreamWidth;
@@ -1354,7 +1359,7 @@ void SdlInputHandler::raiseAllKeys()
     m_KeysDown.clear();
 }
 
-void SdlInputHandler::notifyFocusGained(SDL_Window* window)
+void SdlInputHandler::notifyFocusGained()
 {
     // Capture mouse cursor when user actives the window by clicking on
     // window's client area (borders and title bar excluded).
@@ -1373,24 +1378,22 @@ void SdlInputHandler::notifyFocusGained(SDL_Window* window)
     Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
     if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
         int x, y, width, height;
-        SDL_GetWindowPosition(window, &x, &y);
-        SDL_GetWindowSize(window, &width, &height);
+        SDL_GetWindowPosition(m_Window, &x, &y);
+        SDL_GetWindowSize(m_Window, &width, &height);
         if (mouseX > x && mouseX < x+width && mouseY > y && mouseY < y+height) {
             setCaptureActive(true);
         }
     }
-#else
-    Q_UNUSED(window);
 #endif
 }
 
-void SdlInputHandler::notifyFocusLost(SDL_Window* window)
+void SdlInputHandler::notifyFocusLost()
 {
     // Release mouse cursor when another window is activated (e.g. by using ALT+TAB).
     // This lets user to interact with our window's title bar and with the buttons in it.
     // Doing this while the window is full-screen breaks the transition out of FS
     // (desktop and exclusive), so we must check for that before releasing mouse capture.
-    if (!(SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) && !m_AbsoluteMouseMode) {
+    if (!(SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) && !m_AbsoluteMouseMode) {
         setCaptureActive(false);
     }
 
