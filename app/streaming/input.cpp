@@ -1415,19 +1415,30 @@ bool SdlInputHandler::isCaptureActive()
 void SdlInputHandler::setCaptureActive(bool active)
 {
     if (active) {
+        // If we're in full-screen exclusive mode, grab the cursor so it can't accidentally leave our window.
+        if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+            SDL_SetWindowGrab(m_Window, SDL_TRUE);
+        }
+
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
-            // Relative mouse mode didn't work, so we'll use fake capture
+            // Relative mouse mode didn't work or was disabled, so we'll just hide the cursor
             SDL_ShowCursor(SDL_DISABLE);
             m_FakeCaptureActive = true;
         }
     }
-    else if (m_FakeCaptureActive) {
-        SDL_ShowCursor(SDL_ENABLE);
-        m_FakeCaptureActive = false;
-    }
     else {
-        SDL_SetRelativeMouseMode(SDL_FALSE);
+        if (m_FakeCaptureActive) {
+            // Display the cursor again
+            SDL_ShowCursor(SDL_ENABLE);
+            m_FakeCaptureActive = false;
+        }
+        else {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        }
+
+        // Allow the cursor to leave the bounds of our window again.
+        SDL_SetWindowGrab(m_Window, SDL_FALSE);
     }
 }
 
