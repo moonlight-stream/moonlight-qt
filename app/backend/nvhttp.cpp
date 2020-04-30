@@ -440,9 +440,14 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Add our client certificate
     request.setSslConfiguration(IdentityManager::get()->getSslConfig());
 
-#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && QT_VERSION < QT_VERSION_CHECK(5, 14, 2) && !defined(QT_NO_BEARERMANAGEMENT)
-    // HACK: Set network accessibility to work around QTBUG-80947
+#if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && !defined(QT_NO_BEARERMANAGEMENT)
+    // HACK: Set network accessibility to work around QTBUG-80947.
+    // Even though it was fixed in 5.14.2, it still breaks for users attempting to
+    // directly connect their computers without a router using APIPA.
+    QT_WARNING_PUSH
+    QT_WARNING_DISABLE_DEPRECATED
     m_Nam.setNetworkAccessible(QNetworkAccessManager::Accessible);
+    QT_WARNING_POP
 #endif
 
     QNetworkReply* reply = m_Nam.get(request);
