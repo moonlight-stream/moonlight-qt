@@ -3,7 +3,7 @@
 #include "streaming/session.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
-#include "streamutils.h"
+#include "streaming/streamutils.h"
 
 #include <QtGlobal>
 #include <QtMath>
