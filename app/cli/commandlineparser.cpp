@@ -297,7 +297,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addChoiceOption("audio-config", "audio config", m_AudioConfigMap.keys());
     parser.addToggleOption("multi-controller", "multiple controller support");
     parser.addToggleOption("quit-after", "quit app after session");
-    parser.addToggleOption("absolute-mouse", "enable direct mouse control (best for remote desktop rather than games)");
+    parser.addToggleOption("absolute-mouse", "remote desktop optimized mouse control");
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
     parser.addToggleOption("frame-pacing", "frame pacing");
