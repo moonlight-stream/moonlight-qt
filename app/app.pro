@@ -146,7 +146,11 @@ SOURCES += \
     cli/quitstream.cpp \
     cli/startstream.cpp \
     settings/streamingpreferences.cpp \
+    streaming/input/abstouch.cpp \
+    streaming/input/gamepad.cpp \
     streaming/input/input.cpp \
+    streaming/input/keyboard.cpp \
+    streaming/input/mouse.cpp \
     streaming/session.cpp \
     streaming/audio/audio.cpp \
     streaming/audio/renderers/sdlaud.cpp \
