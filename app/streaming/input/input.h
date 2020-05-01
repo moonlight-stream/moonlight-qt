@@ -128,7 +128,6 @@ private:
     bool m_AbsoluteTouchMode;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
-    float m_CumulativeDelta[MAX_FINGERS];
     SDL_TimerID m_LeftButtonReleaseTimer;
     SDL_TimerID m_RightButtonReleaseTimer;
     SDL_TimerID m_DragTimer;

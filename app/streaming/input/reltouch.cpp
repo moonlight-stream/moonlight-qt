@@ -3,6 +3,8 @@
 #include <Limelight.h>
 #include <SDL.h>
 
+#include <QtMath>
+
 // How long the mouse button will be pressed for a tap to click gesture
 #define TAP_BUTTON_RELEASE_DELAY 100
 
@@ -10,7 +12,7 @@
 #define DRAG_ACTIVATION_DELAY 650
 
 // How far the finger can move before it cancels a drag or tap
-#define DEAD_ZONE_DELTA 0.1f
+#define DEAD_ZONE_DELTA 0.01f
 
 Uint32 SdlInputHandler::releaseLeftButtonTimerCallback(Uint32, void*)
 {
@@ -113,13 +115,9 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
     }
 
     if (event->type == SDL_FINGERMOTION) {
-        // Count the total cumulative dx/dy that the finger
-        // has moved.
-        m_CumulativeDelta[fingerIndex] += qAbs(event->x);
-        m_CumulativeDelta[fingerIndex] += qAbs(event->y);
-
         // If it's outside the deadzone delta, cancel drags and taps
-        if (m_CumulativeDelta[fingerIndex] > DEAD_ZONE_DELTA) {
+        if (qSqrt(qPow(event->x - m_TouchDownEvent[fingerIndex].x, 2) +
+                  qPow(event->y - m_TouchDownEvent[fingerIndex].y, 2)) > DEAD_ZONE_DELTA) {
             SDL_RemoveTimer(m_DragTimer);
             m_DragTimer = 0;
 
@@ -170,7 +168,6 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
 
     if (event->type == SDL_FINGERDOWN) {
         m_TouchDownEvent[fingerIndex] = *event;
-        m_CumulativeDelta[fingerIndex] = 0;
     }
     else if (event->type == SDL_FINGERUP) {
         m_TouchDownEvent[fingerIndex] = {};

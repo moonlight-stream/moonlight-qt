@@ -101,7 +101,6 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     SDL_zero(m_LastTouchDownEvent);
     SDL_zero(m_LastTouchUpEvent);
     SDL_zero(m_TouchDownEvent);
-    SDL_zero(m_CumulativeDelta);
 
     SDL_AtomicSet(&m_MouseDeltaX, 0);
     SDL_AtomicSet(&m_MouseDeltaY, 0);
