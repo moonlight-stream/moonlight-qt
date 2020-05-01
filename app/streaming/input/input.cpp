@@ -17,7 +17,13 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),
-      m_AbsoluteMouseMode(prefs.absoluteMouseMode)
+      m_AbsoluteMouseMode(prefs.absoluteMouseMode),
+      m_AbsoluteTouchMode(prefs.absoluteTouchMode),
+      m_LeftButtonReleaseTimer(0),
+      m_RightButtonReleaseTimer(0),
+      m_DragTimer(0),
+      m_DragButton(0),
+      m_NumFingersDown(0)
 {
     // Allow gamepad input when the app doesn't have focus
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, "1");
@@ -94,6 +100,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     SDL_zero(m_GamepadState);
     SDL_zero(m_LastTouchDownEvent);
     SDL_zero(m_LastTouchUpEvent);
+    SDL_zero(m_TouchDownEvent);
+    SDL_zero(m_CumulativeDelta);
 
     SDL_AtomicSet(&m_MouseDeltaX, 0);
     SDL_AtomicSet(&m_MouseDeltaY, 0);
@@ -130,6 +138,9 @@ SdlInputHandler::~SdlInputHandler()
 
     SDL_RemoveTimer(m_MouseMoveTimer);
     SDL_RemoveTimer(m_LongPressTimer);
+    SDL_RemoveTimer(m_LeftButtonReleaseTimer);
+    SDL_RemoveTimer(m_RightButtonReleaseTimer);
+    SDL_RemoveTimer(m_DragTimer);
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);
@@ -256,5 +267,30 @@ void SdlInputHandler::setCaptureActive(bool active)
 
         // Allow the cursor to leave the bounds of our window again.
         SDL_SetWindowGrab(m_Window, SDL_FALSE);
+    }
+}
+
+void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
+{
+#if SDL_VERSION_ATLEAST(2, 0, 10)
+    if (SDL_GetTouchDeviceType(event->touchId) != SDL_TOUCH_DEVICE_DIRECT) {
+        // Ignore anything that isn't a touchscreen. We may get callbacks
+        // for trackpads, but we want to handle those in the mouse path.
+        return;
+    }
+#elif defined(Q_OS_DARWIN)
+    // SDL2 sends touch events from trackpads by default on
+    // macOS. This totally screws our actual mouse handling,
+    // so we must explicitly ignore touch events on macOS
+    // until SDL 2.0.10 where we have SDL_GetTouchDeviceType()
+    // to tell them apart.
+    return;
+#endif
+
+    if (m_AbsoluteTouchMode) {
+        handleAbsoluteFingerEvent(event);
+    }
+    else {
+        handleRelativeFingerEvent(event);
     }
 }

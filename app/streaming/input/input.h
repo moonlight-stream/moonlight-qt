@@ -86,6 +86,10 @@ private:
 
     void sendGamepadState(GamepadState* state);
 
+    void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
+
+    void handleRelativeFingerEvent(SDL_TouchFingerEvent* event);
+
     static
     Uint32 longPressTimerCallback(Uint32 interval, void* param);
 
@@ -94,6 +98,15 @@ private:
 
     static
     Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
+
+    static
+    Uint32 releaseLeftButtonTimerCallback(Uint32 interval, void* param);
+
+    static
+    Uint32 releaseRightButtonTimerCallback(Uint32 interval, void* param);
+
+    static
+    Uint32 dragTimerCallback(Uint32 interval, void* param);
 
     SDL_Window* m_Window;
     bool m_MultiController;
@@ -112,6 +125,15 @@ private:
     int m_StreamWidth;
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
+    bool m_AbsoluteTouchMode;
+
+    SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
+    float m_CumulativeDelta[MAX_FINGERS];
+    SDL_TimerID m_LeftButtonReleaseTimer;
+    SDL_TimerID m_RightButtonReleaseTimer;
+    SDL_TimerID m_DragTimer;
+    char m_DragButton;
+    int m_NumFingersDown;
 
     static const int k_ButtonMap[];
 };

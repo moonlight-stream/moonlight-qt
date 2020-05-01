@@ -27,23 +27,8 @@ Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void*)
     return 0;
 }
 
-void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)
+void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 {
-#if SDL_VERSION_ATLEAST(2, 0, 10)
-    if (SDL_GetTouchDeviceType(event->touchId) != SDL_TOUCH_DEVICE_DIRECT) {
-        // Ignore anything that isn't a touchscreen. We may get callbacks
-        // for trackpads, but we want to handle those in the mouse path.
-        return;
-    }
-#elif defined(Q_OS_DARWIN)
-    // SDL2 sends touch events from trackpads by default on
-    // macOS. This totally screws our actual mouse handling,
-    // so we must explicitly ignore touch events on macOS
-    // until SDL 2.0.10 where we have SDL_GetTouchDeviceType()
-    // to tell them apart.
-    return;
-#endif
-
     // Observations on Windows 10: x and y appear to be relative to 0,0 of the window client area.
     // Although SDL documentation states they are 0.0 - 1.0 float values, they can actually be higher
     // or lower than those values as touch events continue for touches started within the client area that

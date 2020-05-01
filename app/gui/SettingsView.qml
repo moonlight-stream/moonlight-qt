@@ -597,6 +597,22 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: absoluteTouchCheck
+                    hoverEnabled: true
+                    text: "Use touchscreen as a trackpad"
+                    font.pointSize:  12
+                    checked: !StreamingPreferences.absoluteTouchMode
+                    onCheckedChanged: {
+                        StreamingPreferences.absoluteTouchMode = !checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer."
+                }
+
+                CheckBox {
                     id: gamepadMouseCheck
                     hoverEnabled: true
                     text: "Gamepad mouse mode support"
