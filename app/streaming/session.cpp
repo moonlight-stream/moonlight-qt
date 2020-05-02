@@ -1129,32 +1129,24 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     bool needsFirstEnterCapture = false;
 
-    // Capture the mouse in relative mode by default on release builds only.
-    // This prevents the mouse from becoming trapped inside Moonlight when
-    // it's halted at a debug break.
-#ifdef QT_DEBUG
-    if (prefs.absoluteMouseMode)
-#endif
-    {
-        // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
-        // event where it seems to work consistently on GNOME. This doesn't work for
-        // XWayland though.
-        if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
-            // We know we aren't running on native Wayland now, but
-            // we still may be running on XWayland.
-            if (!WMUtils::isRunningWayland()) {
-                // Neither Wayland or XWayland: capture now
-                m_InputHandler->setCaptureActive(true);
-            }
-            else {
-                // XWayland: mouse capture doesn't work reliably, so let the user
-                // engage the mouse capture via clicking or using the hotkey.
-            }
+    // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
+    // event where it seems to work consistently on GNOME. This doesn't work for
+    // XWayland though.
+    if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
+        // We know we aren't running on native Wayland now, but
+        // we still may be running on XWayland.
+        if (!WMUtils::isRunningWayland()) {
+            // Neither Wayland or XWayland: capture now
+            m_InputHandler->setCaptureActive(true);
         }
         else {
-            // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
-            needsFirstEnterCapture = true;
+            // XWayland: mouse capture doesn't work reliably, so let the user
+            // engage the mouse capture via clicking or using the hotkey.
         }
+    }
+    else {
+        // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
+        needsFirstEnterCapture = true;
     }
 
     // Stop text input. SDL enables it by default
