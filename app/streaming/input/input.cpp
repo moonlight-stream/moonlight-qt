@@ -247,6 +247,14 @@ void SdlInputHandler::setCaptureActive(bool active)
             SDL_SetWindowGrab(m_Window, SDL_TRUE);
         }
 
+        if (!m_AbsoluteMouseMode) {
+            // If our window is occluded when mouse is captured, the mouse may
+            // get stuck on top of the occluding window and not be properly
+            // captured. We can avoid this by raising our window before we
+            // capture the mouse.
+            SDL_RaiseWindow(m_Window);
+        }
+
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
             // Relative mouse mode didn't work or was disabled, so we'll just hide the cursor
