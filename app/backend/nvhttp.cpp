@@ -443,7 +443,8 @@ NvHTTP::openConnection(QUrl baseUrl,
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && !defined(QT_NO_BEARERMANAGEMENT)
     // HACK: Set network accessibility to work around QTBUG-80947.
     // Even though it was fixed in 5.14.2, it still breaks for users attempting to
-    // directly connect their computers without a router using APIPA.
+    // directly connect their computers without a router using APIPA and in some cases
+    // using OpenVPN with IPv6 enabled. https://github.com/moonlight-stream/moonlight-qt/issues/375
     QT_WARNING_PUSH
     QT_WARNING_DISABLE_DEPRECATED
     m_Nam.setNetworkAccessible(QNetworkAccessManager::Accessible);
