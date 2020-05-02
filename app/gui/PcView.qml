@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import QtQuick.Layouts 1.3
 
 import ComputerModel 1.0
 
@@ -161,6 +162,15 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
+                text: "Rename PC"
+                onTriggered: {
+                    renamePcDialog.pcIndex = index
+                    renamePcDialog.originalName = model.name
+                    renamePcDialog.open()
+                }
+            }
+            NavigableMenuItem {
+                parentMenu: pcContextMenu
                 text: "Wake PC"
                 onTriggered: computerModel.wakeComputer(index)
                 visible: !model.online && model.wakeable
@@ -263,6 +273,48 @@ CenteredGridView {
         }
 
         onAccepted: deletePc()
+    }
+
+    NavigableDialog {
+        id: renamePcDialog
+        property string label: "Enter the new name for this PC:"
+        property string originalName
+        property int pcIndex : -1;
+
+        standardButtons: Dialog.Ok | Dialog.Cancel
+
+        onOpened: {
+            // Force keyboard focus on the textbox so keyboard navigation works
+            editText.forceActiveFocus()
+        }
+
+        onClosed: {
+            editText.clear()
+        }
+
+        onAccepted: {
+            if (editText.text) {
+                computerModel.renameComputer(pcIndex, editText.text)
+            }
+        }
+
+        ColumnLayout {
+            Label {
+                text: renamePcDialog.label
+                font.bold: true
+            }
+
+            TextField {
+                id: editText
+                placeholderText: renamePcDialog.originalName
+                Layout.fillWidth: true
+                focus: true
+
+                Keys.onReturnPressed: {
+                    renamePcDialog.accept()
+                }
+            }
+        }
     }
 
     ScrollBar.vertical: ScrollBar {

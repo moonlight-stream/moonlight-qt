@@ -179,6 +179,8 @@ public:
     // computer is deleted inside this call
     void deleteHost(NvComputer* computer);
 
+    void renameHost(NvComputer* computer, QString name);
+
 signals:
     void computerStateChanged(NvComputer* computer);
 

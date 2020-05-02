@@ -14,6 +14,7 @@
 #define SER_IPV6ADDR "ipv6address"
 #define SER_APPLIST "apps"
 #define SER_SRVCERT "srvcert"
+#define SER_CUSTOMNAME "customname"
 
 #define SER_APPNAME "name"
 #define SER_APPID "id"
@@ -23,6 +24,7 @@ NvComputer::NvComputer(QSettings& settings)
 {
     this->name = settings.value(SER_NAME).toString();
     this->uuid = settings.value(SER_UUID).toString();
+    this->hasCustomName = settings.value(SER_CUSTOMNAME).toBool();
     this->macAddress = settings.value(SER_MAC).toByteArray();
     this->localAddress = settings.value(SER_LOCALADDR).toString();
     this->remoteAddress = settings.value(SER_REMOTEADDR).toString();
@@ -62,6 +64,7 @@ void NvComputer::serialize(QSettings& settings) const
     QReadLocker lock(&this->lock);
 
     settings.setValue(SER_NAME, name);
+    settings.setValue(SER_CUSTOMNAME, hasCustomName);
     settings.setValue(SER_UUID, uuid);
     settings.setValue(SER_MAC, macAddress);
     settings.setValue(SER_LOCALADDR, localAddress);
@@ -96,6 +99,7 @@ NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serv
 {
     this->serverCert = serverCert;
 
+    this->hasCustomName = false;
     this->name = NvHTTP::getXmlString(serverInfo, "hostname");
     if (this->name.isEmpty()) {
         this->name = "UNKNOWN";
@@ -377,7 +381,10 @@ bool NvComputer::update(NvComputer& that)
         changed = true;                       \
     }
 
-    ASSIGN_IF_CHANGED(name);
+    if (!hasCustomName) {
+        // Only overwrite the name if it's not custom
+        ASSIGN_IF_CHANGED(name);
+    }
     ASSIGN_IF_CHANGED_AND_NONEMPTY(macAddress);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(localAddress);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(remoteAddress);

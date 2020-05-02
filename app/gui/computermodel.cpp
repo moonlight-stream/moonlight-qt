@@ -128,6 +128,13 @@ void ComputerModel::wakeComputer(int computerIndex)
     QThreadPool::globalInstance()->start(wakeTask);
 }
 
+void ComputerModel::renameComputer(int computerIndex, QString name)
+{
+    Q_ASSERT(computerIndex < m_Computers.count());
+
+    m_ComputerManager->renameHost(m_Computers[computerIndex], name);
+}
+
 void ComputerModel::pairComputer(int computerIndex, QString pin)
 {
     Q_ASSERT(computerIndex < m_Computers.count());

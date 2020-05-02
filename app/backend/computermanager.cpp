@@ -416,6 +416,19 @@ void ComputerManager::deleteHost(NvComputer* computer)
     QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(this, computer));
 }
 
+void ComputerManager::renameHost(NvComputer* computer, QString name)
+{
+    {
+        QWriteLocker(&computer->lock);
+
+        computer->name = name;
+        computer->hasCustomName = true;
+    }
+
+    // Notify the UI of the state change
+    handleComputerStateChanged(computer);
+}
+
 void ComputerManager::handleAboutToQuit()
 {
     QWriteLocker lock(&m_Lock);

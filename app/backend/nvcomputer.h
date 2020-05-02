@@ -71,6 +71,7 @@ public:
     QString manualAddress;
     QByteArray macAddress;
     QString name;
+    bool hasCustomName;
     QString uuid;
     QSslCertificate serverCert;
     QVector<NvApp> appList;
