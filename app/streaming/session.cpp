@@ -68,9 +68,19 @@ void Session::clStageFailed(int stage, int errorCode)
 void Session::clConnectionTerminated(int errorCode)
 {
     // Display the termination dialog if this was not intended
-    if (errorCode != 0) {
+    switch (errorCode) {
+    case ML_ERROR_GRACEFUL_TERMINATION:
+        break;
+
+    case ML_ERROR_NO_VIDEO_TRAFFIC:
+        s_ActiveSession->m_UnexpectedTermination = true;
+        emit s_ActiveSession->displayLaunchError("No video received from host. Check the host PC's firewall and port forwarding rules.");
+        break;
+
+    default:
         s_ActiveSession->m_UnexpectedTermination = true;
         emit s_ActiveSession->displayLaunchError("Connection terminated");
+        break;
     }
 
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
