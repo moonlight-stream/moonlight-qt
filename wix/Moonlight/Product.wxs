@@ -1,11 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?if $(env.APPVEYOR) = True ?>
+<?define ShortName = "Moonlight (Nightly)" ?>
+<?define FullName = "Moonlight Game Streaming Client (Nightly)" ?>
+<?define InstallFolder = "Moonlight Game Streaming (Nightly)" ?>
+<?define RegKeyName = "Moonlight Game Streaming Project (Nightly)" ?>
+<?define UpgradeCode = "1b3bbb1b-3ee3-4000-adf2-6358eab315f6" ?>
+<?else?>
 <?define ShortName = "Moonlight" ?>
 <?define FullName = "Moonlight Game Streaming Client" ?>
+<?define InstallFolder = "Moonlight Game Streaming" ?>
+<?define RegKeyName = "Moonlight Game Streaming Project" ?>
+<?define UpgradeCode = "5c09f94e-f809-4c6a-9b7b-597c99f041fe" ?>
+<?endif ?>
 
 <?define ShortcutName = "$(var.ShortName)" ?>
 <?define ShortcutDesc = "Stream games from your NVIDIA GameStream-enabled PC" ?>
-<?define InstallFolder = "Moonlight Game Streaming" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:fire="http://schemas.microsoft.com/wix/FirewallExtension"
@@ -16,7 +26,7 @@
            Language="1033"
            Version="!(bind.fileVersion.MoonlightExe)"
            Manufacturer="Moonlight Game Streaming Project"
-           UpgradeCode="5c09f94e-f809-4c6a-9b7b-597c99f041fe">
+           UpgradeCode="$(var.UpgradeCode)">
 
     <Package InstallerVersion="500" Compressed="yes" InstallScope="perMachine" />
 
@@ -62,7 +72,7 @@
                 WorkingDirectory="INSTALLFOLDER" />
       <RemoveFolder Id="CleanupStartMenuShortcut" Directory="ApplicationProgramsFolder" On="uninstall" />
       <util:RemoveFolderEx Id="CleanupAppDataFolder" On="uninstall" Property="APPDATAFOLDER" />
-      <RegistryValue Root="HKCU" Key="Software\Moonlight Game Streaming Project" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
+      <RegistryValue Root="HKCU" Key="Software\$(var.RegKeyName)" Name="Installed" Type="integer" Value="1" KeyPath="yes" />
     </Component>
 
     <Component Id="MoonlightDesktopShortcut" Guid="*" Directory="INSTALLFOLDER">
@@ -74,7 +84,7 @@
                 WorkingDirectory="INSTALLFOLDER" />
       <RemoveFolder Id="CleanupDesktopShortcut" Directory="DesktopFolder" On="uninstall" />
       <RegistryValue Root="HKCU"
-                     Key="Software\Moonlight Game Streaming Project"
+                     Key="Software\$(var.RegKeyName)"
                      Name="DesktopShortcutInstalled"
                      Type="integer"
                      Value="1"
@@ -87,7 +97,7 @@
          product -->
     <Component Id="MoonlightDesktopShortcutState" Guid="*" Directory="INSTALLFOLDER">
       <RegistryValue Root="HKCU"
-                     Key="Software\Moonlight Game Streaming Project"
+                     Key="Software\$(var.RegKeyName)"
                      Name="DesktopShortcutInstallState"
                      Type="integer"
                      Value="[ADDDESKTOPSHORTCUT]"

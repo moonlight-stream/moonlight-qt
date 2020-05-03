@@ -12,6 +12,11 @@ if /I "%BUILD_CONFIG%"=="debug" (
 ) else (
     if /I "%BUILD_CONFIG%"=="release" (
         set BUILD_CONFIG=release
+
+        if /I "%APPVEYOR%"=="True" (
+            echo Stamping with AppVeyor version: %APPVEYOR_BUILD_VERSION%
+            echo | set /p dummyName="%APPVEYOR_BUILD_VERSION%" > app\version.txt
+        )
     ) else (
         if /I "%BUILD_CONFIG%"=="signed-release" (
             set BUILD_CONFIG=release
