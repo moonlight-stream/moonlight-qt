@@ -77,7 +77,7 @@ popd
 
 echo Compiling Moonlight in %BUILD_CONFIG% configuration
 pushd %BUILD_FOLDER%
-nmake %BUILD_CONFIG%
+%SOURCE_ROOT%\scripts\jom.exe %BUILD_CONFIG%
 if !ERRORLEVEL! NEQ 0 goto Error
 popd
 
