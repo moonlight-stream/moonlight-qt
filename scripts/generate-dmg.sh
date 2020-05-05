@@ -40,7 +40,7 @@ popd
 
 echo Compiling Moonlight in $BUILD_CONFIG configuration
 pushd $BUILD_FOLDER
-make $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
+make -j$(sysctl -n hw.logicalcpu) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
 popd
 
 echo Saving dSYM file
