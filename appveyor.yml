@@ -1,4 +1,4 @@
-version: 0.0.{build}.0
+version: 0.0.0.{build}
 
 clone_depth: 1
 

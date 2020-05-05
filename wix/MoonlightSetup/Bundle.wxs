@@ -1,25 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?if $(env.APPVEYOR) = True ?>
-<?define FullName = "Moonlight Game Streaming Client (Nightly)" ?>
-<?define InstallFolder = "Moonlight Game Streaming (Nightly)" ?>
-<?define RegKeyName = "Moonlight Game Streaming Project (Nightly)" ?>
-<?define UpgradeCode = "12825490-fd66-4f80-87f9-56531ca66421" ?>
-<?else?>
-<?define FullName = "Moonlight Game Streaming Client" ?>
-<?define InstallFolder = "Moonlight Game Streaming" ?>
-<?define RegKeyName = "Moonlight Game Streaming Project" ?>
-<?define UpgradeCode = "466fa35d-4be4-40ef-9ce5-afadc3b63bc5" ?>
-<?endif ?>
-
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
-  <Bundle Name="$(var.FullName)"
+  <Bundle Name="Moonlight Game Streaming Client"
           Version="!(bind.PackageVersion.Moonlight)"
           Manufacturer="Moonlight Game Streaming Project"
-          UpgradeCode="$(var.UpgradeCode)"
+          UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
           HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
           UpdateUrl="https://github.com/moonlight-stream/moonlight-qt/releases"
           DisableModify="yes"
@@ -43,9 +31,9 @@
     <Variable Name="REINSTALLMODE" bal:Overridable="yes" Value="dmus" />
 
     <?if $(env.ARCH) ~= x64 ?>
-      <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]$(var.InstallFolder)" />
+      <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]Moonlight Game Streaming" />
     <?elseif $(env.ARCH) ~= x86 ?>
-      <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]$(var.InstallFolder)" />
+      <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]Moonlight Game Streaming" />
     <?endif ?>
 
     <!-- Define "Add desktop shortcut" -checkbox's state by defining a variable
@@ -57,12 +45,12 @@
          "DesktopShortcutInstallState" is set in Product.wxs. -->
     <util:RegistrySearch Variable="HasDesktopShortcutInstallStateRegKey"
                          Root="HKCU"
-                         Key="Software\$(var.RegKeyName)"
+                         Key="Software\Moonlight Game Streaming Project"
                          Value="DesktopShortcutInstallState"
                          Result="exists" />
     <util:RegistrySearch Variable="AddDesktopShortcutCheckbox"
                          Root="HKCU"
-                         Key="Software\$(var.RegKeyName)"
+                         Key="Software\Moonlight Game Streaming Project"
                          Value="DesktopShortcutInstallState"
                          Condition="HasDesktopShortcutInstallStateRegKey" />
 
