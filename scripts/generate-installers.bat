@@ -9,9 +9,11 @@ set ARCH=%2
 rem Convert to lower case for windeployqt
 if /I "%BUILD_CONFIG%"=="debug" (
     set BUILD_CONFIG=debug
+    set WIX_MUMS=10
 ) else (
     if /I "%BUILD_CONFIG%"=="release" (
         set BUILD_CONFIG=release
+        set WIX_MUMS=10
     ) else (
         if /I "%BUILD_CONFIG%"=="signed-release" (
             set BUILD_CONFIG=release
