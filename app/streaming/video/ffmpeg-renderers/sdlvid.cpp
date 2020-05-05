@@ -177,14 +177,14 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // Calculate the video region size, scaling to fill the window while
+    // Calculate the video region size, scaling to fill the output size while
     // preserving the aspect ratio of the video stream.
     SDL_Rect src, dst;
     src.x = src.y = 0;
     src.w = params->width;
     src.h = params->height;
     dst.x = dst.y = 0;
-    SDL_GetWindowSize(params->window, &dst.w, &dst.h);
+    SDL_GetRendererOutputSize(m_Renderer, &dst.w, &dst.h);
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
     // Ensure the viewport is set to the desired video region
