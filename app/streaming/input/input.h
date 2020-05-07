@@ -77,8 +77,6 @@ public:
 
     void setCaptureActive(bool active);
 
-    void sendSyntheticMouseState(Uint32 state, Uint32 button);
-
     static
     QString getUnmappedGamepads();
 
@@ -128,9 +126,6 @@ private:
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
     bool m_AbsoluteTouchMode;
-
-    bool m_PendingFocusGain;
-    Uint32 m_PendingFocusButtonUp;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
     SDL_TimerID m_LeftButtonReleaseTimer;

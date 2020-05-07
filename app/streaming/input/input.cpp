@@ -19,8 +19,6 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_StreamHeight(streamHeight),
       m_AbsoluteMouseMode(prefs.absoluteMouseMode),
       m_AbsoluteTouchMode(prefs.absoluteTouchMode),
-      m_PendingFocusGain(false),
-      m_PendingFocusButtonUp(0),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
@@ -205,44 +203,12 @@ void SdlInputHandler::notifyFocusGained()
 #if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     int mouseX, mouseY;
     Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
-    if (mouseState != 0) {
+    if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
         int x, y, width, height;
         SDL_GetWindowPosition(m_Window, &x, &y);
         SDL_GetWindowSize(m_Window, &width, &height);
         if (mouseX > x && mouseX < x+width && mouseY > y && mouseY < y+height) {
-            if (m_AbsoluteMouseMode) {
-                // We won't receive mouse events until the mouse gesture ends after gaining
-                // focus. To allow users to click directly into the unfocused window, we'll
-                // emulate mouse events using SDL_GetGlobalMouseState().
-                m_PendingFocusGain = true;
-
-                if (mouseState & SDL_BUTTON_LMASK) {
-                    m_PendingFocusButtonUp = SDL_BUTTON_LEFT;
-                }
-                else if (mouseState & SDL_BUTTON_RMASK) {
-                    m_PendingFocusButtonUp = SDL_BUTTON_RIGHT;
-                }
-                else if (mouseState & SDL_BUTTON_MMASK) {
-                    m_PendingFocusButtonUp = SDL_BUTTON_MIDDLE;
-                }
-                else if (mouseState & SDL_BUTTON_X1MASK) {
-                    m_PendingFocusButtonUp = SDL_BUTTON_X1;
-                }
-                else if (mouseState & SDL_BUTTON_X2MASK) {
-                    m_PendingFocusButtonUp = SDL_BUTTON_X2;
-                }
-                else {
-                    SDL_assert(false);
-                    m_PendingFocusGain = false;
-                }
-
-                // Update the mouse position then send the button down event
-                sendSyntheticMouseState(SDL_MOUSEMOTION, 0);
-                sendSyntheticMouseState(SDL_MOUSEBUTTONDOWN, m_PendingFocusButtonUp);
-            }
-            else if (mouseState & SDL_BUTTON_LMASK) {
-                setCaptureActive(true);
-            }
+            setCaptureActive(true);
         }
     }
 #endif

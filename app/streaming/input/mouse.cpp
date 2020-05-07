@@ -111,46 +111,6 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
     }
 }
 
-void SdlInputHandler::sendSyntheticMouseState(Uint32 type, Uint32 button) {
-    int mouseX, mouseY;
-    int windowX, windowY;
-    SDL_Event event;
-    Uint32 buttonState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
-    SDL_GetWindowPosition(m_Window, &windowX, &windowY);
-
-    switch (type) {
-    case SDL_MOUSEMOTION:
-        event.motion.type = type;
-        event.motion.timestamp = SDL_GetTicks();
-        event.motion.windowID = SDL_GetWindowID(m_Window);
-        event.motion.which = 0;
-        event.motion.state = buttonState;
-        event.motion.x = mouseX - windowX;
-        event.motion.y = mouseY - windowY;
-        event.motion.xrel = 0;
-        event.motion.yrel = 0;
-        break;
-
-    case SDL_MOUSEBUTTONDOWN:
-    case SDL_MOUSEBUTTONUP:
-        event.button.type = type;
-        event.button.timestamp = SDL_GetTicks();
-        event.button.windowID = SDL_GetWindowID(m_Window);
-        event.button.which = 0;
-        event.button.button = button;
-        event.button.state = type == SDL_MOUSEBUTTONDOWN ? SDL_PRESSED : SDL_RELEASED;
-        event.button.clicks = 1;
-        event.button.x = mouseX - windowX;
-        event.button.y = mouseY - windowY;
-        break;
-
-    default:
-        SDL_assert(false);
-    }
-
-    SDL_PushEvent(&event);
-}
-
 Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
 {
     auto me = reinterpret_cast<SdlInputHandler*>(param);
@@ -160,21 +120,6 @@ Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
 
     if (deltaX != 0 || deltaY != 0) {
         LiSendMouseMoveEvent(deltaX, deltaY);
-    }
-
-    if (me->m_PendingFocusGain && me->m_AbsoluteMouseMode) {
-        Uint32 buttonState = SDL_GetGlobalMouseState(NULL, NULL);
-
-        // Update the position first
-        me->sendSyntheticMouseState(SDL_MOUSEMOTION, 0);
-
-        // If the button has come up since last time, send that too
-        if ((buttonState & SDL_BUTTON(me->m_PendingFocusButtonUp)) == 0) {
-            me->sendSyntheticMouseState(SDL_MOUSEBUTTONUP, me->m_PendingFocusButtonUp);
-
-            // Focus gain has completed
-            me->m_PendingFocusGain = false;
-        }
     }
 
     return interval;
