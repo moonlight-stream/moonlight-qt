@@ -122,29 +122,5 @@ Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
         LiSendMouseMoveEvent(deltaX, deltaY);
     }
 
-    if (me->m_AbsoluteMouseMode && me->m_PendingFocusGain) {
-        int mouseX, mouseY;
-        int windowX, windowY;
-        SDL_Event event;
-        Uint32 buttonState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
-        SDL_GetWindowPosition(me->m_Window, &windowX, &windowY);
-
-        // Send synthetic mouse move events until the button is released
-        event.motion.type = SDL_MOUSEMOTION;
-        event.motion.timestamp = SDL_GetTicks();
-        event.motion.windowID = SDL_GetWindowID(me->m_Window);
-        event.motion.which = 0;
-        event.motion.state = buttonState;
-        event.motion.x = mouseX - windowX;
-        event.motion.y = mouseY - windowY;
-        event.motion.xrel = 0;
-        event.motion.yrel = 0;
-        SDL_PushEvent(&event);
-
-        if ((buttonState & SDL_BUTTON_LMASK) == 0) {
-            me->m_PendingFocusGain = false;
-        }
-    }
-
     return interval;
 }
