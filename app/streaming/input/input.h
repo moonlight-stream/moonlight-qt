@@ -69,6 +69,8 @@ public:
 
     void raiseAllKeys();
 
+    void notifyFocusGained();
+
     void notifyFocusLost();
 
     bool isCaptureActive();
@@ -124,6 +126,8 @@ private:
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
     bool m_AbsoluteTouchMode;
+
+    bool m_PendingFocusGain;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
     SDL_TimerID m_LeftButtonReleaseTimer;

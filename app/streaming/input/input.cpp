@@ -19,6 +19,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_StreamHeight(streamHeight),
       m_AbsoluteMouseMode(prefs.absoluteMouseMode),
       m_AbsoluteTouchMode(prefs.absoluteTouchMode),
+      m_PendingFocusGain(false),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
@@ -190,6 +191,30 @@ void SdlInputHandler::raiseAllKeys()
     }
 
     m_KeysDown.clear();
+}
+
+void SdlInputHandler::notifyFocusGained()
+{
+#if defined(Q_OS_DARWIN)
+    int mouseX, mouseY;
+    Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
+    if (mouseState & SDL_BUTTON_LMASK) {
+        int x, y, width, height;
+        SDL_GetWindowPosition(m_Window, &x, &y);
+        SDL_GetWindowSize(m_Window, &width, &height);
+        if (mouseX > x && mouseX < x+width && mouseY > y && mouseY < y+height) {
+            if (m_AbsoluteMouseMode) {
+                // Send synthetic mouse motion until the button is lifted
+                m_PendingFocusGain = true;
+            }
+            else {
+                // Recapture the mouse
+                // FIXME: Why is this necessary with SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH?
+                setCaptureActive(true);
+            }
+        }
+    }
+#endif
 }
 
 void SdlInputHandler::notifyFocusLost()
