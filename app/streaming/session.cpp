@@ -1218,10 +1218,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
             break;
 
         case SDL_WINDOWEVENT:
-            if (event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED) {
-                m_InputHandler->notifyFocusGained();
-            }
-            else if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                 m_InputHandler->notifyFocusLost();
             }
 

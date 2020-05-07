@@ -69,8 +69,6 @@ public:
 
     void raiseAllKeys();
 
-    void notifyFocusGained();
-
     void notifyFocusLost();
 
     bool isCaptureActive();

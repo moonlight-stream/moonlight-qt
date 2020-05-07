@@ -36,6 +36,12 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
                             prefs.absoluteMouseMode ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 
+    // Allow clicks to pass through to us when focusing the window. If we're in
+    // absolute mouse mode, this will avoid the user having to click twice to
+    // trigger a click on the host if the Moonlight window is not focused. In
+    // relative mode, the click event will trigger the mouse to be recaptured.
+    SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
+
 #if defined(Q_OS_DARWIN) && !SDL_VERSION_ATLEAST(2, 0, 10)
     // SDL 2.0.9 on macOS has a broken HIDAPI mapping for the older Xbox One S
     // firmware, so we have to disable HIDAPI for Xbox gamepads on macOS until
@@ -184,34 +190,6 @@ void SdlInputHandler::raiseAllKeys()
     }
 
     m_KeysDown.clear();
-}
-
-void SdlInputHandler::notifyFocusGained()
-{
-    // Capture mouse cursor when user actives the window by clicking on
-    // window's client area (borders and title bar excluded).
-    // Without this you would have to click the window twice (once to
-    // activate it, second time to enable capture). With this you need to
-    // click it only once.
-    //
-    // On Linux, the button press event is delivered after the focus gain
-    // so this is not neccessary (and leads to a click sent to the host
-    // when focusing the window by clicking).
-    //
-    // By excluding window's borders and title bar out, lets user still
-    // interact with them without mouse capture kicking in.
-#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
-    int mouseX, mouseY;
-    Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
-    if (mouseState & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-        int x, y, width, height;
-        SDL_GetWindowPosition(m_Window, &x, &y);
-        SDL_GetWindowSize(m_Window, &width, &height);
-        if (mouseX > x && mouseX < x+width && mouseY > y && mouseY < y+height) {
-            setCaptureActive(true);
-        }
-    }
-#endif
 }
 
 void SdlInputHandler::notifyFocusLost()
