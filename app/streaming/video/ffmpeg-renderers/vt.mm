@@ -16,6 +16,19 @@
 #import <dispatch/dispatch.h>
 #import <Metal/Metal.h>
 
+@interface VTView : NSView
+- (NSView *)hitTest:(NSPoint)point;
+@end
+
+@implementation VTView
+
+- (NSView *)hitTest:(NSPoint)point {
+    Q_UNUSED(point);
+    return nil;
+}
+
+@end
+
 class VTRenderer : public IFFmpegRenderer
 {
 public:
@@ -398,7 +411,7 @@ public:
         // SDL adds its own content view to listen for events.
         // We need to add a subview for our display layer.
         NSView* contentView = info.info.cocoa.window.contentView;
-        m_StreamView = [[NSView alloc] initWithFrame:contentView.bounds];
+        m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
 
         m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
         m_DisplayLayer.bounds = m_StreamView.bounds;
