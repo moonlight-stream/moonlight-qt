@@ -24,6 +24,7 @@ public:
 
 private:
     void sendKey(QEvent::Type type, Qt::Key key, Qt::KeyboardModifiers modifiers = Qt::NoModifier);
+    void sendWheel(QPoint& angleDelta);
 
 private slots:
     void onPollingTimerFired();
