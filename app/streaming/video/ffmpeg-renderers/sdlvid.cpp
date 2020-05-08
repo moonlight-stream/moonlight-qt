@@ -221,10 +221,10 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
 
             if (type == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
-                int unused;
-                SDL_RenderGetLogicalSize(m_Renderer, &unused, &m_OverlayRects[type].y);
+                SDL_Rect viewportRect;
+                SDL_RenderGetViewport(m_Renderer, &viewportRect);
                 m_OverlayRects[type].x = 0;
-                m_OverlayRects[type].y -= surface->h;
+                m_OverlayRects[type].y = viewportRect.h - surface->h;
             }
             else if (type == Overlay::OverlayDebug) {
                 // Top left
