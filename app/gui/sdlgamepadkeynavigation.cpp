@@ -250,7 +250,11 @@ void SdlGamepadKeyNavigation::sendWheel(QPoint& angleDelta)
     if (focusWindow != nullptr) {
         QPoint mousePos(focusWindow->width() / 2, focusWindow->height() / 2);
         QPoint globalPos(focusWindow->mapToGlobal(mousePos));
-        QWheelEvent wheelEvent(mousePos, globalPos, QPoint(), angleDelta, 0, 0, Qt::NoScrollPhase, false, Qt::MouseEventSynthesizedByApplication);
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
+        QWheelEvent wheelEvent(mousePos, globalPos, QPoint(), angleDelta, Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false, Qt::MouseEventSynthesizedByApplication);
+#else
+        QWheelEvent wheelEvent(mousePos, globalPos, QPoint(), angleDelta, angleDelta.y(), Qt::Vertical, Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, Qt::MouseEventSynthesizedByApplication, false);
+#endif
         app->sendEvent(focusWindow, &wheelEvent);
     }
 }
