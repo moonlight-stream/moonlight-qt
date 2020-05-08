@@ -1,4 +1,5 @@
 #include "nvcomputer.h"
+#include "nvapp.h"
 
 #include <QUdpSocket>
 #include <QHostInfo>
@@ -16,11 +17,6 @@
 #define SER_SRVCERT "srvcert"
 #define SER_CUSTOMNAME "customname"
 
-#define SER_APPNAME "name"
-#define SER_APPID "id"
-#define SER_APPHDR "hdr"
-#define SER_APPCOLLECTOR "appcollector"
-
 NvComputer::NvComputer(QSettings& settings)
 {
     this->name = settings.value(SER_NAME).toString();
@@ -35,15 +31,9 @@ NvComputer::NvComputer(QSettings& settings)
 
     int appCount = settings.beginReadArray(SER_APPLIST);
     for (int i = 0; i < appCount; i++) {
-        NvApp app;
-
         settings.setArrayIndex(i);
 
-        app.name = settings.value(SER_APPNAME).toString();
-        app.id = settings.value(SER_APPID).toInt();
-        app.hdrSupported = settings.value(SER_APPHDR).toBool();
-        app.isAppCollectorGame = settings.value(SER_APPCOLLECTOR).toBool();
-
+        NvApp app(settings);
         this->appList.append(app);
     }
     settings.endArray();
@@ -81,11 +71,7 @@ void NvComputer::serialize(QSettings& settings) const
         settings.beginWriteArray(SER_APPLIST);
         for (int i = 0; i < appList.count(); i++) {
             settings.setArrayIndex(i);
-
-            settings.setValue(SER_APPNAME, appList[i].name);
-            settings.setValue(SER_APPID, appList[i].id);
-            settings.setValue(SER_APPHDR, appList[i].hdrSupported);
-            settings.setValue(SER_APPCOLLECTOR, appList[i].isAppCollectorGame);
+            appList[i].serialize(settings);
         }
         settings.endArray();
     }

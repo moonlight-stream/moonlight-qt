@@ -1,33 +1,13 @@
 #pragma once
 
 #include "identitymanager.h"
+#include "nvapp.h"
 
 #include <Limelight.h>
 
 #include <QUrl>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
-
-class NvApp
-{
-public:
-    bool operator==(const NvApp& other) const
-    {
-        return id == other.id;
-    }
-
-    bool isInitialized()
-    {
-        return id != 0 && !name.isEmpty();
-    }
-
-    int id;
-    QString name;
-    bool hdrSupported;
-    bool isAppCollectorGame;
-};
-
-Q_DECLARE_METATYPE(NvApp)
 
 class NvDisplayMode
 {
