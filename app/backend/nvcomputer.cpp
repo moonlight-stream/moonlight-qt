@@ -19,6 +19,7 @@
 #define SER_APPNAME "name"
 #define SER_APPID "id"
 #define SER_APPHDR "hdr"
+#define SER_APPCOLLECTOR "appcollector"
 
 NvComputer::NvComputer(QSettings& settings)
 {
@@ -41,6 +42,7 @@ NvComputer::NvComputer(QSettings& settings)
         app.name = settings.value(SER_APPNAME).toString();
         app.id = settings.value(SER_APPID).toInt();
         app.hdrSupported = settings.value(SER_APPHDR).toBool();
+        app.isAppCollectorGame = settings.value(SER_APPCOLLECTOR).toBool();
 
         this->appList.append(app);
     }
@@ -83,6 +85,7 @@ void NvComputer::serialize(QSettings& settings) const
             settings.setValue(SER_APPNAME, appList[i].name);
             settings.setValue(SER_APPID, appList[i].id);
             settings.setValue(SER_APPHDR, appList[i].hdrSupported);
+            settings.setValue(SER_APPCOLLECTOR, appList[i].isAppCollectorGame);
         }
         settings.endArray();
     }
