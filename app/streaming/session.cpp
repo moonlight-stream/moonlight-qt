@@ -1221,6 +1221,9 @@ void Session::exec(int displayOriginX, int displayOriginY)
             if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
                 m_InputHandler->notifyFocusLost();
             }
+            else if (event.window.event == SDL_WINDOWEVENT_LEAVE) {
+                m_InputHandler->notifyMouseLeave();
+            }
 
             // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed
             if (needsFirstEnterCapture && event.window.event == SDL_WINDOWEVENT_ENTER) {

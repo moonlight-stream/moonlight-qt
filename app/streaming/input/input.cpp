@@ -19,6 +19,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_StreamHeight(streamHeight),
       m_AbsoluteMouseMode(prefs.absoluteMouseMode),
       m_AbsoluteTouchMode(prefs.absoluteTouchMode),
+      m_PendingMouseLeaveButtonUp(0),
       m_LeftButtonReleaseTimer(0),
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
@@ -190,6 +191,24 @@ void SdlInputHandler::raiseAllKeys()
     }
 
     m_KeysDown.clear();
+}
+
+void SdlInputHandler::notifyMouseLeave()
+{
+#ifdef Q_OS_WIN32
+    // SDL on Windows doesn't send the mouse button up until the mouse re-enters the window
+    // after leaving it. This breaks some of the Aero snap gestures, so we'll fake it here.
+    if (m_AbsoluteMouseMode && isCaptureActive()) {
+        // NB: Not using SDL_GetGlobalMouseState() because we want our state not the system's
+        Uint32 mouseState = SDL_GetMouseState(nullptr, nullptr);
+        for (Uint32 button = SDL_BUTTON_LEFT; button <= SDL_BUTTON_X2; button++) {
+            if (mouseState & SDL_BUTTON(button)) {
+                m_PendingMouseLeaveButtonUp = button;
+                break;
+            }
+        }
+    }
+#endif
 }
 
 void SdlInputHandler::notifyFocusLost()
