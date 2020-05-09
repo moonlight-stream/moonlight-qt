@@ -83,54 +83,35 @@ bool StreamUtils::getRealDesktopMode(int displayIndex, SDL_DisplayMode* mode)
         return false;
     }
 
-    // Grab the (possibly scaled) desktop resolution
-    if (SDL_GetDesktopDisplayMode(displayIndex, mode) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetDesktopDisplayMode() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    // This is required to ensure we get the high DPI display modes
-    const CFStringRef dictKeys[] = {kCGDisplayShowDuplicateLowResolutionModes};
-    const CFBooleanRef dictValues[] = {kCFBooleanTrue};
-    CFDictionaryRef dict = CFDictionaryCreate(NULL,
-                                              (const void**)dictKeys,
-                                              (const void**)dictValues,
-                                              SDL_arraysize(dictValues),
-                                              &kCFCopyStringDictionaryKeyCallBacks,
-                                              &kCFTypeDictionaryValueCallBacks);
+    SDL_zerop(mode);
 
     // Retina displays have non-native resolutions both below and above (!) their
     // native resolution, so it's impossible for us to figure out what's actually
     // native on macOS using the SDL API alone. We'll talk to CoreGraphics to
     // find the correct resolution and match it in our SDL list.
-    CFArrayRef modeList = CGDisplayCopyAllDisplayModes(displayIds[displayIndex], dict);
-    CFRelease(dict);
-
-    // Get the physical size of the matching logical resolution
+    CFArrayRef modeList = CGDisplayCopyAllDisplayModes(displayIds[displayIndex], nullptr);
     CFIndex count = CFArrayGetCount(modeList);
     for (CFIndex i = 0; i < count; i++) {
         auto cgMode = (CGDisplayModeRef)(CFArrayGetValueAtIndex(modeList, i));
-
-        auto modeWidth = static_cast<int>(CGDisplayModeGetWidth(cgMode));
-        auto modeHeight = static_cast<int>(CGDisplayModeGetHeight(cgMode));
-        if (mode->w == modeWidth && mode->h == modeHeight) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Matching desktop resolution is: %zux%zu (scaled size: %zux%zu) (flags: %x)",
-                        CGDisplayModeGetPixelWidth(cgMode),
-                        CGDisplayModeGetPixelHeight(cgMode),
-                        CGDisplayModeGetWidth(cgMode),
-                        CGDisplayModeGetHeight(cgMode),
-                        CGDisplayModeGetIOFlags(cgMode));
-
-            mode->w = static_cast<int>(CGDisplayModeGetPixelWidth(cgMode));
-            mode->h = static_cast<int>(CGDisplayModeGetPixelHeight(cgMode));
+        if ((CGDisplayModeGetIOFlags(cgMode) & kDisplayModeNativeFlag) != 0) {
+            mode->w = static_cast<int>(CGDisplayModeGetWidth(cgMode));
+            mode->h = static_cast<int>(CGDisplayModeGetHeight(cgMode));
             break;
         }
     }
-
     CFRelease(modeList);
+
+    // Now find the SDL mode that matches the CG native mode
+    for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+        SDL_DisplayMode thisMode;
+        if (SDL_GetDisplayMode(displayIndex, i, &thisMode) == 0) {
+            if (thisMode.w == mode->w && thisMode.h == mode->h &&
+                    thisMode.refresh_rate >= mode->refresh_rate) {
+                *mode = thisMode;
+                break;
+            }
+        }
+    }
 #else
     if (SDL_GetDesktopDisplayMode(displayIndex, mode) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
