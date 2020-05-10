@@ -204,6 +204,15 @@ ApplicationWindow {
                 Layout.fillWidth: true
             }
 
+            Label {
+                id: versionLabel
+                visible: stackView.currentItem.objectName === "Settings"
+                text: "Version " + SystemProperties.versionString
+                font.pointSize: titleLabel.font.pointSize
+                horizontalAlignment: Qt.AlignRight
+                verticalAlignment: Qt.AlignVCenter
+            }
+
             NavigableToolButton {
                 id: addPcButton
                 visible: stackView.currentItem.objectName === "Computers"

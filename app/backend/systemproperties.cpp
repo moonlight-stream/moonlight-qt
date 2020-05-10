@@ -8,6 +8,7 @@
 
 SystemProperties::SystemProperties()
 {
+    versionString = QString(VERSION_STR);
     hasWindowManager = WMUtils::isRunningWindowManager();
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
