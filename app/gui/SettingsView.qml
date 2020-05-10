@@ -47,7 +47,8 @@ Flickable {
     Column {
         padding: 10
         id: settingsColumn1
-        width: settingsPage.width / 2 - padding
+        width: settingsPage.width / 2
+        spacing: 15
 
         GroupBox {
             id: basicSettingsGroupBox
@@ -557,11 +558,12 @@ Flickable {
         padding: 10
         anchors.left: settingsColumn1.right
         id: settingsColumn2
-        width: settingsPage.width / 2 - padding
+        width: settingsPage.width / 2
+        spacing: 15
 
         GroupBox {
             id: gamepadSettingsGroupBox
-            width: (parent.width - parent.padding)
+            width: (parent.width - 2 * parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Input Settings</font>"
             font.pointSize: 12
@@ -644,7 +646,7 @@ Flickable {
 
         GroupBox {
             id: hostSettingsGroupBox
-            width: (parent.width - parent.padding)
+            width: (parent.width - 2 * parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Host Settings</font>"
             font.pointSize: 12
@@ -679,7 +681,7 @@ Flickable {
 
         GroupBox {
             id: advancedSettingsGroupBox
-            width: (parent.width - parent.padding)
+            width: (parent.width - 2 * parent.padding)
             padding: 12
             title: "<font color=\"skyblue\">Advanced Settings</font>"
             font.pointSize: 12
