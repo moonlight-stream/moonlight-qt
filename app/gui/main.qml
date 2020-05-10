@@ -177,6 +177,7 @@ ApplicationWindow {
 
         Label {
             id: titleLabel
+            visible: toolBar.width > 700
             anchors.fill: parent
             text: stackView.currentItem.objectName
             font.pointSize: 20
@@ -204,9 +205,20 @@ ApplicationWindow {
                 }
             }
 
+            // This label will appear when the window gets too small and
+            // we need to ensure the toolbar controls don't collide
             Label {
-                // Placeholder to consume all remaining width
+                id: titleRowLabel
+                font.pointSize: titleLabel.font.pointSize
+                elide: Label.ElideRight
+                horizontalAlignment: Qt.AlignHCenter
+                verticalAlignment: Qt.AlignVCenter
                 Layout.fillWidth: true
+
+                // We need this label to always be visible so it can occupy
+                // the remaining space in the RowLayout. To "hide" it, we
+                // just set the text to empty string.
+                text: !titleLabel.visible ? stackView.currentItem.objectName : ""
             }
 
             Label {
