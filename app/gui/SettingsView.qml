@@ -16,12 +16,8 @@ Flickable {
     contentHeight: settingsColumn1.height > settingsColumn2.height ? settingsColumn1.height : settingsColumn2.height
 
     ScrollBar.vertical: ScrollBar {
-        parent: settingsPage.parent
         anchors {
-            top: settingsPage.top
-            left: settingsPage.right
-            bottom: settingsPage.bottom
-
+            left: parent.right
             leftMargin: -10
         }
     }

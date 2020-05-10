@@ -263,18 +263,5 @@ CenteredGridView {
         onAccepted: quitApp()
     }
 
-    ScrollBar.vertical: ScrollBar {
-        // Manually hide the scrollbar to prevent it from being drawn on top
-        // of the StreamSegue during the transition. It can sometimes get stuck
-        // there since we're not consistently pumping the event loop while
-        // starting the stream.
-        visible: activated
-
-        parent: appGrid.parent
-        anchors {
-            top: parent.top
-            right: parent.right
-            bottom: parent.bottom
-        }
-    }
+    ScrollBar.vertical: ScrollBar {}
 }

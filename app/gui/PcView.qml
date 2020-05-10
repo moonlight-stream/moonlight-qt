@@ -317,12 +317,5 @@ CenteredGridView {
         }
     }
 
-    ScrollBar.vertical: ScrollBar {
-        parent: pcGrid.parent
-        anchors {
-            top: parent.top
-            right: parent.right
-            bottom: parent.bottom
-        }
-    }
+    ScrollBar.vertical: ScrollBar {}
 }
