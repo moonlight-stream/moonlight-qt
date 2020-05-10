@@ -175,6 +175,16 @@ ApplicationWindow {
         anchors.topMargin: 5
         anchors.bottomMargin: 5
 
+        Label {
+            id: titleLabel
+            anchors.fill: parent
+            text: stackView.currentItem.objectName
+            font.pointSize: 20
+            elide: Label.ElideRight
+            horizontalAlignment: Qt.AlignHCenter
+            verticalAlignment: Qt.AlignVCenter
+        }
+
         RowLayout {
             spacing: 20
             anchors.leftMargin: 10
@@ -195,12 +205,7 @@ ApplicationWindow {
             }
 
             Label {
-                id: titleLabel
-                text: stackView.currentItem.objectName
-                font.pointSize: 20
-                elide: Label.ElideRight
-                horizontalAlignment: Qt.AlignHCenter
-                verticalAlignment: Qt.AlignVCenter
+                // Placeholder to consume all remaining width
                 Layout.fillWidth: true
             }
 
