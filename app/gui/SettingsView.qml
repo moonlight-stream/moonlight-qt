@@ -48,7 +48,7 @@ Flickable {
 
         GroupBox {
             id: basicSettingsGroupBox
-            width: (parent.width - 2 * parent.padding)
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<font color=\"skyblue\">Basic Settings</font>"
             font.pointSize: 12
@@ -438,7 +438,7 @@ Flickable {
         GroupBox {
 
             id: audioSettingsGroupBox
-            width: (parent.width - 2 * parent.padding)
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<font color=\"skyblue\">Audio Settings</font>"
             font.pointSize: 12
@@ -498,7 +498,7 @@ Flickable {
 
         GroupBox {
             id: uiSettingsGroupBox
-            width: (parent.width - 2 * parent.padding)
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<font color=\"skyblue\">UI Settings</font>"
             font.pointSize: 12
@@ -552,6 +552,7 @@ Flickable {
 
     Column {
         padding: 10
+        rightPadding: 20
         anchors.left: settingsColumn1.right
         id: settingsColumn2
         width: settingsPage.width / 2
@@ -559,7 +560,7 @@ Flickable {
 
         GroupBox {
             id: gamepadSettingsGroupBox
-            width: (parent.width - 2 * parent.padding)
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<font color=\"skyblue\">Input Settings</font>"
             font.pointSize: 12
@@ -642,7 +643,7 @@ Flickable {
 
         GroupBox {
             id: hostSettingsGroupBox
-            width: (parent.width - 2 * parent.padding)
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<font color=\"skyblue\">Host Settings</font>"
             font.pointSize: 12
@@ -677,7 +678,7 @@ Flickable {
 
         GroupBox {
             id: advancedSettingsGroupBox
-            width: (parent.width - 2 * parent.padding)
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<font color=\"skyblue\">Advanced Settings</font>"
             font.pointSize: 12
