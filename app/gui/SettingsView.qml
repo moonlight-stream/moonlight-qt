@@ -78,6 +78,7 @@ Flickable {
 
                 Row {
                     spacing: 5
+                    width: parent.width
 
                     AutoResizingComboBox {
                         // ignore setting the index at first, and actually set it when the component is loaded
@@ -165,6 +166,7 @@ Flickable {
                         }
 
                         id: resolutionComboBox
+                        maximumWidth: parent.width / 2
                         textRole: "text"
                         model: ListModel {
                             id: resolutionListModel
@@ -281,6 +283,7 @@ Flickable {
                         }
 
                         id: fpsComboBox
+                        maximumWidth: parent.width / 2
                         textRole: "text"
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
@@ -401,6 +404,7 @@ Flickable {
 
                 CheckBox {
                     id: vsyncCheck
+                    width: parent.width
                     hoverEnabled: true
                     text: "V-Sync"
                     font.pointSize:  12
@@ -417,6 +421,7 @@ Flickable {
 
                 CheckBox {
                     id: framePacingCheck
+                    width: parent.width
                     hoverEnabled: true
                     text: "Frame pacing"
                     font.pointSize:  12
@@ -507,6 +512,7 @@ Flickable {
 
                 CheckBox {
                     id: startMaximizedCheck
+                    width: parent.width
                     text: "Maximize Moonlight window on startup"
                     font.pointSize: 12
                     enabled: SystemProperties.hasWindowManager
@@ -518,6 +524,7 @@ Flickable {
 
                 CheckBox {
                     id: connectionWarningsCheck
+                    width: parent.width
                     text: "Show connection quality warnings"
                     font.pointSize: 12
                     checked: StreamingPreferences.connectionWarnings
@@ -529,6 +536,7 @@ Flickable {
                 CheckBox {
                     visible: SystemProperties.hasDiscordIntegration
                     id: discordPresenceCheck
+                    width: parent.width
                     text: "Discord Rich Presence integration"
                     font.pointSize: 12
                     checked: StreamingPreferences.richPresence
@@ -564,6 +572,7 @@ Flickable {
 
                 CheckBox {
                     id: singleControllerCheck
+                    width: parent.width
                     text: "Force gamepad #1 always present"
                     font.pointSize:  12
                     checked: !StreamingPreferences.multiController
@@ -581,6 +590,7 @@ Flickable {
                 CheckBox {
                     id: absoluteMouseCheck
                     hoverEnabled: true
+                    width: parent.width
                     text: "Optimize mouse for remote desktop instead of games"
                     font.pointSize:  12
                     enabled: SystemProperties.hasWindowManager
@@ -599,6 +609,7 @@ Flickable {
                 CheckBox {
                     id: absoluteTouchCheck
                     hoverEnabled: true
+                    width: parent.width
                     text: "Use touchscreen as a trackpad"
                     font.pointSize:  12
                     checked: !StreamingPreferences.absoluteTouchMode
@@ -615,6 +626,7 @@ Flickable {
                 CheckBox {
                     id: gamepadMouseCheck
                     hoverEnabled: true
+                    width: parent.width
                     text: "Gamepad mouse mode support"
                     font.pointSize:  12
                     checked: StreamingPreferences.gamepadMouse
@@ -643,6 +655,7 @@ Flickable {
 
                 CheckBox {
                     id: optimizeGameSettingsCheck
+                    width: parent.width
                     text: "Optimize game settings"
                     font.pointSize:  12
                     checked: StreamingPreferences.gameOptimizations
@@ -653,6 +666,7 @@ Flickable {
 
                 CheckBox {
                     id: audioPcCheck
+                    width: parent.width
                     text: "Play audio on host PC"
                     font.pointSize:  12
                     checked: StreamingPreferences.playAudioOnHost
@@ -772,6 +786,7 @@ Flickable {
 
                 CheckBox {
                     id: unlockUnsupportedFps
+                    width: parent.width
                     text: "Unlock unsupported FPS options"
                     font.pointSize: 12
                     checked: StreamingPreferences.unsupportedFps
@@ -790,6 +805,7 @@ Flickable {
 
                 CheckBox {
                     id: enableMdns
+                    width: parent.width
                     text: "Automatically find PCs on the local network (Recommended)"
                     font.pointSize: 12
                     checked: StreamingPreferences.enableMdns
@@ -814,6 +830,7 @@ Flickable {
 
                 CheckBox {
                     id: quitAppAfter
+                    width: parent.width
                     text: "Quit app after quitting session"
                     font.pointSize: 12
                     checked: StreamingPreferences.quitAppAfter

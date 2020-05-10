@@ -6,8 +6,10 @@ import SdlGamepadKeyNavigation 1.0
 // https://stackoverflow.com/questions/45029968/how-do-i-set-the-combobox-width-to-fit-the-largest-item
 ComboBox {
     property int textWidth
+    property int desiredWidth : leftPadding + textWidth + indicator.width + rightPadding
+    property int maximumWidth : parent.width
 
-    implicitWidth: leftPadding + textWidth + indicator.width + rightPadding
+    implicitWidth: desiredWidth < maximumWidth ? desiredWidth : maximumWidth
 
     TextMetrics {
         id: popupMetrics
