@@ -1138,25 +1138,19 @@ void Session::exec(int displayOriginX, int displayOriginY)
     }
 
     bool needsFirstEnterCapture = false;
+    bool needsPostDecoderCreationCapture = false;
 
     // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
-    // event where it seems to work consistently on GNOME. This doesn't work for
-    // XWayland though.
-    if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0) {
-        // We know we aren't running on native Wayland now, but
-        // we still may be running on XWayland.
-        if (!WMUtils::isRunningWayland()) {
-            // Neither Wayland or XWayland: capture now
-            m_InputHandler->setCaptureActive(true);
-        }
-        else {
-            // XWayland: mouse capture doesn't work reliably, so let the user
-            // engage the mouse capture via clicking or using the hotkey.
-        }
-    }
-    else {
+    // event where it seems to work consistently on GNOME. For other platforms,
+    // especially where SDL may call SDL_RecreateWindow(), we must only capture
+    // after the decoder is created.
+    if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
         // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
         needsFirstEnterCapture = true;
+    }
+    else {
+        // X11/XWayland: Capture after decoder creation
+        needsPostDecoderCreationCapture = true;
     }
 
     // Stop text input. SDL enables it by default
@@ -1308,6 +1302,14 @@ void Session::exec(int displayOriginX, int displayOriginY)
                                  "Failed to recreate decoder after reset");
                     emit displayLaunchError("Unable to initialize video decoder. Please check your streaming settings and try again.");
                     goto DispatchDeferredCleanup;
+                }
+
+                // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
+                // or mouse hiding state to the new window. By capturing after the decoder
+                // is set up, this ensures the window re-creation is already done.
+                if (needsPostDecoderCreationCapture) {
+                    m_InputHandler->setCaptureActive(true);
+                    needsFirstEnterCapture = false;
                 }
             }
 
