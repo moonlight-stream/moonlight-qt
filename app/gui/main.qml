@@ -197,7 +197,7 @@ ApplicationWindow {
             Label {
                 id: titleLabel
                 text: stackView.currentItem.objectName
-                font.pointSize: 15
+                font.pointSize: 20
                 elide: Label.ElideRight
                 horizontalAlignment: Qt.AlignHCenter
                 verticalAlignment: Qt.AlignVCenter
@@ -208,7 +208,7 @@ ApplicationWindow {
                 id: versionLabel
                 visible: stackView.currentItem.objectName === "Settings"
                 text: "Version " + SystemProperties.versionString
-                font.pointSize: titleLabel.font.pointSize
+                font.pointSize: 12
                 horizontalAlignment: Qt.AlignRight
                 verticalAlignment: Qt.AlignVCenter
             }
