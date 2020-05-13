@@ -146,7 +146,7 @@ private:
         L"EZFRD32.dll",
         L"EZFRD64.dll",
 
-        // These are the dList DLLs for Optimus hybrid graphics DDI.
+        // These are the newer dList DLLs for Optimus hybrid graphics DDI.
         // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/hybrid-system-ddi
         //
         // We forcefully block them from loading because Optimus has a bug that
@@ -156,6 +156,33 @@ private:
         // https://github.com/moonlight-stream/moonlight-qt/issues/235
         L"nvdlist.dll",
         L"nvdlistx.dll",
+
+        // These are the older dList/AppInit DLLs for Optimus hybrid graphics DDI.
+        // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/hybrid-system-ddi
+        //
+        // These seem to cause a crash in PresentEx() in full-screen exclusive mode.
+        // This block will prevent Optimus from ever using the dGPU even if the user has requested it.
+        // https://github.com/moonlight-stream/moonlight-qt/issues/386
+        //
+        // d3d9!CSwapChain::BltToHybridPrimary+0x200:
+        // 00007ffa`23f37e58 488b01          mov     rax,qword ptr [rcx] ds:00000000`00000038=????????????????
+        // 00 0000004e`496ff4e0 00007ffa`23f39e2c d3d9!CSwapChain::BltToHybridPrimary+0x200
+        // 01 0000004e`496ff880 00007ffa`23ee39ce d3d9!CSwapChain::FlipToSurface+0x15c
+        // 02 0000004e`496ff900 00007ffa`23f4dd75 d3d9!CSwapChain::PresentMain+0x3e13e
+        // 03 0000004e`496ffab0 00007ffa`23f4dccd d3d9!CBaseDevice::PresentMain+0x9d
+        // 04 0000004e`496ffb00 00007ff7`8e31016f d3d9!CBaseDevice::PresentEx+0xbd
+        // 05 0000004e`496ffb50 00007ff7`8e30df1e Moonlight!DXVA2Renderer::renderFrame+0x61f [C:\moonlight-qt\app\streaming\video\ffmpeg-renderers\dxva2.cpp @ 1035]
+        // 06 0000004e`496ffd50 00007ff7`8e30e46a Moonlight!Pacer::renderFrame+0x3e [C:\moonlight-qt\app\streaming\video\ffmpeg-renderers\pacer\pacer.cpp @ 265]
+        // 07 (Inline Function) --------`-------- Moonlight!Pacer::renderLastFrameAndUnlock+0x197 [C:\moonlight-qt\app\streaming\video\ffmpeg-renderers\pacer\pacer.cpp @ 156]
+        // 08 0000004e`496ffda0 00007ffa`14476978 Moonlight!Pacer::renderThread+0x1ca [C:\moonlight-qt\app\streaming\video\ffmpeg-renderers\pacer\pacer.cpp @ 88]
+        // 09 0000004e`496ffde0 00007ffa`14476ee2 SDL2!SDL_RunThread+0x38 [C:\Users\camer\SDL\src\thread\SDL_thread.c @ 276]
+        // 0a 0000004e`496ffe10 00007ffa`2aae0e82 SDL2!RunThread+0x12 [C:\Users\camer\SDL\src\thread\windows\SDL_systhread.c @ 83]
+        // 0b 0000004e`496ffe40 00007ffa`2d627bd4 ucrtbase!thread_start<unsigned int (__cdecl*)(void *),1>+0x42
+        // 0c 0000004e`496ffe70 00007ffa`2da4ce51 kernel32!BaseThreadInitThunk+0x14
+        // 0d 0000004e`496ffea0 00000000`00000000 ntdll!RtlUserThreadStart+0x21
+        //
+        L"nvinit.dll",
+        L"nvinitx.dll",
 
         // In some unknown circumstances, RTSS tries to hook in the middle of an instruction, leaving garbage
         // code inside d3d9.dll that causes a crash when executed:
