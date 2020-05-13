@@ -177,6 +177,14 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
+    // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
+    // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
+    // renderer. This can lead to an infinite to renderer recreation, so discard all
+    // SDL_WINDOWEVENT events after SDL_CreateRenderer().
+    SDL_PumpEvents();
+    SDL_FlushEvent(SDL_WINDOWEVENT);
+
     // Calculate the video region size, scaling to fill the output size while
     // preserving the aspect ratio of the video stream.
     SDL_Rect src, dst;

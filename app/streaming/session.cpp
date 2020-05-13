@@ -1251,6 +1251,12 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 SDL_SetWindowPosition(m_Window, x, y);
             }
 
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Recreating renderer for window event: %d (%d %d)",
+                        event.window.event,
+                        event.window.data1,
+                        event.window.data2);
+
             // Fall through
         case SDL_RENDER_DEVICE_RESET:
         case SDL_RENDER_TARGETS_RESET:
