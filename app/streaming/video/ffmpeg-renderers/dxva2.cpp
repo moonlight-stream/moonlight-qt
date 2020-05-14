@@ -812,6 +812,11 @@ int DXVA2Renderer::getDecoderColorspace()
 
 void DXVA2Renderer::renderFrame(AVFrame *frame)
 {
+    if (frame == nullptr) {
+        // End of stream - nothing to do for us
+        return;
+    }
+
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
     HRESULT hr;
 

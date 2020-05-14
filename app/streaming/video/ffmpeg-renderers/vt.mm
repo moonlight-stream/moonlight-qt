@@ -158,6 +158,11 @@ public:
     // Caller frees frame after we return
     virtual void renderFrame(AVFrame* frame) override
     {
+        if (frame == nullptr) {
+            // End of stream - nothing to do for us
+            return;
+        }
+
         OSStatus status;
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 

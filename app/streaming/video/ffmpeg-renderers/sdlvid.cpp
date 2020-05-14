@@ -259,6 +259,11 @@ void SdlRenderer::renderFrame(AVFrame* frame)
     int err;
     AVFrame* swFrame = nullptr;
 
+    if (frame == nullptr) {
+        // End of stream - nothing to do for us
+        return;
+    }
+
     if (frame->hw_frames_ctx != nullptr) {
         // If we are acting as the frontend for a hardware
         // accelerated decoder, we'll need to read the frame

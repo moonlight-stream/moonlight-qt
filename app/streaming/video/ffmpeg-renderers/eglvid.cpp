@@ -434,6 +434,12 @@ bool EGLRenderer::specialize() {
 void EGLRenderer::renderFrame(AVFrame* frame)
 {
     EGLImage imgs[EGL_MAX_PLANES];
+
+    if (frame == nullptr) {
+        // End of stream - nothing to do for us
+        return;
+    }
+
     if (frame->hw_frames_ctx != nullptr) {
         // Find the native read-back format and load the shader
         if (m_SwPixelFormat == AV_PIX_FMT_NONE) {

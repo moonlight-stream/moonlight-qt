@@ -302,6 +302,11 @@ int VDPAURenderer::getDecoderColorspace()
 
 void VDPAURenderer::renderFrame(AVFrame* frame)
 {
+    if (frame == nullptr) {
+        // End of stream - nothing to do for us
+        return;
+    }
+
     VdpStatus status;
     VdpVideoSurface videoSurface = (VdpVideoSurface)(uintptr_t)frame->data[3];
 

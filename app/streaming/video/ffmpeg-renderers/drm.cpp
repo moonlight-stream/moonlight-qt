@@ -202,6 +202,11 @@ int DrmRenderer::getRendererAttributes()
 
 void DrmRenderer::renderFrame(AVFrame* frame)
 {
+    if (frame == nullptr) {
+        // End of stream - nothing to do for us
+        return;
+    }
+
     AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
     int err;
     uint32_t primeHandle;

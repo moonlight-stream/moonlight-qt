@@ -45,6 +45,10 @@ Pacer::~Pacer()
         m_RenderQueueNotEmpty.wakeAll();
         SDL_WaitThread(m_RenderThread, nullptr);
     }
+    else {
+        // Send a null AVFrame to indicate end of stream on the main thread
+        m_VsyncRenderer->renderFrame(nullptr);
+    }
 
     // Delete any remaining unconsumed frames
     while (!m_RenderQueue.isEmpty()) {
@@ -105,6 +109,9 @@ int Pacer::renderThread(void* context)
         // NB: m_FrameQueueLock still held here!
         me->renderLastFrameAndUnlock();
     }
+
+    // Send a null AVFrame to indicate end of stream on the render thread
+    me->m_VsyncRenderer->renderFrame(nullptr);
 
     return 0;
 }
