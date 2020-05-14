@@ -44,13 +44,12 @@ public:
     virtual int getDecoderColorspace() override;
 #ifdef HAVE_EGL
     virtual bool canExportEGL() override;
-    virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext);
+    virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext) override;
     virtual ssize_t exportEGLImages(AVFrame *frame, EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) override;
     virtual void freeEGLImages(EGLDisplay dpy, EGLImage[EGL_MAX_PLANES]) override;
 #endif
 
 private:
-    bool validateDriver(VADisplay display);
     VADisplay openDisplay(SDL_Window* window);
 
     int m_WindowSystem;

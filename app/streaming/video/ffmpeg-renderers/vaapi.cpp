@@ -45,39 +45,6 @@ VAAPIRenderer::~VAAPIRenderer()
     }
 }
 
-bool
-VAAPIRenderer::validateDriver(VADisplay display)
-{
-    const char* vendorString = vaQueryVendorString(display);
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Validating VAAPI driver: %s",
-                vendorString ? vendorString : "<unknown>");
-
-    if (isDirectRenderingSupported()) {
-        int entrypointCount;
-        VAEntrypoint entrypoints[vaMaxNumEntrypoints(display)];
-        VAStatus status = vaQueryConfigEntrypoints(display, VAProfileNone, entrypoints, &entrypointCount);
-        if (status == VA_STATUS_SUCCESS) {
-            for (int i = 0; i < entrypointCount; i++) {
-                // Without VAEntrypointVideoProc support, the driver will crash inside vaPutSurface()
-                if (entrypoints[i] == VAEntrypointVideoProc) {
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "VAEntrypointVideoProc is supported");
-                    return true;
-                }
-            }
-        }
-
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "VAAPI driver doesn't support VAEntrypointVideoProc!");
-        return false;
-    }
-    else {
-        // Indirect rendering can use any driver
-        return true;
-    }
-}
-
 VADisplay
 VAAPIRenderer::openDisplay(SDL_Window* window)
 {
@@ -200,11 +167,6 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 
     for (;;) {
         status = vaInitialize(vaDeviceContext->display, &major, &minor);
-        if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
-            vaTerminate(vaDeviceContext->display);
-            vaDeviceContext->display = openDisplay(params->window);
-            status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
-        }
         if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Trying fallback VAAPI driver names");
@@ -219,11 +181,6 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // always seem to be the case for some reason.
                 qputenv("LIBVA_DRIVER_NAME", "iHD");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
-                if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
-                    vaTerminate(vaDeviceContext->display);
-                    vaDeviceContext->display = openDisplay(params->window);
-                    status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
-                }
             }
 
             if (status != VA_STATUS_SUCCESS) {
@@ -232,11 +189,6 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // explicitly try i965 to handle this case.
                 qputenv("LIBVA_DRIVER_NAME", "i965");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
-                if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
-                    vaTerminate(vaDeviceContext->display);
-                    vaDeviceContext->display = openDisplay(params->window);
-                    status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
-                }
             }
 
             if (status != VA_STATUS_SUCCESS) {
@@ -244,11 +196,6 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // so try it too if all else fails.
                 qputenv("LIBVA_DRIVER_NAME", "radeonsi");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
-                if (status == VA_STATUS_SUCCESS && !validateDriver(vaDeviceContext->display)) {
-                    vaTerminate(vaDeviceContext->display);
-                    vaDeviceContext->display = openDisplay(params->window);
-                    status = VA_STATUS_ERROR_UNSUPPORTED_PROFILE;
-                }
             }
 
             if (status != VA_STATUS_SUCCESS) {
@@ -376,9 +323,32 @@ VAAPIRenderer::needsTestFrame()
 bool
 VAAPIRenderer::isDirectRenderingSupported()
 {
-    // Many Wayland renderers don't support YUV surfaces, so use
-    // another frontend renderer to draw our frames.
-    return m_WindowSystem == SDL_SYSWM_X11 && !m_BlacklistedForDirectRendering;
+    // We only support direct rendering on X11 with VAEntrypointVideoProc support
+    if (m_WindowSystem != SDL_SYSWM_X11 || m_BlacklistedForDirectRendering) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using indirect rendering due to WM or blacklist");
+        return false;
+    }
+
+    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+    AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
+    VAEntrypoint entrypoints[vaMaxNumEntrypoints(vaDeviceContext->display)];
+    int entrypointCount;
+    VAStatus status = vaQueryConfigEntrypoints(vaDeviceContext->display, VAProfileNone, entrypoints, &entrypointCount);
+    if (status == VA_STATUS_SUCCESS) {
+        for (int i = 0; i < entrypointCount; i++) {
+            // Without VAEntrypointVideoProc support, the driver will crash inside vaPutSurface()
+            if (entrypoints[i] == VAEntrypointVideoProc) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using direct rendering with VAEntrypointVideoProc");
+                return true;
+            }
+        }
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Using indirect rendering due to lack of VAEntrypointVideoProc");
+    return false;
 }
 
 int VAAPIRenderer::getDecoderColorspace()
