@@ -427,8 +427,49 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 
 #ifdef HAVE_EGL
 
+// Ensure that vaExportSurfaceHandle() is supported by the VA-API driver
 bool
 VAAPIRenderer::canExportEGL() {
+    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+    AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
+    VASurfaceID surfaceId;
+    VAStatus st;
+    VADRMPRIMESurfaceDescriptor descriptor;
+
+    st = vaCreateSurfaces(vaDeviceContext->display,
+                          VA_RT_FORMAT_YUV420,
+                          1280,
+                          720,
+                          &surfaceId,
+                          1,
+                          nullptr,
+                          0);
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaCreateSurfaces() failed: %d", st);
+        return false;
+    }
+
+    st = vaExportSurfaceHandle(vaDeviceContext->display,
+                               surfaceId,
+                               VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+                               VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS,
+                               &descriptor);
+
+    vaDestroySurfaces(vaDeviceContext->display, &surfaceId, 1);
+
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaExportSurfaceHandle() failed: %d", st);
+        return false;
+    }
+
+    for (size_t i = 0; i < descriptor.num_objects; ++i) {
+        close(descriptor.objects[i].fd);
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "VAAPI driver supports exporting DRM PRIME surface handles");
     return true;
 }
 
