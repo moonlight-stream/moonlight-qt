@@ -64,6 +64,8 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
 EGLRenderer::~EGLRenderer()
 {
     if (m_Context) {
+        // Reattach the GL context to the main thread for destruction
+        SDL_GL_MakeCurrent(m_Window, m_Context);
         if (m_ShaderProgram)
             glDeleteProgram(m_ShaderProgram);
         if (m_VAO)
@@ -86,12 +88,6 @@ bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
 void EGLRenderer::notifyOverlayUpdated(Overlay::OverlayType)
 {
     // TODO: FIXME
-}
-
-bool EGLRenderer::isRenderThreadSupported()
-{
-    // TODO: can we use DMA-BUF in multithreaded context ?
-    return false;
 }
 
 bool EGLRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
@@ -307,6 +303,9 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     if (err != GL_NO_ERROR)
         EGL_LOG(Error, "OpenGL error: %d", err);
 
+    // Detach the context from this thread, so the render thread can attach it
+    SDL_GL_MakeCurrent(m_Window, nullptr);
+
     return err == GL_NO_ERROR;
 }
 
@@ -365,6 +364,9 @@ const float *EGLRenderer::getColorMatrix() {
 
 bool EGLRenderer::specialize() {
     SDL_assert(!m_VAO);
+
+    // Attach our GL context to the render thread
+    SDL_GL_MakeCurrent(m_Window, m_Context);
 
     if (!compileShader())
         return false;
@@ -436,7 +438,8 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     EGLImage imgs[EGL_MAX_PLANES];
 
     if (frame == nullptr) {
-        // End of stream - nothing to do for us
+        // End of stream - unbind the GL context
+        SDL_GL_MakeCurrent(m_Window, nullptr);
         return;
     }
 

@@ -10,7 +10,6 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
-    virtual bool isRenderThreadSupported() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
 
 private:
