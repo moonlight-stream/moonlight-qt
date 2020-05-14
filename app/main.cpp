@@ -424,7 +424,7 @@ int main(int argc, char *argv[])
                     "Detected XWayland. This will probably break hardware decoding! Try running with QT_QPA_PLATFORM=wayland or switch to X11.");
     }
     else if (QGuiApplication::platformName().startsWith("wayland")) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Detected Wayland. Performance may be worse than X11.");
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Detected Wayland");
         qputenv("SDL_VIDEODRIVER", "wayland");
     }
 
