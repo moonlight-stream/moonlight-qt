@@ -9,6 +9,23 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 }
 
+#ifdef HAVE_EGL
+// SDL_egl.h have too many conflicts, we will do without
+typedef void *EGLDisplay;
+typedef void *EGLImage;
+#define EGL_MAX_PLANES 4
+
+class EGLExtensions {
+public:
+    EGLExtensions(EGLDisplay dpy);
+    ~EGLExtensions() {}
+    bool isSupported(const QString &extension) const;
+private:
+    const QStringList m_Extensions;
+};
+
+#endif
+
 #define RENDERER_ATTRIBUTE_FULLSCREEN_ONLY 0x01
 #define RENDERER_ATTRIBUTE_1080P_MAX 0x02
 
@@ -68,4 +85,25 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing
     }
+
+#ifdef HAVE_EGL
+    // By default we can't do EGL
+    virtual bool canExportEGL() {
+        return false;
+    }
+
+    virtual bool initializeEGL(EGLDisplay,
+                               const EGLExtensions &) {
+        return false;
+    }
+
+    virtual ssize_t exportEGLImages(AVFrame *,
+                                    EGLDisplay,
+                                    EGLImage[EGL_MAX_PLANES]) {
+        return -1;
+    }
+
+    // Free the ressources allocated during the last `exportEGLImages` call
+    virtual void freeEGLImages(EGLDisplay, EGLImage[EGL_MAX_PLANES]) {}
+#endif
 };
