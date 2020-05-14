@@ -323,6 +323,17 @@ VAAPIRenderer::needsTestFrame()
 bool
 VAAPIRenderer::isDirectRenderingSupported()
 {
+    if (qgetenv("VAAPI_FORCE_DIRECT") == "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using direct rendering due to environment variable");
+        return true;
+    }
+    else if (qgetenv("VAAPI_FORCE_INDIRECT") == "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using indirect rendering due to environment variable");
+        return false;
+    }
+
     // We only support direct rendering on X11 with VAEntrypointVideoProc support
     if (m_WindowSystem != SDL_SYSWM_X11 || m_BlacklistedForDirectRendering) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
