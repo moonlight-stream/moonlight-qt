@@ -90,10 +90,6 @@ unix:!macx {
             CONFIG += libva
         }
 
-        packagesExist(egl) {
-            CONFIG += egl
-        }
-
         packagesExist(vdpau) {
             CONFIG += libvdpau
         }
@@ -268,7 +264,7 @@ libdrm {
     SOURCES += streaming/video/ffmpeg-renderers/drm.cpp
     HEADERS += streaming/video/ffmpeg-renderers/drm.h
 }
-egl {
+config_EGL {
     message(EGL renderer selected)
 
     DEFINES += HAVE_EGL
