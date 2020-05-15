@@ -446,6 +446,26 @@ VAAPIRenderer::canExportEGL() {
     VASurfaceID surfaceId;
     VAStatus st;
     VADRMPRIMESurfaceDescriptor descriptor;
+    VASurfaceAttrib attrs[2];
+    int attributeCount = 0;
+
+    // FFmpeg handles setting these quirk flags for us
+    if (!(vaDeviceContext->driver_quirks & AV_VAAPI_DRIVER_QUIRK_ATTRIB_MEMTYPE)) {
+        attrs[attributeCount].type = VASurfaceAttribMemoryType;
+        attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
+        attrs[attributeCount].value.type = VAGenericValueTypeInteger;
+        attrs[attributeCount].value.value.i = VA_SURFACE_ATTRIB_MEM_TYPE_VA;
+        attributeCount++;
+    }
+
+    // These attributes are required for i965 to create a surface that can
+    // be successfully exported via vaExportSurfaceHandle(). iHD doesn't
+    // need these, but it doesn't seem to hurt either.
+    attrs[attributeCount].type = VASurfaceAttribPixelFormat;
+    attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
+    attrs[attributeCount].value.type = VAGenericValueTypeInteger;
+    attrs[attributeCount].value.value.i = VA_FOURCC_NV12;
+    attributeCount++;
 
     st = vaCreateSurfaces(vaDeviceContext->display,
                           VA_RT_FORMAT_YUV420,
@@ -453,8 +473,8 @@ VAAPIRenderer::canExportEGL() {
                           720,
                           &surfaceId,
                           1,
-                          nullptr,
-                          0);
+                          attrs,
+                          attributeCount);
     if (st != VA_STATUS_SUCCESS) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "vaCreateSurfaces() failed: %d", st);
