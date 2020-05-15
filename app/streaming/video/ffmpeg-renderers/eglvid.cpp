@@ -1,6 +1,4 @@
 // vim: noai:ts=4:sw=4:softtabstop=4:expandtab
-#define GL_GLEXT_PROTOTYPES
-
 #include "eglvid.h"
 
 #include "path.h"
@@ -15,7 +13,6 @@
 #include <SDL_egl.h>
 #include <SDL_opengl.h>
 #include <SDL_opengles2.h>
-#include <SDL_opengles2_gl2ext.h>
 #include <SDL_render.h>
 #include <SDL_syswm.h>
 
