@@ -8,3 +8,7 @@
 #ifndef GL_ES_VERSION_2_0
 #error EGLRenderer requires OpenGL ES 2.0
 #endif
+
+int main() {
+    return 0;
+}
