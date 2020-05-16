@@ -17,6 +17,9 @@
 
 #ifndef EGL_VERSION_1_5
 typedef intptr_t EGLAttrib;
+#endif
+
+#if !defined(EGL_VERSION_1_5) || !defined(EGL_EGL_PROTOTYPES)
 typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYPROC) (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
 #endif
 
