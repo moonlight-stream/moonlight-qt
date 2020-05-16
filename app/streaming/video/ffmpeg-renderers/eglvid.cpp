@@ -16,6 +16,7 @@
 #include <SDL_syswm.h>
 
 #ifndef EGL_VERSION_1_5
+typedef intptr_t EGLAttrib;
 typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYPROC) (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
 #endif
 
