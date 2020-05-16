@@ -66,6 +66,11 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
+
+    // Save these global parameters so we can restore them in our destructor
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &m_OldContextProfileMask);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &m_OldContextMajorVersion);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &m_OldContextMinorVersion);
 }
 
 EGLRenderer::~EGLRenderer()
@@ -85,6 +90,12 @@ EGLRenderer::~EGLRenderer()
         }
         SDL_GL_DeleteContext(m_Context);
     }
+
+    // Reset the global properties back to what they were before
+    SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "0");
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, m_OldContextProfileMask);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, m_OldContextMajorVersion);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, m_OldContextMinorVersion);
 }
 
 bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)

@@ -37,5 +37,9 @@ private:
     PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;
     PFNGLDELETEVERTEXARRAYSOESPROC m_glDeleteVertexArraysOES;
 
+    int m_OldContextProfileMask;
+    int m_OldContextMajorVersion;
+    int m_OldContextMinorVersion;
+
     SDL_Renderer *m_DummyRenderer;
 };
