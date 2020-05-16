@@ -15,6 +15,14 @@
 #include <SDL_render.h>
 #include <SDL_syswm.h>
 
+// These are EGL extensions, so some platform headers may not provide them
+#ifndef EGL_PLATFORM_WAYLAND_KHR
+#define EGL_PLATFORM_WAYLAND_KHR 0x31D8
+#endif
+#ifndef EGL_PLATFORM_X11_KHR
+#define EGL_PLATFORM_X11_KHR 0x31D5
+#endif
+
 /* TODO:
  *  - handle more pixel formats
  *  - handle software decoding
@@ -235,14 +243,18 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
     switch (info.subsystem) {
+#ifdef SDL_VIDEO_DRIVER_WAYLAND
     case SDL_SYSWM_WAYLAND:
         m_EGLDisplay = eglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
                                              info.info.wl.display, nullptr);
         break;
+#endif
+#ifdef SDL_VIDEO_DRIVER_X11
     case SDL_SYSWM_X11:
         m_EGLDisplay = eglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
                                              info.info.x11.display, nullptr);
         break;
+#endif
     default:
         EGL_LOG(Error, "not compatible with SYSWM");
         return false;
