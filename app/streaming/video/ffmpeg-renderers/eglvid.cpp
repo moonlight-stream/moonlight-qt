@@ -1,6 +1,4 @@
 // vim: noai:ts=4:sw=4:softtabstop=4:expandtab
-#define GL_GLEXT_PROTOTYPES
-
 #include "eglvid.h"
 
 #include "path.h"
@@ -13,7 +11,6 @@
 #include <unistd.h>
 
 #include <SDL_egl.h>
-#include <SDL_opengl.h>
 #include <SDL_opengles2.h>
 #include <SDL_render.h>
 #include <SDL_syswm.h>
@@ -53,7 +50,10 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_VAO(0),
         m_ColorSpace(AVCOL_SPC_NB),
         m_ColorFull(false),
-        EGLImageTargetTexture2DOES(nullptr),
+        m_glEGLImageTargetTexture2DOES(nullptr),
+        m_glGenVertexArraysOES(nullptr),
+        m_glBindVertexArrayOES(nullptr),
+        m_glDeleteVertexArraysOES(nullptr),
         m_DummyRenderer(nullptr)
 {
     SDL_assert(backendRenderer);
@@ -65,12 +65,16 @@ EGLRenderer::~EGLRenderer()
     if (m_Context) {
         // Reattach the GL context to the main thread for destruction
         SDL_GL_MakeCurrent(m_Window, m_Context);
-        if (m_ShaderProgram)
+        if (m_ShaderProgram) {
             glDeleteProgram(m_ShaderProgram);
-        if (m_VAO)
-            glDeleteVertexArrays(1, &m_VAO);
-        if (m_DummyRenderer)
+        }
+        if (m_VAO) {
+            SDL_assert(m_glDeleteVertexArraysOES != nullptr);
+            m_glDeleteVertexArraysOES(1, &m_VAO);
+        }
+        if (m_DummyRenderer) {
             SDL_DestroyRenderer(m_DummyRenderer);
+        }
         SDL_GL_DeleteContext(m_Context);
     }
 }
@@ -258,19 +262,41 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    const EGLExtensions egl_extensions(m_EGLDisplay);
-    if (!egl_extensions.isSupported("EGL_KHR_image_base") &&
-        !egl_extensions.isSupported("EGL_KHR_image")) {
-        EGL_LOG(Error, "KHR_image unsupported");
+    const EGLExtensions eglExtensions(m_EGLDisplay);
+    if (!eglExtensions.isSupported("EGL_KHR_image_base") &&
+        !eglExtensions.isSupported("EGL_KHR_image")) {
+        EGL_LOG(Error, "EGL_KHR_image unsupported");
+        return false;
+    }
+    else if (!SDL_GL_ExtensionSupported("GL_OES_EGL_image")) {
+        EGL_LOG(Error, "GL_OES_EGL_image unsupported");
         return false;
     }
 
-    if (!m_Backend->initializeEGL(m_EGLDisplay, egl_extensions))
+    if (!m_Backend->initializeEGL(m_EGLDisplay, eglExtensions))
         return false;
 
-    if (!(EGLImageTargetTexture2DOES = (EGLImageTargetTexture2DOES_t)eglGetProcAddress("glEGLImageTargetTexture2DOES"))) {
+    if (!(m_glEGLImageTargetTexture2DOES = (typeof(m_glEGLImageTargetTexture2DOES))eglGetProcAddress("glEGLImageTargetTexture2DOES"))) {
         EGL_LOG(Error,
-                "EGL: cannot retrieve `EGLImageTargetTexture2DOES` address");
+                "EGL: cannot retrieve `glEGLImageTargetTexture2DOES` address");
+        return false;
+    }
+
+    // Vertex arrays are an extension on OpenGL ES 2.0
+    if (SDL_GL_ExtensionSupported("GL_OES_vertex_array_object")) {
+        m_glGenVertexArraysOES = (typeof(m_glGenVertexArraysOES))eglGetProcAddress("glGenVertexArraysOES");
+        m_glBindVertexArrayOES = (typeof(m_glBindVertexArrayOES))eglGetProcAddress("glBindVertexArrayOES");
+        m_glDeleteVertexArraysOES = (typeof(m_glDeleteVertexArraysOES))eglGetProcAddress("glDeleteVertexArraysOES");
+    }
+    else {
+        // They are included in OpenGL ES 3.0 as part of the standard
+        m_glGenVertexArraysOES = (typeof(m_glGenVertexArraysOES))eglGetProcAddress("glGenVertexArrays");
+        m_glBindVertexArrayOES = (typeof(m_glBindVertexArrayOES))eglGetProcAddress("glBindVertexArray");
+        m_glDeleteVertexArraysOES = (typeof(m_glDeleteVertexArraysOES))eglGetProcAddress("glDeleteVertexArrays");
+    }
+
+    if (!m_glGenVertexArraysOES || !m_glBindVertexArrayOES || !m_glDeleteVertexArraysOES) {
+        EGL_LOG(Error, "Failed to find VAO functions");
         return false;
     }
 
@@ -397,11 +423,11 @@ bool EGLRenderer::specialize() {
     glUseProgram(m_ShaderProgram);
 
     unsigned int VBO, EBO;
-    glGenVertexArrays(1, &m_VAO);
+    m_glGenVertexArraysOES(1, &m_VAO);
     glGenBuffers(1, &VBO);
     glGenBuffers(1, &EBO);
 
-    glBindVertexArray(m_VAO);
+    m_glBindVertexArrayOES(m_VAO);
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, sizeof (vertices), vertices, GL_STATIC_DRAW);
@@ -415,7 +441,7 @@ bool EGLRenderer::specialize() {
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
+    m_glBindVertexArrayOES(0);
 
     int yuvmatLocation = glGetUniformLocation(m_ShaderProgram, "yuvmat");
     glUniformMatrix3fv(yuvmatLocation, 1, GL_FALSE, getColorMatrix());
@@ -479,7 +505,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         for (ssize_t i = 0; i < plane_count; ++i) {
             glActiveTexture(GL_TEXTURE0 + i);
             glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
-            EGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
+            m_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
         }
     } else {
         // TODO: load texture for SW decoding ?
@@ -489,7 +515,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(m_ShaderProgram);
-    glBindVertexArray(m_VAO);
+    m_glBindVertexArrayOES(m_VAO);
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     SDL_GL_SwapWindow(m_Window);

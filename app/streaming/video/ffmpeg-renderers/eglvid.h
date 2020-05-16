@@ -2,6 +2,9 @@
 
 #include "renderer.h"
 
+#include <SDL_opengles2.h>
+#include <SDL_opengles2_gl2ext.h>
+
 class EGLRenderer : public IFFmpegRenderer {
 public:
     EGLRenderer(IFFmpegRenderer *backendRenderer);
@@ -13,7 +16,6 @@ public:
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
 
 private:
-    using EGLImageTargetTexture2DOES_t = void (*)(int, void *);
 
     bool compileShader();
     bool specialize();
@@ -30,6 +32,10 @@ private:
     unsigned int m_VAO;
     int m_ColorSpace;
     bool m_ColorFull;
-    EGLImageTargetTexture2DOES_t EGLImageTargetTexture2DOES;
+    PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOES;
+    PFNGLGENVERTEXARRAYSOESPROC m_glGenVertexArraysOES;
+    PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;
+    PFNGLDELETEVERTEXARRAYSOESPROC m_glDeleteVertexArraysOES;
+
     SDL_Renderer *m_DummyRenderer;
 };

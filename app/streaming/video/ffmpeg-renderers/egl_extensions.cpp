@@ -1,6 +1,4 @@
 // vim: noai:ts=4:sw=4:softtabstop=4:expandtab
-#define GL_GLEXT_PROTOTYPES
-
 #include "renderer.h"
 
 #include <SDL_egl.h>
