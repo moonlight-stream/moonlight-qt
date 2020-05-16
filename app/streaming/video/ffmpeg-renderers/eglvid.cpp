@@ -15,6 +15,14 @@
 #include <SDL_render.h>
 #include <SDL_syswm.h>
 
+#ifndef EGL_VERSION_1_5
+typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYPROC) (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
+#endif
+
+#ifndef EGL_EXT_platform_base
+typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platform, void *native_display, const EGLint *attrib_list);
+#endif
+
 // These are EGL extensions, so some platform headers may not provide them
 #ifndef EGL_PLATFORM_WAYLAND_KHR
 #define EGL_PLATFORM_WAYLAND_KHR 0x31D8
@@ -49,7 +57,7 @@
 EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
     :
         m_SwPixelFormat(AV_PIX_FMT_NONE),
-        m_EGLDisplay(nullptr),
+        m_EGLDisplay(EGL_NO_DISPLAY),
         m_Textures{0},
         m_ShaderProgram(0),
         m_Context(0),
@@ -148,6 +156,54 @@ int EGLRenderer::loadAndBuildShader(int shaderType,
     }
 
     return shader;
+}
+
+bool EGLRenderer::openDisplay(unsigned int platform, void* nativeDisplay)
+{
+    PFNEGLGETPLATFORMDISPLAYPROC eglGetPlatformDisplayProc;
+    PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXTProc;
+
+    m_EGLDisplay = EGL_NO_DISPLAY;
+
+    // NB: eglGetPlatformDisplay() and eglGetPlatformDisplayEXT() have slightly different definitions
+    eglGetPlatformDisplayProc = (typeof(eglGetPlatformDisplayProc))eglGetProcAddress("eglGetPlatformDisplay");
+    eglGetPlatformDisplayEXTProc = (typeof(eglGetPlatformDisplayEXTProc))eglGetProcAddress("eglGetPlatformDisplayEXT");
+
+    if (m_EGLDisplay == EGL_NO_DISPLAY) {
+        // eglGetPlatformDisplay() is part of the EGL 1.5 core specification
+        if (eglGetPlatformDisplayProc != nullptr) {
+            m_EGLDisplay = eglGetPlatformDisplayProc(platform, nativeDisplay, nullptr);
+            if (m_EGLDisplay == EGL_NO_DISPLAY) {
+                EGL_LOG(Warn, "eglGetPlatformDisplay() failed: %d", eglGetError());
+            }
+        }
+    }
+
+    if (m_EGLDisplay == EGL_NO_DISPLAY) {
+        // eglGetPlatformDisplayEXT() is an extension for EGL 1.4
+        const EGLExtensions eglExtensions(EGL_NO_DISPLAY);
+        if (eglExtensions.isSupported("EGL_EXT_platform_base")) {
+            if (eglGetPlatformDisplayEXTProc != nullptr) {
+                m_EGLDisplay = eglGetPlatformDisplayEXTProc(platform, nativeDisplay, nullptr);
+                if (m_EGLDisplay == EGL_NO_DISPLAY) {
+                    EGL_LOG(Warn, "eglGetPlatformDisplayEXT() failed: %d", eglGetError());
+                }
+            }
+            else {
+                EGL_LOG(Warn, "EGL_EXT_platform_base supported but no eglGetPlatformDisplayEXT() export!");
+            }
+        }
+    }
+
+    if (m_EGLDisplay == EGL_NO_DISPLAY) {
+        // Finally, if all else fails, use eglGetDisplay()
+        m_EGLDisplay = eglGetDisplay((EGLNativeDisplayType)nativeDisplay);
+        if (m_EGLDisplay == EGL_NO_DISPLAY) {
+            EGL_LOG(Error, "eglGetDisplay() failed: %d", eglGetError());
+        }
+    }
+
+    return m_EGLDisplay != EGL_NO_DISPLAY;
 }
 
 bool EGLRenderer::compileShader() {
@@ -256,14 +312,16 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     switch (info.subsystem) {
 #ifdef SDL_VIDEO_DRIVER_WAYLAND
     case SDL_SYSWM_WAYLAND:
-        m_EGLDisplay = eglGetPlatformDisplay(EGL_PLATFORM_WAYLAND_KHR,
-                                             info.info.wl.display, nullptr);
+        if (!openDisplay(EGL_PLATFORM_WAYLAND_KHR, info.info.wl.display)) {
+            return false;
+        }
         break;
 #endif
 #ifdef SDL_VIDEO_DRIVER_X11
     case SDL_SYSWM_X11:
-        m_EGLDisplay = eglGetPlatformDisplay(EGL_PLATFORM_X11_KHR,
-                                             info.info.x11.display, nullptr);
+        if (!openDisplay(EGL_PLATFORM_X11_KHR, info.info.x11.display)) {
+            return false;
+        }
         break;
 #endif
     default:
@@ -271,7 +329,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if (!m_EGLDisplay) {
+    if (m_EGLDisplay == EGL_NO_DISPLAY) {
         EGL_LOG(Error, "Cannot get EGL display: %d", eglGetError());
         return false;
     }

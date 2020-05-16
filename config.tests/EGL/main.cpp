@@ -1,8 +1,8 @@
 #include <SDL_egl.h>
 #include <SDL_opengles2.h>
 
-#ifndef EGL_VERSION_1_5
-#error EGLRenderer requires EGL 1.5
+#ifndef EGL_VERSION_1_4
+#error EGLRenderer requires EGL 1.4
 #endif
 
 #ifndef GL_ES_VERSION_2_0

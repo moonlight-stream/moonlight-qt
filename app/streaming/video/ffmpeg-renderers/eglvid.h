@@ -21,6 +21,7 @@ private:
     bool specialize();
     const float *getColorMatrix();
     static int loadAndBuildShader(int shaderType, const char *filename);
+    bool openDisplay(unsigned int platform, void* nativeDisplay);
 
     int m_SwPixelFormat;
     void *m_EGLDisplay;
