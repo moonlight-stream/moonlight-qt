@@ -267,6 +267,7 @@ libdrm {
 config_EGL {
     message(EGL renderer selected)
 
+    CONFIG += egl
     DEFINES += HAVE_EGL
     SOURCES += \
         streaming/video/ffmpeg-renderers/eglvid.cpp \
