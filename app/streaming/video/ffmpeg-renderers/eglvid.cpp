@@ -70,6 +70,7 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_VAO(0),
         m_ColorSpace(AVCOL_SPC_NB),
         m_ColorFull(false),
+        m_BlockingSwapBuffers(false),
         m_glEGLImageTargetTexture2DOES(nullptr),
         m_glGenVertexArraysOES(nullptr),
         m_glBindVertexArrayOES(nullptr),
@@ -404,8 +405,10 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         // Try to use adaptive VSYNC unless we're using frame pacing.
         // Frame pacing relies on us blocking in renderFrame() to
         // match the display refresh rate.
-        if (params->enableFramePacing || SDL_GL_SetSwapInterval(-1))
+        if (params->enableFramePacing || SDL_GL_SetSwapInterval(-1)) {
             SDL_GL_SetSwapInterval(1);
+            m_BlockingSwapBuffers = true;
+        }
     } else {
         SDL_GL_SetSwapInterval(0);
     }
@@ -606,6 +609,19 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
     SDL_GL_SwapWindow(m_Window);
+
+    if (m_BlockingSwapBuffers) {
+        // This glClear() forces us to block until the buffer swap is
+        // complete to continue rendering. Mesa won't actually wait
+        // for the swap with just glFinish() alone. Waiting here keeps us
+        // in lock step with the display refresh rate. If we don't wait
+        // here, we'll stall on the first GL call next frame. Doing the
+        // wait here instead allows more time for a newer frame to arrive
+        // for next renderFrame() call.
+        glClear(GL_COLOR_BUFFER_BIT);
+        glFinish();
+    }
+
     if (frame->hw_frames_ctx != nullptr)
         m_Backend->freeEGLImages(m_EGLDisplay, imgs);
 }
