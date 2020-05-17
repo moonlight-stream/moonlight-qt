@@ -35,6 +35,26 @@
 	</screenshots>
 
 	<releases>
+		<release version="2.1.0" date="2020-05-17">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Remote desktop mode now allows interaction with the host without having to click to focus the Moonlight window first</li>
+					<li>Added a new EGL renderer for improved performance on Wayland and XWayland</li>
+					<li>Added the option to toggle between direct touchscreen mode and the old trackpad mode</li>
+					<li>Added the option to rename host PCs</li>
+					<li>Added the ability to scroll the settings page with the right analog stick</li>
+					<li>Various UI improvements</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed unreliable mouse capture when the stream begins</li>
+					<li>Fixed cursor being trapped in full-screen mode even when the mouse wasn't captured</li>
+					<li>Fixed key presses not being sent to the host if the Super/Meta/Windows key is pressed</li>
+					<li>Updated included gamepad mappings</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.0.0" date="2020-04-28">
 			<description>
 				<p>New features:</p>
