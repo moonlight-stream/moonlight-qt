@@ -261,8 +261,8 @@ StreamCommandLineParser::StreamCommandLineParser()
     };
     m_VideoDecoderMap = {
         {"auto",     StreamingPreferences::VDS_AUTO},
-        {"software", StreamingPreferences::VDS_FORCE_HARDWARE},
-        {"hardware", StreamingPreferences::VDS_FORCE_SOFTWARE},
+        {"software", StreamingPreferences::VDS_FORCE_SOFTWARE},
+        {"hardware", StreamingPreferences::VDS_FORCE_HARDWARE},
     };
 }
 
