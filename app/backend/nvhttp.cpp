@@ -164,9 +164,10 @@ NvHTTP::launchApp(int appId,
                                    "&mode="+QString::number(streamConfig->width)+"x"+
                                    QString::number(streamConfig->height)+"x"+
                                    // Using an FPS value over 60 causes SOPS to default to 720p60,
-                                   // so force it to 60 when starting. This won't impact our ability
-                                   // to get > 60 FPS while actually streaming though.
-                                   QString::number(streamConfig->fps > 60 ? 60 : streamConfig->fps)+
+                                   // so force it to 0 to ensure the correct resolution is set. We
+                                   // used to use 60 here but that locked the frame rate to 60 FPS
+                                   // on GFE 3.20.3.
+                                   QString::number(streamConfig->fps > 60 ? 0 : streamConfig->fps)+
                                    "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
                                    "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
                                    "&rikeyid="+QString::number(riKeyId)+
