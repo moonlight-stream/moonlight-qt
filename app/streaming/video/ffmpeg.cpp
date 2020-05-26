@@ -855,6 +855,13 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     m_Pkt.data = reinterpret_cast<uint8_t*>(m_DecodeBuffer.data());
     m_Pkt.size = offset;
 
+    if (du->frameType == FRAME_TYPE_IDR) {
+        m_Pkt.flags = AV_PKT_FLAG_KEY;
+    }
+    else {
+        m_Pkt.flags = 0;
+    }
+
     m_ActiveWndVideoStats.totalReassemblyTime += LiGetMillis() - du->receiveTimeMs;
 
     Uint32 beforeDecode = SDL_GetTicks();
