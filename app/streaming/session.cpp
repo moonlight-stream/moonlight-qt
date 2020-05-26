@@ -967,18 +967,6 @@ void Session::exec(int displayOriginX, int displayOriginY)
         }
     }
 
-    if (prefs.fps > 60) {
-        // Using SOPS with FPS values over 60 causes GFE to fall back
-        // to 720p60. On previous GFE versions, we could avoid this by
-        // forcing the FPS value to 60 when launching the stream, but
-        // now on GFE 3.20.3 that seems to trigger some sort of
-        // frame rate limiter that locks the game to 60 FPS.
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Disabling SOPS for %d FPS stream",
-                    prefs.fps);
-        enableGameOptimizations = false;
-    }
-
     try {
         NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
         if (m_Computer->currentGameId != 0) {
