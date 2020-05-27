@@ -1,6 +1,8 @@
 #include "nvpairingmanager.h"
 #include "utils.h"
 
+#include <stdexcept>
+
 #include <openssl/bio.h>
 #include <openssl/aes.h>
 #include <openssl/rand.h>
