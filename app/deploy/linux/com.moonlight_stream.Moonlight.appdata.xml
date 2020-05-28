@@ -7,7 +7,7 @@
 	<summary>Play games remotely from your NVIDIA GameStream-enabled PC</summary>
 
 	<description>
-		<p>Moonlight can stream games and other applications from a PC with an NVIDIA GeForce GTX 600-series or higher GPU and GeForce Experience installed.</p>
+		<p>Moonlight can stream games and other applications from a PC with an NVIDIA GeForce GTX/RTX or NVIDIA Quadro GPU and GeForce/Quadro Experience installed.</p>
 		<p>Features include:</p>
 		<ul>
 			<li>Streaming at up to 4K resolution</li>
