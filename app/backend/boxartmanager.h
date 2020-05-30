@@ -18,6 +18,10 @@ public:
     QUrl
     loadBoxArt(NvComputer* computer, NvApp& app);
 
+    static
+    void
+    deleteBoxArt(NvComputer* computer);
+
 signals:
     void
     boxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image);

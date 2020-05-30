@@ -1,4 +1,5 @@
 #include "computermanager.h"
+#include "boxartmanager.h"
 #include "nvhttp.h"
 #include "settings/streamingpreferences.h"
 
@@ -398,6 +399,9 @@ public:
 
         // Delete the polling entry first. This will stop all polling threads too.
         delete pollingEntry;
+
+        // Delete cached box art
+        BoxArtManager::deleteBoxArt(m_Computer);
 
         // Finally, delete the computer itself. This must be done
         // last because the polling thread might be using it.
