@@ -6,7 +6,7 @@
 	<dict>
 		<key>Resources/Info.plist</key>
 		<data>
-		kQWsUbAzKB6cDjSyOGRQOM++OWk=
+		MTBDzarlD49wUA3U3XslL/KNTTk=
 		</data>
 		<key>Resources/License.txt</key>
 		<data>
@@ -18,7 +18,7 @@
 		</data>
 		<key>Resources/default.metallib</key>
 		<data>
-		dF9gKJnv0WdQs57PRAzLo+EyGAA=
+		Mp2xZ/ImK+qiewJUABPEZD4KGp8=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -27,10 +27,10 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			p2lcvvUyS6Ahs1nLqMaQaVfaN6Y=
+			yLtbsvhYDBmCoZ2VyZew3DIgaks=
 			</data>
 			<key>requirement</key>
-			<string>cdhash H"51df5d325062884d3b15aea099188c86a0e1e261" or cdhash H"a7695cbef5324ba021b359cba8c6906957da37a6"</string>
+			<string>cdhash H"c9731f7f9d142b4a0361a7b6fbcdc1a425ff9578" or cdhash H"c8bb5bb2f8580c1982a19d95c997b0dc32206a4b"</string>
 		</dict>
 		<key>Headers/SDL.h</key>
 		<dict>
@@ -718,11 +718,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			kQWsUbAzKB6cDjSyOGRQOM++OWk=
+			MTBDzarlD49wUA3U3XslL/KNTTk=
 			</data>
 			<key>hash2</key>
 			<data>
-			z/sm5HUSHetKQYB64C+hQcCeWrT1zzAW5tX83K65RQ0=
+			Aw5qepe5IE6KD4635D6KSeP4YOFiTyVpeaIvjnM275U=
 			</data>
 		</dict>
 		<key>Resources/License.txt</key>
@@ -751,11 +751,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			dF9gKJnv0WdQs57PRAzLo+EyGAA=
+			Mp2xZ/ImK+qiewJUABPEZD4KGp8=
 			</data>
 			<key>hash2</key>
 			<data>
-			A5lFX3lFIAtu4Lxgjh7TXdIVDe0n6G1iPofA+3H+xMA=
+			nTUBNl319cJwZLag6VcH4LF+dIjUoCOfS5FhrVYg16o=
 			</data>
 		</dict>
 	</dict>
