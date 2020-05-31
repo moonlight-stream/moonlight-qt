@@ -13,6 +13,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     : m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_MouseMoveTimer(0),
+      m_MousePositionLock(0),
       m_FakeCaptureActive(false),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
@@ -108,9 +109,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     SDL_zero(m_LastTouchDownEvent);
     SDL_zero(m_LastTouchUpEvent);
     SDL_zero(m_TouchDownEvent);
+    SDL_zero(m_MousePositionReport);
 
     SDL_AtomicSet(&m_MouseDeltaX, 0);
     SDL_AtomicSet(&m_MouseDeltaY, 0);
+    SDL_AtomicSet(&m_MousePositionUpdated, 0);
 
     Uint32 pollingInterval = QString(qgetenv("MOUSE_POLLING_INTERVAL")).toUInt();
     if (pollingInterval == 0) {

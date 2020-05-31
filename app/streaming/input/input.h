@@ -114,6 +114,14 @@ private:
     SDL_TimerID m_MouseMoveTimer;
     SDL_atomic_t m_MouseDeltaX;
     SDL_atomic_t m_MouseDeltaY;
+
+    SDL_SpinLock m_MousePositionLock;
+    struct {
+        int x, y;
+        int windowWidth, windowHeight;
+    } m_MousePositionReport;
+    SDL_atomic_t m_MousePositionUpdated;
+
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<short> m_KeysDown;

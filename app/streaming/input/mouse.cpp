@@ -67,29 +67,23 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         return;
     }
 
+    // Batch until the next mouse polling window or we'll get awful
+    // input lag everything except GFE 3.14 and 3.15.
     if (m_AbsoluteMouseMode) {
-        SDL_Rect src, dst;
+        int windowWidth, windowHeight;
 
-        src.x = src.y = 0;
-        src.w = m_StreamWidth;
-        src.h = m_StreamHeight;
+        // Call SDL_GetWindowSize() before entering the spinlock
+        SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
 
-        dst.x = dst.y = 0;
-        SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
-
-        // Use the stream and window sizes to determine the video region
-        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-        // Clamp motion to the video region
-        short x = qMin(qMax(event->x - dst.x, 0), dst.w);
-        short y = qMin(qMax(event->y - dst.y, 0), dst.h);
-
-        // Send the mouse position update
-        LiSendMousePositionEvent(x, y, dst.w, dst.h);
+        SDL_AtomicLock(&m_MousePositionLock);
+        m_MousePositionReport.x = event->x;
+        m_MousePositionReport.y = event->y;
+        m_MousePositionReport.windowWidth = windowWidth;
+        m_MousePositionReport.windowHeight = windowHeight;
+        SDL_AtomicUnlock(&m_MousePositionLock);
+        SDL_AtomicSet(&m_MousePositionUpdated, 1);
     }
     else {
-        // Batch until the next mouse polling window or we'll get awful
-        // input lag everything except GFE 3.14 and 3.15.
         SDL_AtomicAdd(&m_MouseDeltaX, event->xrel);
         SDL_AtomicAdd(&m_MouseDeltaY, event->yrel);
     }
@@ -120,6 +114,36 @@ Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
 
     if (deltaX != 0 || deltaY != 0) {
         LiSendMouseMoveEvent(deltaX, deltaY);
+    }
+
+    bool hasNewPosition = SDL_AtomicSet(&me->m_MousePositionUpdated, 0) != 0;
+    if (hasNewPosition) {
+        // If the lock is held now, the main thread is trying to update
+        // the mouse position. We'll pick up the new position next time.
+        if (SDL_AtomicTryLock(&me->m_MousePositionLock)) {
+            SDL_Rect src, dst;
+
+            src.x = src.y = 0;
+            src.w = me->m_StreamWidth;
+            src.h = me->m_StreamHeight;
+
+            dst.x = dst.y = 0;
+            dst.w = me->m_MousePositionReport.windowWidth;
+            dst.h = me->m_MousePositionReport.windowHeight;
+
+            // Use the stream and window sizes to determine the video region
+            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+            // Clamp motion to the video region
+            short x = qMin(qMax(me->m_MousePositionReport.x - dst.x, 0), dst.w);
+            short y = qMin(qMax(me->m_MousePositionReport.y - dst.y, 0), dst.h);
+
+            // Release the spinlock to unblock the main thread
+            SDL_AtomicUnlock(&me->m_MousePositionLock);
+
+            // Send the mouse position update
+            LiSendMousePositionEvent(x, y, dst.w, dst.h);
+        }
     }
 
 #ifdef Q_OS_WIN32
