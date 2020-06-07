@@ -3,7 +3,6 @@
 #include "identitymanager.h"
 #include "nvhttp.h"
 
-#include <openssl/aes.h>
 #include <openssl/x509.h>
 #include <openssl/evp.h>
 
@@ -33,10 +32,10 @@ private:
     saltPin(const QByteArray& salt, QString pin);
 
     QByteArray
-    encrypt(const QByteArray& plaintext, AES_KEY* key);
+    encrypt(const QByteArray& plaintext, const QByteArray& key);
 
     QByteArray
-    decrypt(const QByteArray& ciphertext, AES_KEY* key);
+    decrypt(const QByteArray& ciphertext, const QByteArray& key);
 
     QByteArray
     getSignatureFromPemCert(const QByteArray& certificate);

@@ -4,7 +4,6 @@
 #include <stdexcept>
 
 #include <openssl/bio.h>
-#include <openssl/aes.h>
 #include <openssl/rand.h>
 #include <openssl/pem.h>
 #include <openssl/x509.h>
@@ -53,31 +52,51 @@ NvPairingManager::generateRandomBytes(int length)
 }
 
 QByteArray
-NvPairingManager::encrypt(const QByteArray& plaintext, AES_KEY* key)
+NvPairingManager::encrypt(const QByteArray& plaintext, const QByteArray& key)
 {
     QByteArray ciphertext(plaintext.size(), 0);
+    EVP_CIPHER_CTX* cipher;
+    int ciphertextLen;
 
-    for (int i = 0; i < plaintext.size(); i += 16)
-    {
-        AES_encrypt(reinterpret_cast<unsigned char*>(const_cast<char*>(&plaintext.data()[i])),
-                    reinterpret_cast<unsigned char*>(&ciphertext.data()[i]),
-                    key);
-    }
+    cipher = EVP_CIPHER_CTX_new();
+    THROW_BAD_ALLOC_IF_NULL(cipher);
+
+    EVP_EncryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char*>(key.data()), NULL);
+    EVP_CIPHER_CTX_set_padding(cipher, 0);
+
+    EVP_EncryptUpdate(cipher,
+                      reinterpret_cast<unsigned char*>(ciphertext.data()),
+                      &ciphertextLen,
+                      reinterpret_cast<const unsigned char*>(plaintext.data()),
+                      plaintext.length());
+    Q_ASSERT(ciphertextLen == ciphertext.length());
+
+    EVP_CIPHER_CTX_free(cipher);
 
     return ciphertext;
 }
 
 QByteArray
-NvPairingManager::decrypt(const QByteArray& ciphertext, AES_KEY* key)
+NvPairingManager::decrypt(const QByteArray& ciphertext, const QByteArray& key)
 {
     QByteArray plaintext(ciphertext.size(), 0);
+    EVP_CIPHER_CTX* cipher;
+    int plaintextLen;
 
-    for (int i = 0; i < plaintext.size(); i += 16)
-    {
-        AES_decrypt(reinterpret_cast<unsigned char*>(const_cast<char*>(&ciphertext.data()[i])),
-                    reinterpret_cast<unsigned char*>(&plaintext.data()[i]),
-                    key);
-    }
+    cipher = EVP_CIPHER_CTX_new();
+    THROW_BAD_ALLOC_IF_NULL(cipher);
+
+    EVP_DecryptInit(cipher, EVP_aes_128_ecb(), reinterpret_cast<const unsigned char*>(key.data()), NULL);
+    EVP_CIPHER_CTX_set_padding(cipher, 0);
+
+    EVP_DecryptUpdate(cipher,
+                      reinterpret_cast<unsigned char*>(plaintext.data()),
+                      &plaintextLen,
+                      reinterpret_cast<const unsigned char*>(ciphertext.data()),
+                      ciphertext.length());
+    Q_ASSERT(plaintextLen == plaintext.length());
+
+    EVP_CIPHER_CTX_free(cipher);
 
     return plaintext;
 }
@@ -188,9 +207,8 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     QByteArray salt = generateRandomBytes(16);
     QByteArray saltedPin = saltPin(salt, pin);
 
-    AES_KEY encKey, decKey;
-    AES_set_decrypt_key(reinterpret_cast<const unsigned char*>(QCryptographicHash::hash(saltedPin, hashAlgo).data()), 128, &decKey);
-    AES_set_encrypt_key(reinterpret_cast<const unsigned char*>(QCryptographicHash::hash(saltedPin, hashAlgo).data()), 128, &encKey);
+    QByteArray aesKey = QCryptographicHash::hash(saltedPin, hashAlgo).data();
+    aesKey.truncate(16);
 
     QString getCert = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
                                                     "pair",
@@ -225,7 +243,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     m_Http.setServerCert(serverCert);
 
     QByteArray randomChallenge = generateRandomBytes(16);
-    QByteArray encryptedChallenge = encrypt(randomChallenge, &encKey);
+    QByteArray encryptedChallenge = encrypt(randomChallenge, aesKey);
     QString challengeXml = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
                                                          "pair",
                                                          "devicename=roth&updateState=1&clientchallenge=" +
@@ -239,7 +257,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
         return PairState::FAILED;
     }
 
-    QByteArray challengeResponseData = decrypt(m_Http.getXmlStringFromHex(challengeXml, "challengeresponse"), &decKey);
+    QByteArray challengeResponseData = decrypt(m_Http.getXmlStringFromHex(challengeXml, "challengeresponse"), aesKey);
     QByteArray clientSecretData = generateRandomBytes(16);
     QByteArray challengeResponse;
     QByteArray serverResponse(challengeResponseData.data(), hashLength);
@@ -260,7 +278,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
 
     QByteArray paddedHash = QCryptographicHash::hash(challengeResponse, hashAlgo);
     paddedHash.resize(32);
-    QByteArray encryptedChallengeResponseHash = encrypt(paddedHash, &encKey);
+    QByteArray encryptedChallengeResponseHash = encrypt(paddedHash, aesKey);
     QString respXml = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,
                                                     "pair",
                                                     "devicename=roth&updateState=1&serverchallengeresp=" +

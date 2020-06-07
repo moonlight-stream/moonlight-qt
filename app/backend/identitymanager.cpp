@@ -5,7 +5,6 @@
 
 #include <openssl/pem.h>
 #include <openssl/rsa.h>
-#include <openssl/bn.h>
 #include <openssl/x509.h>
 #include <openssl/rand.h>
 
@@ -32,19 +31,15 @@ void IdentityManager::createCredentials(QSettings& settings)
     X509* cert = X509_new();
     THROW_BAD_ALLOC_IF_NULL(cert);
 
-    EVP_PKEY* pk = EVP_PKEY_new();
+    EVP_PKEY* pk;
+    EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
+    THROW_BAD_ALLOC_IF_NULL(ctx);
+
+    EVP_PKEY_keygen_init(ctx);
+    EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048);
+    EVP_PKEY_keygen(ctx, &pk);
+    EVP_PKEY_CTX_free(ctx);
     THROW_BAD_ALLOC_IF_NULL(pk);
-
-    BIGNUM* bne = BN_new();
-    THROW_BAD_ALLOC_IF_NULL(bne);
-
-    RSA* rsa = RSA_new();
-    THROW_BAD_ALLOC_IF_NULL(rsa);
-
-    BN_set_word(bne, RSA_F4);
-    RSA_generate_key_ex(rsa, 2048, bne, nullptr);
-
-    EVP_PKEY_assign_RSA(pk, rsa);
 
     X509_set_version(cert, 2);
     ASN1_INTEGER_set(X509_get_serialNumber(cert), 0);
@@ -94,7 +89,6 @@ void IdentityManager::createCredentials(QSettings& settings)
 
     X509_free(cert);
     EVP_PKEY_free(pk);
-    BN_free(bne);
     BIO_free(biokey);
     BIO_free(biocert);
 
