@@ -30,22 +30,22 @@ private:
     generateRandomBytes(int length);
 
     QByteArray
-    saltPin(QByteArray salt, QString pin);
+    saltPin(const QByteArray& salt, QString pin);
 
     QByteArray
-    encrypt(QByteArray plaintext, AES_KEY* key);
+    encrypt(const QByteArray& plaintext, AES_KEY* key);
 
     QByteArray
-    decrypt(QByteArray ciphertext, AES_KEY* key);
+    decrypt(const QByteArray& ciphertext, AES_KEY* key);
 
     QByteArray
-    getSignatureFromPemCert(QByteArray certificate);
+    getSignatureFromPemCert(const QByteArray& certificate);
 
     bool
-    verifySignature(QByteArray data, QByteArray signature, QByteArray serverCertificate);
+    verifySignature(const QByteArray& data, const QByteArray& signature, const QByteArray& serverCertificate);
 
     QByteArray
-    signMessage(QByteArray message);
+    signMessage(const QByteArray& message);
 
     NvHTTP m_Http;
     X509* m_Cert;

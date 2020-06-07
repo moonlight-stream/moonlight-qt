@@ -53,13 +53,13 @@ NvPairingManager::generateRandomBytes(int length)
 }
 
 QByteArray
-NvPairingManager::encrypt(QByteArray plaintext, AES_KEY* key)
+NvPairingManager::encrypt(const QByteArray& plaintext, AES_KEY* key)
 {
     QByteArray ciphertext(plaintext.size(), 0);
 
     for (int i = 0; i < plaintext.size(); i += 16)
     {
-        AES_encrypt(reinterpret_cast<unsigned char*>(&plaintext.data()[i]),
+        AES_encrypt(reinterpret_cast<unsigned char*>(const_cast<char*>(&plaintext.data()[i])),
                     reinterpret_cast<unsigned char*>(&ciphertext.data()[i]),
                     key);
     }
@@ -68,13 +68,13 @@ NvPairingManager::encrypt(QByteArray plaintext, AES_KEY* key)
 }
 
 QByteArray
-NvPairingManager::decrypt(QByteArray ciphertext, AES_KEY* key)
+NvPairingManager::decrypt(const QByteArray& ciphertext, AES_KEY* key)
 {
     QByteArray plaintext(ciphertext.size(), 0);
 
     for (int i = 0; i < plaintext.size(); i += 16)
     {
-        AES_decrypt(reinterpret_cast<unsigned char*>(&ciphertext.data()[i]),
+        AES_decrypt(reinterpret_cast<unsigned char*>(const_cast<char*>(&ciphertext.data()[i])),
                     reinterpret_cast<unsigned char*>(&plaintext.data()[i]),
                     key);
     }
@@ -83,7 +83,7 @@ NvPairingManager::decrypt(QByteArray ciphertext, AES_KEY* key)
 }
 
 QByteArray
-NvPairingManager::getSignatureFromPemCert(QByteArray certificate)
+NvPairingManager::getSignatureFromPemCert(const QByteArray& certificate)
 {
     BIO* bio = BIO_new_mem_buf(certificate.data(), -1);
     THROW_BAD_ALLOC_IF_NULL(bio);
@@ -109,7 +109,7 @@ NvPairingManager::getSignatureFromPemCert(QByteArray certificate)
 }
 
 bool
-NvPairingManager::verifySignature(QByteArray data, QByteArray signature, QByteArray serverCertificate)
+NvPairingManager::verifySignature(const QByteArray& data, const QByteArray& signature, const QByteArray& serverCertificate)
 {
     BIO* bio = BIO_new_mem_buf(serverCertificate.data(), -1);
     THROW_BAD_ALLOC_IF_NULL(bio);
@@ -125,7 +125,7 @@ NvPairingManager::verifySignature(QByteArray data, QByteArray signature, QByteAr
 
     EVP_DigestVerifyInit(mdctx, nullptr, EVP_sha256(), nullptr, pubKey);
     EVP_DigestVerifyUpdate(mdctx, data.data(), data.length());
-    int result = EVP_DigestVerifyFinal(mdctx, reinterpret_cast<unsigned char*>(signature.data()), signature.length());
+    int result = EVP_DigestVerifyFinal(mdctx, reinterpret_cast<unsigned char*>(const_cast<char*>(signature.data())), signature.length());
 
     EVP_PKEY_free(pubKey);
     EVP_MD_CTX_destroy(mdctx);
@@ -135,7 +135,7 @@ NvPairingManager::verifySignature(QByteArray data, QByteArray signature, QByteAr
 }
 
 QByteArray
-NvPairingManager::signMessage(QByteArray message)
+NvPairingManager::signMessage(const QByteArray& message)
 {
     EVP_MD_CTX *ctx = EVP_MD_CTX_create();
     THROW_BAD_ALLOC_IF_NULL(ctx);
@@ -145,7 +145,7 @@ NvPairingManager::signMessage(QByteArray message)
 
     EVP_DigestInit_ex(ctx, md, NULL);
     EVP_DigestSignInit(ctx, NULL, md, NULL, m_PrivateKey);
-    EVP_DigestSignUpdate(ctx, reinterpret_cast<unsigned char*>(message.data()), message.length());
+    EVP_DigestSignUpdate(ctx, reinterpret_cast<unsigned char*>(const_cast<char*>(message.data())), message.length());
 
     size_t signatureLength = 0;
     EVP_DigestSignFinal(ctx, NULL, &signatureLength);
@@ -159,7 +159,7 @@ NvPairingManager::signMessage(QByteArray message)
 }
 
 QByteArray
-NvPairingManager::saltPin(QByteArray salt, QString pin)
+NvPairingManager::saltPin(const QByteArray& salt, QString pin)
 {
     return QByteArray().append(salt).append(pin.toLatin1());
 }
