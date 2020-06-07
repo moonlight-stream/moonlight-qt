@@ -104,7 +104,11 @@ NvPairingManager::decrypt(const QByteArray& ciphertext, const QByteArray& key)
 QByteArray
 NvPairingManager::getSignatureFromPemCert(const QByteArray& certificate)
 {
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(certificate.data()), -1);
+#else
     BIO* bio = BIO_new_mem_buf(certificate.data(), -1);
+#endif
     THROW_BAD_ALLOC_IF_NULL(bio);
 
     X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
@@ -130,7 +134,11 @@ NvPairingManager::getSignatureFromPemCert(const QByteArray& certificate)
 bool
 NvPairingManager::verifySignature(const QByteArray& data, const QByteArray& signature, const QByteArray& serverCertificate)
 {
+#if (OPENSSL_VERSION_NUMBER < 0x10100000L)
+    BIO* bio = BIO_new_mem_buf(const_cast<char*>(serverCertificate.data()), -1);
+#else
     BIO* bio = BIO_new_mem_buf(serverCertificate.data(), -1);
+#endif
     THROW_BAD_ALLOC_IF_NULL(bio);
 
     X509* cert = PEM_read_bio_X509(bio, nullptr, nullptr, nullptr);
