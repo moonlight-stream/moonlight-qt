@@ -31,13 +31,16 @@ void IdentityManager::createCredentials(QSettings& settings)
     X509* cert = X509_new();
     THROW_BAD_ALLOC_IF_NULL(cert);
 
-    EVP_PKEY* pk;
     EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
     THROW_BAD_ALLOC_IF_NULL(ctx);
 
     EVP_PKEY_keygen_init(ctx);
     EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048);
+
+    // pk must be initialized on input
+    EVP_PKEY* pk = NULL;
     EVP_PKEY_keygen(ctx, &pk);
+
     EVP_PKEY_CTX_free(ctx);
     THROW_BAD_ALLOC_IF_NULL(pk);
 
