@@ -98,10 +98,11 @@ EGLRenderer::~EGLRenderer()
             SDL_assert(m_glDeleteVertexArraysOES != nullptr);
             m_glDeleteVertexArraysOES(1, &m_VAO);
         }
-        if (m_DummyRenderer) {
-            SDL_DestroyRenderer(m_DummyRenderer);
-        }
         SDL_GL_DeleteContext(m_Context);
+    }
+
+    if (m_DummyRenderer) {
+        SDL_DestroyRenderer(m_DummyRenderer);
     }
 
     // Reset the global properties back to what they were before
