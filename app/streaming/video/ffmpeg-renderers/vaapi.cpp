@@ -449,6 +449,12 @@ VAAPIRenderer::canExportEGL() {
     VASurfaceAttrib attrs[2];
     int attributeCount = 0;
 
+    if (qgetenv("VAAPI_FORCE_DIRECT") == "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using direct rendering due to environment variable");
+        return false;
+    }
+
     // FFmpeg handles setting these quirk flags for us
     if (!(vaDeviceContext->driver_quirks & AV_VAAPI_DRIVER_QUIRK_ATTRIB_MEMTYPE)) {
         attrs[attributeCount].type = VASurfaceAttribMemoryType;

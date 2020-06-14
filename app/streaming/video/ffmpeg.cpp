@@ -194,20 +194,21 @@ void FFmpegVideoDecoder::reset()
 
 bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params)
 {
+#ifdef HAVE_EGL
+    if (m_BackendRenderer->canExportEGL()) {
+        m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
+        if (m_FrontendRenderer->initialize(params)) {
+            return true;
+        }
+        delete m_FrontendRenderer;
+    }
+#endif
+
     if (m_BackendRenderer->isDirectRenderingSupported()) {
         // The backend renderer can render to the display
         m_FrontendRenderer = m_BackendRenderer;
     }
     else {
-#ifdef HAVE_EGL
-        if (m_BackendRenderer->canExportEGL()) {
-            m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
-            if (m_FrontendRenderer->initialize(params)) {
-                return true;
-            }
-            delete m_FrontendRenderer;
-        }
-#endif
         // The backend renderer cannot directly render to the display, so
         // we will create an SDL renderer to draw the frames.
         m_FrontendRenderer = new SdlRenderer();
