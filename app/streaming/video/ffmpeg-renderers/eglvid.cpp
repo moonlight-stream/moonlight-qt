@@ -403,13 +403,8 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     glClear(GL_COLOR_BUFFER_BIT);
 
     if (params->enableVsync) {
-        // Try to use adaptive VSYNC unless we're using frame pacing.
-        // Frame pacing relies on us blocking in renderFrame() to
-        // match the display refresh rate.
-        if (params->enableFramePacing || SDL_GL_SetSwapInterval(-1)) {
-            SDL_GL_SetSwapInterval(1);
-            m_BlockingSwapBuffers = true;
-        }
+        SDL_GL_SetSwapInterval(1);
+        m_BlockingSwapBuffers = true;
     } else {
         SDL_GL_SetSwapInterval(0);
     }
