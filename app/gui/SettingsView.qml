@@ -655,7 +655,7 @@ Flickable {
                 CheckBox {
                     id: optimizeGameSettingsCheck
                     width: parent.width
-                    text: "Optimize game settings"
+                    text: "Optimize game settings for streaming"
                     font.pointSize:  12
                     checked: StreamingPreferences.gameOptimizations
                     onCheckedChanged: {
@@ -672,6 +672,22 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.playAudioOnHost = checked
                     }
+                }
+
+                CheckBox {
+                    id: quitAppAfter
+                    width: parent.width
+                    text: "Quit app on host PC after ending stream"
+                    font.pointSize: 12
+                    checked: StreamingPreferences.quitAppAfter
+                    onCheckedChanged: {
+                        StreamingPreferences.quitAppAfter = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!"
                 }
             }
         }
@@ -824,17 +840,6 @@ Flickable {
                                 ComputerManager.startPolling()
                             }
                         }
-                    }
-                }
-
-                CheckBox {
-                    id: quitAppAfter
-                    width: parent.width
-                    text: "Quit app after quitting session"
-                    font.pointSize: 12
-                    checked: StreamingPreferences.quitAppAfter
-                    onCheckedChanged: {
-                        StreamingPreferences.quitAppAfter = checked
                     }
                 }
             }
