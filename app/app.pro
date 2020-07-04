@@ -39,11 +39,13 @@ win32 {
 
     contains(QT_ARCH, i386) {
         LIBS += -L$$PWD/../libs/windows/lib/x86
-        LIBS += -L$$(DXSDK_DIR)LIB\x86
+        LIBS += -L$$(DXSDK_DIR)LIB/x86
+        LIBS += -L$$(DXSDK_DIR)/LIB/x86
     }
     contains(QT_ARCH, x86_64) {
         LIBS += -L$$PWD/../libs/windows/lib/x64
-        LIBS += -L$$(DXSDK_DIR)LIB\x64
+        LIBS += -L$$(DXSDK_DIR)LIB/x64
+        LIBS += -L$$(DXSDK_DIR)/LIB/x64
     }
 
     LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib qwave.lib
