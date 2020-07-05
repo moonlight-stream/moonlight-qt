@@ -11,6 +11,7 @@
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QFile>
+#include "ui_main.h"
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -415,7 +416,7 @@ int main(int argc, char *argv[])
     SDL_SetHint(SDL_HINT_WINDOWS_DISABLE_THREAD_NAMING, "0");
 #endif
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
     // After the QGuiApplication is created, the platform stuff will be initialized
     // and we can set the SDL video driver to match Qt.
@@ -547,10 +548,16 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("initialView", initialView);
 
+    QDialog widget;
+    Ui::Dialog ui;
+    ui.setupUi(&widget);
+
+    widget.show();
+
     // Load the main.qml file
-    engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
+    /*engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
-        return -1;
+        return -1;*/
 
     int err = app.exec();
 
