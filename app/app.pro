@@ -1,4 +1,5 @@
-QT += core quick network quickcontrols2 svg
+QT += core quick network quickcontrols2 svg \
+    widgets
 CONFIG += c++11
 
 unix:!macx {
@@ -148,6 +149,7 @@ SOURCES += \
     cli/commandlineparser.cpp \
     cli/quitstream.cpp \
     cli/startstream.cpp \
+    mainwindow.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
     streaming/input/gamepad.cpp \
@@ -171,6 +173,7 @@ SOURCES += \
 
 HEADERS += \
     backend/nvapp.h \
+    mainwindow.h \
     utils.h \
     backend/computerseeker.h \
     backend/identitymanager.h \
@@ -428,5 +431,4 @@ macx {
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
 
-FORMS += \
-    gui/main.ui
+FORMS +=
