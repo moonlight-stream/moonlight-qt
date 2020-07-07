@@ -41,6 +41,7 @@
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
 #include "ui_mainwindow.h"
+#include "mainwindow.h"
 
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
 // Log to file for release Windows builds
@@ -548,17 +549,13 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("initialView", initialView);
 
-    QMainWindow widget;
-    Ui::MainWindow ui;
-    ui.setupUi(&widget);
-
-    widget.show();
-
     // Load the main.qml file
     /*engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;*/
 
+    MainWindow mainWindow;
+    mainWindow.show();
     int err = app.exec();
 
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
