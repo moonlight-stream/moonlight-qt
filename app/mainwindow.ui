@@ -6,38 +6,51 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
-    <height>600</height>
+    <width>440</width>
+    <height>308</height>
    </rect>
   </property>
   <property name="windowTitle">
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QPushButton" name="pushButton">
+   <widget class="QPushButton" name="connect_pushButton">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>120</y>
+      <x>50</x>
+      <y>170</y>
       <width>80</width>
       <height>22</height>
      </rect>
     </property>
     <property name="text">
-     <string>PushButton</string>
+     <string>connect</string>
     </property>
    </widget>
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="status_label">
     <property name="geometry">
      <rect>
-      <x>230</x>
-      <y>100</y>
-      <width>47</width>
-      <height>14</height>
+      <x>50</x>
+      <y>150</y>
+      <width>171</width>
+      <height>16</height>
      </rect>
     </property>
     <property name="text">
-     <string>TextLabel</string>
+     <string>status</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pair_pushButton">
+    <property name="geometry">
+     <rect>
+      <x>140</x>
+      <y>170</y>
+      <width>80</width>
+      <height>22</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>pair</string>
     </property>
    </widget>
   </widget>
@@ -46,7 +59,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>800</width>
+     <width>440</width>
      <height>21</height>
     </rect>
    </property>
