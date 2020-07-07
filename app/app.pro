@@ -1,5 +1,4 @@
-QT += core quick network quickcontrols2 svg \
-    widgets
+QT += core quick network quickcontrols2 svg
 CONFIG += c++11
 
 unix:!macx {
@@ -431,4 +430,5 @@ macx {
 VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
 
-FORMS +=
+FORMS += \
+    mainwindow.ui

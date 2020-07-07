@@ -1,4 +1,5 @@
 #include "mainwindow.h"
+<<<<<<< HEAD
 
 MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
     status_label(this),
@@ -17,4 +18,26 @@ MainWindow::MainWindow(QWidget *parent) : QMainWindow(parent),
 void MainWindow::pair()
 {
     status_label.setText("paired");
+=======
+#include "ui_mainwindow.h"
+
+MainWindow::MainWindow(QWidget *parent) :
+    QMainWindow(parent),
+    ui(new Ui::MainWindow)
+{
+    ui->setupUi(this);
+    qInfo("test1");
+}
+
+MainWindow::~MainWindow()
+{
+    delete ui;
+    qInfo("test3");
+}
+
+void MainWindow::on_pushButton_clicked()
+{
+    close();
+    qInfo("test2");
+>>>>>>> UI-test
 }

@@ -11,7 +11,6 @@
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QFile>
-#include <QApplication>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -41,6 +40,7 @@
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
+#include "ui_mainwindow.h"
 #include "mainwindow.h"
 
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
@@ -549,7 +549,7 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("initialView", initialView);
 
-    //Load the main.qml file
+    // Load the main.qml file
     /*engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;*/
