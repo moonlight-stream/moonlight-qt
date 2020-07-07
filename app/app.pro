@@ -148,6 +148,7 @@ SOURCES += \
     cli/commandlineparser.cpp \
     cli/quitstream.cpp \
     cli/startstream.cpp \
+    mainwindow.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
     streaming/input/gamepad.cpp \
@@ -171,6 +172,7 @@ SOURCES += \
 
 HEADERS += \
     backend/nvapp.h \
+    mainwindow.h \
     utils.h \
     backend/computerseeker.h \
     backend/identitymanager.h \
@@ -429,4 +431,4 @@ VERSION = "$$cat(version.txt)"
 DEFINES += VERSION_STR=\\\"$$cat(version.txt)\\\"
 
 FORMS += \
-    gui/main.ui
+    mainwindow.ui

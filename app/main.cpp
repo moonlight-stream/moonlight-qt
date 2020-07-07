@@ -11,7 +11,6 @@
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QFile>
-#include "ui_main.h"
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -41,6 +40,7 @@
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
+#include "ui_mainwindow.h"
 
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
 // Log to file for release Windows builds
@@ -548,8 +548,8 @@ int main(int argc, char *argv[])
 
     engine.rootContext()->setContextProperty("initialView", initialView);
 
-    QDialog widget;
-    Ui::Dialog ui;
+    QMainWindow widget;
+    Ui::MainWindow ui;
     ui.setupUi(&widget);
 
     widget.show();
