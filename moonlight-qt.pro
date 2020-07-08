@@ -11,7 +11,7 @@ win32:!winrt {
     SUBDIRS += AntiHooking
     app.depends += AntiHooking
 }
-!winrt {
+!winrt:win32|macx {
     SUBDIRS += soundio
     app.depends += soundio
 }

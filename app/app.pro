@@ -59,20 +59,6 @@ unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 SDL2_ttf opus
 
-    # SLAudio is used on Steam Link
-    !config_SL {
-        CONFIG += soundio
-    }
-
-    soundio {
-        packagesExist(libpulse) {
-            PKGCONFIG += libpulse
-        }
-        packagesExist(alsa) {
-            PKGCONFIG += alsa
-        }
-    }
-
     packagesExist(libavcodec) {
         PKGCONFIG += libavcodec libavutil
         CONFIG += ffmpeg
