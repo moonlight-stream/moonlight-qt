@@ -5,6 +5,9 @@
 
 #include <SDL.h>
 
+#define SDL_CODE_HIDE_CURSOR 1
+#define SDL_CODE_SHOW_CURSOR 2
+
 struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
@@ -125,6 +128,8 @@ private:
         int windowWidth, windowHeight;
     } m_MousePositionReport;
     SDL_atomic_t m_MousePositionUpdated;
+    bool m_MouseWasInVideoRegion;
+    bool m_PendingMouseButtonsAllUpOnVideoRegionLeave;
 
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];

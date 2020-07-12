@@ -14,6 +14,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_GamepadMouse(prefs.gamepadMouse),
       m_MouseMoveTimer(0),
       m_MousePositionLock(0),
+      m_MouseWasInVideoRegion(false),
+      m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_FakeCaptureActive(false),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),

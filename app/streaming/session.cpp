@@ -1195,8 +1195,19 @@ void Session::exec(int displayOriginX, int displayOriginY)
             goto DispatchDeferredCleanup;
 
         case SDL_USEREVENT:
-            SDL_assert(event.user.code == SDL_CODE_FRAME_READY);
-            m_VideoDecoder->renderFrameOnMainThread();
+            switch (event.user.code) {
+            case SDL_CODE_FRAME_READY:
+                m_VideoDecoder->renderFrameOnMainThread();
+                break;
+            case SDL_CODE_HIDE_CURSOR:
+                SDL_ShowCursor(SDL_DISABLE);
+                break;
+            case SDL_CODE_SHOW_CURSOR:
+                SDL_ShowCursor(SDL_ENABLE);
+                break;
+            default:
+                SDL_assert(false);
+            }
             break;
 
         case SDL_WINDOWEVENT:
