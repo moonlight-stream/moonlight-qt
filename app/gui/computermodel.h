@@ -31,6 +31,8 @@ public:
 
     Q_INVOKABLE void deleteComputer(int computerIndex);
 
+    Q_INVOKABLE QString generatePinString();
+
     Q_INVOKABLE void pairComputer(int computerIndex, QString pin);
 
     Q_INVOKABLE void wakeComputer(int computerIndex);

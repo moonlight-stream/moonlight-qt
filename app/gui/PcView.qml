@@ -187,7 +187,7 @@ CenteredGridView {
                 }
                 else {
                     if (!model.busy) {
-                        var pin = ("0000" + Math.floor(Math.random() * 10000)).slice(-4)
+                        var pin = computerModel.generatePinString()
 
                         // Kick off pairing in the background
                         computerModel.pairComputer(index, pin)
