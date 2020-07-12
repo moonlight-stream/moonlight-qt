@@ -446,7 +446,7 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                         // https://www.intel.com/content/www/us/en/support/articles/000005654/graphics-drivers.html
                         if (LOWORD(id.DriverVersion.LowPart) < 4836) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Intel driver version blacklisted for HEVC");
+                                        "Detected buggy Intel GPU driver installed. Update your Intel GPU driver to enable HEVC!");
                             result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
                         }
                         else {
