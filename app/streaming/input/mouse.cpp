@@ -56,6 +56,22 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
                            button);
 }
 
+void SdlInputHandler::updateMousePositionReport(int mouseX, int mouseY)
+{
+    int windowWidth, windowHeight;
+
+    // Call SDL_GetWindowSize() before entering the spinlock
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+
+    SDL_AtomicLock(&m_MousePositionLock);
+    m_MousePositionReport.x = mouseX;
+    m_MousePositionReport.y = mouseY;
+    m_MousePositionReport.windowWidth = windowWidth;
+    m_MousePositionReport.windowHeight = windowHeight;
+    SDL_AtomicUnlock(&m_MousePositionLock);
+    SDL_AtomicSet(&m_MousePositionUpdated, 1);
+}
+
 void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 {
     if (!isCaptureActive()) {
@@ -70,18 +86,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
     // Batch until the next mouse polling window or we'll get awful
     // input lag everything except GFE 3.14 and 3.15.
     if (m_AbsoluteMouseMode) {
-        int windowWidth, windowHeight;
-
-        // Call SDL_GetWindowSize() before entering the spinlock
-        SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
-
-        SDL_AtomicLock(&m_MousePositionLock);
-        m_MousePositionReport.x = event->x;
-        m_MousePositionReport.y = event->y;
-        m_MousePositionReport.windowWidth = windowWidth;
-        m_MousePositionReport.windowHeight = windowHeight;
-        SDL_AtomicUnlock(&m_MousePositionLock);
-        SDL_AtomicSet(&m_MousePositionUpdated, 1);
+        updateMousePositionReport(event->x, event->y);
     }
     else {
         SDL_AtomicAdd(&m_MouseDeltaX, event->xrel);
@@ -103,6 +108,29 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
     if (event->y != 0) {
         LiSendScrollEvent((signed char)event->y);
     }
+}
+
+bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWidth, int windowHeight)
+{
+    SDL_Rect src, dst;
+
+    if (windowWidth < 0 || windowHeight < 0) {
+        SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+    }
+
+    src.x = src.y = 0;
+    src.w = m_StreamWidth;
+    src.h = m_StreamHeight;
+
+    dst.x = dst.y = 0;
+    dst.w = windowWidth;
+    dst.h = windowHeight;
+
+    // Use the stream and window sizes to determine the video region
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    return (mouseX >= dst.x && mouseX <= dst.x + dst.w) &&
+           (mouseY >= dst.y && mouseY <= dst.y + dst.h);
 }
 
 Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)

@@ -261,6 +261,25 @@ void SdlInputHandler::setCaptureActive(bool active)
             SDL_ShowCursor(SDL_DISABLE);
             m_FakeCaptureActive = true;
         }
+
+        // Synchronize the client and host cursor when activating absolute capture
+        if (m_AbsoluteMouseMode) {
+            int mouseX, mouseY;
+            int windowX, windowY;
+
+            // We have to use SDL_GetGlobalMouseState() because macOS may not reflect
+            // the new position of the mouse when outside the window.
+            SDL_GetGlobalMouseState(&mouseX, &mouseY);
+
+            // Convert global mouse state to window-relative
+            SDL_GetWindowPosition(m_Window, &windowX, &windowY);
+            mouseX -= windowX;
+            mouseY -= windowY;
+
+            if (isMouseInVideoRegion(mouseX, mouseY)) {
+                updateMousePositionReport(mouseX, mouseY);
+            }
+        }
     }
     else {
         if (m_FakeCaptureActive) {
