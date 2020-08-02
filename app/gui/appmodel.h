@@ -14,22 +14,26 @@ class AppModel : public QAbstractListModel
     {
         NameRole = Qt::UserRole,
         RunningRole,
-        BoxArtRole
+        BoxArtRole,
+        HiddenRole,
+        AppIdRole,
     };
 
 public:
     explicit AppModel(QObject *parent = nullptr);
 
     // Must be called before any QAbstractListModel functions
-    Q_INVOKABLE void initialize(ComputerManager* computerManager, int computerIndex);
+    Q_INVOKABLE void initialize(ComputerManager* computerManager, int computerIndex, bool showHiddenGames);
 
     Q_INVOKABLE Session* createSessionForApp(int appIndex);
 
-    Q_INVOKABLE int getRunningAppIndex();
+    Q_INVOKABLE int getRunningAppId();
 
     Q_INVOKABLE QString getRunningAppName();
 
     Q_INVOKABLE void quitRunningApp();
+
+    Q_INVOKABLE void setAppHidden(int appIndex, bool hidden);
 
     QVariant data(const QModelIndex &index, int role) const override;
 
@@ -46,9 +50,14 @@ signals:
     void computerLost();
 
 private:
+    void updateAppList(QVector<NvApp> newList);
+
+    QVector<NvApp> getVisibleApps(const QVector<NvApp>& appList);
+
     NvComputer* m_Computer;
     BoxArtManager m_BoxArtManager;
     ComputerManager* m_ComputerManager;
-    QVector<NvApp> m_Apps;
+    QVector<NvApp> m_VisibleApps, m_AllApps;
     int m_CurrentGameId;
+    bool m_ShowHiddenGames;
 };

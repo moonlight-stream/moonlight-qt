@@ -306,6 +306,25 @@ bool NvComputer::isReachableOverVpn()
     }
 }
 
+bool NvComputer::updateAppList(QVector<NvApp> newAppList) {
+    if (appList == newAppList) {
+        return false;
+    }
+
+    // Propagate client-side attributes to the new app list
+    for (const NvApp& existingApp : appList) {
+        for (NvApp& newApp : newAppList) {
+            if (existingApp.id == newApp.id) {
+                newApp.hidden = existingApp.hidden;
+            }
+        }
+    }
+
+    appList = newAppList;
+    sortAppList();
+    return true;
+}
+
 QVector<QString> NvComputer::uniqueAddresses() const
 {
     QVector<QString> uniqueAddressList;
@@ -389,7 +408,12 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);
     ASSIGN_IF_CHANGED_AND_NONNULL(serverCert);
-    ASSIGN_IF_CHANGED_AND_NONEMPTY(appList);
     ASSIGN_IF_CHANGED_AND_NONEMPTY(displayModes);
+
+    if (!that.appList.isEmpty()) {
+        // updateAppList() handles merging client-side attributes
+        updateAppList(that.appList);
+    }
+
     return changed;
 }

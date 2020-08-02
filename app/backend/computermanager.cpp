@@ -68,12 +68,7 @@ private:
         }
 
         QWriteLocker lock(&m_Computer->lock);
-        if (m_Computer->appList != appList) {
-            m_Computer->appList = appList;
-            m_Computer->sortAppList();
-            changed = true;
-        }
-
+        changed = m_Computer->updateAppList(appList);
         return true;
     }
 
@@ -428,6 +423,15 @@ void ComputerManager::renameHost(NvComputer* computer, QString name)
         computer->name = name;
         computer->hasCustomName = true;
     }
+
+    // Notify the UI of the state change
+    handleComputerStateChanged(computer);
+}
+
+void ComputerManager::clientSideAttributeUpdated(NvComputer* computer)
+{
+    // Persist the change
+    saveHosts();
 
     // Notify the UI of the state change
     handleComputerStateChanged(computer);

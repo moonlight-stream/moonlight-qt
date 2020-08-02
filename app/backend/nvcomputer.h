@@ -16,6 +16,8 @@ class NvComputer
 private:
     void sortAppList();
 
+    bool updateAppList(QVector<NvApp> newAppList);
+
     bool pendingQuit;
 
 public:

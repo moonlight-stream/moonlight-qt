@@ -10,7 +10,16 @@ public:
 
     bool operator==(const NvApp& other) const
     {
-        return id == other.id;
+        return id == other.id &&
+                name == other.name &&
+                hdrSupported == other.hdrSupported &&
+                isAppCollectorGame == other.isAppCollectorGame &&
+                hidden == other.hidden;
+    }
+
+    bool operator!=(const NvApp& other) const
+    {
+        return !operator==(other);
     }
 
     bool isInitialized()
@@ -25,6 +34,7 @@ public:
     QString name;
     bool hdrSupported = false;
     bool isAppCollectorGame = false;
+    bool hidden = false;
 };
 
 Q_DECLARE_METATYPE(NvApp)

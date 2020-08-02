@@ -9,6 +9,7 @@ CenteredGridView {
     property int computerIndex
     property AppModel appModel : createModel()
     property bool activated
+    property bool showHiddenGames
 
     id: appGrid
     focus: true
@@ -48,7 +49,7 @@ CenteredGridView {
     function createModel()
     {
         var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, '')
-        model.initialize(ComputerManager, computerIndex)
+        model.initialize(ComputerManager, computerIndex, showHiddenGames)
         return model
     }
 
@@ -57,6 +58,9 @@ CenteredGridView {
     delegate: NavigableItemDelegate {
         width: 220; height: 287;
         grid: appGrid
+
+        // Dim the app if it's hidden
+        opacity: model.hidden ? 0.4 : 1.0
 
         Image {
             property bool isPlaceholder: false
@@ -165,8 +169,8 @@ CenteredGridView {
 
         function launchOrResumeSelectedApp()
         {
-            var runningIndex = appModel.getRunningAppIndex()
-            if (runningIndex >= 0 && runningIndex !== index) {
+            var runningId = appModel.getRunningAppId()
+            if (runningId !== 0 && runningId !== model.appid) {
                 quitAppDialog.appName = appModel.getRunningAppName()
                 quitAppDialog.segueToStream = true
                 quitAppDialog.nextAppName = model.name
@@ -187,6 +191,25 @@ CenteredGridView {
             // be ignored.
             if (!model.running) {
                 launchOrResumeSelectedApp()
+            }
+        }
+
+        onPressAndHold: {
+            // popup() ensures the menu appears under the mouse cursor
+            if (appContextMenu.popup) {
+                appContextMenu.popup()
+            }
+            else {
+                // Qt 5.9 doesn't have popup()
+                appContextMenu.open()
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton;
+            onClicked: {
+                parent.onPressAndHold()
             }
         }
 
@@ -227,6 +250,14 @@ CenteredGridView {
                 text: "Quit Game"
                 onTriggered: doQuitGame()
                 visible: model.running
+            }
+            NavigableMenuItem {
+                parentMenu: appContextMenu
+                checkable: true
+                checked: model.hidden
+                text: "Hide Game"
+                onTriggered: appModel.setAppHidden(model.index, !model.hidden)
+                visible: !model.running || model.hidden
             }
         }
     }

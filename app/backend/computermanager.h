@@ -181,6 +181,8 @@ public:
 
     void renameHost(NvComputer* computer, QString name);
 
+    void clientSideAttributeUpdated(NvComputer* computer);
+
 signals:
     void computerStateChanged(NvComputer* computer);
 
