@@ -5,12 +5,12 @@ clone_depth: 1
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      QTDIR: C:\Qt\5.14\msvc2017_64
+      QTDIR: C:\Qt\5.15\msvc2019_64
       ARCH: x64
     - APPVEYOR_BUILD_WORKER_IMAGE: macOS
       BUILD_TARGET: macos
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      QTDIR: C:\Qt\5.14\msvc2017
+      QTDIR: C:\Qt\5.15\msvc2019
       ARCH: x86
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
       BUILD_TARGET: steamlink
