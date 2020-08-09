@@ -180,12 +180,9 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Delete PC"
-                onTriggered: {
-                    deletePcDialog.pcIndex = index
-                    // get confirmation first, actual closing is called from the dialog
-                    deletePcDialog.open()
-                }
+                text: "Wake PC"
+                onTriggered: computerModel.wakeComputer(index)
+                visible: !model.online && model.wakeable
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
@@ -198,9 +195,12 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Wake PC"
-                onTriggered: computerModel.wakeComputer(index)
-                visible: !model.online && model.wakeable
+                text: "Delete PC"
+                onTriggered: {
+                    deletePcDialog.pcIndex = index
+                    // get confirmation first, actual closing is called from the dialog
+                    deletePcDialog.open()
+                }
             }
         }
 
