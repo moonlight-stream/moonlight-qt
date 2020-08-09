@@ -637,10 +637,19 @@ private:
             return serverInfo;
         } catch (...) {
             if (!m_Mdns) {
-                // We failed to connect to the specified PC. Let's test to make sure this network
-                // isn't blocking Moonlight, so we can tell the user about it.
-                int portTestResult = LiTestClientConnectivity("qt.conntest.moonlight-stream.org", 443,
+                StreamingPreferences prefs;
+                int portTestResult;
+
+                if (prefs.detectNetworkBlocking) {
+                    // We failed to connect to the specified PC. Let's test to make sure this network
+                    // isn't blocking Moonlight, so we can tell the user about it.
+                    portTestResult = LiTestClientConnectivity("qt.conntest.moonlight-stream.org", 443,
                                                               ML_PORT_FLAG_TCP_47984 | ML_PORT_FLAG_TCP_47989);
+                }
+                else {
+                    portTestResult = 0;
+                }
+
                 emit computerAddCompleted(false, portTestResult != 0 && portTestResult != ML_TEST_RESULT_INCONCLUSIVE);
             }
             return QString();

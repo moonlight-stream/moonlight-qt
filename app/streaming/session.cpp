@@ -721,7 +721,7 @@ private:
         else {
             portFlags = 0;
         }
-        if (portFlags != 0) {
+        if (portFlags != 0 && m_Session->m_Preferences->detectNetworkBlocking) {
             portTestResult = LiTestClientConnectivity("qt.conntest.moonlight-stream.org", 443, portFlags);
 
             // Ignore an inconclusive result

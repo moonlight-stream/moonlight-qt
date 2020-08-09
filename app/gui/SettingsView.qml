@@ -842,6 +842,25 @@ Flickable {
                         }
                     }
                 }
+
+                CheckBox {
+                    id: detectNetworkBlocking
+                    width: parent.width
+                    text: "Automatically detect blocked connections (Recommended)"
+                    font.pointSize: 12
+                    checked: StreamingPreferences.detectNetworkBlocking
+                    onCheckedChanged: {
+                        // This is called on init, so only do the work if we've
+                        // actually changed the value.
+                        if (StreamingPreferences.detectNetworkBlocking != checked) {
+                            StreamingPreferences.detectNetworkBlocking = checked
+
+                            // We must save the updated preference to ensure
+                            // ComputerManager can observe the change internally.
+                            StreamingPreferences.save()
+                        }
+                    }
+                }
             }
         }
     }
