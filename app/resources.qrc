@@ -15,6 +15,7 @@
         <file>res/update.svg</file>
         <file>res/baseline-help_outline-24px.svg</file>
         <file>res/baseline-error_outline-24px.svg</file>
+        <file>res/baseline-check_circle_outline-24px.svg</file>
     </qresource>
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>

@@ -6,6 +6,8 @@ NavigableDialog {
     id: dialog
 
     property alias text: dialogLabel.dialogText
+    property alias showSpinner: dialogSpinner.visible
+    property alias imageSrc: dialogImage.source
 
     property string helpText
     property string helpUrl : "https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting"
@@ -19,7 +21,13 @@ NavigableDialog {
     RowLayout {
         spacing: 10
 
+        BusyIndicator {
+            id: dialogSpinner
+            visible: false
+        }
+
         Image {
+            id: dialogImage
             source: (standardButtons & Dialog.Yes) ?
                         "qrc:/res/baseline-help_outline-24px.svg" :
                         "qrc:/res/baseline-error_outline-24px.svg"
@@ -28,6 +36,7 @@ NavigableDialog {
                 width: 50
                 height: 50
             }
+            visible: !showSpinner
         }
 
         Label {

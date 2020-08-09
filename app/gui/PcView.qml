@@ -79,6 +79,7 @@ CenteredGridView {
         var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent, '')
         model.initialize(ComputerManager)
         model.pairingCompleted.connect(pairingComplete)
+        model.connectionTestCompleted.connect(testConnectionDialog.connectionTestComplete)
         return model
     }
 
@@ -184,6 +185,15 @@ CenteredGridView {
                 onTriggered: computerModel.wakeComputer(index)
                 visible: !model.online && model.wakeable
             }
+            NavigableMenuItem {
+                parentMenu: pcContextMenu
+                text: "Test Network"
+                onTriggered: {
+                    computerModel.testConnectionForComputer(index)
+                    testConnectionDialog.open()
+                }
+            }
+
             NavigableMenuItem {
                 parentMenu: pcContextMenu
                 text: "Rename PC"
@@ -300,6 +310,37 @@ CenteredGridView {
         }
 
         onAccepted: deletePc()
+    }
+
+    NavigableMessageDialog {
+        id: testConnectionDialog
+        closePolicy: Popup.CloseOnEscape
+        standardButtons: Dialog.Ok
+
+        onAboutToShow: {
+            testConnectionDialog.text = "Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.\n\nThis may take a few seconds…"
+            showSpinner = true
+        }
+
+        function connectionTestComplete(result, blockedPorts)
+        {
+            if (result === -1) {
+                text = "The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later."
+                imageSrc = "qrc:/res/baseline-warning-24px.svg"
+            }
+            else if (result === 0) {
+                text = "This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.\n\nIf you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection."
+                imageSrc = "qrc:/res/baseline-check_circle_outline-24px.svg"
+            }
+            else {
+                text = "Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.\n\nThe following network ports were blocked:\n"
+                text += blockedPorts
+                imageSrc = "qrc:/res/baseline-error_outline-24px.svg"
+            }
+
+            // Stop showing the spinner and show the image instead
+            showSpinner = false
+        }
     }
 
     NavigableDialog {
