@@ -61,12 +61,15 @@ void Session::clStageFailed(int stage, int errorCode)
     // We know this is called on the same thread as LiStartConnection()
     // which happens to be the main thread, so it's cool to interact
     // with the GUI in these callbacks.
+    s_ActiveSession->m_FailedStageId = stage;
     emit s_ActiveSession->stageFailed(QString::fromLocal8Bit(LiGetStageName(stage)), errorCode);
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void Session::clConnectionTerminated(int errorCode)
 {
+    s_ActiveSession->m_TerminationErrorCode = errorCode;
+
     // Display the termination dialog if this was not intended
     switch (errorCode) {
     case ML_ERROR_GRACEFUL_TERMINATION:
@@ -336,6 +339,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandler(nullptr),
       m_InputHandlerLock(0),
       m_MouseEmulationRefCount(0),
+      m_TerminationErrorCode(ML_ERROR_GRACEFUL_TERMINATION),
+      m_FailedStageId(STAGE_NONE),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
@@ -701,12 +706,36 @@ private:
                 !m_Session->m_UnexpectedTermination &&
                 m_Session->m_Preferences->quitAppAfter;
 
+
+        // If the connection terminated due to an error, we may want
+        // to perform a connection test to ensure our traffic is not
+        // being blocked.
+        int portFlags;
+        unsigned int portTestResult = 0;
+        if (m_Session->m_FailedStageId != STAGE_NONE) {
+            portFlags = LiGetPortFlagsFromStage(m_Session->m_FailedStageId);
+        }
+        else if (m_Session->m_TerminationErrorCode != ML_ERROR_GRACEFUL_TERMINATION) {
+            portFlags = LiGetPortFlagsFromTerminationErrorCode(m_Session->m_TerminationErrorCode);
+        }
+        else {
+            portFlags = 0;
+        }
+        if (portFlags != 0) {
+            portTestResult = LiTestClientConnectivity("qt.conntest.moonlight-stream.org", 443, portFlags);
+
+            // Ignore an inconclusive result
+            if (portTestResult == ML_TEST_RESULT_INCONCLUSIVE) {
+                portTestResult = 0;
+            }
+        }
+
         // Notify the UI
         if (shouldQuit) {
             emit m_Session->quitStarting();
         }
         else {
-            emit m_Session->sessionFinished();
+            emit m_Session->sessionFinished(portTestResult);
         }
 
         // Finish cleanup of the connection state
@@ -724,7 +753,7 @@ private:
             }
 
             // Session is finished now
-            emit m_Session->sessionFinished();
+            emit m_Session->sessionFinished(portTestResult);
         }
     }
 
@@ -922,7 +951,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // calling expensive functions in the constructor (during the
     // process of loading the StreamSegue).
     if (!initialize()) {
-        emit sessionFinished();
+        emit sessionFinished(0);
         return;
     }
 

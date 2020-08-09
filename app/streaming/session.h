@@ -51,7 +51,7 @@ signals:
 
     void quitStarting();
 
-    void sessionFinished();
+    void sessionFinished(int portTestResult);
 
 private:
     bool initialize();
@@ -146,6 +146,9 @@ private:
     SdlInputHandler* m_InputHandler;
     SDL_SpinLock m_InputHandlerLock;
     int m_MouseEmulationRefCount;
+
+    int m_TerminationErrorCode;
+    int m_FailedStageId;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;

@@ -62,8 +62,12 @@ Item {
         window.visible = true
     }
 
-    function sessionFinished()
+    function sessionFinished(portTestResult)
     {
+        if (portTestResult !== 0 && streamSegueErrorDialog.text) {
+            streamSegueErrorDialog.text += "\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network."
+        }
+
         // Enable GUI gamepad usage now
         SdlGamepadKeyNavigation.enable()
 
