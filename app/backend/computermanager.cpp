@@ -607,7 +607,7 @@ public:
     }
 
 signals:
-    void computerAddCompleted(QVariant success);
+    void computerAddCompleted(QVariant success, QVariant detectedPortBlocking);
 
     void computerStateChanged(NvComputer* computer);
 
@@ -637,7 +637,11 @@ private:
             return serverInfo;
         } catch (...) {
             if (!m_Mdns) {
-                emit computerAddCompleted(false);
+                // We failed to connect to the specified PC. Let's test to make sure this network
+                // isn't blocking Moonlight, so we can tell the user about it.
+                int portTestResult = LiTestClientConnectivity("qt.conntest.moonlight-stream.org", 443,
+                                                              ML_PORT_FLAG_TCP_47984 | ML_PORT_FLAG_TCP_47989);
+                emit computerAddCompleted(false, portTestResult != 0 && portTestResult != ML_TEST_RESULT_INCONCLUSIVE);
             }
             return QString();
         }
@@ -729,7 +733,7 @@ private:
 
                 // For non-mDNS clients, let them know it succeeded
                 if (!m_Mdns) {
-                    emit computerAddCompleted(true);
+                    emit computerAddCompleted(true, false);
                 }
 
                 // Tell our client if something changed
@@ -750,7 +754,7 @@ private:
 
                 // For non-mDNS clients, let them know it succeeded
                 if (!m_Mdns) {
-                    emit computerAddCompleted(true);
+                    emit computerAddCompleted(true, false);
                 }
 
                 // Tell our client about this new PC

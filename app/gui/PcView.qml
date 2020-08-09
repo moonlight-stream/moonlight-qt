@@ -58,11 +58,18 @@ CenteredGridView {
         }
     }
 
-    function addComplete(success)
+    function addComplete(success, detectedPortBlocking)
     {
         if (!success) {
             errorDialog.text = "Unable to connect to the specified PC."
-            errorDialog.helpText = "Click the Help button for possible solutions."
+
+            if (detectedPortBlocking) {
+                errorDialog.text += "\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network."
+            }
+            else {
+                errorDialog.helpText = "Click the Help button for possible solutions."
+            }
+
             errorDialog.open()
         }
     }

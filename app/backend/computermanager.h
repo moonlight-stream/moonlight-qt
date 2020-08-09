@@ -188,7 +188,7 @@ signals:
 
     void pairingCompleted(NvComputer* computer, QString error);
 
-    void computerAddCompleted(QVariant success);
+    void computerAddCompleted(QVariant success, QVariant detectedPortBlocking);
 
     void quitAppCompleted(QVariant error);
 
