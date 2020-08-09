@@ -23,6 +23,18 @@
     <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed." Schedule="afterInstallInitialize" />
     <MediaTemplate CompressionLevel="high" EmbedCab="yes" />
 
+    <Property Id="MPSSVC_START">
+      <RegistrySearch Id="MpsSvcStart"
+                      Root="HKLM"
+                      Key="System\CurrentControlSet\Services\MpsSvc"
+                      Name="Start"
+                      Type="raw" />
+    </Property>
+
+    <Condition Message="Setup cannot proceed because the Windows Firewall service has been improperly disabled or stopped. You must start the Windows Firewall service (MpsSvc) to continue. If you would like to disable Windows Firewall properly, use the Windows Firewall options in Control Panel.">
+      <![CDATA[Installed OR MPSSVC_START="#2"]]>
+    </Condition>
+
     <?if $(var.Platform) = x64 ?>
       <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
     <?else ?>
