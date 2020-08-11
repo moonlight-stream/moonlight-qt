@@ -33,6 +33,8 @@
 #include <QGuiApplication>
 #include <QCursor>
 
+#define CONN_TEST_SERVER "qt.conntest.moonlight-stream.org"
+
 CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clStageStarting,
     nullptr,
@@ -53,22 +55,19 @@ void Session::clStageStarting(int stage)
     // which happens to be the main thread, so it's cool to interact
     // with the GUI in these callbacks.
     emit s_ActiveSession->stageStarting(QString::fromLocal8Bit(LiGetStageName(stage)));
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void Session::clStageFailed(int stage, int errorCode)
 {
-    // We know this is called on the same thread as LiStartConnection()
-    // which happens to be the main thread, so it's cool to interact
-    // with the GUI in these callbacks.
-    s_ActiveSession->m_FailedStageId = stage;
+    // Perform the port test now, while we're on the async connection thread and not blocking the UI.
+    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, LiGetPortFlagsFromStage(stage));
+
     emit s_ActiveSession->stageFailed(QString::fromLocal8Bit(LiGetStageName(stage)), errorCode);
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 }
 
 void Session::clConnectionTerminated(int errorCode)
 {
-    s_ActiveSession->m_TerminationErrorCode = errorCode;
+    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, LiGetPortFlagsFromTerminationErrorCode(errorCode));
 
     // Display the termination dialog if this was not intended
     switch (errorCode) {
@@ -339,8 +338,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandler(nullptr),
       m_InputHandlerLock(0),
       m_MouseEmulationRefCount(0),
-      m_TerminationErrorCode(ML_ERROR_GRACEFUL_TERMINATION),
-      m_FailedStageId(STAGE_NONE),
+      m_AsyncConnectionSuccess(false),
+      m_PortTestResults(0),
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
@@ -706,36 +705,12 @@ private:
                 !m_Session->m_UnexpectedTermination &&
                 m_Session->m_Preferences->quitAppAfter;
 
-
-        // If the connection terminated due to an error, we may want
-        // to perform a connection test to ensure our traffic is not
-        // being blocked.
-        int portFlags;
-        unsigned int portTestResult = 0;
-        if (m_Session->m_FailedStageId != STAGE_NONE) {
-            portFlags = LiGetPortFlagsFromStage(m_Session->m_FailedStageId);
-        }
-        else if (m_Session->m_TerminationErrorCode != ML_ERROR_GRACEFUL_TERMINATION) {
-            portFlags = LiGetPortFlagsFromTerminationErrorCode(m_Session->m_TerminationErrorCode);
-        }
-        else {
-            portFlags = 0;
-        }
-        if (portFlags != 0 && m_Session->m_Preferences->detectNetworkBlocking) {
-            portTestResult = LiTestClientConnectivity("qt.conntest.moonlight-stream.org", 443, portFlags);
-
-            // Ignore an inconclusive result
-            if (portTestResult == ML_TEST_RESULT_INCONCLUSIVE) {
-                portTestResult = 0;
-            }
-        }
-
         // Notify the UI
         if (shouldQuit) {
             emit m_Session->quitStarting();
         }
         else {
-            emit m_Session->sessionFinished(portTestResult);
+            emit m_Session->sessionFinished(m_Session->m_PortTestResults);
         }
 
         // Finish cleanup of the connection state
@@ -753,7 +728,7 @@ private:
             }
 
             // Session is finished now
-            emit m_Session->sessionFinished(portTestResult);
+            emit m_Session->sessionFinished(m_Session->m_PortTestResults);
         }
     }
 
@@ -942,39 +917,30 @@ void Session::notifyMouseEmulationMode(bool enabled)
     }
 }
 
-void Session::exec(int displayOriginX, int displayOriginY)
+class AsyncConnectionStartThread : public QThread
 {
-    m_DisplayOriginX = displayOriginX;
-    m_DisplayOriginY = displayOriginY;
+public:
+    AsyncConnectionStartThread(Session* session) :
+        QThread(nullptr),
+        m_Session(session) {}
 
-    // Complete initialization in this deferred context to avoid
-    // calling expensive functions in the constructor (during the
-    // process of loading the StreamSegue).
-    if (!initialize()) {
-        emit sessionFinished(0);
-        return;
+private:
+    void run() override
+    {
+        m_Session->m_AsyncConnectionSuccess = m_Session->startConnectionAsync();
     }
+
+    Session* m_Session;
+};
+
+// Called in a non-main thread
+bool Session::startConnectionAsync()
+{
+    StreamingPreferences prefs;
 
     // Wait 1.5 seconds before connecting to let the user
     // have time to read any messages present on the segue
-    uint32_t start = SDL_GetTicks();
-    while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 1500)) {
-        // Pump the UI loop while we wait
-        SDL_Delay(5);
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    }
-
-    // Wait for any old session to finish cleanup
-    s_ActiveSessionSemaphore.acquire();
-
-    // We're now active
-    s_ActiveSession = this;
-
-    // Initialize the gamepad code with our preferences
-    StreamingPreferences prefs;
-    m_InputHandler = new SdlInputHandler(prefs, m_Computer,
-                                         m_StreamConfig.width,
-                                         m_StreamConfig.height);
+    SDL_Delay(1500);
 
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
@@ -1008,19 +974,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
                            m_InputHandler->getAttachedGamepadMask());
         }
     } catch (const GfeHttpResponseException& e) {
-        delete m_InputHandler;
-        m_InputHandler = nullptr;
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         emit displayLaunchError("GeForce Experience returned error: " + e.toQString());
-        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-        return;
+        return false;
     } catch (const QtNetworkReplyException& e) {
-        delete m_InputHandler;
-        m_InputHandler = nullptr;
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
         emit displayLaunchError(e.toQString());
-        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-        return;
+        return false;
     }
 
     QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
@@ -1070,16 +1028,57 @@ void Session::exec(int displayOriginX, int displayOriginY)
     if (err != 0) {
         // We already displayed an error dialog in the stage failure
         // listener.
+        return false;
+    }
+
+    emit connectionStarted();
+    return true;
+}
+
+void Session::exec(int displayOriginX, int displayOriginY)
+{
+    m_DisplayOriginX = displayOriginX;
+    m_DisplayOriginY = displayOriginY;
+
+    // Complete initialization in this deferred context to avoid
+    // calling expensive functions in the constructor (during the
+    // process of loading the StreamSegue).
+    //
+    // NB: This initializes the SDL video subsystem, so it must be
+    // called on the main thread.
+    if (!initialize()) {
+        emit sessionFinished(0);
+        return;
+    }
+
+    // Wait for any old session to finish cleanup
+    s_ActiveSessionSemaphore.acquire();
+
+    // We're now active
+    s_ActiveSession = this;
+
+    // Initialize the gamepad code with our preferences
+    // NB: m_InputHandler must be initialize before starting the connection.
+    StreamingPreferences prefs;
+    m_InputHandler = new SdlInputHandler(prefs, m_Computer,
+                                         m_StreamConfig.width,
+                                         m_StreamConfig.height);
+
+    // Kick off the async connection thread while we sit here and pump the event loop
+    AsyncConnectionStartThread asyncConnThread(this);
+    asyncConnThread.start();
+    while (!asyncConnThread.wait(10)) {
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    }
+
+    // If the connection failed, clean up and abort the connection.
+    if (!m_AsyncConnectionSuccess) {
         delete m_InputHandler;
         m_InputHandler = nullptr;
         SDL_QuitSubSystem(SDL_INIT_VIDEO);
         QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
         return;
     }
-
-    // Pump the message loop to update the UI
-    emit connectionStarted();
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
 
     int x, y, width, height;
     getWindowDimensions(x, y, width, height);

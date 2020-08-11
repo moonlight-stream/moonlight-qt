@@ -64,7 +64,7 @@ Item {
 
     function sessionFinished(portTestResult)
     {
-        if (portTestResult !== 0 && streamSegueErrorDialog.text) {
+        if (portTestResult !== 0 && portTestResult !== -1 && streamSegueErrorDialog.text) {
             streamSegueErrorDialog.text += "\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network."
         }
 

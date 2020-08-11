@@ -16,6 +16,7 @@ class Session : public QObject
 
     friend class SdlInputHandler;
     friend class DeferredSessionCleanupTask;
+    friend class AsyncConnectionStartThread;
 
 public:
     explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
@@ -55,6 +56,8 @@ signals:
 
 private:
     bool initialize();
+
+    bool startConnectionAsync();
 
     bool validateLaunch(SDL_Window* testWindow);
 
@@ -147,8 +150,8 @@ private:
     SDL_SpinLock m_InputHandlerLock;
     int m_MouseEmulationRefCount;
 
-    int m_TerminationErrorCode;
-    int m_FailedStageId;
+    bool m_AsyncConnectionSuccess;
+    int m_PortTestResults;
 
     int m_ActiveVideoFormat;
     int m_ActiveVideoWidth;
