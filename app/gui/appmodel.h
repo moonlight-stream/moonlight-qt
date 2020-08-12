@@ -54,6 +54,8 @@ private:
 
     QVector<NvApp> getVisibleApps(const QVector<NvApp>& appList);
 
+    bool isAppCurrentlyVisible(const NvApp& app);
+
     NvComputer* m_Computer;
     BoxArtManager m_BoxArtManager;
     ComputerManager* m_ComputerManager;

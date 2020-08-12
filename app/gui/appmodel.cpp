@@ -101,12 +101,26 @@ void AppModel::quitRunningApp()
     m_ComputerManager->quitRunningApp(m_Computer);
 }
 
+bool AppModel::isAppCurrentlyVisible(const NvApp& app)
+{
+    for (const NvApp& visibleApp : m_VisibleApps) {
+        if (app.id == visibleApp.id) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 QVector<NvApp> AppModel::getVisibleApps(const QVector<NvApp>& appList)
 {
     QVector<NvApp> visibleApps;
 
     for (const NvApp& app : appList) {
-        if (m_ShowHiddenGames || !app.hidden) {
+        // Don't immediately hide games that were previously visible. This
+        // allows users to easily uncheck the "Hide App" checkbox if they
+        // check it by mistake.
+        if (m_ShowHiddenGames || !app.hidden || isAppCurrentlyVisible(app)) {
             visibleApps.append(app);
         }
     }
