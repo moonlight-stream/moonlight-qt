@@ -282,7 +282,7 @@ public:
         CMSampleTimingInfo timingInfo = {
             .duration = kCMTimeInvalid,
             .decodeTimeStamp = kCMTimeInvalid,
-            .presentationTimeStamp = CMTimeMake(mach_absolute_time(), 1000 * 1000 * 1000)
+            .presentationTimeStamp = CMClockMakeHostTimeFromSystemUnits(mach_absolute_time())
         };
 
         CMSampleBufferRef sampleBuffer;
