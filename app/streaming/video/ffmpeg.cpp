@@ -423,17 +423,45 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
 void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
 {
     int offset = 0;
+    const char* codecString;
 
     // Start with an empty string
     output[offset] = 0;
 
+    switch (m_VideoFormat)
+    {
+    case VIDEO_FORMAT_H264:
+        codecString = "H.264";
+        break;
+
+    case VIDEO_FORMAT_H265:
+        codecString = "HEVC";
+        break;
+
+    case VIDEO_FORMAT_H265_MAIN10:
+        codecString = "HEVC Main 10";
+        break;
+
+    default:
+        SDL_assert(false);
+        codecString = "UNKNOWN";
+        break;
+    }
+
     if (stats.receivedFps > 0) {
+        if (m_VideoDecoderCtx != nullptr) {
+            offset += sprintf(&output[offset],
+                              "Video stream: %dx%d %.2f FPS (Codec: %s)\n",
+                              m_VideoDecoderCtx->width,
+                              m_VideoDecoderCtx->height,
+                              stats.totalFps,
+                              codecString);
+        }
+
         offset += sprintf(&output[offset],
-                          "Estimated host PC frame rate: %.2f FPS\n"
                           "Incoming frame rate from network: %.2f FPS\n"
                           "Decoding frame rate: %.2f FPS\n"
                           "Rendering frame rate: %.2f FPS\n",
-                          stats.totalFps,
                           stats.receivedFps,
                           stats.decodedFps,
                           stats.renderedFps);
