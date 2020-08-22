@@ -135,6 +135,8 @@ private:
     GamepadState m_GamepadState[MAX_GAMEPADS];
     QSet<short> m_KeysDown;
     bool m_FakeCaptureActive;
+    QString m_OldIgnoreDevices;
+    QString m_OldIgnoreDevicesExcept;
 
     SDL_TouchFingerEvent m_LastTouchDownEvent;
     SDL_TouchFingerEvent m_LastTouchUpEvent;
