@@ -13,5 +13,6 @@ CONFIG(release, debug|release) {
 #CONFIG += sanitizer sanitize_address
 
 # Enable ASan for Windows
-#QMAKE_CFLAGS += /fsanitize=address /MD
-#LIBS += clang_rt.asan_dynamic-i386.lib clang_rt.asan_dynamic_runtime_thunk-i386.lib
+#QMAKE_CFLAGS += -fsanitize=address
+#QMAKE_CXXFLAGS += -fsanitize=address
+#QMAKE_LFLAGS += -incremental:no -wholearchive:clang_rt.asan_dynamic-x86_64.lib -wholearchive:clang_rt.asan_dynamic_runtime_thunk-x86_64.lib
