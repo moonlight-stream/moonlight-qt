@@ -29,6 +29,7 @@
 #define SER_DEFAULTVER "defaultver"
 #define SER_PACKETSIZE "packetsize"
 #define SER_DETECTNETBLOCKING "detectnetblocking"
+#define SER_SWAPMOUSEBUTTONS "swapmousebuttons"
 
 #define CURRENT_DEFAULT_VER 1
 
@@ -70,6 +71,7 @@ void StreamingPreferences::reload()
     gamepadMouse = settings.value(SER_GAMEPADMOUSE, true).toBool();
     detectNetworkBlocking = settings.value(SER_DETECTNETBLOCKING, true).toBool();
     packetSize = settings.value(SER_PACKETSIZE, 0).toInt();
+    swapMouseButtons = settings.value(SER_SWAPMOUSEBUTTONS, false).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -121,6 +123,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
     settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
     settings.setValue(SER_DEFAULTVER, CURRENT_DEFAULT_VER);
+    settings.setValue(SER_SWAPMOUSEBUTTONS, swapMouseButtons);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)

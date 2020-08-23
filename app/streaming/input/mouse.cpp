@@ -55,6 +55,14 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             return;
     }
 
+    if (m_SwapMouseButtons) {
+        if (button == BUTTON_RIGHT)
+            button = BUTTON_LEFT;
+        else if (button == BUTTON_LEFT)
+            button = BUTTON_RIGHT;
+    }
+
+
     LiSendMouseButtonEvent(event->state == SDL_PRESSED ?
                                BUTTON_ACTION_PRESS :
                                BUTTON_ACTION_RELEASE,

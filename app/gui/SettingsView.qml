@@ -638,6 +638,23 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: "When enabled, holding the Start button will toggle mouse mode"
                 }
+
+                CheckBox {
+                    id: swapMouseButtonsCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: "Swap mouse buttons"
+                    font.pointSize:  12
+                    checked: StreamingPreferences.swapMouseButtons
+                    onCheckedChanged: {
+                        StreamingPreferences.swapMouseButtons = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
+                    ToolTip.text: "When checked, swap the left and right mouse buttons"
+                }
             }
         }
 
