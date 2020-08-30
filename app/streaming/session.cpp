@@ -79,6 +79,11 @@ void Session::clConnectionTerminated(int errorCode)
         emit s_ActiveSession->displayLaunchError("No video received from host. Check the host PC's firewall and port forwarding rules.");
         break;
 
+    case ML_ERROR_NO_VIDEO_FRAME:
+        s_ActiveSession->m_UnexpectedTermination = true;
+        emit s_ActiveSession->displayLaunchError("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection.");
+        break;
+
     default:
         s_ActiveSession->m_UnexpectedTermination = true;
         emit s_ActiveSession->displayLaunchError("Connection terminated");
