@@ -728,6 +728,12 @@ private:
             newComputer->manualAddress = m_Address;
         }
 
+        QHostAddress hostAddress(m_Address);
+        bool addressIsSiteLocalV4 =
+                hostAddress.isInSubnet(QHostAddress("10.0.0.0"), 8) ||
+                hostAddress.isInSubnet(QHostAddress("172.16.0.0"), 12) ||
+                hostAddress.isInSubnet(QHostAddress("192.168.0.0"), 16);
+
         {
             // Check if this PC already exists
             QWriteLocker lock(&m_ComputerManager->m_Lock);
@@ -760,6 +766,21 @@ private:
 
                 // Drop the lock before notifying
                 lock.unlock();
+
+                // If this wasn't added via mDNS but it is a RFC 1918 IPv4 address,
+                // go ahead and do the STUN request now to populate an external address.
+                if (!m_Mdns && addressIsSiteLocalV4) {
+                    quint32 addr;
+                    int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &addr);
+                    if (err == 0) {
+                        lock.relock();
+                        newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
+                        lock.unlock();
+                    }
+                    else {
+                        qWarning() << "STUN failed to get WAN address:" << err;
+                    }
+                }
 
                 // For non-mDNS clients, let them know it succeeded
                 if (!m_Mdns) {
