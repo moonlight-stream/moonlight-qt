@@ -529,6 +529,7 @@ void Session::emitLaunchWarning(QString text)
         // Pump the UI loop while we wait
         SDL_Delay(5);
         QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        QCoreApplication::sendPostedEvents();
     }
 }
 
@@ -1071,7 +1072,13 @@ void Session::exec(int displayOriginX, int displayOriginY)
     asyncConnThread.start();
     while (!asyncConnThread.wait(10)) {
         QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        QCoreApplication::sendPostedEvents();
     }
+
+    // Pump the event loop one last time to ensure we pick up any events from
+    // the thread that happened while it was in the final successful QThread::wait().
+    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+    QCoreApplication::sendPostedEvents();
 
     // If the connection failed, clean up and abort the connection.
     if (!m_AsyncConnectionSuccess) {
