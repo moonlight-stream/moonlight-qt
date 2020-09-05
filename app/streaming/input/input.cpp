@@ -12,6 +12,7 @@
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int streamWidth, int streamHeight)
     : m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
+      m_SwapMouseButtons(prefs.swapMouseButtons),
       m_MouseMoveTimer(0),
       m_MousePositionLock(0),
       m_MouseWasInVideoRegion(false),

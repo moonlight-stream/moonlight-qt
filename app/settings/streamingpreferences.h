@@ -74,6 +74,7 @@ public:
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
+    Q_PROPERTY(bool swapMouseButtons MEMBER swapMouseButtons NOTIFY mouseButtonsChanged)
 
     // Directly accessible members for preferences
     int width;
@@ -95,6 +96,7 @@ public:
     bool richPresence;
     bool gamepadMouse;
     bool detectNetworkBlocking;
+    bool swapMouseButtons;
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
@@ -124,5 +126,6 @@ signals:
     void richPresenceChanged();
     void gamepadMouseChanged();
     void detectNetworkBlockingChanged();
+    void mouseButtonsChanged();
 };
 
