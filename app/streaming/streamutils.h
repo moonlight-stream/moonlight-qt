@@ -6,6 +6,9 @@ class StreamUtils
 {
 public:
     static
+    Uint32 getPlatformWindowFlags();
+
+    static
     void scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst);
 
     static

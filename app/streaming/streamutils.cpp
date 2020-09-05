@@ -6,6 +6,15 @@
 #include <ApplicationServices/ApplicationServices.h>
 #endif
 
+Uint32 StreamUtils::getPlatformWindowFlags()
+{
+#ifdef Q_OS_DARWIN
+    return SDL_WINDOW_METAL;
+#else
+    return 0;
+#endif
+}
+
 void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
 {
     int dstH = dst->w * src->h / src->w;

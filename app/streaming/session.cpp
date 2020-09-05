@@ -372,13 +372,21 @@ bool Session::initialize()
     }
 
     // Create a hidden window to use for decoder initialization tests
-    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+                                              SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
     if (!testWindow) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create window for hardware decode test: %s",
-                     SDL_GetError());
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        return false;
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create test window with platform flags: %s",
+                    SDL_GetError());
+
+        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+        if (!testWindow) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create window for hardware decode test: %s",
+                         SDL_GetError());
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+            return false;
+        }
     }
 
     qInfo() << "Server GPU:" << m_Computer->gpuModel;
@@ -1104,16 +1112,29 @@ void Session::exec(int displayOriginX, int displayOriginY)
                                 y,
                                 width,
                                 height,
-                                SDL_WINDOW_ALLOW_HIGHDPI);
+                                SDL_WINDOW_ALLOW_HIGHDPI | StreamUtils::getPlatformWindowFlags());
     if (!m_Window) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_CreateWindow() failed: %s",
-                     SDL_GetError());
-        delete m_InputHandler;
-        m_InputHandler = nullptr;
-        SDL_QuitSubSystem(SDL_INIT_VIDEO);
-        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-        return;
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL_CreateWindow() failed with platform flags: %s",
+                    SDL_GetError());
+
+        m_Window = SDL_CreateWindow("Moonlight",
+                                    x,
+                                    y,
+                                    width,
+                                    height,
+                                    SDL_WINDOW_ALLOW_HIGHDPI);
+        if (!m_Window) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_CreateWindow() failed: %s",
+                         SDL_GetError());
+
+            delete m_InputHandler;
+            m_InputHandler = nullptr;
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+            QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+            return;
+        }
     }
 
     m_InputHandler->setWindow(m_Window);
