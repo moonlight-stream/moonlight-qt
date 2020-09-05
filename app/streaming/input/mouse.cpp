@@ -62,6 +62,15 @@ void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
             button = BUTTON_RIGHT;
     }
 
+    // Ensure any pending mouse position update has been sent before we send
+    // our button event. This ensures that the cursor is in the correct location
+    // when the button event is issued.
+    //
+    // On platforms like macOS, the mouse doesn't track when the window isn't
+    // focused. When we gain focus via mouse click, we immediately get a mouse
+    // move event and a mouse button event. If we don't flush here, the button
+    // will probably arrive before the mouse timer issues the position update.
+    flushMousePositionUpdate();
 
     LiSendMouseButtonEvent(event->state == SDL_PRESSED ?
                                BUTTON_ACTION_PRESS :
@@ -83,6 +92,73 @@ void SdlInputHandler::updateMousePositionReport(int mouseX, int mouseY)
     m_MousePositionReport.windowHeight = windowHeight;
     SDL_AtomicUnlock(&m_MousePositionLock);
     SDL_AtomicSet(&m_MousePositionUpdated, 1);
+}
+
+void SdlInputHandler::flushMousePositionUpdate()
+{
+    bool hasNewPosition = SDL_AtomicSet(&m_MousePositionUpdated, 0) != 0;
+    if (hasNewPosition) {
+        // If the lock is held now, the main thread is trying to update
+        // the mouse position. We'll pick up the new position next time.
+        if (SDL_AtomicTryLock(&m_MousePositionLock)) {
+            SDL_Rect src, dst;
+            bool mouseInVideoRegion;
+
+            src.x = src.y = 0;
+            src.w = m_StreamWidth;
+            src.h = m_StreamHeight;
+
+            dst.x = dst.y = 0;
+            dst.w = m_MousePositionReport.windowWidth;
+            dst.h = m_MousePositionReport.windowHeight;
+
+            // Use the stream and window sizes to determine the video region
+            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+            mouseInVideoRegion = isMouseInVideoRegion(m_MousePositionReport.x,
+                                                      m_MousePositionReport.y,
+                                                      m_MousePositionReport.windowWidth,
+                                                      m_MousePositionReport.windowHeight);
+
+            // Clamp motion to the video region
+            short x = qMin(qMax(m_MousePositionReport.x - dst.x, 0), dst.w);
+            short y = qMin(qMax(m_MousePositionReport.y - dst.y, 0), dst.h);
+
+            // Release the spinlock to unblock the main thread
+            SDL_AtomicUnlock(&m_MousePositionLock);
+
+            // Send the mouse position update if one of the following is true:
+            // a) it is in the video region now
+            // b) it just left the video region (to ensure the mouse is clamped to the video boundary)
+            // c) a mouse button is still down from before the cursor left the video region (to allow smooth dragging)
+            Uint32 buttonState = SDL_GetMouseState(nullptr, nullptr);
+            if (buttonState == 0) {
+                m_PendingMouseButtonsAllUpOnVideoRegionLeave = false;
+            }
+            if (mouseInVideoRegion || m_MouseWasInVideoRegion || m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
+                LiSendMousePositionEvent(x, y, dst.w, dst.h);
+            }
+
+            // Adjust the cursor visibility if applicable
+            if (mouseInVideoRegion ^ m_MouseWasInVideoRegion) {
+                // We must push an event for the main thread to process, because it's not safe
+                // to directly can SDL_ShowCursor() on the arbitrary thread on which this timer
+                // executes.
+                SDL_Event event;
+                event.type = SDL_USEREVENT;
+                event.user.code = mouseInVideoRegion ? SDL_CODE_HIDE_CURSOR : SDL_CODE_SHOW_CURSOR;
+                SDL_PushEvent(&event);
+
+                if (!mouseInVideoRegion && buttonState != 0) {
+                    // If we still have a button pressed on leave, wait for that to come up
+                    // before we stop sending mouse position events.
+                    m_PendingMouseButtonsAllUpOnVideoRegionLeave = true;
+                }
+            }
+
+            m_MouseWasInVideoRegion = mouseInVideoRegion;
+        }
+    }
 }
 
 void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
@@ -166,69 +242,8 @@ Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
         LiSendMouseMoveEvent(deltaX, deltaY);
     }
 
-    bool hasNewPosition = SDL_AtomicSet(&me->m_MousePositionUpdated, 0) != 0;
-    if (hasNewPosition) {
-        // If the lock is held now, the main thread is trying to update
-        // the mouse position. We'll pick up the new position next time.
-        if (SDL_AtomicTryLock(&me->m_MousePositionLock)) {
-            SDL_Rect src, dst;
-            bool mouseInVideoRegion;
-
-            src.x = src.y = 0;
-            src.w = me->m_StreamWidth;
-            src.h = me->m_StreamHeight;
-
-            dst.x = dst.y = 0;
-            dst.w = me->m_MousePositionReport.windowWidth;
-            dst.h = me->m_MousePositionReport.windowHeight;
-
-            // Use the stream and window sizes to determine the video region
-            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-            mouseInVideoRegion = me->isMouseInVideoRegion(me->m_MousePositionReport.x,
-                                                          me->m_MousePositionReport.y,
-                                                          me->m_MousePositionReport.windowWidth,
-                                                          me->m_MousePositionReport.windowHeight);
-
-            // Clamp motion to the video region
-            short x = qMin(qMax(me->m_MousePositionReport.x - dst.x, 0), dst.w);
-            short y = qMin(qMax(me->m_MousePositionReport.y - dst.y, 0), dst.h);
-
-            // Release the spinlock to unblock the main thread
-            SDL_AtomicUnlock(&me->m_MousePositionLock);
-
-            // Send the mouse position update if one of the following is true:
-            // a) it is in the video region now
-            // b) it just left the video region (to ensure the mouse is clamped to the video boundary)
-            // c) a mouse button is still down from before the cursor left the video region (to allow smooth dragging)
-            Uint32 buttonState = SDL_GetMouseState(nullptr, nullptr);
-            if (buttonState == 0) {
-                me->m_PendingMouseButtonsAllUpOnVideoRegionLeave = false;
-            }
-            if (mouseInVideoRegion || me->m_MouseWasInVideoRegion || me->m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
-                LiSendMousePositionEvent(x, y, dst.w, dst.h);
-            }
-
-            // Adjust the cursor visibility if applicable
-            if (mouseInVideoRegion ^ me->m_MouseWasInVideoRegion) {
-                // We must push an event for the main thread to process, because it's not safe
-                // to directly can SDL_ShowCursor() on the arbitrary thread on which this timer
-                // executes.
-                SDL_Event event;
-                event.type = SDL_USEREVENT;
-                event.user.code = mouseInVideoRegion ? SDL_CODE_HIDE_CURSOR : SDL_CODE_SHOW_CURSOR;
-                SDL_PushEvent(&event);
-
-                if (!mouseInVideoRegion && buttonState != 0) {
-                    // If we still have a button pressed on leave, wait for that to come up
-                    // before we stop sending mouse position events.
-                    me->m_PendingMouseButtonsAllUpOnVideoRegionLeave = true;
-                }
-            }
-
-            me->m_MouseWasInVideoRegion = mouseInVideoRegion;
-        }
-    }
+    // Send mouse position updates if applicable
+    me->flushMousePositionUpdate();
 
 #ifdef Q_OS_WIN32
     // See comment in SdlInputHandler::notifyMouseLeave()

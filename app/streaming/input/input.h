@@ -84,6 +84,8 @@ public:
 
     void updateMousePositionReport(int mouseX, int mouseY);
 
+    void flushMousePositionUpdate();
+
     static
     QString getUnmappedGamepads();
 
