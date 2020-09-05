@@ -85,6 +85,8 @@ typedef enum
                                      Called on Android in onResume()
                                 */
 
+    SDL_LOCALECHANGED,  /**< The user's locale preferences have changed. */
+
     /* Display events */
     SDL_DISPLAYEVENT   = 0x150,  /**< Display state change */
 
