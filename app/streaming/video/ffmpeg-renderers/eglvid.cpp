@@ -58,6 +58,8 @@ typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platf
         SDL_LOG_CATEGORY_APPLICATION, \
         "EGLRenderer: " __VA_ARGS__)
 
+SDL_Window* EGLRenderer::s_LastFailedWindow = nullptr;
+
 EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
     :
         m_SwPixelFormat(AV_PIX_FMT_NONE),
@@ -276,6 +278,13 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // HACK: Work around bug where renderer will repeatedly fail with:
+    // SDL_CreateRenderer() failed: Could not create GLES window surface
+    if (m_Window == s_LastFailedWindow) {
+        EGL_LOG(Error, "SDL_CreateRenderer() already failed on this window!");
+        return false;
+    }
+
     /*
      * Create a dummy renderer in order to craft an accelerated SDL Window.
      * Request opengl ES 3.0 context, otherwise it will SIGSEGV
@@ -306,6 +315,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     if (!(m_DummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED))) {
         EGL_LOG(Error, "SDL_CreateRenderer() failed: %s", SDL_GetError());
+        s_LastFailedWindow = m_Window;
         return false;
     }
 

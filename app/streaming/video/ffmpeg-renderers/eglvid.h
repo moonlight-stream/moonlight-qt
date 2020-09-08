@@ -44,4 +44,8 @@ private:
     int m_OldContextMinorVersion;
 
     SDL_Renderer *m_DummyRenderer;
+
+    // HACK: Work around bug where renderer will repeatedly fail with:
+    // SDL_CreateRenderer() failed: Could not create GLES window surface
+    static SDL_Window* s_LastFailedWindow;
 };
