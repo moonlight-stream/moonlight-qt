@@ -35,6 +35,32 @@
 	</screenshots>
 
 	<releases>
+		<release version="2.2.0" date="2020-09-10">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added the ability to hide unwanted apps and games</li>
+					<li>Added a network test to determine if your Internet connection is blocking Moonlight</li>
+					<li>Added the option to swap mouse buttons</li>
+					<li>Added codec and resolution to the on-screen performance stats</li>
+					<li>Added a warning if the connection is too unstable to receive any complete video frames</li>
+					<li>Added a Discord link to the toolbar in settings</li>
+					<li>Enabled the new EGL renderer by default on Linux</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed streaming over networks that block QoS-tagged packets</li>
+					<li>Selecting a frame rate higher than 60 FPS no longer sets the host desktop to 720p</li>
+					<li>Right-side modifier keys no longer press the corresponding left-side keys too</li>
+					<li>Fixed mouse position never reaching the edge of the screen with certain desktop resolutions</li>
+					<li>Improved synchronization between host and client mouse cursor in remote desktop mouse mode</li>
+					<li>Cached box art is now deleted when the PC is removed from Moonlight</li>
+					<li>Fixed several CLI options not properly overriding GUI options</li>
+					<li>Updated included gamepad mappings</li>
+					<li>Updated to Qt 5.15.1</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.1.0" date="2020-05-17">
 			<description>
 				<p>New features:</p>
