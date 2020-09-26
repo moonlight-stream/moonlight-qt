@@ -240,7 +240,6 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Join our community on Discord"
                 ToolTip.text: "Rejoignez notre communauté sur Discord"
 
                 // TODO need to make sure browser is brought to foreground.
@@ -251,6 +250,7 @@ ApplicationWindow {
                 }
             }
 
+
             NavigableToolButton {
                 id: addPcButton
                 visible: stackView.currentItem.objectName === "Computers"
@@ -260,7 +260,6 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Add PC manually" + (newPcShortcut.nativeText ? (" ("+newPcShortcut.nativeText+")") : "")
                 ToolTip.text: "Ajouter un PC manuellement" + (newPcShortcut.nativeText ? (" ("+newPcShortcut.nativeText+")") : "")
 
                 Shortcut {
