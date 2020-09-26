@@ -17,7 +17,7 @@ CenteredGridView {
     topMargin: 20
     bottomMargin: 5
     cellWidth: 310; cellHeight: 330;
-    objectName: "Computers"
+    objectName: "Ordinateurs"
 
     Component.onCompleted: {
         // Don't show any highlighted item until interacting with them.
@@ -64,13 +64,13 @@ CenteredGridView {
     function addComplete(success, detectedPortBlocking)
     {
         if (!success) {
-            errorDialog.text = "Unable to connect to the specified PC."
+            errorDialog.text = "Impossible de se connecter au PC spécifié."
 
             if (detectedPortBlocking) {
-                errorDialog.text += "\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network."
+                errorDialog.text += "\n\nLa connexion Internet de ce PC bloque le Moonlight. Le streaming sur Internet peut ne pas fonctionner lorsqu'il est connecté à ce réseau."
             }
             else {
-                errorDialog.helpText = "Click the Help button for possible solutions."
+                errorDialog.helpText = "Cliquez sur le bouton Aide pour connaître les solutions possibles."
             }
 
             errorDialog.open()
@@ -99,8 +99,8 @@ CenteredGridView {
         Label {
             height: searchSpinner.height
             elide: Label.ElideRight
-            text: StreamingPreferences.enableMdns ? "Searching for PCs with NVIDIA GameStream enabled..."
-                                                  : "Automatic PC discovery is disabled. Add your PC manually."
+            text: StreamingPreferences.enableMdns ? "Recherche de PC avec NVIDIA GameStream activé..."
+                                                  : "La découverte automatique des PC est désactivée. Ajoutez votre PC manuellement."
             font.pointSize: 20
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
@@ -164,7 +164,7 @@ CenteredGridView {
             id: pcContextMenu
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "View Apps"
+                text: "Voir les applications"
                 onTriggered: {
                     var component = Qt.createComponent("AppView.qml")
                     var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
@@ -174,7 +174,7 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "View Hidden Apps"
+                text: "Voir les applications cachées"
                 onTriggered: {
                     var component = Qt.createComponent("AppView.qml")
                     var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
@@ -184,13 +184,13 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Wake PC"
+                text: "Réveiller le PC"
                 onTriggered: computerModel.wakeComputer(index)
                 visible: !model.online && model.wakeable
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Test Network"
+                text: "Test Réseau"
                 onTriggered: {
                     computerModel.testConnectionForComputer(index)
                     testConnectionDialog.open()
@@ -199,7 +199,7 @@ CenteredGridView {
 
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Rename PC"
+                text: "Renommer le PC"
                 onTriggered: {
                     renamePcDialog.pcIndex = index
                     renamePcDialog.originalName = model.name
@@ -208,7 +208,7 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Delete PC"
+                text: "Supprimer le PC"
                 onTriggered: {
                     deletePcDialog.pcIndex = index
                     // get confirmation first, actual closing is called from the dialog
@@ -238,7 +238,7 @@ CenteredGridView {
                     }
                     else {
                         // cannot pair while something is streaming or attempting to pair
-                        errorDialog.text = "You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again."
+                        errorDialog.text = "Vous ne pouvez pas effectuer de couplage alors qu'une session précédente est encore en cours sur le PC hôte. Quittez tous les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d'effectuer l'appariement."
                         errorDialog.helpText = ""
                         errorDialog.open()
                     }
@@ -293,7 +293,7 @@ CenteredGridView {
 
         // don't allow edits to the rest of the window while open
         property string pin : "0000"
-        text:"Please enter " + pin + " on your GameStream PC. This dialog will close when pairing is completed."
+        text:"Please enter " + pin + " sur votre GameStream PC. Cette boîte de dialogue se fermera lorsque l'appariement sera terminé."
         standardButtons: Dialog.Cancel
         onRejected: {
             // FIXME: We should interrupt pairing here
@@ -304,11 +304,11 @@ CenteredGridView {
         id: deletePcDialog
         // don't allow edits to the rest of the window while open
         property int pcIndex : -1;
-        text:"Are you sure you want to remove this PC?"
+        text:"Êtes-vous sûr de vouloir supprimer ce PC ?"
         standardButtons: Dialog.Yes | Dialog.No
 
         function deletePc() {
-            console.log("deleting PC pairing for PC at index: " + pcIndex)
+            console.log("suppression de l'appariement PC pour PC à l'index : " + pcIndex)
             computerModel.deleteComputer(pcIndex);
         }
 
@@ -321,22 +321,22 @@ CenteredGridView {
         standardButtons: Dialog.Ok
 
         onAboutToShow: {
-            testConnectionDialog.text = "Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.\n\nThis may take a few seconds…"
+            testConnectionDialog.text = "Moonlight teste votre connexion réseau pour déterminer si NVIDIA GameStream est bloqué.\n\nCela peut prendre quelques secondes ..."
             showSpinner = true
         }
 
         function connectionTestComplete(result, blockedPorts)
         {
             if (result === -1) {
-                text = "The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later."
+                text = "Le test de réseau n'a pas pu être effectué car aucun des serveurs de test de connexion de Moonlight n'était accessible depuis ce PC. Vérifiez votre connexion Internet ou réessayez plus tard."
                 imageSrc = "qrc:/res/baseline-warning-24px.svg"
             }
             else if (result === 0) {
-                text = "This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.\n\nIf you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection."
+                text = "Ce réseau ne semble pas bloquer le Moonlight. Si vous avez toujours des difficultés à vous connecter, vérifiez les paramètres du pare-feu de votre PC. Si vous essayez d'utiliser le streaming sur Internet, installez l'outil d'hébergement Internet Moonlight sur votre PC de jeu et exécutez le testeur de streaming Internet inclus pour vérifier la connexion Internet de votre PC de jeu."
                 imageSrc = "qrc:/res/baseline-check_circle_outline-24px.svg"
             }
             else {
-                text = "Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.\n\nThe following network ports were blocked:\n"
+                text = "La connexion réseau actuelle de votre PC semble bloquer le Moonlight. Il se peut que la diffusion en continu sur Internet ne fonctionne pas lorsque vous êtes connecté à ce réseau.\n\nLes ports de réseau suivants ont été bloqués :\n"
                 text += blockedPorts
                 imageSrc = "qrc:/res/baseline-error_outline-24px.svg"
             }
@@ -348,7 +348,7 @@ CenteredGridView {
 
     NavigableDialog {
         id: renamePcDialog
-        property string label: "Enter the new name for this PC:"
+        property string label: "Saisissez le nouveau nom de ce PC :"
         property string originalName
         property int pcIndex : -1;
 

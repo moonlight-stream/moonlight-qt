@@ -6,11 +6,11 @@ import Session 1.0
 
 Item {
     function onSearchingComputer() {
-        stageLabel.text = "Establishing connection to PC..."
+        stageLabel.text = "Connexion en cours au pc..."
     }
 
     function onQuittingApp() {
-        stageLabel.text = "Quitting app..."
+        stageLabel.text = "Fermeture l'application..."
     }
 
     function onFailure(message) {

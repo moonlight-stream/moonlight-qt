@@ -8,7 +8,7 @@ import SystemProperties 1.0
 
 Flickable {
     id: settingsPage
-    objectName: "Settings"
+    objectName: "Paramètres"
 
     boundsBehavior: Flickable.OvershootBounds
 
@@ -50,7 +50,7 @@ Flickable {
             id: basicSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">Basic Settings</font>"
+            title: "<font color=\"skyblue\">Paramètres de base</font>"
             font.pointSize: 12
 
             Column {
@@ -60,7 +60,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: resFPStitle
-                    text: qsTr("Resolution and FPS")
+                    text: qsTr("Résolution et FPS")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -68,7 +68,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: resFPSdesc
-                    text: qsTr("Setting values too high for your PC or network connection may cause lag, stuttering, or errors.")
+                    text: qsTr("Le fait de fixer des valeurs trop élevées pour votre PC ou votre connexion réseau peut entraîner un décalage, des bégaiements ou des erreurs.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                 }
@@ -221,10 +221,10 @@ Flickable {
                             // Add unsupported FPS values that come before the display max FPS
                             if (StreamingPreferences.unsupportedFps) {
                                 if (max_fps > 90) {
-                                    fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
+                                    fpsListModel.append({"text": "90 FPS (Non pris en charge)", "video_fps": "90"})
                                 }
                                 if (max_fps > 120) {
-                                    fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
+                                    fpsListModel.append({"text": "120 FPS (Non pris en charge)", "video_fps": "120"})
                                 }
                             }
 
@@ -233,7 +233,7 @@ Flickable {
                             if (max_fps > 64) {
                                 // Mark any FPS value greater than 120 as unsupported
                                 if (StreamingPreferences.unsupportedFps && max_fps > 120) {
-                                    fpsListModel.append({"text": max_fps+" FPS (Unsupported)", "video_fps": ""+max_fps})
+                                    fpsListModel.append({"text": max_fps+" FPS (Non pris en charge)", "video_fps": ""+max_fps})
                                 }
                                 else if (max_fps > 120) {
                                     fpsListModel.append({"text": "120 FPS", "video_fps": "120"})
@@ -246,10 +246,10 @@ Flickable {
                             // Add unsupported FPS values that come after the display max FPS
                             if (StreamingPreferences.unsupportedFps) {
                                 if (max_fps < 90) {
-                                    fpsListModel.append({"text": "90 FPS (Unsupported)", "video_fps": "90"})
+                                    fpsListModel.append({"text": "90 FPS (Non pris en charge)", "video_fps": "90"})
                                 }
                                 if (max_fps < 120) {
-                                    fpsListModel.append({"text": "120 FPS (Unsupported)", "video_fps": "120"})
+                                    fpsListModel.append({"text": "120 FPS (Non pris en charge)", "video_fps": "120"})
                                 }
                             }
 
@@ -302,7 +302,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateTitle
-                    text: qsTr("Video bitrate: ")
+                    text: qsTr("Bitrate vidéo: ")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -310,7 +310,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateDesc
-                    text: qsTr("Lower the bitrate on slower connections. Raise the bitrate to increase image quality.")
+                    text: qsTr("Baissez le bitrate sur les connexions plus lentes. Augmentez le bitrate pour améliorer la qualité de l'image.")
                     font.pointSize: 9
                     wrapMode: Text.Wrap
                 }
@@ -328,7 +328,7 @@ Flickable {
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
 
                     onValueChanged: {
-                        bitrateTitle.text = "Video bitrate: " + (value / 1000.0) + " Mbps"
+                        bitrateTitle.text = "Bitrate vidéo: " + (value / 1000.0) + " Mbps"
                         StreamingPreferences.bitrateKbps = value
                     }
                 }
@@ -336,7 +336,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: windowModeTitle
-                    text: qsTr("Display mode")
+                    text: qsTr("Mode d'affichage")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -348,7 +348,7 @@ Flickable {
                         for (var i = 0; i < windowModeListModel.count; i++) {
                              var thisWm = windowModeListModel.get(i).val;
                              if (thisWm === StreamingPreferences.recommendedFullScreenMode) {
-                                 windowModeListModel.get(i).text += " (Recommended)"
+                                 windowModeListModel.get(i).text += " (Recommandé)"
                                  windowModeListModel.move(i, 0, 1);
                                  break
                              }
@@ -377,15 +377,15 @@ Flickable {
                     model: ListModel {
                         id: windowModeListModel
                         ListElement {
-                            text: "Full-screen"
+                            text: "Plein écran"
                             val: StreamingPreferences.WM_FULLSCREEN
                         }
                         ListElement {
-                            text: "Borderless windowed"
+                            text: "fenêtré sans bordure"
                             val: StreamingPreferences.WM_FULLSCREEN_DESKTOP
                         }
                         ListElement {
-                            text: "Windowed"
+                            text: "Fenêtré"
                             val: StreamingPreferences.WM_WINDOWED
                         }
                     }
@@ -396,7 +396,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "Full-screen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc."
+                    ToolTip.text: "Le plein écran offre généralement les meilleures performances, mais les fenêtres sans bordure peuvent fonctionner mieux avec des fonctionnalités telles que MacOS Spaces, Alt+Tab, les outils de capture d'écran, les superpositions à l'écran, etc."
                 }
 
                 CheckBox {
@@ -413,7 +413,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing"
+                    ToolTip.text: "La désactivation de V-Sync permet une latence de rendu des sous-images, mais elle peut afficher des déchirures visibles"
                 }
 
                 CheckBox {
@@ -430,7 +430,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "Frame pacing reduces micro-stutter by delaying frames that come in too early"
+                    ToolTip.text: "Le rythme des images réduit le micro-bégaiement en retardant les images qui arrivent trop tôt"
                 }
             }
         }
@@ -440,7 +440,7 @@ Flickable {
             id: audioSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">Audio Settings</font>"
+            title: "<font color=\"skyblue\">Réglages audio</font>"
             font.pointSize: 12
 
             Column {
@@ -450,7 +450,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: resAudioTitle
-                    text: qsTr("Audio configuration")
+                    text: qsTr("Configuration audio")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -479,11 +479,11 @@ Flickable {
                             val: StreamingPreferences.AC_STEREO
                         }
                         ListElement {
-                            text: "5.1 surround sound"
+                            text: "5.1 surround son"
                             val: StreamingPreferences.AC_51_SURROUND
                         }
                         ListElement {
-                            text: "7.1 surround sound"
+                            text: "7.1 surround son"
                             val: StreamingPreferences.AC_71_SURROUND
                         }
                     }
@@ -500,7 +500,7 @@ Flickable {
             id: uiSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">UI Settings</font>"
+            title: "<font color=\"skyblue\">Paramètres de l'interface utilisateur</font>"
             font.pointSize: 12
 
             Column {
@@ -510,7 +510,7 @@ Flickable {
                 CheckBox {
                     id: startMaximizedCheck
                     width: parent.width
-                    text: "Maximize Moonlight window on startup"
+                    text: "Maximiser la fenêtre Moonlight au démarrage"
                     font.pointSize: 12
                     enabled: SystemProperties.hasWindowManager
                     checked: !StreamingPreferences.startWindowed || !SystemProperties.hasWindowManager
@@ -522,19 +522,18 @@ Flickable {
                 CheckBox {
                     id: connectionWarningsCheck
                     width: parent.width
-                    text: "Show connection quality warnings"
+                    text: "Afficher les avertissements sur la qualité de la connexion"
                     font.pointSize: 12
                     checked: StreamingPreferences.connectionWarnings
                     onCheckedChanged: {
                         StreamingPreferences.connectionWarnings = checked
                     }
                 }
-
                 CheckBox {
                     visible: SystemProperties.hasDiscordIntegration
                     id: discordPresenceCheck
                     width: parent.width
-                    text: "Discord Rich Presence integration"
+                    text: "Intégration de la présence de discorde"
                     font.pointSize: 12
                     checked: StreamingPreferences.richPresence
                     onCheckedChanged: {
@@ -544,7 +543,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "Updates your Discord status to display the name of the game you're streaming."
+                    ToolTip.text: "Met à jour votre statut Discorde pour afficher le nom du jeu que vous jouez en streaming."
                 }
             }
         }
@@ -562,7 +561,7 @@ Flickable {
             id: gamepadSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">Input Settings</font>"
+            title: "<font color=\"skyblue\">Paramètres des entrées</font>"
             font.pointSize: 12
 
             Column {
@@ -572,7 +571,7 @@ Flickable {
                 CheckBox {
                     id: singleControllerCheck
                     width: parent.width
-                    text: "Force gamepad #1 always present"
+                    text: "Forcé la manette de jeu #1 toujours présente"
                     font.pointSize:  12
                     checked: !StreamingPreferences.multiController
                     onCheckedChanged: {
@@ -582,15 +581,15 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.\n" +
-                                  "Only enable this option when streaming a game that doesn't support gamepads being connected after startup."
+                    ToolTip.text: "Oblige une seule manette de jeu à toujours rester connectée à l'hôte, même si aucune manette de jeu n'est réellement connectée à ce PC.\n" +
+                                  "N'activez cette option que lorsque vous diffusez en continu un jeu qui ne prend pas en charge la connexion des manettes de jeu après le démarrage."
                 }
 
                 CheckBox {
                     id: absoluteMouseCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: "Optimize mouse for remote desktop instead of games"
+                    text: "Optimiser la souris pour le bureau à distance plutôt que pour les jeux"
                     font.pointSize:  12
                     enabled: SystemProperties.hasWindowManager
                     checked: StreamingPreferences.absoluteMouseMode && SystemProperties.hasWindowManager
@@ -601,15 +600,15 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "This enables mouse control without capturing the client's mouse cursor. It will not work in most games.\n
-                                   You can toggle this while streaming using Ctrl+Alt+Shift+M."
+                    ToolTip.text: "Cela permet de contrôler la souris sans avoir à capturer le curseur du client. Cela ne fonctionne pas dans la plupart des jeux.\n
+                                   Vous pouvez le basculer pendant la diffusion en utilisant Ctrl+Alt+Maj+M."
                 }
 
                 CheckBox {
                     id: absoluteTouchCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: "Use touchscreen as a trackpad"
+                    text: "Utiliser l'écran tactile comme trackpad"
                     font.pointSize:  12
                     checked: !StreamingPreferences.absoluteTouchMode
                     onCheckedChanged: {
@@ -619,14 +618,14 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer."
+                    ToolTip.text: "Lorsqu'on le vérifie, l'écran tactile agit comme un pavé tactile. Lorsqu'il n'est pas coché, l'écran tactile contrôle directement le pointeur de la souris."
                 }
 
                 CheckBox {
                     id: gamepadMouseCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: "Gamepad mouse mode support"
+                    text: "Prise en charge du mode souris de la manette de jeu"
                     font.pointSize:  12
                     checked: StreamingPreferences.gamepadMouse
                     onCheckedChanged: {
@@ -636,14 +635,14 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
-                    ToolTip.text: "When enabled, holding the Start button will toggle mouse mode"
+                    ToolTip.text: "Lorsqu'il est activé, le maintien du bouton Start permet de passer en mode souris"
                 }
 
                 CheckBox {
                     id: swapMouseButtonsCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: "Swap mouse buttons"
+                    text: "Échanger les boutons de la souris"
                     font.pointSize:  12
                     checked: StreamingPreferences.swapMouseButtons
                     onCheckedChanged: {
@@ -653,7 +652,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
-                    ToolTip.text: "When checked, swap the left and right mouse buttons"
+                    ToolTip.text: "Lorsque la case est cochée, permuter les boutons gauche et droit de la souris"
                 }
             }
         }
@@ -662,7 +661,7 @@ Flickable {
             id: hostSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">Host Settings</font>"
+            title: "<font color=\"skyblue\">Paramètres de l'hôte</font>"
             font.pointSize: 12
 
             Column {
@@ -672,7 +671,7 @@ Flickable {
                 CheckBox {
                     id: optimizeGameSettingsCheck
                     width: parent.width
-                    text: "Optimize game settings for streaming"
+                    text: "Optimiser les paramètres du jeu pour la diffusion en continu"
                     font.pointSize:  12
                     checked: StreamingPreferences.gameOptimizations
                     onCheckedChanged: {
@@ -683,7 +682,7 @@ Flickable {
                 CheckBox {
                     id: audioPcCheck
                     width: parent.width
-                    text: "Play audio on host PC"
+                    text: "Lecture audio sur le PC hôte"
                     font.pointSize:  12
                     checked: StreamingPreferences.playAudioOnHost
                     onCheckedChanged: {
@@ -694,7 +693,7 @@ Flickable {
                 CheckBox {
                     id: quitAppAfter
                     width: parent.width
-                    text: "Quit app on host PC after ending stream"
+                    text: "Quitter l'application sur le PC hôte après avoir terminé le flux"
                     font.pointSize: 12
                     checked: StreamingPreferences.quitAppAfter
                     onCheckedChanged: {
@@ -704,7 +703,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: "This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!"
+                    ToolTip.text: "Cela fermera l'application ou le jeu que vous êtes en train de diffuser lorsque vous aurez terminé votre flux. Vous perdrez tout progrès non sauvegardé !"
                 }
             }
         }
@@ -713,7 +712,7 @@ Flickable {
             id: advancedSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: "<font color=\"skyblue\">Advanced Settings</font>"
+            title: "<font color=\"skyblue\">Paramètres avancés</font>"
             font.pointSize: 12
 
             Column {
@@ -723,7 +722,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: resVDSTitle
-                    text: qsTr("Video decoder")
+                    text: qsTr("Décodeur vidéo")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -748,15 +747,15 @@ Flickable {
                     model: ListModel {
                         id: decoderListModel
                         ListElement {
-                            text: "Automatic (Recommended)"
+                            text: "Automatique (Recommandé)"
                             val: StreamingPreferences.VDS_AUTO
                         }
                         ListElement {
-                            text: "Force software decoding"
+                            text: "Forcer le décodage logiciels"
                             val: StreamingPreferences.VDS_FORCE_SOFTWARE
                         }
                         ListElement {
-                            text: "Force hardware decoding"
+                            text: "Forcer le décodage du matériel"
                             val: StreamingPreferences.VDS_FORCE_HARDWARE
                         }
                     }
@@ -769,7 +768,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: resVCCTitle
-                    text: qsTr("Video codec")
+                    text: qsTr("Codec vidéo")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -794,7 +793,7 @@ Flickable {
                     model: ListModel {
                         id: codecListModel
                         ListElement {
-                            text: "Automatic (Recommended)"
+                            text: "Automatique (Recommandé)"
                             val: StreamingPreferences.VCC_AUTO
                         }
                         ListElement {
@@ -819,13 +818,13 @@ Flickable {
                 CheckBox {
                     id: unlockUnsupportedFps
                     width: parent.width
-                    text: "Unlock unsupported FPS options"
+                    text: "Débloquer les options du FPS non prises en charge"
                     font.pointSize: 12
                     checked: StreamingPreferences.unsupportedFps
                     onCheckedChanged: {
                         // This is called on init, so only do the work if we've
                         // actually changed the value.
-                        if (StreamingPreferences.unsupportedFps != checked) {
+                        if (StreamingPreferences.unsupportedFps !== checked) {
                             StreamingPreferences.unsupportedFps = checked
 
                             // The selectable FPS values depend on whether
@@ -838,13 +837,13 @@ Flickable {
                 CheckBox {
                     id: enableMdns
                     width: parent.width
-                    text: "Automatically find PCs on the local network (Recommended)"
+                    text: "Trouver automatiquement les PC sur le réseau local (recommandé)"
                     font.pointSize: 12
                     checked: StreamingPreferences.enableMdns
                     onCheckedChanged: {
                         // This is called on init, so only do the work if we've
                         // actually changed the value.
-                        if (StreamingPreferences.enableMdns != checked) {
+                        if (StreamingPreferences.enableMdns !== checked) {
                             StreamingPreferences.enableMdns = checked
 
                             // We must save the updated preference to ensure
@@ -863,13 +862,13 @@ Flickable {
                 CheckBox {
                     id: detectNetworkBlocking
                     width: parent.width
-                    text: "Automatically detect blocked connections (Recommended)"
+                    text: "Détecter automatiquement les connexions bloquées (recommandé)"
                     font.pointSize: 12
                     checked: StreamingPreferences.detectNetworkBlocking
                     onCheckedChanged: {
                         // This is called on init, so only do the work if we've
                         // actually changed the value.
-                        if (StreamingPreferences.detectNetworkBlocking != checked) {
+                        if (StreamingPreferences.detectNetworkBlocking !== checked) {
                             StreamingPreferences.detectNetworkBlocking = checked
 
                             // We must save the updated preference to ensure

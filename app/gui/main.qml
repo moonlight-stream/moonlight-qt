@@ -241,6 +241,7 @@ ApplicationWindow {
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
                 ToolTip.text: "Join our community on Discord"
+                ToolTip.text: "Rejoignez notre communauté sur Discord"
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://moonlight-stream.org/discord");
@@ -260,6 +261,7 @@ ApplicationWindow {
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
                 ToolTip.text: "Add PC manually" + (newPcShortcut.nativeText ? (" ("+newPcShortcut.nativeText+")") : "")
+                ToolTip.text: "Ajouter un PC manuellement" + (newPcShortcut.nativeText ? (" ("+newPcShortcut.nativeText+")") : "")
 
                 Shortcut {
                     id: newPcShortcut
@@ -275,6 +277,7 @@ ApplicationWindow {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
                 }
             }
+
 
             NavigableToolButton {
                 property string browserUrl: ""
@@ -299,7 +302,7 @@ ApplicationWindow {
 
                 function updateAvailable(version, url)
                 {
-                    ToolTip.text = "Update available for Moonlight: Version " + version
+                    ToolTip.text = "Mise à jour disponible pour Moonlight : Version " + version
                     updateButton.browserUrl = url
                     updateButton.visible = true
                 }
@@ -323,7 +326,7 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Help" + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
+                ToolTip.text: "Aide" + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
 
                 Shortcut {
                     id: helpShortcut
@@ -339,6 +342,8 @@ ApplicationWindow {
                 }
             }
 
+
+
             NavigableToolButton {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
@@ -350,7 +355,7 @@ ApplicationWindow {
 
                 iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
 
-                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Gamepad Mapping")
+                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "Manette Mapping")
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
@@ -362,7 +367,7 @@ ApplicationWindow {
 
                 iconSource:  "qrc:/res/settings.svg"
 
-                onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Settings")
+                onClicked: navigateTo("qrc:/gui/SettingsView.qml", "Paramètres")
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
@@ -377,31 +382,31 @@ ApplicationWindow {
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
-                ToolTip.text: "Settings" + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
+                ToolTip.text: "Paramètres" + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
             }
         }
     }
 
     ErrorMessageDialog {
         id: noHwDecoderDialog
-        text: "No functioning hardware accelerated H.264 video decoder was detected by Moonlight. " +
-              "Your streaming performance may be severely degraded in this configuration."
-        helpText: "Click the Help button for more information on solving this problem."
+        text: "Aucun décodeur vidéo H.264 accéléré par le matériel n'a été détecté par Moonlight. " +
+              "Dans cette configuration, les performances de votre streaming peuvent être fortement dégradées."
+        helpText: "Cliquez sur le bouton Aide pour obtenir plus d'informations sur la manière de résoudre ce problème."
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems"
     }
 
     ErrorMessageDialog {
         id: xWaylandDialog
-        text: "Hardware acceleration doesn't work on XWayland. Continuing on XWayland may result in poor streaming performance. " +
-              "Try running with QT_QPA_PLATFORM=wayland or switch to X11."
-        helpText: "Click the Help button for more information."
+        text: "L'accélération matérielle ne fonctionne pas sur XWayland. Continuer sur XWayland peut entraîner de mauvaises performances de streaming. " +
+              "Essayez de fonctionner avec QT_QPA_PLATFORM=wayland ou passez à X11."
+        helpText: "Cliquez sur le bouton Aide pour plus d'informations."
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Fixing-Hardware-Decoding-Problems"
     }
 
     NavigableMessageDialog {
         id: wow64Dialog
         standardButtons: Dialog.Ok | Dialog.Cancel
-        text: "This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance."
+        text: "Ce PC fonctionne avec une version 64 bits de Windows. Veuillez télécharger la version x64 de Moonlight pour obtenir les meilleures performances de diffusion en continu."
         onAccepted: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-qt/releases");
         }
@@ -410,9 +415,9 @@ ApplicationWindow {
     ErrorMessageDialog {
         id: unmappedGamepadDialog
         property string unmappedGamepads : ""
-        text: "Moonlight detected gamepads without a mapping:\n" + unmappedGamepads
+        text: "Moonlight a détecté des manettes de jeu sans cartographie :\n" + unmappedGamepads
         helpTextSeparator: "\n\n"
-        helpText: "Click the Help button for information on how to map your gamepads."
+        helpText: "Cliquez sur le bouton Aide pour obtenir des informations sur la manière de cartographier vos manettes de jeu."
         helpUrl: "https://github.com/moonlight-stream/moonlight-docs/wiki/Gamepad-Mapping"
     }
 
@@ -420,7 +425,7 @@ ApplicationWindow {
     NavigableMessageDialog {
         id: quitConfirmationDialog
         standardButtons: Dialog.Yes | Dialog.No
-        text: "Are you sure you want to quit?"
+        text: "Vous êtes sûr de vouloir arrêter ?"
         // For keyboard/gamepad navigation
         onAccepted: Qt.quit()
     }
@@ -450,7 +455,7 @@ ApplicationWindow {
 
     NavigableDialog {
         id: addPcDialog
-        property string label: "Enter the IP address of your GameStream PC:"
+        property string label: "Saisissez l'adresse IP de votre PC GameStream :"
 
         standardButtons: Dialog.Ok | Dialog.Cancel
 

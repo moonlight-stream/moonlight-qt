@@ -6,11 +6,11 @@ import SdlGamepadKeyNavigation 1.0
 
 Item {
     function onSearchingComputer() {
-        stageLabel.text = "Establishing connection to PC..."
+        stageLabel.text = "Connexion en cours au pc..."
     }
 
     function onSearchingApp() {
-        stageLabel.text = "Loading app list..."
+        stageLabel.text = "Chargement de la liste des applications..."
     }
 
     function onSessionCreated(appName, session) {
@@ -78,7 +78,7 @@ Item {
 
     NavigableMessageDialog {
         id: quitAppDialog
-        text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
+        text:"Êtes-vous sûr de vouloir arrêter " + appName +"? Tout progrès non sauvegardé sera perdu."
         standardButtons: Dialog.Yes | Dialog.No
         property string appName : ""
 
