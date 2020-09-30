@@ -8,19 +8,19 @@ import Session 1.0
 Item {
     property Session session
     property string appName
-    property string stageText : "Starting " + appName + "..."
+    property string stageText : qsTr("Starting " + appName + "...")
     property bool quitAfter : false
 
     function stageStarting(stage)
     {
         // Update the spinner text
-        stageText = "Starting " + stage + "..."
+        stageText = qsTr("Starting " + stage + "...")
     }
 
     function stageFailed(stage, errorCode)
     {
         // Display the error dialog after Session::exec() returns
-        streamSegueErrorDialog.text = "Starting " + stage + " failed: Error " + errorCode
+        streamSegueErrorDialog.text = qsTr("Starting " + stage + " failed: Error " + errorCode)
     }
 
     function connectionStarted()
@@ -65,7 +65,7 @@ Item {
     function sessionFinished(portTestResult)
     {
         if (portTestResult !== 0 && portTestResult !== -1 && streamSegueErrorDialog.text) {
-            streamSegueErrorDialog.text += "\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network."
+            streamSegueErrorDialog.text += qsTr("\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
         }
 
         // Enable GUI gamepad usage now
@@ -148,8 +148,8 @@ Item {
             // with Session.exec() which requires no concurrent
             // gamepad usage.
             hintText.text = SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
-                      "Tip: Press Start+Select+L1+R1 to disconnect your session" :
-                      "Tip: Press Ctrl+Alt+Shift+Q to disconnect your session"
+                      qsTr("Tip: Press Start+Select+L1+R1 to disconnect your session") :
+                      qsTr("Tip: Press Ctrl+Alt+Shift+Q to disconnect your session")
 
             // Stop GUI gamepad usage now
             SdlGamepadKeyNavigation.disable()

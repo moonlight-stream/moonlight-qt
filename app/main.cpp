@@ -11,6 +11,7 @@
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QFile>
+#include<QTranslator>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -417,6 +418,14 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+    //QTranslator* tr = new QTranslator;
+    //qDebug() << "loaded: " << tr->load("qml_en.qm",":/languages");
+    //app.installTranslator(tr);
+
+    QTranslator translator;
+    translator.load(QString(":/languages/qml_") + QLocale::system().name());
+    app.installTranslator(&translator);
+
     // After the QGuiApplication is created, the platform stuff will be initialized
     // and we can set the SDL video driver to match Qt.
     if (WMUtils::isRunningWayland() && QGuiApplication::platformName() == "xcb") {
@@ -551,7 +560,6 @@ int main(int argc, char *argv[])
     engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
-
     int err = app.exec();
 
     // Give worker tasks time to properly exit. Fixes PendingQuitTask

@@ -9,7 +9,7 @@ Item {
     property Session nextSession : null
     property string nextAppName : ""
 
-    property string stageText : "Quitting " + appName + "..."
+    property string stageText : qsTr("Quitting " + appName + "...")
 
     function quitAppCompleted(error)
     {

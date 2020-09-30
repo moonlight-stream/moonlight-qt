@@ -17,7 +17,7 @@ CenteredGridView {
     topMargin: 20
     bottomMargin: 5
     cellWidth: 310; cellHeight: 330;
-    objectName: "Computers"
+    objectName: qsTr("Computers")
 
     Component.onCompleted: {
         // Don't show any highlighted item until interacting with them.
@@ -64,13 +64,13 @@ CenteredGridView {
     function addComplete(success, detectedPortBlocking)
     {
         if (!success) {
-            errorDialog.text = "Unable to connect to the specified PC."
+            errorDialog.text = qsTr("Unable to connect to the specified PC.")
 
             if (detectedPortBlocking) {
-                errorDialog.text += "\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network."
+                errorDialog.text += qsTr("\n\nThis PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
             }
             else {
-                errorDialog.helpText = "Click the Help button for possible solutions."
+                errorDialog.helpText = qsTr("Click the Help button for possible solutions.")
             }
 
             errorDialog.open()
@@ -99,8 +99,8 @@ CenteredGridView {
         Label {
             height: searchSpinner.height
             elide: Label.ElideRight
-            text: StreamingPreferences.enableMdns ? "Searching for PCs with NVIDIA GameStream enabled..."
-                                                  : "Automatic PC discovery is disabled. Add your PC manually."
+            text: StreamingPreferences.enableMdns ? qsTr("Searching for PCs with NVIDIA GameStream enabled...")
+                                                  : qsTr("Automatic PC discovery is disabled. Add your PC manually.")
             font.pointSize: 20
             verticalAlignment: Text.AlignVCenter
             wrapMode: Text.Wrap
@@ -164,7 +164,7 @@ CenteredGridView {
             id: pcContextMenu
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "View Apps"
+                text: qsTr("View Apps")
                 onTriggered: {
                     var component = Qt.createComponent("AppView.qml")
                     var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
@@ -174,7 +174,7 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "View Hidden Apps"
+                text: qsTr("View Hidden Apps")
                 onTriggered: {
                     var component = Qt.createComponent("AppView.qml")
                     var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
@@ -184,13 +184,13 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Wake PC"
+                text: qsTr("Wake PC")
                 onTriggered: computerModel.wakeComputer(index)
                 visible: !model.online && model.wakeable
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Test Network"
+                text: qsTr("Test Network")
                 onTriggered: {
                     computerModel.testConnectionForComputer(index)
                     testConnectionDialog.open()
@@ -199,7 +199,7 @@ CenteredGridView {
 
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Rename PC"
+                text: qsTr("Rename PC")
                 onTriggered: {
                     renamePcDialog.pcIndex = index
                     renamePcDialog.originalName = model.name
@@ -208,7 +208,7 @@ CenteredGridView {
             }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: "Delete PC"
+                text: qsTr("Delete PC")
                 onTriggered: {
                     deletePcDialog.pcIndex = index
                     // get confirmation first, actual closing is called from the dialog
@@ -238,7 +238,7 @@ CenteredGridView {
                     }
                     else {
                         // cannot pair while something is streaming or attempting to pair
-                        errorDialog.text = "You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again."
+                        errorDialog.text = qsTr("You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.")
                         errorDialog.helpText = ""
                         errorDialog.open()
                     }
@@ -293,7 +293,7 @@ CenteredGridView {
 
         // don't allow edits to the rest of the window while open
         property string pin : "0000"
-        text:"Please enter " + pin + " on your GameStream PC. This dialog will close when pairing is completed."
+        text:qsTr("Please enter " + pin + " on your GameStream PC. This dialog will close when pairing is completed.")
         standardButtons: Dialog.Cancel
         onRejected: {
             // FIXME: We should interrupt pairing here
@@ -304,7 +304,7 @@ CenteredGridView {
         id: deletePcDialog
         // don't allow edits to the rest of the window while open
         property int pcIndex : -1;
-        text:"Are you sure you want to remove this PC?"
+        text:qsTr("Are you sure you want to remove this PC?")
         standardButtons: Dialog.Yes | Dialog.No
 
         function deletePc() {
@@ -321,22 +321,22 @@ CenteredGridView {
         standardButtons: Dialog.Ok
 
         onAboutToShow: {
-            testConnectionDialog.text = "Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.\n\nThis may take a few seconds…"
+            testConnectionDialog.text = qsTr("Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.\n\nThis may take a few seconds…")
             showSpinner = true
         }
 
         function connectionTestComplete(result, blockedPorts)
         {
             if (result === -1) {
-                text = "The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later."
+                text = qsTr("The network test could not be performed because none of Moonlight's connection testing servers were reachable from this PC. Check your Internet connection or try again later.")
                 imageSrc = "qrc:/res/baseline-warning-24px.svg"
             }
             else if (result === 0) {
-                text = "This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.\n\nIf you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection."
+                text = qsTr("This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC's firewall settings.\n\nIf you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC's Internet connection.")
                 imageSrc = "qrc:/res/baseline-check_circle_outline-24px.svg"
             }
             else {
-                text = "Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.\n\nThe following network ports were blocked:\n"
+                text = qsTr("Your PC's current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.\n\nThe following network ports were blocked:\n")
                 text += blockedPorts
                 imageSrc = "qrc:/res/baseline-error_outline-24px.svg"
             }
@@ -348,7 +348,7 @@ CenteredGridView {
 
     NavigableDialog {
         id: renamePcDialog
-        property string label: "Enter the new name for this PC:"
+        property string label: qsTr("Enter the new name for this PC:")
         property string originalName
         property int pcIndex : -1;
 
