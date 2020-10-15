@@ -68,7 +68,12 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
 
     if (reply->error() == QNetworkReply::NoError) {
         QTextStream stream(reply);
+
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        stream.setEncoding(QStringConverter::Utf8);
+#else
         stream.setCodec("UTF-8");
+#endif
 
         // Read all data and queue the reply for deletion
         QString jsonString = stream.readAll();
