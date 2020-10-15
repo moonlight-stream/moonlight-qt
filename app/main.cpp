@@ -305,8 +305,10 @@ int main(int argc, char *argv[])
     // NB: We can't use QGuiApplication::platformName() here because it is only
     // set once the QGuiApplication is created, which is too late to enable High DPI :(
     if (WMUtils::isRunningWindowManager()) {
-        // Enable High DPI support
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+        // Enable High DPI support on Qt 5.x. It is always enabled on Qt 6.0
         QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         // Enable fractional High DPI scaling on Qt 5.14 and later

@@ -233,17 +233,17 @@ NvHTTP::getDisplayModeList(QString serverInfo)
 
     while (!xmlReader.atEnd()) {
         while (xmlReader.readNextStartElement()) {
-            QStringRef name = xmlReader.name();
-            if (name == "DisplayMode") {
+            auto name = xmlReader.name();
+            if (name == QString("DisplayMode")) {
                 modes.append(NvDisplayMode());
             }
-            else if (name == "Width") {
+            else if (name == QString("Width")) {
                 modes.last().width = xmlReader.readElementText().toInt();
             }
-            else if (name == "Height") {
+            else if (name == QString("Height")) {
                 modes.last().height = xmlReader.readElementText().toInt();
             }
-            else if (name == "RefreshRate") {
+            else if (name == QString("RefreshRate")) {
                 modes.last().refreshRate = xmlReader.readElementText().toInt();
             }
         }
@@ -266,8 +266,8 @@ NvHTTP::getAppList()
     QVector<NvApp> apps;
     while (!xmlReader.atEnd()) {
         while (xmlReader.readNextStartElement()) {
-            QStringRef name = xmlReader.name();
-            if (name == "App") {
+            auto name = xmlReader.name();
+            if (name == QString("App")) {
                 // We must have a valid app before advancing to the next one
                 if (!apps.isEmpty() && !apps.last().isInitialized()) {
                     qWarning() << "Invalid applist XML";
@@ -276,16 +276,16 @@ NvHTTP::getAppList()
                 }
                 apps.append(NvApp());
             }
-            else if (name == "AppTitle") {
+            else if (name == QString("AppTitle")) {
                 apps.last().name = xmlReader.readElementText();
             }
-            else if (name == "ID") {
+            else if (name == QString("ID")) {
                 apps.last().id = xmlReader.readElementText().toInt();
             }
-            else if (name == "IsHdrSupported") {
+            else if (name == QString("IsHdrSupported")) {
                 apps.last().hdrSupported = xmlReader.readElementText() == "1";
             }
-            else if (name == "IsAppCollectorGame") {
+            else if (name == QString("IsAppCollectorGame")) {
                 apps.last().isAppCollectorGame = xmlReader.readElementText() == "1";
             }
         }
@@ -301,7 +301,7 @@ NvHTTP::verifyResponseStatus(QString xml)
 
     while (xmlReader.readNextStartElement())
     {
-        if (xmlReader.name() == "root")
+        if (xmlReader.name() == QString("root"))
         {
             // Status code can be 0xFFFFFFFF in some rare cases on GFE 3.20.3, and
             // QString::toInt() will fail in that case, so use QString::toUInt()
