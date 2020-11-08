@@ -40,7 +40,7 @@ QString Path::getDataFilePath(QString fileName)
     }
 
     // Now check the data directories (for Linux, in particular)
-    candidatePath = QStandardPaths::locate(QStandardPaths::DataLocation, fileName);
+    candidatePath = QStandardPaths::locate(QStandardPaths::AppDataLocation, fileName);
     if (!candidatePath.isEmpty() && QFile::exists(candidatePath)) {
         qInfo() << "Found" << fileName << "at" << candidatePath;
         return candidatePath;

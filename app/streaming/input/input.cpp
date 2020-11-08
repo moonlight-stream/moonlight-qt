@@ -211,7 +211,7 @@ void SdlInputHandler::raiseAllKeys()
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Raising %d keys",
-                m_KeysDown.count());
+                (int)m_KeysDown.count());
 
     for (auto keyDown : m_KeysDown) {
         LiSendKeyboardEvent(keyDown, KEY_ACTION_UP, 0);
