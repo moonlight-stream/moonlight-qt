@@ -323,7 +323,7 @@ NvHTTP::verifyResponseStatus(QString xml)
                     // Special case handling an audio capture error which GFE doesn't
                     // provide any useful status message for.
                     statusCode = 418;
-                    statusMessage = "Missing audio capture device. Reinstalling GeForce Experience should resolve this error.";
+                    statusMessage = tr("Missing audio capture device. Reinstalling GeForce Experience should resolve this error.");
                 }
                 throw GfeHttpResponseException(statusCode, statusMessage);
             }

@@ -536,8 +536,8 @@ private:
             }
             if (e.getStatusCode() == 599) {
                 // 599 is a special code we make a custom message for
-                emit quitAppFailed("The running game wasn't started by this PC. "
-                                   "You must quit the game on the host PC manually or use the device that originally started the game.");
+                emit quitAppFailed(tr("The running game wasn't started by this PC. "
+                                      "You must quit the game on the host PC manually or use the device that originally started the game."));
             }
             else {
                 emit quitAppFailed(e.toQString());

@@ -78,7 +78,7 @@ Item {
 
     NavigableMessageDialog {
         id: quitAppDialog
-        text:qsTr("Are you sure you want to quit " + appName +"? Any unsaved progress will be lost.")
+        text:qsTr("Are you sure you want to quit %1? Any unsaved progress will be lost.").arg(appName)
         standardButtons: Dialog.Yes | Dialog.No
         property string appName : ""
 

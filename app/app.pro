@@ -311,6 +311,9 @@ RESOURCES += \
     resources.qrc \
     qml.qrc
 
+TRANSLATIONS += \
+    languages/qml_fr.ts
+
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
 

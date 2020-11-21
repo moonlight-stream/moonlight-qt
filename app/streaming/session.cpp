@@ -94,17 +94,17 @@ void Session::clConnectionTerminated(int errorCode)
 
     case ML_ERROR_NO_VIDEO_TRAFFIC:
         s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError("No video received from host. Check the host PC's firewall and port forwarding rules.");
+        emit s_ActiveSession->displayLaunchError(tr("No video received from host. Check the host PC's firewall and port forwarding rules."));
         break;
 
     case ML_ERROR_NO_VIDEO_FRAME:
         s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection.");
+        emit s_ActiveSession->displayLaunchError(tr("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection."));
         break;
 
     default:
         s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError("Connection terminated");
+        emit s_ActiveSession->displayLaunchError(tr("Connection terminated"));
         break;
     }
 
@@ -564,24 +564,24 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     QStringList warningList;
 
     if (m_Preferences->absoluteMouseMode && !m_App.isAppCollectorGame) {
-        emitLaunchWarning("Your selection to enable remote desktop mouse mode may cause problems in games.");
+        emitLaunchWarning(tr("Your selection to enable remote desktop mouse mode may cause problems in games."));
     }
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
         if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR) {
-            emitLaunchWarning("HDR is not supported with software decoding.");
+            emitLaunchWarning(tr("HDR is not supported with software decoding."));
             m_StreamConfig.enableHdr = false;
         }
         else {
-            emitLaunchWarning("Your settings selection to force software decoding may cause poor streaming performance.");
+            emitLaunchWarning(tr("Your settings selection to force software decoding may cause poor streaming performance."));
         }
     }
 
     if (m_Preferences->unsupportedFps && m_StreamConfig.fps > 60) {
-        emitLaunchWarning("Using unsupported FPS options may cause stuttering or lag.");
+        emitLaunchWarning(tr("Using unsupported FPS options may cause stuttering or lag."));
 
         if (m_Preferences->enableVsync) {
-            emitLaunchWarning("V-sync will be disabled when streaming at a higher frame rate than the display.");
+            emitLaunchWarning(tr("V-sync will be disabled when streaming at a higher frame rate than the display."));
         }
     }
 
@@ -598,18 +598,18 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                                            m_StreamConfig.height,
                                            m_StreamConfig.fps)) {
             if (hevcForced) {
-                emitLaunchWarning("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.");
+                emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
             }
             else {
-                emitLaunchWarning("This PC's GPU doesn't support HEVC decoding.");
+                emitLaunchWarning(tr("This PC's GPU doesn't support HEVC decoding."));
                 m_StreamConfig.supportsHevc = false;
             }
         }
 
         if (hevcForced) {
             if (m_Computer->maxLumaPixelsHEVC == 0) {
-                emitLaunchWarning("Your host PC GPU doesn't support HEVC. "
-                                  "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.");
+                emitLaunchWarning(tr("Your host PC GPU doesn't support HEVC. "
+                                     "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming."));
 
                 // Moonlight-common-c will handle this case already, but we want
                 // to set this explicitly here so we can do our hardware acceleration
@@ -625,12 +625,12 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 
         // Check that the app supports HDR
         if (!m_App.hdrSupported) {
-            emitLaunchWarning(m_App.name + " doesn't support HDR10.");
+            emitLaunchWarning(tr("%1 doesn't support HDR10.").arg(m_App.name));
         }
         // Check that the server GPU supports HDR
         else if (!(m_Computer->serverCodecModeSupport & 0x200)) {
-            emitLaunchWarning("Your host PC GPU doesn't support HDR streaming. "
-                              "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.");
+            emitLaunchWarning(tr("Your host PC GPU doesn't support HDR streaming. "
+                                 "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming."));
         }
         else if (!isHardwareDecodeAvailable(testWindow,
                                             m_Preferences->videoDecoderSelection,
@@ -638,7 +638,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                                             m_StreamConfig.width,
                                             m_StreamConfig.height,
                                             m_StreamConfig.fps)) {
-            emitLaunchWarning("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming.");
+            emitLaunchWarning(tr("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming."));
         }
         else {
             // TODO: Also validate display capabilites
@@ -651,7 +651,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     if (m_StreamConfig.width >= 3840) {
         // Only allow 4K on GFE 3.x+
         if (m_Computer->gfeVersion.isEmpty() || m_Computer->gfeVersion.startsWith("2.")) {
-            emitLaunchWarning("GeForce Experience 3.0 or higher is required for 4K streaming.");
+            emitLaunchWarning(tr("GeForce Experience 3.0 or higher is required for 4K streaming."));
 
             m_StreamConfig.width = 1920;
             m_StreamConfig.height = 1080;
@@ -666,29 +666,29 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         audioTestPassed = testAudio(AUDIO_CONFIGURATION_STEREO);
         if (audioTestPassed) {
             m_StreamConfig.audioConfiguration = AUDIO_CONFIGURATION_STEREO;
-            emitLaunchWarning("Your selected surround sound setting is not supported by the current audio device.");
+            emitLaunchWarning(tr("Your selected surround sound setting is not supported by the current audio device."));
         }
     }
 
     // If nothing worked, warn the user that audio will not work
     m_AudioDisabled = !audioTestPassed;
     if (m_AudioDisabled) {
-        emitLaunchWarning("Failed to open audio device. Audio will be unavailable during this session.");
+        emitLaunchWarning(tr("Failed to open audio device. Audio will be unavailable during this session."));
     }
 
     // Check for unmapped gamepads
     if (!SdlInputHandler::getUnmappedGamepads().isEmpty()) {
-        emitLaunchWarning("An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this.");
+        emitLaunchWarning(tr("An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this."));
     }
 
     // NVENC will fail to initialize when using dimensions over 4096 and H.264.
     if (m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) {
         if (m_Computer->maxLumaPixelsHEVC == 0) {
-            emit displayLaunchError("Your host PC's GPU doesn't support streaming video resolutions over 4K.");
+            emit displayLaunchError(tr("Your host PC's GPU doesn't support streaming video resolutions over 4K."));
             return false;
         }
         else if (!m_StreamConfig.supportsHevc) {
-            emit displayLaunchError("Video resolutions over 4K are only supported by the HEVC codec.");
+            emit displayLaunchError(tr("Video resolutions over 4K are only supported by the HEVC codec."));
             return false;
         }
     }
@@ -702,10 +702,10 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                                        m_StreamConfig.height,
                                        m_StreamConfig.fps)) {
         if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_AUTO) {
-            emit displayLaunchError("Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC's GPU.");
+            emit displayLaunchError(tr("Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC's GPU."));
         }
         else {
-            emit displayLaunchError("Your codec selection and force hardware decoding setting are not compatible. This PC's GPU lacks support for decoding your chosen codec.");
+            emit displayLaunchError(tr("Your codec selection and force hardware decoding setting are not compatible. This PC's GPU lacks support for decoding your chosen codec."));
         }
 
         // Fail the launch, because we won't manage to get a decoder for the actual stream
@@ -1013,7 +1013,7 @@ bool Session::startConnectionAsync()
                            m_InputHandler->getAttachedGamepadMask());
         }
     } catch (const GfeHttpResponseException& e) {
-        emit displayLaunchError("GeForce Experience returned error: " + e.toQString());
+        emit displayLaunchError(tr("GeForce Experience returned error: %1").arg(e.toQString()));
         return false;
     } catch (const QtNetworkReplyException& e) {
         emit displayLaunchError(e.toQString());
@@ -1394,7 +1394,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                     SDL_AtomicUnlock(&m_DecoderLock);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                  "Failed to recreate decoder after reset");
-                    emit displayLaunchError("Unable to initialize video decoder. Please check your streaming settings and try again.");
+                    emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
                     goto DispatchDeferredCleanup;
                 }
 

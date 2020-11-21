@@ -50,7 +50,7 @@ Flickable {
             id: basicSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: qsTr("<font color=\"skyblue\">Basic Settings</font>")
+            title: "<font color=\"skyblue\">" + qsTr("Basic Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -170,22 +170,22 @@ Flickable {
                             // Other elements may be added at runtime
                             // based on attached display resolution
                             ListElement {
-                                text: "720p"
+                                text: qsTr("720p")
                                 video_width: "1280"
                                 video_height: "720"
                             }
                             ListElement {
-                                text: "1080p"
+                                text: qsTr("1080p")
                                 video_width: "1920"
                                 video_height: "1080"
                             }
                             ListElement {
-                                text: "1440p"
+                                text: qsTr("1440p")
                                 video_width: "2560"
                                 video_height: "1440"
                             }
                             ListElement {
-                                text: "4K"
+                                text: qsTr("4K")
                                 video_width: "3840"
                                 video_height: "2160"
                             }
@@ -215,16 +215,16 @@ Flickable {
                             var max_fps = SystemProperties.maximumStreamingFrameRate
 
                             // Default entries
-                            fpsListModel.append({"text": qsTr("30 FPS"), "video_fps": "30"})
-                            fpsListModel.append({"text": qsTr("60 FPS"), "video_fps": "60"})
+                            fpsListModel.append({"text": qsTr("%1 FPS").arg("30"), "video_fps": "30"})
+                            fpsListModel.append({"text": qsTr("%1 FPS").arg("60"), "video_fps": "60"})
 
                             // Add unsupported FPS values that come before the display max FPS
                             if (StreamingPreferences.unsupportedFps) {
                                 if (max_fps > 90) {
-                                    fpsListModel.append({"text": qsTr("90 FPS (Unsupported)"), "video_fps": "90"})
+                                    fpsListModel.append({"text": qsTr("%1 FPS (Unsupported)").arg("90"), "video_fps": "90"})
                                 }
                                 if (max_fps > 120) {
-                                    fpsListModel.append({"text": qsTr("120 FPS (Unsupported)"), "video_fps": "120"})
+                                    fpsListModel.append({"text": qsTr("%1 FPS (Unsupported)").arg("120"), "video_fps": "120"})
                                 }
                             }
 
@@ -233,23 +233,23 @@ Flickable {
                             if (max_fps > 64) {
                                 // Mark any FPS value greater than 120 as unsupported
                                 if (StreamingPreferences.unsupportedFps && max_fps > 120) {
-                                    fpsListModel.append({"text": max_fps+qsTr(" FPS (Unsupported)"), "video_fps": ""+max_fps})
+                                    fpsListModel.append({"text": qsTr("%1 FPS (Unsupported)").arg(max_fps), "video_fps": ""+max_fps})
                                 }
                                 else if (max_fps > 120) {
-                                    fpsListModel.append({"text": "120 FPS", "video_fps": "120"})
+                                    fpsListModel.append({"text": qsTr("%1 FPS").arg("120"), "video_fps": "120"})
                                 }
                                 else {
-                                    fpsListModel.append({"text": max_fps+" FPS", "video_fps": ""+max_fps})
+                                    fpsListModel.append({"text": qsTr("%1 FPS").arg(max_fps), "video_fps": ""+max_fps})
                                 }
                             }
 
                             // Add unsupported FPS values that come after the display max FPS
                             if (StreamingPreferences.unsupportedFps) {
                                 if (max_fps < 90) {
-                                    fpsListModel.append({"text":qsTr( "90 FPS (Unsupported)"), "video_fps": "90"})
+                                    fpsListModel.append({"text":qsTr("%1 FPS (Unsupported)").arg("90"), "video_fps": "90"})
                                 }
                                 if (max_fps < 120) {
-                                    fpsListModel.append({"text":qsTr( "120 FPS (Unsupported)"), "video_fps": "120"})
+                                    fpsListModel.append({"text":qsTr("%1 FPS (Unsupported)").arg("120"), "video_fps": "120"})
                                 }
                             }
 
@@ -302,7 +302,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: bitrateTitle
-                    text: qsTr("Video bitrate: ")
+                    text: qsTr("Video bitrate:")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -328,7 +328,7 @@ Flickable {
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
 
                     onValueChanged: {
-                        bitrateTitle.text = qsTr("Video bitrate: " + (value / 1000.0) + " Mbps")
+                        bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
                         StreamingPreferences.bitrateKbps = value
                     }
                 }
@@ -403,7 +403,7 @@ Flickable {
                     id: vsyncCheck
                     width: parent.width
                     hoverEnabled: true
-                    text: "V-Sync"
+                    text: qsTr("V-Sync")
                     font.pointSize:  12
                     checked: StreamingPreferences.enableVsync
                     onCheckedChanged: {
@@ -440,7 +440,7 @@ Flickable {
             id: audioSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: qsTr("<font color=\"skyblue\">Audio Settings</font>")
+            title: "<font color=\"skyblue\">" + qsTr("Audio Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -475,15 +475,15 @@ Flickable {
                     model: ListModel {
                         id: audioListModel
                         ListElement {
-                            text: "Stereo"
+                            text: qsTr("Stereo")
                             val: StreamingPreferences.AC_STEREO
                         }
                         ListElement {
-                            text: "5.1 surround sound"
+                            text: qsTr("5.1 surround sound")
                             val: StreamingPreferences.AC_51_SURROUND
                         }
                         ListElement {
-                            text: "7.1 surround sound"
+                            text: qsTr("7.1 surround sound")
                             val: StreamingPreferences.AC_71_SURROUND
                         }
                     }
@@ -500,7 +500,7 @@ Flickable {
             id: uiSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: qsTr("<font color=\"skyblue\">UI Settings</font>")
+            title: "<font color=\"skyblue\">" + qsTr("UI Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -562,7 +562,7 @@ Flickable {
             id: gamepadSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: qsTr("<font color=\"skyblue\">Input Settings</font>")
+            title: "<font color=\"skyblue\">" + qsTr("Input Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -582,7 +582,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.\n") +
+                    ToolTip.text: qsTr("Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.") + "\n" +
                                   qsTr("Only enable this option when streaming a game that doesn't support gamepads being connected after startup.")
                 }
 
@@ -601,8 +601,8 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("This enables mouse control without capturing the client's mouse cursor. It will not work in most games.\n
-                                   You can toggle this while streaming using Ctrl+Alt+Shift+M.")
+                    ToolTip.text: qsTr("This enables mouse control without capturing the client's mouse cursor. It will not work in most games.") + "\n" +
+                                  qsTr("You can toggle this while streaming using Ctrl+Alt+Shift+M.")
                 }
 
                 CheckBox {
@@ -662,7 +662,7 @@ Flickable {
             id: hostSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: qsTr("<font color=\"skyblue\">Host Settings</font>")
+            title: "<font color=\"skyblue\">" + qsTr("Host Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -713,7 +713,7 @@ Flickable {
             id: advancedSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
-            title: qsTr("<font color=\"skyblue\">Advanced Settings</font>")
+            title: "<font color=\"skyblue\">" + qsTr("Advanced Settings") + "</font>"
             font.pointSize: 12
 
             Column {
@@ -798,15 +798,15 @@ Flickable {
                             val: StreamingPreferences.VCC_AUTO
                         }
                         ListElement {
-                            text: "H.264"
+                            text: qsTr("H.264")
                             val: StreamingPreferences.VCC_FORCE_H264
                         }
                         ListElement {
-                            text: "HEVC (H.265)"
+                            text: qsTr("HEVC (H.265)")
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
                         /*ListElement {
-                            text: "HEVC HDR (Experimental)"
+                            text: qsTr("HEVC HDR (Experimental)")
                             val: StreamingPreferences.VCC_FORCE_HEVC_HDR
                         }*/
                     }

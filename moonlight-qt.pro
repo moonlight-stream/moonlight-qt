@@ -1,4 +1,3 @@
-TRANSLATIONS += languages/qml_fr.ts
 TEMPLATE = subdirs
 SUBDIRS = \
     moonlight-common-c \

@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QTranslator translator;
-    qDebug() <<"loaded: " <<translator.load(QString(":/languages/qml_") + QLocale::system().name());
+    qDebug() << "Translation loaded: " << translator.load(QString(":/languages/qml_") + QLocale::system().name());
     app.installTranslator(&translator);
 
     // After the QGuiApplication is created, the platform stuff will be initialized

@@ -86,8 +86,8 @@ public:
                     emit q->searchingApp();
                 } else {
                     m_State = StateFailure;
-                    QString msg = QString("Computer %1 has not been paired. "
-                                          "Please open Moonlight to pair before streaming.")
+                    QString msg = QObject::tr("Computer %1 has not been paired. "
+                                              "Please open Moonlight to pair before streaming.")
                             .arg(event.computer->name);
                     emit q->failed(msg);
                 }
@@ -123,18 +123,18 @@ public:
         case Event::AppQuitCompleted:
             if (m_State == StateSeekApp && !event.errorMessage.isEmpty()) {
                 m_State = StateFailure;
-                emit q->failed(QString("Quitting app failed, reason: %1").arg(event.errorMessage));
+                emit q->failed(QObject::tr("Quitting app failed, reason: %1").arg(event.errorMessage));
             }
             break;
         // Occurs when computer or app search timed out
         case Event::Timedout:
             if (m_State == StateSeekComputer) {
                 m_State = StateFailure;
-                emit q->failed(QString("Failed to connect to %1").arg(m_ComputerName));
+                emit q->failed(QObject::tr("Failed to connect to %1").arg(m_ComputerName));
             }
             if (m_State == StateSeekApp) {
                 m_State = StateFailure;
-                emit q->failed(QString("Failed to find application %1").arg(m_AppName));
+                emit q->failed(QObject::tr("Failed to find application %1").arg(m_AppName));
             }
             break;
         }

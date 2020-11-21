@@ -73,7 +73,7 @@ public:
         case Event::ComputerSeekTimedout:
             if (m_State == StateSeekComputer) {
                 m_State = StateFailure;
-                emit q->failed(QString("Failed to connect to %1").arg(m_ComputerName));
+                emit q->failed(QObject::tr("Failed to connect to %1").arg(m_ComputerName));
             }
             break;
         // Occurs when searched computer is found
@@ -85,8 +85,8 @@ public:
                     m_ComputerManager->quitRunningApp(event.computer);
                 } else {
                     m_State = StateFailure;
-                    QString msg = QString("Computer %1 has not been paired. "
-                                          "Please open Moonlight to pair before streaming.")
+                    QString msg = QObject::tr("Computer %1 has not been paired. "
+                                              "Please open Moonlight to pair before streaming.")
                             .arg(event.computer->name);
                     emit q->failed(msg);
                 }
@@ -99,7 +99,7 @@ public:
                     QCoreApplication::exit(0);
                 } else {
                     m_State = StateFailure;
-                    emit q->failed(QString("Quitting app failed, reason: %1").arg(event.errorMessage));
+                    emit q->failed(QObject::tr("Quitting app failed, reason: %1").arg(event.errorMessage));
                 }
             }
             break;
