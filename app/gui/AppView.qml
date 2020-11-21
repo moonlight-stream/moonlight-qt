@@ -225,11 +225,8 @@ CenteredGridView {
         }
 
         Keys.onMenuPressed: {
-            if (model.running) {
-                // This will be keyboard/gamepad driven so use
-                // open() instead of popup()
-                appContextMenu.open()
-            }
+            // This will be keyboard/gamepad driven so use open() instead of popup()
+            appContextMenu.open()
         }
 
         function doQuitGame() {
