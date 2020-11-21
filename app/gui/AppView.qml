@@ -115,7 +115,7 @@ CenteredGridView {
                 launchOrResumeSelectedApp()
             }
 
-            ToolTip.text: "Resume Game"
+            ToolTip.text: qsTr("Resume Game")
             ToolTip.delay: 1000
             ToolTip.timeout: 3000
             ToolTip.visible: hovered
@@ -143,7 +143,7 @@ CenteredGridView {
                 doQuitGame()
             }
 
-            ToolTip.text: "Quit Game"
+            ToolTip.text: qsTr("Quit Game")
             ToolTip.delay: 1000
             ToolTip.timeout: 3000
             ToolTip.visible: hovered
@@ -242,12 +242,12 @@ CenteredGridView {
             id: appContextMenu
             NavigableMenuItem {
                 parentMenu: appContextMenu
-                text: model.running ? "Resume Game" : "Launch Game"
+                text: model.running ? qsTr("Resume Game") : qsTr("Launch Game")
                 onTriggered: launchOrResumeSelectedApp()
             }
             NavigableMenuItem {
                 parentMenu: appContextMenu
-                text: "Quit Game"
+                text: qsTr("Quit Game")
                 onTriggered: doQuitGame()
                 visible: model.running
             }
@@ -255,7 +255,7 @@ CenteredGridView {
                 parentMenu: appContextMenu
                 checkable: true
                 checked: model.hidden
-                text: "Hide Game"
+                text: qsTr("Hide Game")
                 onTriggered: appModel.setAppHidden(model.index, !model.hidden)
                 visible: !model.running || model.hidden
             }
@@ -268,7 +268,7 @@ CenteredGridView {
         property bool segueToStream : false
         property string nextAppName: ""
         property int nextAppIndex: 0
-        text:"Are you sure you want to quit " + appName +"? Any unsaved progress will be lost."
+        text:qsTr("Are you sure you want to quit " + appName +"? Any unsaved progress will be lost.")
         standardButtons: Dialog.Yes | Dialog.No
 
         function quitApp() {
