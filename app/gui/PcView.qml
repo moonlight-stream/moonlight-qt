@@ -99,7 +99,7 @@ CenteredGridView {
         Label {
             height: searchSpinner.height
             elide: Label.ElideRight
-            text: StreamingPreferences.enableMdns ? qsTr("Searching for PCs with NVIDIA GameStream enabled...")
+            text: StreamingPreferences.enableMdns ? qsTr("Searching for PCs on your local network with NVIDIA GameStream enabled...")
                                                   : qsTr("Automatic PC discovery is disabled. Add your PC manually.")
             font.pointSize: 20
             verticalAlignment: Text.AlignVCenter
