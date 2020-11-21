@@ -1,3 +1,7 @@
+// minwindef.h defines min() and max() macros that conflict with
+// std::numeric_limits, which Qt uses in some of its headers.
+#define NOMINMAX
+
 #include <initguid.h>
 #include "dxva2.h"
 #include "../ffmpeg.h"
