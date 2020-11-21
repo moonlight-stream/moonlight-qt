@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QCoreApplication>
 
+QString Path::s_CacheDir;
 QString Path::s_LogDir;
 QString Path::s_BoxArtCacheDir;
 
@@ -28,11 +29,25 @@ QByteArray Path::readDataFile(QString fileName)
     return dataFile.readAll();
 }
 
+void Path::writeDataFile(QString fileName, QByteArray data)
+{
+    QFile dataFile(QDir(s_CacheDir).absoluteFilePath(fileName));
+    dataFile.open(QIODevice::WriteOnly);
+    dataFile.write(data);
+}
+
 QString Path::getDataFilePath(QString fileName)
 {
     QString candidatePath;
 
-    // Check the current directory first
+    // Check the cache location first (used by Path::writeDataFile())
+    candidatePath = QDir(s_CacheDir).absoluteFilePath(fileName);
+    if (QFile::exists(candidatePath)) {
+        qInfo() << "Found" << fileName << "at" << candidatePath;
+        return candidatePath;
+    }
+
+    // Check the current directory
     candidatePath = QDir(QDir::currentPath()).absoluteFilePath(fileName);
     if (QFile::exists(candidatePath)) {
         qInfo() << "Found" << fileName << "at" << candidatePath;
@@ -64,6 +79,7 @@ void Path::initialize(bool portable)
     if (portable) {
         s_LogDir = QDir::currentPath();
         s_BoxArtCacheDir = QDir::currentPath() + "/boxart";
+        s_CacheDir = QDir::currentPath();
     }
     else {
 #ifdef Q_OS_DARWIN
@@ -73,6 +89,7 @@ void Path::initialize(bool portable)
 #else
         s_LogDir = QDir::tempPath();
 #endif
+        s_CacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
         s_BoxArtCacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/boxart";
     }
 }
