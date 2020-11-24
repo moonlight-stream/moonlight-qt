@@ -44,7 +44,10 @@ void MappingFetcher::start()
     // Only download the file if it's newer than what we have
     QFileInfo existingFileInfo = Path::getCacheFileInfo("gamecontrollerdb.txt");
     if (existingFileInfo.exists()) {
-        if (existingFileInfo.size() > 0) {
+        // Make sure the cached file looks reasonable. It should have some data and
+        // the last modified time should not be in the future.
+        QDateTime lastModifiedTime = existingFileInfo.lastModified().toUTC();
+        if (existingFileInfo.size() > 0 && lastModifiedTime <= QDateTime::currentDateTimeUtc()) {
             request.setHeader(QNetworkRequest::IfModifiedSinceHeader, existingFileInfo.lastModified().toUTC());
         }
         else {
