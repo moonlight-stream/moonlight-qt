@@ -29,7 +29,6 @@ void MappingFetcher::start()
 
     QUrl url("https://moonlight-stream.org/SDL_GameControllerDB/gamecontrollerdb.txt");
     QNetworkRequest request(url);
-    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
 
     // Only download the file if it's newer than what we have
     QFileInfo existingFileInfo = Path::getCacheFileInfo("gamecontrollerdb.txt");
