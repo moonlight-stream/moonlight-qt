@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
         // On Windows, use ANGLE so we don't have to load OpenGL
         // user-mode drivers into our app. OGL drivers (especially Intel)
