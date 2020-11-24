@@ -5,30 +5,30 @@
     <name>AppView</name>
     <message>
         <location filename="../gui/AppView.qml" line="118"/>
-        <location filename="../gui/AppView.qml" line="245"/>
+        <location filename="../gui/AppView.qml" line="242"/>
         <source>Resume Game</source>
         <translation>Reprendre le jeu</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="146"/>
-        <location filename="../gui/AppView.qml" line="250"/>
+        <location filename="../gui/AppView.qml" line="247"/>
         <source>Quit Game</source>
         <translation>Quitter le jeu</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="245"/>
+        <location filename="../gui/AppView.qml" line="242"/>
         <source>Launch Game</source>
         <translation>Lancer le jeu</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="258"/>
+        <location filename="../gui/AppView.qml" line="255"/>
         <source>Hide Game</source>
         <translation>Cacher le jeu</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="271"/>
+        <location filename="../gui/AppView.qml" line="268"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vous êtes sûr de vouloir arrêter %1? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -59,7 +59,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vous êtes sûr de vouloir arrêter %1? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -67,7 +67,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Configuration du controleur</translation>
     </message>
 </context>
 <context>
@@ -75,7 +75,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="326"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dispositif de capture audio manquant. La réinstallation de GeForce Experience devrait résoudre cette erreur.</translation>
     </message>
 </context>
 <context>
@@ -101,9 +101,8 @@
         <translation>Cliquez sur le bouton Aide pour connaître les solutions possibles.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation>La recherche de PC avec NVIDIA GameStream activé...</translation>
+        <translation type="vanished">La recherche de PC avec NVIDIA GameStream activé...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
@@ -148,7 +147,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="296"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Veuillez saisir %1 sur votre PC GameStream. Cette boîte de dialogue se fermera lorsque l&apos;appariement sera terminé.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="307"/>
@@ -163,7 +162,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="324"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>Cela peut prendre quelques secondes...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="335"/>
@@ -191,6 +190,11 @@
         <translation>Le test de réseau n&apos;a pas pu être effectué car aucun des serveurs de test de connexion de Moonlight n&apos;était accessible depuis ce PC. Vérifiez votre connexion Internet ou réessayez plus tard.</translation>
     </message>
     <message>
+        <location filename="../gui/PcView.qml" line="102"/>
+        <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
+        <translation>Recherche de PC sur votre réseau local avec NVIDIA GameStream activé...</translation>
+    </message>
+    <message>
         <location filename="../gui/PcView.qml" line="351"/>
         <source>Enter the new name for this PC:</source>
         <translation>Saisissez le nouveau nom de ce PC :</translation>
@@ -201,7 +205,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le jeu en cours d’exécution n&apos;a pas été démarré par ce PC. Vous devez fermer le jeu sur le PC hôte manuellement ou utiliser l&apos;appareil qui a démarré le jeu à l&apos;origine.</translation>
     </message>
 </context>
 <context>
@@ -210,24 +214,24 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>N&apos;a pas pu se connecter à %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le %1 de l&apos;ordinateur n&apos;a pas été jumelé. Veuillez ouvrir Moonlight pour jumeler avant le streaming.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>La fermeture de l&apos;application a échoué, raison : %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation type="unfinished"></translation>
+        <translation>N&apos;a pas trouvé l&apos;application %1</translation>
     </message>
 </context>
 <context>
@@ -235,7 +239,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Fermeture %1...</translation>
     </message>
 </context>
 <context>
@@ -243,122 +247,122 @@
     <message>
         <location filename="../streaming/session.cpp" line="97"/>
         <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucune vidéo reçue de l&apos;hôte. Vérifiez le pare-feu et les règles de transfert de port du PC hôte.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="102"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre connexion réseau ne fonctionne pas bien. Réduisez votre débit vidéo ou essayez une connexion plus rapide.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>Connexion terminée</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="567"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre sélection pour activer le mode de souris de bureau à distance peut causer des problèmes dans les jeux.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="572"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le HDR n&apos;est pas pris en charge par le décodage logiciel.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="576"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>La sélection de vos paramètres pour forcer le décodage du logiciel peut entraîner de mauvaises performances de streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="581"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;utilisation d&apos;options de FPS non prises en charge peut entraîner un stuttering ou des lag.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="584"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="unfinished"></translation>
+        <translation>La synchronisation vertical sera désactivée lors de la diffusion en continu à une fréquence d&apos;images supérieure à celle de l&apos;affichage.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="601"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Utilisation du décodage logiciel dû à votre sélection pour forcer les HEVC sans support GPU. Cela peut entraîner de mauvaises performances de streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="604"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le GPU de ce PC ne prend pas en charge le décodage HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="611"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le GPU de votre PC hôte ne prend pas en charge les HEVC. Un GPU GeForce GTX série 900 (Maxwell) ou plus récent est nécessaire pour le streaming HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="628"/>
         <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ne prend pas en charge le HDR10.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="632"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le GPU de votre PC hôte ne prend pas en charge le streaming HDR. Un GPU GeForce GTX série 1000 (Pascal) ou plus récent est nécessaire pour la diffusion HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="641"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le GPU de ce PC ne prend pas en charge le décodage HEVC pour le streaming HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="654"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Une expérience GeForce 3.0 ou supérieure est requise pour le streaming 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="669"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le réglage du son surround que vous avez sélectionné n&apos;est pas pris en charge par l&apos;appareil audio actuel.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="676"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation type="unfinished"></translation>
+        <translation>Echec de l&apos;ouverture de l&apos;appareil audio. L&apos;audio ne sera pas disponible pendant cette session.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="681"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation type="unfinished"></translation>
+        <translation>Une manette de jeun n&apos;a pas était configurée et ne sera pas utilisable. Visitez le Moonlight pour aider à résoudre ce problème.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="687"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le GPU de votre PC hôte ne prend pas en charge les résolutions vidéo en continu supérieures à 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="691"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Les résolutions vidéo supérieures à 4K sont uniquement prises en charge par le codec HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="705"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre choix pour forcer le décodage matériel ne peut être satisfait en raison de l&apos;absence de support de décodage matériel sur le GPU de ce PC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="708"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre sélection de codecs et le réglage du décodage matériel  ne sont pas compatibles. Le GPU de ce PC ne prend pas en charge le décodage du codec que vous avez choisi.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1016"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>GeForce Experience a renvoyé l&apos;erreur : %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1397"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossible d&apos;initialiser le décodeur vidéo. Veuillez vérifier vos paramètres de diffusion en continu et réessayer.</translation>
     </message>
 </context>
 <context>
@@ -386,22 +390,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="173"/>
         <source>720p</source>
-        <translation type="unfinished"></translation>
+        <translation>720p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="178"/>
         <source>1080p</source>
-        <translation type="unfinished"></translation>
+        <translation>1080p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>1440p</source>
-        <translation type="unfinished"></translation>
+        <translation>1440p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="188"/>
         <source>4K</source>
-        <translation type="unfinished"></translation>
+        <translation>4K</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="218"/>
@@ -468,7 +472,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="406"/>
         <source>V-Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>synchronisation verticale</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="416"/>
@@ -493,17 +497,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="478"/>
         <source>Stereo</source>
-        <translation type="unfinished"></translation>
+        <translation>Stereo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="482"/>
         <source>5.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>5.1 son surround</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="486"/>
         <source>7.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>7.1 son surround</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="503"/>
@@ -659,12 +663,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="801"/>
         <source>H.264</source>
-        <translation type="unfinished"></translation>
+        <translation>H.264</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="805"/>
         <source>HEVC (H.265)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC (H.265)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="822"/>
@@ -688,12 +692,12 @@
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <location filename="../gui/StreamSegue.qml" line="17"/>
         <source>Starting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Démarrage de %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="23"/>
         <source>Starting %1 failed: Error %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Démarrage de %1... echec: erreur %2</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="68"/>
@@ -703,7 +707,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="150"/>
         <source>Tip:</source>
-        <translation type="unfinished"></translation>
+        <translation>Aide:</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="150"/>
@@ -734,7 +738,7 @@
     <message>
         <location filename="../gui/main.qml" line="227"/>
         <source>Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Version %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="243"/>
@@ -759,12 +763,12 @@
     <message>
         <location filename="../gui/main.qml" line="349"/>
         <source>Gamepad Mapper</source>
-        <translation type="unfinished"></translation>
+        <translation>configuration du controleur</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="353"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>configuration du controleur</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="387"/>
