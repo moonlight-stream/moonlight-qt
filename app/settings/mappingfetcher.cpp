@@ -29,18 +29,32 @@ void MappingFetcher::start()
 
     QUrl url("https://moonlight-stream.org/SDL_GameControllerDB/gamecontrollerdb.txt");
     QNetworkRequest request(url);
-    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
 
+#if QT_VERSION >= QT_VERSION_CHECK(5, 15, 0)
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
+#else
+    request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
+#endif
+
+    // Qt 5.12 introduced QNetworkRequest::IfModifiedSinceHeader. We _could_ implement it
+    // by hand (including QDateTime conversion to the correct string form) for earlier Qt
+    // versions, but that's a pain and this is just an optimization anyway. We'll do a bit
+    // of extra work on those legacy Qt versions by fetching the GCDB each time we launch.
+#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
     // Only download the file if it's newer than what we have
     QFileInfo existingFileInfo = Path::getCacheFileInfo("gamecontrollerdb.txt");
     if (existingFileInfo.exists()) {
-        if (existingFileInfo.size() > 0) {
+        // Make sure the cached file looks reasonable. It should have some data and
+        // the last modified time should not be in the future.
+        QDateTime lastModifiedTime = existingFileInfo.lastModified().toUTC();
+        if (existingFileInfo.size() > 0 && lastModifiedTime <= QDateTime::currentDateTimeUtc()) {
             request.setHeader(QNetworkRequest::IfModifiedSinceHeader, existingFileInfo.lastModified().toUTC());
         }
         else {
             Path::deleteCacheFile("gamecontrollerdb.txt");
         }
     }
+#endif
 
     // We'll get a callback when this is finished
     m_Nam.get(request);

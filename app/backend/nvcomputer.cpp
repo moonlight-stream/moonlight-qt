@@ -317,6 +317,7 @@ bool NvComputer::updateAppList(QVector<NvApp> newAppList) {
         for (NvApp& newApp : newAppList) {
             if (existingApp.id == newApp.id) {
                 newApp.hidden = existingApp.hidden;
+                newApp.directLaunch = existingApp.directLaunch;
             }
         }
     }

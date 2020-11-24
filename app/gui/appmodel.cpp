@@ -47,6 +47,17 @@ Session* AppModel::createSessionForApp(int appIndex)
     return new Session(m_Computer, app);
 }
 
+int AppModel::getDirectLaunchAppIndex()
+{
+    for (int i = 0; i < m_AllApps.count(); i++) {
+        if (m_VisibleApps[i].directLaunch) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
 int AppModel::rowCount(const QModelIndex &parent) const
 {
     // For list models only the root node (an invalid parent) should return the list's size. For all
@@ -78,6 +89,8 @@ QVariant AppModel::data(const QModelIndex &index, int role) const
         return app.hidden;
     case AppIdRole:
         return app.id;
+    case DirectLaunchRole:
+        return app.directLaunch;
     default:
         return QVariant();
     }
@@ -92,6 +105,7 @@ QHash<int, QByteArray> AppModel::roleNames() const
     names[BoxArtRole] = "boxart";
     names[HiddenRole] = "hidden";
     names[AppIdRole] = "appid";
+    names[DirectLaunchRole] = "directLaunch";
 
     return names;
 }
@@ -199,6 +213,32 @@ void AppModel::setAppHidden(int appIndex, bool hidden)
         for (NvApp& app : m_Computer->appList) {
             if (app.id == appId) {
                 app.hidden = hidden;
+                break;
+            }
+        }
+    }
+
+    m_ComputerManager->clientSideAttributeUpdated(m_Computer);
+}
+
+void AppModel::setAppDirectLaunch(int appIndex, bool directLaunch)
+{
+    Q_ASSERT(appIndex < m_VisibleApps.count());
+    int appId = m_VisibleApps.at(appIndex).id;
+
+    {
+        QWriteLocker lock(&m_Computer->lock);
+
+        for (NvApp& app : m_Computer->appList) {
+            if (directLaunch) {
+                // We must clear direct launch from all other apps
+                // to set it on the new app.
+                app.directLaunch = app.id == appId;
+            }
+            else if (app.id == appId) {
+                // If we're clearing direct launch, we're done once we
+                // find our matching app ID.
+                app.directLaunch = false;
                 break;
             }
         }

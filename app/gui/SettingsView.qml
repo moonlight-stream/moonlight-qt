@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import QtQuick.Layouts 1.2
 
 import StreamingPreferences 1.0
 import ComputerManager 1.0
@@ -78,6 +79,8 @@ Flickable {
                     width: parent.width
 
                     AutoResizingComboBox {
+                        property int lastIndexValue
+
                         // ignore setting the index at first, and actually set it when the component is loaded
                         Component.onCompleted: {
                             // Add native resolutions for all attached displays
@@ -123,7 +126,8 @@ Flickable {
                                                                    {
                                                                        "text": "Native ("+screenRect.width+"x"+screenRect.height+")",
                                                                        "video_width": ""+screenRect.width,
-                                                                       "video_height": ""+screenRect.height
+                                                                       "video_height": ""+screenRect.height,
+                                                                       "is_custom": false
                                                                    })
                                     }
                                 }
@@ -147,19 +151,42 @@ Flickable {
                             // and set it to that index.
                             var saved_width = StreamingPreferences.width
                             var saved_height = StreamingPreferences.height
-                            currentIndex = 0
+                            var index_set = false
                             for (var i = 0; i < resolutionListModel.count; i++) {
                                 var el_width = parseInt(resolutionListModel.get(i).video_width);
                                 var el_height = parseInt(resolutionListModel.get(i).video_height);
 
-                                // Pick the highest value lesser or equal to the saved resolution
-                                if (saved_width * saved_height >= el_width * el_height) {
+                                if (saved_width === el_width && saved_height === el_height) {
                                     currentIndex = i
+                                    index_set = true
+                                    break
                                 }
                             }
 
-                            // Persist the selected value
-                            activated(currentIndex)
+                            if (!index_set) {
+                                // We did not find a match. This must be a custom resolution.
+                                resolutionListModel.append({
+                                                               "text": "Custom ("+StreamingPreferences.width+"x"+StreamingPreferences.height+")",
+                                                               "video_width": ""+StreamingPreferences.width,
+                                                               "video_height": ""+StreamingPreferences.height,
+                                                               "is_custom": true
+                                                           })
+                                currentIndex = resolutionListModel.count - 1
+                            }
+                            else {
+                                resolutionListModel.append({
+                                                               "text": "Custom",
+                                                               "video_width": "",
+                                                               "video_height": "",
+                                                               "is_custom": true
+                                                           })
+                            }
+
+                            // Since we don't call activate() here, we need to trigger
+                            // width calculation manually
+                            recalculateWidth()
+
+                            lastIndexValue = currentIndex
                         }
 
                         id: resolutionComboBox
@@ -173,25 +200,29 @@ Flickable {
                                 text: qsTr("720p")
                                 video_width: "1280"
                                 video_height: "720"
+                                is_custom: false
                             }
                             ListElement {
                                 text: qsTr("1080p")
                                 video_width: "1920"
                                 video_height: "1080"
+                                is_custom: false
                             }
                             ListElement {
                                 text: qsTr("1440p")
                                 video_width: "2560"
                                 video_height: "1440"
+                                is_custom: false
                             }
                             ListElement {
                                 text: qsTr("4K")
                                 video_width: "3840"
                                 video_height: "2160"
+                                is_custom: false
                             }
                         }
-                        // ::onActivated must be used, as it only listens for when the index is changed by a human
-                        onActivated : {
+
+                        function updateBitrateForSelection() {
                             var selectedWidth = parseInt(resolutionListModel.get(currentIndex).video_width)
                             var selectedHeight = parseInt(resolutionListModel.get(currentIndex).video_height)
 
@@ -204,6 +235,146 @@ Flickable {
                                                                                                           StreamingPreferences.height,
                                                                                                           StreamingPreferences.fps);
                                 slider.value = StreamingPreferences.bitrateKbps
+                            }
+
+                            lastIndexValue = currentIndex
+                        }
+
+                        // ::onActivated must be used, as it only listens for when the index is changed by a human
+                        onActivated : {
+                            if (resolutionListModel.get(currentIndex).is_custom) {
+                                customResolutionDialog.open()
+                            }
+                            else {
+                                updateBitrateForSelection()
+                            }
+                        }
+
+                        NavigableDialog {
+                            id: customResolutionDialog
+                            standardButtons: Dialog.Ok | Dialog.Cancel
+                            onOpened: {
+                                // Force keyboard focus on the textbox so keyboard navigation works
+                                widthField.forceActiveFocus()
+
+                                // standardButton() was added in Qt 5.10, so we must check for it first
+                                if (customResolutionDialog.standardButton) {
+                                    customResolutionDialog.standardButton(Dialog.Ok).enabled = customResolutionDialog.isInputValid()
+                                }
+                            }
+
+                            onClosed: {
+                                widthField.clear()
+                                heightField.clear()
+                            }
+
+                            onRejected: {
+                                resolutionComboBox.currentIndex = resolutionComboBox.lastIndexValue
+                            }
+
+                            function isInputValid() {
+                                // If we have text in either textbox that isn't valid,
+                                // reject the input.
+                                if ((!widthField.acceptableInput && widthField.text) ||
+                                        (!heightField.acceptableInput && heightField.text)) {
+                                    return false
+                                }
+
+                                // The textboxes need to have text or placeholder text
+                                if ((!widthField.text && !widthField.placeholderText) ||
+                                        (!heightField.text && !heightField.placeholderText)) {
+                                    return false
+                                }
+
+                                return true
+                            }
+
+                            onAccepted: {
+                                // Reject if there's invalid input
+                                if (!isInputValid()) {
+                                    reject()
+                                    return
+                                }
+
+                                var width = widthField.text ? widthField.text : widthField.placeholderText
+                                var height = heightField.text ? heightField.text : heightField.placeholderText
+
+                                // Find and update the custom entry
+                                for (var i = 0; i < resolutionListModel.count; i++) {
+                                    if (resolutionListModel.get(i).is_custom) {
+                                        resolutionListModel.setProperty(i, "video_width", width)
+                                        resolutionListModel.setProperty(i, "video_height", height)
+                                        resolutionListModel.setProperty(i, "text", "Custom ("+width+"x"+height+")")
+
+                                        // Now update the bitrate using the custom resolution
+                                        resolutionComboBox.currentIndex = i
+                                        resolutionComboBox.updateBitrateForSelection()
+
+                                        // Update the combobox width too
+                                        resolutionComboBox.recalculateWidth()
+                                        break
+                                    }
+                                }
+                            }
+
+                            ColumnLayout {
+                                Label {
+                                    text: qsTr("Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.") + "\n\n" +
+                                          qsTr("Resolutions that are not supported by your client or host PC may cause streaming errors.") + "\n"
+                                    wrapMode: Label.WordWrap
+                                    Layout.maximumWidth: 300
+                                }
+
+                                Label {
+                                    text: qsTr("Enter a custom resolution:")
+                                    font.bold: true
+                                }
+
+                                RowLayout {
+                                    TextField {
+                                        id: widthField
+                                        maximumLength: 5
+                                        inputMethodHints: Qt.ImhDigitsOnly
+                                        placeholderText: resolutionListModel.get(resolutionComboBox.currentIndex).video_width
+                                        validator: IntValidator{bottom:128; top:8192}
+                                        focus: true
+
+                                        onTextChanged: {
+                                            // standardButton() was added in Qt 5.10, so we must check for it first
+                                            if (customResolutionDialog.standardButton) {
+                                                customResolutionDialog.standardButton(Dialog.Ok).enabled = customResolutionDialog.isInputValid()
+                                            }
+                                        }
+
+                                        Keys.onReturnPressed: {
+                                            customResolutionDialog.accept()
+                                        }
+                                    }
+
+                                    Label {
+                                        text: "x"
+                                        font.bold: true
+                                    }
+
+                                    TextField {
+                                        id: heightField
+                                        maximumLength: 5
+                                        inputMethodHints: Qt.ImhDigitsOnly
+                                        placeholderText: resolutionListModel.get(resolutionComboBox.currentIndex).video_height
+                                        validator: IntValidator{bottom:128; top:8192}
+
+                                        onTextChanged: {
+                                            // standardButton() was added in Qt 5.10, so we must check for it first
+                                            if (customResolutionDialog.standardButton) {
+                                                customResolutionDialog.standardButton(Dialog.Ok).enabled = customResolutionDialog.isInputValid()
+                                            }
+                                        }
+
+                                        Keys.onReturnPressed: {
+                                            customResolutionDialog.accept()
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
