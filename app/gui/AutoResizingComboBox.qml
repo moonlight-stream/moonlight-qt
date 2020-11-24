@@ -19,9 +19,7 @@ ComboBox {
         id: textMetrics
     }
 
-    // We call this every time the options change (and init)
-    // so we can adjust the combo box width here too
-    onActivated: {
+    function recalculateWidth() {
         textMetrics.font = font
         popupMetrics.font = popup.font
         textWidth = 0
@@ -32,6 +30,10 @@ ComboBox {
             textWidth = Math.max(popupMetrics.width, textWidth)
         }
     }
+
+    // We call this every time the options change (and init)
+    // so we can adjust the combo box width here too
+    onActivated: recalculateWidth()
 
     popup.onAboutToShow: {
         // Switch to normal navigation for combo boxes
