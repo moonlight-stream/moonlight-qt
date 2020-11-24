@@ -72,15 +72,25 @@ void MappingManager::applyMappings()
     if (!mappingData.isEmpty()) {
         int newMappings = SDL_GameControllerAddMappingsFromRW(
                     SDL_RWFromConstMem(mappingData.constData(), mappingData.size()), 1);
-        if (newMappings < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Error loading gamepad mappings: %s",
-                         SDL_GetError());
-        }
-        else {
+
+        if (newMappings > 0) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Loaded %d new gamepad mappings",
                         newMappings);
+        }
+        else {
+            if (newMappings < 0) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Error loading gamepad mappings: %s",
+                             SDL_GetError());
+            }
+            else if (newMappings == 0) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "0 new mappings found in gamecontrollerdb.txt. Is it corrupt?");
+            }
+
+            // Try deleting the cached mapping list just in case it's corrupt
+            Path::deleteCacheFile("gamecontrollerdb.txt");
         }
     }
     else {

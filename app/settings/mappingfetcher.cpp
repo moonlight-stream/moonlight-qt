@@ -32,8 +32,13 @@ void MappingFetcher::start()
 
     // Only download the file if it's newer than what we have
     QFileInfo existingFileInfo = Path::getCacheFileInfo("gamecontrollerdb.txt");
-    if (existingFileInfo.exists() && existingFileInfo.size() > 0) {
-        request.setHeader(QNetworkRequest::IfModifiedSinceHeader, existingFileInfo.lastModified().toUTC());
+    if (existingFileInfo.exists()) {
+        if (existingFileInfo.size() > 0) {
+            request.setHeader(QNetworkRequest::IfModifiedSinceHeader, existingFileInfo.lastModified().toUTC());
+        }
+        else {
+            Path::deleteCacheFile("gamecontrollerdb.txt");
+        }
     }
 
     // We'll get a callback when this is finished
