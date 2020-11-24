@@ -14,7 +14,8 @@ public:
                 name == other.name &&
                 hdrSupported == other.hdrSupported &&
                 isAppCollectorGame == other.isAppCollectorGame &&
-                hidden == other.hidden;
+                hidden == other.hidden &&
+                directLaunch == other.directLaunch;
     }
 
     bool operator!=(const NvApp& other) const
@@ -35,6 +36,7 @@ public:
     bool hdrSupported = false;
     bool isAppCollectorGame = false;
     bool hidden = false;
+    bool directLaunch = false;
 };
 
 Q_DECLARE_METATYPE(NvApp)

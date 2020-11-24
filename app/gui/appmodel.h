@@ -17,6 +17,7 @@ class AppModel : public QAbstractListModel
         BoxArtRole,
         HiddenRole,
         AppIdRole,
+        DirectLaunchRole
     };
 
 public:
@@ -27,6 +28,8 @@ public:
 
     Q_INVOKABLE Session* createSessionForApp(int appIndex);
 
+    Q_INVOKABLE int getDirectLaunchAppIndex();
+
     Q_INVOKABLE int getRunningAppId();
 
     Q_INVOKABLE QString getRunningAppName();
@@ -34,6 +37,8 @@ public:
     Q_INVOKABLE void quitRunningApp();
 
     Q_INVOKABLE void setAppHidden(int appIndex, bool hidden);
+
+    Q_INVOKABLE void setAppDirectLaunch(int appIndex, bool directLaunch);
 
     QVariant data(const QModelIndex &index, int role) const override;
 
