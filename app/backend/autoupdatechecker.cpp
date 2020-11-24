@@ -39,7 +39,9 @@ void AutoUpdateChecker::start()
 
     // We'll get a callback when this is finished
     QUrl url("https://moonlight-stream.org/updates/qt.json");
-    m_Nam.get(QNetworkRequest(url));
+    QNetworkRequest request(url);
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, true);
+    m_Nam.get(request);
 #endif
 }
 
