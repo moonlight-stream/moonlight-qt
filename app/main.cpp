@@ -334,7 +334,7 @@ int main(int argc, char *argv[])
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
         // On Windows, use ANGLE so we don't have to load OpenGL
         // user-mode drivers into our app. OGL drivers (especially Intel)
@@ -421,7 +421,7 @@ int main(int argc, char *argv[])
     QGuiApplication app(argc, argv);
 
     QTranslator translator;
-    qDebug() << "Translation loaded: " << translator.load(QString(":/languages/qml_") + QLocale::system().name());
+    qDebug() << "Translation loaded:" << translator.load(QString(":/languages/qml_") + QLocale::system().name());
     app.installTranslator(&translator);
 
     // After the QGuiApplication is created, the platform stuff will be initialized
