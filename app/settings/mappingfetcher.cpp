@@ -27,9 +27,17 @@ void MappingFetcher::start()
     QT_WARNING_POP
 #endif
 
-    // We'll get a callback when this is finished
     QUrl url("https://moonlight-stream.org/SDL_GameControllerDB/gamecontrollerdb.txt");
-    m_Nam.get(QNetworkRequest(url));
+    QNetworkRequest request(url);
+
+    // Only download the file if it's newer than what we have
+    QFileInfo existingFileInfo = Path::getCacheFileInfo("gamecontrollerdb.txt");
+    if (existingFileInfo.exists() && existingFileInfo.size() > 0) {
+        request.setHeader(QNetworkRequest::IfModifiedSinceHeader, existingFileInfo.lastModified().toUTC());
+    }
+
+    // We'll get a callback when this is finished
+    m_Nam.get(request);
 }
 
 void MappingFetcher::handleMappingListFetched(QNetworkReply* reply)
@@ -40,10 +48,21 @@ void MappingFetcher::handleMappingListFetched(QNetworkReply* reply)
         // Queue the reply for deletion
         reply->deleteLater();
 
-        // Update the cached data on disk for next call to applyMappings()
-        Path::writeDataFile("gamecontrollerdb.txt", reply->readAll());
+        // If we get a 304 back, Qt will happily just tell us our request was
+        // successful and let us try to write our empty response to disk. Check
+        // the status code directly to prevent this.
+        if (reply->attribute(QNetworkRequest::HttpStatusCodeAttribute) == 304) {
+            qInfo() << "Gamepad mappings are up to date";
+        }
+        else {
+            // Update the cached data on disk for next call to applyMappings()
+            QByteArray data = reply->readAll();
+            if (!data.isEmpty()) {
+                Path::writeCacheFile("gamecontrollerdb.txt", data);
+            }
 
-        qInfo() << "Downloaded updated gamepad mappings";
+            qInfo() << "Downloaded updated gamepad mappings";
+        }
     }
     else {
         qWarning() << "Failed to download updated gamepad mappings:" << reply->error();

@@ -29,11 +29,29 @@ QByteArray Path::readDataFile(QString fileName)
     return dataFile.readAll();
 }
 
-void Path::writeDataFile(QString fileName, QByteArray data)
+void Path::writeCacheFile(QString fileName, QByteArray data)
 {
-    QFile dataFile(QDir(s_CacheDir).absoluteFilePath(fileName));
+    QDir cacheDir(s_CacheDir);
+
+    // Create the cache path if it does not exist
+    if (!cacheDir.exists()) {
+        cacheDir.mkpath(".");
+    }
+
+    QFile dataFile(cacheDir.absoluteFilePath(fileName));
     dataFile.open(QIODevice::WriteOnly);
     dataFile.write(data);
+}
+
+void Path::deleteCacheFile(QString fileName)
+{
+    QFile dataFile(QDir(s_CacheDir).absoluteFilePath(fileName));
+    dataFile.remove();
+}
+
+QFileInfo Path::getCacheFileInfo(QString fileName)
+{
+    return QFileInfo(QDir(s_CacheDir), fileName);
 }
 
 QString Path::getDataFilePath(QString fileName)
@@ -79,7 +97,10 @@ void Path::initialize(bool portable)
     if (portable) {
         s_LogDir = QDir::currentPath();
         s_BoxArtCacheDir = QDir::currentPath() + "/boxart";
-        s_CacheDir = QDir::currentPath();
+
+        // In order for the If-Modified-Since logic to work in MappingFetcher,
+        // the cache directory must be different than the current directory.
+        s_CacheDir = QDir::currentPath() + "/cache";
     }
     else {
 #ifdef Q_OS_DARWIN
