@@ -49,7 +49,7 @@ Session* AppModel::createSessionForApp(int appIndex)
 
 int AppModel::getDirectLaunchAppIndex()
 {
-    for (int i = 0; i < m_AllApps.count(); i++) {
+    for (int i = 0; i < m_VisibleApps.count(); i++) {
         if (m_VisibleApps[i].directLaunch) {
             return i;
         }
