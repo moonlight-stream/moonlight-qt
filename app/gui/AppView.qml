@@ -268,23 +268,23 @@ CenteredGridView {
             NavigableMenuItem {
                 parentMenu: appContextMenu
                 checkable: true
-                checked: model.hidden
-                text: qsTr("Hide Game")
-                onTriggered: appModel.setAppHidden(model.index, !model.hidden)
-                visible: !model.running || model.hidden
-            }
-            NavigableMenuItem {
-                parentMenu: appContextMenu
-                checkable: true
                 checked: model.directLaunch
                 text: qsTr("Direct Launch")
                 onTriggered: appModel.setAppDirectLaunch(model.index, !model.directLaunch)
-                visible: !model.hidden
+                enabled: !model.hidden
 
                 ToolTip.text: qsTr("Launch this app immediately when the host is selected, bypassing the app selection grid.")
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
+            }
+            NavigableMenuItem {
+                parentMenu: appContextMenu
+                checkable: true
+                checked: model.hidden
+                text: qsTr("Hide Game")
+                onTriggered: appModel.setAppHidden(model.index, !model.hidden)
+                enabled: model.hidden || (!model.running && !model.directLaunch)
             }
         }
     }
