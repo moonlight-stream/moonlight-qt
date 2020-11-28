@@ -164,17 +164,7 @@ CenteredGridView {
             id: pcContextMenu
             NavigableMenuItem {
                 parentMenu: pcContextMenu
-                text: qsTr("View Apps")
-                onTriggered: {
-                    var component = Qt.createComponent("AppView.qml")
-                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showGames": true})
-                    stackView.push(appView)
-                }
-                visible: model.online && model.paired
-            }
-            NavigableMenuItem {
-                parentMenu: pcContextMenu
-                text: qsTr("View Hidden Apps")
+                text: qsTr("View All Apps")
                 onTriggered: {
                     var component = Qt.createComponent("AppView.qml")
                     var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
