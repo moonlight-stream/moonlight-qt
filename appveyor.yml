@@ -49,8 +49,10 @@ build_script:
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:
-  - cmd: 'appveyor PushArtifact build\installer-%ARCH%-Release\MoonlightPortable-%ARCH%-%VERSION%.zip -FileName MoonlightPortable-%ARCH%-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\symbols-%ARCH%-Release\MoonlightDebuggingSymbols-%ARCH%-%VERSION%.zip -FileName MoonlightDebuggingSymbols-%ARCH%-r%APPVEYOR_BUILD_NUMBER%.zip'
+  - cmd: 'appveyor PushArtifact build\installer-x86-Release\MoonlightPortable-x86-%VERSION%.zip -FileName MoonlightPortable-x86-r%APPVEYOR_BUILD_NUMBER%.zip'
+  - cmd: 'appveyor PushArtifact build\symbols-x86-Release\MoonlightDebuggingSymbols-x86-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x86-r%APPVEYOR_BUILD_NUMBER%.zip'
+  - cmd: 'appveyor PushArtifact build\installer-x64-Release\MoonlightPortable-x64-%VERSION%.zip -FileName MoonlightPortable-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
+  - cmd: 'appveyor PushArtifact build\symbols-x64-Release\MoonlightDebuggingSymbols-x64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$VERSION.zip -FileName Moonlight-SteamLink-r$APPVEYOR_BUILD_NUMBER.zip'
   - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/Moonlight-$VERSION.dmg -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER.dmg'
   - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/Moonlight-$VERSION-x86_64.AppImage -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
