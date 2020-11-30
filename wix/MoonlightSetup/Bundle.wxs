@@ -1,5 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?define VCREDIST_VER = "14.28.29334" ?>
+<?define VCREDIST_X86_SIZE = "14328440" ?>
+<?define VCREDIST_X86_SHA1 = "17674FCC6CF3A2FFDC391BDCDE082AA936E37A89" ?>
+<?define VCREDIST_X86_UPGRADE_CODE = "65E5BD06-6392-3027-8C26-853107D3CF1A" ?>
+<?define VCREDIST_X64_SIZE = "14882584" ?>
+<?define VCREDIST_X64_SHA1 = "1EFFE7DB3F42D670A1352C5C9B451C4DB3E57AB5" ?>
+<?define VCREDIST_X64_UPGRADE_CODE = "36F68A90-239C-34DF-B58C-64B30153CE35" ?>
+
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
      xmlns:bal="http://schemas.microsoft.com/wix/BalExtension"
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
@@ -54,6 +62,16 @@
                          Value="DesktopShortcutInstallState"
                          Condition="HasDesktopShortcutInstallStateRegKey" />
 
+    <util:ProductSearch Id="VCREDIST_142_x86"
+                        UpgradeCode="$(var.VCREDIST_X86_UPGRADE_CODE)"
+                        Result="version"
+                        Variable="VCREDIST_142_x86" />
+
+    <util:ProductSearch Id="VCREDIST_142_x64"
+                        UpgradeCode="$(var.VCREDIST_X64_UPGRADE_CODE)"
+                        Result="version"
+                        Variable="VCREDIST_142_x64" />
+
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication
         ShowVersion="yes"
@@ -65,16 +83,46 @@
     </BootstrapperApplicationRef>
 
     <Chain>
-      <ExePackage Cache="no"
+      <ExePackage Name="Microsoft Visual C++ 2015-2019 Redistributable - x86"
+                  Cache="no"
                   PerMachine="yes"
                   Permanent="yes"
                   Vital="yes"
-                  Compressed="yes"
-                  SourceFile="$(env.VCToolsRedistDir)vcredist_$(env.ARCH).exe"
-                  InstallCommand="/install /quiet /norestart">
+                  InstallCommand="/install /quiet /norestart"
+                  DownloadUrl="https://moonlight-stream.org/downloads/vcredist/$(var.VCREDIST_VER)/vcredist_x86.exe"
+                  InstallCondition="NOT VersionNT64"
+                  DetectCondition="VCREDIST_142_x86 &gt;= v$(var.VCREDIST_VER)">
+        
+        <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - x86"
+                       ProductName="Microsoft Visual C++ 2015-2019 Redistributable - x86"
+                       Size="$(var.VCREDIST_X86_SIZE)"
+                       Version="$(var.VCREDIST_VER).0"
+                       Hash="$(var.VCREDIST_X86_SHA1)"/>
+
         <!-- Newer version installed is fine -->
         <ExitCode Value="1638" Behavior="success" />
       </ExePackage>
+
+      <ExePackage Name="Microsoft Visual C++ 2015-2019 Redistributable - x64"
+                  Cache="no"
+                  PerMachine="yes"
+                  Permanent="yes"
+                  Vital="yes"
+                  InstallCommand="/install /quiet /norestart"
+                  DownloadUrl="https://moonlight-stream.org/downloads/vcredist/$(var.VCREDIST_VER)/vcredist_x64.exe"
+                  InstallCondition="VersionNT64"
+                  DetectCondition="VCREDIST_142_x64 &gt;= v$(var.VCREDIST_VER)">
+        
+        <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - x64"
+                       ProductName="Microsoft Visual C++ 2015-2019 Redistributable - x64"
+                       Size="$(var.VCREDIST_X64_SIZE)"
+                       Version="$(var.VCREDIST_VER).0"
+                       Hash="$(var.VCREDIST_X64_SHA1)"/>
+
+        <!-- Newer version installed is fine -->
+        <ExitCode Value="1638" Behavior="success" />
+      </ExePackage>
+
       <MsiPackage Id="Moonlight" SourceFile="$(var.Moonlight.TargetPath)" Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
