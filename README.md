@@ -64,7 +64,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
 3. Open the project in Qt Creator or build from qmake on the command line.
     * To build a binary for use on non-development machines, use the scripts in the `scripts` folder.
-        * For Windows builds, use `scripts\generate-installers.bat`. Execute this script from the root of the repository within a Qt command prompt. Ensure WiX and 7-Zip binary directories are in your `%PATH%`.
+        * For Windows builds, use `scripts\build-arch.bat` and `scripts\generate-bundle.bat`. Execute these scripts from the root of the repository within a Qt command prompt. Ensure WiX and 7-Zip binary directories are in your `%PATH%`.
         * For macOS builds, use `scripts/generate-dmg.sh`. Execute this script from the root of the repository and ensure Qt's `bin` folder is in your `$PATH`.
         * For Steam Link builds, run `scripts/build-steamlink-app.sh` from the root of the repository.
     * To build from the command line for development use, run `qmake moonlight-qt.pro` then `make debug` or `make release`

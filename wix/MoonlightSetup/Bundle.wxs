@@ -13,7 +13,7 @@
      xmlns:util="http://schemas.microsoft.com/wix/UtilExtension">
 
   <Bundle Name="Moonlight Game Streaming Client"
-          Version="!(bind.PackageVersion.Moonlight)"
+          Version="!(bind.PackageVersion.Moonlight_x64)"
           Manufacturer="Moonlight Game Streaming Project"
           UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
           HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
@@ -25,24 +25,10 @@
       <![CDATA[VersionNT >= v6.1]]>
     </bal:Condition>
 
-    <?if $(env.ARCH) ~= x64 ?>
-      <bal:Condition Message="This Moonlight installer requires a 64-bit (x64) OS. Please download the 32-bit (x86) installer.">
-        VersionNT64
-      </bal:Condition>
-    <?elseif $(env.ARCH) ~= x86 ?>
-      <bal:Condition Message="This Moonlight installer requires a 32-bit (x86) OS. Please download the 64-bit (x64) installer.">
-        NOT VersionNT64
-      </bal:Condition>
-    <?endif ?>
-
     <!-- HACK: Force replacement of lower versioned files too. This is only safe because we don't install any shared files -->
     <Variable Name="REINSTALLMODE" bal:Overridable="yes" Value="dmus" />
 
-    <?if $(env.ARCH) ~= x64 ?>
-      <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles64Folder]Moonlight Game Streaming" />
-    <?elseif $(env.ARCH) ~= x86 ?>
-      <Variable Name="InstallFolder" Type="string" Value="[ProgramFilesFolder]Moonlight Game Streaming" />
-    <?endif ?>
+    <Variable Name="InstallFolder" Type="string" Value="[ProgramFiles6432Folder]Moonlight Game Streaming" />
 
     <!-- Define "Add desktop shortcut" -checkbox's state by defining a variable
          which has same name as the checkbox has. Value 1 means that checkbox
@@ -123,7 +109,19 @@
         <ExitCode Value="1638" Behavior="success" />
       </ExePackage>
 
-      <MsiPackage Id="Moonlight" SourceFile="$(var.Moonlight.TargetPath)" Vital="yes">
+      <MsiPackage Id="Moonlight_x86"
+                  SourceFile="$(env.BUILD_ROOT)\build-x86-$(env.BUILD_CONFIG)\Moonlight.msi"
+                  InstallCondition="NOT VersionNT64"
+                  Vital="yes">
+        <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
+        <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
+      </MsiPackage>
+
+      <MsiPackage Id="Moonlight_x64"
+                  SourceFile="$(env.BUILD_ROOT)\build-x64-$(env.BUILD_CONFIG)\Moonlight.msi"
+                  InstallCondition="VersionNT64"
+                  Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
         <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />

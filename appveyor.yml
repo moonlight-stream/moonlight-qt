@@ -5,13 +5,9 @@ clone_depth: 1
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      QTDIR: C:\Qt\5.15\msvc2019_64
-      ARCH: x64
+      QTDIR: C:\Qt\5.15
     - APPVEYOR_BUILD_WORKER_IMAGE: macOS
       BUILD_TARGET: macos
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
-      QTDIR: C:\Qt\5.15\msvc2019
-      ARCH: x86
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
       BUILD_TARGET: steamlink
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
@@ -37,13 +33,16 @@ install:
 
 before_build:
   - 'git submodule update --init --recursive'
-  - cmd: 'set PATH=%PATH%;%QTDIR%\bin;%ProgramFiles(x86)%\WiX Toolset v3.11\bin'
+  - cmd: 'set OLDPATH=%PATH%'
   - cmd: 'set /p VERSION=<app\version.txt'
   - sh: 'export VERSION=`cat app/version.txt`'
 
 build_script:
-  - cmd: 'scripts\generate-installers.bat Debug %ARCH%'
-  - cmd: 'scripts\generate-installers.bat Release %ARCH%'
+  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019_64\bin;%ProgramFiles(x86)%\WiX Toolset v3.11\bin'
+  - cmd: 'scripts\build-arch.bat Release x64'
+  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019\bin;%ProgramFiles(x86)%\WiX Toolset v3.11\bin'
+  - cmd: 'scripts\build-arch.bat Release x86'
+  - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt514/bin/qt514-env.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
   - sh: '[ "$BUILD_TARGET" != macos ] || scripts/generate-dmg.sh Release'
