@@ -343,6 +343,16 @@ int main(int argc, char *argv[])
     }
 #endif
 
+#if defined(Q_OS_DARWIN) && QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    if (!qEnvironmentVariableIsSet("QSG_RHI_BACKEND")) {
+        // The Metal backend in Qt 6.0.0 causes really strange issues transitioning to
+        // full-screen in our SDL window (hangs in SDL's Cocoa_SetWindowFullscreenSpace())
+        // and breaks drawing our status updates in the StreamSegue, so use OpenGL like
+        // Qt 5 does until we figure out the cause of these issues.
+        qputenv("QSG_RHI_BACKEND", "opengl");
+    }
+#endif
+
     // We don't want system proxies to apply to us
     QNetworkProxyFactory::setUseSystemConfiguration(false);
 
