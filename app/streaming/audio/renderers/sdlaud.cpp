@@ -3,10 +3,6 @@
 #include <Limelight.h>
 #include <SDL.h>
 
-#include <QtGlobal>
-#include <QFile>
-#include <QTextStream>
-
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
       m_AudioBuffer(nullptr)
