@@ -83,6 +83,9 @@ Flickable {
 
                         // ignore setting the index at first, and actually set it when the component is loaded
                         Component.onCompleted: {
+                            // Refresh display data before using it to build the list
+                            SystemProperties.refreshDisplays()
+
                             // Add native resolutions for all attached displays
                             var done = false
                             for (var displayIndex = 0; !done; displayIndex++) {

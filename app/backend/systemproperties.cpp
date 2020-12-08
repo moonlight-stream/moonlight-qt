@@ -57,12 +57,7 @@ QRect SystemProperties::getNativeResolution(int displayIndex)
 
 void SystemProperties::querySdlVideoInfo()
 {
-    monitorDesktopResolutions.clear();
-    monitorNativeResolutions.clear();
     hasHardwareAcceleration = false;
-
-    // Never let the maximum drop below 60 FPS
-    maximumStreamingFrameRate = 60;
 
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -70,6 +65,48 @@ void SystemProperties::querySdlVideoInfo()
                      SDL_GetError());
         return;
     }
+
+    // Update display related attributes (max FPS, native resolution, etc).
+    refreshDisplays();
+
+    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+                                              SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
+    if (!testWindow) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Failed to create test window with platform flags: %s",
+                    SDL_GetError());
+
+        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+        if (!testWindow) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create window for hardware decode test: %s",
+                         SDL_GetError());
+            SDL_QuitSubSystem(SDL_INIT_VIDEO);
+            return;
+        }
+    }
+
+    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, maximumResolution);
+
+    SDL_DestroyWindow(testWindow);
+
+    SDL_QuitSubSystem(SDL_INIT_VIDEO);
+}
+
+void SystemProperties::refreshDisplays()
+{
+    if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
+                     SDL_GetError());
+        return;
+    }
+
+    monitorDesktopResolutions.clear();
+    monitorNativeResolutions.clear();
+
+    // Never let the maximum drop below 60 FPS
+    maximumStreamingFrameRate = 60;
 
     SDL_DisplayMode bestMode;
     for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
@@ -119,27 +156,6 @@ void SystemProperties::querySdlVideoInfo()
             maximumStreamingFrameRate = qMax(maximumStreamingFrameRate, bestMode.refresh_rate);
         }
     }
-
-    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
-                                              SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
-    if (!testWindow) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to create test window with platform flags: %s",
-                    SDL_GetError());
-
-        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
-        if (!testWindow) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to create window for hardware decode test: %s",
-                         SDL_GetError());
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            return;
-        }
-    }
-
-    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, maximumResolution);
-
-    SDL_DestroyWindow(testWindow);
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }

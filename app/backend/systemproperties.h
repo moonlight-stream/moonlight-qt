@@ -23,6 +23,7 @@ public:
     Q_PROPERTY(QSize maximumResolution MEMBER maximumResolution CONSTANT)
     Q_PROPERTY(QString versionString MEMBER versionString CONSTANT)
 
+    Q_INVOKABLE void refreshDisplays();
     Q_INVOKABLE QRect getDesktopResolution(int displayIndex);
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
 
