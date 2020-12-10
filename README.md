@@ -36,7 +36,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 * Select **MSVC 2019** option during Qt installation. MinGW is not supported.
 * [DirectX SDK](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
-* [WiX Toolset](http://wixtoolset.org/releases/) v3.11 or later (only if building installers for non-development PCs)
+* [WiX Toolset](https://wixtoolset.org/releases/) v3.11 or later (only if building installers for non-development PCs)
 
 ### macOS Build Requirements
 * Qt 5.15 SDK or later
@@ -50,7 +50,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 * Install the required packages:
   * Debian/Ubuntu: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libqt5svg5-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libva-dev libvdpau-dev libxkbcommon-dev qt5-default qt5-qmake qtbase5-dev qtdeclarative5-dev qtquickcontrols2-5-dev wayland-protocols qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2`
   * RedHat/Fedora: `openssl-devel qt5-devel SDL2-devel ffmpeg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel SDL2_ttf-devel`
-* FFmpeg 4.0+ is required to build. If your distro doesn't package FFmpeg 4.0 or later, you can build and install it from source on http://ffmpeg.org/
+* FFmpeg 4.0+ is required to build. If your distro doesn't package FFmpeg 4.0 or later, you can build and install it from source on https://ffmpeg.org/
 
 ### Steam Link Build Requirements
 * [Steam Link SDK](https://github.com/ValveSoftware/steamlink-sdk) cloned on your build system
