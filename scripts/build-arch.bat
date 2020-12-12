@@ -28,6 +28,7 @@ if /I "%BUILD_CONFIG%"=="debug" (
             )
         ) else (
             echo Invalid build configuration - expected 'debug' or 'release'
+            echo Usage: scripts\build-arch.bat ^(release^|debug^) ^(x86^|x64^|ARM64^)
             exit /b 1
         )
     )
@@ -35,8 +36,11 @@ if /I "%BUILD_CONFIG%"=="debug" (
 
 if /I "%ARCH%" NEQ "x86" (
     if /I "%ARCH%" NEQ "x64" (
-        echo Invalid build architecture - expected 'x86' or 'x64'
-        exit /b 1
+        if /I "%ARCH%" NEQ "ARM64" (
+            echo Invalid build architecture - expected 'x86', 'x64', or 'ARM64'
+            echo Usage: scripts\build-arch.bat ^(release^|debug^) ^(x86^|x64^|ARM64^)
+            exit /b 1
+        )
     )
 )
 
@@ -50,10 +54,23 @@ set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%ARCH%-%BUILD_CONFIG%
 set SYMBOLS_FOLDER=%BUILD_ROOT%\symbols-%ARCH%-%BUILD_CONFIG%
 set /p VERSION=<%SOURCE_ROOT%\app\version.txt
 
+rem Use the correct VC tools for the specified architecture
+if /I "%ARCH%" EQU "x64" (
+    rem x64 is a special case that doesn't match %PROCESSOR_ARCHITECTURE%
+    set VC_ARCH=AMD64
+) else (
+    set VC_ARCH=%ARCH%
+)
+
+rem If we're not building for the current platform, use the cross compiling toolchain
+if /I "%VC_ARCH%" NEQ "%PROCESSOR_ARCHITECTURE%" (
+    set VC_ARCH=%PROCESSOR_ARCHITECTURE%_%VC_ARCH%
+)
+
 rem Find Visual Studio and run vcvarsall.bat
 set VSWHERE="%SOURCE_ROOT%\scripts\vswhere.exe"
 for /f "usebackq delims=" %%i in (`%VSWHERE% -latest -property installationPath`) do (
-    call "%%i\VC\Auxiliary\Build\vcvarsall.bat" %ARCH%
+    call "%%i\VC\Auxiliary\Build\vcvarsall.bat" %VC_ARCH%
 )
 if !ERRORLEVEL! NEQ 0 goto Error
 
