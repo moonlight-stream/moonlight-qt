@@ -33,17 +33,22 @@ DEFINES += QT_DEPRECATED_WARNINGS
 DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 win32 {
-    INCLUDEPATH += \
-        $$PWD/../libs/windows/include \
-        $$(DXSDK_DIR)/Include
+    INCLUDEPATH += $$PWD/../libs/windows/include
 
     contains(QT_ARCH, i386) {
+        INCLUDEPATH += $$(DXSDK_DIR)/Include
         LIBS += -L$$PWD/../libs/windows/lib/x86
-        LIBS += -L$$(DXSDK_DIR)/Lib/x86
+        LIBS += -L$$(DXSDK_DIR)/Lib/x86 -ld3dx9
+        DEFINES += HAS_D3DX9
     }
     contains(QT_ARCH, x86_64) {
+        INCLUDEPATH += $$(DXSDK_DIR)/Include
         LIBS += -L$$PWD/../libs/windows/lib/x64
-        LIBS += -L$$(DXSDK_DIR)/Lib/x64
+        LIBS += -L$$(DXSDK_DIR)/Lib/x64 -ld3dx9
+        DEFINES += HAS_D3DX9
+    }
+    contains(QT_ARCH, arm64) {
+        LIBS += -L$$PWD/../libs/windows/lib/arm64
     }
 
     LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib qwave.lib
@@ -102,7 +107,7 @@ unix:!macx {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ld3dx9
+    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus
     CONFIG += ffmpeg
 }
 win32:!winrt {
@@ -353,11 +358,13 @@ INCLUDEPATH += $$PWD/../h264bitstream/h264bitstream
 DEPENDPATH += $$PWD/../h264bitstream/h264bitstream
 
 !winrt {
-    win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
-    else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
+    contains(QT_ARCH, i386)|contains(QT_ARCH, x86_64) {
+        win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
+        else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
 
-    INCLUDEPATH += $$PWD/../AntiHooking
-    DEPENDPATH += $$PWD/../AntiHooking
+        INCLUDEPATH += $$PWD/../AntiHooking
+        DEPENDPATH += $$PWD/../AntiHooking
+    }
 }
 
 unix:!macx: {

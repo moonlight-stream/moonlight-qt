@@ -4,8 +4,11 @@
 #include "pacer/pacer.h"
 
 #include <d3d9.h>
-#include <d3dx9.h>
 #include <dxva2api.h>
+
+#ifdef HAS_D3DX9
+#include <d3dx9.h>
+#endif
 
 extern "C" {
 #include <libavcodec/dxva2.h>
@@ -63,7 +66,9 @@ private:
     DXVA2_ValueRange m_SaturationRange;
     DXVA2_VideoDesc m_Desc;
     REFERENCE_TIME m_FrameIndex;
+#ifdef HAS_D3DX9
     LPD3DXFONT m_DebugOverlayFont;
     LPD3DXFONT m_StatusOverlayFont;
+#endif
     bool m_BlockingPresent;
 };

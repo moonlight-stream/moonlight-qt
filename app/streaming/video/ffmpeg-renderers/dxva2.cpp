@@ -31,8 +31,10 @@ DXVA2Renderer::DXVA2Renderer() :
     m_ProcService(nullptr),
     m_Processor(nullptr),
     m_FrameIndex(0),
+#ifdef HAS_D3DX9
     m_DebugOverlayFont(nullptr),
     m_StatusOverlayFont(nullptr),
+#endif
     m_BlockingPresent(false)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
@@ -52,8 +54,11 @@ DXVA2Renderer::~DXVA2Renderer()
     SAFE_COM_RELEASE(m_RenderTarget);
     SAFE_COM_RELEASE(m_ProcService);
     SAFE_COM_RELEASE(m_Processor);
+
+#ifdef HAS_D3DX9
     SAFE_COM_RELEASE(m_DebugOverlayFont);
     SAFE_COM_RELEASE(m_StatusOverlayFont);
+#endif
 
     for (int i = 0; i < ARRAYSIZE(m_DecSurfaces); i++) {
         SAFE_COM_RELEASE(m_DecSurfaces[i]);
@@ -744,6 +749,7 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 
 void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
+#ifdef HAS_D3DX9
     HRESULT hr;
 
     switch (type)
@@ -798,6 +804,9 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         SDL_assert(false);
         break;
     }
+#else
+    Q_UNUSED(type);
+#endif
 }
 
 int DXVA2Renderer::getDecoderColorspace()
@@ -1002,6 +1011,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
         }
     }
 
+#ifdef HAS_D3DX9
     if (m_DebugOverlayFont != nullptr) {
         if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
             SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayDebug);
@@ -1025,6 +1035,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
                                            D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
         }
     }
+#endif
 
     hr = m_Device->EndScene();
     if (FAILED(hr)) {
