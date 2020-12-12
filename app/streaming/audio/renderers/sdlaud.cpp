@@ -42,7 +42,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
         return false;
     }
 
-    m_AudioBuffer = malloc(m_FrameSize);
+    m_AudioBuffer = SDL_malloc(m_FrameSize);
     if (m_AudioBuffer == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to allocate audio buffer");
@@ -74,7 +74,7 @@ SdlAudioRenderer::~SdlAudioRenderer()
     }
 
     if (m_AudioBuffer != nullptr) {
-        free(m_AudioBuffer);
+        SDL_free(m_AudioBuffer);
     }
 
     SDL_QuitSubSystem(SDL_INIT_AUDIO);

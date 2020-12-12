@@ -23,7 +23,7 @@
 #include "streaming/video/ffmpeg.h"
 #endif
 
-#if defined(Q_OS_WIN32)
+#if defined(Q_OS_WIN32) && defined(Q_PROCESSOR_X86)
 #include "antihookingprotection.h"
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>

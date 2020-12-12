@@ -35,7 +35,7 @@
       <![CDATA[Installed OR MPSSVC_START="#2"]]>
     </Condition>
 
-    <?if $(var.Platform) = x64 ?>
+    <?if $(var.Platform) = x64 Or $(var.Platform) = arm64 ?>
       <?define PlatformProgramFilesFolder = "ProgramFiles64Folder" ?>
     <?else ?>
       <?define PlatformProgramFilesFolder = "ProgramFilesFolder" ?>
