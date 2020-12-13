@@ -21,6 +21,12 @@ DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0x
 
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
+typedef struct _VERTEX
+{
+    float x, y, z, rhw;
+    float tu, tv;
+} VERTEX, *PVERTEX;
+
 DXVA2Renderer::DXVA2Renderer() :
     m_DecService(nullptr),
     m_Decoder(nullptr),
@@ -31,14 +37,13 @@ DXVA2Renderer::DXVA2Renderer() :
     m_ProcService(nullptr),
     m_Processor(nullptr),
     m_FrameIndex(0),
-#ifdef HAS_D3DX9
-    m_DebugOverlayFont(nullptr),
-    m_StatusOverlayFont(nullptr),
-#endif
     m_BlockingPresent(false)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
+
+    RtlZeroMemory(m_OverlaySurfaces, sizeof(m_OverlaySurfaces));
+    RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
 
     // Use MMCSS scheduling for lower scheduling latency while we're streaming
     DwmEnableMMCSS(TRUE);
@@ -55,10 +60,15 @@ DXVA2Renderer::~DXVA2Renderer()
     SAFE_COM_RELEASE(m_ProcService);
     SAFE_COM_RELEASE(m_Processor);
 
-#ifdef HAS_D3DX9
-    SAFE_COM_RELEASE(m_DebugOverlayFont);
-    SAFE_COM_RELEASE(m_StatusOverlayFont);
-#endif
+    for (int i = 0; i < ARRAYSIZE(m_OverlaySurfaces); i++) {
+        if (m_OverlaySurfaces[i] != nullptr) {
+            SDL_FreeSurface(m_OverlaySurfaces[i]);
+        }
+    }
+
+    for (int i = 0; i < ARRAYSIZE(m_OverlayTextures); i++) {
+        SAFE_COM_RELEASE(m_OverlayTextures[i]);
+    }
 
     for (int i = 0; i < ARRAYSIZE(m_DecSurfaces); i++) {
         SAFE_COM_RELEASE(m_DecSurfaces[i]);
@@ -331,6 +341,20 @@ bool DXVA2Renderer::initializeRenderer()
             return false;
         }
     }
+
+    m_Device->SetRenderState(D3DRS_ZENABLE, D3DZB_FALSE);
+    m_Device->SetRenderState(D3DRS_CULLMODE, D3DCULL_NONE);
+    m_Device->SetRenderState(D3DRS_LIGHTING, FALSE);
+
+    m_Device->SetTextureStageState(0, D3DTSS_COLOROP, D3DTOP_MODULATE);
+    m_Device->SetTextureStageState(0, D3DTSS_COLORARG1, D3DTA_TEXTURE);
+    m_Device->SetTextureStageState(0, D3DTSS_COLORARG2, D3DTA_DIFFUSE);
+
+    m_Device->SetRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+    m_Device->SetRenderState(D3DRS_SRCBLEND, D3DBLEND_SRCALPHA);
+    m_Device->SetRenderState(D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA);
+
+    m_Device->SetFVF(D3DFVF_XYZRHW | D3DFVF_TEX1);
 
     return true;
 }
@@ -749,64 +773,127 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 
 void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
-#ifdef HAS_D3DX9
     HRESULT hr;
 
-    switch (type)
-    {
-    case Overlay::OverlayDebug:
-        if (m_DebugOverlayFont == nullptr) {
-            hr = D3DXCreateFontA(m_Device,
-                                 Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayDebug),
-                                 0,
-                                 FW_HEAVY,
-                                 1,
-                                 false,
-                                 ANSI_CHARSET,
-                                 OUT_DEFAULT_PRECIS,
-                                 DEFAULT_QUALITY,
-                                 DEFAULT_PITCH | FF_DONTCARE,
-                                 "",
-                                 &m_DebugOverlayFont);
-            if (FAILED(hr)) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "D3DXCreateFontA() failed: %x",
-                             hr);
-                m_DebugOverlayFont = nullptr;
-            }
-        }
-        break;
-
-    case Overlay::OverlayStatusUpdate:
-        if (m_StatusOverlayFont == nullptr) {
-            hr = D3DXCreateFontA(m_Device,
-                                 Session::get()->getOverlayManager().getOverlayFontSize(Overlay::OverlayStatusUpdate),
-                                 0,
-                                 FW_HEAVY,
-                                 1,
-                                 false,
-                                 ANSI_CHARSET,
-                                 OUT_DEFAULT_PRECIS,
-                                 DEFAULT_QUALITY,
-                                 DEFAULT_PITCH | FF_DONTCARE,
-                                 "",
-                                 &m_StatusOverlayFont);
-            if (FAILED(hr)) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "D3DXCreateFontA() failed: %x",
-                             hr);
-                m_StatusOverlayFont = nullptr;
-            }
-        }
-        break;
-
-    default:
-        SDL_assert(false);
-        break;
+    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+    if (newSurface == nullptr && Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        // The overlay is enabled and there is no new surface. Leave the old texture alone.
+        return;
     }
-#else
-    Q_UNUSED(type);
-#endif
+
+    // We must free the old texture first because it references the memory stored in the old surface.
+    IDirect3DTexture9* oldTexture = (IDirect3DTexture9*)SDL_AtomicSetPtr((void**)&m_OverlayTextures[type], nullptr);
+    SAFE_COM_RELEASE(oldTexture);
+
+    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_OverlaySurfaces[type], nullptr);
+    if (oldSurface != nullptr) {
+        SDL_FreeSurface(oldSurface);
+    }
+
+    // If the overlay is disabled, we're done
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        return;
+    }
+
+    // Create a dynamic texture to populate with our pixel data
+    SDL_assert(!SDL_MUSTLOCK(newSurface));
+    IDirect3DTexture9* newTexture = nullptr;
+    hr = m_Device->CreateTexture(newSurface->w,
+                                 newSurface->h,
+                                 1,
+                                 D3DUSAGE_DYNAMIC,
+                                 D3DFMT_A8R8G8B8,
+                                 D3DPOOL_DEFAULT,
+                                 &newTexture,
+                                 nullptr);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "CreateTexture() failed: %x",
+                     hr);
+        return;
+    }
+
+    D3DLOCKED_RECT lockedRect;
+    hr = newTexture->LockRect(0, &lockedRect, nullptr, D3DLOCK_DISCARD);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "LockRect() failed: %x",
+                     hr);
+        return;
+    }
+
+    if (newSurface->pitch == lockedRect.Pitch) {
+        // If the pitch matches, we can take the fast path and use a single copy to transfer the pixels
+        RtlCopyMemory(lockedRect.pBits, newSurface->pixels, newSurface->pitch * newSurface->h);
+    }
+    else {
+        // If the pitch doesn't match, we'll need to copy each row separately
+        int pitch = SDL_min(newSurface->pitch, lockedRect.Pitch);
+        for (int i = 0; i < newSurface->h; i++) {
+            RtlCopyMemory(((PUCHAR)lockedRect.pBits) + (lockedRect.Pitch * i),
+                          ((PUCHAR)newSurface->pixels) + (newSurface->pitch * i),
+                          pitch);
+        }
+    }
+
+    newTexture->UnlockRect(0);
+
+    SDL_AtomicSetPtr((void**)&m_OverlaySurfaces[type], newSurface);
+    SDL_AtomicSetPtr((void**)&m_OverlayTextures[type], newTexture);
+}
+
+void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
+{
+    HRESULT hr;
+
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        return;
+    }
+
+    IDirect3DTexture9* overlayTexture = (IDirect3DTexture9*)SDL_AtomicGetPtr((void**)&m_OverlayTextures[type]);
+    SDL_Surface* overlaySurface = (SDL_Surface*)SDL_AtomicGetPtr((void**)&m_OverlaySurfaces[type]);
+
+    if (overlayTexture != nullptr && overlaySurface != nullptr) {
+        hr = m_Device->SetTexture(0, overlayTexture);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SetTexture() failed: %x",
+                         hr);
+            return;
+        }
+
+        SDL_FRect renderRect = {};
+
+        if (type == Overlay::OverlayStatusUpdate) {
+            // Bottom Left
+            renderRect.x = 0;
+            renderRect.y = m_DisplayHeight - overlaySurface->h;
+        }
+        else if (type == Overlay::OverlayDebug) {
+            // Top left
+            renderRect.x = 0;
+            renderRect.y = 0;
+        }
+
+        renderRect.w = overlaySurface->w;
+        renderRect.h = overlaySurface->h;
+
+        VERTEX verts[] =
+        {
+            {renderRect.x, renderRect.y, 0, 1, 0, 0},
+            {renderRect.x, renderRect.y+renderRect.h, 0, 1, 0, 1},
+            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0, 1, 1, 1},
+            {renderRect.x+renderRect.w, renderRect.y, 0, 1, 1, 0}
+        };
+
+        hr = m_Device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(VERTEX));
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DrawPrimitiveUP() failed: %x",
+                         hr);
+            return;
+        }
+    }
 }
 
 int DXVA2Renderer::getDecoderColorspace()
@@ -1011,31 +1098,10 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
         }
     }
 
-#ifdef HAS_D3DX9
-    if (m_DebugOverlayFont != nullptr) {
-        if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayDebug);
-            m_DebugOverlayFont->DrawTextA(nullptr,
-                                          Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
-                                          -1,
-                                          &sample.DstRect,
-                                          DT_LEFT | DT_NOCLIP,
-                                          D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
-        }
+    // Render overlays on top of the video stream
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        renderOverlay((Overlay::OverlayType)i);
     }
-
-    if (m_StatusOverlayFont != nullptr) {
-        if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayStatusUpdate)) {
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(Overlay::OverlayStatusUpdate);
-            m_StatusOverlayFont->DrawTextA(nullptr,
-                                           Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayStatusUpdate),
-                                           -1,
-                                           &sample.DstRect,
-                                           DT_RIGHT | DT_NOCLIP,
-                                           D3DCOLOR_ARGB(color.a, color.r, color.g, color.b));
-        }
-    }
-#endif
 
     hr = m_Device->EndScene();
     if (FAILED(hr)) {

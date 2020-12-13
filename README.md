@@ -34,7 +34,6 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 * Windows 7 or later
 * [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
 * Select **MSVC 2019** option during Qt installation. MinGW is not supported.
-* [DirectX SDK](https://www.microsoft.com/en-us/download/details.aspx?id=6812)
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
 * [WiX Toolset](https://wixtoolset.org/releases/) v3.11 or later (only if building installers for non-development PCs)
 

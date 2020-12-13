@@ -36,16 +36,10 @@ win32 {
     INCLUDEPATH += $$PWD/../libs/windows/include
 
     contains(QT_ARCH, i386) {
-        INCLUDEPATH += $$(DXSDK_DIR)/Include
         LIBS += -L$$PWD/../libs/windows/lib/x86
-        LIBS += -L$$(DXSDK_DIR)/Lib/x86 -ld3dx9
-        DEFINES += HAS_D3DX9
     }
     contains(QT_ARCH, x86_64) {
-        INCLUDEPATH += $$(DXSDK_DIR)/Include
         LIBS += -L$$PWD/../libs/windows/lib/x64
-        LIBS += -L$$(DXSDK_DIR)/Lib/x64 -ld3dx9
-        DEFINES += HAS_D3DX9
     }
     contains(QT_ARCH, arm64) {
         LIBS += -L$$PWD/../libs/windows/lib/arm64

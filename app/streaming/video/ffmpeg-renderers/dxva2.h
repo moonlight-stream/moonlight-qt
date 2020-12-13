@@ -6,10 +6,6 @@
 #include <d3d9.h>
 #include <dxva2api.h>
 
-#ifdef HAS_D3DX9
-#include <d3dx9.h>
-#endif
-
 extern "C" {
 #include <libavcodec/dxva2.h>
 }
@@ -22,7 +18,7 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
-    virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+    virtual void notifyOverlayUpdated(Overlay::OverlayType type) override;
     virtual int getDecoderColorspace() override;
 
 private:
@@ -31,6 +27,7 @@ private:
     bool initializeDevice(SDL_Window* window, bool enableVsync);
     bool isDecoderBlacklisted();
     bool isDXVideoProcessorAPIBlacklisted();
+    void renderOverlay(Overlay::OverlayType type);
 
     static
     AVBufferRef* ffPoolAlloc(void* opaque, int size);
@@ -56,6 +53,9 @@ private:
     int m_SurfacesUsed;
     AVBufferPool* m_Pool;
 
+    SDL_Surface* m_OverlaySurfaces[Overlay::OverlayMax];
+    IDirect3DTexture9* m_OverlayTextures[Overlay::OverlayMax];
+
     IDirect3DDevice9Ex* m_Device;
     IDirect3DSurface9* m_RenderTarget;
     IDirectXVideoProcessorService* m_ProcService;
@@ -66,9 +66,5 @@ private:
     DXVA2_ValueRange m_SaturationRange;
     DXVA2_VideoDesc m_Desc;
     REFERENCE_TIME m_FrameIndex;
-#ifdef HAS_D3DX9
-    LPD3DXFONT m_DebugOverlayFont;
-    LPD3DXFONT m_StatusOverlayFont;
-#endif
     bool m_BlockingPresent;
 };
