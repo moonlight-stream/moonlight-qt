@@ -2,51 +2,22 @@
 
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
-#include "path.h"
-
-#include <QDir>
 
 #include <Limelight.h>
 
 SdlRenderer::SdlRenderer()
     : m_Renderer(nullptr),
       m_Texture(nullptr),
-      m_SwPixelFormat(AV_PIX_FMT_NONE),
-      m_FontData(Path::readDataFile("ModeSeven.ttf"))
+      m_SwPixelFormat(AV_PIX_FMT_NONE)
 {
-    SDL_assert(TTF_WasInit() == 0);
-    if (TTF_Init() != 0) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "TTF_Init() failed: %s",
-                    TTF_GetError());
-        return;
-    }
-
-    SDL_zero(m_OverlayFonts);
-    SDL_zero(m_OverlaySurfaces);
     SDL_zero(m_OverlayTextures);
 }
 
 SdlRenderer::~SdlRenderer()
 {
     for (int i = 0; i < Overlay::OverlayMax; i++) {
-        if (m_OverlayFonts[i] != nullptr) {
-            TTF_CloseFont(m_OverlayFonts[i]);
-        }
-    }
-
-    TTF_Quit();
-    SDL_assert(TTF_WasInit() == 0);
-
-    for (int i = 0; i < Overlay::OverlayMax; i++) {
         if (m_OverlayTextures[i] != nullptr) {
             SDL_DestroyTexture(m_OverlayTextures[i]);
-        }
-    }
-
-    for (int i = 0; i < Overlay::OverlayMax; i++) {
-        if (m_OverlaySurfaces[i] != nullptr) {
-            SDL_FreeSurface(m_OverlaySurfaces[i]);
         }
     }
 
@@ -67,47 +38,6 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
                 "Using SDL renderer");
 
     return true;
-}
-
-void SdlRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
-{
-    // Construct the required font to render the overlay
-    if (m_OverlayFonts[type] == nullptr) {
-        if (m_FontData.isEmpty()) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL overlay font failed to load");
-            return;
-        }
-
-        // m_FontData must stay around until the font is closed
-        m_OverlayFonts[type] = TTF_OpenFontRW(SDL_RWFromConstMem(m_FontData.constData(), m_FontData.size()),
-                                              1,
-                                              Session::get()->getOverlayManager().getOverlayFontSize(type));
-        if (m_OverlayFonts[type] == nullptr) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "TTF_OpenFont() failed: %s",
-                        TTF_GetError());
-
-            // Can't proceed without a font
-            return;
-        }
-    }
-
-    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicGetPtr((void**)&m_OverlaySurfaces[type]);
-
-    // Free the old surface
-    if (oldSurface != nullptr && SDL_AtomicCASPtr((void**)&m_OverlaySurfaces[type], oldSurface, nullptr)) {
-        SDL_FreeSurface(oldSurface);
-    }
-
-    if (Session::get()->getOverlayManager().isOverlayEnabled(type)) {
-        // The _Wrapped variant is required for line breaks to work
-        SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_OverlayFonts[type],
-                                                              Session::get()->getOverlayManager().getOverlayText(type),
-                                                              Session::get()->getOverlayManager().getOverlayColor(type),
-                                                              1000);
-        SDL_AtomicSetPtr((void**)&m_OverlaySurfaces[type], surface);
-    }
 }
 
 bool SdlRenderer::isRenderThreadSupported()
@@ -221,8 +151,8 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
         // If a new surface has been created for updated overlay data, convert it into a texture.
         // NB: We have to do this conversion at render-time because we can only interact
         // with the renderer on a single thread.
-        SDL_Surface* surface = (SDL_Surface*)SDL_AtomicGetPtr((void**)&m_OverlaySurfaces[type]);
-        if (surface != nullptr && SDL_AtomicCASPtr((void**)&m_OverlaySurfaces[type], surface, nullptr)) {
+        SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+        if (newSurface != nullptr) {
             if (m_OverlayTextures[type] != nullptr) {
                 SDL_DestroyTexture(m_OverlayTextures[type]);
             }
@@ -232,7 +162,7 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
                 SDL_Rect viewportRect;
                 SDL_RenderGetViewport(m_Renderer, &viewportRect);
                 m_OverlayRects[type].x = 0;
-                m_OverlayRects[type].y = viewportRect.h - surface->h;
+                m_OverlayRects[type].y = viewportRect.h - newSurface->h;
             }
             else if (type == Overlay::OverlayDebug) {
                 // Top left
@@ -240,11 +170,11 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
                 m_OverlayRects[type].y = 0;
             }
 
-            m_OverlayRects[type].w = surface->w;
-            m_OverlayRects[type].h = surface->h;
+            m_OverlayRects[type].w = newSurface->w;
+            m_OverlayRects[type].h = newSurface->h;
 
-            m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, surface);
-            SDL_FreeSurface(surface);
+            m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, newSurface);
+            SDL_FreeSurface(newSurface);
         }
 
         // If we have an overlay texture, render it too

@@ -1,9 +1,11 @@
 #include "overlaymanager.h"
+#include "path.h"
 
 using namespace Overlay;
 
 OverlayManager::OverlayManager() :
-    m_Renderer(nullptr)
+    m_Renderer(nullptr),
+    m_FontData(Path::readDataFile("ModeSeven.ttf"))
 {
     memset(m_Overlays, 0, sizeof(m_Overlays));
 
@@ -12,6 +14,29 @@ OverlayManager::OverlayManager() :
 
     m_Overlays[OverlayType::OverlayStatusUpdate].color = {0xCC, 0x00, 0x00, 0xFF};
     m_Overlays[OverlayType::OverlayStatusUpdate].fontSize = 36;
+
+    SDL_assert(TTF_WasInit() == 0);
+    if (TTF_Init() != 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "TTF_Init() failed: %s",
+                    TTF_GetError());
+        return;
+    }
+}
+
+OverlayManager::~OverlayManager()
+{
+    for (int i = 0; i < OverlayType::OverlayMax; i++) {
+        if (m_Overlays[i].surface != nullptr) {
+            SDL_FreeSurface(m_Overlays[i].surface);
+        }
+        if (m_Overlays[i].font != nullptr) {
+            TTF_CloseFont(m_Overlays[i].font);
+        }
+    }
+
+    TTF_Quit();
+    SDL_assert(TTF_WasInit() == 0);
 }
 
 bool OverlayManager::isOverlayEnabled(OverlayType type)
@@ -29,12 +54,19 @@ int OverlayManager::getOverlayFontSize(OverlayType type)
     return m_Overlays[type].fontSize;
 }
 
+SDL_Surface* OverlayManager::getUpdatedOverlaySurface(OverlayType type)
+{
+    // If a new surface is available, return it. If not, return nullptr.
+    // Caller must free the surface on success.
+    return (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, nullptr);
+}
+
 void OverlayManager::setOverlayTextUpdated(OverlayType type)
 {
     // Only update the overlay state if it's enabled. If it's not enabled,
     // the renderer has already been notified by setOverlayState().
-    if (m_Overlays[type].enabled && m_Renderer != nullptr) {
-        m_Renderer->notifyOverlayUpdated(type);
+    if (m_Overlays[type].enabled) {
+        notifyOverlayUpdated(type);
     }
 }
 
@@ -50,9 +82,7 @@ void OverlayManager::setOverlayState(OverlayType type, bool enabled)
             m_Overlays[type].text[0] = 0;
         }
 
-        if (m_Renderer != nullptr) {
-            m_Renderer->notifyOverlayUpdated(type);
-        }
+        notifyOverlayUpdated(type);
     }
 }
 
@@ -64,4 +94,52 @@ SDL_Color OverlayManager::getOverlayColor(OverlayType type)
 void OverlayManager::setOverlayRenderer(IOverlayRenderer* renderer)
 {
     m_Renderer = renderer;
+}
+
+void OverlayManager::notifyOverlayUpdated(OverlayType type)
+{
+    if (m_Renderer == nullptr) {
+        return;
+    }
+
+    // Construct the required font to render the overlay
+    if (m_Overlays[type].font == nullptr) {
+        if (m_FontData.isEmpty()) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL overlay font failed to load");
+            return;
+        }
+
+        // m_FontData must stay around until the font is closed
+        m_Overlays[type].font = TTF_OpenFontRW(SDL_RWFromConstMem(m_FontData.constData(), m_FontData.size()),
+                                               1,
+                                               m_Overlays[type].fontSize);
+        if (m_Overlays[type].font == nullptr) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "TTF_OpenFont() failed: %s",
+                        TTF_GetError());
+
+            // Can't proceed without a font
+            return;
+        }
+    }
+
+    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, nullptr);
+
+    // Free the old surface
+    if (oldSurface != nullptr) {
+        SDL_FreeSurface(oldSurface);
+    }
+
+    if (m_Overlays[type].enabled) {
+        // The _Wrapped variant is required for line breaks to work
+        SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
+                                                              m_Overlays[type].text,
+                                                              m_Overlays[type].color,
+                                                              1000);
+        SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
+    }
+
+    // Notify the renderer
+    m_Renderer->notifyOverlayUpdated(type);
 }
