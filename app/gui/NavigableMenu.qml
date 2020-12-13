@@ -3,6 +3,13 @@ import QtQuick.Controls 2.2
 
 Menu {
     onOpened: {
-        itemAt(0).forceActiveFocus(Qt.TabFocusReason)
+        // Give focus to the first visible and enabled menu item
+        for (var i = 0; i < count; i++) {
+            var item = itemAt(i)
+            if (item.visible && item.enabled) {
+                item.forceActiveFocus(Qt.TabFocusReason)
+                break
+            }
+        }
     }
 }

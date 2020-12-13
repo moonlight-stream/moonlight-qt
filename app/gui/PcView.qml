@@ -162,6 +162,11 @@ CenteredGridView {
 
         NavigableMenu {
             id: pcContextMenu
+            MenuItem {
+                text: qsTr("PC Status: %1").arg(model.online ? qsTr("Online") : qsTr("Offline"))
+                font.bold: true
+                enabled: false
+            }
             NavigableMenuItem {
                 parentMenu: pcContextMenu
                 text: qsTr("View All Apps")
