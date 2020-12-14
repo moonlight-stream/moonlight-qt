@@ -19,7 +19,7 @@ CONFIG += warn_off
 include(../globaldefs.pri)
 
 # Force MSVC to compile C as C++ for atomic support
-*-msvc {
+*-msvc* {
     QMAKE_CFLAGS += /TP
 }
 
