@@ -238,17 +238,18 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
         return PairState::ALREADY_IN_PROGRESS;
     }
 
-    serverCert = QSslCertificate(serverCertStr);
-    if (serverCert.isNull()) {
-        Q_ASSERT(!serverCert.isNull());
+    QSslCertificate unverifiedServerCert = QSslCertificate(serverCertStr);
+    if (unverifiedServerCert.isNull()) {
+        Q_ASSERT(!unverifiedServerCert.isNull());
 
         qCritical() << "Failed to parse plaincert";
         m_Http.openConnectionToString(m_Http.m_BaseUrlHttp, "unpair", nullptr, REQUEST_TIMEOUT_MS);
         return PairState::FAILED;
     }
 
-    // Pin this cert for TLS
-    m_Http.setServerCert(serverCert);
+    // Pin this cert for TLS until pairing is complete. If successful, we will propagate
+    // the cert into the NvComputer object and persist it.
+    m_Http.setServerCert(unverifiedServerCert);
 
     QByteArray randomChallenge = generateRandomBytes(16);
     QByteArray encryptedChallenge = encrypt(randomChallenge, aesKey);
@@ -353,5 +354,6 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
         return PairState::FAILED;
     }
 
+    serverCert = std::move(unverifiedServerCert);
     return PairState::PAIRED;
 }
