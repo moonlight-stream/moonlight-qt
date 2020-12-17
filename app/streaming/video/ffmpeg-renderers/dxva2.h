@@ -53,7 +53,7 @@ private:
     int m_SurfacesUsed;
     AVBufferPool* m_Pool;
 
-    SDL_Surface* m_OverlaySurfaces[Overlay::OverlayMax];
+    IDirect3DVertexBuffer9* m_OverlayVertexBuffers[Overlay::OverlayMax];
     IDirect3DTexture9* m_OverlayTextures[Overlay::OverlayMax];
 
     IDirect3DDevice9Ex* m_Device;

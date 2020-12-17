@@ -42,7 +42,7 @@ DXVA2Renderer::DXVA2Renderer() :
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
 
-    RtlZeroMemory(m_OverlaySurfaces, sizeof(m_OverlaySurfaces));
+    RtlZeroMemory(m_OverlayVertexBuffers, sizeof(m_OverlayVertexBuffers));
     RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
 
     // Use MMCSS scheduling for lower scheduling latency while we're streaming
@@ -60,10 +60,8 @@ DXVA2Renderer::~DXVA2Renderer()
     SAFE_COM_RELEASE(m_ProcService);
     SAFE_COM_RELEASE(m_Processor);
 
-    for (int i = 0; i < ARRAYSIZE(m_OverlaySurfaces); i++) {
-        if (m_OverlaySurfaces[i] != nullptr) {
-            SDL_FreeSurface(m_OverlaySurfaces[i]);
-        }
+    for (int i = 0; i < ARRAYSIZE(m_OverlayVertexBuffers); i++) {
+        SAFE_COM_RELEASE(m_OverlayVertexBuffers[i]);
     }
 
     for (int i = 0; i < ARRAYSIZE(m_OverlayTextures); i++) {
@@ -781,14 +779,11 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    // We must free the old texture first because it references the memory stored in the old surface.
     IDirect3DTexture9* oldTexture = (IDirect3DTexture9*)SDL_AtomicSetPtr((void**)&m_OverlayTextures[type], nullptr);
     SAFE_COM_RELEASE(oldTexture);
 
-    SDL_Surface* oldSurface = (SDL_Surface*)SDL_AtomicSetPtr((void**)&m_OverlaySurfaces[type], nullptr);
-    if (oldSurface != nullptr) {
-        SDL_FreeSurface(oldSurface);
-    }
+    IDirect3DVertexBuffer9* oldVertexBuffer = (IDirect3DVertexBuffer9*)SDL_AtomicSetPtr((void**)&m_OverlayVertexBuffers[type], nullptr);
+    SAFE_COM_RELEASE(oldVertexBuffer);
 
     // If the overlay is disabled, we're done
     if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
@@ -807,6 +802,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
                                  &newTexture,
                                  nullptr);
     if (FAILED(hr)) {
+        SDL_FreeSurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateTexture() failed: %x",
                      hr);
@@ -816,8 +812,10 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     D3DLOCKED_RECT lockedRect;
     hr = newTexture->LockRect(0, &lockedRect, nullptr, D3DLOCK_DISCARD);
     if (FAILED(hr)) {
+        SDL_FreeSurface(newSurface);
+        SAFE_COM_RELEASE(newTexture);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "LockRect() failed: %x",
+                     "IDirect3DTexture9::LockRect() failed: %x",
                      hr);
         return;
     }
@@ -838,7 +836,65 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     newTexture->UnlockRect(0);
 
-    SDL_AtomicSetPtr((void**)&m_OverlaySurfaces[type], newSurface);
+    SDL_FRect renderRect = {};
+
+    if (type == Overlay::OverlayStatusUpdate) {
+        // Bottom Left
+        renderRect.x = 0;
+        renderRect.y = m_DisplayHeight - newSurface->h;
+    }
+    else if (type == Overlay::OverlayDebug) {
+        // Top left
+        renderRect.x = 0;
+        renderRect.y = 0;
+    }
+
+    renderRect.w = newSurface->w;
+    renderRect.h = newSurface->h;
+
+    // The surface is no longer required
+    SDL_FreeSurface(newSurface);
+    newSurface = nullptr;
+
+    VERTEX verts[] =
+    {
+        {renderRect.x, renderRect.y, 0, 1, 0, 0},
+        {renderRect.x, renderRect.y+renderRect.h, 0, 1, 0, 1},
+        {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0, 1, 1, 1},
+        {renderRect.x+renderRect.w, renderRect.y, 0, 1, 1, 0}
+    };
+
+    IDirect3DVertexBuffer9* newVertexBuffer = nullptr;
+    hr = m_Device->CreateVertexBuffer(sizeof(verts),
+                                      D3DUSAGE_WRITEONLY,
+                                      D3DFVF_XYZRHW | D3DFVF_TEX1,
+                                      D3DPOOL_DEFAULT,
+                                      &newVertexBuffer,
+                                      nullptr);
+    if (FAILED(hr)) {
+        SAFE_COM_RELEASE(newTexture);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "CreateVertexBuffer() failed: %x",
+                     hr);
+        return;
+    }
+
+    PVOID targetVertexBuffer = nullptr;
+    hr = newVertexBuffer->Lock(0, 0, &targetVertexBuffer, 0);
+    if (FAILED(hr)) {
+        SAFE_COM_RELEASE(newTexture);
+        SAFE_COM_RELEASE(newVertexBuffer);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "IDirect3DVertexBuffer9::Lock() failed: %x",
+                     hr);
+        return;
+    }
+
+    RtlCopyMemory(targetVertexBuffer, verts, sizeof(verts));
+
+    newVertexBuffer->Unlock();
+
+    SDL_AtomicSetPtr((void**)&m_OverlayVertexBuffers[type], newVertexBuffer);
     SDL_AtomicSetPtr((void**)&m_OverlayTextures[type], newTexture);
 }
 
@@ -851,9 +907,9 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
     }
 
     IDirect3DTexture9* overlayTexture = (IDirect3DTexture9*)SDL_AtomicGetPtr((void**)&m_OverlayTextures[type]);
-    SDL_Surface* overlaySurface = (SDL_Surface*)SDL_AtomicGetPtr((void**)&m_OverlaySurfaces[type]);
+    IDirect3DVertexBuffer9* overlayVertexBuffer = (IDirect3DVertexBuffer9*)SDL_AtomicGetPtr((void**)&m_OverlayVertexBuffers[type]);
 
-    if (overlayTexture != nullptr && overlaySurface != nullptr) {
+    if (overlayTexture != nullptr && overlayVertexBuffer != nullptr) {
         hr = m_Device->SetTexture(0, overlayTexture);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -862,34 +918,18 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
             return;
         }
 
-        SDL_FRect renderRect = {};
-
-        if (type == Overlay::OverlayStatusUpdate) {
-            // Bottom Left
-            renderRect.x = 0;
-            renderRect.y = m_DisplayHeight - overlaySurface->h;
-        }
-        else if (type == Overlay::OverlayDebug) {
-            // Top left
-            renderRect.x = 0;
-            renderRect.y = 0;
-        }
-
-        renderRect.w = overlaySurface->w;
-        renderRect.h = overlaySurface->h;
-
-        VERTEX verts[] =
-        {
-            {renderRect.x, renderRect.y, 0, 1, 0, 0},
-            {renderRect.x, renderRect.y+renderRect.h, 0, 1, 0, 1},
-            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0, 1, 1, 1},
-            {renderRect.x+renderRect.w, renderRect.y, 0, 1, 1, 0}
-        };
-
-        hr = m_Device->DrawPrimitiveUP(D3DPT_TRIANGLEFAN, 2, verts, sizeof(VERTEX));
+        hr = m_Device->SetStreamSource(0, overlayVertexBuffer, 0, sizeof(VERTEX));
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DrawPrimitiveUP() failed: %x",
+                         "SetStreamSource() failed: %x",
+                         hr);
+            return;
+        }
+
+        hr = m_Device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DrawPrimitive() failed: %x",
                          hr);
             return;
         }
