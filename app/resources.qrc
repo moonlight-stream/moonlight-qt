@@ -25,5 +25,7 @@
         <file alias="ModeSeven.ttf">ModeSeven.ttf</file>
         <file alias="egl.frag">shaders/egl.frag</file>
         <file alias="egl.vert">shaders/egl.vert</file>
+        <file alias="egl_overlay.frag">shaders/egl_overlay.frag</file>
+        <file alias="egl_overlay.vert">shaders/egl_overlay.vert</file>
     </qresource>
 </RCC>

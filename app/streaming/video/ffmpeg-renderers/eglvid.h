@@ -17,16 +17,26 @@ public:
 
 private:
 
-    bool compileShader();
+    void renderOverlay(Overlay::OverlayType type);
+    unsigned compileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc);
+    bool compileShaders();
     bool specialize();
+    const float *getColorOffsets();
     const float *getColorMatrix();
     static int loadAndBuildShader(int shaderType, const char *filename);
     bool openDisplay(unsigned int platform, void* nativeDisplay);
 
+    int m_ViewportWidth;
+    int m_ViewportHeight;
+
     int m_SwPixelFormat;
     void *m_EGLDisplay;
     unsigned m_Textures[EGL_MAX_PLANES];
+    unsigned m_OverlayTextures[Overlay::OverlayMax];
+    unsigned m_OverlayVbos[Overlay::OverlayMax];
+    SDL_atomic_t m_OverlayHasValidData[Overlay::OverlayMax];
     unsigned m_ShaderProgram;
+    unsigned m_OverlayShaderProgram;
     SDL_GLContext m_Context;
     SDL_Window *m_Window;
     IFFmpegRenderer *m_Backend;
@@ -38,6 +48,15 @@ private:
     PFNGLGENVERTEXARRAYSOESPROC m_glGenVertexArraysOES;
     PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;
     PFNGLDELETEVERTEXARRAYSOESPROC m_glDeleteVertexArraysOES;
+
+#define PARAM_YUVMAT 0
+#define PARAM_OFFSET 1
+#define PARAM_PLANE1 2
+#define PARAM_PLANE2 3
+    int m_ShaderProgramParams[4];
+
+#define PARAM_TEXTURE 0
+    int m_OverlayShaderProgramParams[1];
 
     int m_OldContextProfileMask;
     int m_OldContextMajorVersion;

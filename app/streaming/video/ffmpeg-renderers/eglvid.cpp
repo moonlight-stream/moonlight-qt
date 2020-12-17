@@ -35,6 +35,12 @@ typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platf
 #define EGL_PLATFORM_X11_KHR 0x31D5
 #endif
 
+typedef struct _OVERLAY_VERTEX
+{
+    float x, y;
+    float u, v;
+} OVERLAY_VERTEX, *POVERLAY_VERTEX;
+
 /* TODO:
  *  - handle more pixel formats
  *  - handle software decoding
@@ -65,7 +71,11 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_SwPixelFormat(AV_PIX_FMT_NONE),
         m_EGLDisplay(EGL_NO_DISPLAY),
         m_Textures{0},
+        m_OverlayTextures{0},
+        m_OverlayVbos{0},
+        m_OverlayHasValidData{},
         m_ShaderProgram(0),
+        m_OverlayShaderProgram(0),
         m_Context(0),
         m_Window(nullptr),
         m_Backend(backendRenderer),
@@ -96,9 +106,25 @@ EGLRenderer::~EGLRenderer()
         if (m_ShaderProgram) {
             glDeleteProgram(m_ShaderProgram);
         }
+        if (m_OverlayShaderProgram) {
+            glDeleteProgram(m_OverlayShaderProgram);
+        }
         if (m_VAO) {
             SDL_assert(m_glDeleteVertexArraysOES != nullptr);
             m_glDeleteVertexArraysOES(1, &m_VAO);
+        }
+        for (int i = 0; i < EGL_MAX_PLANES; i++) {
+            if (m_Textures[i] != 0) {
+                glDeleteTextures(1, &m_Textures[i]);
+            }
+        }
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            if (m_OverlayTextures[i] != 0) {
+                glDeleteTextures(1, &m_OverlayTextures[i]);
+            }
+            if (m_OverlayVbos[i] != 0) {
+                glDeleteBuffers(1, &m_OverlayVbos[i]);
+            }
         }
         SDL_GL_DeleteContext(m_Context);
     }
@@ -123,9 +149,17 @@ bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
     return true;
 }
 
-void EGLRenderer::notifyOverlayUpdated(Overlay::OverlayType)
+void EGLRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
-    // TODO: FIXME
+    // We handle uploading the updated overlay texture in renderOverlay().
+    // notifyOverlayUpdated() is called on an arbitrary thread, which may
+    // not be have the OpenGL context current on it.
+
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        // If the overlay has been disabled, mark the data as invalid/stale.
+        SDL_AtomicSet(&m_OverlayHasValidData[type], 0);
+        return;
+    }
 }
 
 bool EGLRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
@@ -138,6 +172,85 @@ bool EGLRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
     default:
         return false;
     }
+}
+
+void EGLRenderer::renderOverlay(Overlay::OverlayType type)
+{
+    // Do nothing if this overlay is disabled
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        return;
+    }
+
+    // Upload a new overlay texture if needed
+    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+    if (newSurface != nullptr) {
+        SDL_assert(!SDL_MUSTLOCK(newSurface));
+
+        glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSurface->w, newSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, newSurface->pixels);
+
+        SDL_FRect overlayRect;
+
+        // These overlay positions differ from the other renderers because OpenGL
+        // places the origin in the lower-left corner instead of the upper-left.
+        if (type == Overlay::OverlayStatusUpdate) {
+            // Bottom Left
+            overlayRect.x = 0;
+            overlayRect.y = 0;
+        }
+        else if (type == Overlay::OverlayDebug) {
+            // Top left
+            overlayRect.x = 0;
+            overlayRect.y = m_ViewportHeight - newSurface->h;
+        }
+
+        overlayRect.w = newSurface->w;
+        overlayRect.h = newSurface->h;
+
+        SDL_FreeSurface(newSurface);
+
+        // Convert screen space to normalized device coordinates
+        overlayRect.x /= m_ViewportWidth / 2;
+        overlayRect.w /= m_ViewportWidth / 2;
+        overlayRect.y /= m_ViewportHeight / 2;
+        overlayRect.h /= m_ViewportHeight / 2;
+        overlayRect.x -= 1.0f;
+        overlayRect.y -= 1.0f;
+
+        OVERLAY_VERTEX verts[] =
+        {
+            {overlayRect.x + overlayRect.w, overlayRect.y + overlayRect.h, 1.0f, 0.0f},
+            {overlayRect.x, overlayRect.y + overlayRect.h, 0.0f, 0.0f},
+            {overlayRect.x, overlayRect.y, 0.0f, 1.0f},
+            {overlayRect.x, overlayRect.y, 0.0f, 1.0f},
+            {overlayRect.x + overlayRect.w, overlayRect.y, 1.0f, 1.0f},
+            {overlayRect.x + overlayRect.w, overlayRect.y + overlayRect.h, 1.0f, 0.0f}
+        };
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVbos[type]);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW);
+
+        SDL_AtomicSet(&m_OverlayHasValidData[type], 1);
+    }
+
+    if (!SDL_AtomicGet(&m_OverlayHasValidData[type])) {
+        // If the overlay is not populated yet or is stale, don't render it.
+        return;
+    }
+
+    glUseProgram(m_OverlayShaderProgram);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_OverlayVbos[type]);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(OVERLAY_VERTEX), (void*)offsetof(OVERLAY_VERTEX, x));
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(OVERLAY_VERTEX), (void*)offsetof(OVERLAY_VERTEX, u));
+    glEnableVertexAttribArray(1);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
+    glUniform1i(m_OverlayShaderProgramParams[PARAM_TEXTURE], 0);
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
 int EGLRenderer::loadAndBuildShader(int shaderType,
@@ -214,49 +327,70 @@ bool EGLRenderer::openDisplay(unsigned int platform, void* nativeDisplay)
     return m_EGLDisplay != EGL_NO_DISPLAY;
 }
 
-bool EGLRenderer::compileShader() {
-    SDL_assert(!m_ShaderProgram);
-    SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
+unsigned EGLRenderer::compileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) {
+    unsigned shader = 0;
 
-    // XXX: TODO: other formats
-    SDL_assert(m_SwPixelFormat == AV_PIX_FMT_NV12);
-
-    bool ret = false;
-
-    GLuint vertexShader = loadAndBuildShader(GL_VERTEX_SHADER, "egl.vert");
+    GLuint vertexShader = loadAndBuildShader(GL_VERTEX_SHADER, vertexShaderSrc);
     if (!vertexShader)
         return false;
 
-    GLuint fragmentShader = loadAndBuildShader(GL_FRAGMENT_SHADER, "egl.frag");
+    GLuint fragmentShader = loadAndBuildShader(GL_FRAGMENT_SHADER, fragmentShaderSrc);
     if (!fragmentShader)
         goto fragError;
 
-    m_ShaderProgram = glCreateProgram();
-    if (!m_ShaderProgram) {
+    shader = glCreateProgram();
+    if (!shader) {
         EGL_LOG(Error, "Cannot create shader program");
         goto progFailCreate;
     }
 
-    glAttachShader(m_ShaderProgram, vertexShader);
-    glAttachShader(m_ShaderProgram, fragmentShader);
-    glLinkProgram(m_ShaderProgram);
+    glAttachShader(shader, vertexShader);
+    glAttachShader(shader, fragmentShader);
+    glLinkProgram(shader);
     int status;
-    glGetProgramiv(m_ShaderProgram, GL_LINK_STATUS, &status);
-    if (status) {
-        ret = true;
-    } else {
+    glGetProgramiv(shader, GL_LINK_STATUS, &status);
+    if (!status) {
         char shader_log[512];
-        glGetProgramInfoLog(m_ShaderProgram, sizeof (shader_log), nullptr, shader_log);
+        glGetProgramInfoLog(shader, sizeof (shader_log), nullptr, shader_log);
         EGL_LOG(Error, "Cannot link shader program: %s", shader_log);
-        glDeleteProgram(m_ShaderProgram);
-        m_ShaderProgram = 0;
+        glDeleteProgram(shader);
+        shader = 0;
     }
 
 progFailCreate:
     glDeleteShader(fragmentShader);
 fragError:
     glDeleteShader(vertexShader);
-    return ret;
+    return shader;
+}
+
+bool EGLRenderer::compileShaders() {
+    SDL_assert(!m_ShaderProgram);
+    SDL_assert(!m_OverlayShaderProgram);
+
+    SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
+
+    // XXX: TODO: other formats
+    SDL_assert(m_SwPixelFormat == AV_PIX_FMT_NV12);
+
+    m_ShaderProgram = compileShader("egl.vert", "egl.frag");
+    if (!m_ShaderProgram) {
+        return false;
+    }
+
+    m_ShaderProgramParams[PARAM_YUVMAT] = glGetUniformLocation(m_ShaderProgram, "yuvmat");
+    m_ShaderProgramParams[PARAM_OFFSET] = glGetUniformLocation(m_ShaderProgram, "offset");
+    m_ShaderProgramParams[PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
+    m_ShaderProgramParams[PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
+
+    m_OverlayShaderProgram = compileShader("egl_overlay.vert", "egl_overlay.frag");
+    if (!m_OverlayShaderProgram) {
+        return false;
+    }
+
+    m_OverlayShaderProgramParams[PARAM_TEXTURE] = glGetUniformLocation(m_OverlayShaderProgram, "uTexture");
+
+    return true;
 }
 
 bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
@@ -409,6 +543,9 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     glViewport(dst.x, dst.y, dst.w, dst.h);
 
+    m_ViewportWidth = dst.w;
+    m_ViewportHeight = dst.h;
+
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -430,6 +567,19 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     }
 
+    glGenBuffers(Overlay::OverlayMax, m_OverlayVbos);
+    glGenTextures(Overlay::OverlayMax, m_OverlayTextures);
+    for (size_t i = 0; i < Overlay::OverlayMax; ++i) {
+        glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[i]);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    }
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
     GLenum err = glGetError();
     if (err != GL_NO_ERROR)
         EGL_LOG(Error, "OpenGL error: %d", err);
@@ -438,6 +588,13 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_GL_MakeCurrent(m_Window, nullptr);
 
     return err == GL_NO_ERROR;
+}
+
+const float *EGLRenderer::getColorOffsets() {
+    static const float limitedOffsets[] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
+    static const float fullOffsets[] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
+
+    return m_ColorFull ? fullOffsets : limitedOffsets;
 }
 
 const float *EGLRenderer::getColorMatrix() {
@@ -478,18 +635,16 @@ const float *EGLRenderer::getColorMatrix() {
     switch (m_ColorSpace) {
         case AVCOL_SPC_SMPTE170M:
         case AVCOL_SPC_BT470BG:
-            EGL_LOG(Info, "BT-601 pixels");
             return m_ColorFull ? bt601Full : bt601Lim;
         case AVCOL_SPC_BT709:
-            EGL_LOG(Info, "BT-709 pixels");
             return m_ColorFull ? bt709Full : bt709Lim;
         case AVCOL_SPC_BT2020_NCL:
         case AVCOL_SPC_BT2020_CL:
-            EGL_LOG(Info, "BT-2020 pixels");
             return m_ColorFull ? bt2020Full : bt2020Lim;
+        default:
+            SDL_assert(false);
     };
-    EGL_LOG(Warn, "unknown color space: %d, falling back to BT-601",
-            m_ColorSpace);
+
     return bt601Lim;
 }
 
@@ -499,7 +654,7 @@ bool EGLRenderer::specialize() {
     // Attach our GL context to the render thread
     SDL_GL_MakeCurrent(m_Window, m_Context);
 
-    if (!compileShader())
+    if (!compileShaders())
         return false;
 
     // The viewport should have the aspect ratio of the video stream
@@ -538,20 +693,6 @@ bool EGLRenderer::specialize() {
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     m_glBindVertexArrayOES(0);
-
-    int yuvmatLocation = glGetUniformLocation(m_ShaderProgram, "yuvmat");
-    glUniformMatrix3fv(yuvmatLocation, 1, GL_FALSE, getColorMatrix());
-
-    static const float limitedOffsets[] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
-    static const float fullOffsets[] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
-
-    int offLocation = glGetUniformLocation(m_ShaderProgram, "offset");
-    glUniform3fv(offLocation, 1, m_ColorFull ? fullOffsets : limitedOffsets);
-
-    int colorPlane = glGetUniformLocation(m_ShaderProgram, "plane1");
-    glUniform1i(colorPlane, 0);
-    colorPlane = glGetUniformLocation(m_ShaderProgram, "plane2");
-    glUniform1i(colorPlane, 1);
 
     glDeleteBuffers(1, &VBO);
     glDeleteBuffers(1, &EBO);
@@ -612,7 +753,19 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glClear(GL_COLOR_BUFFER_BIT);
     glUseProgram(m_ShaderProgram);
     m_glBindVertexArrayOES(m_VAO);
+
+    glUniformMatrix3fv(m_ShaderProgramParams[PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix());
+    glUniform3fv(m_ShaderProgramParams[PARAM_OFFSET], 1, getColorOffsets());
+    glUniform1i(m_ShaderProgramParams[PARAM_PLANE1], 0);
+    glUniform1i(m_ShaderProgramParams[PARAM_PLANE2], 1);
+
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+    m_glBindVertexArrayOES(0);
+
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        renderOverlay((Overlay::OverlayType)i);
+    }
 
     SDL_GL_SwapWindow(m_Window);
 
