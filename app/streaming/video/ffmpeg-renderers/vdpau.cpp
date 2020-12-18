@@ -1,3 +1,4 @@
+#include <streaming/session.h>
 #include "vdpau.h"
 #include <streaming/streamutils.h>
 
@@ -27,9 +28,11 @@ VDPAURenderer::VDPAURenderer()
       m_PresentationQueueTarget(0),
       m_PresentationQueue(0),
       m_VideoMixer(0),
+      m_OverlayMutex(nullptr),
       m_NextSurfaceIndex(0)
 {
     SDL_zero(m_OutputSurface);
+    SDL_zero(m_OverlaySurface);
 }
 
 VDPAURenderer::~VDPAURenderer()
@@ -50,6 +53,16 @@ VDPAURenderer::~VDPAURenderer()
         if (m_OutputSurface[i] != 0) {
             m_VdpOutputSurfaceDestroy(m_OutputSurface[i]);
         }
+    }
+
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        if (m_OverlaySurface[i] != 0) {
+            m_VdpBitmapSurfaceDestroy(m_OverlaySurface[i]);
+        }
+    }
+
+    if (m_OverlayMutex != nullptr) {
+        SDL_DestroyMutex(m_OverlayMutex);
     }
 
     // This must be done last as it frees VDPAU context required to call
@@ -136,6 +149,10 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_CREATE, &m_VdpOutputSurfaceCreate);
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_DESTROY, &m_VdpOutputSurfaceDestroy);
     GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_QUERY_CAPABILITIES, &m_VdpOutputSurfaceQueryCapabilities);
+    GET_PROC_ADDRESS(VDP_FUNC_ID_BITMAP_SURFACE_CREATE, &m_VdpBitmapSurfaceCreate);
+    GET_PROC_ADDRESS(VDP_FUNC_ID_BITMAP_SURFACE_DESTROY, &m_VdpBitmapSurfaceDestroy);
+    GET_PROC_ADDRESS(VDP_FUNC_ID_BITMAP_SURFACE_PUT_BITS_NATIVE, &m_VdpBitmapSurfacePutBitsNative);
+    GET_PROC_ADDRESS(VDP_FUNC_ID_OUTPUT_SURFACE_RENDER_BITMAP_SURFACE, &m_VdpOutputSurfaceRenderBitmapSurface);
     GET_PROC_ADDRESS(VDP_FUNC_ID_VIDEO_SURFACE_GET_PARAMETERS, &m_VdpVideoSurfaceGetParameters);
     GET_PROC_ADDRESS(VDP_FUNC_ID_GET_INFORMATION_STRING, &m_VdpGetInformationString);
 
@@ -263,6 +280,24 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     VdpColor color = {0.0, 0.0, 0.0, 1.0};
     m_VdpPresentationQueueSetBackgroundColor(m_PresentationQueue, &color);
 
+    // Populate blend state for overlays
+    m_OverlayBlendState.struct_version = VDP_OUTPUT_SURFACE_RENDER_BLEND_STATE_VERSION;
+    m_OverlayBlendState.blend_factor_destination_alpha = VDP_OUTPUT_SURFACE_RENDER_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    m_OverlayBlendState.blend_factor_destination_color = VDP_OUTPUT_SURFACE_RENDER_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    m_OverlayBlendState.blend_factor_source_alpha = VDP_OUTPUT_SURFACE_RENDER_BLEND_FACTOR_SRC_ALPHA;
+    m_OverlayBlendState.blend_factor_source_color = VDP_OUTPUT_SURFACE_RENDER_BLEND_FACTOR_SRC_ALPHA;
+    m_OverlayBlendState.blend_equation_alpha = VDP_OUTPUT_SURFACE_RENDER_BLEND_EQUATION_ADD;
+    m_OverlayBlendState.blend_equation_color = VDP_OUTPUT_SURFACE_RENDER_BLEND_EQUATION_ADD;
+    m_OverlayBlendState.blend_constant = {};
+
+    // Allocate mutex to synchronize overlay updates and rendering
+    m_OverlayMutex = SDL_CreateMutex();
+    if (m_OverlayMutex == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create overlay mutex");
+        return false;
+    }
+
     return true;
 }
 
@@ -284,6 +319,98 @@ bool VDPAURenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary*
     return true;
 }
 
+void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
+{
+    VdpStatus status;
+
+    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+    if (newSurface == nullptr && Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        // There's no updated surface and the overlay is enabled, so just leave the old surface alone.
+        return;
+    }
+
+    // Destroy the old surface
+    // NB: The mutex ensures the surface is not currently being read for rendering.
+    // NB 2: It is safe to unlock here because this thread is the only surface producer.
+    SDL_LockMutex(m_OverlayMutex);
+    VdpBitmapSurface oldBitmapSurface = m_OverlaySurface[type];
+    m_OverlaySurface[type] = 0;
+    SDL_UnlockMutex(m_OverlayMutex);
+
+    if (oldBitmapSurface != 0) {
+        status = m_VdpBitmapSurfaceDestroy(oldBitmapSurface);
+        if (status != VDP_STATUS_OK) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "VdpBitmapSurfaceDestroy() failed: %s",
+                         m_VdpGetErrorString(status));
+
+            // This should never happen.
+            SDL_assert(false);
+        }
+    }
+
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        SDL_FreeSurface(newSurface);
+        return;
+    }
+
+    if (newSurface != nullptr) {
+        SDL_assert(!SDL_MUSTLOCK(newSurface));
+
+        VdpBitmapSurface newBitmapSurface = 0;
+        status = m_VdpBitmapSurfaceCreate(m_Device,
+                                          VDP_RGBA_FORMAT_B8G8R8A8,
+                                          newSurface->w,
+                                          newSurface->h,
+                                          VDP_TRUE, // Is this correct?
+                                          &newBitmapSurface);
+        if (status != VDP_STATUS_OK) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "VdpBitmapSurfaceCreate() failed: %s",
+                         m_VdpGetErrorString(status));
+            SDL_FreeSurface(newSurface);
+            return;
+        }
+
+        status = m_VdpBitmapSurfacePutBitsNative(newBitmapSurface,
+                                                 &newSurface->pixels,
+                                                 (const uint32_t*)&newSurface->pitch,
+                                                 nullptr);
+        if (status != VDP_STATUS_OK) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "VdpBitmapSurfacePutBitsNative() failed: %s",
+                         m_VdpGetErrorString(status));
+            m_VdpBitmapSurfaceDestroy(newBitmapSurface);
+            SDL_FreeSurface(newSurface);
+            return;
+        }
+
+        // Surface data is no longer needed
+        SDL_FreeSurface(newSurface);
+
+        VdpRect overlayRect;
+
+        if (type == Overlay::OverlayStatusUpdate) {
+            // Bottom Left
+            overlayRect.x0 = 0;
+            overlayRect.y0 = m_DisplayHeight - newSurface->h;
+        }
+        else if (type == Overlay::OverlayDebug) {
+            // Top left
+            overlayRect.x0 = 0;
+            overlayRect.y0 = 0;
+        }
+
+        overlayRect.x1 = overlayRect.x0 + newSurface->w;
+        overlayRect.y1 = overlayRect.y0 + newSurface->h;
+
+        SDL_LockMutex(m_OverlayMutex);
+        m_OverlaySurface[type] = newBitmapSurface;
+        m_OverlayRect[type] = overlayRect;
+        SDL_UnlockMutex(m_OverlayMutex);
+    }
+}
+
 bool VDPAURenderer::needsTestFrame()
 {
     // We need a test frame to see if this VDPAU driver
@@ -298,6 +425,44 @@ int VDPAURenderer::getDecoderColorspace()
     //
     // AMD and Nvidia GPUs both correctly process Rec 601, so let's not try our luck using a non-default colorspace.
     return COLORSPACE_REC_601;
+}
+
+void VDPAURenderer::renderOverlay(VdpOutputSurface destination, Overlay::OverlayType type)
+{
+    VdpStatus status;
+
+    // Don't even bother locking the mutex if the overlay is disabled
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        return;
+    }
+
+    if (SDL_TryLockMutex(m_OverlayMutex) != 0) {
+        // If the overlay is currently being updated, skip rendering it this frame.
+        return;
+    }
+
+    // Check if there's a surface to render
+    if (m_OverlaySurface[type] == 0) {
+        SDL_UnlockMutex(m_OverlayMutex);
+        return;
+    }
+
+    status = m_VdpOutputSurfaceRenderBitmapSurface(destination,
+                                                   &m_OverlayRect[type],
+                                                   m_OverlaySurface[type],
+                                                   nullptr,
+                                                   nullptr,
+                                                   &m_OverlayBlendState,
+                                                   0);
+
+    SDL_UnlockMutex(m_OverlayMutex);
+
+    if (status != VDP_STATUS_OK) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "VdpOutputSurfaceRenderBitmapSurface() failed: %s",
+                     m_VdpGetErrorString(status));
+        return;
+    }
 }
 
 void VDPAURenderer::renderFrame(AVFrame* frame)
@@ -398,6 +563,11 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
                      "VdpVideoMixerRender() failed: %s",
                      m_VdpGetErrorString(status));
         return;
+    }
+
+    // Render overlays into the output surface before display
+    for (int i = 0; i < Overlay::OverlayMax; i++) {
+        renderOverlay(chosenSurface, (Overlay::OverlayType)i);
     }
 
     // Queue the frame for display immediately

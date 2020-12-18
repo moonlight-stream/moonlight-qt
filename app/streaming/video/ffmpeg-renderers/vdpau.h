@@ -15,11 +15,14 @@ public:
     virtual ~VDPAURenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual void notifyOverlayUpdated(Overlay::OverlayType type) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
     virtual int getDecoderColorspace() override;
 
 private:
+    void renderOverlay(VdpOutputSurface destination, Overlay::OverlayType type);
+
     uint32_t m_VideoWidth, m_VideoHeight;
     uint32_t m_DisplayWidth, m_DisplayHeight;
     AVBufferRef* m_HwContext;
@@ -28,6 +31,15 @@ private:
     VdpVideoMixer m_VideoMixer;
     VdpRGBAFormat m_OutputSurfaceFormat;
     VdpDevice m_Device;
+
+    // We just have a single mutex to protect all overlay slots.
+    // This is fine because the majority of time spent in the mutex
+    // is by the render thread, which cannot contend with itself
+    // because overlays are rendered sequentially.
+    SDL_mutex* m_OverlayMutex;
+    VdpBitmapSurface m_OverlaySurface[Overlay::OverlayMax];
+    VdpRect m_OverlayRect[Overlay::OverlayMax];
+    VdpOutputSurfaceRenderBlendState m_OverlayBlendState;
 
 #define OUTPUT_SURFACE_COUNT 3
     VdpOutputSurface m_OutputSurface[OUTPUT_SURFACE_COUNT];
@@ -50,6 +62,10 @@ private:
     VdpOutputSurfaceCreate* m_VdpOutputSurfaceCreate;
     VdpOutputSurfaceDestroy* m_VdpOutputSurfaceDestroy;
     VdpOutputSurfaceQueryCapabilities* m_VdpOutputSurfaceQueryCapabilities;
+    VdpBitmapSurfaceCreate* m_VdpBitmapSurfaceCreate;
+    VdpBitmapSurfaceDestroy* m_VdpBitmapSurfaceDestroy;
+    VdpBitmapSurfacePutBitsNative* m_VdpBitmapSurfacePutBitsNative;
+    VdpOutputSurfaceRenderBitmapSurface* m_VdpOutputSurfaceRenderBitmapSurface;
     VdpVideoSurfaceGetParameters* m_VdpVideoSurfaceGetParameters;
     VdpGetInformationString* m_VdpGetInformationString;
 
