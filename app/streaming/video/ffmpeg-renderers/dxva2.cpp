@@ -32,6 +32,7 @@ DXVA2Renderer::DXVA2Renderer() :
     m_Decoder(nullptr),
     m_SurfacesUsed(0),
     m_Pool(nullptr),
+    m_OverlayLock(0),
     m_Device(nullptr),
     m_RenderTarget(nullptr),
     m_ProcService(nullptr),
@@ -779,14 +780,20 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    IDirect3DTexture9* oldTexture = (IDirect3DTexture9*)SDL_AtomicSetPtr((void**)&m_OverlayTextures[type], nullptr);
-    SAFE_COM_RELEASE(oldTexture);
+    SDL_AtomicLock(&m_OverlayLock);
+    IDirect3DTexture9* oldTexture = m_OverlayTextures[type];
+    m_OverlayTextures[type] = nullptr;
 
-    IDirect3DVertexBuffer9* oldVertexBuffer = (IDirect3DVertexBuffer9*)SDL_AtomicSetPtr((void**)&m_OverlayVertexBuffers[type], nullptr);
+    IDirect3DVertexBuffer9* oldVertexBuffer = m_OverlayVertexBuffers[type];
+    m_OverlayVertexBuffers[type] = nullptr;
+    SDL_AtomicUnlock(&m_OverlayLock);
+
+    SAFE_COM_RELEASE(oldTexture);
     SAFE_COM_RELEASE(oldVertexBuffer);
 
     // If the overlay is disabled, we're done
     if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        SDL_FreeSurface(newSurface);
         return;
     }
 
@@ -894,8 +901,10 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     newVertexBuffer->Unlock();
 
-    SDL_AtomicSetPtr((void**)&m_OverlayVertexBuffers[type], newVertexBuffer);
-    SDL_AtomicSetPtr((void**)&m_OverlayTextures[type], newTexture);
+    SDL_AtomicLock(&m_OverlayLock);
+    m_OverlayVertexBuffers[type] = newVertexBuffer;
+    m_OverlayTextures[type] = newTexture;
+    SDL_AtomicUnlock(&m_OverlayLock);
 }
 
 void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
@@ -906,34 +915,54 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
         return;
     }
 
-    IDirect3DTexture9* overlayTexture = (IDirect3DTexture9*)SDL_AtomicGetPtr((void**)&m_OverlayTextures[type]);
-    IDirect3DVertexBuffer9* overlayVertexBuffer = (IDirect3DVertexBuffer9*)SDL_AtomicGetPtr((void**)&m_OverlayVertexBuffers[type]);
-
-    if (overlayTexture != nullptr && overlayVertexBuffer != nullptr) {
-        hr = m_Device->SetTexture(0, overlayTexture);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SetTexture() failed: %x",
-                         hr);
-            return;
-        }
-
-        hr = m_Device->SetStreamSource(0, overlayVertexBuffer, 0, sizeof(VERTEX));
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SetStreamSource() failed: %x",
-                         hr);
-            return;
-        }
-
-        hr = m_Device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "DrawPrimitive() failed: %x",
-                         hr);
-            return;
-        }
+    // If the overlay is being updated, just skip rendering it this frame
+    if (!SDL_AtomicTryLock(&m_OverlayLock)) {
+        return;
     }
+
+    IDirect3DTexture9* overlayTexture = m_OverlayTextures[type];
+    IDirect3DVertexBuffer9* overlayVertexBuffer = m_OverlayVertexBuffers[type];
+
+    if (overlayTexture == nullptr) {
+        SDL_AtomicUnlock(&m_OverlayLock);
+        return;
+    }
+
+    // Reference these objects so they don't immediately go away if the
+    // overlay update thread tries to release them.
+    SDL_assert(overlayVertexBuffer != nullptr);
+    overlayTexture->AddRef();
+    overlayVertexBuffer->AddRef();
+
+    SDL_AtomicUnlock(&m_OverlayLock);
+
+    hr = m_Device->SetTexture(0, overlayTexture);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SetTexture() failed: %x",
+                     hr);
+        goto Exit;
+    }
+
+    hr = m_Device->SetStreamSource(0, overlayVertexBuffer, 0, sizeof(VERTEX));
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SetStreamSource() failed: %x",
+                     hr);
+        goto Exit;
+    }
+
+    hr = m_Device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DrawPrimitive() failed: %x",
+                     hr);
+        goto Exit;
+    }
+
+Exit:
+    overlayTexture->Release();
+    overlayVertexBuffer->Release();
 }
 
 int DXVA2Renderer::getDecoderColorspace()
