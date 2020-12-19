@@ -77,19 +77,25 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     {
-        MMAL_DISPLAYREGION_T dr;
+        MMAL_DISPLAYREGION_T dr = {};
 
         dr.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
         dr.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
 
-        dr.set = MMAL_DISPLAY_SET_LAYER;
-        dr.layer = 128;
-
-        dr.set |= MMAL_DISPLAY_SET_ALPHA;
-        dr.alpha = 255;
-
         dr.set |= MMAL_DISPLAY_SET_FULLSCREEN;
-        dr.fullscreen = true;
+        dr.fullscreen = MMAL_FALSE;
+
+        dr.set |= MMAL_DISPLAY_SET_MODE;
+        dr.mode = MMAL_DISPLAY_MODE_LETTERBOX;
+
+        dr.set |= MMAL_DISPLAY_SET_NOASPECT;
+        dr.noaspect = MMAL_TRUE;
+
+        dr.set |= MMAL_DISPLAY_SET_SRC_RECT;
+        dr.src_rect.x = 0;
+        dr.src_rect.y = 0;
+        dr.src_rect.width = params->width;
+        dr.src_rect.height = params->height;
 
         {
             SDL_Rect src, dst;
@@ -106,6 +112,14 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
             dr.dest_rect.y = dst.y;
             dr.dest_rect.width = dst.w;
             dr.dest_rect.height = dst.h;
+        }
+
+        status = mmal_port_parameter_set(m_InputPort, &dr.hdr);
+        if (status != MMAL_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "mmal_port_parameter_set() failed: %x (%s)",
+                         status, mmal_status_to_string(status));
+            return false;
         }
     }
 
