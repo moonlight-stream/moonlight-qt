@@ -385,9 +385,6 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             return;
         }
 
-        // Surface data is no longer needed
-        SDL_FreeSurface(newSurface);
-
         VdpRect overlayRect;
 
         if (type == Overlay::OverlayStatusUpdate) {
@@ -403,6 +400,9 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
         overlayRect.x1 = overlayRect.x0 + newSurface->w;
         overlayRect.y1 = overlayRect.y0 + newSurface->h;
+
+        // Surface data is no longer needed
+        SDL_FreeSurface(newSurface);
 
         SDL_LockMutex(m_OverlayMutex);
         m_OverlaySurface[type] = newBitmapSurface;
