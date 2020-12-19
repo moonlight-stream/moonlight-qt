@@ -97,6 +97,11 @@ Item {
                 streamSegueErrorDialog.open()
             }
         }
+
+        // Garbage collect the Session object since it's pretty heavyweight
+        // and keeps other libraries (like SDL_TTF) around until it is deleted.
+        session = null
+        gc()
     }
 
     StackView.onDeactivating: {
@@ -152,6 +157,11 @@ Item {
 
             // Stop GUI gamepad usage now
             SdlGamepadKeyNavigation.disable()
+
+            // Garbage collect QML stuff before we start streaming,
+            // since we'll probably be streaming for a while and we
+            // won't be able to GC during the stream.
+            gc()
 
             // Run the streaming session to completion
             session.exec(Screen.virtualX, Screen.virtualY)
