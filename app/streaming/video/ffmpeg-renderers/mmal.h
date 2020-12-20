@@ -21,7 +21,11 @@ public:
 private:
     static void InputPortCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
 
+    void setupBackground(PDECODER_PARAMETERS params);
+
     MMAL_COMPONENT_T* m_Renderer;
     MMAL_PORT_T* m_InputPort;
+
+    SDL_Renderer* m_BackgroundRenderer;
 };
 

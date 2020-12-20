@@ -5,9 +5,12 @@
 
 #include <Limelight.h>
 
+#include <SDL_syswm.h>
+
 MmalRenderer::MmalRenderer()
     : m_Renderer(nullptr),
-      m_InputPort(nullptr)
+      m_InputPort(nullptr),
+      m_BackgroundRenderer(nullptr)
 {
 }
 
@@ -19,6 +22,10 @@ MmalRenderer::~MmalRenderer()
 
     if (m_Renderer != nullptr) {
         mmal_component_destroy(m_Renderer);
+    }
+
+    if (m_BackgroundRenderer != nullptr) {
+        SDL_DestroyRenderer(m_BackgroundRenderer);
     }
 }
 
@@ -42,6 +49,9 @@ bool MmalRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**
 bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
 {
     MMAL_STATUS_T status;
+
+    // Clear the background if possible
+    setupBackground(params);
 
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER, &m_Renderer);
     if (status != MMAL_SUCCESS) {
@@ -132,6 +142,36 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     return true;
+}
+
+void MmalRenderer::setupBackground(PDECODER_PARAMETERS params)
+{
+    SDL_SysWMinfo info;
+
+    SDL_VERSION(&info.version);
+
+    if (!SDL_GetWindowWMInfo(params->window, &info)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetWindowWMInfo() failed: %s",
+                     SDL_GetError());
+        return;
+    }
+
+    // On X11, we can safely create a renderer and draw a black background.
+    // Due to conflicts with Qt, it's unsafe to do this for KMSDRM.
+    if (info.subsystem == SDL_SYSWM_X11) {
+        m_BackgroundRenderer = SDL_CreateRenderer(params->window, -1, SDL_RENDERER_SOFTWARE);
+        if (m_BackgroundRenderer == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDL_CreateRenderer() failed: %s",
+                        SDL_GetError());
+            return;
+        }
+
+        SDL_SetRenderDrawColor(m_BackgroundRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(m_BackgroundRenderer);
+        SDL_RenderPresent(m_BackgroundRenderer);
+    }
 }
 
 void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)
