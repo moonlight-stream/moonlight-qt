@@ -136,7 +136,7 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
         SDL_Surface* surface = TTF_RenderText_Blended_Wrapped(m_Overlays[type].font,
                                                               m_Overlays[type].text,
                                                               m_Overlays[type].color,
-                                                              1000);
+                                                              1024);
         SDL_AtomicSetPtr((void**)&m_Overlays[type].surface, surface);
     }
 
