@@ -271,7 +271,7 @@ extern DECLSPEC void * SDLCALL SDL_SIMDAlloc(const size_t len);
  * \sa SDL_SIMDAlloc
  * \sa SDL_SIMDFree
  */
-extern DECLSPEC void * SDLCALL SDL_SIMDRealloc(void *mem, size_t len);
+extern DECLSPEC void * SDLCALL SDL_SIMDRealloc(void *mem, const size_t len);
 
 /**
  * \brief Deallocate memory obtained from SDL_SIMDAlloc

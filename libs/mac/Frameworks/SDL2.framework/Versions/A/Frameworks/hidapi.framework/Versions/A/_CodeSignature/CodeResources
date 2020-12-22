@@ -10,7 +10,7 @@
 		</data>
 		<key>Resources/Info.plist</key>
 		<data>
-		k9vWJij3RA8s13h/WkHnqVv977U=
+		tGFoM6QHKngffYbWA76aPn/ESNM=
 		</data>
 		<key>Resources/LICENSE-bsd.txt</key>
 		<data>
@@ -31,17 +31,6 @@
 	</dict>
 	<key>files2</key>
 	<dict>
-		<key>Headers/hidapi.h</key>
-		<dict>
-			<key>hash</key>
-			<data>
-			k64XAQ+3r97nmyIHwE8OT8womds=
-			</data>
-			<key>hash2</key>
-			<data>
-			lVEZqQL+xakdQRDnxHo2VwkisMieptRP2Im3DPsMMAs=
-			</data>
-		</dict>
 		<key>Resources/AUTHORS.txt</key>
 		<dict>
 			<key>hash</key>
@@ -57,11 +46,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			k9vWJij3RA8s13h/WkHnqVv977U=
+			tGFoM6QHKngffYbWA76aPn/ESNM=
 			</data>
 			<key>hash2</key>
 			<data>
-			WME8EBqUAByTxhCypUOOYXVJiElcUNSkBXR1bxH3n5Q=
+			fgTFYKM0llbznibqeBwDi/6Y3eVW0HtYW+1EdComD7E=
 			</data>
 		</dict>
 		<key>Resources/LICENSE-bsd.txt</key>
