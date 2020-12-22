@@ -382,15 +382,28 @@ bool DXVA2Renderer::isDXVideoProcessorAPIBlacklisted()
             D3DADAPTER_IDENTIFIER9 id;
 
             hr = d3d9->GetAdapterIdentifier(caps.AdapterOrdinal, 0, &id);
-            if (SUCCEEDED(hr) && id.VendorId == 0x8086) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding IDirectXVideoProcessor API on Intel GPU");
+            if (SUCCEEDED(hr)) {
+                if (id.VendorId == 0x8086) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Avoiding IDirectXVideoProcessor API on Intel GPU");
 
-                // On Intel GPUs, we can get unwanted video "enhancements" due to post-processing
-                // effects that the GPU driver forces on us. In many cases, this makes the video
-                // actually look worse. We can avoid these by using StretchRect() instead on these
-                // platforms.
-                result = true;
+                    // On Intel GPUs, we can get unwanted video "enhancements" due to post-processing
+                    // effects that the GPU driver forces on us. In many cases, this makes the video
+                    // actually look worse. We can avoid these by using StretchRect() instead on these
+                    // platforms.
+                    result = true;
+                }
+                else if (id.VendorId == 0x4d4f4351) { // QCOM in ASCII
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Avoiding IDirectXVideoProcessor API on Qualcomm GPU");
+
+                    // On Qualcomm GPUs (all D3D9on12 GPUs?), the scaling quality of VideoProcessBlt()
+                    // is absolutely horrible. StretchRect() is much much better.
+                    result = true;
+                }
+                else {
+                    result = false;
+                }
             }
             else {
                 result = false;
@@ -971,7 +984,7 @@ Exit:
 int DXVA2Renderer::getDecoderColorspace()
 {
     if (isDXVideoProcessorAPIBlacklisted()) {
-        // StretchRect() assumes Rec 601 on Intel GPUs
+        // StretchRect() assumes Rec 601 on Intel and Qualcomm GPUs.
         return COLORSPACE_REC_601;
     }
     else {
