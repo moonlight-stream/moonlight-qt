@@ -121,6 +121,8 @@
 #define HAVE_SQRTF  1
 #define HAVE_TAN    1
 #define HAVE_TANF   1
+#define HAVE_TRUNC    1
+#define HAVE_TRUNCF   1
 #define HAVE_SIGACTION 1
 #define HAVE_SETJMP 1
 #define HAVE_NANOSLEEP  1

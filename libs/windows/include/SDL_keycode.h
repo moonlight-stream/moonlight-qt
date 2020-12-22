@@ -88,9 +88,11 @@ typedef enum
     SDLK_GREATER = '>',
     SDLK_QUESTION = '?',
     SDLK_AT = '@',
+
     /*
        Skip uppercase letters
      */
+
     SDLK_LEFTBRACKET = '[',
     SDLK_BACKSLASH = '\\',
     SDLK_RIGHTBRACKET = ']',
@@ -336,13 +338,13 @@ typedef enum
     KMOD_NUM = 0x1000,
     KMOD_CAPS = 0x2000,
     KMOD_MODE = 0x4000,
-    KMOD_RESERVED = 0x8000
-} SDL_Keymod;
+    KMOD_RESERVED = 0x8000,
 
-#define KMOD_CTRL   (KMOD_LCTRL|KMOD_RCTRL)
-#define KMOD_SHIFT  (KMOD_LSHIFT|KMOD_RSHIFT)
-#define KMOD_ALT    (KMOD_LALT|KMOD_RALT)
-#define KMOD_GUI    (KMOD_LGUI|KMOD_RGUI)
+    KMOD_CTRL = KMOD_LCTRL | KMOD_RCTRL,
+    KMOD_SHIFT = KMOD_LSHIFT | KMOD_RSHIFT,
+    KMOD_ALT = KMOD_LALT | KMOD_RALT,
+    KMOD_GUI = KMOD_LGUI | KMOD_RGUI
+} SDL_Keymod;
 
 #endif /* SDL_keycode_h_ */
 

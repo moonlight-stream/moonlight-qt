@@ -31,6 +31,7 @@
 #include "SDL_stdinc.h"
 #include "SDL_error.h"
 #include "SDL_rwops.h"
+#include "SDL_sensor.h"
 #include "SDL_joystick.h"
 
 #include "begin_code.h"
@@ -65,7 +66,8 @@ typedef enum
     SDL_CONTROLLER_TYPE_PS3,
     SDL_CONTROLLER_TYPE_PS4,
     SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO,
-    SDL_CONTROLLER_TYPE_VIRTUAL
+    SDL_CONTROLLER_TYPE_VIRTUAL,
+    SDL_CONTROLLER_TYPE_PS5
 } SDL_GameControllerType;
 
 typedef enum
@@ -171,7 +173,7 @@ extern DECLSPEC char * SDLCALL SDL_GameControllerMappingForGUID(SDL_JoystickGUID
  *
  *  \return the mapping string.  Must be freed with SDL_free().  Returns NULL if no mapping is available
  */
-extern DECLSPEC char * SDLCALL SDL_GameControllerMapping(SDL_GameController * gamecontroller);
+extern DECLSPEC char * SDLCALL SDL_GameControllerMapping(SDL_GameController *gamecontroller);
 
 /**
  *  Is the joystick on this index supported by the game controller interface?
@@ -246,19 +248,26 @@ extern DECLSPEC void SDLCALL SDL_GameControllerSetPlayerIndex(SDL_GameController
  *  Get the USB vendor ID of an opened controller, if available.
  *  If the vendor ID isn't available this function returns 0.
  */
-extern DECLSPEC Uint16 SDLCALL SDL_GameControllerGetVendor(SDL_GameController * gamecontroller);
+extern DECLSPEC Uint16 SDLCALL SDL_GameControllerGetVendor(SDL_GameController *gamecontroller);
 
 /**
  *  Get the USB product ID of an opened controller, if available.
  *  If the product ID isn't available this function returns 0.
  */
-extern DECLSPEC Uint16 SDLCALL SDL_GameControllerGetProduct(SDL_GameController * gamecontroller);
+extern DECLSPEC Uint16 SDLCALL SDL_GameControllerGetProduct(SDL_GameController *gamecontroller);
 
 /**
  *  Get the product version of an opened controller, if available.
  *  If the product version isn't available this function returns 0.
  */
-extern DECLSPEC Uint16 SDLCALL SDL_GameControllerGetProductVersion(SDL_GameController * gamecontroller);
+extern DECLSPEC Uint16 SDLCALL SDL_GameControllerGetProductVersion(SDL_GameController *gamecontroller);
+
+/**
+ *  Get the serial number of an opened controller, if available.
+ * 
+ *  Returns the serial number of the controller, or NULL if it is not available.
+ */
+extern DECLSPEC const char * SDLCALL SDL_GameControllerGetSerial(SDL_GameController *gamecontroller);
 
 /**
  *  Returns SDL_TRUE if the controller has been opened and currently connected,
@@ -330,6 +339,12 @@ SDL_GameControllerGetBindForAxis(SDL_GameController *gamecontroller,
                                  SDL_GameControllerAxis axis);
 
 /**
+ *  Return whether a game controller has a given axis
+ */
+extern DECLSPEC SDL_bool SDLCALL
+SDL_GameControllerHasAxis(SDL_GameController *gamecontroller, SDL_GameControllerAxis axis);
+
+/**
  *  Get the current state of an axis control on a game controller.
  *
  *  The state is a value ranging from -32768 to 32767 (except for the triggers,
@@ -338,8 +353,7 @@ SDL_GameControllerGetBindForAxis(SDL_GameController *gamecontroller,
  *  The axis indices start at index 0.
  */
 extern DECLSPEC Sint16 SDLCALL
-SDL_GameControllerGetAxis(SDL_GameController *gamecontroller,
-                          SDL_GameControllerAxis axis);
+SDL_GameControllerGetAxis(SDL_GameController *gamecontroller, SDL_GameControllerAxis axis);
 
 /**
  *  The list of buttons available from a controller
@@ -362,6 +376,12 @@ typedef enum
     SDL_CONTROLLER_BUTTON_DPAD_DOWN,
     SDL_CONTROLLER_BUTTON_DPAD_LEFT,
     SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    SDL_CONTROLLER_BUTTON_MISC1,    /* Xbox Series X share button, PS5 microphone button, Nintendo Switch Pro capture button */
+    SDL_CONTROLLER_BUTTON_PADDLE1,  /* Xbox Elite paddle P1 */
+    SDL_CONTROLLER_BUTTON_PADDLE2,  /* Xbox Elite paddle P3 */
+    SDL_CONTROLLER_BUTTON_PADDLE3,  /* Xbox Elite paddle P2 */
+    SDL_CONTROLLER_BUTTON_PADDLE4,  /* Xbox Elite paddle P4 */
+    SDL_CONTROLLER_BUTTON_TOUCHPAD, /* PS4/PS5 touchpad button */
     SDL_CONTROLLER_BUTTON_MAX
 } SDL_GameControllerButton;
 
@@ -382,6 +402,11 @@ extern DECLSPEC SDL_GameControllerButtonBind SDLCALL
 SDL_GameControllerGetBindForButton(SDL_GameController *gamecontroller,
                                    SDL_GameControllerButton button);
 
+/**
+ *  Return whether a game controller has a given button
+ */
+extern DECLSPEC SDL_bool SDLCALL SDL_GameControllerHasButton(SDL_GameController *gamecontroller,
+                                                             SDL_GameControllerButton button);
 
 /**
  *  Get the current state of a button on a game controller.
@@ -392,7 +417,68 @@ extern DECLSPEC Uint8 SDLCALL SDL_GameControllerGetButton(SDL_GameController *ga
                                                           SDL_GameControllerButton button);
 
 /**
- *  Trigger a rumble effect
+ *  Get the number of touchpads on a game controller.
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerGetNumTouchpads(SDL_GameController *gamecontroller);
+
+/**
+ *  Get the number of supported simultaneous fingers on a touchpad on a game controller.
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerGetNumTouchpadFingers(SDL_GameController *gamecontroller, int touchpad);
+
+/**
+ *  Get the current state of a finger on a touchpad on a game controller.
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerGetTouchpadFinger(SDL_GameController *gamecontroller, int touchpad, int finger, Uint8 *state, float *x, float *y, float *pressure);
+
+/**
+ *  Return whether a game controller has a particular sensor.
+ *
+ *  \param gamecontroller The controller to query
+ *  \param type The type of sensor to query
+ *
+ *  \return SDL_TRUE if the sensor exists, SDL_FALSE otherwise.
+ */
+extern DECLSPEC SDL_bool SDLCALL SDL_GameControllerHasSensor(SDL_GameController *gamecontroller, SDL_SensorType type);
+
+/**
+ *  Set whether data reporting for a game controller sensor is enabled
+ *
+ *  \param gamecontroller The controller to update
+ *  \param type The type of sensor to enable/disable
+ *  \param enabled Whether data reporting should be enabled
+ *
+ *  \return 0 or -1 if an error occurred.
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerSetSensorEnabled(SDL_GameController *gamecontroller, SDL_SensorType type, SDL_bool enabled);
+
+/**
+ *  Query whether sensor data reporting is enabled for a game controller
+ *
+ *  \param gamecontroller The controller to query
+ *  \param type The type of sensor to query
+ *
+ *  \return SDL_TRUE if the sensor is enabled, SDL_FALSE otherwise.
+ */
+extern DECLSPEC SDL_bool SDLCALL SDL_GameControllerIsSensorEnabled(SDL_GameController *gamecontroller, SDL_SensorType type);
+
+/**
+ *  Get the current state of a game controller sensor.
+ *
+ *  The number of values and interpretation of the data is sensor dependent.
+ *  See SDL_sensor.h for the details for each type of sensor.
+ *
+ *  \param gamecontroller The controller to query
+ *  \param type The type of sensor to query
+ *  \param data A pointer filled with the current sensor state
+ *  \param num_values The number of values to write to data
+ *
+ *  \return 0 or -1 if an error occurred.
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerGetSensorData(SDL_GameController *gamecontroller, SDL_SensorType type, float *data, int num_values);
+
+/**
+ *  Start a rumble effect
  *  Each call to this function cancels any previous rumble effect, and calling it with 0 intensity stops any rumbling.
  *
  *  \param gamecontroller The controller to vibrate
@@ -400,9 +486,43 @@ extern DECLSPEC Uint8 SDLCALL SDL_GameControllerGetButton(SDL_GameController *ga
  *  \param high_frequency_rumble The intensity of the high frequency (right) rumble motor, from 0 to 0xFFFF
  *  \param duration_ms The duration of the rumble effect, in milliseconds
  *
- *  \return 0, or -1 if rumble isn't supported on this joystick
+ *  \return 0, or -1 if rumble isn't supported on this controller
  */
 extern DECLSPEC int SDLCALL SDL_GameControllerRumble(SDL_GameController *gamecontroller, Uint16 low_frequency_rumble, Uint16 high_frequency_rumble, Uint32 duration_ms);
+
+/**
+ *  Start a rumble effect in the game controller's triggers
+ *  Each call to this function cancels any previous trigger rumble effect, and calling it with 0 intensity stops any rumbling.
+ *
+ *  \param gamecontroller The controller to vibrate
+ *  \param left_rumble The intensity of the left trigger rumble motor, from 0 to 0xFFFF
+ *  \param right_rumble The intensity of the right trigger rumble motor, from 0 to 0xFFFF
+ *  \param duration_ms The duration of the rumble effect, in milliseconds
+ *
+ *  \return 0, or -1 if rumble isn't supported on this controller
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerRumbleTriggers(SDL_GameController *gamecontroller, Uint16 left_rumble, Uint16 right_rumble, Uint32 duration_ms);
+
+/**
+ *  Return whether a controller has an LED
+ *
+ *  \param gamecontroller The controller to query
+ *
+ *  \return SDL_TRUE, or SDL_FALSE if this controller does not have a modifiable LED
+ */
+extern DECLSPEC SDL_bool SDLCALL SDL_GameControllerHasLED(SDL_GameController *gamecontroller);
+
+/**
+ *  Update a controller's LED color.
+ *
+ *  \param gamecontroller The controller to update
+ *  \param red The intensity of the red LED
+ *  \param green The intensity of the green LED
+ *  \param blue The intensity of the blue LED
+ *
+ *  \return 0, or -1 if this controller does not have a modifiable LED
+ */
+extern DECLSPEC int SDLCALL SDL_GameControllerSetLED(SDL_GameController *gamecontroller, Uint8 red, Uint8 green, Uint8 blue);
 
 /**
  *  Close a controller previously opened with SDL_GameControllerOpen().

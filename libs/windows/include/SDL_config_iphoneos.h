@@ -122,6 +122,8 @@
 #define HAVE_SQRTF  1
 #define HAVE_TAN    1
 #define HAVE_TANF   1
+#define HAVE_TRUNC  1
+#define HAVE_TRUNCF 1
 #define HAVE_SIGACTION  1
 #define HAVE_SETJMP 1
 #define HAVE_NANOSLEEP  1
@@ -136,7 +138,8 @@
 /* Enable the stub haptic driver (src/haptic/dummy/\*.c) */
 #define SDL_HAPTIC_DUMMY 1
 
-/* Enable MFi joystick support */
+/* Enable joystick support */
+/* Only enable HIDAPI support if you want to support Steam Controllers on iOS and tvOS */
 /*#define SDL_JOYSTICK_HIDAPI 1*/
 #define SDL_JOYSTICK_MFI 1
 #define SDL_JOYSTICK_VIRTUAL    1
@@ -168,8 +171,10 @@
 #define SDL_VIDEO_RENDER_OGL_ES 1
 #define SDL_VIDEO_RENDER_OGL_ES2    1
 
-/* Metal supported on 64-bit devices running iOS 8.0 and tvOS 9.0 and newer */
-#if !TARGET_OS_SIMULATOR && !TARGET_CPU_ARM && ((__IPHONE_OS_VERSION_MIN_REQUIRED >= 80000) || (__TV_OS_VERSION_MIN_REQUIRED >= 90000))
+/* Metal supported on 64-bit devices running iOS 8.0 and tvOS 9.0 and newer
+   Also supported in simulator from iOS 13.0 and tvOS 13.0
+ */
+#if (TARGET_OS_SIMULATOR && ((__IPHONE_OS_VERSION_MIN_REQUIRED >= 130000) || (__TV_OS_VERSION_MIN_REQUIRED >= 130000))) || (!TARGET_CPU_ARM && ((__IPHONE_OS_VERSION_MIN_REQUIRED >= 80000) || (__TV_OS_VERSION_MIN_REQUIRED >= 90000)))
 #define SDL_PLATFORM_SUPPORTS_METAL	1
 #else
 #define SDL_PLATFORM_SUPPORTS_METAL	0
@@ -195,11 +200,6 @@
 
 /* enable iOS extended launch screen */
 #define SDL_IPHONE_LAUNCHSCREEN 1
-
-/* Set max recognized G-force from accelerometer
-   See src/joystick/uikit/SDL_sysjoystick.m for notes on why this is needed
- */
-#define SDL_IPHONE_MAX_GFORCE 5.0
 
 /* enable filesystem support */
 #define SDL_FILESYSTEM_COCOA   1

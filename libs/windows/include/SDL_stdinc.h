@@ -30,6 +30,12 @@
 
 #include "SDL_config.h"
 
+#ifdef __APPLE__
+#ifndef _DARWIN_C_SOURCE
+#define _DARWIN_C_SOURCE 1 /* for memset_pattern4() */
+#endif
+#endif
+
 #ifdef HAVE_SYS_TYPES_H
 #include <sys/types.h>
 #endif
@@ -413,6 +419,8 @@ extern DECLSPEC int SDLCALL SDL_islower(int x);
 extern DECLSPEC int SDLCALL SDL_toupper(int x);
 extern DECLSPEC int SDLCALL SDL_tolower(int x);
 
+extern DECLSPEC Uint32 SDLCALL SDL_crc32(Uint32 crc, const void *data, size_t len);
+
 extern DECLSPEC void *SDLCALL SDL_memset(SDL_OUT_BYTECAP(len) void *dst, int c, size_t len);
 
 #define SDL_zero(x) SDL_memset(&(x), 0, sizeof((x)))
@@ -463,6 +471,8 @@ extern DECLSPEC wchar_t *SDLCALL SDL_wcsstr(const wchar_t *haystack, const wchar
 
 extern DECLSPEC int SDLCALL SDL_wcscmp(const wchar_t *str1, const wchar_t *str2);
 extern DECLSPEC int SDLCALL SDL_wcsncmp(const wchar_t *str1, const wchar_t *str2, size_t maxlen);
+extern DECLSPEC int SDLCALL SDL_wcscasecmp(const wchar_t *str1, const wchar_t *str2);
+extern DECLSPEC int SDLCALL SDL_wcsncasecmp(const wchar_t *str1, const wchar_t *str2, size_t len);
 
 extern DECLSPEC size_t SDLCALL SDL_strlen(const char *str);
 extern DECLSPEC size_t SDLCALL SDL_strlcpy(SDL_OUT_Z_CAP(maxlen) char *dst, const char *src, size_t maxlen);
@@ -577,6 +587,17 @@ extern DECLSPEC char *SDLCALL SDL_iconv_string(const char *tocode,
 /* force builds using Clang's static analysis tools to use literal C runtime
    here, since there are possibly tests that are ineffective otherwise. */
 #if defined(__clang_analyzer__) && !defined(SDL_DISABLE_ANALYZE_MACROS)
+
+/* The analyzer knows about strlcpy even when the system doesn't provide it */
+#ifndef HAVE_STRLCPY
+size_t strlcpy(char* dst, const char* src, size_t size);
+#endif
+
+/* The analyzer knows about strlcat even when the system doesn't provide it */
+#ifndef HAVE_STRLCAT
+size_t strlcat(char* dst, const char* src, size_t size);
+#endif
+
 #define SDL_malloc malloc
 #define SDL_calloc calloc
 #define SDL_realloc realloc
@@ -585,16 +606,23 @@ extern DECLSPEC char *SDLCALL SDL_iconv_string(const char *tocode,
 #define SDL_memcpy memcpy
 #define SDL_memmove memmove
 #define SDL_memcmp memcmp
-#define SDL_strlen strlen
 #define SDL_strlcpy strlcpy
 #define SDL_strlcat strlcat
+#define SDL_strlen strlen
+#define SDL_wcslen wcslen
+#define SDL_wcslcpy wcslcpy
+#define SDL_wcslcat wcslcat
 #define SDL_strdup strdup
+#define SDL_wcsdup wcsdup
 #define SDL_strchr strchr
 #define SDL_strrchr strrchr
 #define SDL_strstr strstr
+#define SDL_wcsstr wcsstr
 #define SDL_strtokr strtok_r
 #define SDL_strcmp strcmp
+#define SDL_wcscmp wcscmp
 #define SDL_strncmp strncmp
+#define SDL_wcsncmp wcsncmp
 #define SDL_strcasecmp strcasecmp
 #define SDL_strncasecmp strncasecmp
 #define SDL_sscanf sscanf

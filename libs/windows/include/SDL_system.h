@@ -123,6 +123,7 @@ extern DECLSPEC void * SDLCALL SDL_AndroidGetActivity(void);
 /**
    \brief Return API level of the current device
 
+    API level 30: Android 11
     API level 29: Android 10
     API level 28: Android 9
     API level 27: Android 8.1
@@ -197,6 +198,14 @@ extern DECLSPEC int SDLCALL SDL_AndroidGetExternalStorageState(void);
    written to by other applications.
  */
 extern DECLSPEC const char * SDLCALL SDL_AndroidGetExternalStoragePath(void);
+
+/**
+   \brief Request permissions at runtime.
+
+   This blocks the calling thread until the permission is granted or
+   denied. Returns SDL_TRUE if the permission was granted.
+ */
+extern DECLSPEC SDL_bool SDLCALL SDL_AndroidRequestPermission(const char *permission);
 
 #endif /* __ANDROID__ */
 

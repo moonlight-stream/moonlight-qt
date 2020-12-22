@@ -181,6 +181,8 @@ typedef unsigned int uintptr_t;
 #define HAVE_SQRTF  1
 #define HAVE_TAN    1
 #define HAVE_TANF   1
+#define HAVE_TRUNC  1
+#define HAVE_TRUNCF 1
 #define HAVE__FSEEKI64 1
 
 /* Enable various audio drivers */
