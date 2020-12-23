@@ -158,26 +158,9 @@ public:
             emit connectionTestCompleted(-1, QString());
         }
         else {
-            QString blockedPorts;
-
-            for (int i = 0; i < 32; i++) {
-                if (portTestResult & (1 << i)) {
-                    if (!blockedPorts.isEmpty()) {
-                        blockedPorts += "\n";
-                    }
-
-                    if (LiGetProtocolFromPortFlagIndex(i) == 17 /* IPPROTO_UDP */) {
-                        blockedPorts += "UDP ";
-                    }
-                    else {
-                        blockedPorts += "TCP ";
-                    }
-
-                    blockedPorts += QString::number(LiGetPortFromPortFlagIndex(i));
-                }
-            }
-
-            emit connectionTestCompleted(portTestResult, blockedPorts);
+            char blockedPorts[512];
+            LiStringifyPortFlags(portTestResult, "\n", blockedPorts, sizeof(blockedPorts));
+            emit connectionTestCompleted(portTestResult, QString(blockedPorts));
         }
     }
 
