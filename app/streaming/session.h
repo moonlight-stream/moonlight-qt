@@ -42,7 +42,7 @@ public:
 signals:
     void stageStarting(QString stage);
 
-    void stageFailed(QString stage, int errorCode);
+    void stageFailed(QString stage, int errorCode, QString failingPorts);
 
     void connectionStarted();
 

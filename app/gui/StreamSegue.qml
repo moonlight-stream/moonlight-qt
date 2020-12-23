@@ -17,10 +17,14 @@ Item {
         stageText = qsTr("Starting %1...").arg(stage)
     }
 
-    function stageFailed(stage, errorCode)
+    function stageFailed(stage, errorCode, failingPorts)
     {
         // Display the error dialog after Session::exec() returns
         streamSegueErrorDialog.text = qsTr("Starting %1 failed: Error %2").arg(stage).arg(errorCode)
+
+        if (failingPorts) {
+            streamSegueErrorDialog.text += "\n\n" + qsTr("Check your firewall and port forwarding rules for port(s): %1").arg(failingPorts)
+        }
     }
 
     function connectionStarted()

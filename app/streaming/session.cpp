@@ -73,9 +73,12 @@ void Session::clStageStarting(int stage)
 void Session::clStageFailed(int stage, int errorCode)
 {
     // Perform the port test now, while we're on the async connection thread and not blocking the UI.
-    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, LiGetPortFlagsFromStage(stage));
+    unsigned int portFlags = LiGetPortFlagsFromStage(stage);
+    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
 
-    emit s_ActiveSession->stageFailed(QString::fromLocal8Bit(LiGetStageName(stage)), errorCode);
+    char failingPorts[128];
+    LiStringifyPortFlags(portFlags, ", ", failingPorts, sizeof(failingPorts));
+    emit s_ActiveSession->stageFailed(QString::fromLocal8Bit(LiGetStageName(stage)), errorCode, QString(failingPorts));
 
 #ifndef USE_ASYNC_CONNECT_THREAD
     QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
@@ -85,7 +88,8 @@ void Session::clStageFailed(int stage, int errorCode)
 
 void Session::clConnectionTerminated(int errorCode)
 {
-    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, LiGetPortFlagsFromTerminationErrorCode(errorCode));
+    unsigned int portFlags = LiGetPortFlagsFromTerminationErrorCode(errorCode);
+    s_ActiveSession->m_PortTestResults = LiTestClientConnectivity(CONN_TEST_SERVER, 443, portFlags);
 
     // Display the termination dialog if this was not intended
     switch (errorCode) {
@@ -94,7 +98,12 @@ void Session::clConnectionTerminated(int errorCode)
 
     case ML_ERROR_NO_VIDEO_TRAFFIC:
         s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("No video received from host. Check the host PC's firewall and port forwarding rules."));
+
+        char ports[128];
+        SDL_assert(portFlags != 0);
+        LiStringifyPortFlags(portFlags, ", ", ports, sizeof(ports));
+        emit s_ActiveSession->displayLaunchError(tr("No video received from host.") + "\n\n"+
+                                                 tr("Check your firewall and port forwarding rules for port(s): %1").arg(ports));
         break;
 
     case ML_ERROR_NO_VIDEO_FRAME:
