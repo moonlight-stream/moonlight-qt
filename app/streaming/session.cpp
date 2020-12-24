@@ -111,6 +111,13 @@ void Session::clConnectionTerminated(int errorCode)
         emit s_ActiveSession->displayLaunchError(tr("Your network connection isn't performing well. Reduce your video bitrate setting or try a faster connection."));
         break;
 
+    case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
+        s_ActiveSession->m_UnexpectedTermination = true;
+        emit s_ActiveSession->displayLaunchError(tr("Something went wrong on your host PC when starting the stream.") + "\n\n" +
+                                                 tr("Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC.") + "\n\n" +
+                                                 tr("If the issue persists, try reinstalling your GPU drivers and GeForce Experience."));
+        break;
+
     default:
         s_ActiveSession->m_UnexpectedTermination = true;
         emit s_ActiveSession->displayLaunchError(tr("Connection terminated"));
