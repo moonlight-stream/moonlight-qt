@@ -422,6 +422,14 @@ int main(int argc, char *argv[])
     // releases of Moonlight.
     SDL_SetHint("SDL_GAMECONTROLLER_USE_BUTTON_LABELS", "0");
 
+    // Disable relative mouse scaling to renderer size or logical DPI. We want to send
+    // the mouse motion exactly how it was given to us.
+    SDL_SetHint("SDL_MOUSE_RELATIVE_SCALING", "0");
+
+    // Set our app name for SDL to use with PulseAudio. This matches what we provide
+    // as our app name to libsoundio too.
+    SDL_SetHint("SDL_AUDIO_DEVICE_APP_NAME", "Moonlight");
+
 #ifdef QT_DEBUG
     // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
     // when throwing the exceptions, so we don't enable it for release builds out
