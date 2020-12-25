@@ -667,6 +667,22 @@ Flickable {
                     }
                 }
 
+
+                CheckBox {
+                    id: audioPcCheck
+                    width: parent.width
+                    text: qsTr("Mute host PC speakers while streaming")
+                    font.pointSize: 12
+                    checked: !StreamingPreferences.playAudioOnHost
+                    onCheckedChanged: {
+                        StreamingPreferences.playAudioOnHost = !checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("You must restart any game currently in progress for this setting to take effect")
+                }
             }
         }
 
@@ -733,7 +749,7 @@ Flickable {
         spacing: 15
 
         GroupBox {
-            id: gamepadSettingsGroupBox
+            id: inputSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
             title: "<font color=\"skyblue\">" + qsTr("Input Settings") + "</font>"
@@ -742,23 +758,6 @@ Flickable {
             Column {
                 anchors.fill: parent
                 spacing: 5
-
-                CheckBox {
-                    id: singleControllerCheck
-                    width: parent.width
-                    text: qsTr("Force gamepad #1 always present")
-                    font.pointSize:  12
-                    checked: !StreamingPreferences.multiController
-                    onCheckedChanged: {
-                        StreamingPreferences.multiController = !checked
-                    }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.") + "\n" +
-                                  qsTr("Only enable this option when streaming a game that doesn't support gamepads being connected after startup.")
-                }
 
                 CheckBox {
                     id: absoluteMouseCheck
@@ -783,7 +782,7 @@ Flickable {
                     id: absoluteTouchCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: qsTr("Use touchscreen as a trackpad")
+                    text: qsTr("Use touchscreen as a virtual trackpad")
                     font.pointSize:  12
                     checked: !StreamingPreferences.absoluteTouchMode
                     onCheckedChanged: {
@@ -794,6 +793,48 @@ Flickable {
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.")
+                }
+
+                CheckBox {
+                    id: swapMouseButtonsCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Swap left and right mouse buttons")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.swapMouseButtons
+                    onCheckedChanged: {
+                        StreamingPreferences.swapMouseButtons = checked
+                    }
+                }
+            }
+        }
+
+        GroupBox {
+            id: gamepadSettingsGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Gamepad Settings") + "</font>"
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: singleControllerCheck
+                    width: parent.width
+                    text: qsTr("Force gamepad #1 always present")
+                    font.pointSize:  12
+                    checked: !StreamingPreferences.multiController
+                    onCheckedChanged: {
+                        StreamingPreferences.multiController = !checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.") + "\n" +
+                                  qsTr("Only enable this option when streaming a game that doesn't support gamepads being connected after startup.")
                 }
 
                 CheckBox {
@@ -811,23 +852,6 @@ Flickable {
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("When enabled, holding the Start button will toggle mouse mode")
-                }
-
-                CheckBox {
-                    id: swapMouseButtonsCheck
-                    hoverEnabled: true
-                    width: parent.width
-                    text: qsTr("Swap mouse buttons")
-                    font.pointSize:  12
-                    checked: StreamingPreferences.swapMouseButtons
-                    onCheckedChanged: {
-                        StreamingPreferences.swapMouseButtons = checked
-                    }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 3000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("When checked, swap the left and right mouse buttons")
                 }
             }
         }
@@ -851,17 +875,6 @@ Flickable {
                     checked: StreamingPreferences.gameOptimizations
                     onCheckedChanged: {
                         StreamingPreferences.gameOptimizations = checked
-                    }
-                }
-
-                CheckBox {
-                    id: audioPcCheck
-                    width: parent.width
-                    text: qsTr("Play audio on host PC")
-                    font.pointSize:  12
-                    checked: StreamingPreferences.playAudioOnHost
-                    onCheckedChanged: {
-                        StreamingPreferences.playAudioOnHost = checked
                     }
                 }
 
