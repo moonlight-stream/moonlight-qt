@@ -197,6 +197,11 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
 
     s_ActiveSession->m_AudioSampleCount++;
 
+    // If audio is muted, don't decode or play the audio
+    if (s_ActiveSession->m_AudioMuted) {
+        return;
+    }
+
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
         int desiredSize = sizeof(short) * s_ActiveSession->m_AudioConfig.samplesPerFrame * s_ActiveSession->m_AudioConfig.channelCount;
         void* buffer = s_ActiveSession->m_AudioRenderer->getAudioBuffer(&desiredSize);

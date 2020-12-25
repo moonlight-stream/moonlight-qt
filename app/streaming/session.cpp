@@ -370,6 +370,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_DecoderLock(0),
       m_NeedsIdr(false),
       m_AudioDisabled(false),
+      m_AudioMuted(false),
       m_DisplayOriginX(0),
       m_DisplayOriginY(0),
       m_PendingWindowedTransition(false),
@@ -1318,11 +1319,25 @@ void Session::exec(int displayOriginX, int displayOriginY)
             break;
 
         case SDL_WINDOWEVENT:
-            if (event.window.event == SDL_WINDOWEVENT_FOCUS_LOST) {
+            // Early handling of some events
+            switch (event.window.event) {
+            case SDL_WINDOWEVENT_FOCUS_LOST:
                 m_InputHandler->notifyFocusLost();
-            }
-            else if (event.window.event == SDL_WINDOWEVENT_LEAVE) {
+                break;
+            case SDL_WINDOWEVENT_LEAVE:
                 m_InputHandler->notifyMouseLeave();
+                break;
+            case SDL_WINDOWEVENT_MINIMIZED:
+                if (m_Preferences->muteOnMinimize) {
+                    m_AudioMuted = true;
+                }
+                break;
+            case SDL_WINDOWEVENT_MAXIMIZED:
+            case SDL_WINDOWEVENT_RESTORED:
+                if (m_Preferences->muteOnMinimize) {
+                    m_AudioMuted = false;
+                }
+                break;
             }
 
             // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed

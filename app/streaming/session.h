@@ -141,6 +141,7 @@ private:
     SDL_SpinLock m_DecoderLock;
     bool m_NeedsIdr;
     bool m_AudioDisabled;
+    bool m_AudioMuted;
     Uint32 m_FullScreenFlag;
     int m_DisplayOriginX;
     int m_DisplayOriginY;

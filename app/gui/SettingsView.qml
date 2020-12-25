@@ -683,6 +683,17 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("You must restart any game currently in progress for this setting to take effect")
                 }
+
+                CheckBox {
+                    id: muteOnMinimizeCheck
+                    width: parent.width
+                    text: qsTr("Mute audio stream when Moonlight is minimized")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.muteOnMinimize
+                    onCheckedChanged: {
+                        StreamingPreferences.muteOnMinimize = checked
+                    }
+                }
             }
         }
 
@@ -823,7 +834,7 @@ Flickable {
                 CheckBox {
                     id: singleControllerCheck
                     width: parent.width
-                    text: qsTr("Force gamepad #1 always present")
+                    text: qsTr("Force gamepad #1 always connected")
                     font.pointSize:  12
                     checked: !StreamingPreferences.multiController
                     onCheckedChanged: {
@@ -852,6 +863,22 @@ Flickable {
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("When enabled, holding the Start button will toggle mouse mode")
+                }
+
+                CheckBox {
+                    id: backgroundGamepadCheck
+                    width: parent.width
+                    text: qsTr("Process gamepad input when Moonlight is in the background")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.backgroundGamepad
+                    onCheckedChanged: {
+                        StreamingPreferences.backgroundGamepad = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Allows Moonlight to capture gamepad inputs even if it's not the current window in focus")
                 }
             }
         }
