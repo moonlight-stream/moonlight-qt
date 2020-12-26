@@ -167,6 +167,23 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         return;
     }
 
+    if (m_SwapFaceButtons) {
+        switch (event->button) {
+        case SDL_CONTROLLER_BUTTON_A:
+            event->button = SDL_CONTROLLER_BUTTON_B;
+            break;
+        case SDL_CONTROLLER_BUTTON_B:
+            event->button = SDL_CONTROLLER_BUTTON_A;
+            break;
+        case SDL_CONTROLLER_BUTTON_X:
+            event->button = SDL_CONTROLLER_BUTTON_Y;
+            break;
+        case SDL_CONTROLLER_BUTTON_Y:
+            event->button = SDL_CONTROLLER_BUTTON_X;
+            break;
+        }
+    }
+
     if (event->state == SDL_PRESSED) {
         state->buttons |= k_ButtonMap[event->button];
 

@@ -121,6 +121,8 @@ private:
     bool m_MultiController;
     bool m_GamepadMouse;
     bool m_SwapMouseButtons;
+    bool m_ReverseScrollDirection;
+    bool m_SwapFaceButtons;
     SDL_TimerID m_MouseMoveTimer;
     SDL_atomic_t m_MouseDeltaX;
     SDL_atomic_t m_MouseDeltaY;

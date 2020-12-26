@@ -204,6 +204,11 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
     }
 
     if (event->y != 0) {
+        // Invert the scroll direction if needed
+        if (m_ReverseScrollDirection) {
+            event->y = -event->y;
+        }
+
         LiSendScrollEvent((signed char)event->y);
     }
 }

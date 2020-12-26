@@ -817,6 +817,18 @@ Flickable {
                         StreamingPreferences.swapMouseButtons = checked
                     }
                 }
+
+                CheckBox {
+                    id: reverseScrollButtonsCheck
+                    hoverEnabled: true
+                    width: parent.width
+                    text: qsTr("Reverse mouse scrolling direction")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.reverseScrollDirection
+                    onCheckedChanged: {
+                        StreamingPreferences.reverseScrollDirection = checked
+                    }
+                }
             }
         }
 
@@ -830,6 +842,30 @@ Flickable {
             Column {
                 anchors.fill: parent
                 spacing: 5
+
+                CheckBox {
+                    id: swapFaceButtonsCheck
+                    width: parent.width
+                    text: qsTr("Swap A/B and X/Y gamepad buttons")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.swapFaceButtons
+                    onCheckedChanged: {
+                        // Check if the value changed (this is called on init too)
+                        if (StreamingPreferences.swapFaceButtons !== checked) {
+                            StreamingPreferences.swapFaceButtons = checked
+
+                            // Save and restart SdlGamepadKeyNavigation so it can pull the new value
+                            StreamingPreferences.save()
+                            SdlGamepadKeyNavigation.disable()
+                            SdlGamepadKeyNavigation.enable()
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("This switches gamepads into a Nintendo-style button layout")
+                }
 
                 CheckBox {
                     id: singleControllerCheck

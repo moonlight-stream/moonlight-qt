@@ -4,6 +4,7 @@
 #include <QGuiApplication>
 #include <QWindow>
 
+#include "settings/streamingpreferences.h"
 #include "settings/mappingmanager.h"
 
 #define AXIS_NAVIGATION_REPEAT_DELAY 150
@@ -88,6 +89,7 @@ void SdlGamepadKeyNavigation::disable()
 void SdlGamepadKeyNavigation::onPollingTimerFired()
 {
     SDL_Event event;
+    StreamingPreferences prefs;
 
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
@@ -103,6 +105,24 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
             QEvent::Type type =
                     event.type == SDL_CONTROLLERBUTTONDOWN ?
                         QEvent::Type::KeyPress : QEvent::Type::KeyRelease;
+
+            // Swap face buttons if needed
+            if (prefs.swapFaceButtons) {
+                switch (event.cbutton.button) {
+                case SDL_CONTROLLER_BUTTON_A:
+                    event.cbutton.button = SDL_CONTROLLER_BUTTON_B;
+                    break;
+                case SDL_CONTROLLER_BUTTON_B:
+                    event.cbutton.button = SDL_CONTROLLER_BUTTON_A;
+                    break;
+                case SDL_CONTROLLER_BUTTON_X:
+                    event.cbutton.button = SDL_CONTROLLER_BUTTON_Y;
+                    break;
+                case SDL_CONTROLLER_BUTTON_Y:
+                    event.cbutton.button = SDL_CONTROLLER_BUTTON_X;
+                    break;
+                }
+            }
 
             switch (event.cbutton.button) {
             case SDL_CONTROLLER_BUTTON_DPAD_UP:

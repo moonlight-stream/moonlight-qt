@@ -303,8 +303,10 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
     parser.addToggleOption("frame-pacing", "frame pacing");
-    parser.addToggleOption("mute-on-minimize", "mute audio whe minimized");
+    parser.addToggleOption("mute-on-minimize", "mute audio when minimized");
     parser.addToggleOption("background-gamepad", "background gamepad input");
+    parser.addToggleOption("reverse-scroll-direction", "inverted scroll direction");
+    parser.addToggleOption("swap-gamepad-buttons", "swap A/B and X/Y gamepad buttons (Nintendo-style)");
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
     parser.addChoiceOption("video-decoder", "video decoder", m_VideoDecoderMap.keys());
 
@@ -412,6 +414,12 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --background-gamepad and --no-background-gamepad options
     preferences->backgroundGamepad = parser.getToggleOptionValue("background-gamepad", preferences->backgroundGamepad);
+
+    // Resolve --reverse-scroll-direction and --no-reverse-scroll-direction options
+    preferences->reverseScrollDirection = parser.getToggleOptionValue("reverse-scroll-direction", preferences->reverseScrollDirection);
+
+    // Resolve --swap-gamepad-buttons and --no-swap-gamepad-buttons options
+    preferences->swapFaceButtons = parser.getToggleOptionValue("swap-gamepad-buttons", preferences->swapFaceButtons);
 
     // Resolve --video-codec option
     if (parser.isSet("video-codec")) {

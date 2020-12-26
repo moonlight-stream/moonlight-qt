@@ -77,6 +77,8 @@ public:
     Q_PROPERTY(bool swapMouseButtons MEMBER swapMouseButtons NOTIFY mouseButtonsChanged)
     Q_PROPERTY(bool muteOnMinimize MEMBER muteOnMinimize NOTIFY muteOnMinimizeChanged)
     Q_PROPERTY(bool backgroundGamepad MEMBER backgroundGamepad NOTIFY backgroundGamepadChanged)
+    Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
+    Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
 
     // Directly accessible members for preferences
     int width;
@@ -101,6 +103,8 @@ public:
     bool swapMouseButtons;
     bool muteOnMinimize;
     bool backgroundGamepad;
+    bool reverseScrollDirection;
+    bool swapFaceButtons;
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
@@ -133,5 +137,7 @@ signals:
     void mouseButtonsChanged();
     void muteOnMinimizeChanged();
     void backgroundGamepadChanged();
+    void reverseScrollDirectionChanged();
+    void swapFaceButtonsChanged();
 };
 

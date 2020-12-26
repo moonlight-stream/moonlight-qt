@@ -32,6 +32,8 @@
 #define SER_SWAPMOUSEBUTTONS "swapmousebuttons"
 #define SER_MUTEONMINIMIZE "muteonminimize"
 #define SER_BACKGROUNDGAMEPAD "backgroundgamepad"
+#define SER_REVERSESCROLL "reversescroll"
+#define SER_SWAPFACEBUTTONS "swapfacebuttons"
 
 #define CURRENT_DEFAULT_VER 1
 
@@ -76,6 +78,8 @@ void StreamingPreferences::reload()
     swapMouseButtons = settings.value(SER_SWAPMOUSEBUTTONS, false).toBool();
     muteOnMinimize = settings.value(SER_MUTEONMINIMIZE, false).toBool();
     backgroundGamepad = settings.value(SER_BACKGROUNDGAMEPAD, false).toBool();
+    reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
+    swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -130,6 +134,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_SWAPMOUSEBUTTONS, swapMouseButtons);
     settings.setValue(SER_MUTEONMINIMIZE, muteOnMinimize);
     settings.setValue(SER_BACKGROUNDGAMEPAD, backgroundGamepad);
+    settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
+    settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
