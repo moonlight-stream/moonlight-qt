@@ -888,17 +888,12 @@ Flickable {
                     id: gamepadMouseCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: qsTr("Gamepad mouse mode support")
-                    font.pointSize:  12
+                    text: qsTr("Enable mouse control with gamepads by holding the 'Start' button")
+                    font.pointSize: 12
                     checked: StreamingPreferences.gamepadMouse
                     onCheckedChanged: {
                         StreamingPreferences.gamepadMouse = checked
                     }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 3000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("When enabled, holding the Start button will toggle mouse mode")
                 }
 
                 CheckBox {
