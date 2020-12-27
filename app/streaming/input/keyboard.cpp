@@ -104,6 +104,20 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
+        // Check for mouse show combo (Ctrl+Alt+Shift+C)
+        else if (event->keysym.sym == SDLK_c) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected show mouse combo (SDLK)");
+
+            if (!SDL_GetRelativeMouseMode()) {
+                SDL_ShowCursor(!SDL_ShowCursor(SDL_QUERY));
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Cursor can only be shown in remote desktop mouse mode");
+            }
+            return;
+        }
         // Check for quit combo (Ctrl+Alt+Shift+Q)
         else if (event->keysym.scancode == SDL_SCANCODE_Q) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -166,6 +180,20 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             // Force raise all keys just be safe across this full-screen/windowed
             // transition just in case key events get lost.
             raiseAllKeys();
+            return;
+        }
+        // Check for mouse show combo (Ctrl+Alt+Shift+C)
+        else if (event->keysym.sym == SDL_SCANCODE_C) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected show mouse combo (scancode)");
+
+            if (!SDL_GetRelativeMouseMode()) {
+                SDL_ShowCursor(!SDL_ShowCursor(SDL_QUERY));
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Cursor can only be shown in remote desktop mouse mode");
+            }
             return;
         }
     }
