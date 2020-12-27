@@ -179,6 +179,11 @@ enum AVFrameSideDataType {
      * array element is implied by AVFrameSideData.size / AVRegionOfInterest.self_size.
      */
     AV_FRAME_DATA_REGIONS_OF_INTEREST,
+
+    /**
+     * Encoding parameters for a video frame, as described by AVVideoEncParams.
+     */
+    AV_FRAME_DATA_VIDEO_ENC_PARAMS,
 };
 
 enum AVActiveFormatDescription {
@@ -920,8 +925,7 @@ AVFrameSideData *av_frame_get_side_data(const AVFrame *frame,
                                         enum AVFrameSideDataType type);
 
 /**
- * If side data of the supplied type exists in the frame, free it and remove it
- * from the frame.
+ * Remove and free all side data instances of the given type.
  */
 void av_frame_remove_side_data(AVFrame *frame, enum AVFrameSideDataType type);
 

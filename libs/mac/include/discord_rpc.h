@@ -35,6 +35,7 @@ typedef struct DiscordRichPresence {
     const char* partyId;        /* max 128 bytes */
     int partySize;
     int partyMax;
+    int partyPrivacy;
     const char* matchSecret;    /* max 128 bytes */
     const char* joinSecret;     /* max 128 bytes */
     const char* spectateSecret; /* max 128 bytes */
@@ -60,6 +61,8 @@ typedef struct DiscordEventHandlers {
 #define DISCORD_REPLY_NO 0
 #define DISCORD_REPLY_YES 1
 #define DISCORD_REPLY_IGNORE 2
+#define DISCORD_PARTY_PRIVATE 0
+#define DISCORD_PARTY_PUBLIC 1
 
 DISCORD_EXPORT void Discord_Initialize(const char* applicationId,
                                        DiscordEventHandlers* handlers,
