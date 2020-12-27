@@ -19,6 +19,10 @@ ApplicationWindow {
 
     visibility: (SystemProperties.hasWindowManager && StreamingPreferences.startWindowed) ? "Windowed" : "Maximized"
 
+    // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
+    // it will never insert a line break and just extend on forever.
+    ToolTip.toolTip.contentWidth: ToolTip.toolTip.implicitContentWidth < 400 ? ToolTip.toolTip.implicitContentWidth : 400
+
     StackView {
         id: stackView
         initialItem: initialView
