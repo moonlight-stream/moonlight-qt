@@ -6,18 +6,54 @@
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
 
+#ifdef Q_OS_WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#endif
+
 SystemProperties::SystemProperties()
 {
     versionString = QString(VERSION_STR);
     hasWindowManager = WMUtils::isRunningWindowManager();
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
+    QString nativeArch = QSysInfo::currentCpuArchitecture();
 
 #ifdef Q_OS_WIN32
-    isWow64 = QSysInfo::currentCpuArchitecture() != QSysInfo::buildCpuArchitecture();
+    {
+        USHORT processArch, machineArch;
+
+        // Use IsWow64Process2 on TH2 and later, because it supports ARM64
+        auto isWow64Process2 = (decltype(IsWow64Process2)*)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process2");
+        if (isWow64Process2 != nullptr && IsWow64Process2(GetCurrentProcess(), &processArch, &machineArch)) {
+            switch (machineArch) {
+            case IMAGE_FILE_MACHINE_I386:
+                nativeArch = "i386";
+                break;
+            case IMAGE_FILE_MACHINE_AMD64:
+                nativeArch = "x86_64";
+                break;
+            case IMAGE_FILE_MACHINE_ARM64:
+                nativeArch = "arm64";
+                break;
+            }
+        }
+
+        isWow64 = nativeArch != QSysInfo::buildCpuArchitecture();
+    }
 #else
     isWow64 = false;
 #endif
+
+    if (nativeArch == "i386") {
+        friendlyNativeArchName = "x86";
+    }
+    else if (nativeArch == "x86_64") {
+        friendlyNativeArchName = "x64";
+    }
+    else {
+        friendlyNativeArchName = nativeArch.toUpper();
+    }
 
 #ifndef STEAM_LINK
     // Assume we can probably launch a browser if we're in a GUI environment

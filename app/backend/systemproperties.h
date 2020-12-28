@@ -15,6 +15,7 @@ public:
     Q_PROPERTY(bool isRunningWayland MEMBER isRunningWayland CONSTANT)
     Q_PROPERTY(bool isRunningXWayland MEMBER isRunningXWayland CONSTANT)
     Q_PROPERTY(bool isWow64 MEMBER isWow64 CONSTANT)
+    Q_PROPERTY(QString friendlyNativeArchName MEMBER friendlyNativeArchName CONSTANT)
     Q_PROPERTY(bool hasWindowManager MEMBER hasWindowManager CONSTANT)
     Q_PROPERTY(bool hasBrowser MEMBER hasBrowser CONSTANT)
     Q_PROPERTY(bool hasDiscordIntegration MEMBER hasDiscordIntegration CONSTANT)
@@ -38,6 +39,7 @@ private:
     bool isRunningWayland;
     bool isRunningXWayland;
     bool isWow64;
+    QString friendlyNativeArchName;
     bool hasWindowManager;
     bool hasBrowser;
     bool hasDiscordIntegration;

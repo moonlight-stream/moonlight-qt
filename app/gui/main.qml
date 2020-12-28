@@ -405,7 +405,7 @@ ApplicationWindow {
     NavigableMessageDialog {
         id: wow64Dialog
         standardButtons: Dialog.Ok | Dialog.Cancel
-        text: qsTr("This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance.")
+        text: qsTr("This PC is running the %1 version of Windows. Please download the %1 version of Moonlight for the best streaming performance.").arg(SystemProperties.friendlyNativeArchName)
         onAccepted: {
             Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-qt/releases");
         }
