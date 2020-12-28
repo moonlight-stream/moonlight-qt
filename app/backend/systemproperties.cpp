@@ -24,8 +24,8 @@ SystemProperties::SystemProperties()
         USHORT processArch, machineArch;
 
         // Use IsWow64Process2 on TH2 and later, because it supports ARM64
-        auto isWow64Process2 = (decltype(IsWow64Process2)*)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process2");
-        if (isWow64Process2 != nullptr && IsWow64Process2(GetCurrentProcess(), &processArch, &machineArch)) {
+        auto fnIsWow64Process2 = (decltype(IsWow64Process2)*)GetProcAddress(GetModuleHandleA("kernel32.dll"), "IsWow64Process2");
+        if (fnIsWow64Process2 != nullptr && fnIsWow64Process2(GetCurrentProcess(), &processArch, &machineArch)) {
             switch (machineArch) {
             case IMAGE_FILE_MACHINE_I386:
                 nativeArch = "i386";
