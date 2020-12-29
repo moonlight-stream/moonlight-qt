@@ -71,10 +71,8 @@ public:
     Q_PROPERTY(bool quitAppAfter MEMBER quitAppAfter NOTIFY quitAppAfterChanged)
     Q_PROPERTY(bool absoluteMouseMode MEMBER absoluteMouseMode NOTIFY absoluteMouseModeChanged)
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
-    Q_PROPERTY(bool startWindowed MEMBER startWindowed NOTIFY startWindowedChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
     Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)
-    Q_PROPERTY(bool fullScreenModeUI MEMBER fullScreenModeUI NOTIFY fullScreenModeUIChanged)
     Q_PROPERTY(bool richPresence MEMBER richPresence NOTIFY richPresenceChanged)
     Q_PROPERTY(bool gamepadMouse MEMBER gamepadMouse NOTIFY gamepadMouseChanged)
     Q_PROPERTY(bool detectNetworkBlocking MEMBER detectNetworkBlocking NOTIFY detectNetworkBlockingChanged);
@@ -104,10 +102,8 @@ public:
     bool quitAppAfter;
     bool absoluteMouseMode;
     bool absoluteTouchMode;
-    bool startWindowed;
     bool framePacing;
     bool connectionWarnings;
-    bool fullScreenModeUI;
     bool richPresence;
     bool gamepadMouse;
     bool detectNetworkBlocking;
@@ -141,10 +137,8 @@ signals:
     void videoDecoderSelectionChanged();
     void uiDisplayModeChanged();
     void windowModeChanged();
-    void startWindowedChanged();
     void framePacingChanged();
     void connectionWarningsChanged();
-    void fullScreenModeUIChanged();
     void richPresenceChanged();
     void gamepadMouseChanged();
     void detectNetworkBlockingChanged();

@@ -21,10 +21,8 @@
 #define SER_QUITAPPAFTER "quitAppAfter"
 #define SER_ABSMOUSEMODE "mouseacceleration"
 #define SER_ABSTOUCHMODE "abstouchmode"
-#define SER_STARTWINDOWED "startwindowed"
 #define SER_FRAMEPACING "framepacing"
 #define SER_CONNWARNINGS "connwarnings"
-#define SER_FULLSCREENMODEUI "fullscreenmodeui"
 #define SER_UIDISPLAYMODE "uidisplaymode"
 #define SER_RICHPRESENCE "richpresence"
 #define SER_GAMEPADMOUSE "gamepadmouse"
@@ -70,7 +68,6 @@ void StreamingPreferences::reload()
     quitAppAfter = settings.value(SER_QUITAPPAFTER, false).toBool();
     absoluteMouseMode = settings.value(SER_ABSMOUSEMODE, false).toBool();
     absoluteTouchMode = settings.value(SER_ABSTOUCHMODE, true).toBool();
-    startWindowed = settings.value(SER_STARTWINDOWED, true).toBool();
     framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     connectionWarnings = settings.value(SER_CONNWARNINGS, true).toBool();
     richPresence = settings.value(SER_RICHPRESENCE, true).toBool();
@@ -124,10 +121,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_QUITAPPAFTER, quitAppAfter);
     settings.setValue(SER_ABSMOUSEMODE, absoluteMouseMode);
     settings.setValue(SER_ABSTOUCHMODE, absoluteTouchMode);
-    settings.setValue(SER_STARTWINDOWED, startWindowed);
     settings.setValue(SER_FRAMEPACING, framePacing);
     settings.setValue(SER_CONNWARNINGS, connectionWarnings);
-    settings.setValue(SER_FULLSCREENMODEUI, fullScreenModeUI);
     settings.setValue(SER_RICHPRESENCE, richPresence);
     settings.setValue(SER_GAMEPADMOUSE, gamepadMouse);
     settings.setValue(SER_PACKETSIZE, packetSize);

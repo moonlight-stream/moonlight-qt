@@ -708,34 +708,6 @@ Flickable {
                 anchors.fill: parent
                 spacing: 5
 
-                CheckBox {
-                    id: startMaximizedCheck
-                    width: parent.width
-                    text: qsTr("Maximize Moonlight window on startup")
-                    font.pointSize: 12
-                    enabled: SystemProperties.hasWindowManager
-                    checked: !StreamingPreferences.startWindowed || !SystemProperties.hasWindowManager
-                    onCheckedChanged: {
-                        StreamingPreferences.startWindowed = !checked
-                    }
-                }
-
-                CheckBox {
-                    id: fullScreenModeUICheck
-                    width: parent.width
-                    text: qsTr("Run Moonlight window in Fullscreen")
-                    font.pointSize: 12
-                    checked: StreamingPreferences.fullScreenModeUI
-                    onCheckedChanged: {
-                        StreamingPreferences.fullScreenModeUI = checked
-                    }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Run the Moonlight application in fullscreen with no window decoration.")
-                }
-
                 Label {
                     width: parent.width
                     id: uiDisplayModeTitle
