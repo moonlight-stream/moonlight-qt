@@ -24,7 +24,7 @@
 #define SER_STARTWINDOWED "startwindowed"
 #define SER_FRAMEPACING "framepacing"
 #define SER_CONNWARNINGS "connwarnings"
-#define SER_KIOSKMODE "kioskmode"
+#define SER_FULLSCREENMODEUI "fullscreenmodeui"
 #define SER_RICHPRESENCE "richpresence"
 #define SER_GAMEPADMOUSE "gamepadmouse"
 #define SER_DEFAULTVER "defaultver"
@@ -72,7 +72,7 @@ void StreamingPreferences::reload()
     startWindowed = settings.value(SER_STARTWINDOWED, true).toBool();
     framePacing = settings.value(SER_FRAMEPACING, false).toBool();
     connectionWarnings = settings.value(SER_CONNWARNINGS, true).toBool();
-    kioskMode = settings.value(SER_KIOSKMODE, false).toBool();
+    fullScreenModeUI = settings.value(SER_FULLSCREENMODEUI, false).toBool();
     richPresence = settings.value(SER_RICHPRESENCE, true).toBool();
     gamepadMouse = settings.value(SER_GAMEPADMOUSE, true).toBool();
     detectNetworkBlocking = settings.value(SER_DETECTNETBLOCKING, true).toBool();
@@ -124,7 +124,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_STARTWINDOWED, startWindowed);
     settings.setValue(SER_FRAMEPACING, framePacing);
     settings.setValue(SER_CONNWARNINGS, connectionWarnings);
-    settings.setValue(SER_KIOSKMODE, kioskMode);
+    settings.setValue(SER_FULLSCREENMODEUI, fullScreenModeUI);
     settings.setValue(SER_RICHPRESENCE, richPresence);
     settings.setValue(SER_GAMEPADMOUSE, gamepadMouse);
     settings.setValue(SER_PACKETSIZE, packetSize);

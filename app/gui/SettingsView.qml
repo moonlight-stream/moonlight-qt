@@ -721,19 +721,19 @@ Flickable {
                 }
 
                 CheckBox {
-                    id: kioskModeCheck
+                    id: fullScreenModeUICheck
                     width: parent.width
-                    text: qsTr("Start Moonlight in Kiosk Mode")
+                    text: qsTr("Start Moonlight in Full Screen Mode")
                     font.pointSize: 12
-                    checked: StreamingPreferences.kioskMode
+                    checked: StreamingPreferences.fullScreenModeUI
                     onCheckedChanged: {
-                        StreamingPreferences.kioskMode = checked
+                        StreamingPreferences.fullScreenModeUI = checked
                     }
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Start Moonlight in full screen, with no window decorations.")
+                    ToolTip.text: qsTr("Start the Moonlight application in full screen.")
                 }
 
                 CheckBox {
