@@ -736,6 +736,14 @@ Flickable {
                     ToolTip.text: qsTr("Run the Moonlight application in fullscreen with no window decoration.")
                 }
 
+                Label {
+                    width: parent.width
+                    id: uiDisplayModeTitle
+                    text: qsTr("Display Mode")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
