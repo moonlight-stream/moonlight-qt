@@ -17,7 +17,7 @@ ApplicationWindow {
     width: 1280
     height: 600
 
-    visibility: (SystemProperties.hasWindowManager && StreamingPreferences.startWindowed) ? "Windowed" : "Maximized"
+    visibility: (StreamingPreferences.kioskMode ? "FullScreen" : (SystemProperties.hasWindowManager && StreamingPreferences.startWindowed) ? "Windowed" : "Maximized")
     flags: StreamingPreferences.kioskMode ? Qt.FramelessWindowHint : 0
 
     // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
