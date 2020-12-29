@@ -22,16 +22,7 @@ ApplicationWindow {
         else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN_WINDOWED) return "Maximized"
         else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
     }
-  //flags: {StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN ? Qt.FramelessWindowHint : 0}
-
-    flags: {
-        console.log(flags);
-        if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return 1
-        else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN_WINDOWED) return 1
-        else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return Qt.FramelessWindowHint
-        else return 1
-    }
-    
+  
     // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
     // it will never insert a line break and just extend on forever.
     ToolTip.toolTip.contentWidth: ToolTip.toolTip.implicitContentWidth < 400 ? ToolTip.toolTip.implicitContentWidth : 400
