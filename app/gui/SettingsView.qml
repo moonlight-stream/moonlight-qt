@@ -723,7 +723,7 @@ Flickable {
                 CheckBox {
                     id: fullScreenModeUICheck
                     width: parent.width
-                    text: qsTr("Start Moonlight in Fullscreen Mode")
+                    text: qsTr("Run Moonlight window in Fullscreen")
                     font.pointSize: 12
                     checked: StreamingPreferences.fullScreenModeUI
                     onCheckedChanged: {
@@ -733,7 +733,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Start the Moonlight application in fullscreen.")
+                    ToolTip.text: qsTr("Run the Moonlight application in fullscreen with no window decoration.")
                 }
 
                 CheckBox {
