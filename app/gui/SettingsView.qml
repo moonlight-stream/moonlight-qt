@@ -729,6 +729,11 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.kioskMode = checked
                     }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Start Moonlight in full screen, with no window decorations.")
                 }
 
                 CheckBox {
