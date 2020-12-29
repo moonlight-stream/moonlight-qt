@@ -50,6 +50,14 @@ public:
     };
     Q_ENUM(WindowMode)
 
+    enum UIDisplayMode
+    {
+        UI_WINDOWED,
+        UI_FULLSCREEN_WINDOWED,
+        UI_FULLSCREEN
+    };
+    Q_ENUM(UIDisplayMode)
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -75,6 +83,7 @@ public:
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
+    Q_PROPERTY(UIDisplayMode uiDisplayMode MEMBER uiDisplayMode NOTIFY uiDisplayModeChanged)
     Q_PROPERTY(bool swapMouseButtons MEMBER swapMouseButtons NOTIFY mouseButtonsChanged)
     Q_PROPERTY(bool muteOnMinimize MEMBER muteOnMinimize NOTIFY muteOnMinimizeChanged)
     Q_PROPERTY(bool backgroundGamepad MEMBER backgroundGamepad NOTIFY backgroundGamepadChanged)
@@ -113,6 +122,7 @@ public:
     VideoDecoderSelection videoDecoderSelection;
     WindowMode windowMode;
     WindowMode recommendedFullScreenMode;
+    UIDisplayMode uiDisplayMode;
 
 signals:
     void displayModeChanged();
@@ -129,6 +139,7 @@ signals:
     void audioConfigChanged();
     void videoCodecConfigChanged();
     void videoDecoderSelectionChanged();
+    void uiDisplayModeChanged();
     void windowModeChanged();
     void startWindowedChanged();
     void framePacingChanged();

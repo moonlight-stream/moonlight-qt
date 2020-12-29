@@ -736,6 +736,44 @@ Flickable {
                     ToolTip.text: qsTr("Run the Moonlight application in fullscreen with no window decoration.")
                 }
 
+                AutoResizingComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_uidisplaymode = StreamingPreferences.uiDisplayMode
+                        currentIndex = 0
+                        for (var i = 0; i < uiDisplayModeListModel.count; i++) {
+                            var el_uidisplaymode = uiDisplayModeListModel.get(i).val;
+                            if (saved_uidisplaymode === el_uidisplaymode) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+                        activated(currentIndex)
+                    }
+
+                    id: uiDisplayModeComboBox
+                    textRole: "text"
+                    model: ListModel {
+                        id: uiDisplayModeListModel
+                        ListElement {
+                            text: qsTr("Windowed")
+                            val: StreamingPreferences.UI_WINDOWED
+                        }
+                        ListElement {
+                            text: qsTr("Fullscreen (Windowed)")
+                            val: StreamingPreferences.UI_FULLSCREEN_WINDOWED
+                        }   
+                        ListElement {
+                            text: qsTr("Fullscreen")
+                            val: StreamingPreferences.UI_FULLSCREEN
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        StreamingPreferences.uiDisplayMode = uiDisplayModeListModel.get(currentIndex).val
+                    }
+                }
+
                 CheckBox {
                     id: connectionWarningsCheck
                     width: parent.width
