@@ -15,7 +15,7 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 1000
+    height: 600
 
     visibility: (SystemProperties.hasWindowManager && StreamingPreferences.startWindowed) ? "Windowed" : "Maximized"
     flags: StreamingPreferences.kioskMode ? Qt.FramelessWindowHint : 0
