@@ -551,7 +551,7 @@ Flickable {
                     model: ListModel {
                         id: windowModeListModel
                         ListElement {
-                            text: qsTr("Full-screen")
+                            text: qsTr("Fullscreen")
                             val: StreamingPreferences.WM_FULLSCREEN
                         }
                         ListElement {
@@ -570,7 +570,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Full-screen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
+                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
                 }
 
                 CheckBox {
@@ -723,7 +723,7 @@ Flickable {
                 CheckBox {
                     id: fullScreenModeUICheck
                     width: parent.width
-                    text: qsTr("Start Moonlight in Full Screen Mode")
+                    text: qsTr("Start Moonlight in Fullscreen Mode")
                     font.pointSize: 12
                     checked: StreamingPreferences.fullScreenModeUI
                     onCheckedChanged: {
@@ -733,7 +733,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Start the Moonlight application in full screen.")
+                    ToolTip.text: qsTr("Start the Moonlight application in fullscreen.")
                 }
 
                 CheckBox {
