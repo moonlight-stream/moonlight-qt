@@ -721,6 +721,17 @@ Flickable {
                 }
 
                 CheckBox {
+                    id: kioskModeCheck
+                    width: parent.width
+                    text: qsTr("Start Moonlight in Kiosk Mode")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.kioskMode
+                    onCheckedChanged: {
+                        StreamingPreferences.kioskMode = checked
+                    }
+                }
+
+                CheckBox {
                     id: connectionWarningsCheck
                     width: parent.width
                     text: qsTr("Show connection quality warnings")

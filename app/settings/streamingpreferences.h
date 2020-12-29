@@ -66,6 +66,7 @@ public:
     Q_PROPERTY(bool startWindowed MEMBER startWindowed NOTIFY startWindowedChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
     Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)
+    Q_PROPERTY(bool kioskMode MEMBER kioskMode NOTIFY kioskModeChanged)
     Q_PROPERTY(bool richPresence MEMBER richPresence NOTIFY richPresenceChanged)
     Q_PROPERTY(bool gamepadMouse MEMBER gamepadMouse NOTIFY gamepadMouseChanged)
     Q_PROPERTY(bool detectNetworkBlocking MEMBER detectNetworkBlocking NOTIFY detectNetworkBlockingChanged);
@@ -97,6 +98,7 @@ public:
     bool startWindowed;
     bool framePacing;
     bool connectionWarnings;
+    bool kioskMode;
     bool richPresence;
     bool gamepadMouse;
     bool detectNetworkBlocking;
@@ -131,6 +133,7 @@ signals:
     void startWindowedChanged();
     void framePacingChanged();
     void connectionWarningsChanged();
+    void kioskModeChanged();
     void richPresenceChanged();
     void gamepadMouseChanged();
     void detectNetworkBlockingChanged();

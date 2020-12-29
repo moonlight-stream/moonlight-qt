@@ -15,9 +15,10 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 600
+    height: 1000
 
     visibility: (SystemProperties.hasWindowManager && StreamingPreferences.startWindowed) ? "Windowed" : "Maximized"
+    flags: StreamingPreferences.kioskMode ? Qt.FramelessWindowHint : 0
 
     // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
     // it will never insert a line break and just extend on forever.
