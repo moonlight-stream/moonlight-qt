@@ -444,7 +444,7 @@ public:
             return false;
         }
 
-        if (params->enableVsync) {
+        if (params->enableFramePacing) {
             if (!initializeVsyncCallback(&info)) {
                 return false;
             }
