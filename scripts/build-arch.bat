@@ -147,8 +147,18 @@ copy %SOURCE_ROOT%\app\SDL_GameControllerDB\gamecontrollerdb.txt %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Deploying Qt dependencies
-windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-qmltooling %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
+windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-qmltooling --no-virtualkeyboard --no-sql %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
 if !ERRORLEVEL! NEQ 0 goto Error
+
+echo Deleting unused styles
+rem Qt 5.x directories
+rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Fusion
+rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Imagine
+rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Universal
+rem Qt 6.x directories
+rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Fusion
+rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Imagine
+rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Universal
 
 echo Generating QML cache
 forfiles /p %DEPLOY_FOLDER% /m *.qml /s /c "cmd /c qmlcachegen.exe @path"
