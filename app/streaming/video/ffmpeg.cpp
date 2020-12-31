@@ -891,9 +891,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         m_Pkt.flags = 0;
     }
 
-    m_ActiveWndVideoStats.totalReassemblyTime += LiGetMillis() - du->receiveTimeMs;
-
-    Uint32 beforeDecode = SDL_GetTicks();
+    m_ActiveWndVideoStats.totalReassemblyTime += du->enqueueTimeMs - du->receiveTimeMs;
 
     err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
     if (err < 0) {
@@ -945,8 +943,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         frame->pkt_dts = SDL_GetTicks();
 
         // Count time in avcodec_send_packet() and avcodec_receive_frame()
-        // as time spent decoding
-        m_ActiveWndVideoStats.totalDecodeTime += SDL_GetTicks() - beforeDecode;
+        // as time spent decoding. Also count time spent in the decode unit
+        // queue because that's directly caused by decoder latency.
+        m_ActiveWndVideoStats.totalDecodeTime += LiGetMillis() - du->enqueueTimeMs;
 
         // Also count the frame-to-frame delay if the decoder is delaying frames
         // until a subsequent frame is submitted.
