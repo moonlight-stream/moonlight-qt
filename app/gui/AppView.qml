@@ -285,6 +285,11 @@ CenteredGridView {
                 text: qsTr("Hide Game")
                 onTriggered: appModel.setAppHidden(model.index, !model.hidden)
                 enabled: model.hidden || (!model.running && !model.directLaunch)
+
+                ToolTip.text: qsTr("Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.").arg(qsTr("View All Apps"))
+                ToolTip.delay: 1000
+                ToolTip.timeout: 5000
+                ToolTip.visible: hovered
             }
         }
     }
