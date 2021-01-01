@@ -732,6 +732,7 @@ Flickable {
                     }
 
                     id: uiDisplayModeComboBox
+                    enabled: SystemProperties.hasWindowManager
                     textRole: "text"
                     model: ListModel {
                         id: uiDisplayModeListModel
