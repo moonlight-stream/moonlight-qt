@@ -740,7 +740,7 @@ Flickable {
                             val: StreamingPreferences.UI_WINDOWED
                         }
                         ListElement {
-                            text: qsTr("Fullscreen (Windowed)")
+                            text: qsTr("Maximized")
                             val: StreamingPreferences.UI_FULLSCREEN_WINDOWED
                         }   
                         ListElement {
