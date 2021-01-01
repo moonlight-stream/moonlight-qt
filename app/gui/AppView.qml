@@ -197,7 +197,11 @@ CenteredGridView {
             }
 
             var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView, {"appName": model.name, "session": appModel.createSessionForApp(index)})
+            var segue = component.createObject(stackView, {
+                                                   "appName": model.name,
+                                                   "session": appModel.createSessionForApp(index),
+                                                   "isResume": runningId === model.appid
+                                               })
             stackView.push(segue)
         }
 

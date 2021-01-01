@@ -8,7 +8,9 @@ import Session 1.0
 Item {
     property Session session
     property string appName
-    property string stageText : qsTr("Starting %1...").arg(appName)
+    property string stageText : isResume ? qsTr("Resuming %1...").arg(appName) :
+                                           qsTr("Starting %1...").arg(appName)
+    property bool isResume : false
     property bool quitAfter : false
 
     function stageStarting(stage)
