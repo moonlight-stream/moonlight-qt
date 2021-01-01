@@ -15,12 +15,16 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 1000
+    height: 600
 
     visibility: {
-        if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return "Windowed"
-        else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN_WINDOWED) return "Maximized"
-        else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
+        if (SystemProperties.hasWindowManager) {
+            if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return "Windowed"
+            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN_WINDOWED) return "Maximized"
+            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
+        } else {
+            return "Maximized"
+        }
     }
   
     // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
