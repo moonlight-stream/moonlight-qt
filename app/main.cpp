@@ -323,6 +323,13 @@ int main(int argc, char *argv[])
             qInfo() << "Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.";
             qputenv("QT_QPA_PLATFORM", "eglfs");
 
+            if (!qEnvironmentVariableIsSet("QT_QPA_EGLFS_ALWAYS_SET_MODE")) {
+                qInfo() << "Setting display mode by default. Set QT_QPA_EGLFS_ALWAYS_SET_MODE=0 to override this.";
+
+                // The UI doesn't appear on RetroPie without this option.
+                qputenv("QT_QPA_EGLFS_ALWAYS_SET_MODE", "1");
+            }
+
             if (!QFile("/dev/dri").exists()) {
                 qWarning() << "Unable to find a KMSDRM display device!";
                 qWarning() << "On the Raspberry Pi, you must enable the 'fake KMS' driver in raspi-config to use Moonlight outside of the GUI environment.";
