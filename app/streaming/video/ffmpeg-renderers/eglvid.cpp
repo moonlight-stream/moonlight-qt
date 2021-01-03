@@ -189,7 +189,13 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
         glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSurface->w, newSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, newSurface->pixels);
 
-        SDL_FRect overlayRect;
+        // SDL_FRect wasn't added until 2.0.10
+        struct {
+            float x;
+            float y;
+            float w;
+            float h;
+        } overlayRect;
 
         // These overlay positions differ from the other renderers because OpenGL
         // places the origin in the lower-left corner instead of the upper-left.
