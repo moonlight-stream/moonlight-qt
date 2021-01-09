@@ -22,6 +22,8 @@
 #define ICON_SIZE 64
 #endif
 
+#define SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER 100
+
 #include <openssl/rand.h>
 
 #include <QtEndian>
@@ -378,6 +380,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandler(nullptr),
       m_InputHandlerLock(0),
       m_MouseEmulationRefCount(0),
+      m_FlushingWindowEvents(false),
       m_AsyncConnectionSuccess(false),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
@@ -1093,6 +1096,23 @@ bool Session::startConnectionAsync()
     return true;
 }
 
+void Session::flushWindowEvents()
+{
+    // Pump events to ensure all pending OS events are posted
+    SDL_PumpEvents();
+
+    // Insert a barrier to discard any additional window events.
+    // We don't use SDL_FlushEvent() here because it could cause
+    // important events to be lost.
+    m_FlushingWindowEvents = true;
+
+    // This event will cause us to set m_FlushingWindowEvents back to false.
+    SDL_Event flushEvent = {};
+    flushEvent.type = SDL_USEREVENT;
+    flushEvent.user.code = SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER;
+    SDL_PushEvent(&flushEvent);
+}
+
 void Session::exec(int displayOriginX, int displayOriginY)
 {
     m_DisplayOriginX = displayOriginX;
@@ -1313,6 +1333,9 @@ void Session::exec(int displayOriginX, int displayOriginY)
             case SDL_CODE_SHOW_CURSOR:
                 SDL_ShowCursor(SDL_ENABLE);
                 break;
+            case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
+                m_FlushingWindowEvents = false;
+                break;
             default:
                 SDL_assert(false);
             }
@@ -1372,6 +1395,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 SDL_SetWindowPosition(m_Window, x, y);
             }
 
+            if (m_FlushingWindowEvents) {
+                // Ignore window events for renderer reset if flushing
+                break;
+            }
+
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Recreating renderer for window event: %d (%d %d)",
                         event.window.event,
@@ -1387,10 +1415,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
             // Destroy the old decoder
             delete m_VideoDecoder;
 
-            // Flush any other pending window events that could
-            // send us back here immediately
-            SDL_PumpEvents();
-            SDL_FlushEvent(SDL_WINDOWEVENT);
+            // Insert a barrier to discard any additional window events
+            // that could cause the renderer to be and recreated again.
+            // We don't use SDL_FlushEvent() here because it could cause
+            // important events to be lost.
+            flushWindowEvents();
 
             // Update the window display mode based on our current monitor
             currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);

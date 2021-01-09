@@ -112,8 +112,17 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
     // renderer. This can lead to an infinite to renderer recreation, so discard all
     // SDL_WINDOWEVENT events after SDL_CreateRenderer().
-    SDL_PumpEvents();
-    SDL_FlushEvent(SDL_WINDOWEVENT);
+    Session* session = Session::get();
+    if (session != nullptr) {
+        // If we get here during a session, we need to synchronize with the event loop
+        // to ensure we don't drop any important events.
+        session->flushWindowEvents();
+    }
+    else {
+        // If we get here prior to the start of a session, just pump and flush ourselves.
+        SDL_PumpEvents();
+        SDL_FlushEvent(SDL_WINDOWEVENT);
+    }
 
     // Calculate the video region size, scaling to fill the output size while
     // preserving the aspect ratio of the video stream.

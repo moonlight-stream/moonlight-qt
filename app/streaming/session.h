@@ -39,6 +39,8 @@ public:
         return m_OverlayManager;
     }
 
+    void flushWindowEvents();
+
 signals:
     void stageStarting(QString stage);
 
@@ -150,6 +152,7 @@ private:
     SdlInputHandler* m_InputHandler;
     SDL_SpinLock m_InputHandlerLock;
     int m_MouseEmulationRefCount;
+    bool m_FlushingWindowEvents;
 
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;
