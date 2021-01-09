@@ -291,25 +291,38 @@ void SdlRenderer::renderFrame(AVFrame* frame)
                              frame->linesize[2]);
     }
     else {
-        char* pixels;
-        int pitch;
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+        // SDL_UpdateNVTexture is not supported on all renderer backends,
+        // (notably not DX9), so we must have a fallback in case it's not
+        // supported and for earlier versions of SDL.
+        if (SDL_UpdateNVTexture(m_Texture,
+                                nullptr,
+                                frame->data[0],
+                                frame->linesize[0],
+                                frame->data[1],
+                                frame->linesize[1]) != 0)
+#endif
+        {
+            char* pixels;
+            int pitch;
 
-        err = SDL_LockTexture(m_Texture, nullptr, (void**)&pixels, &pitch);
-        if (err < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_LockTexture() failed: %s",
-                         SDL_GetError());
-            goto Exit;
+            err = SDL_LockTexture(m_Texture, nullptr, (void**)&pixels, &pitch);
+            if (err < 0) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "SDL_LockTexture() failed: %s",
+                             SDL_GetError());
+                goto Exit;
+            }
+
+            memcpy(pixels,
+                   frame->data[0],
+                   frame->linesize[0] * frame->height);
+            memcpy(pixels + (frame->linesize[0] * frame->height),
+                   frame->data[1],
+                   frame->linesize[1] * frame->height / 2);
+
+            SDL_UnlockTexture(m_Texture);
         }
-
-        memcpy(pixels,
-               frame->data[0],
-               frame->linesize[0] * frame->height);
-        memcpy(pixels + (frame->linesize[0] * frame->height),
-               frame->data[1],
-               frame->linesize[1] * frame->height / 2);
-
-        SDL_UnlockTexture(m_Texture);
     }
 
     SDL_RenderClear(m_Renderer);
