@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2021 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -95,6 +95,10 @@
 #define HAVE_FLOOR 1
 #define HAVE_LOG 1
 #define HAVE_LOG10 1
+#define HAVE_LROUND 1
+#define HAVE_LROUNDF 1
+#define HAVE_ROUND 1
+#define HAVE_ROUNDF 1
 #define HAVE_SCALBN 1
 #define HAVE_SIN 1
 #define HAVE_SINF 1
