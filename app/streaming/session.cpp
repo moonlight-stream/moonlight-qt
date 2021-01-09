@@ -1345,21 +1345,18 @@ void Session::exec(int displayOriginX, int displayOriginY)
             // Early handling of some events
             switch (event.window.event) {
             case SDL_WINDOWEVENT_FOCUS_LOST:
+                if (m_Preferences->muteOnFocusLoss) {
+                    m_AudioMuted = true;
+                }
                 m_InputHandler->notifyFocusLost();
+                break;
+            case SDL_WINDOWEVENT_FOCUS_GAINED:
+                if (m_Preferences->muteOnFocusLoss) {
+                    m_AudioMuted = false;
+                }
                 break;
             case SDL_WINDOWEVENT_LEAVE:
                 m_InputHandler->notifyMouseLeave();
-                break;
-            case SDL_WINDOWEVENT_MINIMIZED:
-                if (m_Preferences->muteOnMinimize) {
-                    m_AudioMuted = true;
-                }
-                break;
-            case SDL_WINDOWEVENT_MAXIMIZED:
-            case SDL_WINDOWEVENT_RESTORED:
-                if (m_Preferences->muteOnMinimize) {
-                    m_AudioMuted = false;
-                }
                 break;
             }
 

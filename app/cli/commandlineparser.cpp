@@ -303,7 +303,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("game-optimization", "game optimizations");
     parser.addToggleOption("audio-on-host", "audio on host PC");
     parser.addToggleOption("frame-pacing", "frame pacing");
-    parser.addToggleOption("mute-on-minimize", "mute audio when minimized");
+    parser.addToggleOption("mute-on-focus-loss", "mute audio when Moonlight window loses focus");
     parser.addToggleOption("background-gamepad", "background gamepad input");
     parser.addToggleOption("reverse-scroll-direction", "inverted scroll direction");
     parser.addToggleOption("swap-gamepad-buttons", "swap A/B and X/Y gamepad buttons (Nintendo-style)");
@@ -409,8 +409,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --frame-pacing and --no-frame-pacing options
     preferences->framePacing = parser.getToggleOptionValue("frame-pacing", preferences->framePacing);
 
-    // Resolve --mute-on-minimize and --no-mute-on-minimize options
-    preferences->muteOnMinimize = parser.getToggleOptionValue("mute-on-minimize", preferences->muteOnMinimize);
+    // Resolve --mute-on-focus-loss and --no-mute-on-focus-loss options
+    preferences->muteOnFocusLoss = parser.getToggleOptionValue("mute-on-focus-loss", preferences->muteOnFocusLoss);
 
     // Resolve --background-gamepad and --no-background-gamepad options
     preferences->backgroundGamepad = parser.getToggleOptionValue("background-gamepad", preferences->backgroundGamepad);
