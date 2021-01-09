@@ -49,22 +49,12 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     // relative mode, the click event will trigger the mouse to be recaptured.
     SDL_SetHint(SDL_HINT_MOUSE_FOCUS_CLICKTHROUGH, "1");
 
-#if defined(Q_OS_DARWIN) && !SDL_VERSION_ATLEAST(2, 0, 10)
-    // SDL 2.0.9 on macOS has a broken HIDAPI mapping for the older Xbox One S
-    // firmware, so we have to disable HIDAPI for Xbox gamepads on macOS until
-    // SDL 2.0.10 where the bug is fixed.
-    // https://github.com/moonlight-stream/moonlight-qt/issues/133
-    // https://bugzilla.libsdl.org/show_bug.cgi?id=4395
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_XBOX, "0");
-#endif
-
-#if SDL_VERSION_ATLEAST(2, 0, 9)
-    // Enabling extended input reports allows rumble to function on Bluetooth PS4
+    // Enabling extended input reports allows rumble to function on Bluetooth PS4/PS5
     // controllers, but breaks DirectInput applications. We will enable it because
     // it's likely that working rumble is what the user is expecting. If they don't
     // want this behavior, they can override it with the environment variable.
-    SDL_SetHint(SDL_HINT_JOYSTICK_HIDAPI_PS4_RUMBLE, "1");
-#endif
+    SDL_SetHint("SDL_JOYSTICK_HIDAPI_PS4_RUMBLE", "1");
+    SDL_SetHint("SDL_JOYSTICK_HIDAPI_PS5_RUMBLE", "1");
 
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
