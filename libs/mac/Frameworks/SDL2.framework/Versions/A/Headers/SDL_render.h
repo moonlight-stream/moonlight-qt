@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2021 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -449,6 +449,28 @@ extern DECLSPEC int SDLCALL SDL_UpdateYUVTexture(SDL_Texture * texture,
                                                  const Uint8 *Yplane, int Ypitch,
                                                  const Uint8 *Uplane, int Upitch,
                                                  const Uint8 *Vplane, int Vpitch);
+
+/**
+ *  \brief Update a rectangle within a planar NV12 or NV21 texture with new pixel data.
+ *
+ *  \param texture   The texture to update
+ *  \param rect      A pointer to the rectangle of pixels to update, or NULL to
+ *                   update the entire texture.
+ *  \param Yplane    The raw pixel data for the Y plane.
+ *  \param Ypitch    The number of bytes between rows of pixel data for the Y plane.
+ *  \param UVplane   The raw pixel data for the UV plane.
+ *  \param UVpitch   The number of bytes between rows of pixel data for the UV plane.
+ *
+ *  \return 0 on success, or -1 if the texture is not valid.
+ *
+ *  \note You can use SDL_UpdateTexture() as long as your pixel data is
+ *        a contiguous block of NV12/21 planes in the proper order, but
+ *        this function is available if your pixel data is not contiguous.
+ */
+extern DECLSPEC int SDLCALL SDL_UpdateNVTexture(SDL_Texture * texture,
+                                                 const SDL_Rect * rect,
+                                                 const Uint8 *Yplane, int Ypitch,
+                                                 const Uint8 *UVplane, int UVpitch);
 
 /**
  *  \brief Lock a portion of the texture for write-only pixel access.

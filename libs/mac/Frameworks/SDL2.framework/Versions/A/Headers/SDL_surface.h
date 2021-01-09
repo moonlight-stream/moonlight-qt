@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2021 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -518,6 +518,17 @@ extern DECLSPEC int SDLCALL SDL_SoftStretch(SDL_Surface * src,
                                             const SDL_Rect * srcrect,
                                             SDL_Surface * dst,
                                             const SDL_Rect * dstrect);
+
+/**
+ *  \brief Perform a bilinear scaling between two surfaces of the
+ *         same pixel format, 32BPP.
+ *
+ */
+extern DECLSPEC int SDLCALL SDL_SoftStretchLinear(SDL_Surface * src,
+                                            const SDL_Rect * srcrect,
+                                            SDL_Surface * dst,
+                                            const SDL_Rect * dstrect);
+
 
 #define SDL_BlitScaled SDL_UpperBlitScaled
 

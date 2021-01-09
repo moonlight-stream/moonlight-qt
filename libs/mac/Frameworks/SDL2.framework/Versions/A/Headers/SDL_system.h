@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2020 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2021 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -59,11 +59,19 @@ extern DECLSPEC int SDLCALL SDL_Direct3D9GetAdapterIndex( int displayIndex );
 
 typedef struct IDirect3DDevice9 IDirect3DDevice9;
 /**
-   \brief Returns the D3D device associated with a renderer, or NULL if it's not a D3D renderer.
+   \brief Returns the D3D9 device associated with a renderer, or NULL if it's not a D3D9 renderer.
 
    Once you are done using the device, you should release it to avoid a resource leak.
  */
 extern DECLSPEC IDirect3DDevice9* SDLCALL SDL_RenderGetD3D9Device(SDL_Renderer * renderer);
+
+typedef struct ID3D11Device ID3D11Device;
+/**
+   \brief Returns the D3D11 device associated with a renderer, or NULL if it's not a D3D11 renderer.
+
+   Once you are done using the device, you should release it to avoid a resource leak.
+ */
+extern DECLSPEC ID3D11Device* SDLCALL SDL_RenderGetD3D11Device(SDL_Renderer * renderer);
 
 /**
    \brief Returns the DXGI Adapter and Output indices for the specified display index.
