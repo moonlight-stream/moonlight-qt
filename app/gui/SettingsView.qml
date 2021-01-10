@@ -551,7 +551,7 @@ Flickable {
                     model: ListModel {
                         id: windowModeListModel
                         ListElement {
-                            text: qsTr("Full-screen")
+                            text: qsTr("Fullscreen")
                             val: StreamingPreferences.WM_FULLSCREEN
                         }
                         ListElement {
@@ -570,7 +570,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Full-screen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
+                    ToolTip.text: qsTr("Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.")
                 }
 
                 CheckBox {
@@ -713,15 +713,50 @@ Flickable {
                 anchors.fill: parent
                 spacing: 5
 
-                CheckBox {
-                    id: startMaximizedCheck
+                Label {
                     width: parent.width
-                    text: qsTr("Maximize Moonlight window on startup")
+                    id: uiDisplayModeTitle
+                    text: qsTr("Display Mode")
                     font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_uidisplaymode = StreamingPreferences.uiDisplayMode
+                        currentIndex = 0
+                        for (var i = 0; i < uiDisplayModeListModel.count; i++) {
+                            var el_uidisplaymode = uiDisplayModeListModel.get(i).val;
+                            if (saved_uidisplaymode === el_uidisplaymode) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+                        activated(currentIndex)
+                    }
+
+                    id: uiDisplayModeComboBox
                     enabled: SystemProperties.hasWindowManager
-                    checked: !StreamingPreferences.startWindowed || !SystemProperties.hasWindowManager
-                    onCheckedChanged: {
-                        StreamingPreferences.startWindowed = !checked
+                    textRole: "text"
+                    model: ListModel {
+                        id: uiDisplayModeListModel
+                        ListElement {
+                            text: qsTr("Windowed")
+                            val: StreamingPreferences.UI_WINDOWED
+                        }
+                        ListElement {
+                            text: qsTr("Maximized")
+                            val: StreamingPreferences.UI_FULLSCREEN_WINDOWED
+                        }   
+                        ListElement {
+                            text: qsTr("Fullscreen")
+                            val: StreamingPreferences.UI_FULLSCREEN
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        StreamingPreferences.uiDisplayMode = uiDisplayModeListModel.get(currentIndex).val
                     }
                 }
 

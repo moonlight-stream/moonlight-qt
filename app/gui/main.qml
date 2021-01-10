@@ -17,8 +17,16 @@ ApplicationWindow {
     width: 1280
     height: 600
 
-    visibility: (SystemProperties.hasWindowManager && StreamingPreferences.startWindowed) ? "Windowed" : "Maximized"
-
+    visibility: {
+        if (SystemProperties.hasWindowManager) {
+            if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return "Windowed"
+            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN_WINDOWED) return "Maximized"
+            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
+        } else {
+            return "Maximized"
+        }
+    }
+  
     // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
     // it will never insert a line break and just extend on forever.
     ToolTip.toolTip.contentWidth: ToolTip.toolTip.implicitContentWidth < 400 ? ToolTip.toolTip.implicitContentWidth : 400
