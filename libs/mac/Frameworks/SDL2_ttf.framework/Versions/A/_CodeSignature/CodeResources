@@ -6,40 +6,31 @@
 	<dict>
 		<key>Resources/Info.plist</key>
 		<data>
-		IfLC5JMCapmKtefZrmJcxZV4NMA=
+		k7Av9aS5Xq5V94y0oXhg1dJQKis=
 		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
-		<key>Frameworks/FreeType.framework</key>
-		<dict>
-			<key>cdhash</key>
-			<data>
-			7QiXe3F/Kkx1E+Qs7nq27ZOleU4=
-			</data>
-			<key>requirement</key>
-			<string>identifier FreeType and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "45U78722YL"</string>
-		</dict>
 		<key>Headers/SDL_ttf.h</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			wuhCDit3v14GFg2+LWc+UTKSKsE=
+			cDVQTTFmmTw5dpLXeVXP6xykLOs=
 			</data>
 			<key>hash2</key>
 			<data>
-			T1XsXFvOExAvEeSokWuDjAxPzjfUhdYqMQ7oVafG/Ug=
+			nSF57Fh6OtJdIL7HmMPMYZm07ewBZn00X0uk0mXaKzM=
 			</data>
 		</dict>
 		<key>Resources/Info.plist</key>
 		<dict>
 			<key>hash</key>
 			<data>
-			IfLC5JMCapmKtefZrmJcxZV4NMA=
+			k7Av9aS5Xq5V94y0oXhg1dJQKis=
 			</data>
 			<key>hash2</key>
 			<data>
-			/IL1YRtl9s1fvhfRZrQYffaUK0FTRX5NjUZY5ahDouY=
+			Xk1zZ6iF+O+FU096EIOJJrrzKhHeYO/T41XXITvszBw=
 			</data>
 		</dict>
 	</dict>
