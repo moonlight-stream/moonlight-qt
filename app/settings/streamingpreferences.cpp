@@ -21,6 +21,7 @@
 #define SER_QUITAPPAFTER "quitAppAfter"
 #define SER_ABSMOUSEMODE "mouseacceleration"
 #define SER_ABSTOUCHMODE "abstouchmode"
+#define SER_STARTWINDOWED "startwindowed"
 #define SER_FRAMEPACING "framepacing"
 #define SER_CONNWARNINGS "connwarnings"
 #define SER_UIDISPLAYMODE "uidisplaymode"
@@ -90,7 +91,8 @@ void StreamingPreferences::reload()
                                                         static_cast<int>(settings.value(SER_FULLSCREEN, true).toBool() ?
                                                                              recommendedFullScreenMode : WindowMode::WM_WINDOWED)).toInt());
     uiDisplayMode = static_cast<UIDisplayMode>(settings.value(SER_UIDISPLAYMODE,
-                                                static_cast<int>(UIDisplayMode::UI_WINDOWED)).toInt());
+                                               static_cast<int>(settings.value(SER_STARTWINDOWED, true).toBool() ? UIDisplayMode::UI_WINDOWED
+                                                                                                                 : UIDisplayMode::UI_MAXIMIZED)).toInt());
 
 
     // Perform default settings updates as required based on last default version

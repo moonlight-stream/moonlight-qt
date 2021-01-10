@@ -716,7 +716,7 @@ Flickable {
                 Label {
                     width: parent.width
                     id: uiDisplayModeTitle
-                    text: qsTr("Display Mode")
+                    text: qsTr("GUI display mode")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
                 }
@@ -724,15 +724,22 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        var saved_uidisplaymode = StreamingPreferences.uiDisplayMode
-                        currentIndex = 0
-                        for (var i = 0; i < uiDisplayModeListModel.count; i++) {
-                            var el_uidisplaymode = uiDisplayModeListModel.get(i).val;
-                            if (saved_uidisplaymode === el_uidisplaymode) {
-                                currentIndex = i
-                                break
+                        if (SystemProperties.hasWindowManager) {
+                            var saved_uidisplaymode = StreamingPreferences.uiDisplayMode
+                            currentIndex = 0
+                            for (var i = 0; i < uiDisplayModeListModel.count; i++) {
+                                var el_uidisplaymode = uiDisplayModeListModel.get(i).val;
+                                if (saved_uidisplaymode === el_uidisplaymode) {
+                                    currentIndex = i
+                                    break
+                                }
                             }
                         }
+                        else {
+                            // Full-screen is always selected when there is no window manager
+                            currentIndex = 2
+                        }
+
                         activated(currentIndex)
                     }
 
@@ -747,7 +754,7 @@ Flickable {
                         }
                         ListElement {
                             text: qsTr("Maximized")
-                            val: StreamingPreferences.UI_FULLSCREEN_WINDOWED
+                            val: StreamingPreferences.UI_MAXIMIZED
                         }   
                         ListElement {
                             text: qsTr("Fullscreen")

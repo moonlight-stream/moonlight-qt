@@ -20,10 +20,10 @@ ApplicationWindow {
     visibility: {
         if (SystemProperties.hasWindowManager) {
             if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return "Windowed"
-            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN_WINDOWED) return "Maximized"
+            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) return "Maximized"
             else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
         } else {
-            return "Maximized"
+            return "FullScreen"
         }
     }
   

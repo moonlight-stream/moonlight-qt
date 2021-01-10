@@ -53,7 +53,7 @@ public:
     enum UIDisplayMode
     {
         UI_WINDOWED,
-        UI_FULLSCREEN_WINDOWED,
+        UI_MAXIMIZED,
         UI_FULLSCREEN
     };
     Q_ENUM(UIDisplayMode)
