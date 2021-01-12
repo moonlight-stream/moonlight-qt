@@ -5,10 +5,6 @@
 
 #include <QGuiApplication>
 
-// Until we can fully capture these on all platforms (without conflicting with
-// OS-provided shortcuts), we should avoid passing them through to the host.
-//#define ENABLE_META
-
 #define VK_0 0x30
 #define VK_A 0x41
 
@@ -215,11 +211,11 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     if (event->keysym.mod & KMOD_SHIFT) {
         modifiers |= MODIFIER_SHIFT;
     }
-#ifdef ENABLE_META
     if (event->keysym.mod & KMOD_GUI) {
-        modifiers |= MODIFIER_META;
+        if (isSystemKeyCaptureActive()) {
+            modifiers |= MODIFIER_META;
+        }
     }
-#endif
 
     // Set keycode. We explicitly use scancode here because GFE will try to correct
     // for AZERTY layouts on the host but it depends on receiving VK_ values matching
@@ -360,14 +356,18 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             case SDL_SCANCODE_RALT:
                 keyCode = 0xA5;
                 break;
-            #ifdef ENABLE_META
             case SDL_SCANCODE_LGUI:
+                if (!isSystemKeyCaptureActive()) {
+                    return;
+                }
                 keyCode = 0x5B;
                 break;
             case SDL_SCANCODE_RGUI:
+                if (!isSystemKeyCaptureActive()) {
+                    return;
+                }
                 keyCode = 0x5C;
                 break;
-            #endif
             case SDL_SCANCODE_AC_BACK:
                 keyCode = 0xA6;
                 break;
@@ -441,7 +441,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         m_KeysDown.remove(keyCode);
     }
 
-    LiSendKeyboardEvent(keyCode,
+    LiSendKeyboardEvent(0x8000 | keyCode,
                         event->state == SDL_PRESSED ?
                             KEY_ACTION_DOWN : KEY_ACTION_UP,
                         modifiers);
