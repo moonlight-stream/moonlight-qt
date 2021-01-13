@@ -269,7 +269,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         event.quit.timestamp = SDL_GetTicks();
         SDL_PushEvent(&event);
 
-        // Clear buttons down on this gameapd
+        // Clear buttons down on this gamepad
         LiSendMultiControllerEvent(state->index, m_GamepadMask,
                                    0, 0, 0, 0, 0, 0, 0);
         return;
@@ -284,7 +284,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
                                                             !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
 
-        // Clear buttons down on this gameapd
+        // Clear buttons down on this gamepad
         LiSendMultiControllerEvent(state->index, m_GamepadMask,
                                    0, 0, 0, 0, 0, 0, 0);
         return;
