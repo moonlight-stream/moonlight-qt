@@ -275,6 +275,21 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         return;
     }
 
+    // Handle Select+L1+R1+X as a gamepad overlay combo
+    if (state->buttons == (BACK_FLAG | LB_FLAG | RB_FLAG | X_FLAG)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected stats toggle gamepad combo");
+
+        // Toggle the stats overlay
+        Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
+                                                            !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
+
+        // Clear buttons down on this gameapd
+        LiSendMultiControllerEvent(state->index, m_GamepadMask,
+                                   0, 0, 0, 0, 0, 0, 0);
+        return;
+    }
+
     // Only send the gamepad state to the host if it's not in mouse emulation mode
     if (state->mouseEmulationTimer == 0) {
         sendGamepadState(state);
