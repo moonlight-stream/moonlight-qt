@@ -3,6 +3,7 @@
 #include "streaming/session.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
+#include "utils.h"
 
 #include <QtGlobal>
 #include <QDir>
@@ -24,7 +25,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_MouseWasInVideoRegion(false),
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_FakeCaptureActive(false),
-      m_CaptureSystemKeysEnabled(false),
+      m_CaptureSystemKeysEnabled(prefs.captureSysKeys || !WMUtils::isRunningWindowManager()),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),

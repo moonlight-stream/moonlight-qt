@@ -35,6 +35,7 @@
 #define SER_BACKGROUNDGAMEPAD "backgroundgamepad"
 #define SER_REVERSESCROLL "reversescroll"
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
+#define SER_CAPTURESYSKEYS "capturesyskeys"
 
 #define CURRENT_DEFAULT_VER 1
 
@@ -80,6 +81,7 @@ void StreamingPreferences::reload()
     backgroundGamepad = settings.value(SER_BACKGROUNDGAMEPAD, false).toBool();
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
+    captureSysKeys = settings.value(SER_CAPTURESYSKEYS, false).toBool();
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
                                                   static_cast<int>(AudioConfig::AC_STEREO)).toInt());
     videoCodecConfig = static_cast<VideoCodecConfig>(settings.value(SER_VIDEOCFG,
@@ -140,6 +142,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_BACKGROUNDGAMEPAD, backgroundGamepad);
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
+    settings.setValue(SER_CAPTURESYSKEYS, captureSysKeys);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)

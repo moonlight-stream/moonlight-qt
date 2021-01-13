@@ -87,6 +87,7 @@ public:
     Q_PROPERTY(bool backgroundGamepad MEMBER backgroundGamepad NOTIFY backgroundGamepadChanged)
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
+    Q_PROPERTY(bool captureSysKeys MEMBER captureSysKeys NOTIFY captureSysKeysChanged)
 
     // Directly accessible members for preferences
     int width;
@@ -112,6 +113,7 @@ public:
     bool backgroundGamepad;
     bool reverseScrollDirection;
     bool swapFaceButtons;
+    bool captureSysKeys;
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
@@ -147,5 +149,6 @@ signals:
     void backgroundGamepadChanged();
     void reverseScrollDirectionChanged();
     void swapFaceButtonsChanged();
+    void captureSysKeysChanged();
 };
 

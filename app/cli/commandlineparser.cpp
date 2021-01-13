@@ -307,6 +307,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("background-gamepad", "background gamepad input");
     parser.addToggleOption("reverse-scroll-direction", "inverted scroll direction");
     parser.addToggleOption("swap-gamepad-buttons", "swap A/B and X/Y gamepad buttons (Nintendo-style)");
+    parser.addToggleOption("capture-system-keys", "capture system key combos in fullscreen mode");
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
     parser.addChoiceOption("video-decoder", "video decoder", m_VideoDecoderMap.keys());
 
@@ -420,6 +421,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --swap-gamepad-buttons and --no-swap-gamepad-buttons options
     preferences->swapFaceButtons = parser.getToggleOptionValue("swap-gamepad-buttons", preferences->swapFaceButtons);
+
+    // Resolve --capture-system-keys and --no-capture-system-keys options
+    preferences->captureSysKeys = parser.getToggleOptionValue("capture-system-keys", preferences->captureSysKeys);
 
     // Resolve --video-codec option
     if (parser.isSet("video-codec")) {
