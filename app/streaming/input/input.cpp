@@ -164,6 +164,19 @@ SdlInputHandler::~SdlInputHandler()
     if (g_KeyboardHook != nullptr) {
         UnhookWindowsHookEx(g_KeyboardHook);
         g_KeyboardHook = nullptr;
+
+        // If we're terminating because of the user pressing the quit combo,
+        // we won't have a chance to inform SDL as the modifier keys raise.
+        // This will leave stale modifier flags in the SDL_Keyboard global
+        // inside SDL which will show up on our next key event if the user
+        // streams again. Avoid this by explicitly zeroing mod state when
+        // ending the stream.
+        //
+        // This is only needed for the case where we're hooking the keyboard
+        // because we're generating synthetic SDL_KEYDOWN/SDL_KEYUP events
+        // which don't properly maintain SDL's internal keyboard state,
+        // so we're forced to invoke SDL_SetModState() ourselves to set mods.
+        SDL_SetModState(KMOD_NONE);
     }
 #endif
 
@@ -227,6 +240,7 @@ LRESULT CALLBACK SdlInputHandler::keyboardHookProc(int nCode, WPARAM wParam, LPA
         return CallNextHookEx(g_KeyboardHook, nCode, wParam, lParam);
     }
 
+    bool keyCaptureActive;
     SDL_Event event = {};
     KBDLLHOOKSTRUCT* hookData = (KBDLLHOOKSTRUCT*)lParam;
     switch (hookData->vkCode) {
@@ -261,9 +275,11 @@ LRESULT CALLBACK SdlInputHandler::keyboardHookProc(int nCode, WPARAM wParam, LPA
 
     // Make sure we're in a state where we actually want to steal this event (and it is safe to do so)
     Session* session = Session::get();
-    if (session == nullptr || session->m_InputHandler == nullptr || !session->m_InputHandler->isSystemKeyCaptureActive()) {
+    if (session == nullptr || session->m_InputHandler == nullptr) {
         goto NextHook;
     }
+
+    keyCaptureActive = session->m_InputHandler->isSystemKeyCaptureActive();
 
     // If this is a key we're going to intercept, create the synthetic SDL event.
     // This is necessary because we are also hiding this key event from ourselves too.
@@ -276,8 +292,12 @@ LRESULT CALLBACK SdlInputHandler::keyboardHookProc(int nCode, WPARAM wParam, LPA
         event.key.state = SDL_RELEASED;
     }
 
-    event.key.timestamp = SDL_GetTicks();
-    event.key.windowID = SDL_GetWindowID(session->m_Window);
+    // Drop the event if it's a key down and capture is not active.
+    // For key up, we'll need to do a little more work to determine if we need to send this
+    // event to SDL in order to keep its internal keyboard modifier state consistent.
+    if (event.type == SDL_KEYDOWN && !keyCaptureActive) {
+        goto NextHook;
+    }
 
     event.key.keysym.mod = SDL_GetModState();
     switch (hookData->vkCode) {
@@ -331,6 +351,18 @@ LRESULT CALLBACK SdlInputHandler::keyboardHookProc(int nCode, WPARAM wParam, LPA
         break;
     }
 
+    // If the modifier state is unchanged and we're not capturing system keys,
+    // drop the event. If the modifier state is changed, we need to send the
+    // event to update SDL's state even if system key capture is now inactive
+    // (due to focus loss, mouse capture toggled off, etc.) otherwise SDL won't
+    // know that the modifier key has been lifted.
+    if (event.key.keysym.mod == SDL_GetModState() && !keyCaptureActive) {
+        goto NextHook;
+    }
+
+    event.key.timestamp = SDL_GetTicks();
+    event.key.windowID = SDL_GetWindowID(session->m_Window);
+
     // NOTE: event.key.repeat is not populated in this path!
     SDL_PushEvent(&event);
 
@@ -339,7 +371,13 @@ LRESULT CALLBACK SdlInputHandler::keyboardHookProc(int nCode, WPARAM wParam, LPA
     // WM_KEYUP/WM_KEYDOWN events.
     SDL_SetModState((SDL_Keymod)event.key.keysym.mod);
 
-    return 1;
+    // Eat the event only if key capture is active.
+    // If capture is not active and we're just resyncing SDL's modifier state,
+    // we need to ensure the key event is still delivered normally to the
+    // window in focus.
+    if (keyCaptureActive) {
+        return 1;
+    }
 
 NextHook:
     return CallNextHookEx(g_KeyboardHook, nCode, wParam, lParam);
