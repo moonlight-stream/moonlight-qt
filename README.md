@@ -2,7 +2,7 @@
 
 [Moonlight PC](https://moonlight-stream.org) is an open source implementation of NVIDIA's GameStream, as used by the NVIDIA Shield, but built to run on Windows, Mac, and Linux. This client is the successor to [Moonlight Chrome](https://github.com/moonlight-stream/moonlight-chrome) for streaming on PC.
 
-Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and  [iOS](https://github.com/moonlight-stream/moonlight-ios).
+Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/moonlight-stream/moonlight-ios).
 
 You can follow development on our [Discord server](https://moonlight-stream.org/discord).
 
@@ -15,6 +15,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
  - Supports streaming at 720p, 1080p, 1440p, 4K, and the client PC's native screen resolution
  - 7.1 surround sound audio support
  - Support for both pointer capture (for games) and direct mouse control (for remote desktop)
+ - Support for passing system-wide keyboard shortcuts like Alt+Tab to the host in fullscreen mode
  - Direct touchscreen mouse control
  - HEVC support for better image quality at reduced bandwidth
  - Gamepad support with force feedback for up to 4 players
