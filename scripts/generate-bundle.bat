@@ -100,6 +100,14 @@ rem Rename the installer to match the publishing convention
 ren %INSTALLER_FOLDER%\MoonlightSetup.exe MoonlightSetup-%VERSION%.exe
 
 echo Build successful for Moonlight v%VERSION% installer!
+echo.
+echo x86 included: YES
+echo x64 included: YES
+if %INCLUDE_ARM64% NEQ 0 (
+    echo ARM64 included: YES
+) else (
+    echo ARM64 included: NO
+)
 exit /b 0
 
 :Error
