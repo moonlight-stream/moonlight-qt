@@ -41,6 +41,12 @@ Flickable {
         StreamingPreferences.save()
     }
 
+    Component.onDestruction: {
+        // Also save preferences on destruction, since we won't get a
+        // deactivating callback if the user just closes Moonlight
+        StreamingPreferences.save()
+    }
+
     Column {
         padding: 10
         id: settingsColumn1
