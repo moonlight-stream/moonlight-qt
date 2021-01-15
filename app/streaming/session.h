@@ -152,7 +152,7 @@ private:
     SdlInputHandler* m_InputHandler;
     SDL_SpinLock m_InputHandlerLock;
     int m_MouseEmulationRefCount;
-    bool m_FlushingWindowEvents;
+    int m_FlushingWindowEventsRef;
 
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;

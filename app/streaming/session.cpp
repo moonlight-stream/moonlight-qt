@@ -380,7 +380,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_InputHandler(nullptr),
       m_InputHandlerLock(0),
       m_MouseEmulationRefCount(0),
-      m_FlushingWindowEvents(false),
+      m_FlushingWindowEventsRef(0),
       m_AsyncConnectionSuccess(false),
       m_PortTestResults(0),
       m_OpusDecoder(nullptr),
@@ -1113,7 +1113,7 @@ void Session::flushWindowEvents()
     // Insert a barrier to discard any additional window events.
     // We don't use SDL_FlushEvent() here because it could cause
     // important events to be lost.
-    m_FlushingWindowEvents = true;
+    m_FlushingWindowEventsRef++;
 
     // This event will cause us to set m_FlushingWindowEvents back to false.
     SDL_Event flushEvent = {};
@@ -1343,7 +1343,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 SDL_ShowCursor(SDL_ENABLE);
                 break;
             case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
-                m_FlushingWindowEvents = false;
+                m_FlushingWindowEventsRef--;
                 break;
             default:
                 SDL_assert(false);
@@ -1401,8 +1401,13 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 SDL_SetWindowPosition(m_Window, x, y);
             }
 
-            if (m_FlushingWindowEvents) {
+            if (m_FlushingWindowEventsRef > 0) {
                 // Ignore window events for renderer reset if flushing
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Dropping window event during flush: %d (%d %d)",
+                            event.window.event,
+                            event.window.data1,
+                            event.window.data2);
                 break;
             }
 
