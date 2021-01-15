@@ -1476,7 +1476,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 // is set up, this ensures the window re-creation is already done.
                 if (needsPostDecoderCreationCapture) {
                     m_InputHandler->setCaptureActive(true);
-                    needsFirstEnterCapture = false;
+                    needsPostDecoderCreationCapture = false;
                 }
             }
 
