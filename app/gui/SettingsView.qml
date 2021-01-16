@@ -519,6 +519,7 @@ Flickable {
                     text: qsTr("Display mode")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+                    visible: SystemProperties.hasWindowManager
                 }
 
                 AutoResizingComboBox {
@@ -551,7 +552,8 @@ Flickable {
                     }
 
                     id: windowModeComboBox
-                    enabled: SystemProperties.hasWindowManager && !SystemProperties.rendererAlwaysFullScreen
+                    visible: SystemProperties.hasWindowManager
+                    enabled: !SystemProperties.rendererAlwaysFullScreen
                     hoverEnabled: true
                     textRole: "text"
                     model: ListModel {
@@ -695,6 +697,7 @@ Flickable {
                     width: parent.width
                     text: qsTr("Mute audio stream when Moonlight is not the active window")
                     font.pointSize: 12
+                    visible: SystemProperties.hasWindowManager
                     checked: StreamingPreferences.muteOnFocusLoss
                     onCheckedChanged: {
                         StreamingPreferences.muteOnFocusLoss = checked
@@ -725,6 +728,7 @@ Flickable {
                     text: qsTr("GUI display mode")
                     font.pointSize: 12
                     wrapMode: Text.Wrap
+                    visible: SystemProperties.hasWindowManager
                 }
 
                 AutoResizingComboBox {
@@ -750,7 +754,7 @@ Flickable {
                     }
 
                     id: uiDisplayModeComboBox
-                    enabled: SystemProperties.hasWindowManager
+                    visible: SystemProperties.hasWindowManager
                     textRole: "text"
                     model: ListModel {
                         id: uiDisplayModeListModel
@@ -829,8 +833,8 @@ Flickable {
                     width: parent.width
                     text: qsTr("Optimize mouse for remote desktop instead of games")
                     font.pointSize:  12
-                    enabled: SystemProperties.hasWindowManager
-                    checked: StreamingPreferences.absoluteMouseMode && SystemProperties.hasWindowManager
+                    visible: SystemProperties.hasWindowManager
+                    checked: StreamingPreferences.absoluteMouseMode
                     onCheckedChanged: {
                         StreamingPreferences.absoluteMouseMode = checked
                     }
@@ -976,6 +980,7 @@ Flickable {
                     width: parent.width
                     text: qsTr("Process gamepad input when Moonlight is in the background")
                     font.pointSize: 12
+                    visible: SystemProperties.hasWindowManager
                     checked: StreamingPreferences.backgroundGamepad
                     onCheckedChanged: {
                         StreamingPreferences.backgroundGamepad = checked
