@@ -36,6 +36,33 @@
 	</screenshots>
 
 	<releases>
+		<release version="3.0.0" date="2021-01-17">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added the ability to define a custom streaming resolution using the UI</li>
+					<li>Added the option to capture system key combinations (Alt+Tab, Ctrl+Shift+Esc, Win+Tab, etc) in fullscreen mode</li>
+					<li>Updated gamepad mappings are automatically downloaded each time Moonlight launches</li>
+					<li>The performance overlay is now supported for Linux clients using VAAPI and VDPAU hardware acceleration</li>
+					<li>Added the option to enable "Direct Launch" which immediately launches the specified game when clicking on a PC</li>
+					<li>Added the option to mute audio when the Moonlight window loses input focus</li>
+					<li>Added the option to toggle background gamepad input</li>
+					<li>Added the option to invert scroll direction</li>
+					<li>Added the option to swap gamepad button layout to Nintendo-style</li>
+					<li>Added the option to start the Moonlight UI in fullscreen mode</li>
+					<li>The failing TCP or UDP ports are now displayed when the connection fails</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed PS4 controllers not reading inputs during haptics in some games</li>
+					<li>Fixed some slow decoders causing the receive time value to increase rather than the decode time</li>
+					<li>Native resolution options now refresh each time the settings page is opened, rather than once per launch of Moonlight</li>
+					<li>Fixed no video or audio while streaming over Internet connections that drop packets with QoS tagging enabled</li>
+					<li>Improved connection testing accuracy for connections with low MTUs</li>
+					<li>Fixed inability to open an app's context menu with a gamepad</li>
+				</ul>
+			</description>
+		</release>
 		<release version="2.2.0" date="2020-09-10">
 			<description>
 				<p>New features:</p>
