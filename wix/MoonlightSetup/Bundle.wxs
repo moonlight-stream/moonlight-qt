@@ -54,7 +54,8 @@
     <util:RegistrySearch Variable="NT_BUILD_STRING"
                          Root="HKLM"
                          Key="Software\Microsoft\Windows NT\CurrentVersion"
-                         Value="BuildLabEx" />
+                         Value="BuildLabEx"
+                         Win64="yes" />
 
     <util:ProductSearch Id="VCREDIST_142_x86"
                         UpgradeCode="$(var.VCREDIST_X86_UPGRADE_CODE)"
