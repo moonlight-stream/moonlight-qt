@@ -27,7 +27,7 @@
 		<dict>
 			<key>cdhash</key>
 			<data>
-			c8f8dm7+lXdq/Z6WbkTx/1+k5c8=
+			PhgHozinkAzD8nahJaBZ1/oJU2g=
 			</data>
 			<key>requirement</key>
 			<string>identifier "org.libsdl.hidapi" and anchor apple generic and certificate 1[field.1.2.840.113635.100.6.2.6] /* exists */ and certificate leaf[field.1.2.840.113635.100.6.1.13] /* exists */ and certificate leaf[subject.OU] = "45U78722YL"</string>
@@ -47,11 +47,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			IiADcTyPo9pVBYrpKHU6mFN50e8=
+			1DPiXYesyNHEpDx6O6DAQtDDVpM=
 			</data>
 			<key>hash2</key>
 			<data>
-			cJ9XWwjjAF41qBQKxApkxGOIALw175pk2GwNunz1wpg=
+			RivNhNmxSfSv5F3G6U6zXGpL03d7McfcUPOziuiwl9o=
 			</data>
 		</dict>
 		<key>Headers/SDL_atomic.h</key>
@@ -630,11 +630,11 @@
 		<dict>
 			<key>hash</key>
 			<data>
-			tx2N4ZBojH9icPrioVFxJSC3PqU=
+			SRx/vJZF0gB/BMNwqk99jiFOzv0=
 			</data>
 			<key>hash2</key>
 			<data>
-			+euT3aTdjRQw3Mn13gwrNYGNyl9MJjWvVSxHqJuQGm0=
+			/1aFRHr+7TVJ57vEMAOl6EtytMgiUb0ZN50zJD11gZo=
 			</data>
 		</dict>
 		<key>Headers/SDL_thread.h</key>
