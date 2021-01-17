@@ -274,9 +274,10 @@ struct SDL_SysWMinfo
 #if defined(SDL_VIDEO_DRIVER_WAYLAND)
         struct
         {
-            struct wl_display *display;            /**< Wayland display */
-            struct wl_surface *surface;            /**< Wayland surface */
+            struct wl_display *display;             /**< Wayland display */
+            struct wl_surface *surface;             /**< Wayland surface */
             struct wl_shell_surface *shell_surface; /**< Wayland shell_surface (window manager handle) */
+            struct wl_egl_window *egl_window;       /**< Wayland EGL window (native window) */
         } wl;
 #endif
 #if defined(SDL_VIDEO_DRIVER_MIR)  /* no longer available, left for API/ABI compatibility. Remove in 2.1! */
