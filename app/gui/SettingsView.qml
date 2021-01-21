@@ -851,12 +851,10 @@ Flickable {
                     id: captureSysKeysCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: qsTr("Capture system keyboard shortcuts ") +
-                          (!SystemProperties.isRunningWayland ? qsTr("while streaming in fullscreen") :
-                                                                qsTr("(unsupported on Wayland)"))
+                    text: qsTr("Capture system keyboard shortcuts while streaming in fullscreen")
                     font.pointSize:  12
-                    enabled: SystemProperties.hasWindowManager && !SystemProperties.isRunningWayland
-                    checked: (StreamingPreferences.captureSysKeys || !SystemProperties.hasWindowManager) && !SystemProperties.isRunningWayland
+                    enabled: SystemProperties.hasWindowManager
+                    checked: StreamingPreferences.captureSysKeys && SystemProperties.hasWindowManager
                     onCheckedChanged: {
                         StreamingPreferences.captureSysKeys = checked
                     }
