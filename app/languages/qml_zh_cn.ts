@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="280"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>选择主机后立即启动此应用程序，绕过应用程序选择网格。</translation>
+        <translation>选择目标计算机后立即启动此应用程序，绕过应用程序选择网格。</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="289"/>
@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="293"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>从应用程序网格中隐藏此游戏。要访问隐藏的游戏，请右键单击主机并选择 %1。</translation>
+        <translation>从应用程序网格中隐藏此游戏。要访问隐藏的游戏，请右键单击目标计算机并选择 %1。</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="293"/>
@@ -273,12 +273,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>No video received from host.</source>
-        <translation>没有从主机接收到视频画面。</translation>
+        <translation>没有从目标计算机接收到视频画面。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="108"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>检查你的防火墙和端口转发规则: %1</translation>
+        <translation>检查防火墙和端口转发规则: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="113"/>
@@ -303,7 +303,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="125"/>
         <source>Connection terminated</source>
-        <translation>连接已终止</translation>
+        <translation>会话已终止</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="596"/>
@@ -378,7 +378,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="710"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>附加的游戏手柄没有映射，因此无法使用。请访问 Moonlight 帮助解决此问题。</translation>
+        <translation>附加的手柄没有映射，因此无法使用。请访问 Moonlight 帮助解决此问题。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="718"/>
@@ -456,7 +456,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="331"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation>自定义分辨率不受 GeForce Experience 的正式支持，因此不会设置主机的显示分辨率。你需要在游戏中手动设置。</translation>
+        <translation>自定义分辨率不受 GeForce Experience 的正式支持，因此不会设置目标计算机的分辨率。你需要在游戏中手动设置。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="332"/>
@@ -625,7 +625,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="805"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>更新你的 Discord 状态，以显示你正在运行的游戏名称。</translation>
+        <translation>更新你的 Discord 状态，以显示正在运行的游戏名称。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="823"/>
@@ -640,7 +640,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="845"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation>这可以实现无缝鼠标控制，而无需捕获客户端的鼠标光标。这是理想的远程桌面使用，但不会在大多数游戏中工作。</translation>
+        <translation>这可以实现无缝鼠标控制，而无需捕获客户端的鼠标光标。这是理想的远程桌面使用方案，但不会在大多数游戏中工作。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="846"/>
@@ -650,7 +650,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="847"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>注意：由于 GeForce Experience 的 Bug，如果你的主机有多个监视器，则此选项可能无法正常工作。</translation>
+        <translation>注意：由于 GeForce Experience 的 Bug，如果你的目标计算机有多个显示器，则此选项可能无法正常工作。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="854"/>
@@ -700,7 +700,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="944"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>这会将手柄切换为 Nintendo 风格的按钮布局</translation>
+        <translation>这会将手柄切换为任天堂风格的按钮布局</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="950"/>
@@ -730,7 +730,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="990"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation>即使不是焦点窗口，也允许 Moonlight 捕获游戏手柄的输入</translation>
+        <translation>即使不是焦点窗口，也允许 Moonlight 捕获手柄的输入</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
@@ -750,7 +750,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1030"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>当你结束流式传输时，这将关闭你正在运行的应用程序或游戏。这将导致你失去所有未保存的游戏进度！</translation>
+        <translation>当你结束流式传输时，这将关闭正在运行的应用程序或游戏。这会导致你失去所有未保存的游戏进度！</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1039"/>
@@ -830,7 +830,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>检查端口的防火墙和端口转发规则: %1</translation>
+        <translation>检查防火墙和端口转发规则: %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
@@ -936,12 +936,12 @@
     <message>
         <location filename="../gui/main.qml" line="425"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight 检测到没有映射的游戏手柄:</translation>
+        <translation>Moonlight 检测到没有映射的手柄:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="427"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>单击帮助按钮以获取有关如何映射游戏手柄的信息。</translation>
+        <translation>单击帮助按钮以获取有关如何映射手柄的信息。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="435"/>
@@ -951,7 +951,7 @@
     <message>
         <location filename="../gui/main.qml" line="465"/>
         <source>Enter the IP address of your GameStream PC:</source>
-        <translation>输入目标计算机的 IP 地址：</translation>
+        <translation>输入目标计算机的 IP 地址:</translation>
     </message>
 </context>
 </TS>
