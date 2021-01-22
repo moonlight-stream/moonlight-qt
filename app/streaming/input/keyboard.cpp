@@ -86,6 +86,14 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
+        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+D) unless on EGLFS which has no window manager
+        else if (event->keysym.sym == SDLK_d && QGuiApplication::platformName() != "eglfs") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected minimize combo (SDLK)");
+
+            SDL_MinimizeWindow(m_Window);
+            return;
+        }
         // Check for overlay combo (Ctrl+Alt+Shift+S)
         else if (event->keysym.sym == SDLK_s) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -163,6 +171,14 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 
             // Recapture input
             setCaptureActive(true);
+            return;
+        }
+        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+D) unless on EGLFS which has no window manager
+        else if (event->keysym.scancode == SDL_SCANCODE_D && QGuiApplication::platformName() != "eglfs") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected minimize combo (scancode)");
+
+            SDL_MinimizeWindow(m_Window);
             return;
         }
         else if (event->keysym.scancode == SDL_SCANCODE_S) {
