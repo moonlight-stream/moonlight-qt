@@ -86,8 +86,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             raiseAllKeys();
             return;
         }
-        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+DownArrow) unless on EGLFS which has no window manager
-        else if (event->keysym.sym == SDLK_DOWN && QGuiApplication::platformName() != "eglfs") {
+        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+D) unless on EGLFS which has no window manager
+        else if (event->keysym.sym == SDLK_d && QGuiApplication::platformName() != "eglfs") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected minimize combo (SDLK)");
 
@@ -173,8 +173,8 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             setCaptureActive(true);
             return;
         }
-        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+DownArrow) unless on EGLFS which has no window manager
-        else if (event->keysym.scancode == SDL_SCANCODE_DOWN && QGuiApplication::platformName() != "eglfs") {
+        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+D) unless on EGLFS which has no window manager
+        else if (event->keysym.scancode == SDL_SCANCODE_D && QGuiApplication::platformName() != "eglfs") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Detected minimize combo (scancode)");
 
