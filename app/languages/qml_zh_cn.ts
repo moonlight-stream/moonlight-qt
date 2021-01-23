@@ -720,7 +720,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="968"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>按住“Start”按钮，通过手柄启用鼠标控制</translation>
+        <translation>按住手柄的“Start”按钮启用鼠标控制</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="979"/>
