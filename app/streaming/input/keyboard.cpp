@@ -3,8 +3,6 @@
 #include <Limelight.h>
 #include <SDL.h>
 
-#include <QGuiApplication>
-
 #define VK_0 0x30
 #define VK_A 0x41
 
@@ -14,6 +12,85 @@
 #define VK_F13 0x7C
 #define VK_NUMPAD0 0x60
 #endif
+
+void SdlInputHandler::performPendingSpecialKeyCombo()
+{
+    // The caller must ensure all keys are up
+    Q_ASSERT(m_KeysDown.isEmpty());
+
+    switch (m_PendingKeyCombo) {
+    case KeyComboQuit:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected quit key combo");
+
+        // Push a quit event to the main loop
+        SDL_Event event;
+        event.type = SDL_QUIT;
+        event.quit.timestamp = SDL_GetTicks();
+        SDL_PushEvent(&event);
+        break;
+
+    case KeyComboUngrabInput:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected mouse capture toggle combo");
+
+        // Stop handling future input
+        setCaptureActive(!isCaptureActive());
+        break;
+
+    case KeyComboToggleFullScreen:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected full-screen toggle combo");
+        Session::s_ActiveSession->toggleFullscreen();
+        break;
+
+    case KeyComboToggleStatsOverlay:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected stats toggle combo");
+
+        // Toggle the stats overlay
+        Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
+                                                            !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
+        break;
+
+    case KeyComboToggleMouseMode:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected mouse mode toggle combo");
+
+        // Uncapture input
+        setCaptureActive(false);
+
+        // Toggle mouse mode
+        m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
+
+        // Recapture input
+        setCaptureActive(true);
+        break;
+
+    case KeyComboToggleCursorHide:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected show mouse combo");
+
+        if (!SDL_GetRelativeMouseMode()) {
+            SDL_ShowCursor(!SDL_ShowCursor(SDL_QUERY));
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Cursor can only be shown in remote desktop mouse mode");
+        }
+        break;
+
+    case KeyComboToggleMinimize:
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected minimize combo");
+
+        SDL_MinimizeWindow(m_Window);
+        break;
+    }
+
+    // Reset pending key combo
+    m_PendingKeyCombo = KeyComboMax;
+}
 
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
@@ -36,178 +113,28 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         // where the SDLK for one shortcut collides with
         // the scancode of another.
 
-        // Check for quit combo (Ctrl+Alt+Shift+Q)
-        if (event->keysym.sym == SDLK_q) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected quit key combo (SDLK)");
-
-            // Push a quit event to the main loop
-            SDL_Event event;
-            event.type = SDL_QUIT;
-            event.quit.timestamp = SDL_GetTicks();
-            SDL_PushEvent(&event);
-            return;
-        }
-        // Check for the unbind combo (Ctrl+Alt+Shift+Z) unless on EGLFS which has no window manager
-        else if (event->keysym.sym == SDLK_z && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected mouse capture toggle combo (SDLK)");
-
-            // Stop handling future input
-            setCaptureActive(!isCaptureActive());
-
-            // Force raise all keys to ensure they aren't stuck,
-            // since we won't get their key up events.
-            raiseAllKeys();
-            return;
-        }
-        // Check for the mouse mode combo (Ctrl+Alt+Shift+M) unless on EGLFS which has no window manager
-        else if (event->keysym.sym == SDLK_m && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected mouse mode toggle combo (SDLK)");
-
-            // Uncapture input
-            setCaptureActive(false);
-
-            // Toggle mouse mode
-            m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
-
-            // Recapture input
-            setCaptureActive(true);
-            return;
-        }
-        else if (event->keysym.sym == SDLK_x && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected full-screen toggle combo (SDLK)");
-            Session::s_ActiveSession->toggleFullscreen();
-
-            // Force raise all keys just be safe across this full-screen/windowed
-            // transition just in case key events get lost.
-            raiseAllKeys();
-            return;
-        }
-        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+D) unless on EGLFS which has no window manager
-        else if (event->keysym.sym == SDLK_d && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected minimize combo (SDLK)");
-
-            SDL_MinimizeWindow(m_Window);
-            return;
-        }
-        // Check for overlay combo (Ctrl+Alt+Shift+S)
-        else if (event->keysym.sym == SDLK_s) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected stats toggle combo (SDLK)");
-
-            // Toggle the stats overlay
-            Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
-                                                                !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
-
-            // Force raise all keys just be safe across this full-screen/windowed
-            // transition just in case key events get lost.
-            raiseAllKeys();
-            return;
-        }
-        // Check for mouse show combo (Ctrl+Alt+Shift+C)
-        else if (event->keysym.sym == SDLK_c) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected show mouse combo (SDLK)");
-
-            if (!SDL_GetRelativeMouseMode()) {
-                SDL_ShowCursor(!SDL_ShowCursor(SDL_QUERY));
+        if (m_PendingKeyCombo == KeyComboMax) {
+            for (int i = 0; i < KeyComboMax; i++) {
+                if (m_SpecialKeyCombos[i].enabled && event->keysym.sym == m_SpecialKeyCombos[i].keyCode) {
+                    m_PendingKeyCombo = m_SpecialKeyCombos[i].keyCombo;
+                    break;
+                }
             }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Cursor can only be shown in remote desktop mouse mode");
+        }
+
+        if (m_PendingKeyCombo == KeyComboMax) {
+            for (int i = 0; i < KeyComboMax; i++) {
+                if (m_SpecialKeyCombos[i].enabled && event->keysym.scancode == m_SpecialKeyCombos[i].scanCode) {
+                    m_PendingKeyCombo = m_SpecialKeyCombos[i].keyCombo;
+                    break;
+                }
             }
-            return;
         }
-        // Check for quit combo (Ctrl+Alt+Shift+Q)
-        else if (event->keysym.scancode == SDL_SCANCODE_Q) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected quit key combo (scancode)");
+    }
 
-            // Push a quit event to the main loop
-            SDL_Event event;
-            event.type = SDL_QUIT;
-            event.quit.timestamp = SDL_GetTicks();
-            SDL_PushEvent(&event);
-            return;
-        }
-        // Check for the unbind combo (Ctrl+Alt+Shift+Z)
-        else if (event->keysym.scancode == SDL_SCANCODE_Z && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected mouse capture toggle combo (scancode)");
-
-            // Stop handling future input
-            setCaptureActive(!isCaptureActive());
-
-            // Force raise all keys to ensure they aren't stuck,
-            // since we won't get their key up events.
-            raiseAllKeys();
-            return;
-        }
-        // Check for the full-screen combo (Ctrl+Alt+Shift+X) unless on EGLFS which has no window manager
-        else if (event->keysym.scancode == SDL_SCANCODE_X && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected full-screen toggle combo (scancode)");
-            Session::s_ActiveSession->toggleFullscreen();
-
-            // Force raise all keys just be safe across this full-screen/windowed
-            // transition just in case key events get lost.
-            raiseAllKeys();
-            return;
-        }
-        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+M) unless on EGLFS which has no window manager
-        else if (event->keysym.scancode == SDL_SCANCODE_M && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected mouse mode toggle combo (scancode)");
-
-            // Uncapture input
-            setCaptureActive(false);
-
-            // Toggle mouse mode
-            m_AbsoluteMouseMode = !m_AbsoluteMouseMode;
-
-            // Recapture input
-            setCaptureActive(true);
-            return;
-        }
-        // Check for the mouse mode toggle combo (Ctrl+Alt+Shift+D) unless on EGLFS which has no window manager
-        else if (event->keysym.scancode == SDL_SCANCODE_D && QGuiApplication::platformName() != "eglfs") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected minimize combo (scancode)");
-
-            SDL_MinimizeWindow(m_Window);
-            return;
-        }
-        else if (event->keysym.scancode == SDL_SCANCODE_S) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected stats toggle combo (scancode)");
-
-            // Toggle the stats overlay
-            Session::get()->getOverlayManager().setOverlayState(Overlay::OverlayDebug,
-                                                                !Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug));
-
-            // Force raise all keys just be safe across this full-screen/windowed
-            // transition just in case key events get lost.
-            raiseAllKeys();
-            return;
-        }
-        // Check for mouse show combo (Ctrl+Alt+Shift+C)
-        else if (event->keysym.sym == SDL_SCANCODE_C) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected show mouse combo (scancode)");
-
-            if (!SDL_GetRelativeMouseMode()) {
-                SDL_ShowCursor(!SDL_ShowCursor(SDL_QUERY));
-            }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Cursor can only be shown in remote desktop mouse mode");
-            }
-            return;
-        }
+    if (event->state == SDL_PRESSED && m_PendingKeyCombo != KeyComboMax) {
+        // Ignore further key presses until the special combo is raised
+        return;
     }
 
     if (event->repeat) {
@@ -461,4 +388,19 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                         event->state == SDL_PRESSED ?
                             KEY_ACTION_DOWN : KEY_ACTION_UP,
                         modifiers);
+
+    if (m_PendingKeyCombo != KeyComboMax && m_KeysDown.isEmpty()) {
+        int keys;
+        const Uint8 *keyState = SDL_GetKeyboardState(&keys);
+
+        // Make sure all client keys are up before we process the special key combo
+        for (int i = 0; i < keys; i++) {
+            if (keyState[i] == SDL_PRESSED) {
+                return;
+            }
+        }
+
+        // If we made it this far, no keys are pressed
+        performPendingSpecialKeyCombo();
+    }
 }

@@ -97,6 +97,17 @@ public:
     QString getUnmappedGamepads();
 
 private:
+    enum KeyCombo {
+        KeyComboQuit,
+        KeyComboUngrabInput,
+        KeyComboToggleFullScreen,
+        KeyComboToggleStatsOverlay,
+        KeyComboToggleMouseMode,
+        KeyComboToggleCursorHide,
+        KeyComboToggleMinimize,
+        KeyComboMax
+    };
+
     GamepadState*
     findStateForGamepad(SDL_JoystickID id);
 
@@ -105,6 +116,8 @@ private:
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
 
     void handleRelativeFingerEvent(SDL_TouchFingerEvent* event);
+
+    void performPendingSpecialKeyCombo();
 
     static
     Uint32 longPressTimerCallback(Uint32 interval, void* param);
@@ -155,6 +168,14 @@ private:
     QString m_OldIgnoreDevices;
     QString m_OldIgnoreDevicesExcept;
     bool m_CaptureSystemKeysEnabled;
+
+    struct {
+        KeyCombo keyCombo;
+        SDL_Keycode keyCode;
+        SDL_Scancode scanCode;
+        bool enabled;
+    } m_SpecialKeyCombos[KeyComboMax];
+    KeyCombo m_PendingKeyCombo;
 
     SDL_TouchFingerEvent m_LastTouchDownEvent;
     SDL_TouchFingerEvent m_LastTouchUpEvent;
