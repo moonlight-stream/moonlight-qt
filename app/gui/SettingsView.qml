@@ -909,7 +909,8 @@ Flickable {
                     id: captureSysKeysCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: qsTr("Capture system keyboard shortcuts while streaming in fullscreen")
+                    text: qsTr("Capture system keyboard shortcuts") + (SystemProperties.supportsWindowedSystemKeyCapture ?
+                              "" : qsTr(" while streaming in fullscreen mode"))
                     font.pointSize:  12
                     enabled: SystemProperties.hasWindowManager
                     checked: StreamingPreferences.captureSysKeys && SystemProperties.hasWindowManager
@@ -920,7 +921,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 10000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.") + "\n\n" +
+                    ToolTip.text: qsTr("This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.") + "\n\n" +
                                   qsTr("NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.")
                 }
 

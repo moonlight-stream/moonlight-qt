@@ -11,10 +11,6 @@
 
 #define MOUSE_POLLING_INTERVAL 5
 
-#ifdef Q_OS_WIN32
-HHOOK g_KeyboardHook;
-#endif
-
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int streamWidth, int streamHeight)
     : m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
@@ -52,10 +48,18 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
                             prefs.absoluteMouseMode ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 
-    // If we're grabbing system keys, enable the X11 keyboard grab in SDL
+#if !SDL_VERSION_ATLEAST(2, 0, 15)
+    // For older versions of SDL (2.0.14 and earlier), use SDL_HINT_GRAB_KEYBOARD
     SDL_SetHintWithPriority(SDL_HINT_GRAB_KEYBOARD,
                             m_CaptureSystemKeysEnabled ? "1" : "0",
                             SDL_HINT_OVERRIDE);
+#endif
+
+    // Opt-out of SDL's built-in Alt+Tab handling while keyboard grab is enabled
+    SDL_SetHint("SDL_ALLOW_ALT_TAB_WHILE_GRABBED", "0");
+
+    // Don't close the window on Alt+F4 when keyboard grab is enabled
+    SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, m_CaptureSystemKeysEnabled ? "1" : "0");
 
     // Allow clicks to pass through to us when focusing the window. If we're in
     // absolute mouse mode, this will avoid the user having to click twice to
@@ -188,38 +192,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     }
 
     m_MouseMoveTimer = SDL_AddTimer(pollingInterval, SdlInputHandler::mouseMoveTimerCallback, this);
-
-#ifdef Q_OS_WIN32
-    if (m_CaptureSystemKeysEnabled) {
-        // If system key capture is enabled, install the window hook required to intercept
-        // these key presses and block them from the OS itself.
-        g_KeyboardHook = SetWindowsHookEx(WH_KEYBOARD_LL, SdlInputHandler::keyboardHookProc, GetModuleHandle(NULL), 0);
-    }
-#endif
 }
 
 SdlInputHandler::~SdlInputHandler()
 {
-#ifdef Q_OS_WIN32
-    if (g_KeyboardHook != nullptr) {
-        UnhookWindowsHookEx(g_KeyboardHook);
-        g_KeyboardHook = nullptr;
-
-        // If we're terminating because of the user pressing the quit combo,
-        // we won't have a chance to inform SDL as the modifier keys raise.
-        // This will leave stale modifier flags in the SDL_Keyboard global
-        // inside SDL which will show up on our next key event if the user
-        // streams again. Avoid this by explicitly zeroing mod state when
-        // ending the stream.
-        //
-        // This is only needed for the case where we're hooking the keyboard
-        // because we're generating synthetic SDL_KEYDOWN/SDL_KEYUP events
-        // which don't properly maintain SDL's internal keyboard state,
-        // so we're forced to invoke SDL_SetModState() ourselves to set mods.
-        SDL_SetModState(KMOD_NONE);
-    }
-#endif
-
     for (int i = 0; i < MAX_GAMEPADS; i++) {
         if (m_GamepadState[i].mouseEmulationTimer != 0) {
             Session::get()->notifyMouseEmulationMode(false);
@@ -272,157 +248,6 @@ void SdlInputHandler::setWindow(SDL_Window *window)
 {
     m_Window = window;
 }
-
-#ifdef Q_OS_WIN32
-LRESULT CALLBACK SdlInputHandler::keyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam)
-{
-    if (nCode < 0 || nCode != HC_ACTION) {
-        return CallNextHookEx(g_KeyboardHook, nCode, wParam, lParam);
-    }
-
-    bool keyCaptureActive;
-    SDL_Event event = {};
-    KBDLLHOOKSTRUCT* hookData = (KBDLLHOOKSTRUCT*)lParam;
-    switch (hookData->vkCode) {
-    case VK_LWIN:
-        event.key.keysym.sym = SDLK_LGUI;
-        event.key.keysym.scancode = SDL_SCANCODE_LGUI;
-        break;
-    case VK_RWIN:
-        event.key.keysym.sym = SDLK_RGUI;
-        event.key.keysym.scancode = SDL_SCANCODE_RGUI;
-        break;
-    case VK_LMENU:
-        event.key.keysym.sym = SDLK_LALT;
-        event.key.keysym.scancode = SDL_SCANCODE_LALT;
-        break;
-    case VK_RMENU:
-        event.key.keysym.sym = SDLK_RALT;
-        event.key.keysym.scancode = SDL_SCANCODE_RALT;
-        break;
-    case VK_LCONTROL:
-        event.key.keysym.sym = SDLK_LCTRL;
-        event.key.keysym.scancode = SDL_SCANCODE_LCTRL;
-        break;
-    case VK_RCONTROL:
-        event.key.keysym.sym = SDLK_RCTRL;
-        event.key.keysym.scancode = SDL_SCANCODE_RCTRL;
-        break;
-    default:
-        // Bail quickly if it's not a key we care about
-        goto NextHook;
-    }
-
-    // Make sure we're in a state where we actually want to steal this event (and it is safe to do so)
-    Session* session = Session::get();
-    if (session == nullptr || session->m_InputHandler == nullptr) {
-        goto NextHook;
-    }
-
-    keyCaptureActive = session->m_InputHandler->isSystemKeyCaptureActive();
-
-    // If this is a key we're going to intercept, create the synthetic SDL event.
-    // This is necessary because we are also hiding this key event from ourselves too.
-    if (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN) {
-        event.type = SDL_KEYDOWN;
-        event.key.state = SDL_PRESSED;
-    }
-    else {
-        event.type = SDL_KEYUP;
-        event.key.state = SDL_RELEASED;
-    }
-
-    // Drop the event if it's a key down and capture is not active.
-    // For key up, we'll need to do a little more work to determine if we need to send this
-    // event to SDL in order to keep its internal keyboard modifier state consistent.
-    if (event.type == SDL_KEYDOWN && !keyCaptureActive) {
-        goto NextHook;
-    }
-
-    event.key.keysym.mod = SDL_GetModState();
-    switch (hookData->vkCode) {
-    case VK_LWIN:
-        if (event.key.state == SDL_PRESSED) {
-            event.key.keysym.mod |= KMOD_LGUI;
-        }
-        else {
-            event.key.keysym.mod &= ~KMOD_LGUI;
-        }
-        break;
-    case VK_RWIN:
-        if (event.key.state == SDL_PRESSED) {
-            event.key.keysym.mod |= KMOD_RGUI;
-        }
-        else {
-            event.key.keysym.mod &= ~KMOD_RGUI;
-        }
-        break;
-    case VK_LMENU:
-        if (event.key.state == SDL_PRESSED) {
-            event.key.keysym.mod |= KMOD_LALT;
-        }
-        else {
-            event.key.keysym.mod &= ~KMOD_LALT;
-        }
-        break;
-    case VK_RMENU:
-        if (event.key.state == SDL_PRESSED) {
-            event.key.keysym.mod |= KMOD_RALT;
-        }
-        else {
-            event.key.keysym.mod &= ~KMOD_RALT;
-        }
-        break;
-    case VK_LCONTROL:
-        if (event.key.state == SDL_PRESSED) {
-            event.key.keysym.mod |= KMOD_LCTRL;
-        }
-        else {
-            event.key.keysym.mod &= ~KMOD_LCTRL;
-        }
-        break;
-    case VK_RCONTROL:
-        if (event.key.state == SDL_PRESSED) {
-            event.key.keysym.mod |= KMOD_RCTRL;
-        }
-        else {
-            event.key.keysym.mod &= ~KMOD_RCTRL;
-        }
-        break;
-    }
-
-    // If the modifier state is unchanged and we're not capturing system keys,
-    // drop the event. If the modifier state is changed, we need to send the
-    // event to update SDL's state even if system key capture is now inactive
-    // (due to focus loss, mouse capture toggled off, etc.) otherwise SDL won't
-    // know that the modifier key has been lifted.
-    if (event.key.keysym.mod == SDL_GetModState() && !keyCaptureActive) {
-        goto NextHook;
-    }
-
-    event.key.timestamp = SDL_GetTicks();
-    event.key.windowID = SDL_GetWindowID(session->m_Window);
-
-    // NOTE: event.key.repeat is not populated in this path!
-    SDL_PushEvent(&event);
-
-    // Synchronize SDL's modifier state with the current state.
-    // SDL won't do this on its own because it will never see the
-    // WM_KEYUP/WM_KEYDOWN events.
-    SDL_SetModState((SDL_Keymod)event.key.keysym.mod);
-
-    // Eat the event only if key capture is active.
-    // If capture is not active and we're just resyncing SDL's modifier state,
-    // we need to ensure the key event is still delivered normally to the
-    // window in focus.
-    if (keyCaptureActive) {
-        return 1;
-    }
-
-NextHook:
-    return CallNextHookEx(g_KeyboardHook, nCode, wParam, lParam);
-}
-#endif
 
 void SdlInputHandler::raiseAllKeys()
 {
@@ -496,18 +321,35 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 
     Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
     return (windowFlags & SDL_WINDOW_INPUT_FOCUS) &&
-            (windowFlags & SDL_WINDOW_INPUT_GRABBED) &&
-            (windowFlags & SDL_WINDOW_FULLSCREEN_DESKTOP);
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+            (windowFlags & SDL_WINDOW_KEYBOARD_GRABBED)
+#else
+            (windowFlags & SDL_WINDOW_INPUT_GRABBED)
+#endif
+#ifdef Q_OS_DARWIN
+            // Darwin only supports full-screen system key capture
+            (windowFlags & SDL_WINDOW_FULLSCREEN)
+#endif
+            ;
 }
 
 void SdlInputHandler::setCaptureActive(bool active)
 {
     if (active) {
         // If we're in full-screen exclusive mode, grab the cursor so it can't accidentally leave our window.
-        // If we're in full-screen desktop mode but system key capture is enabled, also grab the cursor (will grab the keyboard too on X11).
-        if (((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != 0 && m_CaptureSystemKeysEnabled) ||
-                (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+        if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
             SDL_SetWindowGrab(m_Window, SDL_TRUE);
+        }
+        else if (m_CaptureSystemKeysEnabled) {
+#if SDL_VERSION_ATLEAST(2, 0, 15) && !defined(Q_OS_DARWIN)
+            // On SDL 2.0.15, we can get keyboard-only grab on Win32, X11, and Wayland
+            SDL_SetWindowKeyboardGrab(m_Window, SDL_TRUE);
+#else
+            // If we're in full-screen desktop mode but system key capture is enabled, also grab the cursor (will grab the keyboard too on X11).
+            if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) {
+                SDL_SetWindowGrab(m_Window, SDL_TRUE);
+            }
+#endif
         }
 
         if (!m_AbsoluteMouseMode) {
@@ -556,6 +398,11 @@ void SdlInputHandler::setCaptureActive(bool active)
 
         // Allow the cursor to leave the bounds of our window again.
         SDL_SetWindowGrab(m_Window, SDL_FALSE);
+
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+        // Allow the keyboard to leave the window
+        SDL_SetWindowKeyboardGrab(m_Window, SDL_FALSE);
+#endif
     }
 }
 

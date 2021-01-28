@@ -5,11 +5,6 @@
 
 #include <SDL.h>
 
-#ifdef Q_OS_WIN32
-#define WIN32_LEAN_AND_MEAN
-#include <Windows.h>
-#endif
-
 #define SDL_CODE_HIDE_CURSOR 1
 #define SDL_CODE_SHOW_CURSOR 2
 
@@ -136,11 +131,6 @@ private:
 
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
-
-#ifdef Q_OS_WIN32
-    static
-    LRESULT CALLBACK keyboardHookProc(int nCode, WPARAM wParam, LPARAM lParam);
-#endif
 
     SDL_Window* m_Window;
     bool m_MultiController;
