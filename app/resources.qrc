@@ -19,6 +19,8 @@
         <file>res/Discord-Logo-White.svg</file>
         <file>languages/qml_fr.ts</file>
         <file>languages/qml_fr.qm</file>
+        <file>languages/qml_zh_cn.ts</file>
+        <file>languages/qml_zh_cn.qm</file>
     </qresource>
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>
