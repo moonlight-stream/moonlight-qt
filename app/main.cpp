@@ -11,7 +11,6 @@
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QFile>
-#include<QTranslator>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers

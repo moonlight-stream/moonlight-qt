@@ -3,6 +3,9 @@
 #include <QSettings>
 #include <QTranslator>
 #include <QCoreApplication>
+#include <QLocale>
+
+#include <QtDebug>
 
 #define SER_STREAMSETTINGS "streamsettings"
 #define SER_WIDTH "width"
@@ -162,7 +165,7 @@ bool StreamingPreferences::retranslate()
         m_QmlEngine->retranslate();
 #else
         // Unreachable below Qt 5.10 due to the check above
-        Q_ASSERT(FALSE);
+        Q_ASSERT(false);
 #endif
     }
     else {
