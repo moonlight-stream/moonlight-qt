@@ -51,7 +51,7 @@ bool FFmpegVideoDecoder::isHardwareAccelerated()
 
 bool FFmpegVideoDecoder::isAlwaysFullScreen()
 {
-    return m_BackendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+    return m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
 }
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
