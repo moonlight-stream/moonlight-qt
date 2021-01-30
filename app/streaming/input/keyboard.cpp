@@ -72,7 +72,8 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
                     "Detected show mouse combo");
 
         if (!SDL_GetRelativeMouseMode()) {
-            SDL_ShowCursor(!SDL_ShowCursor(SDL_QUERY));
+            m_MouseCursorCapturedVisibilityState = !m_MouseCursorCapturedVisibilityState;
+            SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);
         }
         else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,

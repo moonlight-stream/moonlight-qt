@@ -168,6 +168,7 @@ private:
     QString m_OldIgnoreDevices;
     QString m_OldIgnoreDevicesExcept;
     bool m_CaptureSystemKeysEnabled;
+    int m_MouseCursorCapturedVisibilityState;
 
     struct {
         KeyCombo keyCombo;

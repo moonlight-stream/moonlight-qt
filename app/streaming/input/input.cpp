@@ -27,6 +27,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_FakeCaptureActive(false),
       m_CaptureSystemKeysEnabled(prefs.captureSysKeys || !WMUtils::isRunningWindowManager()),
+      m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
       m_PendingKeyCombo(KeyComboMax),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
@@ -520,7 +521,7 @@ void SdlInputHandler::setCaptureActive(bool active)
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
             // Relative mouse mode didn't work or was disabled, so we'll just hide the cursor
-            SDL_ShowCursor(SDL_DISABLE);
+            SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);
             m_FakeCaptureActive = true;
         }
 

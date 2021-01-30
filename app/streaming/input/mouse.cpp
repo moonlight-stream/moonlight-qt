@@ -146,7 +146,8 @@ void SdlInputHandler::flushMousePositionUpdate()
                 // executes.
                 SDL_Event event;
                 event.type = SDL_USEREVENT;
-                event.user.code = mouseInVideoRegion ? SDL_CODE_HIDE_CURSOR : SDL_CODE_SHOW_CURSOR;
+                event.user.code = (mouseInVideoRegion && m_MouseCursorCapturedVisibilityState == SDL_DISABLE) ?
+                            SDL_CODE_HIDE_CURSOR : SDL_CODE_SHOW_CURSOR;
                 SDL_PushEvent(&event);
 
                 if (!mouseInVideoRegion && buttonState != 0) {
