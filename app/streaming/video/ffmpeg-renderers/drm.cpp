@@ -15,7 +15,8 @@ extern "C" {
 #include <Limelight.h>
 
 DrmRenderer::DrmRenderer()
-    : m_DrmFd(-1),
+    : m_HwContext(nullptr),
+      m_DrmFd(-1),
       m_CrtcId(0),
       m_PlaneId(0),
       m_CurrentFbId(0)
@@ -31,11 +32,15 @@ DrmRenderer::~DrmRenderer()
     if (m_DrmFd != -1) {
         close(m_DrmFd);
     }
+
+    if (m_HwContext != nullptr) {
+        av_buffer_unref(&m_HwContext);
+    }
 }
 
-bool DrmRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
+bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
-    /* Nothing to do */
+    context->hw_device_ctx = av_buffer_ref(m_HwContext);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using DRM renderer");
@@ -184,6 +189,26 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS)
     }
 
     drmModeFreePlaneResources(planeRes);
+
+    m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
+    if (m_HwContext == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "av_hwdevice_ctx_alloc(DRM) failed");
+        return false;
+    }
+
+    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+    AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
+
+    drmDeviceContext->fd = m_DrmFd;
+
+    int err = av_hwdevice_ctx_init(m_HwContext);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "av_hwdevice_ctx_init(DRM) failed: %d",
+                     err);
+        return false;
+    }
 
     return true;
 }

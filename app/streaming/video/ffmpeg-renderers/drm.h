@@ -16,6 +16,7 @@ public:
     virtual int getRendererAttributes() override;
 
 private:
+    AVBufferRef* m_HwContext;
     int m_DrmFd;
     uint32_t m_CrtcId;
     uint32_t m_PlaneId;
