@@ -523,6 +523,10 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
         case AV_HWDEVICE_TYPE_VDPAU:
             return new VDPAURenderer();
 #endif
+#ifdef HAVE_DRM
+        case AV_HWDEVICE_TYPE_DRM:
+            return new DrmRenderer();
+#endif
         default:
             return nullptr;
         }
