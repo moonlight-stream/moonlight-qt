@@ -14,6 +14,10 @@ extern "C" {
 
 #include <Limelight.h>
 
+#ifdef HAVE_EGL
+#include <SDL_egl.h>
+#endif
+
 DrmRenderer::DrmRenderer()
     : m_HwContext(nullptr),
       m_DrmFd(-1),
@@ -302,3 +306,78 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     // Free the previous FB object which has now been superseded
     drmModeRmFB(m_DrmFd, lastFbId);
 }
+
+#ifdef HAVE_EGL
+
+bool DrmRenderer::canExportEGL() {
+    if (qgetenv("DRM_FORCE_DIRECT") == "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using direct rendering due to environment variable");
+        return false;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "DRM backend supports exporting EGLImage");
+    return true;
+}
+
+bool DrmRenderer::initializeEGL(EGLDisplay,
+                                const EGLExtensions &ext) {
+    if (!ext.isSupported("EGL_EXT_image_dma_buf_import")) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "DRM-EGL: DMABUF unsupported");
+        return false;
+    }
+
+    return true;
+}
+
+ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
+                                     EGLImage images[EGL_MAX_PLANES]) {
+    ssize_t count = 0;
+    AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
+
+    memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
+
+    SDL_assert(drmFrame->nb_objects == 1);
+    SDL_assert(drmFrame->nb_layers == 1);
+    SDL_assert(drmFrame->layers[0].nb_planes == 2);
+
+    for (int i = 0; i < drmFrame->layers[0].nb_planes; ++i) {
+        const auto &plane = drmFrame->layers[0].planes[i];
+        const auto &object = drmFrame->objects[plane.object_index];
+
+        EGLAttrib attribs[17] = {
+            EGL_LINUX_DRM_FOURCC_EXT, i == 0 ? DRM_FORMAT_R8 : DRM_FORMAT_GR88,
+            EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
+            EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
+            EGL_DMA_BUF_PLANE0_FD_EXT, object.fd,
+            EGL_DMA_BUF_PLANE0_OFFSET_EXT, (EGLint)plane.offset,
+            EGL_DMA_BUF_PLANE0_PITCH_EXT, (EGLint)plane.pitch,
+            EGL_NONE,
+        };
+        images[i] = eglCreateImage(dpy, EGL_NO_CONTEXT,
+                                   EGL_LINUX_DMA_BUF_EXT,
+                                   nullptr, attribs);
+        if (!images[i]) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "eglCreateImage() Failed: %d", eglGetError());
+            goto fail;
+        }
+        ++count;
+    }
+
+    return count;
+
+fail:
+    freeEGLImages(dpy, images);
+    return -1;
+}
+
+void DrmRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
+    for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
+        eglDestroyImage(dpy, images[i]);
+    }
+}
+
+#endif
