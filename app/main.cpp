@@ -451,9 +451,9 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
-    QTranslator translator;
-    qDebug() << "Translation loaded:" << translator.load(QString(":/languages/qml_") + QLocale::system().name());
-    app.installTranslator(&translator);
+    // Apply the initial translation based on user preference
+    StreamingPreferences prefs;
+    prefs.retranslate();
 
     // After the QGuiApplication is created, the platform stuff will be initialized
     // and we can set the SDL video driver to match Qt.
@@ -525,8 +525,8 @@ int main(int argc, char *argv[])
                                                       });
     qmlRegisterSingletonType<StreamingPreferences>("StreamingPreferences", 1, 0,
                                                    "StreamingPreferences",
-                                                   [](QQmlEngine*, QJSEngine*) -> QObject* {
-                                                       return new StreamingPreferences();
+                                                   [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
+                                                       return new StreamingPreferences(qmlEngine);
                                                    });
 
     // Create the identity manager on the main thread

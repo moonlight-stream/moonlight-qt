@@ -1,6 +1,8 @@
 #include "streamingpreferences.h"
 
 #include <QSettings>
+#include <QTranslator>
+#include <QCoreApplication>
 
 #define SER_STREAMSETTINGS "streamsettings"
 #define SER_WIDTH "width"
@@ -36,11 +38,20 @@
 #define SER_REVERSESCROLL "reversescroll"
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
+#define SER_LANGUAGE "language"
 
 #define CURRENT_DEFAULT_VER 1
 
 StreamingPreferences::StreamingPreferences(QObject *parent)
-    : QObject(parent)
+    : QObject(parent),
+      m_QmlEngine(nullptr)
+{
+    reload();
+}
+
+StreamingPreferences::StreamingPreferences(QQmlEngine *qmlEngine, QObject *parent)
+    : QObject(parent),
+      m_QmlEngine(qmlEngine)
 {
     reload();
 }
@@ -95,6 +106,8 @@ void StreamingPreferences::reload()
     uiDisplayMode = static_cast<UIDisplayMode>(settings.value(SER_UIDISPLAYMODE,
                                                static_cast<int>(settings.value(SER_STARTWINDOWED, true).toBool() ? UIDisplayMode::UI_WINDOWED
                                                                                                                  : UIDisplayMode::UI_MAXIMIZED)).toInt());
+    language = static_cast<Language>(settings.value(SER_LANGUAGE,
+                                                    static_cast<int>(Language::LANG_AUTO)).toInt());
 
 
     // Perform default settings updates as required based on last default version
@@ -105,6 +118,74 @@ void StreamingPreferences::reload()
             windowMode = WindowMode::WM_FULLSCREEN_DESKTOP;
         }
 #endif
+    }
+}
+
+bool StreamingPreferences::retranslate()
+{
+    static QTranslator* translator = nullptr;
+
+#if QT_VERSION < QT_VERSION_CHECK(5, 10, 0)
+    if (m_QmlEngine != nullptr) {
+        // Dynamic retranslation is not supported until Qt 5.10
+        return false;
+    }
+#endif
+
+    QTranslator* newTranslator = new QTranslator();
+    QString languageSuffix = getSuffixFromLanguage(language);
+
+    // Remove the old translator, even if we can't load a new one.
+    // Otherwise we'll be stuck with the old translated values instead
+    // of defaulting to English.
+    if (translator != nullptr) {
+        QCoreApplication::removeTranslator(translator);
+        delete translator;
+        translator = nullptr;
+    }
+
+    if (newTranslator->load(QString(":/languages/qml_") + languageSuffix)) {
+        qInfo() << "Successfully loaded translation for " << languageSuffix;
+
+        translator = newTranslator;
+        QCoreApplication::installTranslator(translator);
+    }
+    else {
+        qInfo() << "No translation available for " << languageSuffix;
+        delete newTranslator;
+    }
+
+    if (m_QmlEngine != nullptr) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+        // This is a dynamic retranslation from the settings page.
+        // We have to kick the QML engine into reloading our text.
+        m_QmlEngine->retranslate();
+#else
+        // Unreachable below Qt 5.10 due to the check above
+        Q_ASSERT(FALSE);
+#endif
+    }
+    else {
+        // This is a translation from a non-QML context, which means
+        // it is probably app startup. There's nothing to refresh.
+    }
+
+    return true;
+}
+
+QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Language lang)
+{
+    switch (lang)
+    {
+    case LANG_EN:
+        return "en";
+    case LANG_FR:
+        return "fr";
+    case LANG_ZH_CN:
+        return "zh_cn";
+    case LANG_AUTO:
+    default:
+        return QLocale::system().name();
     }
 }
 
@@ -136,6 +217,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
     settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));
     settings.setValue(SER_UIDISPLAYMODE, static_cast<int>(uiDisplayMode));
+    settings.setValue(SER_LANGUAGE, static_cast<int>(language));
     settings.setValue(SER_DEFAULTVER, CURRENT_DEFAULT_VER);
     settings.setValue(SER_SWAPMOUSEBUTTONS, swapMouseButtons);
     settings.setValue(SER_MUTEONFOCUSLOSS, muteOnFocusLoss);

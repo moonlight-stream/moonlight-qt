@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QRect>
+#include <QQmlEngine>
 
 class StreamingPreferences : public QObject
 {
@@ -9,6 +10,7 @@ class StreamingPreferences : public QObject
 
 public:
     StreamingPreferences(QObject *parent = nullptr);
+    StreamingPreferences(QQmlEngine *qmlEngine, QObject *parent = nullptr);
 
     Q_INVOKABLE static int
     getDefaultBitrate(int width, int height, int fps);
@@ -58,6 +60,15 @@ public:
     };
     Q_ENUM(UIDisplayMode)
 
+    enum Language
+    {
+        LANG_AUTO,
+        LANG_EN,
+        LANG_FR,
+        LANG_ZH_CN
+    };
+    Q_ENUM(Language);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -88,6 +99,9 @@ public:
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(bool captureSysKeys MEMBER captureSysKeys NOTIFY captureSysKeysChanged)
+    Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+
+    Q_INVOKABLE bool retranslate();
 
     // Directly accessible members for preferences
     int width;
@@ -121,6 +135,7 @@ public:
     WindowMode windowMode;
     WindowMode recommendedFullScreenMode;
     UIDisplayMode uiDisplayMode;
+    Language language;
 
 signals:
     void displayModeChanged();
@@ -150,5 +165,11 @@ signals:
     void reverseScrollDirectionChanged();
     void swapFaceButtonsChanged();
     void captureSysKeysChanged();
+    void languageChanged();
+
+private:
+    QString getSuffixFromLanguage(Language lang);
+
+    QQmlEngine* m_QmlEngine;
 };
 

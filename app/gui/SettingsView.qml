@@ -724,6 +724,60 @@ Flickable {
 
                 Label {
                     width: parent.width
+                    id: languageTitle
+                    text: qsTr("Language")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        var saved_language = StreamingPreferences.language
+                        currentIndex = 0
+                        for (var i = 0; i < languageListModel.count; i++) {
+                            var el_language = languageListModel.get(i).val;
+                            if (saved_language === el_language) {
+                                currentIndex = i
+                                break
+                            }
+                        }
+
+                        activated(currentIndex)
+                    }
+
+                    id: languageComboBox
+                    textRole: "text"
+                    model: ListModel {
+                        id: languageListModel
+                        ListElement {
+                            text: qsTr("Automatic")
+                            val: StreamingPreferences.LANG_AUTO
+                        }
+                        ListElement {
+                            text: qsTr("English")
+                            val: StreamingPreferences.LANG_EN
+                        }
+                        ListElement {
+                            text: qsTr("French")
+                            val: StreamingPreferences.LANG_FR
+                        }
+                        ListElement {
+                            text: qsTr("Simplified Chinese")
+                            val: StreamingPreferences.LANG_ZH_CN
+                        }
+                    }
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        StreamingPreferences.language = languageListModel.get(currentIndex).val
+                        if (!StreamingPreferences.retranslate()) {
+                            ToolTip.show(qsTr("You must restart Moonlight for this change to take effect"), 5000)
+                        }
+                    }
+                }
+
+                Label {
+                    width: parent.width
                     id: uiDisplayModeTitle
                     text: qsTr("GUI display mode")
                     font.pointSize: 12
