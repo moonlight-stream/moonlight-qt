@@ -713,6 +713,25 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 return true;
             }
         }
+
+        {
+            // v4l2request is an out-of-tree hardware accelerated decoder that outputs DRI PRIME buffers
+            // https://github.com/LibreELEC/LibreELEC.tv/tree/master/packages/multimedia/ffmpeg/patches/v4l2-request
+            AVCodec* v4l2requestDecoder;
+
+            if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
+                v4l2requestDecoder = avcodec_find_decoder_by_name("h264_v4l2request");
+            }
+            else {
+                v4l2requestDecoder = avcodec_find_decoder_by_name("hevc_v4l2request");
+            }
+
+            if (v4l2requestDecoder != nullptr &&
+                    tryInitializeRenderer(v4l2requestDecoder, params, nullptr,
+                                          []() -> IFFmpegRenderer* { return new DrmRenderer(); })) {
+                return true;
+            }
+        }
 #endif
 
 #ifdef Q_OS_LINUX
