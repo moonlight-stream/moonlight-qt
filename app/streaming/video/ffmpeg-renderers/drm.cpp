@@ -20,6 +20,10 @@ extern "C" {
 
 #include <SDL_syswm.h>
 
+#ifndef SDL_VIDEO_DRIVER_KMSDRM
+#error DRM renderer requires SDL built with --enable-video-kmsdrm
+#endif
+
 DrmRenderer::DrmRenderer()
     : m_HwContext(nullptr),
       m_DrmFd(-1),

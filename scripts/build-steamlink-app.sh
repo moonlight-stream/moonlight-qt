@@ -27,22 +27,15 @@ mkdir $BUILD_FOLDER
 mkdir $DEPLOY_FOLDER
 mkdir $INSTALLER_FOLDER
 
-echo Switching to Qt 5.14 SDK
-pushd $STEAMLINK_SDK_PATH
-git clean -f -d -x
-git reset --hard
-git checkout $QT_514_COMMIT || fail "Unable to checkout $QT_514_COMMIT"
-popd
-
-echo Initializing Steam Link SDK for Qt 5.14
+echo Initializing Steam Link SDK
 source $STEAMLINK_SDK_PATH/setenv.sh || fail "SL SDK initialization failed!"
 
-echo Configuring the project for Qt 5.14
+echo Configuring the project
 pushd $BUILD_FOLDER
 qmake $SOURCE_ROOT/moonlight-qt.pro QMAKE_CFLAGS_ISYSTEM= || fail "Qmake failed!"
 popd
 
-echo Compiling Moonlight for Qt 5.14 in $BUILD_CONFIG configuration
+echo Compiling Moonlight in $BUILD_CONFIG configuration
 pushd $BUILD_FOLDER
 make -j$(nproc) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
 popd
