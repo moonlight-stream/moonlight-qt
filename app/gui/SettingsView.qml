@@ -769,9 +769,13 @@ Flickable {
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
-                        StreamingPreferences.language = languageListModel.get(currentIndex).val
-                        if (!StreamingPreferences.retranslate()) {
-                            ToolTip.show(qsTr("You must restart Moonlight for this change to take effect"), 5000)
+                        // Retranslating is expensive, so only do it if the language actually changed
+                        var new_language = languageListModel.get(currentIndex).val
+                        if (StreamingPreferences.language !== new_language) {
+                            StreamingPreferences.language = languageListModel.get(currentIndex).val
+                            if (!StreamingPreferences.retranslate()) {
+                                ToolTip.show(qsTr("You must restart Moonlight for this change to take effect"), 5000)
+                            }
                         }
                     }
                 }
