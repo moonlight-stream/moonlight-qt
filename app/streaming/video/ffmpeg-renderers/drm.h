@@ -24,6 +24,7 @@ public:
 private:
     AVBufferRef* m_HwContext;
     int m_DrmFd;
+    bool m_SdlOwnsDrmFd;
     uint32_t m_CrtcId;
     uint32_t m_PlaneId;
     uint32_t m_CurrentFbId;

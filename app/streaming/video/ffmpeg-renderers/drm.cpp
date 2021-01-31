@@ -20,13 +20,10 @@ extern "C" {
 
 #include <SDL_syswm.h>
 
-#ifndef SDL_VIDEO_DRIVER_KMSDRM
-#error DRM renderer requires SDL built with --enable-video-kmsdrm
-#endif
-
 DrmRenderer::DrmRenderer()
     : m_HwContext(nullptr),
       m_DrmFd(-1),
+      m_SdlOwnsDrmFd(false),
       m_CrtcId(0),
       m_PlaneId(0),
       m_CurrentFbId(0)
@@ -43,12 +40,9 @@ DrmRenderer::~DrmRenderer()
         av_buffer_unref(&m_HwContext);
     }
 
-#if !SDL_VERSION_ATLEAST(2, 0, 15)
-    // This is owned by us on SDL 2.0.14 and earlier
-    if (m_DrmFd != -1) {
+    if (!m_SdlOwnsDrmFd && m_DrmFd != -1) {
         close(m_DrmFd);
     }
-#endif
 }
 
 bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
@@ -77,34 +71,35 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if (info.subsystem != SDL_SYSWM_KMSDRM) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Unexpected subsystem in DRM renderer: %d",
-                     info.subsystem);
-        return false;
+    if (info.subsystem == SDL_SYSWM_KMSDRM) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Sharing DRM FD with SDL");
+
+        SDL_assert(info.info.kmsdrm.drm_fd >= 0);
+        m_DrmFd = info.info.kmsdrm.drm_fd;
+        m_SdlOwnsDrmFd = true;
     }
-
-    SDL_assert(info.info.kmsdrm.drm_fd >= 0);
-    m_DrmFd = info.info.kmsdrm.drm_fd;
-#else
-    const char* device = SDL_getenv("DRM_DEV");
-
-    if (device == nullptr) {
-        device = "/dev/dri/card0";
-    }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Opening DRM device: %s",
-                device);
-
-    m_DrmFd = open(device, O_RDWR | O_CLOEXEC);
-    if (m_DrmFd < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to open DRM device: %d",
-                      errno);
-        return false;
-    }
+    else
 #endif
+    {
+        const char* device = SDL_getenv("DRM_DEV");
+
+        if (device == nullptr) {
+            device = "/dev/dri/card0";
+        }
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Opening DRM device: %s",
+                    device);
+
+        m_DrmFd = open(device, O_RDWR | O_CLOEXEC);
+        if (m_DrmFd < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to open DRM device: %d",
+                          errno);
+            return false;
+        }
+    }
 
     drmModeRes* resources = drmModeGetResources(m_DrmFd);
     if (resources == nullptr) {
