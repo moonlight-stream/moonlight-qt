@@ -5,9 +5,6 @@
 #include <streaming/streamutils.h>
 
 #include <SDL_syswm.h>
-#ifdef HAVE_EGL
-#include <SDL_egl.h>
-#endif
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -20,6 +17,11 @@ VAAPIRenderer::VAAPIRenderer()
     m_PrimeDescriptor.num_layers = 0;
     m_PrimeDescriptor.num_objects = 0;
     m_EGLExtDmaBuf = false;
+
+    m_eglCreateImage = nullptr;
+    m_eglCreateImageKHR = nullptr;
+    m_eglDestroyImage = nullptr;
+    m_eglDestroyImageKHR = nullptr;
 #endif
 }
 
@@ -490,6 +492,20 @@ VAAPIRenderer::initializeEGL(EGLDisplay,
         return false;
     }
     m_EGLExtDmaBuf = ext.isSupported("EGL_EXT_image_dma_buf_import_modifiers");
+
+    // NB: eglCreateImage() and eglCreateImageKHR() have slightly different definitions
+    m_eglCreateImage = (typeof(m_eglCreateImage))eglGetProcAddress("eglCreateImage");
+    m_eglCreateImageKHR = (typeof(m_eglCreateImageKHR))eglGetProcAddress("eglCreateImageKHR");
+    m_eglDestroyImage = (typeof(m_eglDestroyImage))eglGetProcAddress("eglDestroyImage");
+    m_eglDestroyImageKHR = (typeof(m_eglDestroyImageKHR))eglGetProcAddress("eglDestroyImageKHR");
+
+    if (!(m_eglCreateImage && m_eglDestroyImage) &&
+            !(m_eglCreateImageKHR && m_eglDestroyImageKHR)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Missing eglCreateImage()/eglDestroyImage() in EGL driver");
+        return false;
+    }
+
     return true;
 }
 
@@ -525,33 +541,54 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         const auto &layer = m_PrimeDescriptor.layers[i];
         const auto &object = m_PrimeDescriptor.objects[layer.object_index[0]];
 
-        EGLAttrib attribs[17] = {
-            EGL_LINUX_DRM_FOURCC_EXT, (EGLint)layer.drm_format,
+        const int EGL_ATTRIB_COUNT = 17;
+        EGLAttrib attribs[EGL_ATTRIB_COUNT] = {
+            EGL_LINUX_DRM_FOURCC_EXT, layer.drm_format,
             EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
             EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
             EGL_DMA_BUF_PLANE0_FD_EXT, object.fd,
-            EGL_DMA_BUF_PLANE0_OFFSET_EXT, (EGLint)layer.offset[0],
-            EGL_DMA_BUF_PLANE0_PITCH_EXT, (EGLint)layer.pitch[0],
-            EGL_NONE,
+            EGL_DMA_BUF_PLANE0_OFFSET_EXT, layer.offset[0],
+            EGL_DMA_BUF_PLANE0_PITCH_EXT, layer.pitch[0],
+            EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT, (EGLint)object.drm_format_modifier,
+            EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT, (EGLint)(object.drm_format_modifier >> 32),
+            EGL_NONE
         };
-        if (m_EGLExtDmaBuf) {
-            const EGLAttrib extra[] = {
-                EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT,
-                (EGLint)object.drm_format_modifier,
-                EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT,
-                (EGLint)(object.drm_format_modifier >> 32),
-                EGL_NONE,
-            };
-            memcpy((void *)(&attribs[12]), (void *)extra, sizeof (extra));
+
+        // Cut off the attribute array before the modifiers if they aren't supported
+        if (!m_EGLExtDmaBuf) {
+            SDL_assert(attribs[12] == EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT);
+            SDL_assert(attribs[14] == EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT);
+            SDL_assert(attribs[16] == EGL_NONE);
+            attribs[12] = EGL_NONE;
         }
-        images[i] = eglCreateImage(dpy, EGL_NO_CONTEXT,
-                                   EGL_LINUX_DMA_BUF_EXT,
-                                   nullptr, attribs);
-        if (!images[i]) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "eglCreateImage() Failed: %d", eglGetError());
-            goto create_image_fail;
+
+        if (m_eglCreateImage) {
+            images[i] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
+                                         EGL_LINUX_DMA_BUF_EXT,
+                                         nullptr, attribs);
+            if (!images[i]) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "eglCreateImage() Failed: %d", eglGetError());
+                goto create_image_fail;
+            }
         }
+        else {
+            // Cast the EGLAttrib array elements to EGLint for the KHR extension
+            EGLint intAttribs[EGL_ATTRIB_COUNT];
+            for (int i = 0; i < EGL_ATTRIB_COUNT; i++) {
+                intAttribs[i] = (EGLint)attribs[i];
+            }
+
+            images[i] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
+                                            EGL_LINUX_DMA_BUF_EXT,
+                                            nullptr, intAttribs);
+            if (!images[i]) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "eglCreateImageKHR() Failed: %d", eglGetError());
+                goto create_image_fail;
+            }
+        }
+
         ++count;
     }
     return count;
@@ -566,7 +603,12 @@ sync_fail:
 void
 VAAPIRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
     for (size_t i = 0; i < m_PrimeDescriptor.num_layers; ++i) {
-        eglDestroyImage(dpy, images[i]);
+        if (m_eglDestroyImage) {
+            m_eglDestroyImage(dpy, images[i]);
+        }
+        else {
+            m_eglDestroyImageKHR(dpy, images[i]);
+        }
     }
     for (size_t i = 0; i < m_PrimeDescriptor.num_objects; ++i) {
         close(m_PrimeDescriptor.objects[i].fd);
