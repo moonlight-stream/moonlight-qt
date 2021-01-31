@@ -198,7 +198,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
             float y;
             float w;
             float h;
-        } overlayRect;
+        } overlayRect = {};
 
         // These overlay positions differ from the other renderers because OpenGL
         // places the origin in the lower-left corner instead of the upper-left.
@@ -211,6 +211,8 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
             // Top left
             overlayRect.x = 0;
             overlayRect.y = m_ViewportHeight - newSurface->h;
+        } else {
+            SDL_assert(false);
         }
 
         overlayRect.w = newSurface->w;
