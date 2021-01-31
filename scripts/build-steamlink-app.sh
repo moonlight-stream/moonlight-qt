@@ -41,6 +41,7 @@ make -j$(nproc) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Ma
 popd
 
 echo Creating app bundle
+mkdir -p $DEPLOY_FOLDER/steamlink/apps/moonlight/bin
 cp $BUILD_FOLDER/app/moonlight $DEPLOY_FOLDER/steamlink/apps/moonlight/bin/ || fail "Binary copy failed!"
 cp $SOURCE_ROOT/app/deploy/steamlink/* $DEPLOY_FOLDER/steamlink/apps/moonlight/ || fail "Metadata copy failed!"
 pushd $DEPLOY_FOLDER
