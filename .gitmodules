@@ -13,3 +13,7 @@
 [submodule "h264bitstream/h264bitstream"]
 	path = h264bitstream/h264bitstream
 	url = https://github.com/aizvorski/h264bitstream.git
+[submodule "libs"]
+	path = libs
+	url = https://github.com/cgutman/moonlight-qt-prebuilts.git
+	shallow = true

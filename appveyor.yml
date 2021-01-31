@@ -32,7 +32,9 @@ install:
   - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then mkdir $HOME/bin && wget -O $HOME/bin/linuxdeployqt https://github.com/probonopd/linuxdeployqt/releases/download/continuous/linuxdeployqt-continuous-x86_64.AppImage && chmod a+x $HOME/bin/linuxdeployqt; fi'
 
 before_build:
-  - 'git submodule update --init --recursive'
+  - 'git -c submodule.libs.update=none submodule update --init --recursive'
+  - cmd: 'git submodule update --init --recursive'
+  - sh: '[ "$BUILD_TARGET" != macos ] || git submodule update --init --recursive'
   - cmd: 'set OLDPATH=%PATH%'
   - cmd: 'set /p VERSION=<app\version.txt'
   - sh: 'export VERSION=`cat app/version.txt`'
