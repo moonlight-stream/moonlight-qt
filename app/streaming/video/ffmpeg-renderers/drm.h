@@ -14,6 +14,8 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual int getRendererAttributes() override;
+    virtual bool needsTestFrame() override;
+    virtual bool isDirectRenderingSupported() override;
 #ifdef HAVE_EGL
     virtual bool canExportEGL() override;
     virtual bool initializeEGL(EGLDisplay dpy, const EGLExtensions &ext) override;
@@ -25,6 +27,7 @@ private:
     AVBufferRef* m_HwContext;
     int m_DrmFd;
     bool m_SdlOwnsDrmFd;
+    bool m_SupportsDirectRendering;
     uint32_t m_CrtcId;
     uint32_t m_PlaneId;
     uint32_t m_CurrentFbId;

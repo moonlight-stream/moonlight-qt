@@ -24,6 +24,7 @@ DrmRenderer::DrmRenderer()
     : m_HwContext(nullptr),
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
+      m_SupportsDirectRendering(false),
       m_CrtcId(0),
       m_PlaneId(0),
       m_CurrentFbId(0)
@@ -101,12 +102,43 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+    // Create the device context first because it is needed whether we can
+    // actually use direct rendering or not.
+    m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
+    if (m_HwContext == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "av_hwdevice_ctx_alloc(DRM) failed");
+        return false;
+    }
+
+    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+    AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
+
+    drmDeviceContext->fd = m_DrmFd;
+
+    int err = av_hwdevice_ctx_init(m_HwContext);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "av_hwdevice_ctx_init(DRM) failed: %d",
+                     err);
+        return false;
+    }
+
+#ifdef HAVE_EGL
+    // Still return true if we fail to initialize DRM direct rendering
+    // stuff, since we have EGL that we can use for indirect rendering.
+    const bool DIRECT_RENDERING_INIT_FAILED = true;
+#else
+    // Fail if we can't initialize direct rendering and we don't have EGL.
+    const bool DIRECT_RENDERING_INIT_FAILED = false;
+#endif
+
     drmModeRes* resources = drmModeGetResources(m_DrmFd);
     if (resources == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "drmModeGetResources() failed: %d",
-                 errno);
-        return false;
+                     "drmModeGetResources() failed: %d",
+                     errno);
+        return DIRECT_RENDERING_INIT_FAILED;
     }
 
     // Look for a connected connector and get the associated encoder
@@ -126,7 +158,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "No connected displays found!");
         drmModeFreeResources(resources);
-        return false;
+        return DIRECT_RENDERING_INIT_FAILED;
     }
 
     // Now find the CRTC from the encoder
@@ -146,7 +178,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "DRM encoder not found!");
         drmModeFreeResources(resources);
-        return false;
+        return DIRECT_RENDERING_INIT_FAILED;
     }
 
     int crtcIndex = -1;
@@ -167,7 +199,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     if (crtcIndex == -1) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to get CRTC!");
-        return false;
+        return DIRECT_RENDERING_INIT_FAILED;
     }
 
     drmSetClientCap(m_DrmFd, DRM_CLIENT_CAP_UNIVERSAL_PLANES, 1);
@@ -177,7 +209,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmGetPlaneResources() failed: %d",
                      errno);
-        return false;
+        return DIRECT_RENDERING_INIT_FAILED;
     }
 
     // Find an NV12 overlay plane to render on
@@ -222,25 +254,14 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     drmModeFreePlaneResources(planeRes);
 
-    m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
-    if (m_HwContext == nullptr) {
+    if (m_PlaneId == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_alloc(DRM) failed");
-        return false;
+                     "Failed to find suitable NV12 overlay plane!");
+        return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
-    AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
-
-    drmDeviceContext->fd = m_DrmFd;
-
-    int err = av_hwdevice_ctx_init(m_HwContext);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_init(DRM) failed: %d",
-                     err);
-        return false;
-    }
+    // If we got this far, we can do direct rendering via the DRM FD.
+    m_SupportsDirectRendering = true;
 
     return true;
 }
@@ -333,6 +354,16 @@ void DrmRenderer::renderFrame(AVFrame* frame)
 
     // Free the previous FB object which has now been superseded
     drmModeRmFB(m_DrmFd, lastFbId);
+}
+
+bool DrmRenderer::needsTestFrame()
+{
+    return true;
+}
+
+bool DrmRenderer::isDirectRenderingSupported()
+{
+    return m_SupportsDirectRendering;
 }
 
 #ifdef HAVE_EGL
