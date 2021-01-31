@@ -18,6 +18,8 @@ extern "C" {
 #include <SDL_egl.h>
 #endif
 
+#include <SDL_syswm.h>
+
 DrmRenderer::DrmRenderer()
     : m_HwContext(nullptr),
       m_DrmFd(-1),
@@ -33,13 +35,16 @@ DrmRenderer::~DrmRenderer()
         drmModeRmFB(m_DrmFd, m_CurrentFbId);
     }
 
-    if (m_DrmFd != -1) {
-        close(m_DrmFd);
-    }
-
     if (m_HwContext != nullptr) {
         av_buffer_unref(&m_HwContext);
     }
+
+#if !SDL_VERSION_ATLEAST(2, 0, 15)
+    // This is owned by us on SDL 2.0.14 and earlier
+    if (m_DrmFd != -1) {
+        close(m_DrmFd);
+    }
+#endif
 }
 
 bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
@@ -52,10 +57,33 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
     return true;
 }
 
-bool DrmRenderer::initialize(PDECODER_PARAMETERS)
+bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 {
-    const char* device = SDL_getenv("DRM_DEV");
     int i;
+
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+    SDL_SysWMinfo info;
+
+    SDL_VERSION(&info.version);
+
+    if (!SDL_GetWindowWMInfo(params->window, &info)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetWindowWMInfo() failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
+    if (info.subsystem != SDL_SYSWM_KMSDRM) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unexpected subsystem in DRM renderer: %d",
+                     info.subsystem);
+        return false;
+    }
+
+    SDL_assert(info.info.kmsdrm.drm_fd >= 0);
+    m_DrmFd = info.info.kmsdrm.drm_fd;
+#else
+    const char* device = SDL_getenv("DRM_DEV");
 
     if (device == nullptr) {
         device = "/dev/dri/card0";
@@ -72,6 +100,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS)
                       errno);
         return false;
     }
+#endif
 
     drmModeRes* resources = drmModeGetResources(m_DrmFd);
     if (resources == nullptr) {

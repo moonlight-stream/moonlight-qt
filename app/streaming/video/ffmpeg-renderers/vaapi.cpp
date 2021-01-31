@@ -14,7 +14,6 @@
 
 VAAPIRenderer::VAAPIRenderer()
     : m_HwContext(nullptr),
-      m_DrmFd(-1),
       m_BlacklistedForDirectRendering(false)
 {
 #ifdef HAVE_EGL
@@ -38,10 +37,6 @@ VAAPIRenderer::~VAAPIRenderer()
         if (display) {
             vaTerminate(display);
         }
-    }
-
-    if (m_DrmFd != -1) {
-        close(m_DrmFd);
     }
 }
 
@@ -90,41 +85,17 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
         return nullptr;
 #endif
     }
-    // TODO: Upstream a better solution for SDL_GetWindowWMInfo on KMSDRM
-    else if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
-#ifdef HAVE_LIBVA_DRM
-        if (m_DrmFd < 0) {
-            const char* device = SDL_getenv("DRM_DEV");
-
-            if (device == nullptr) {
-                device = "/dev/dri/card0";
-            }
-
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Opening DRM device: %s",
-                        device);
-
-            m_DrmFd = open(device, O_RDWR | O_CLOEXEC);
-            if (m_DrmFd < 0) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to open DRM device: %d",
-                             errno);
-                return nullptr;
-            }
-        }
-
-        display = vaGetDisplayDRM(m_DrmFd);
+#if defined(SDL_VIDEO_DRIVER_KMSDRM) && defined(HAVE_LIBVA_DRM) && SDL_VERSION_ATLEAST(2, 0, 15)
+    else if (info.subsystem == SDL_SYSWM_KMSDRM) {
+        SDL_assert(info.info.kmsdrm.drm_fd >= 0);
+        display = vaGetDisplayDRM(info.info.kmsdrm.drm_fd);
         if (display == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Unable to open DRM display for VAAPI");
             return nullptr;
         }
-#else
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Moonlight not compiled with VAAPI DRM support!");
-        return nullptr;
-#endif
     }
+#endif
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unsupported VAAPI rendering subsystem: %d",

@@ -34,6 +34,9 @@ typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platf
 #ifndef EGL_PLATFORM_X11_KHR
 #define EGL_PLATFORM_X11_KHR 0x31D5
 #endif
+#ifndef EGL_PLATFORM_GBM_KHR
+#define EGL_PLATFORM_GBM_KHR 0x31D7
+#endif
 
 typedef struct _OVERLAY_VERTEX
 {
@@ -476,6 +479,13 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 #ifdef SDL_VIDEO_DRIVER_X11
     case SDL_SYSWM_X11:
         if (!openDisplay(EGL_PLATFORM_X11_KHR, info.info.x11.display)) {
+            return false;
+        }
+        break;
+#endif
+#if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
+    case SDL_SYSWM_KMSDRM:
+        if (!openDisplay(EGL_PLATFORM_GBM_KHR, info.info.kmsdrm.gbm_dev)) {
             return false;
         }
         break;

@@ -54,7 +54,6 @@ private:
 
     int m_WindowSystem;
     AVBufferRef* m_HwContext;
-    int m_DrmFd;
     bool m_BlacklistedForDirectRendering;
 
 #ifdef HAVE_LIBVA_X11
