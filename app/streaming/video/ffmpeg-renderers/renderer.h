@@ -11,6 +11,7 @@ extern "C" {
 
 #ifdef HAVE_EGL
 #ifdef HAVE_EGL
+#define MESA_EGL_NO_X11_HEADERS
 #define EGL_NO_X11
 #include <SDL_egl.h>
 
