@@ -15,18 +15,6 @@
 #include <SDL_render.h>
 #include <SDL_syswm.h>
 
-#ifndef EGL_VERSION_1_5
-typedef intptr_t EGLAttrib;
-#endif
-
-#if !defined(EGL_VERSION_1_5) || !defined(EGL_EGL_PROTOTYPES)
-typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYPROC) (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
-#endif
-
-#ifndef EGL_EXT_platform_base
-typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platform, void *native_display, const EGLint *attrib_list);
-#endif
-
 // These are EGL extensions, so some platform headers may not provide them
 #ifndef EGL_PLATFORM_WAYLAND_KHR
 #define EGL_PLATFORM_WAYLAND_KHR 0x31D8

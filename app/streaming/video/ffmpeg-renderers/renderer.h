@@ -10,7 +10,6 @@ extern "C" {
 }
 
 #ifdef HAVE_EGL
-#ifdef HAVE_EGL
 #define MESA_EGL_NO_X11_HEADERS
 #define EGL_NO_X11
 #include <SDL_egl.h>
@@ -18,15 +17,23 @@ extern "C" {
 #ifndef EGL_VERSION_1_5
 typedef intptr_t EGLAttrib;
 typedef void *EGLImage;
-typedef EGLImage (EGLAPIENTRYP PFNEGLCREATEIMAGEPROC) (EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLAttrib *attrib_list);
-typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYIMAGEPROC) (EGLDisplay dpy, EGLImage image);
 #endif
 
-#ifndef EGL_KHR_image
+#if !defined(EGL_VERSION_1_5) || !defined(EGL_EGL_PROTOTYPES)
+typedef EGLImage (EGLAPIENTRYP PFNEGLCREATEIMAGEPROC) (EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLAttrib *attrib_list);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYIMAGEPROC) (EGLDisplay dpy, EGLImage image);
+typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYPROC) (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
+#endif
+
+#if !defined(EGL_KHR_image) || !defined(EGL_EGLEXT_PROTOTYPES)
 // EGL_KHR_image technically uses EGLImageKHR instead of EGLImage, but they're compatible
 // so we swap them here to avoid mixing them all over the place
 typedef EGLImage (EGLAPIENTRYP PFNEGLCREATEIMAGEKHRPROC) (EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLint *attrib_list);
 typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYIMAGEKHRPROC) (EGLDisplay dpy, EGLImage image);
+#endif
+
+#if !defined(EGL_EXT_platform_base) || !defined(EGL_EGLEXT_PROTOTYPES)
+typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platform, void *native_display, const EGLint *attrib_list);
 #endif
 
 #ifndef EGL_EXT_image_dma_buf_import
@@ -43,7 +50,6 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYIMAGEKHRPROC) (EGLDisplay dpy, EGL
 #endif
 
 #define EGL_MAX_PLANES 4
-#endif
 
 class EGLExtensions {
 public:
