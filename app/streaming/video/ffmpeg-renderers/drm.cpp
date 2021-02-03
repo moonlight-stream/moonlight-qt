@@ -48,8 +48,12 @@ DrmRenderer::~DrmRenderer()
     }
 }
 
-bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
+bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** options)
 {
+    // The out-of-tree LibreELEC patches use this option to control the type of the V4L2
+    // buffers that we get back. We only support NV12 buffers now.
+    av_dict_set_int(options, "pixel_format", AV_PIX_FMT_NV12, 0);
+
     context->hw_device_ctx = av_buffer_ref(m_HwContext);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
