@@ -599,6 +599,9 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
         if (renderer.getPreferredPixelFormat(params->videoFormat) == decoder->pix_fmts[i]) { \
             if (tryInitializeRenderer(decoder, params, nullptr, \
                                       []() -> IFFmpegRenderer* { return new RENDERER_TYPE(); })) { \
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
+                            "Chose " #RENDERER_TYPE " for codec %s due to preferred pixel format: 0x%x", \
+                            decoder->name, decoder->pix_fmts[i]); \
                 return true; \
             } \
         } \
@@ -610,6 +613,9 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
         if (renderer.isPixelFormatSupported(params->videoFormat, decoder->pix_fmts[i])) { \
             if (tryInitializeRenderer(decoder, params, nullptr, \
                                       []() -> IFFmpegRenderer* { return new RENDERER_TYPE(); })) { \
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
+                            "Chose " #RENDERER_TYPE " for codec %s due to compatible pixel format: 0x%x", \
+                            decoder->name, decoder->pix_fmts[i]); \
                 return true; \
             } \
         } \
@@ -621,6 +627,21 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
     AVCodec* decoder = avcodec_find_decoder_by_name(decoderName);
     if (decoder == nullptr) {
         return false;
+    }
+
+    // This might be a hwaccel decoder, so try any hw configs first
+    for (int i = 0;; i++) {
+        const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
+        if (!config) {
+            // No remaing hwaccel options
+            break;
+        }
+
+        // Initialize the hardware codec and submit a test frame if the renderer needs it
+        if (tryInitializeRenderer(decoder, params, config,
+                                  [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, 0); })) {
+            return true;
+        }
     }
 
     if (decoder->pix_fmts == NULL) {
@@ -741,7 +762,6 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
         }
 
         // Continue with special non-hwaccel hardware decoders
-
         if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
             QList<const char *> knownAvcCodecs = { "h264_mmal", "h264_rkmpp", "h264_nvmpi", "h264_v4l2m2m" };
             for (const char* codec : knownAvcCodecs) {
