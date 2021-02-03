@@ -36,6 +36,9 @@ private:
 
     bool createFrontendRenderer(PDECODER_PARAMETERS params);
 
+    bool tryInitializeRendererForDecoderByName(const char* decoderName,
+                                               PDECODER_PARAMETERS params);
+
     bool tryInitializeRenderer(AVCodec* decoder,
                                PDECODER_PARAMETERS params,
                                const AVCodecHWConfig* hwConfig,
