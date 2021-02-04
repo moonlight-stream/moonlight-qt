@@ -10,7 +10,12 @@
 MmalRenderer::MmalRenderer()
     : m_Renderer(nullptr),
       m_InputPort(nullptr),
-      m_BackgroundRenderer(nullptr)
+      m_BackgroundRenderer(nullptr),
+      m_Window(nullptr),
+      m_VideoWidth(0),
+      m_VideoHeight(0),
+      m_LastWindowPosX(-1),
+      m_LastWindowPosY(-1)
 {
 }
 
@@ -46,9 +51,66 @@ bool MmalRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**
     return true;
 }
 
+void MmalRenderer::updateDisplayRegion()
+{
+    MMAL_STATUS_T status;
+    int currentPosX, currentPosY;
+    MMAL_DISPLAYREGION_T dr;
+
+    dr.hdr.id = MMAL_PARAMETER_DISPLAYREGION;
+    dr.hdr.size = sizeof(MMAL_DISPLAYREGION_T);
+    dr.set = MMAL_DISPLAY_SET_DEST_RECT;
+
+    SDL_GetWindowPosition(m_Window, &currentPosX, &currentPosY);
+
+    if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_INPUT_FOCUS) == 0) {
+        dr.dest_rect.x = 0;
+        dr.dest_rect.y = 0;
+        dr.dest_rect.width = 0;
+        dr.dest_rect.height = 0;
+
+        // Force a re-evaluation next time
+        m_LastWindowPosX = -1;
+        m_LastWindowPosY = -1;
+    }
+    else if (m_LastWindowPosX != currentPosX || m_LastWindowPosY != currentPosY) {
+        SDL_Rect src, dst;
+        src.x = src.y = 0;
+        src.w = m_VideoWidth;
+        src.h = m_VideoHeight;
+        dst.x = dst.y = 0;
+        SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
+
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        dr.dest_rect.x = currentPosX + dst.x;
+        dr.dest_rect.y = currentPosY + dst.y;
+        dr.dest_rect.width = dst.w;
+        dr.dest_rect.height = dst.h;
+
+        m_LastWindowPosX = currentPosX;
+        m_LastWindowPosY = currentPosY;
+    }
+    else {
+        // Nothing to do
+        return;
+    }
+
+    status = mmal_port_parameter_set(m_InputPort, &dr.hdr);
+    if (status != MMAL_SUCCESS) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "mmal_port_parameter_set() failed: %x (%s)",
+                    status, mmal_status_to_string(status));
+    }
+}
+
 bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
 {
     MMAL_STATUS_T status;
+
+    m_Window = params->window;
+    m_VideoWidth = params->width;
+    m_VideoHeight = params->height;
 
     // Clear the background if possible
     setupBackground(params);
@@ -107,23 +169,6 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
         dr.src_rect.width = params->width;
         dr.src_rect.height = params->height;
 
-        {
-            SDL_Rect src, dst;
-            src.x = src.y = 0;
-            src.w = params->width;
-            src.h = params->height;
-            dst.x = dst.y = 0;
-            SDL_GetWindowSize(params->window, &dst.w, &dst.h);
-
-            StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-            dr.set |= MMAL_DISPLAY_SET_DEST_RECT;
-            dr.dest_rect.x = dst.x;
-            dr.dest_rect.y = dst.y;
-            dr.dest_rect.width = dst.w;
-            dr.dest_rect.height = dst.h;
-        }
-
         status = mmal_port_parameter_set(m_InputPort, &dr.hdr);
         if (status != MMAL_SUCCESS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -131,6 +176,9 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
                          status, mmal_status_to_string(status));
             return false;
         }
+
+        // Set the destination display region
+        updateDisplayRegion();
     }
 
     status = mmal_port_enable(m_InputPort, InputPortCallback);
@@ -179,17 +227,16 @@ void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)
     mmal_buffer_header_release(buffer);
 }
 
-enum AVPixelFormat MmalRenderer::getPreferredPixelFormat(int videoFormat)
+enum AVPixelFormat MmalRenderer::getPreferredPixelFormat(int)
 {
     // Opaque MMAL buffers
-    SDL_assert(videoFormat == VIDEO_FORMAT_H264);
     return AV_PIX_FMT_MMAL;
 }
 
 int MmalRenderer::getRendererAttributes()
 {
-    // This renderer can only draw in full-screen and maxes out at 1080p
-    return RENDERER_ATTRIBUTE_FULLSCREEN_ONLY | RENDERER_ATTRIBUTE_1080P_MAX;
+    // This renderer maxes out at 1080p
+    return RENDERER_ATTRIBUTE_1080P_MAX;
 }
 
 bool MmalRenderer::needsTestFrame()
@@ -208,6 +255,9 @@ void MmalRenderer::renderFrame(AVFrame* frame)
 
     MMAL_BUFFER_HEADER_T* buffer = (MMAL_BUFFER_HEADER_T*)frame->data[3];
     MMAL_STATUS_T status;
+
+    // Update the destination display region in case the window moved
+    updateDisplayRegion();
 
     status = mmal_port_send_buffer(m_InputPort, buffer);
     if (status != MMAL_SUCCESS) {
