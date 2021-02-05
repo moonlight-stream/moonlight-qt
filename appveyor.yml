@@ -17,8 +17,6 @@ environment:
 install:
   - sh: '[ "$BUILD_TARGET" != macos ] || nvm use node'
   - sh: '[ "$BUILD_TARGET" != macos ] || npm install --global create-dmg'
-  - sh: '[ "$BUILD_TARGET" != macos ] || brew install qt'
-  - sh: '[ "$BUILD_TARGET" != macos ] || brew link --force qt'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || sudo apt install -y libc6:i386 libstdc++6:i386'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk'
   - sh: '[ "$BUILD_TARGET" != linux ] || sudo add-apt-repository ppa:beineri/opt-qt-5.14.2-xenial'
@@ -47,7 +45,7 @@ build_script:
   - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt514/bin/qt514-env.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
-  - sh: '[ "$BUILD_TARGET" != macos ] || scripts/generate-dmg.sh Release'
+  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/Qt/5.15/clang_64/bin scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:
