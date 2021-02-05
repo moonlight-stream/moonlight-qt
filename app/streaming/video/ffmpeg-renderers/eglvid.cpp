@@ -648,7 +648,18 @@ const float *EGLRenderer::getColorMatrix() {
         case AVCOL_SPC_BT2020_CL:
             return m_ColorFull ? bt2020Full : bt2020Lim;
         default:
-            SDL_assert(false);
+            // Some backends don't populate this, so we'll assume
+            // the host gave us what we asked for by default.
+            switch (getDecoderColorspace()) {
+                case COLORSPACE_REC_601:
+                    return m_ColorFull ? bt601Full : bt601Lim;
+                case COLORSPACE_REC_709:
+                    return m_ColorFull ? bt709Full : bt709Lim;
+                case COLORSPACE_REC_2020:
+                    return m_ColorFull ? bt2020Full : bt2020Lim;
+                default:
+                    SDL_assert(false);
+            }
     };
 
     return bt601Lim;
@@ -729,6 +740,10 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         SDL_assert(m_EGLImagePixelFormat != AV_PIX_FMT_NONE);
 
         m_ColorSpace = frame->colorspace;
+
+        // This handles the case where the color range is unknown,
+        // so that we use Limited color range which is the default
+        // behavior for Moonlight.
         m_ColorFull = frame->color_range == AVCOL_RANGE_JPEG;
 
         if (!specialize()) {
