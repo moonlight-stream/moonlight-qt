@@ -101,7 +101,7 @@ public:
         return true;
     }
 
-    virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) {
+    virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) {
         if (videoFormat == VIDEO_FORMAT_H265_MAIN10) {
             // 10-bit YUV 4:2:0
             return AV_PIX_FMT_P010;
@@ -112,7 +112,7 @@ public:
         }
     }
 
-    virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) {
+    virtual bool isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) {
         // By default, we only support the preferred pixel format
         return getPreferredPixelFormat(videoFormat) == pixelFormat;
     }
@@ -126,6 +126,10 @@ public:
     // By default we can't do EGL
     virtual bool canExportEGL() {
         return false;
+    }
+
+    virtual AVPixelFormat getEGLImagePixelFormat() {
+        return AV_PIX_FMT_NONE;
     }
 
     virtual bool initializeEGL(EGLDisplay,

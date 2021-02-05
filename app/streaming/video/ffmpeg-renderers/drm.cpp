@@ -386,6 +386,10 @@ bool DrmRenderer::canExportEGL() {
     return true;
 }
 
+AVPixelFormat DrmRenderer::getEGLImagePixelFormat() {
+    return AV_PIX_FMT_NV12;
+}
+
 bool DrmRenderer::initializeEGL(EGLDisplay,
                                 const EGLExtensions &ext) {
     if (!ext.isSupported("EGL_EXT_image_dma_buf_import")) {

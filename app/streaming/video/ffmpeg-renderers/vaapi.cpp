@@ -483,6 +483,10 @@ VAAPIRenderer::canExportEGL() {
     return true;
 }
 
+AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
+    return AV_PIX_FMT_NV12;
+}
+
 bool
 VAAPIRenderer::initializeEGL(EGLDisplay,
                              const EGLExtensions &ext) {

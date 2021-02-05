@@ -59,7 +59,7 @@ SDL_Window* EGLRenderer::s_LastFailedWindow = nullptr;
 
 EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
     :
-        m_SwPixelFormat(AV_PIX_FMT_NONE),
+        m_EGLImagePixelFormat(AV_PIX_FMT_NONE),
         m_EGLDisplay(EGL_NO_DISPLAY),
         m_Textures{0},
         m_OverlayTextures{0},
@@ -153,16 +153,16 @@ void EGLRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 }
 
-bool EGLRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
+bool EGLRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    // Remember to keep this in sync with EGLRenderer::renderFrame()!
-    switch (pixelFormat)
-    {
-    case AV_PIX_FMT_NV12:
-        return true;
-    default:
-        return false;
-    }
+    // Pixel format support should be determined by the backend renderer
+    return m_Backend->isPixelFormatSupported(videoFormat, pixelFormat);
+}
+
+AVPixelFormat EGLRenderer::getPreferredPixelFormat(int videoFormat)
+{
+    // Pixel format preference should be determined by the backend renderer
+    return m_Backend->getPreferredPixelFormat(videoFormat);
 }
 
 void EGLRenderer::renderOverlay(Overlay::OverlayType type)
@@ -367,10 +367,10 @@ bool EGLRenderer::compileShaders() {
     SDL_assert(!m_ShaderProgram);
     SDL_assert(!m_OverlayShaderProgram);
 
-    SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
+    SDL_assert(m_EGLImagePixelFormat != AV_PIX_FMT_NONE);
 
     // XXX: TODO: other formats
-    SDL_assert(m_SwPixelFormat == AV_PIX_FMT_NV12);
+    SDL_assert(m_EGLImagePixelFormat == AV_PIX_FMT_NV12);
 
     m_ShaderProgram = compileShader("egl.vert", "egl.frag");
     if (!m_ShaderProgram) {
@@ -721,39 +721,29 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         return;
     }
 
-    if (frame->hw_frames_ctx != nullptr) {
-        // Find the native read-back format and load the shader
-        if (m_SwPixelFormat == AV_PIX_FMT_NONE) {
-            auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+    // Find the native read-back format and load the shaders
+    if (m_EGLImagePixelFormat == AV_PIX_FMT_NONE) {
+        m_EGLImagePixelFormat = m_Backend->getEGLImagePixelFormat();
+        EGL_LOG(Info, "EGLImage pixel format: %d", m_EGLImagePixelFormat);
 
-            m_SwPixelFormat = hwFrameCtx->sw_format;
-            SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
+        SDL_assert(m_EGLImagePixelFormat != AV_PIX_FMT_NONE);
 
-            EGL_LOG(Info, "Selected read-back format: %d", m_SwPixelFormat);
+        m_ColorSpace = frame->colorspace;
+        m_ColorFull = frame->color_range == AVCOL_RANGE_JPEG;
 
-            // XXX: TODO: Handle other pixel formats
-            SDL_assert(m_SwPixelFormat == AV_PIX_FMT_NV12);
-            m_ColorSpace = frame->colorspace;
-            m_ColorFull = frame->color_range == AVCOL_RANGE_JPEG;
-
-            if (!specialize()) {
-                m_SwPixelFormat = AV_PIX_FMT_NONE;
-                return;
-            }
-        }
-
-        ssize_t plane_count = m_Backend->exportEGLImages(frame, m_EGLDisplay, imgs);
-        if (plane_count < 0)
+        if (!specialize()) {
+            m_EGLImagePixelFormat = AV_PIX_FMT_NONE;
             return;
-        for (ssize_t i = 0; i < plane_count; ++i) {
-            glActiveTexture(GL_TEXTURE0 + i);
-            glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
-            m_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
         }
-    } else {
-        // TODO: load texture for SW decoding ?
-        EGL_LOG(Error, "EGL rendering only supports hw frames");
+    }
+
+    ssize_t plane_count = m_Backend->exportEGLImages(frame, m_EGLDisplay, imgs);
+    if (plane_count < 0)
         return;
+    for (ssize_t i = 0; i < plane_count; ++i) {
+        glActiveTexture(GL_TEXTURE0 + i);
+        glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
+        m_glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, imgs[i]);
     }
 
     glClear(GL_COLOR_BUFFER_BIT);

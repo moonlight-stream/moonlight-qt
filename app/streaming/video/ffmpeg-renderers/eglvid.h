@@ -14,6 +14,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
+    virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
 
 private:
 
@@ -29,7 +30,7 @@ private:
     int m_ViewportWidth;
     int m_ViewportHeight;
 
-    int m_SwPixelFormat;
+    AVPixelFormat m_EGLImagePixelFormat;
     void *m_EGLDisplay;
     unsigned m_Textures[EGL_MAX_PLANES];
     unsigned m_OverlayTextures[Overlay::OverlayMax];
