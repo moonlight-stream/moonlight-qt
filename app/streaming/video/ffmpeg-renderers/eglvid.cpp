@@ -792,6 +792,5 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         glFinish();
     }
 
-    if (frame->hw_frames_ctx != nullptr)
-        m_Backend->freeEGLImages(m_EGLDisplay, imgs);
+    m_Backend->freeEGLImages(m_EGLDisplay, imgs);
 }
