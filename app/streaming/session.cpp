@@ -37,14 +37,6 @@
 
 #define CONN_TEST_SERVER "qt.conntest.moonlight-stream.org"
 
-// Running the connection process asynchronously seems to reliably
-// cause a crash in QSGRenderThread on Wayland and strange crashes
-// elsewhere. Until these are figured out, avoid the async connect
-// thread on Linux and BSDs.
-#if !defined(Q_OS_UNIX) || defined(Q_OS_DARWIN)
-#define USE_ASYNC_CONNECT_THREAD 1
-#endif
-
 CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clStageStarting,
     nullptr,
@@ -65,11 +57,6 @@ void Session::clStageStarting(int stage)
     // which happens to be the main thread, so it's cool to interact
     // with the GUI in these callbacks.
     emit s_ActiveSession->stageStarting(QString::fromLocal8Bit(LiGetStageName(stage)));
-
-#ifndef USE_ASYNC_CONNECT_THREAD
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    QCoreApplication::sendPostedEvents();
-#endif
 }
 
 void Session::clStageFailed(int stage, int errorCode)
@@ -81,11 +68,6 @@ void Session::clStageFailed(int stage, int errorCode)
     char failingPorts[128];
     LiStringifyPortFlags(portFlags, ", ", failingPorts, sizeof(failingPorts));
     emit s_ActiveSession->stageFailed(QString::fromLocal8Bit(LiGetStageName(stage)), errorCode, QString(failingPorts));
-
-#ifndef USE_ASYNC_CONNECT_THREAD
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    QCoreApplication::sendPostedEvents();
-#endif
 }
 
 void Session::clConnectionTerminated(int errorCode)
@@ -1002,17 +984,7 @@ bool Session::startConnectionAsync()
 {
     // Wait 1.5 seconds before connecting to let the user
     // have time to read any messages present on the segue
-#ifdef USE_ASYNC_CONNECT_THREAD
     SDL_Delay(1500);
-#else
-    uint32_t start = SDL_GetTicks();
-    while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 1500)) {
-        // Pump the UI loop while we wait since we're not async
-        SDL_Delay(5);
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-        QCoreApplication::sendPostedEvents();
-    }
-#endif
 
     // The UI should have ensured the old game was already quit
     // if we decide to stream a different game.
@@ -1154,15 +1126,11 @@ void Session::exec(int displayOriginX, int displayOriginY)
 
     // Kick off the async connection thread while we sit here and pump the event loop
     AsyncConnectionStartThread asyncConnThread(this);
-#ifdef USE_ASYNC_CONNECT_THREAD
     asyncConnThread.start();
     while (!asyncConnThread.wait(10)) {
         QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
         QCoreApplication::sendPostedEvents();
     }
-#else
-    asyncConnThread.run();
-#endif
 
     // Pump the event loop one last time to ensure we pick up any events from
     // the thread that happened while it was in the final successful QThread::wait().
