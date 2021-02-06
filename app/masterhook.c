@@ -20,6 +20,14 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+// We require SDL 2.0.15+ to hook because it supports sharing
+// the DRM FD with our code. This avoids having multiple DRM FDs
+// in flight at the same time which would significantly complicate
+// the logic here because we'd need to figure out exactly which FD
+// should be the master at any given time. With the position of our
+// hooks, that is definitely not trivial.
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+
 // Qt's DRM master FD grabbed by our hook
 int g_QtDrmMasterFd = -1;
 struct stat64 g_DrmMasterStat;
@@ -134,3 +142,5 @@ int close(int fd)
     }
     return ret;
 }
+
+#endif

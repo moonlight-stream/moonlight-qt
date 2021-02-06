@@ -254,6 +254,7 @@ libdrm {
     linux {
         message(Master hooks enabled)
         SOURCES += masterhook.c
+        LIBS += -ldl
     }
 }
 config_EGL {
