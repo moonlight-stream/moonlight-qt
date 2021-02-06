@@ -320,15 +320,15 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
     }
 
     Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
-    return (windowFlags & SDL_WINDOW_INPUT_FOCUS) &&
+    return (windowFlags & SDL_WINDOW_INPUT_FOCUS)
 #if SDL_VERSION_ATLEAST(2, 0, 15)
-            (windowFlags & SDL_WINDOW_KEYBOARD_GRABBED)
+            && (windowFlags & SDL_WINDOW_KEYBOARD_GRABBED)
 #else
-            (windowFlags & SDL_WINDOW_INPUT_GRABBED)
+            && (windowFlags & SDL_WINDOW_INPUT_GRABBED)
 #endif
 #ifdef Q_OS_DARWIN
             // Darwin only supports full-screen system key capture
-            (windowFlags & SDL_WINDOW_FULLSCREEN)
+            && (windowFlags & SDL_WINDOW_FULLSCREEN)
 #endif
             ;
 }
@@ -338,14 +338,23 @@ void SdlInputHandler::setCaptureActive(bool active)
     if (active) {
         // If we're in full-screen exclusive mode, grab the cursor so it can't accidentally leave our window.
         if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+            SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);
+#else
             SDL_SetWindowGrab(m_Window, SDL_TRUE);
+#endif
         }
-        else if (m_CaptureSystemKeysEnabled) {
-#if SDL_VERSION_ATLEAST(2, 0, 15) && !defined(Q_OS_DARWIN)
-            // On SDL 2.0.15, we can get keyboard-only grab on Win32, X11, and Wayland
+
+        // Grab the keyboard too if system key capture is enabled
+        if (m_CaptureSystemKeysEnabled) {
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+            // On SDL 2.0.15, we can get keyboard-only grab on Win32, X11, and Wayland.
+            // This does nothing on macOS but it sets the SDL_WINDOW_KEYBOARD_GRABBED flag
+            // that we look for to see if keyboard capture is enabled.
             SDL_SetWindowKeyboardGrab(m_Window, SDL_TRUE);
 #else
-            // If we're in full-screen desktop mode but system key capture is enabled, also grab the cursor (will grab the keyboard too on X11).
+            // If we're in full-screen desktop mode and SDL doesn't have keyboard grab yet,
+            // grab the cursor (will grab the keyboard too on X11).
             if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) {
                 SDL_SetWindowGrab(m_Window, SDL_TRUE);
             }
@@ -396,12 +405,15 @@ void SdlInputHandler::setCaptureActive(bool active)
             SDL_SetRelativeMouseMode(SDL_FALSE);
         }
 
-        // Allow the cursor to leave the bounds of our window again.
-        SDL_SetWindowGrab(m_Window, SDL_FALSE);
-
 #if SDL_VERSION_ATLEAST(2, 0, 15)
+        // Allow the cursor to leave the bounds of our window again.
+        SDL_SetWindowMouseGrab(m_Window, SDL_FALSE);
+
         // Allow the keyboard to leave the window
         SDL_SetWindowKeyboardGrab(m_Window, SDL_FALSE);
+#else
+        // Allow the cursor to leave the bounds of our window again.
+        SDL_SetWindowGrab(m_Window, SDL_FALSE);
 #endif
     }
 }
