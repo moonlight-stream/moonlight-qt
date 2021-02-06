@@ -250,6 +250,11 @@ libdrm {
     DEFINES += HAVE_DRM
     SOURCES += streaming/video/ffmpeg-renderers/drm.cpp
     HEADERS += streaming/video/ffmpeg-renderers/drm.h
+
+    linux {
+        message(Master hooks enabled)
+        SOURCES += masterhook.c
+    }
 }
 config_EGL {
     message(EGL renderer selected)
