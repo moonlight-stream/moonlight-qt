@@ -15,7 +15,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
  - Supports streaming at 720p, 1080p, 1440p, 4K, and the client PC's native screen resolution
  - 7.1 surround sound audio support
  - Support for both pointer capture (for games) and direct mouse control (for remote desktop)
- - Support for passing system-wide keyboard shortcuts like Alt+Tab to the host in fullscreen mode
+ - Support for passing system-wide keyboard shortcuts like Alt+Tab to the host
  - Direct touchscreen mouse control
  - HEVC support for better image quality at reduced bandwidth
  - Gamepad support with force feedback for up to 4 players
