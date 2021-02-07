@@ -1321,6 +1321,9 @@ void Session::exec(int displayOriginX, int displayOriginY)
             case SDL_CODE_SHOW_CURSOR:
                 SDL_ShowCursor(SDL_ENABLE);
                 break;
+            case SDL_CODE_UNCAPTURE_MOUSE:
+                SDL_CaptureMouse(SDL_FALSE);
+                break;
             case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
                 m_FlushingWindowEventsRef--;
                 break;

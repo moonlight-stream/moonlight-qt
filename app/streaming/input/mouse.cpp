@@ -133,7 +133,15 @@ void SdlInputHandler::flushMousePositionUpdate()
             // c) a mouse button is still down from before the cursor left the video region (to allow smooth dragging)
             Uint32 buttonState = SDL_GetMouseState(nullptr, nullptr);
             if (buttonState == 0) {
-                m_PendingMouseButtonsAllUpOnVideoRegionLeave = false;
+                if (m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
+                    // Tell the main thread to stop capturing the mouse now
+                    SDL_Event event;
+                    event.type = SDL_USEREVENT;
+                    event.user.code = SDL_CODE_UNCAPTURE_MOUSE;
+                    SDL_PushEvent(&event);
+
+                    m_PendingMouseButtonsAllUpOnVideoRegionLeave = false;
+                }
             }
             if (mouseInVideoRegion || m_MouseWasInVideoRegion || m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
                 LiSendMousePositionEvent(x, y, dst.w, dst.h);
@@ -250,34 +258,6 @@ Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
 
     // Send mouse position updates if applicable
     me->flushMousePositionUpdate();
-
-#ifdef Q_OS_WIN32
-    // See comment in SdlInputHandler::notifyMouseLeave()
-    if (me->m_AbsoluteMouseMode && me->m_PendingMouseLeaveButtonUp != 0 && me->isCaptureActive()) {
-        int mouseX, mouseY;
-        int windowX, windowY;
-        Uint32 mouseState = SDL_GetGlobalMouseState(&mouseX, &mouseY);
-        SDL_GetWindowPosition(me->m_Window, &windowX, &windowY);
-
-        // If the button is now up, send the synthetic mouse up event
-        if ((mouseState & SDL_BUTTON(me->m_PendingMouseLeaveButtonUp)) == 0) {
-            SDL_Event event;
-
-            event.button.type = SDL_MOUSEBUTTONUP;
-            event.button.timestamp = SDL_GetTicks();
-            event.button.windowID = SDL_GetWindowID(me->m_Window);
-            event.button.which = 0;
-            event.button.button = me->m_PendingMouseLeaveButtonUp;
-            event.button.state = SDL_RELEASED;
-            event.button.clicks = 1;
-            event.button.x = mouseX - windowX;
-            event.button.y = mouseY - windowY;
-            SDL_PushEvent(&event);
-
-            me->m_PendingMouseLeaveButtonUp = 0;
-        }
-    }
-#endif
 
     return interval;
 }

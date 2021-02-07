@@ -7,6 +7,7 @@
 
 #define SDL_CODE_HIDE_CURSOR 1
 #define SDL_CODE_SHOW_CURSOR 2
+#define SDL_CODE_UNCAPTURE_MOUSE 3
 
 struct GamepadState {
     SDL_GameController* controller;
@@ -175,7 +176,6 @@ private:
     int m_StreamHeight;
     bool m_AbsoluteMouseMode;
     bool m_AbsoluteTouchMode;
-    Uint32 m_PendingMouseLeaveButtonUp;
 
     SDL_TouchFingerEvent m_TouchDownEvent[MAX_FINGERS];
     SDL_TimerID m_LeftButtonReleaseTimer;
