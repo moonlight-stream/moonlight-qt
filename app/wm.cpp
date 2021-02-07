@@ -2,6 +2,8 @@
 
 #include "utils.h"
 
+#include <SDL.h>
+
 #ifdef HAS_X11
 #include <X11/Xlib.h>
 #endif
@@ -10,14 +12,30 @@
 #include <wayland-client.h>
 #endif
 
+#define VALUE_SET 0x01
+#define VALUE_TRUE 0x02
+
 bool WMUtils::isRunningX11()
 {
 #ifdef HAS_X11
-    Display* display = XOpenDisplay(nullptr);
-    if (display != nullptr) {
-        XCloseDisplay(display);
-        return true;
+    static SDL_atomic_t isRunningOnX11;
+
+    // If the value is not set yet, populate it now.
+    int val = SDL_AtomicGet(&isRunningOnX11);
+    if (!(val & VALUE_SET)) {
+        Display* display = XOpenDisplay(nullptr);
+        if (display != nullptr) {
+            XCloseDisplay(display);
+        }
+
+        // Populate the value to return and have for next time.
+        // This can race with another thread populating the same data,
+        // but that's no big deal.
+        val = VALUE_SET | ((display != nullptr) ? VALUE_TRUE : 0);
+        SDL_AtomicSet(&isRunningOnX11, val);
     }
+
+    return !!(val & VALUE_TRUE);
 #endif
 
     return false;
@@ -26,11 +44,24 @@ bool WMUtils::isRunningX11()
 bool WMUtils::isRunningWayland()
 {
 #ifdef HAS_WAYLAND
-    struct wl_display* display = wl_display_connect(nullptr);
-    if (display != nullptr) {
-        wl_display_disconnect(display);
-        return true;
+    static SDL_atomic_t isRunningOnWayland;
+
+    // If the value is not set yet, populate it now.
+    int val = SDL_AtomicGet(&isRunningOnWayland);
+    if (!(val & VALUE_SET)) {
+        struct wl_display* display = wl_display_connect(nullptr);
+        if (display != nullptr) {
+            wl_display_disconnect(display);
+        }
+
+        // Populate the value to return and have for next time.
+        // This can race with another thread populating the same data,
+        // but that's no big deal.
+        val = VALUE_SET | ((display != nullptr) ? VALUE_TRUE : 0);
+        SDL_AtomicSet(&isRunningOnWayland, val);
     }
+
+    return !!(val & VALUE_TRUE);
 #endif
 
     return false;
