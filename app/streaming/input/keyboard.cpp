@@ -92,8 +92,8 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
     {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected paste text combo");
-        const char* text = SDL_GetClipboardText();
-        if (text != nullptr) {
+        const char* text;
+        if (SDL_HasClipboardText() && (text = SDL_GetClipboardText()) != nullptr) {
             // Reset pending key combo before pasting,
             // otherwise it will ignore our keypresses.
             m_PendingKeyCombo = KeyComboMax;
