@@ -1,5 +1,7 @@
 #include "input.h"
 
+#include <QString>
+
 #define MAP_KEY(c, sc) \
     case c: \
         event.key.keysym.scancode = sc; \
@@ -13,27 +15,62 @@
 
 void SdlInputHandler::sendText(const char* text)
 {
-    for (const char* c = text; *c != 0; c++) {
+    QString string = QString::fromUtf8(text);
+
+    for (int i = 0; i < string.size(); i++) {
+        char16_t c = string[i].unicode();
         SDL_Event event = {};
 
-        if (*c >= 'A' && *c <= 'Z') {
-            event.key.keysym.scancode = (SDL_Scancode)((*c - 'A') + SDL_SCANCODE_A);
+        if (c >= 'A' && c <= 'Z') {
+            event.key.keysym.scancode = (SDL_Scancode)((c - 'A') + SDL_SCANCODE_A);
             event.key.keysym.mod = KMOD_SHIFT;
         }
-        else if (*c >= 'a' && *c <= 'z') {
-            event.key.keysym.scancode = (SDL_Scancode)((*c - 'a') + SDL_SCANCODE_A);
+        else if (c >= 'a' && c <= 'z') {
+            event.key.keysym.scancode = (SDL_Scancode)((c - 'a') + SDL_SCANCODE_A);
         }
-        else if (*c >= '1' && *c <= '9') {
-            event.key.keysym.scancode = (SDL_Scancode)((*c - '1') + SDL_SCANCODE_1);
+        else if (c >= '1' && c <= '9') {
+            event.key.keysym.scancode = (SDL_Scancode)((c - '1') + SDL_SCANCODE_1);
         }
         else {
-            // TODO: Smartquotes
-            switch (*c) {
+            // Fixup some Unicode characters to be expressible in ASCII
+            switch (c) {
+            case u'\U0000201C': // Left "
+            case u'\U0000201D': // Right "
+                c = '"';
+                break;
+
+            case u'\U00002018': // Left '
+            case u'\U00002019': // Right '
+                c = '\'';
+                break;
+
+            case u'\U00002013': // Smart -
+                c = '-';
+                break;
+
+            case u'\U00002026': // Ellipsis (...)
+                // Convert this character into 3 periods
+                string.insert(i+1, '.');
+                string.insert(i+1, '.');
+                c = '.';
+                break;
+
+            case u'\U000000A0': // Non-breaking space
+                c = ' ';
+                break;
+
+            default:
+                // Nothing
+                break;
+            }
+
+
+            switch (c) {
 
             // Handle CRLF separately to avoid duplicate newlines
             case '\r':
-                if (*(c + 1) == '\n') {
-                    c++;
+                if (string[i + 1] == '\n') {
+                    i++;
                 }
                 event.key.keysym.scancode = SDL_SCANCODE_RETURN;
                 break;
@@ -82,8 +119,8 @@ void SdlInputHandler::sendText(const char* text)
 
             default:
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Pasting text - non-ASCII character '%c' ignored",
-                            *c);
+                            "Pasting text - non-ASCII character value 'U+%x' ignored",
+                            c);
                 continue;
             }
         }
