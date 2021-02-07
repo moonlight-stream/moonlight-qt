@@ -65,6 +65,8 @@ public:
 
     void handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event);
 
+    void sendText(const char* text);
+
     void rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
@@ -101,6 +103,7 @@ private:
         KeyComboToggleMouseMode,
         KeyComboToggleCursorHide,
         KeyComboToggleMinimize,
+        KeyComboPasteText,
         KeyComboMax
     };
 

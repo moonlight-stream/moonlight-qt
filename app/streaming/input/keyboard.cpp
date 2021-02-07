@@ -87,6 +87,30 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
 
         SDL_MinimizeWindow(m_Window);
         break;
+
+    case KeyComboPasteText:
+    {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected paste text combo");
+        const char* text = SDL_GetClipboardText();
+        if (text != nullptr) {
+            // Reset pending key combo before pasting,
+            // otherwise it will ignore our keypresses.
+            m_PendingKeyCombo = KeyComboMax;
+
+            // Send the text and free it as required by SDL
+            sendText(text);
+            SDL_free((void*)text);
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "No text in clipboard to paste!");
+        }
+        break;
+    }
+
+    default:
+        Q_UNREACHABLE();
     }
 
     // Reset pending key combo

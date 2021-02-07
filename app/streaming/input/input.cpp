@@ -109,6 +109,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     m_SpecialKeyCombos[KeyComboToggleMinimize].scanCode = SDL_SCANCODE_D;
     m_SpecialKeyCombos[KeyComboToggleMinimize].enabled = QGuiApplication::platformName() != "eglfs";
 
+    m_SpecialKeyCombos[KeyComboPasteText].keyCombo = KeyComboPasteText;
+    m_SpecialKeyCombos[KeyComboPasteText].keyCode = SDLK_v;
+    m_SpecialKeyCombos[KeyComboPasteText].scanCode = SDL_SCANCODE_V;
+    m_SpecialKeyCombos[KeyComboPasteText].enabled = true;
+
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
 
