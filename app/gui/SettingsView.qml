@@ -525,6 +525,11 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
+                        if (!visible) {
+                            // Do nothing if the control won't even be visible
+                            return
+                        }
+
                         // Set the recommended option based on the OS
                         for (var i = 0; i < windowModeListModel.count; i++) {
                              var thisWm = windowModeListModel.get(i).val;
@@ -537,15 +542,13 @@ Flickable {
 
                         currentIndex = 0
 
-                        if (SystemProperties.hasWindowManager && !SystemProperties.rendererAlwaysFullScreen) {
-                            var savedWm = StreamingPreferences.windowMode
-                            for (var i = 0; i < windowModeListModel.count; i++) {
-                                 var thisWm = windowModeListModel.get(i).val;
-                                 if (savedWm === thisWm) {
-                                     currentIndex = i
-                                     break
-                                 }
-                            }
+                        var savedWm = StreamingPreferences.windowMode
+                        for (var i = 0; i < windowModeListModel.count; i++) {
+                             var thisWm = windowModeListModel.get(i).val;
+                             if (savedWm === thisWm) {
+                                 currentIndex = i
+                                 break
+                             }
                         }
 
                         activated(currentIndex)
@@ -792,20 +795,19 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        if (SystemProperties.hasWindowManager) {
-                            var saved_uidisplaymode = StreamingPreferences.uiDisplayMode
-                            currentIndex = 0
-                            for (var i = 0; i < uiDisplayModeListModel.count; i++) {
-                                var el_uidisplaymode = uiDisplayModeListModel.get(i).val;
-                                if (saved_uidisplaymode === el_uidisplaymode) {
-                                    currentIndex = i
-                                    break
-                                }
-                            }
+                        if (!visible) {
+                            // Do nothing if the control won't even be visible
+                            return
                         }
-                        else {
-                            // Full-screen is always selected when there is no window manager
-                            currentIndex = 2
+
+                        var saved_uidisplaymode = StreamingPreferences.uiDisplayMode
+                        currentIndex = 0
+                        for (var i = 0; i < uiDisplayModeListModel.count; i++) {
+                            var el_uidisplaymode = uiDisplayModeListModel.get(i).val;
+                            if (saved_uidisplaymode === el_uidisplaymode) {
+                                currentIndex = i
+                                break
+                            }
                         }
 
                         activated(currentIndex)

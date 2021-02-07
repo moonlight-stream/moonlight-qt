@@ -340,6 +340,10 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 
     m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
 
+    if (decoder->isAlwaysFullScreen()) {
+        m_IsFullScreen = true;
+    }
+
     delete decoder;
 
     return true;
@@ -347,6 +351,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
     : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
+      m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningWindowManager()),
       m_Computer(computer),
       m_App(app),
       m_Window(nullptr),
@@ -506,8 +511,12 @@ bool Session::initialize()
     {
     default:
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
-        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
-        break;
+        // Only use full-screen desktop mode if we're running a window manager
+        if (WMUtils::isRunningWindowManager()) {
+            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+            break;
+        }
+        // Fall-through
     case StreamingPreferences::WM_FULLSCREEN:
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
         break;
@@ -817,7 +826,7 @@ void Session::getWindowDimensions(int& x, int& y,
             }
         }
 
-        fullScreen = (m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED);
+        fullScreen = m_IsFullScreen;
     }
 
     SDL_Rect usableBounds;
@@ -1212,7 +1221,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
     // For non-full screen windows, call getWindowDimensions()
     // again after creating a window to allow it to account
     // for window chrome size.
-    if (m_Preferences->windowMode == StreamingPreferences::WM_WINDOWED) {
+    if (!m_IsFullScreen) {
         getWindowDimensions(x, y, width, height);
 
         // We must set the size before the position because centering
