@@ -34,7 +34,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_RightButtonReleaseTimer(0),
       m_DragTimer(0),
       m_DragButton(0),
-      m_NumFingersDown(0)
+      m_NumFingersDown(0),
+      m_ClipboardData()
 {
     // Allow gamepad input when the app doesn't have focus if requested
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, prefs.backgroundGamepad ? "1" : "0");
@@ -196,6 +197,13 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     }
 
     m_MouseMoveTimer = SDL_AddTimer(pollingInterval, SdlInputHandler::mouseMoveTimerCallback, this);
+
+    // Initialize state used by the clipboard thread before we start it
+    SDL_AtomicSet(&m_ShutdownClipboardThread, 0);
+    m_ClipboardHasData = SDL_CreateCond();
+    m_ClipboardLock = SDL_CreateMutex();
+
+    m_ClipboardThread = SDL_CreateThread(SdlInputHandler::clipboardThreadProc, "Clipboard Sender", this);
 }
 
 SdlInputHandler::~SdlInputHandler()
@@ -220,6 +228,17 @@ SdlInputHandler::~SdlInputHandler()
     SDL_RemoveTimer(m_LeftButtonReleaseTimer);
     SDL_RemoveTimer(m_RightButtonReleaseTimer);
     SDL_RemoveTimer(m_DragTimer);
+
+    // Wake up the clipboard thread to terminate it
+    SDL_AtomicSet(&m_ShutdownClipboardThread, 1);
+    SDL_CondBroadcast(m_ClipboardHasData);
+
+    // Wait for it to terminate
+    SDL_WaitThread(m_ClipboardThread, nullptr);
+
+    // Now we can safely clean up its resources
+    SDL_DestroyCond(m_ClipboardHasData);
+    SDL_DestroyMutex(m_ClipboardLock);
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);

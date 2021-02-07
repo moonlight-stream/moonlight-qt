@@ -94,12 +94,13 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
                     "Detected paste text combo");
         const char* text;
         if (SDL_HasClipboardText() && (text = SDL_GetClipboardText()) != nullptr) {
-            // Reset pending key combo before pasting,
-            // otherwise it will ignore our keypresses.
-            m_PendingKeyCombo = KeyComboMax;
+            // Append this data to the clipboard data string for the thread to process
+            SDL_LockMutex(m_ClipboardLock);
+            m_ClipboardData.append(text);
+            SDL_CondSignal(m_ClipboardHasData);
+            SDL_UnlockMutex(m_ClipboardLock);
 
-            // Send the text and free it as required by SDL
-            sendText(text);
+            // SDL_GetClipboardText() allocates, so we must free
             SDL_free((void*)text);
         }
         else {
@@ -117,13 +118,17 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
     m_PendingKeyCombo = KeyComboMax;
 }
 
+#define IS_SYNTHETIC_KEY_EVENT(x) ((x)->timestamp == 0)
+
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
     short keyCode;
     char modifiers;
 
     // Check for our special key combos
-    if ((event->state == SDL_PRESSED) &&
+    // Ignore timestamp == 0 which are sent from our keyboard code.
+    if (!IS_SYNTHETIC_KEY_EVENT(event) &&
+            (event->state == SDL_PRESSED) &&
             (event->keysym.mod & KMOD_CTRL) &&
             (event->keysym.mod & KMOD_ALT) &&
             (event->keysym.mod & KMOD_SHIFT)) {
@@ -157,7 +162,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
     }
 
-    if (event->state == SDL_PRESSED && m_PendingKeyCombo != KeyComboMax) {
+    if (!IS_SYNTHETIC_KEY_EVENT(event) && event->state == SDL_PRESSED && m_PendingKeyCombo != KeyComboMax) {
         // Ignore further key presses until the special combo is raised
         return;
     }
@@ -401,12 +406,16 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
     }
 
-    // Track the key state so we always know which keys are down
-    if (event->state == SDL_PRESSED) {
-        m_KeysDown.insert(keyCode);
-    }
-    else {
-        m_KeysDown.remove(keyCode);
+    // If this is a synthetic keypress from the clipboard code,
+    // this will be on a non-main thread, so don't touch m_KeysDown.
+    if (!IS_SYNTHETIC_KEY_EVENT(event)) {
+        // Track the key state so we always know which keys are down
+        if (event->state == SDL_PRESSED) {
+            m_KeysDown.insert(keyCode);
+        }
+        else {
+            m_KeysDown.remove(keyCode);
+        }
     }
 
     LiSendKeyboardEvent(0x8000 | keyCode,
@@ -414,7 +423,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                             KEY_ACTION_DOWN : KEY_ACTION_UP,
                         modifiers);
 
-    if (m_PendingKeyCombo != KeyComboMax && m_KeysDown.isEmpty()) {
+    if (!IS_SYNTHETIC_KEY_EVENT(event) && m_PendingKeyCombo != KeyComboMax && m_KeysDown.isEmpty()) {
         int keys;
         const Uint8 *keyState = SDL_GetKeyboardState(&keys);
 

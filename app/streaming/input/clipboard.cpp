@@ -2,6 +2,34 @@
 
 #include <QString>
 
+int SdlInputHandler::clipboardThreadProc(void *ptr)
+{
+    auto me = (SdlInputHandler*)ptr;
+
+    while (!SDL_AtomicGet(&me->m_ShutdownClipboardThread)) {
+        QString clipboardData;
+
+        SDL_LockMutex(me->m_ClipboardLock);
+        for (;;) {
+            clipboardData = me->m_ClipboardData;
+            me->m_ClipboardData.clear();
+            if (!clipboardData.isEmpty() || SDL_AtomicGet(&me->m_ShutdownClipboardThread)) {
+                break;
+            }
+            SDL_CondWait(me->m_ClipboardHasData, me->m_ClipboardLock);
+        }
+        SDL_UnlockMutex(me->m_ClipboardLock);
+
+        // We might get here on shutdown, so don't send text if there's
+        // nothing to send.
+        if (!clipboardData.isEmpty()) {
+            me->sendText(clipboardData);
+        }
+    }
+
+    return 0;
+}
+
 #define MAP_KEY(c, sc) \
     case c: \
         event.key.keysym.scancode = sc; \
@@ -13,13 +41,17 @@
         event.key.keysym.mod = KMOD_SHIFT; \
         break
 
-void SdlInputHandler::sendText(const char* text)
+void SdlInputHandler::sendText(QString& string)
 {
-    QString string = QString::fromUtf8(text);
-
     for (int i = 0; i < string.size(); i++) {
         char16_t c = string[i].unicode();
         SDL_Event event = {};
+
+        // If we're sending a very long string, we might get a termination request
+        // while we're in the middle of sending a string. In that case, just bail.
+        if (SDL_AtomicGet(&m_ShutdownClipboardThread)) {
+            return;
+        }
 
         if (c >= 'A' && c <= 'Z') {
             event.key.keysym.scancode = (SDL_Scancode)((c - 'A') + SDL_SCANCODE_A);
@@ -125,6 +157,16 @@ void SdlInputHandler::sendText(const char* text)
             }
         }
 
+        if (event.key.keysym.mod & KMOD_SHIFT) {
+            SDL_Event modifierEvent = {};
+            modifierEvent.type = SDL_KEYDOWN;
+            modifierEvent.key.state = SDL_PRESSED;
+            modifierEvent.key.keysym.scancode = SDL_SCANCODE_LSHIFT;
+            handleKeyEvent(&modifierEvent.key);
+
+            SDL_Delay(10);
+        }
+
         event.type = SDL_KEYDOWN;
         event.key.state = SDL_PRESSED;
         handleKeyEvent(&event.key);
@@ -134,5 +176,15 @@ void SdlInputHandler::sendText(const char* text)
         event.type = SDL_KEYUP;
         event.key.state = SDL_RELEASED;
         handleKeyEvent(&event.key);
+
+        if (event.key.keysym.mod & KMOD_SHIFT) {
+            SDL_Event modifierEvent = {};
+            modifierEvent.type = SDL_KEYUP;
+            modifierEvent.key.state = SDL_RELEASED;
+            modifierEvent.key.keysym.scancode = SDL_SCANCODE_LSHIFT;
+            handleKeyEvent(&modifierEvent.key);
+
+            SDL_Delay(10);
+        }
     }
 }
