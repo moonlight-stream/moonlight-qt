@@ -495,6 +495,10 @@ ApplicationWindow {
                 Keys.onReturnPressed: {
                     addPcDialog.accept()
                 }
+
+                Keys.onEnterPressed: {
+                    addPcDialog.accept()
+                }
             }
         }
     }

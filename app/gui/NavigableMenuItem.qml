@@ -22,6 +22,10 @@ MenuItem {
         triggered()
     }
 
+    Keys.onEnterPressed: {
+        triggered()
+    }
+
     Keys.onEscapePressed: {
         parentMenu.close()
     }

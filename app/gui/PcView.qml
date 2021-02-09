@@ -379,6 +379,10 @@ CenteredGridView {
                 Keys.onReturnPressed: {
                     renamePcDialog.accept()
                 }
+
+                Keys.onEnterPressed: {
+                    renamePcDialog.accept()
+                }
             }
         }
     }
