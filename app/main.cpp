@@ -503,6 +503,11 @@ int main(int argc, char *argv[])
     app.setWindowIcon(QIcon(":/res/moonlight.svg"));
 #endif
 
+    // This is necessary to show our icon correctly on Wayland
+    app.setDesktopFileName("com.moonlight_stream.Moonlight.desktop");
+    qputenv("SDL_VIDEO_WAYLAND_WMCLASS", "com.moonlight_stream.Moonlight");
+    qputenv("SDL_VIDEO_X11_WMCLASS", "com.moonlight_stream.Moonlight");
+
     // Register our C++ types for QML
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
