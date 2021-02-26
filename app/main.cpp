@@ -395,6 +395,9 @@ int main(int argc, char *argv[])
     // future KMSDRM platforms that use SDL for rendering.
     SDL_SetHint(SDL_HINT_VIDEO_DOUBLE_BUFFER, "1");
 
+    // We use MMAL to render on Raspberry Pi, so we do not require DRM master.
+    SDL_SetHint("SDL_KMSDRM_REQUIRE_DRM_MASTER", "0");
+
     // Use Direct3D 9Ex to avoid a deadlock caused by the D3D device being reset when
     // the user triggers a UAC prompt. This option controls the software/SDL renderer.
     // The DXVA2 renderer uses Direct3D 9Ex itself directly.
