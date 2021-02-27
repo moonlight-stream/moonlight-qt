@@ -522,15 +522,6 @@ bool Session::initialize()
         break;
     }
 
-#ifdef Q_OS_DARWIN
-    // macOS behaves as if we're capturing system keys when
-    // we enter "real" full-screen mode, so use standard
-    // full-screen as our full-screen flag when capturing keys.
-    if (m_Preferences->captureSysKeys) {
-        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
-    }
-#endif
-
 #if !SDL_VERSION_ATLEAST(2, 0, 11)
     // HACK: Using a full-screen window breaks mouse capture on the Pi's LXDE
     // GUI environment. Force the session to use windowed mode (which won't
@@ -1345,6 +1336,7 @@ void Session::exec(int displayOriginX, int displayOriginY)
                 if (m_Preferences->muteOnFocusLoss) {
                     m_AudioMuted = false;
                 }
+                m_InputHandler->notifyFocusGained();
                 break;
             case SDL_WINDOWEVENT_LEAVE:
                 m_InputHandler->notifyMouseLeave();

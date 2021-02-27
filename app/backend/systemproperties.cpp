@@ -68,12 +68,6 @@ SystemProperties::SystemProperties()
     hasDiscordIntegration = false;
 #endif
 
-#ifdef Q_OS_DARWIN
-    supportsWindowedSystemKeyCapture = false;
-#else
-    supportsWindowedSystemKeyCapture = true;
-#endif
-
     unmappedGamepads = SdlInputHandler::getUnmappedGamepads();
 
     // Populate data that requires talking to SDL. We do it all in one shot

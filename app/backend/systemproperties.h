@@ -19,7 +19,6 @@ public:
     Q_PROPERTY(bool hasWindowManager MEMBER hasWindowManager CONSTANT)
     Q_PROPERTY(bool hasBrowser MEMBER hasBrowser CONSTANT)
     Q_PROPERTY(bool hasDiscordIntegration MEMBER hasDiscordIntegration CONSTANT)
-    Q_PROPERTY(bool supportsWindowedSystemKeyCapture MEMBER supportsWindowedSystemKeyCapture CONSTANT)
     Q_PROPERTY(QString unmappedGamepads MEMBER unmappedGamepads NOTIFY unmappedGamepadsChanged)
     Q_PROPERTY(int maximumStreamingFrameRate MEMBER maximumStreamingFrameRate CONSTANT)
     Q_PROPERTY(QSize maximumResolution MEMBER maximumResolution CONSTANT)
@@ -44,7 +43,6 @@ private:
     bool hasWindowManager;
     bool hasBrowser;
     bool hasDiscordIntegration;
-    bool supportsWindowedSystemKeyCapture;
     QString unmappedGamepads;
     int maximumStreamingFrameRate;
     QSize maximumResolution;

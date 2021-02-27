@@ -911,8 +911,7 @@ Flickable {
                     id: captureSysKeysCheck
                     hoverEnabled: true
                     width: parent.width
-                    text: qsTr("Capture system keyboard shortcuts") + (SystemProperties.supportsWindowedSystemKeyCapture ?
-                              "" : qsTr(" while streaming in fullscreen mode"))
+                    text: qsTr("Capture system keyboard shortcuts")
                     font.pointSize:  12
                     enabled: SystemProperties.hasWindowManager
                     checked: StreamingPreferences.captureSysKeys && SystemProperties.hasWindowManager

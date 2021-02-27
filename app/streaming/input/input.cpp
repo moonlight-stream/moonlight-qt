@@ -171,6 +171,10 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     }
 #endif
 
+#ifdef Q_OS_DARWIN
+    CGSGetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), &m_OldHotKeyMode);
+#endif
+
     // Initialize the gamepad mask with currently attached gamepads to avoid
     // causing gamepads to unexpectedly disappear and reappear on the host
     // during stream startup as we detect currently attached gamepads one at a time.
@@ -239,6 +243,10 @@ SdlInputHandler::~SdlInputHandler()
     // Now we can safely clean up its resources
     SDL_DestroyCond(m_ClipboardHasData);
     SDL_DestroyMutex(m_ClipboardLock);
+
+#ifdef Q_OS_DARWIN
+    CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
+#endif
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);
@@ -319,9 +327,26 @@ void SdlInputHandler::notifyFocusLost()
         setCaptureActive(false);
     }
 
+#ifdef Q_OS_DARWIN
+    if (m_CaptureSystemKeysEnabled) {
+        // Stop capturing system keys on focus loss
+        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
+    }
+#endif
+
     // Raise all keys that are currently pressed. If we don't do this, certain keys
     // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
     raiseAllKeys();
+}
+
+void SdlInputHandler::notifyFocusGained()
+{
+#ifdef Q_OS_DARWIN
+    if (m_CaptureSystemKeysEnabled) {
+        // Start capturing system keys again on focus gain
+        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), CGSGlobalHotKeyDisable);
+    }
+#endif
 }
 
 bool SdlInputHandler::isCaptureActive()
@@ -351,10 +376,6 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 #else
             && (windowFlags & SDL_WINDOW_INPUT_GRABBED)
 #endif
-#ifdef Q_OS_DARWIN
-            // Darwin only supports full-screen system key capture
-            && (windowFlags & SDL_WINDOW_FULLSCREEN)
-#endif
             ;
 }
 
@@ -383,6 +404,10 @@ void SdlInputHandler::setCaptureActive(bool active)
             if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) {
                 SDL_SetWindowGrab(m_Window, SDL_TRUE);
             }
+#endif
+#ifdef Q_OS_DARWIN
+            // SDL doesn't support this private macOS API
+            CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), CGSGlobalHotKeyDisable);
 #endif
         }
 
@@ -439,6 +464,11 @@ void SdlInputHandler::setCaptureActive(bool active)
 #else
         // Allow the cursor to leave the bounds of our window again.
         SDL_SetWindowGrab(m_Window, SDL_FALSE);
+#endif
+
+#ifdef Q_OS_DARWIN
+        // SDL doesn't support this private macOS API
+        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
 #endif
     }
 }
