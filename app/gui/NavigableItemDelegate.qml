@@ -21,4 +21,7 @@ ItemDelegate {
     Keys.onReturnPressed: {
         clicked()
     }
+    Keys.onEnterPressed: {
+        clicked()
+    }
 }

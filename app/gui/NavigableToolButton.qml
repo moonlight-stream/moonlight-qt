@@ -27,6 +27,10 @@ ToolButton {
         clicked()
     }
 
+    Keys.onEnterPressed: {
+        clicked()
+    }
+
     Keys.onRightPressed: {
         nextItemInFocusChain(true).forceActiveFocus(Qt.TabFocus)
     }

@@ -358,6 +358,10 @@ Flickable {
                                         Keys.onReturnPressed: {
                                             customResolutionDialog.accept()
                                         }
+
+                                        Keys.onEnterPressed: {
+                                            customResolutionDialog.accept()
+                                        }
                                     }
 
                                     Label {
@@ -380,6 +384,10 @@ Flickable {
                                         }
 
                                         Keys.onReturnPressed: {
+                                            customResolutionDialog.accept()
+                                        }
+
+                                        Keys.onEnterPressed: {
                                             customResolutionDialog.accept()
                                         }
                                     }

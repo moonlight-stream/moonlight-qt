@@ -245,6 +245,17 @@ CenteredGridView {
             }
         }
 
+        Keys.onEnterPressed: {
+            // Open the app context menu if activated via the gamepad or keyboard
+            // for running games. If the game isn't running, the above onClicked
+            // method will handle the launch.
+            if (model.running) {
+                // This will be keyboard/gamepad driven so use
+                // open() instead of popup()
+                appContextMenu.open()
+            }
+        }
+
         Keys.onMenuPressed: {
             // This will be keyboard/gamepad driven so use open() instead of popup()
             appContextMenu.open()
