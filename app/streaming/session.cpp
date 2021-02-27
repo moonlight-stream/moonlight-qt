@@ -926,10 +926,8 @@ void Session::toggleFullscreen()
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
 
     if (fullScreen) {
-        if ((m_FullScreenFlag == SDL_WINDOW_FULLSCREEN || m_Preferences->captureSysKeys) && m_InputHandler->isCaptureActive()) {
+        if (m_FullScreenFlag == SDL_WINDOW_FULLSCREEN && m_InputHandler->isCaptureActive()) {
             // Confine the cursor to the window if we're capturing input while transitioning to full screen.
-            // We also need to grab if we're capturing system keys, because SDL requires window grab to
-            // capture the keyboard on X11.
             SDL_SetWindowGrab(m_Window, SDL_TRUE);
         }
 
@@ -946,6 +944,9 @@ void Session::toggleFullscreen()
         // Reposition the window when the resize is complete
         m_PendingWindowedTransition = true;
     }
+
+    // Input handler might need to start/stop keyboard grab after changing modes
+    m_InputHandler->updateKeyboardGrabState();
 }
 
 void Session::notifyMouseEmulationMode(bool enabled)

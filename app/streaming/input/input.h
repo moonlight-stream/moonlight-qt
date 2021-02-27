@@ -112,6 +112,8 @@ public:
 
     void flushMousePositionUpdate();
 
+    void updateKeyboardGrabState();
+
     static
     QString getUnmappedGamepads();
 
@@ -185,7 +187,7 @@ private:
     bool m_FakeCaptureActive;
     QString m_OldIgnoreDevices;
     QString m_OldIgnoreDevicesExcept;
-    bool m_CaptureSystemKeysEnabled;
+    StreamingPreferences::CaptureSysKeysMode m_CaptureSystemKeysMode;
     int m_MouseCursorCapturedVisibilityState;
 
 #ifdef Q_OS_DARWIN

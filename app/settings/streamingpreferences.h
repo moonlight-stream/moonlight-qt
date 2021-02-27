@@ -69,6 +69,14 @@ public:
     };
     Q_ENUM(Language);
 
+    enum CaptureSysKeysMode
+    {
+        CSK_OFF,
+        CSK_FULLSCREEN,
+        CSK_ALWAYS,
+    };
+    Q_ENUM(CaptureSysKeysMode);
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -98,7 +106,7 @@ public:
     Q_PROPERTY(bool backgroundGamepad MEMBER backgroundGamepad NOTIFY backgroundGamepadChanged)
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
-    Q_PROPERTY(bool captureSysKeys MEMBER captureSysKeys NOTIFY captureSysKeysChanged)
+    Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
 
     Q_INVOKABLE bool retranslate();
@@ -127,7 +135,6 @@ public:
     bool backgroundGamepad;
     bool reverseScrollDirection;
     bool swapFaceButtons;
-    bool captureSysKeys;
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
@@ -136,6 +143,7 @@ public:
     WindowMode recommendedFullScreenMode;
     UIDisplayMode uiDisplayMode;
     Language language;
+    CaptureSysKeysMode captureSysKeysMode;
 
 signals:
     void displayModeChanged();
@@ -164,7 +172,7 @@ signals:
     void backgroundGamepadChanged();
     void reverseScrollDirectionChanged();
     void swapFaceButtonsChanged();
-    void captureSysKeysChanged();
+    void captureSysKeysModeChanged();
     void languageChanged();
 
 private:

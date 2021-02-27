@@ -22,7 +22,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_MouseWasInVideoRegion(false),
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_FakeCaptureActive(false),
-      m_CaptureSystemKeysEnabled(prefs.captureSysKeys || !WMUtils::isRunningWindowManager()),
+      m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
       m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
       m_PendingKeyCombo(KeyComboMax),
       m_LongPressTimer(0),
@@ -37,6 +37,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_NumFingersDown(0),
       m_ClipboardData()
 {
+    // System keys are always captured when running without a WM
+    if (!WMUtils::isRunningWindowManager()) {
+        m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
+    }
+
     // Allow gamepad input when the app doesn't have focus if requested
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, prefs.backgroundGamepad ? "1" : "0");
 
@@ -51,15 +56,12 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
 #if !SDL_VERSION_ATLEAST(2, 0, 15)
     // For older versions of SDL (2.0.14 and earlier), use SDL_HINT_GRAB_KEYBOARD
     SDL_SetHintWithPriority(SDL_HINT_GRAB_KEYBOARD,
-                            m_CaptureSystemKeysEnabled ? "1" : "0",
+                            m_CaptureSystemKeysMode != StreamingPreferences::CSK_OFF ? "1" : "0",
                             SDL_HINT_OVERRIDE);
 #endif
 
     // Opt-out of SDL's built-in Alt+Tab handling while keyboard grab is enabled
     SDL_SetHint("SDL_ALLOW_ALT_TAB_WHILE_GRABBED", "0");
-
-    // Don't close the window on Alt+F4 when keyboard grab is enabled
-    SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, m_CaptureSystemKeysEnabled ? "1" : "0");
 
     // Allow clicks to pass through to us when focusing the window. If we're in
     // absolute mouse mode, this will avoid the user having to click twice to
@@ -328,10 +330,8 @@ void SdlInputHandler::notifyFocusLost()
     }
 
 #ifdef Q_OS_DARWIN
-    if (m_CaptureSystemKeysEnabled) {
-        // Stop capturing system keys on focus loss
-        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
-    }
+    // Ungrab the keyboard
+    updateKeyboardGrabState();
 #endif
 
     // Raise all keys that are currently pressed. If we don't do this, certain keys
@@ -342,10 +342,11 @@ void SdlInputHandler::notifyFocusLost()
 void SdlInputHandler::notifyFocusGained()
 {
 #ifdef Q_OS_DARWIN
-    if (m_CaptureSystemKeysEnabled) {
-        // Start capturing system keys again on focus gain
-        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), CGSGlobalHotKeyDisable);
-    }
+    // Re-grab the keyboard if it was grabbed before focus loss
+    // FIXME: We only do this on macOS because we get a spurious
+    // focus gain when in SDL_WINDOW_FULLSCREEN_DESKTOP on Windows
+    // immediately after losing focus by clicking on another window.
+    updateKeyboardGrabState();
 #endif
 }
 
@@ -359,9 +360,62 @@ bool SdlInputHandler::isCaptureActive()
     return m_FakeCaptureActive;
 }
 
+void SdlInputHandler::updateKeyboardGrabState()
+{
+    if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_OFF) {
+        return;
+    }
+
+    bool shouldGrab = isCaptureActive();
+    Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
+    if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
+            !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
+        // Ungrab if it's fullscreen only and we left fullscreen
+        shouldGrab = false;
+    }
+    else if (!(windowFlags & SDL_WINDOW_INPUT_FOCUS)) {
+        // Ungrab if we lose input focus (SDL will do this internally, but
+        // not for macOS where SDL is not handling the grab logic).
+        shouldGrab = false;
+    }
+
+    // Don't close the window on Alt+F4 when keyboard grab is enabled
+    SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, shouldGrab ? "1" : "0");
+
+    if (shouldGrab) {
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+        // On SDL 2.0.15, we can get keyboard-only grab on Win32, X11, and Wayland.
+        // This does nothing on macOS but it sets the SDL_WINDOW_KEYBOARD_GRABBED flag
+        // that we look for to see if keyboard capture is enabled. We'll handle macOS
+        // ourselves below using the private CGSSetGlobalHotKeyOperatingMode() API.
+        SDL_SetWindowKeyboardGrab(m_Window, SDL_TRUE);
+#else
+        // If we're in full-screen desktop mode and SDL doesn't have keyboard grab yet,
+        // grab the cursor (will grab the keyboard too on X11).
+        if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) {
+            SDL_SetWindowGrab(m_Window, SDL_TRUE);
+        }
+#endif
+#ifdef Q_OS_DARWIN
+        // SDL doesn't support this private macOS API
+        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), CGSGlobalHotKeyDisable);
+#endif
+    }
+    else {
+#if SDL_VERSION_ATLEAST(2, 0, 15)
+        // Allow the keyboard to leave the window
+        SDL_SetWindowKeyboardGrab(m_Window, SDL_FALSE);
+#endif
+#ifdef Q_OS_DARWIN
+        // SDL doesn't support this private macOS API
+        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
+#endif
+    }
+}
+
 bool SdlInputHandler::isSystemKeyCaptureActive()
 {
-    if (!m_CaptureSystemKeysEnabled) {
+    if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_OFF) {
         return false;
     }
 
@@ -370,13 +424,23 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
     }
 
     Uint32 windowFlags = SDL_GetWindowFlags(m_Window);
-    return (windowFlags & SDL_WINDOW_INPUT_FOCUS)
+    if (!(windowFlags & SDL_WINDOW_INPUT_FOCUS)
 #if SDL_VERSION_ATLEAST(2, 0, 15)
-            && (windowFlags & SDL_WINDOW_KEYBOARD_GRABBED)
+            || !(windowFlags & SDL_WINDOW_KEYBOARD_GRABBED)
 #else
-            && (windowFlags & SDL_WINDOW_INPUT_GRABBED)
+            || !(windowFlags & SDL_WINDOW_INPUT_GRABBED)
 #endif
-            ;
+            )
+    {
+        return false;
+    }
+
+    if (m_CaptureSystemKeysMode == StreamingPreferences::CSK_FULLSCREEN &&
+            !(windowFlags & SDL_WINDOW_FULLSCREEN)) {
+        return false;
+    }
+
+    return true;
 }
 
 void SdlInputHandler::setCaptureActive(bool active)
@@ -388,26 +452,6 @@ void SdlInputHandler::setCaptureActive(bool active)
             SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);
 #else
             SDL_SetWindowGrab(m_Window, SDL_TRUE);
-#endif
-        }
-
-        // Grab the keyboard too if system key capture is enabled
-        if (m_CaptureSystemKeysEnabled) {
-#if SDL_VERSION_ATLEAST(2, 0, 15)
-            // On SDL 2.0.15, we can get keyboard-only grab on Win32, X11, and Wayland.
-            // This does nothing on macOS but it sets the SDL_WINDOW_KEYBOARD_GRABBED flag
-            // that we look for to see if keyboard capture is enabled.
-            SDL_SetWindowKeyboardGrab(m_Window, SDL_TRUE);
-#else
-            // If we're in full-screen desktop mode and SDL doesn't have keyboard grab yet,
-            // grab the cursor (will grab the keyboard too on X11).
-            if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) {
-                SDL_SetWindowGrab(m_Window, SDL_TRUE);
-            }
-#endif
-#ifdef Q_OS_DARWIN
-            // SDL doesn't support this private macOS API
-            CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), CGSGlobalHotKeyDisable);
 #endif
         }
 
@@ -458,19 +502,14 @@ void SdlInputHandler::setCaptureActive(bool active)
 #if SDL_VERSION_ATLEAST(2, 0, 15)
         // Allow the cursor to leave the bounds of our window again.
         SDL_SetWindowMouseGrab(m_Window, SDL_FALSE);
-
-        // Allow the keyboard to leave the window
-        SDL_SetWindowKeyboardGrab(m_Window, SDL_FALSE);
 #else
         // Allow the cursor to leave the bounds of our window again.
         SDL_SetWindowGrab(m_Window, SDL_FALSE);
 #endif
-
-#ifdef Q_OS_DARWIN
-        // SDL doesn't support this private macOS API
-        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
-#endif
     }
+
+    // Now update the keyboard grab
+    updateKeyboardGrabState();
 }
 
 void SdlInputHandler::handleTouchFingerEvent(SDL_TouchFingerEvent* event)

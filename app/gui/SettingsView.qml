@@ -907,23 +907,79 @@ Flickable {
                                   qsTr("NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.")
                 }
 
-                CheckBox {
-                    id: captureSysKeysCheck
-                    hoverEnabled: true
+                Row {
+                    spacing: 5
                     width: parent.width
-                    text: qsTr("Capture system keyboard shortcuts")
-                    font.pointSize:  12
-                    enabled: SystemProperties.hasWindowManager
-                    checked: StreamingPreferences.captureSysKeys && SystemProperties.hasWindowManager
-                    onCheckedChanged: {
-                        StreamingPreferences.captureSysKeys = checked
+
+                    CheckBox {
+                        id: captureSysKeysCheck
+                        hoverEnabled: true
+                        text: qsTr("Capture system keyboard shortcuts")
+                        font.pointSize: 12
+                        enabled: SystemProperties.hasWindowManager
+                        checked: StreamingPreferences.captureSysKeysMode !== StreamingPreferences.CSK_OFF || !SystemProperties.hasWindowManager
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 10000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.") + "\n\n" +
+                                      qsTr("NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.")
                     }
 
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 10000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.") + "\n\n" +
-                                  qsTr("NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.")
+                    AutoResizingComboBox {
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            if (!visible) {
+                                // Do nothing if the control won't even be visible
+                                return
+                            }
+
+                            var saved_syskeysmode = StreamingPreferences.captureSysKeysMode
+                            currentIndex = 0
+                            for (var i = 0; i < captureSysKeysModeListModel.count; i++) {
+                                var el_syskeysmode = captureSysKeysModeListModel.get(i).val;
+                                if (saved_syskeysmode === el_syskeysmode) {
+                                    currentIndex = i
+                                    break
+                                }
+                            }
+
+                            activated(currentIndex)
+                        }
+
+                        enabled: captureSysKeysCheck.checked
+                        textRole: "text"
+                        model: ListModel {
+                            id: captureSysKeysModeListModel
+                            ListElement {
+                                text: qsTr("in fullscreen")
+                                val: StreamingPreferences.CSK_FULLSCREEN
+                            }
+                            ListElement {
+                                text: qsTr("always")
+                                val: StreamingPreferences.CSK_ALWAYS
+                            }
+                        }
+
+                        function updatePref() {
+                            if (!enabled) {
+                                StreamingPreferences.captureSysKeysMode = StreamingPreferences.CSK_OFF
+                            }
+                            else {
+                                StreamingPreferences.captureSysKeysMode = captureSysKeysModeListModel.get(currentIndex).val
+                            }
+                        }
+
+                        // ::onActivated must be used, as it only listens for when the index is changed by a human
+                        onActivated: {
+                            updatePref()
+                        }
+
+                        // This handles transition of the checkbox state
+                        onEnabledChanged: {
+                            updatePref()
+                        }
+                    }
                 }
 
                 CheckBox {
