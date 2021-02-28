@@ -68,6 +68,32 @@ QString AutoUpdateChecker::getPlatform()
 #endif
 }
 
+int AutoUpdateChecker::compareVersion(QVector<int>& version1, QVector<int>& version2) {
+    for (int i = 0;; i++) {
+        int v1Val = 0;
+        int v2Val = 0;
+
+        // Treat missing decimal places as 0
+        if (i < version1.count()) {
+            v1Val = version1[i];
+        }
+        if (i < version2.count()) {
+            v2Val = version2[i];
+        }
+        if (i >= version1.count() && i >= version2.count()) {
+            // Equal versions
+            return 0;
+        }
+
+        if (v1Val < v2Val) {
+            return -1;
+        }
+        else if (v1Val > v2Val) {
+            return 1;
+        }
+    }
+}
+
 void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
 {
     Q_ASSERT(reply->isFinished());
@@ -119,46 +145,47 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
 
                 if (updateObj["arch"] == QSysInfo::buildCpuArchitecture() &&
                         updateObj["platform"] == getPlatform()) {
+
+                    // Check the kernel version minimum if one exists
+                    if (updateObj.contains("kernel_version_at_least") && updateObj["kernel_version_at_least"].isString()) {
+                        QVector<int> requiredVersionQuad;
+                        QVector<int> actualVersionQuad;
+
+                        QString requiredVersion = updateObj["kernel_version_at_least"].toString();
+                        QString actualVersion = QSysInfo::kernelVersion();
+                        parseStringToVersionQuad(requiredVersion, requiredVersionQuad);
+                        parseStringToVersionQuad(actualVersion, actualVersionQuad);
+
+                        if (compareVersion(actualVersionQuad, requiredVersionQuad) < 0) {
+                            qDebug() << "Skipping manifest entry due to kernel version (" << actualVersion << "<" << requiredVersion << ")";
+                            continue;
+                        }
+                    }
+
                     qDebug() << "Found update manifest match for current platform";
 
                     QString latestVersion = updateObj["version"].toString();
                     qDebug() << "Latest version of Moonlight for this platform is:" << latestVersion;
 
                     QVector<int> latestVersionQuad;
-
                     parseStringToVersionQuad(latestVersion, latestVersionQuad);
 
-                    for (int i = 0;; i++) {
-                        int latestVer = 0;
-                        int currentVer = 0;
-
-                        // Treat missing decimal places as 0
-                        if (i < latestVersionQuad.count()) {
-                            latestVer = latestVersionQuad[i];
-                        }
-                        if (i < m_CurrentVersionQuad.count()) {
-                            currentVer = m_CurrentVersionQuad[i];
-                        }
-                        if (i >= latestVersionQuad.count() && i >= m_CurrentVersionQuad.count()) {
-                            break;
-                        }
-
-                        if (currentVer < latestVer) {
-                            qDebug() << "Update available";
-
-                            emit onUpdateAvailable(updateObj["version"].toString(),
-                                                   updateObj["browser_url"].toString());
-                            return;
-                        }
-                        else if (currentVer > latestVer) {
-                            qDebug() << "Update manifest version lower than current version";
-                            return;
-                        }
+                    int res = compareVersion(m_CurrentVersionQuad, latestVersionQuad);
+                    if (res < 0) {
+                        // m_CurrentVersionQuad < latestVersionQuad
+                        qDebug() << "Update available";
+                        emit onUpdateAvailable(updateObj["version"].toString(),
+                                               updateObj["browser_url"].toString());
+                        return;
                     }
-
-                    qDebug() << "Update manifest version equal to current version";
-
-                    return;
+                    else if (res > 0) {
+                        qDebug() << "Update manifest version lower than current version";
+                        return;
+                    }
+                    else {
+                        qDebug() << "Update manifest version equal to current version";
+                        return;
+                    }
                 }
             }
             else {
@@ -166,8 +193,8 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
             }
         }
 
-        qWarning() << "No entry in update manifest found for current platform: "
-                   << QSysInfo::buildCpuArchitecture() << getPlatform();
+        qWarning() << "No entry in update manifest found for current platform:"
+                   << QSysInfo::buildCpuArchitecture() << getPlatform() << QSysInfo::kernelVersion();
     }
     else {
         qWarning() << "Update checking failed with error: " << reply->error();
