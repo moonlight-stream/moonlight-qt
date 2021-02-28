@@ -50,6 +50,11 @@ pushd $BUILD_FOLDER
 make -j$(sysctl -n hw.logicalcpu) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
 popd
 
+if [ "$ARCH" != "" ]; then
+  echo Single arch binary build successful
+  exit 0
+fi
+
 if [ "$MOONLIGHT_ALT_ARCH" != "" ]; then
   echo Creating Universal binary with alternate arch
   lipo $BUILD_FOLDER/app/Moonlight.app/Contents/MacOS/Moonlight $BUILD_FOLDER-$MOONLIGHT_ALT_ARCH/app/Moonlight.app/Contents/MacOS/Moonlight -create -o $BUILD_FOLDER/app/Moonlight.app/Contents/MacOS/Moonlight
@@ -60,11 +65,6 @@ pushd $BUILD_FOLDER
 dsymutil app/Moonlight.app/Contents/MacOS/Moonlight -o Moonlight-$VERSION.dsym || fail "dSYM creation failed!"
 cp -R Moonlight-$VERSION.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
 popd
-
-if [ "$ARCH" != "" ]; then
-  echo Single arch binary build successful
-  exit 0
-fi
 
 echo Creating app bundle
 EXTRA_ARGS=
