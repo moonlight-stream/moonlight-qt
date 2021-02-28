@@ -1,5 +1,6 @@
 # This script requires create-dmg to be installed from https://github.com/sindresorhus/create-dmg
 BUILD_CONFIG=$1
+ARCH=$2
 
 fail()
 {
@@ -17,6 +18,10 @@ BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
 VERSION=`cat $SOURCE_ROOT/app/version.txt`
 
+if [ "$ARCH" != "" ]; then
+  BUILD_FOLDER=$BUILD_FOLDER-$ARCH
+fi
+
 if [ "$SIGNING_PROVIDER_SHORTNAME" == "" ]; then
   SIGNING_PROVIDER_SHORTNAME=$SIGNING_IDENTITY
 fi
@@ -33,6 +38,8 @@ mkdir $BUILD_ROOT
 mkdir $BUILD_FOLDER
 mkdir $INSTALLER_FOLDER
 
+set -e
+
 echo Configuring the project
 pushd $BUILD_FOLDER
 qmake $SOURCE_ROOT/moonlight-qt.pro || fail "Qmake failed!"
@@ -43,11 +50,21 @@ pushd $BUILD_FOLDER
 make -j$(sysctl -n hw.logicalcpu) $(echo "$BUILD_CONFIG" | tr '[:upper:]' '[:lower:]') || fail "Make failed!"
 popd
 
+if [ "$MOONLIGHT_ALT_ARCH" != "" ]; then
+  echo Creating Universal binary with alternate arch
+  lipo $BUILD_FOLDER/app/Moonlight.app/Contents/MacOS/Moonlight $BUILD_FOLDER-$MOONLIGHT_ALT_ARCH/app/Moonlight.app/Contents/MacOS/Moonlight -create -o $BUILD_FOLDER/app/Moonlight.app/Contents/MacOS/Moonlight
+fi
+
 echo Saving dSYM file
 pushd $BUILD_FOLDER
 dsymutil app/Moonlight.app/Contents/MacOS/Moonlight -o Moonlight-$VERSION.dsym || fail "dSYM creation failed!"
 cp -R Moonlight-$VERSION.dsym $INSTALLER_FOLDER || fail "dSYM copy failed!"
 popd
+
+if [ "$ARCH" != "" ]; then
+  echo Single arch binary build successful
+  exit 0
+fi
 
 echo Creating app bundle
 EXTRA_ARGS=
