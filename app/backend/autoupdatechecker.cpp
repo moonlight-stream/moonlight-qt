@@ -63,6 +63,10 @@ QString AutoUpdateChecker::getPlatform()
     return QStringLiteral("steamlink");
 #elif defined(APP_IMAGE)
     return QStringLiteral("appimage");
+#elif defined(Q_OS_DARWIN) && QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Qt 6 changed this from 'osx' to 'macos'. Use the old one
+    // to be consistent (and not require another entry in the manifest).
+    return QStringLiteral("osx");
 #else
     return QSysInfo::productType();
 #endif
