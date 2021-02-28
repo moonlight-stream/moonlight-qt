@@ -38,8 +38,6 @@ mkdir $BUILD_ROOT
 mkdir $BUILD_FOLDER
 mkdir $INSTALLER_FOLDER
 
-set -e
-
 echo Configuring the project
 pushd $BUILD_FOLDER
 qmake $SOURCE_ROOT/moonlight-qt.pro || fail "Qmake failed!"
