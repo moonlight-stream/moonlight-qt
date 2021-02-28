@@ -13,12 +13,9 @@
 #define VK_NUMPAD0 0x60
 #endif
 
-void SdlInputHandler::performPendingSpecialKeyCombo()
+void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 {
-    // The caller must ensure all keys are up
-    Q_ASSERT(m_KeysDown.isEmpty());
-
-    switch (m_PendingKeyCombo) {
+    switch (combo) {
     case KeyComboQuit:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected quit key combo");
@@ -36,12 +33,20 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
 
         // Stop handling future input
         setCaptureActive(!isCaptureActive());
+
+        // Force raise all keys to ensure they aren't stuck,
+        // since we won't get their key up events.
+        raiseAllKeys();
         break;
 
     case KeyComboToggleFullScreen:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected full-screen toggle combo");
         Session::s_ActiveSession->toggleFullscreen();
+
+        // Force raise all keys just be safe across this full-screen/windowed
+        // transition just in case key events get lost.
+        raiseAllKeys();
         break;
 
     case KeyComboToggleStatsOverlay:
@@ -84,14 +89,18 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
     case KeyComboToggleMinimize:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected minimize combo");
-
         SDL_MinimizeWindow(m_Window);
         break;
 
     case KeyComboPasteText:
     {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Detected paste text combo");
+                    "Detected type clipboard text combo");
+
+        // Force raise all keys to ensure that none of them interfere
+        // with the text we're going to type.
+        raiseAllKeys();
+
         const char* text;
         if (SDL_HasClipboardText() && (text = SDL_GetClipboardText()) != nullptr) {
             // Append this data to the clipboard data string for the thread to process
@@ -113,9 +122,6 @@ void SdlInputHandler::performPendingSpecialKeyCombo()
     default:
         Q_UNREACHABLE();
     }
-
-    // Reset pending key combo
-    m_PendingKeyCombo = KeyComboMax;
 }
 
 #define IS_SYNTHETIC_KEY_EVENT(x) ((x)->timestamp == 0)
@@ -124,6 +130,12 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
     short keyCode;
     char modifiers;
+
+    if (event->repeat) {
+        // Ignore repeat key down events
+        SDL_assert(event->state == SDL_PRESSED);
+        return;
+    }
 
     // Check for our special key combos
     // Ignore timestamp == 0 which are sent from our keyboard code.
@@ -143,34 +155,19 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         // where the SDLK for one shortcut collides with
         // the scancode of another.
 
-        if (m_PendingKeyCombo == KeyComboMax) {
-            for (int i = 0; i < KeyComboMax; i++) {
-                if (m_SpecialKeyCombos[i].enabled && event->keysym.sym == m_SpecialKeyCombos[i].keyCode) {
-                    m_PendingKeyCombo = m_SpecialKeyCombos[i].keyCombo;
-                    break;
-                }
+        for (int i = 0; i < KeyComboMax; i++) {
+            if (m_SpecialKeyCombos[i].enabled && event->keysym.sym == m_SpecialKeyCombos[i].keyCode) {
+                performSpecialKeyCombo(m_SpecialKeyCombos[i].keyCombo);
+                return;
             }
         }
 
-        if (m_PendingKeyCombo == KeyComboMax) {
-            for (int i = 0; i < KeyComboMax; i++) {
-                if (m_SpecialKeyCombos[i].enabled && event->keysym.scancode == m_SpecialKeyCombos[i].scanCode) {
-                    m_PendingKeyCombo = m_SpecialKeyCombos[i].keyCombo;
-                    break;
-                }
+        for (int i = 0; i < KeyComboMax; i++) {
+            if (m_SpecialKeyCombos[i].enabled && event->keysym.scancode == m_SpecialKeyCombos[i].scanCode) {
+                performSpecialKeyCombo(m_SpecialKeyCombos[i].keyCombo);
+                return;
             }
         }
-    }
-
-    if (!IS_SYNTHETIC_KEY_EVENT(event) && event->state == SDL_PRESSED && m_PendingKeyCombo != KeyComboMax) {
-        // Ignore further key presses until the special combo is raised
-        return;
-    }
-
-    if (event->repeat) {
-        // Ignore repeat key down events
-        SDL_assert(event->state == SDL_PRESSED);
-        return;
     }
 
     // Set modifier flags
@@ -422,19 +419,4 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                         event->state == SDL_PRESSED ?
                             KEY_ACTION_DOWN : KEY_ACTION_UP,
                         modifiers);
-
-    if (!IS_SYNTHETIC_KEY_EVENT(event) && m_PendingKeyCombo != KeyComboMax && m_KeysDown.isEmpty()) {
-        int keys;
-        const Uint8 *keyState = SDL_GetKeyboardState(&keys);
-
-        // Make sure all client keys are up before we process the special key combo
-        for (int i = 0; i < keys; i++) {
-            if (keyState[i] == SDL_PRESSED) {
-                return;
-            }
-        }
-
-        // If we made it this far, no keys are pressed
-        performPendingSpecialKeyCombo();
-    }
 }

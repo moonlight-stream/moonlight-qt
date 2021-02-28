@@ -139,7 +139,7 @@ private:
 
     void handleRelativeFingerEvent(SDL_TouchFingerEvent* event);
 
-    void performPendingSpecialKeyCombo();
+    void performSpecialKeyCombo(KeyCombo combo);
 
     static
     Uint32 longPressTimerCallback(Uint32 interval, void* param);
@@ -200,7 +200,6 @@ private:
         SDL_Scancode scanCode;
         bool enabled;
     } m_SpecialKeyCombos[KeyComboMax];
-    KeyCombo m_PendingKeyCombo;
 
     SDL_TouchFingerEvent m_LastTouchDownEvent;
     SDL_TouchFingerEvent m_LastTouchUpEvent;
