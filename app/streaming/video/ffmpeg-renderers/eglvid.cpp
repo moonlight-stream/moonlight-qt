@@ -544,7 +544,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     src.x = src.y = dst.x = dst.y = 0;
     src.w = params->width;
     src.h = params->height;
-    SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
+    SDL_GL_GetDrawableSize(m_Window, &dst.w, &dst.h);
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
     glViewport(dst.x, dst.y, dst.w, dst.h);
