@@ -74,6 +74,7 @@ CenteredGridView {
         grid: appGrid
 
         property alias appContextMenu: appContextMenuLoader.item
+        property alias appNameText: appNameTextLoader.item
 
         // Dim the app if it's hidden
         opacity: model.hidden ? 0.4 : 1.0
@@ -106,7 +107,7 @@ CenteredGridView {
             ToolTip.text: model.name
             ToolTip.delay: 1000
             ToolTip.timeout: 5000
-            ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText.visible || appNameText.truncated)
+            ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText || appNameText.truncated)
         }
 
         Loader {
@@ -170,6 +171,7 @@ CenteredGridView {
         }
 
         Loader {
+            id: appNameTextLoader
             active: appIcon.isPlaceholder
             asynchronous: true
 
