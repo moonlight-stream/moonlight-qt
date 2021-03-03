@@ -15,7 +15,7 @@ SdlGamepadKeyNavigation::SdlGamepadKeyNavigation()
       m_LastAxisNavigationEventTime(0)
 {
     m_PollingTimer = new QTimer(this);
-    connect(m_PollingTimer, SIGNAL(timeout()), this, SLOT(onPollingTimerFired()));
+    connect(m_PollingTimer, &QTimer::timeout, this, &SdlGamepadKeyNavigation::onPollingTimerFired);
 }
 
 SdlGamepadKeyNavigation::~SdlGamepadKeyNavigation()

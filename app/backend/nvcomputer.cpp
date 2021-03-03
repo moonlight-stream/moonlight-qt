@@ -30,6 +30,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
 
     int appCount = settings.beginReadArray(SER_APPLIST);
+    this->appList.reserve(appCount);
     for (int i = 0; i < appCount; i++) {
         settings.setArrayIndex(i);
 
@@ -98,7 +99,7 @@ NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serv
     QString newMacString = NvHTTP::getXmlString(serverInfo, "mac");
     if (newMacString != "00:00:00:00:00:00") {
         QStringList macOctets = newMacString.split(':');
-        for (QString macOctet : macOctets) {
+        for (const QString& macOctet : macOctets) {
             this->macAddress.append((char) macOctet.toInt(nullptr, 16));
         }
     }

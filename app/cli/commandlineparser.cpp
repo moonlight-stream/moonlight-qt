@@ -52,7 +52,7 @@ public:
 
     void handleUnknownOptions()
     {
-        if (unknownOptionNames().length()) {
+        if (!unknownOptionNames().isEmpty()) {
             showError(QString("Unknown options: %1").arg(unknownOptionNames().join(", ")));
         }
     }
@@ -325,25 +325,21 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve display's width and height
     QRegularExpression resolutionRexExp("^(720|1080|1440|4K|resolution)$");
     QStringList resoOptions = parser.optionNames().filter(resolutionRexExp);
-    bool displaySet = resoOptions.length();
+    bool displaySet = !resoOptions.isEmpty();
     if (displaySet) {
         QString name = resoOptions.last();
         if (name == "720") {
             preferences->width  = 1280;
             preferences->height = 720;
-            displaySet = true;
         } else if (name == "1080") {
             preferences->width  = 1920;
             preferences->height = 1080;
-            displaySet = true;
         } else if (name == "1440") {
             preferences->width  = 2560;
             preferences->height = 1440;
-            displaySet = true;
         } else if (name == "4K") {
             preferences->width  = 3840;
             preferences->height = 2160;
-            displaySet = true;
         } else if (name == "resolution") {
             auto resolution = parser.getResolutionOptionValue(name);
             preferences->width  = resolution.first;

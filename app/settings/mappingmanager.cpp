@@ -41,7 +41,7 @@ MappingManager::MappingManager()
         #else
             .split('\n', QString::SkipEmptyParts);
         #endif
-    for (QString sdlMapping : sdlMappings) {
+    for (const QString& sdlMapping : sdlMappings) {
         SdlGamepadMapping mapping(sdlMapping);
         addMapping(mapping);
     }

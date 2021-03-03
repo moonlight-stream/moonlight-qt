@@ -70,7 +70,7 @@ private:
         m_Resolver = new QMdnsEngine::Resolver(m_Server, m_Hostname);
         connect(m_Resolver, &QMdnsEngine::Resolver::resolved,
                 this, &MdnsPendingComputer::handleResolvedAddress);
-        QTimer::singleShot(2000, this, SLOT(handleResolvedTimeout()));
+        QTimer::singleShot(2000, this, &MdnsPendingComputer::handleResolvedTimeout);
     }
 
     QByteArray m_Hostname;

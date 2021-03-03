@@ -281,8 +281,8 @@ public:
         // Queue this sample for the next v-sync
         CMSampleTimingInfo timingInfo = {
             .duration = kCMTimeInvalid,
+            .presentationTimeStamp = CMClockMakeHostTimeFromSystemUnits(mach_absolute_time()),
             .decodeTimeStamp = kCMTimeInvalid,
-            .presentationTimeStamp = CMClockMakeHostTimeFromSystemUnits(mach_absolute_time())
         };
 
         CMSampleBufferRef sampleBuffer;
@@ -365,6 +365,7 @@ public:
                                 if ([device.name containsString:@" 5"]) {
                                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                                 "No HEVC Main10 support on Skylake iGPU");
+                                    [device release];
                                     return false;
                                 }
                             }
@@ -375,10 +376,13 @@ public:
                                         [device.name containsString:@" M3"]) {
                                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                                 "No HEVC Main10 support on AMD GPUs until Polaris");
+                                    [device release];
                                     return false;
                                 }
                             }
                         }
+
+                        [device release];
                     }
                     else
             #endif

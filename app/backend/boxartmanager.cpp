@@ -46,8 +46,8 @@ public:
           m_Computer(computer),
           m_App(app)
     {
-        connect(this, SIGNAL(boxArtFetchCompleted(NvComputer*,NvApp,QUrl)),
-                boxArtManager, SLOT(handleBoxArtLoadComplete(NvComputer*,NvApp,QUrl)));
+        connect(this, &NetworkBoxArtLoadTask::boxArtFetchCompleted,
+                boxArtManager, &BoxArtManager::handleBoxArtLoadComplete);
     }
 
 signals:

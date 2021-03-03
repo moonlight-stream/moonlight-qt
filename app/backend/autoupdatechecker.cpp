@@ -15,8 +15,8 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
     // Allow HTTP redirects
     m_Nam.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
 
-    connect(&m_Nam, SIGNAL(finished(QNetworkReply*)),
-            this, SLOT(handleUpdateCheckRequestFinished(QNetworkReply*)));
+    connect(&m_Nam, &QNetworkAccessManager::finished,
+            this, &AutoUpdateChecker::handleUpdateCheckRequestFinished);
 
     QString currentVersion(VERSION_STR);
     qDebug() << "Current Moonlight version:" << currentVersion;

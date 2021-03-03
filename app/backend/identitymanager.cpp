@@ -143,7 +143,7 @@ QSslKey
 IdentityManager::getSslKey()
 {
     if (m_CachedSslKey.isNull()) {
-        BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.data(), -1);
+        BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.constData(), -1);
         THROW_BAD_ALLOC_IF_NULL(bio);
 
         EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);

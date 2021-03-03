@@ -67,7 +67,8 @@ NvHTTP::parseQuad(QString quad)
     }
 
     QStringList parts = quad.split(".");
-    for (int i = 0; i < 4; i++)
+    ret.reserve(parts.length());
+    for (int i = 0; i < parts.length(); i++)
     {
         ret.append(parts.at(i).toInt());
     }
@@ -391,7 +392,7 @@ void NvHTTP::handleSslErrors(QNetworkReply* reply, const QList<QSslError>& error
         return;
     }
 
-    for (auto error : errors) {
+    for (const QSslError& error : errors) {
         if (m_ServerCert != error.certificate()) {
             ignoreErrors = false;
             break;
@@ -462,10 +463,10 @@ NvHTTP::openConnection(QUrl baseUrl,
 
     // Run the request with a timeout if requested
     QEventLoop loop;
-    connect(reply, SIGNAL(finished()), &loop, SLOT(quit()));
-    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()), &loop, SLOT(quit()));
+    connect(reply, &QNetworkReply::finished, &loop, &QEventLoop::quit);
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, &loop, &QEventLoop::quit);
     if (timeoutMs) {
-        QTimer::singleShot(timeoutMs, &loop, SLOT(quit()));
+        QTimer::singleShot(timeoutMs, &loop, &QEventLoop::quit);
     }
     if (logLevel >= NvLogLevel::NVLL_VERBOSE) {
         qInfo() << "Executing request:" << url.toString();

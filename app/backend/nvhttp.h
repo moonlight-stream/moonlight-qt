@@ -23,6 +23,7 @@ public:
     int height;
     int refreshRate;
 };
+Q_DECLARE_TYPEINFO(NvDisplayMode, Q_PRIMITIVE_TYPE);
 
 class GfeHttpResponseException : public std::exception
 {

@@ -215,7 +215,7 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     QByteArray salt = generateRandomBytes(16);
     QByteArray saltedPin = saltPin(salt, pin);
 
-    QByteArray aesKey = QCryptographicHash::hash(saltedPin, hashAlgo).data();
+    QByteArray aesKey = QCryptographicHash::hash(saltedPin, hashAlgo).constData();
     aesKey.truncate(16);
 
     QString getCert = m_Http.openConnectionToString(m_Http.m_BaseUrlHttp,

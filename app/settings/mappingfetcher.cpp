@@ -13,8 +13,8 @@ MappingFetcher::MappingFetcher(QObject *parent) :
     // Allow HTTP redirects
     m_Nam.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
 
-    connect(&m_Nam, SIGNAL(finished(QNetworkReply*)),
-            this, SLOT(handleMappingListFetched(QNetworkReply*)));
+    connect(&m_Nam, &QNetworkAccessManager::finished,
+            this, &MappingFetcher::handleMappingListFetched);
 }
 
 void MappingFetcher::start()

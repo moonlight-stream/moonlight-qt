@@ -164,7 +164,7 @@ ComputerManager::ComputerManager(QObject *parent)
     // because NvHTTP uses aboutToQuit() to abort requests in progres
     // while quitting, however this is a one time signal - additional
     // requests would not be aborted and block termination.
-    connect(QCoreApplication::instance(), SIGNAL(aboutToQuit()), this, SLOT(handleAboutToQuit()));
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, &ComputerManager::handleAboutToQuit);
 }
 
 ComputerManager::~ComputerManager()
@@ -302,8 +302,8 @@ void ComputerManager::startPollingComputer(NvComputer* computer)
 
     if (!pollingEntry->isActive()) {
         PcMonitorThread* thread = new PcMonitorThread(computer);
-        connect(thread, SIGNAL(computerStateChanged(NvComputer*)),
-                this, SLOT(handleComputerStateChanged(NvComputer*)));
+        connect(thread, &PcMonitorThread::computerStateChanged,
+                this, &ComputerManager::handleComputerStateChanged);
         pollingEntry->setActiveThread(thread);
         thread->start();
     }
@@ -337,7 +337,6 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
                         address.isInSubnet(QHostAddress("fec0::"), 10) ||
                         address.isInSubnet(QHostAddress("fc00::"), 7)) {
                     addNewHost(address.toString(), true, v6Global);
-                    added = true;
                     break;
                 }
             }
@@ -418,7 +417,7 @@ void ComputerManager::deleteHost(NvComputer* computer)
 void ComputerManager::renameHost(NvComputer* computer, QString name)
 {
     {
-        QWriteLocker(&computer->lock);
+        QWriteLocker lock(&computer->lock);
 
         computer->name = name;
         computer->hasCustomName = true;
