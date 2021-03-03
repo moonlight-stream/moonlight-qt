@@ -143,7 +143,10 @@ QSslKey
 IdentityManager::getSslKey()
 {
     if (m_CachedSslKey.isNull()) {
-        BIO* bio = BIO_new_mem_buf(m_CachedPrivateKey.constData(), -1);
+        // This seemingly useless const_cast is required for old OpenSSL headers
+        // where BIO_new_mem_buf's parameter is not declared const like those on
+        // the Steam Link hardware.
+        BIO* bio = BIO_new_mem_buf(const_cast<char*>(m_CachedPrivateKey.constData()), -1);
         THROW_BAD_ALLOC_IF_NULL(bio);
 
         EVP_PKEY* pk = PEM_read_bio_PrivateKey(bio, nullptr, nullptr, nullptr);
