@@ -173,7 +173,9 @@ CenteredGridView {
         Loader {
             id: appNameTextLoader
             active: appIcon.isPlaceholder
-            asynchronous: true
+
+            // This loader is not asynchronous to avoid noticeable differences
+            // in the time in which the text loads for each game.
 
             width: appIcon.width
             height: model.running ? 175 : appIcon.height
