@@ -73,6 +73,8 @@ CenteredGridView {
         width: 220; height: 287;
         grid: appGrid
 
+        property alias appContextMenu: appContextMenuLoader.item
+
         // Dim the app if it's hidden
         opacity: model.hidden ? 0.4 : 1.0
 
@@ -107,78 +109,88 @@ CenteredGridView {
             ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText.visible || appNameText.truncated)
         }
 
-        ToolButton {
-            id: resumeButton
-            anchors.horizontalCenterOffset: appIcon.isPlaceholder ? -47 : 0
-            anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : -60
-            anchors.centerIn: appIcon
-            visible: model.running
-            implicitWidth: 125
-            implicitHeight: 125
+        Loader {
+            active: model.running
+            asynchronous: true
+            anchors.fill: appIcon
 
-            Image {
-                source: "qrc:/res/baseline-play_circle_filled_white-48px.svg"
-                anchors.centerIn: parent
-                sourceSize {
-                    width: 75
-                    height: 75
+            sourceComponent: Item {
+                ToolButton {
+                    anchors.horizontalCenterOffset: appIcon.isPlaceholder ? -47 : 0
+                    anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : -60
+                    anchors.centerIn: parent
+                    implicitWidth: 125
+                    implicitHeight: 125
+
+                    Image {
+                        source: "qrc:/res/baseline-play_circle_filled_white-48px.svg"
+                        anchors.centerIn: parent
+                        sourceSize {
+                            width: 75
+                            height: 75
+                        }
+                    }
+
+                    onClicked: {
+                        launchOrResumeSelectedApp(true)
+                    }
+
+                    ToolTip.text: qsTr("Resume Game")
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
+                }
+
+                ToolButton {
+                    anchors.horizontalCenterOffset: appIcon.isPlaceholder ? 47 : 0
+                    anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : 60
+                    anchors.centerIn: parent
+                    implicitWidth: 125
+                    implicitHeight: 125
+
+                    Image {
+                        source: "qrc:/res/baseline-cancel-24px.svg"
+                        anchors.centerIn: parent
+                        sourceSize {
+                            width: 75
+                            height: 75
+                        }
+                    }
+
+                    onClicked: {
+                        doQuitGame()
+                    }
+
+                    ToolTip.text: qsTr("Quit Game")
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
                 }
             }
-
-            onClicked: {
-                launchOrResumeSelectedApp(true)
-            }
-
-            ToolTip.text: qsTr("Resume Game")
-            ToolTip.delay: 1000
-            ToolTip.timeout: 3000
-            ToolTip.visible: hovered
         }
 
-        ToolButton {
-            id: quitButton
-            anchors.horizontalCenterOffset: appIcon.isPlaceholder ? 47 : 0
-            anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : 60
-            anchors.centerIn: appIcon
-            visible: model.running
-            implicitWidth: 125
-            implicitHeight: 125
+        Loader {
+            active: appIcon.isPlaceholder
+            asynchronous: true
 
-            Image {
-                source: "qrc:/res/baseline-cancel-24px.svg"
-                anchors.centerIn: parent
-                sourceSize {
-                    width: 75
-                    height: 75
-                }
-            }
-
-            onClicked: {
-                doQuitGame()
-            }
-
-            ToolTip.text: qsTr("Quit Game")
-            ToolTip.delay: 1000
-            ToolTip.timeout: 3000
-            ToolTip.visible: hovered
-        }
-
-        Label {
-            id: appNameText
-            visible: appIcon.isPlaceholder
-            text: model.name
             width: appIcon.width
             height: model.running ? 175 : appIcon.height
-            leftPadding: 20
-            rightPadding: 20
+
             anchors.left: appIcon.left
             anchors.right: appIcon.right
             anchors.bottom: appIcon.bottom
-            font.pointSize: 22
-            verticalAlignment: Text.AlignVCenter
-            horizontalAlignment: Text.AlignHCenter
-            wrapMode: Text.Wrap
-            elide: Text.ElideRight
+
+            sourceComponent: Label {
+                id: appNameText
+                text: model.name
+                font.pointSize: 22
+                leftPadding: 20
+                rightPadding: 20
+                verticalAlignment: Text.AlignVCenter
+                horizontalAlignment: Text.AlignHCenter
+                wrapMode: Text.Wrap
+                elide: Text.ElideRight
+            }
         }
 
         function launchOrResumeSelectedApp(quitExistingApp)
@@ -267,44 +279,48 @@ CenteredGridView {
             quitAppDialog.open()
         }
 
-        NavigableMenu {
-            id: appContextMenu
-            NavigableMenuItem {
-                parentMenu: appContextMenu
-                text: model.running ? qsTr("Resume Game") : qsTr("Launch Game")
-                onTriggered: launchOrResumeSelectedApp(true)
-            }
-            NavigableMenuItem {
-                parentMenu: appContextMenu
-                text: qsTr("Quit Game")
-                onTriggered: doQuitGame()
-                visible: model.running
-            }
-            NavigableMenuItem {
-                parentMenu: appContextMenu
-                checkable: true
-                checked: model.directLaunch
-                text: qsTr("Direct Launch")
-                onTriggered: appModel.setAppDirectLaunch(model.index, !model.directLaunch)
-                enabled: !model.hidden
+        Loader {
+            id: appContextMenuLoader
+            asynchronous: true
+            sourceComponent: NavigableMenu {
+                id: appContextMenu
+                NavigableMenuItem {
+                    parentMenu: appContextMenu
+                    text: model.running ? qsTr("Resume Game") : qsTr("Launch Game")
+                    onTriggered: launchOrResumeSelectedApp(true)
+                }
+                NavigableMenuItem {
+                    parentMenu: appContextMenu
+                    text: qsTr("Quit Game")
+                    onTriggered: doQuitGame()
+                    visible: model.running
+                }
+                NavigableMenuItem {
+                    parentMenu: appContextMenu
+                    checkable: true
+                    checked: model.directLaunch
+                    text: qsTr("Direct Launch")
+                    onTriggered: appModel.setAppDirectLaunch(model.index, !model.directLaunch)
+                    enabled: !model.hidden
 
-                ToolTip.text: qsTr("Launch this app immediately when the host is selected, bypassing the app selection grid.")
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-            }
-            NavigableMenuItem {
-                parentMenu: appContextMenu
-                checkable: true
-                checked: model.hidden
-                text: qsTr("Hide Game")
-                onTriggered: appModel.setAppHidden(model.index, !model.hidden)
-                enabled: model.hidden || (!model.running && !model.directLaunch)
+                    ToolTip.text: qsTr("Launch this app immediately when the host is selected, bypassing the app selection grid.")
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 3000
+                    ToolTip.visible: hovered
+                }
+                NavigableMenuItem {
+                    parentMenu: appContextMenu
+                    checkable: true
+                    checked: model.hidden
+                    text: qsTr("Hide Game")
+                    onTriggered: appModel.setAppHidden(model.index, !model.hidden)
+                    enabled: model.hidden || (!model.running && !model.directLaunch)
 
-                ToolTip.text: qsTr("Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.").arg(qsTr("View All Apps"))
-                ToolTip.delay: 1000
-                ToolTip.timeout: 5000
-                ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.").arg(qsTr("View All Apps"))
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                }
             }
         }
     }

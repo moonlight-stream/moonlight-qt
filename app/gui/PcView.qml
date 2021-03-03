@@ -113,6 +113,8 @@ CenteredGridView {
         width: 300; height: 320;
         grid: pcGrid
 
+        property alias pcContextMenu : pcContextMenuLoader.item
+
         Image {
             id: pcIcon
             anchors.horizontalCenter: parent.horizontalCenter
@@ -160,54 +162,58 @@ CenteredGridView {
             elide: Text.ElideRight
         }
 
-        NavigableMenu {
-            id: pcContextMenu
-            MenuItem {
-                text: qsTr("PC Status: %1").arg(model.online ? qsTr("Online") : qsTr("Offline"))
-                font.bold: true
-                enabled: false
-            }
-            NavigableMenuItem {
-                parentMenu: pcContextMenu
-                text: qsTr("View All Apps")
-                onTriggered: {
-                    var component = Qt.createComponent("AppView.qml")
-                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
-                    stackView.push(appView)
+        Loader {
+            id: pcContextMenuLoader
+            asynchronous: true
+            sourceComponent: NavigableMenu {
+                id: pcContextMenu
+                MenuItem {
+                    text: qsTr("PC Status: %1").arg(model.online ? qsTr("Online") : qsTr("Offline"))
+                    font.bold: true
+                    enabled: false
                 }
-                visible: model.online && model.paired
-            }
-            NavigableMenuItem {
-                parentMenu: pcContextMenu
-                text: qsTr("Wake PC")
-                onTriggered: computerModel.wakeComputer(index)
-                visible: !model.online && model.wakeable
-            }
-            NavigableMenuItem {
-                parentMenu: pcContextMenu
-                text: qsTr("Test Network")
-                onTriggered: {
-                    computerModel.testConnectionForComputer(index)
-                    testConnectionDialog.open()
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: qsTr("View All Apps")
+                    onTriggered: {
+                        var component = Qt.createComponent("AppView.qml")
+                        var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
+                        stackView.push(appView)
+                    }
+                    visible: model.online && model.paired
                 }
-            }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: qsTr("Wake PC")
+                    onTriggered: computerModel.wakeComputer(index)
+                    visible: !model.online && model.wakeable
+                }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: qsTr("Test Network")
+                    onTriggered: {
+                        computerModel.testConnectionForComputer(index)
+                        testConnectionDialog.open()
+                    }
+                }
 
-            NavigableMenuItem {
-                parentMenu: pcContextMenu
-                text: qsTr("Rename PC")
-                onTriggered: {
-                    renamePcDialog.pcIndex = index
-                    renamePcDialog.originalName = model.name
-                    renamePcDialog.open()
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: qsTr("Rename PC")
+                    onTriggered: {
+                        renamePcDialog.pcIndex = index
+                        renamePcDialog.originalName = model.name
+                        renamePcDialog.open()
+                    }
                 }
-            }
-            NavigableMenuItem {
-                parentMenu: pcContextMenu
-                text: qsTr("Delete PC")
-                onTriggered: {
-                    deletePcDialog.pcIndex = index
-                    // get confirmation first, actual closing is called from the dialog
-                    deletePcDialog.open()
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: qsTr("Delete PC")
+                    onTriggered: {
+                        deletePcDialog.pcIndex = index
+                        // get confirmation first, actual closing is called from the dialog
+                        deletePcDialog.open()
+                    }
                 }
             }
         }
