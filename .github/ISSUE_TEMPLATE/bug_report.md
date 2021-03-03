@@ -1,10 +1,12 @@
 ---
 name: Bug report
-about: Ask for help on Discord before reporting a bug
+about: Follow the troubleshooting guide before reporting a bug
 
 ---
 **READ ME FIRST!**
-This issue tracker is not the right place to ask for troubleshooting help if you're not able to connect or stream at all. For those requests, please use the #pc-help channel on our Discord server where there are many more people who can help (or direct you back here if it looks like a Moonlight bug after all). https://moonlight-stream.org/discord
+If you're here because something basic is not working (like gamepad input, video, or similar), it's probably something specific to your setup, so make sure you've gone through the Troubleshooting Guide first: https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting
+
+If you still have trouble with basic functionality after following the guide, join our Discord server where there are many other volunteers who can help (or direct you back here if it looks like a Moonlight bug after all). https://moonlight-stream.org/discord
 
 **Describe the bug**
 A clear and concise description of what the bug is.
@@ -26,14 +28,21 @@ List the games you've tried that exhibit the issue. To see if the issue is game-
 - If so, which settings have been changed?
 - Does the problem still occur after reverting settings back to default?
 
+**Gamepad-related issues (please complete if problem is gamepad-related)**
+- Do you have any gamepads connected to your host PC directly?
+- Does the problem still remain if you stream the desktop and use https://html5gamepad.com to test your gamepad?
+  - Instructions for streaming the desktop can be found here: https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide
+
 **Client PC details (please complete the following information)**
  - OS: [e.g. Windows 10 1809]
  - Moonlight Version: [e.g. v0.9.0]
+ - GPU: [e.g. Intel HD Graphics 520]
 
 **Server PC details (please complete the following information)**
  - OS: [e.g. Windows 10 1809]
  - GeForce Experience version: [e.g. 3.16.0.140]
  - Nvidia GPU driver: [e.g. 417.35]
+ - Antivirus and firewall software: [e.g. Windows Defender and Windows Firewall]
 
 **Moonlight Logs (please attach)**
 - On Windows, `Moonlight-###.log` files can be found in `%TEMP%`. Simply type that into the File Explorer path field to navigate there.
