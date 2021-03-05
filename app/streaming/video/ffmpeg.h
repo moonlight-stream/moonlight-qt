@@ -54,7 +54,7 @@ private:
     enum AVPixelFormat ffGetFormat(AVCodecContext* context,
                                    const enum AVPixelFormat* pixFmts);
 
-    AVPacket m_Pkt;
+    AVPacket* m_Pkt;
     AVCodecContext* m_VideoDecoderCtx;
     QByteArray m_DecodeBuffer;
     const AVCodecHWConfig* m_HwDecodeCfg;

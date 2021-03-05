@@ -117,7 +117,8 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
 }
 
 FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
-    : m_VideoDecoderCtx(nullptr),
+    : m_Pkt(av_packet_alloc()),
+      m_VideoDecoderCtx(nullptr),
       m_DecodeBuffer(1024 * 1024, 0),
       m_HwDecodeCfg(nullptr),
       m_BackendRenderer(nullptr),
@@ -132,8 +133,6 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly)
 {
-    av_init_packet(&m_Pkt);
-
     SDL_zero(m_ActiveWndVideoStats);
     SDL_zero(m_LastWndVideoStats);
     SDL_zero(m_GlobalVideoStats);
@@ -151,6 +150,8 @@ FFmpegVideoDecoder::~FFmpegVideoDecoder()
     // to preserve the log level across reset() during
     // test initialization.
     av_log_set_level(AV_LOG_INFO);
+
+    av_packet_free(&m_Pkt);
 }
 
 IFFmpegRenderer* FFmpegVideoDecoder::getBackendRenderer()
@@ -311,16 +312,16 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
     if (testFrame) {
         switch (params->videoFormat) {
         case VIDEO_FORMAT_H264:
-            m_Pkt.data = (uint8_t*)k_H264TestFrame;
-            m_Pkt.size = sizeof(k_H264TestFrame);
+            m_Pkt->data = (uint8_t*)k_H264TestFrame;
+            m_Pkt->size = sizeof(k_H264TestFrame);
             break;
         case VIDEO_FORMAT_H265:
-            m_Pkt.data = (uint8_t*)k_HEVCMainTestFrame;
-            m_Pkt.size = sizeof(k_HEVCMainTestFrame);
+            m_Pkt->data = (uint8_t*)k_HEVCMainTestFrame;
+            m_Pkt->size = sizeof(k_HEVCMainTestFrame);
             break;
         case VIDEO_FORMAT_H265_MAIN10:
-            m_Pkt.data = (uint8_t*)k_HEVCMain10TestFrame;
-            m_Pkt.size = sizeof(k_HEVCMain10TestFrame);
+            m_Pkt->data = (uint8_t*)k_HEVCMain10TestFrame;
+            m_Pkt->size = sizeof(k_HEVCMain10TestFrame);
             break;
         default:
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -341,7 +342,7 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
         for (int retries = 0; retries < 5; retries++) {
             // Most FFmpeg decoders process input using a "push" model.
             // We'll see those fail here if the format is not supported.
-            err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
+            err = avcodec_send_packet(m_VideoDecoderCtx, m_Pkt);
             if (err < 0) {
                 av_frame_free(&frame);
                 char errorstring[512];
@@ -909,19 +910,19 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         entry = entry->next;
     }
 
-    m_Pkt.data = reinterpret_cast<uint8_t*>(m_DecodeBuffer.data());
-    m_Pkt.size = offset;
+    m_Pkt->data = reinterpret_cast<uint8_t*>(m_DecodeBuffer.data());
+    m_Pkt->size = offset;
 
     if (du->frameType == FRAME_TYPE_IDR) {
-        m_Pkt.flags = AV_PKT_FLAG_KEY;
+        m_Pkt->flags = AV_PKT_FLAG_KEY;
     }
     else {
-        m_Pkt.flags = 0;
+        m_Pkt->flags = 0;
     }
 
     m_ActiveWndVideoStats.totalReassemblyTime += du->enqueueTimeMs - du->receiveTimeMs;
 
-    err = avcodec_send_packet(m_VideoDecoderCtx, &m_Pkt);
+    err = avcodec_send_packet(m_VideoDecoderCtx, m_Pkt);
     if (err < 0) {
         char errorstring[512];
         av_strerror(err, errorstring, sizeof(errorstring));
