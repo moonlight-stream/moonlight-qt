@@ -12,6 +12,11 @@ import SdlGamepadKeyNavigation 1.0
 ApplicationWindow {
     property bool pollingActive: false
 
+    // Set by SettingsView to force the back operation to pop all
+    // pages except the initial view. This is required when doing
+    // a retranslate() because AppView breaks for some reason.
+    property bool clearOnBack: false
+
     id: window
     visible: true
     width: 1280
@@ -31,6 +36,17 @@ ApplicationWindow {
     // it will never insert a line break and just extend on forever.
     ToolTip.toolTip.contentWidth: ToolTip.toolTip.implicitContentWidth < 400 ? ToolTip.toolTip.implicitContentWidth : 400
 
+    function goBack() {
+        if (clearOnBack) {
+            // Pop all items except the first one
+            stackView.pop(null)
+            clearOnBack = false
+        }
+        else {
+            stackView.pop()
+        }
+    }
+
     StackView {
         id: stackView
         initialItem: initialView
@@ -46,7 +62,7 @@ ApplicationWindow {
 
         Keys.onEscapePressed: {
             if (depth > 1) {
-                stackView.pop()
+                goBack()
             }
             else {
                 quitConfirmationDialog.open()
@@ -55,7 +71,7 @@ ApplicationWindow {
 
         Keys.onBackPressed: {
             if (depth > 1) {
-                stackView.pop()
+                goBack()
             }
             else {
                 quitConfirmationDialog.open()
@@ -210,7 +226,7 @@ ApplicationWindow {
 
                 iconSource: "qrc:/res/arrow_left.svg"
 
-                onClicked: stackView.pop()
+                onClicked: goBack()
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)

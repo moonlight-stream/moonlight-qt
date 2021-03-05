@@ -787,6 +787,11 @@ Flickable {
                             if (!StreamingPreferences.retranslate()) {
                                 ToolTip.show(qsTr("You must restart Moonlight for this change to take effect"), 5000)
                             }
+                            else {
+                                // Force the back operation to pop any AppView pages that exist.
+                                // The AppView stops working after retranslate() for some reason.
+                                window.clearOnBack = true
+                            }
                         }
                     }
                 }
