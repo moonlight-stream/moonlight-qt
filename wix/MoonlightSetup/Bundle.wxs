@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<?define VCREDIST_VER = "14.28.29334" ?>
-<?define VCREDIST_X86_SIZE = "14328440" ?>
-<?define VCREDIST_X86_SHA1 = "17674FCC6CF3A2FFDC391BDCDE082AA936E37A89" ?>
+<?define VCREDIST_VER = "14.28.29910" ?>
+<?define VCREDIST_X86_SIZE = "14308616" ?>
+<?define VCREDIST_X86_SHA1 = "CC6D8F9286645F2A11BCAE9D0E000CF012B08112" ?>
+<?define VCREDIST_X86_URL = "https://download.visualstudio.microsoft.com/download/pr/d64b93c3-f270-4750-9e75-bc12b2e899fb/4521ED84B9B1679A706E719423D54EF5E413DC50DDE1CF362232D7359D7E89C4/VC_redist.x86.exe" ?>
 <?define VCREDIST_X86_UPGRADE_CODE = "65E5BD06-6392-3027-8C26-853107D3CF1A" ?>
-<?define VCREDIST_X64_SIZE = "14882584" ?>
-<?define VCREDIST_X64_SHA1 = "1EFFE7DB3F42D670A1352C5C9B451C4DB3E57AB5" ?>
+<?define VCREDIST_X64_SIZE = "14871096" ?>
+<?define VCREDIST_X64_SHA1 = "725CE1EAB169888A70F3394AC08F7CDEDB2EF497" ?>
+<?define VCREDIST_X64_URL = "https://download.visualstudio.microsoft.com/download/pr/cd3a705f-70b6-46f7-b8e2-63e6acc5bd05/F299953673DE262FEFAD9DD19BFBE6A5725A03AE733BEBFEC856F1306F79C9F7/VC_redist.x64.exe" ?>
 <?define VCREDIST_X64_UPGRADE_CODE = "36F68A90-239C-34DF-B58C-64B30153CE35" ?>
-<?define VCREDIST_ARM64_SIZE = "7028584" ?>
-<?define VCREDIST_ARM64_SHA1 = "37C2A217EB881B2E7695656A6D7B001ADAC4354D" ?>
+<?define VCREDIST_ARM64_SIZE = "11742776" ?>
+<?define VCREDIST_ARM64_SHA1 = "16B71424329609D15F5D2F52B20772AA5D5BAF9C" ?>
+<?define VCREDIST_ARM64_URL = "https://download.visualstudio.microsoft.com/download/pr/cd3a705f-70b6-46f7-b8e2-63e6acc5bd05/D49B964641B8B2B9908A2908851A6196734B47BCC7B198C387287C438C8100B7/VC_redist.arm64.exe" ?>
 <?define VCREDIST_ARM64_UPGRADE_CODE = "DC9BAE42-810B-423A-9E25-E4073F1C7B00" ?>
 
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi"
@@ -90,7 +93,7 @@
                   Permanent="yes"
                   Vital="yes"
                   InstallCommand="/install /quiet /norestart"
-                  DownloadUrl="https://moonlight-stream.org/downloads/vcredist/$(var.VCREDIST_VER)/vcredist_x86.exe"
+                  DownloadUrl="$(var.VCREDIST_X86_URL)"
                   InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;x86&quot;"
                   DetectCondition="VCREDIST_142_x86 &gt;= v$(var.VCREDIST_VER)">
         
@@ -111,7 +114,7 @@
                   Permanent="yes"
                   Vital="yes"
                   InstallCommand="/install /quiet /norestart"
-                  DownloadUrl="https://moonlight-stream.org/downloads/vcredist/$(var.VCREDIST_VER)/vcredist_x64.exe"
+                  DownloadUrl="$(var.VCREDIST_X64_URL)"
                   InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;amd64&quot;"
                   DetectCondition="VCREDIST_142_x64 &gt;= v$(var.VCREDIST_VER)">
         
@@ -133,7 +136,7 @@
                     Permanent="yes"
                     Vital="yes"
                     InstallCommand="/install /quiet /norestart"
-                    DownloadUrl="https://moonlight-stream.org/downloads/vcredist/$(var.VCREDIST_VER)/vcredist_arm64.exe"
+                    DownloadUrl="$(var.VCREDIST_ARM64_URL)"
                     InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;arm64&quot;"
                     DetectCondition="VCREDIST_142_ARM64 &gt;= v$(var.VCREDIST_VER)">
           
