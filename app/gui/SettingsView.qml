@@ -766,19 +766,19 @@ Flickable {
                             val: StreamingPreferences.LANG_AUTO
                         }
                         ListElement {
-                            text: qsTr("English")
-                            val: StreamingPreferences.LANG_EN
-                        }
-                        ListElement {
-                            text: qsTr("French")
-                            val: StreamingPreferences.LANG_FR
-                        }
-                        ListElement {
-                            text: qsTr("German")
+                            text: "Deutsch" //German
                             val: StreamingPreferences.LANG_DE
                         }
                         ListElement {
-                            text: qsTr("Simplified Chinese")
+                            text: "English"
+                            val: StreamingPreferences.LANG_EN
+                        }
+                        ListElement {
+                            text: "Français" //French
+                            val: StreamingPreferences.LANG_FR
+                        }
+                        ListElement {
+                            text: "简体中文" //Simplified Chinese
                             val: StreamingPreferences.LANG_ZH_CN
                         }
                     }
