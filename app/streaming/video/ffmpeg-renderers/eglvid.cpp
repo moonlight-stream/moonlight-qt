@@ -557,7 +557,17 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     if (params->enableVsync) {
         SDL_GL_SetSwapInterval(1);
-        m_BlockingSwapBuffers = true;
+
+#if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
+        // The SDL KMSDRM backend already enforces double buffering (due to
+        // SDL_HINT_VIDEO_DOUBLE_BUFFER=1), so calling glFinish() after
+        // SDL_GL_SwapWindow() will block an extra frame and lock rendering
+        // at 1/2 the display refresh rate.
+        if (info.subsystem != SDL_SYSWM_KMSDRM)
+#endif
+        {
+            m_BlockingSwapBuffers = true;
+        }
     } else {
         SDL_GL_SetSwapInterval(0);
     }
