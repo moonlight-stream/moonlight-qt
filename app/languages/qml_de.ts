@@ -804,7 +804,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1153"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Beende die App auf dem Host nach dem beenden des Stream</translation>
+        <translation>Schließe die App auf dem Host nach dem beenden des Streams</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1163"/>
