@@ -45,6 +45,7 @@ private:
     int m_ColorSpace;
     bool m_ColorFull;
     bool m_BlockingSwapBuffers;
+    AVFrame* m_LastFrame;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOES;
     PFNGLGENVERTEXARRAYSOESPROC m_glGenVertexArraysOES;
     PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;

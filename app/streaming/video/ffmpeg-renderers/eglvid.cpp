@@ -74,6 +74,7 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_ColorSpace(AVCOL_SPC_NB),
         m_ColorFull(false),
         m_BlockingSwapBuffers(false),
+        m_LastFrame(av_frame_alloc()),
         m_glEGLImageTargetTexture2DOES(nullptr),
         m_glGenVertexArraysOES(nullptr),
         m_glBindVertexArrayOES(nullptr),
@@ -123,6 +124,8 @@ EGLRenderer::~EGLRenderer()
     if (m_DummyRenderer) {
         SDL_DestroyRenderer(m_DummyRenderer);
     }
+
+    av_frame_free(&m_LastFrame);
 
     // Reset the global properties back to what they were before
     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "0");
@@ -803,4 +806,12 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     }
 
     m_Backend->freeEGLImages(m_EGLDisplay, imgs);
+
+    // Free the DMA-BUF backing the last frame now that it is definitely
+    // no longer being used anymore. While the PRIME FD stays around until
+    // EGL is done with it, the memory backing it may be reused by FFmpeg
+    // before the GPU has read it. This is particularly noticeable on the
+    // RK3288-based TinkerBoard when V-Sync is disabled.
+    av_frame_unref(m_LastFrame);
+    av_frame_move_ref(m_LastFrame, frame);
 }
