@@ -7,6 +7,9 @@ class SystemProperties : public QObject
 {
     Q_OBJECT
 
+    friend class QuerySdlVideoThread;
+    friend class RefreshDisplaysThread;
+
 public:
     SystemProperties();
 
@@ -33,6 +36,8 @@ signals:
 
 private:
     void querySdlVideoInfo();
+    void querySdlVideoInfoInternal();
+    void refreshDisplaysInternal();
 
     bool hasHardwareAcceleration;
     bool rendererAlwaysFullScreen;
