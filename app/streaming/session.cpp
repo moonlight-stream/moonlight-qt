@@ -563,10 +563,13 @@ void Session::emitLaunchWarning(QString text)
     // to allow it to transition off the screen before continuing.
     uint32_t start = SDL_GetTicks();
     while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
-        // Pump the UI loop while we wait
         SDL_Delay(5);
-        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-        QCoreApplication::sendPostedEvents();
+
+        if (!m_ThreadedExec) {
+            // Pump the UI loop while we wait if we're on the main thread
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            QCoreApplication::sendPostedEvents();
+        }
     }
 }
 
@@ -1097,11 +1100,58 @@ void Session::flushWindowEvents()
     SDL_PushEvent(&flushEvent);
 }
 
+class ExecThread : public QThread
+{
+public:
+    ExecThread(Session* session) :
+        QThread(nullptr),
+        m_Session(session) {}
+
+    void run() override
+    {
+        m_Session->execInternal();
+    }
+
+    Session* m_Session;
+};
+
 void Session::exec(int displayOriginX, int displayOriginY)
 {
     m_DisplayOriginX = displayOriginX;
     m_DisplayOriginY = displayOriginY;
 
+    // Use a separate thread for the streaming session on X11 or Wayland
+    // to ensure we don't stomp on Qt's GL context. This breaks when using
+    // the Qt EGLFS backend, so we will restrict this to X11
+    m_ThreadedExec = WMUtils::isRunningX11() || WMUtils::isRunningWayland();
+
+    if (m_ThreadedExec) {
+        // Run the streaming session on a separate thread for Linux/BSD
+        ExecThread execThread(this);
+        execThread.start();
+
+        // Until the SDL streaming window is created, we should continue
+        // to update the Qt UI to allow warning messages to display and
+        // make sure that the Qt window can hide itself.
+        while (!execThread.wait(10) && m_Window == nullptr) {
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            QCoreApplication::sendPostedEvents();
+        }
+        QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+        QCoreApplication::sendPostedEvents();
+
+        // SDL is in charge now. Wait until the streaming thread exits
+        // to further update the Qt window.
+        execThread.wait();
+    }
+    else {
+        // Run the streaming session on the main thread for Windows and macOS
+        execInternal();
+    }
+}
+
+void Session::execInternal()
+{
     // Complete initialization in this deferred context to avoid
     // calling expensive functions in the constructor (during the
     // process of loading the StreamSegue).
@@ -1125,18 +1175,26 @@ void Session::exec(int displayOriginX, int displayOriginY)
                                          m_StreamConfig.width,
                                          m_StreamConfig.height);
 
-    // Kick off the async connection thread while we sit here and pump the event loop
     AsyncConnectionStartThread asyncConnThread(this);
-    asyncConnThread.start();
-    while (!asyncConnThread.wait(10)) {
+    if (!m_ThreadedExec) {
+        // Kick off the async connection thread while we sit here and pump the event loop
+        asyncConnThread.start();
+        while (!asyncConnThread.wait(10)) {
+            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+            QCoreApplication::sendPostedEvents();
+        }
+
+        // Pump the event loop one last time to ensure we pick up any events from
+        // the thread that happened while it was in the final successful QThread::wait().
         QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
         QCoreApplication::sendPostedEvents();
     }
-
-    // Pump the event loop one last time to ensure we pick up any events from
-    // the thread that happened while it was in the final successful QThread::wait().
-    QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-    QCoreApplication::sendPostedEvents();
+    else {
+        // We're already in a separate thread so run the connection operations
+        // synchronously and don't pump the event loop. The main thread is already
+        // pumping the event loop for us.
+        asyncConnThread.run();
+    }
 
     // If the connection failed, clean up and abort the connection.
     if (!m_AsyncConnectionSuccess) {

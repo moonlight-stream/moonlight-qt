@@ -17,6 +17,7 @@ class Session : public QObject
     friend class SdlInputHandler;
     friend class DeferredSessionCleanupTask;
     friend class AsyncConnectionStartThread;
+    friend class ExecThread;
 
 public:
     explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
@@ -57,6 +58,8 @@ signals:
     void sessionFinished(int portTestResult);
 
 private:
+    void execInternal();
+
     bool initialize();
 
     bool startConnectionAsync();
@@ -148,6 +151,7 @@ private:
     Uint32 m_FullScreenFlag;
     int m_DisplayOriginX;
     int m_DisplayOriginY;
+    bool m_ThreadedExec;
     bool m_PendingWindowedTransition;
     bool m_UnexpectedTermination;
     SdlInputHandler* m_InputHandler;
