@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="338"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Bist du sicher, dass du %1 beenden willst? Nicht gespeicherte Fortschritte gehen dabei verloren.</translation>
+        <translation>Bist du sicher, dass du &apos;%1&apos; beenden willst? Nicht gespeicherte Fortschritte gehen dabei verloren.</translation>
     </message>
 </context>
 <context>
@@ -520,7 +520,7 @@
         <location filename="../gui/SettingsView.qml" line="545"/>
         <source> (Recommended)</source>
         <translatorcomment>Dont put the space in ransaltions</translatorcomment>
-        <translation> Empfohlen</translation>
+        <translation> (empfohlen)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="573"/>
@@ -699,7 +699,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1077"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>Dies ändert das Controller Tasten Layout in ein Nintento-Controller-Style Layout</translation>
+        <translation>Dies ändert das Controller Tastenlayout in ein Nintento Controller Style Layout</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1083"/>
@@ -749,7 +749,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="860"/>
         <source>Show connection quality warnings</source>
-        <translation>Verbindungswarnungen anzeigen</translation>
+        <translation>Warnung bei Verbindungsproblemen anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="872"/>
@@ -784,17 +784,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="972"/>
         <source>in fullscreen</source>
-        <translation>Im Vollbildmodus</translation>
+        <translation>im Vollbildmodus</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="976"/>
         <source>always</source>
-        <translation>Immer</translation>
+        <translation>immer</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1016"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation>Wenn aktiviert, verhält sich der Touchscreen wie ein Trackpad. Wenn es deaktiviert ist, steuert der Touchscreen direkt den Mauszeiger.</translation>
+        <translation>Wenn aktiviert, verhält sich der Touchscreen wie ein Trackpad. Wenn deaktiviert, steuert der Touchscreen direkt den Mauszeiger.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1142"/>
@@ -814,7 +814,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
         <source>Video decoder</source>
-        <translation>Video Dekodierer</translation>
+        <translation>Video Decoder</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1207"/>
@@ -825,12 +825,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1211"/>
         <source>Force software decoding</source>
-        <translation>Erwzinge Sooftware dekodierung</translation>
+        <translation>Erwzinge Software decoding</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1215"/>
         <source>Force hardware decoding</source>
-        <translation>Erzwinge Hardware dekodierung</translation>
+        <translation>Erzwinge Hardware decoding</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1228"/>
