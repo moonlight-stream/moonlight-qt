@@ -28,6 +28,7 @@
 #include <openssl/ssl.h>
 #endif
 
+#include "cli/listapps.h"
 #include "cli/quitstream.h"
 #include "cli/startstream.h"
 #include "cli/pair.h"
@@ -617,6 +618,15 @@ int main(int argc, char *argv[])
             PairCommandLineParser pairParser;
             pairParser.parse(app.arguments());
             auto launcher = new CliPair::Launcher(pairParser.getHost(), pairParser.getPredefinedPin(), &app);
+            engine.rootContext()->setContextProperty("launcher", launcher);
+            break;
+        }
+    case GlobalCommandLineParser::ListRequested:
+        {
+            initialView = "qrc:/gui/CliListAppsSegue.qml";
+            ListCommandLineParser listParser;
+            listParser.parse(app.arguments());
+            auto launcher = new CliListApps::Launcher(listParser.getHost(), &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }
