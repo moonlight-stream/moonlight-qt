@@ -12,6 +12,7 @@ public:
         NormalStartRequested,
         StreamRequested,
         QuitRequested,
+        ListRequested,
     };
 
     GlobalCommandLineParser();
@@ -54,4 +55,18 @@ private:
     QMap<QString, StreamingPreferences::VideoCodecConfig> m_VideoCodecMap;
     QMap<QString, StreamingPreferences::VideoDecoderSelection> m_VideoDecoderMap;
     QMap<QString, StreamingPreferences::CaptureSysKeysMode> m_CaptureSysKeysModeMap;
+};
+
+class ListCommandLineParser
+{
+public:
+    ListCommandLineParser();
+    virtual ~ListCommandLineParser();
+
+    void parse(const QStringList &args);
+
+    QString getHost() const;
+
+private:
+    QString m_Host;
 };

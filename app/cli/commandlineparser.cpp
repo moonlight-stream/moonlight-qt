@@ -164,6 +164,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "Starts Moonlight normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
+        "  list            List the available apps as CSV\n"
         "  quit            Quit the currently running app\n"
         "  stream          Start streaming an app\n"
         "\n"
@@ -193,6 +194,8 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
                 return QuitRequested;
             } else if (action == "stream") {
                 return StreamRequested;
+            } else if (action == "list") {
+                return ListRequested;
             }
         }
 
@@ -463,4 +466,47 @@ QString StreamCommandLineParser::getHost() const
 QString StreamCommandLineParser::getAppName() const
 {
     return m_AppName;
+}
+
+ListCommandLineParser::ListCommandLineParser()
+{
+}
+
+ListCommandLineParser::~ListCommandLineParser()
+{
+}
+
+void ListCommandLineParser::parse(const QStringList &args)
+{
+    CommandLineParser parser;
+    parser.setupCommonOptions();
+    parser.setApplicationDescription(
+        "\n"
+        "List the available apps on the given host as CSV:\n"
+        "\tName, ID, HDR Support, App Collection Game, Hidden, Direct Launch, Path to Boxart"
+    );
+    parser.addPositionalArgument("list", "list available apps");
+    parser.addPositionalArgument("host", "Host computer name, UUID, or IP address", "<host>");
+
+    if (!parser.parse(args)) {
+        parser.showError(parser.errorText());
+    }
+
+    parser.handleUnknownOptions();
+
+    // This method will not return and terminates the process if --version or
+    // --help is specified
+    parser.handleHelpAndVersionOptions();
+
+    // Verify that host has been provided
+    auto posArgs = parser.positionalArguments();
+    if (posArgs.length() < 2) {
+        parser.showError("Host not provided");
+    }
+    m_Host = parser.positionalArguments().at(1);
+}
+
+QString ListCommandLineParser::getHost() const
+{
+    return m_Host;
 }
