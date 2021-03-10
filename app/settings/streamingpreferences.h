@@ -60,13 +60,16 @@ public:
     };
     Q_ENUM(UIDisplayMode)
 
+    // New entries must go at the end of the enum
+    // to avoid renumbering existing entries (which
+    // would affect existing user preferences).
     enum Language
     {
         LANG_AUTO,
-        LANG_DE,
         LANG_EN,
         LANG_FR,
-        LANG_ZH_CN
+        LANG_ZH_CN,
+        LANG_DE
     };
     Q_ENUM(Language);
 
