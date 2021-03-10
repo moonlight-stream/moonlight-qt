@@ -181,6 +181,8 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
 {
     switch (lang)
     {
+    case LANG_DE:
+        return "de";
     case LANG_EN:
         return "en";
     case LANG_FR:

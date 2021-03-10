@@ -63,6 +63,7 @@ public:
     enum Language
     {
         LANG_AUTO,
+        LANG_DE,
         LANG_EN,
         LANG_FR,
         LANG_ZH_CN
