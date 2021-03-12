@@ -626,7 +626,7 @@ int main(int argc, char *argv[])
             initialView = "qrc:/gui/CliListAppsSegue.qml";
             ListCommandLineParser listParser;
             listParser.parse(app.arguments());
-            auto launcher = new CliListApps::Launcher(listParser.getHost(), &app);
+            auto launcher = new CliListApps::Launcher(listParser.getHost(), listParser.isPrintCSV(), &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }

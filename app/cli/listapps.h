@@ -17,7 +17,7 @@ class Launcher : public QObject
     Q_DECLARE_PRIVATE_D(m_DPtr, Launcher)
 
 public:
-    explicit Launcher(QString computer, QObject *parent = nullptr);
+    explicit Launcher(QString computer, bool printCSV, QObject *parent = nullptr);
     ~Launcher();
 
     Q_INVOKABLE void execute(ComputerManager *manager);
@@ -35,6 +35,7 @@ private slots:
 
 private:
     QScopedPointer<LauncherPrivate> m_DPtr;
+    bool m_Print_CSV;
 };
 
 }
