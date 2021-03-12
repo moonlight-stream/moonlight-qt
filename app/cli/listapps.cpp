@@ -102,9 +102,7 @@ public:
         // Occurs when a computer is updated
         case Event::ComputerUpdated:
             if (m_State == StateSeekApp) {
-                for (int i = 0; i < m_Computer->appList.length(); i++) {
-                    printApp(m_Computer->appList[i]);
-                }
+                m_PrintCSV ? printAppsCSV(m_Computer->appList) : printApps(m_Computer->appList);
 
                 QCoreApplication::exit(0);
             }
@@ -112,15 +110,28 @@ public:
         }
     }
 
-    void printApp(NvApp app) const
+    void printApps(QVector<NvApp> apps) {
+        for (int i = 0; i < apps.length(); i++) {
+            fprintf(stdout, "%s\n", qPrintable(apps[i].name));
+        }
+    }
+
+    void printAppsCSV(QVector<NvApp> apps) {
+        fprintf(stdout, "Name, ID, HDR Support, App Collection Game, Hidden, Direct Launch, Boxart URL\n");
+        for (int i = 0; i < apps.length(); i++) {
+            printAppCSV(apps[i]);
+        }
+    }
+
+    void printAppCSV(NvApp app) const
     {
-        fprintf(stdout, "%s,%d,%s,%s,%s,%s,%s\n", qPrintable(app.name),
-                                               app.id,
-                                               app.hdrSupported ? "true" : "false",
-                                               app.isAppCollectorGame ? "true" : "false",
-                                               app.hidden ? "true" : "false",
-                                               app.directLaunch ? "true" : "false",
-                                               qPrintable(m_BoxArtManager->loadBoxArt(m_Computer, app).toDisplayString()));
+        fprintf(stdout, "\"%s\",%d,%s,%s,%s,%s,\"%s\"\n", qPrintable(app.name),
+                                                          app.id,
+                                                          app.hdrSupported ? "true" : "false",
+                                                          app.isAppCollectorGame ? "true" : "false",
+                                                          app.hidden ? "true" : "false",
+                                                          app.directLaunch ? "true" : "false",
+                                                          qPrintable(m_BoxArtManager->loadBoxArt(m_Computer, app).toDisplayString()));
     }
 
     Launcher *q_ptr;
@@ -131,9 +142,10 @@ public:
     NvComputer *m_Computer;
     State m_State;
     QTimer *m_TimeoutTimer;
+    bool m_PrintCSV;
 };
 
-Launcher::Launcher(QString computer, QObject *parent)
+Launcher::Launcher(QString computer, bool printCSV, QObject *parent)
     : QObject(parent),
       m_DPtr(new LauncherPrivate(this))
 {
@@ -142,6 +154,7 @@ Launcher::Launcher(QString computer, QObject *parent)
     d->m_State = StateInit;
     d->m_TimeoutTimer = new QTimer(this);
     d->m_TimeoutTimer->setSingleShot(true);
+    d->m_PrintCSV = printCSV;
     connect(d->m_TimeoutTimer, &QTimer::timeout,
             this, &Launcher::onComputerSeekTimeout);
 }

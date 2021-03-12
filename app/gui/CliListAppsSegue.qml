@@ -10,7 +10,7 @@ Item {
     }
 
     function onSearchingApps() {
-        stageLabel.text = qsTr("Searching for Apps...")
+        stageLabel.text = qsTr("Loading app list...")
     }
 
     function onFailure(message) {

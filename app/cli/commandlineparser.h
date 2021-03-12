@@ -66,7 +66,9 @@ public:
     void parse(const QStringList &args);
 
     QString getHost() const;
+    bool isPrintCSV() const;
 
 private:
     QString m_Host;
+    bool m_PrintCSV;
 };
