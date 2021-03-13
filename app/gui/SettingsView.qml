@@ -964,7 +964,7 @@ Flickable {
                             activated(currentIndex)
                         }
 
-                        enabled: captureSysKeysCheck.checked
+                        enabled: captureSysKeysCheck.checked && captureSysKeysCheck.enabled
                         textRole: "text"
                         model: ListModel {
                             id: captureSysKeysModeListModel
