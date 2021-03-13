@@ -351,7 +351,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
     : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
-      m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningWindowManager()),
+      m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
       m_App(app),
       m_Window(nullptr),
@@ -511,8 +511,8 @@ bool Session::initialize()
     {
     default:
     case StreamingPreferences::WM_FULLSCREEN_DESKTOP:
-        // Only use full-screen desktop mode if we're running a window manager
-        if (WMUtils::isRunningWindowManager()) {
+        // Only use full-screen desktop mode if we're running a desktop environment
+        if (WMUtils::isRunningDesktopEnvironment()) {
             m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
             break;
         }

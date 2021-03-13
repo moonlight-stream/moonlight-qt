@@ -14,7 +14,7 @@
 SystemProperties::SystemProperties()
 {
     versionString = QString(VERSION_STR);
-    hasWindowManager = WMUtils::isRunningWindowManager();
+    hasDesktopEnvironment = WMUtils::isRunningDesktopEnvironment();
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
     QString nativeArch = QSysInfo::currentCpuArchitecture();
@@ -55,12 +55,8 @@ SystemProperties::SystemProperties()
         friendlyNativeArchName = nativeArch.toUpper();
     }
 
-#ifndef STEAM_LINK
     // Assume we can probably launch a browser if we're in a GUI environment
-    hasBrowser = hasWindowManager;
-#else
-    hasBrowser = false;
-#endif
+    hasBrowser = hasDesktopEnvironment;
 
 #ifdef HAVE_DISCORD
     hasDiscordIntegration = true;

@@ -77,3 +77,22 @@ bool WMUtils::isRunningWindowManager()
     return WMUtils::isRunningWayland() || WMUtils::isRunningX11();
 #endif
 }
+
+bool WMUtils::isRunningDesktopEnvironment()
+{
+    if (qEnvironmentVariableIsSet("HAS_DESKTOP_ENVIRONMENT")) {
+        return qEnvironmentVariableIntValue("HAS_DESKTOP_ENVIRONMENT");
+    }
+
+#if defined(Q_OS_WIN) || defined(Q_OS_DARWIN)
+    // Windows and macOS are always running a desktop environment
+    return true;
+#elif defined(EMBEDDED_BUILD)
+    // Embedded systems don't run desktop environments
+    return false;
+#else
+    // On non-embedded systems, assume we have a desktop environment
+    // if we have a WM running.
+    return isRunningWindowManager();
+#endif
+}

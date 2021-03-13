@@ -7,4 +7,5 @@ namespace WMUtils {
     bool isRunningX11();
     bool isRunningWayland();
     bool isRunningWindowManager();
+    bool isRunningDesktopEnvironment();
 }

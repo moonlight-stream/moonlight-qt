@@ -271,7 +271,7 @@ config_EGL {
 config_SL {
     message(Steam Link build configuration selected)
 
-    DEFINES += STEAM_LINK HAVE_SLVIDEO HAVE_SLAUDIO
+    DEFINES += EMBEDDED_BUILD STEAM_LINK HAVE_SLVIDEO HAVE_SLAUDIO
     LIBS += -lSLVideo -lSLAudio
 
     SOURCES += \
@@ -313,6 +313,11 @@ discord-rpc {
 
     LIBS += -ldiscord-rpc
     DEFINES += HAVE_DISCORD
+}
+embedded {
+    message(Embedded build)
+
+    DEFINES += EMBEDDED_BUILD
 }
 
 RESOURCES += \

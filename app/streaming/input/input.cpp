@@ -36,8 +36,8 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_NumFingersDown(0),
       m_ClipboardData()
 {
-    // System keys are always captured when running without a WM
-    if (!WMUtils::isRunningWindowManager()) {
+    // System keys are always captured when running without a DE
+    if (!WMUtils::isRunningDesktopEnvironment()) {
         m_CaptureSystemKeysMode = StreamingPreferences::CSK_ALWAYS;
     }
 

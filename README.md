@@ -68,6 +68,8 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
         * For macOS builds, use `scripts/generate-dmg.sh`. Execute this script from the root of the repository and ensure Qt's `bin` folder is in your `$PATH`.
         * For Steam Link builds, run `scripts/build-steamlink-app.sh` from the root of the repository.
     * To build from the command line for development use, run `qmake moonlight-qt.pro` then `make debug` or `make release`
+    * To create an embedded build for a single-purpose device, use `qmake "CONFIG+=embedded" moonlight-qt.pro` and build normally.
+        * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
 
 ## Contribute
 1. Fork us
