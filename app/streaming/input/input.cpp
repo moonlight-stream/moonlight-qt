@@ -99,7 +99,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     m_SpecialKeyCombos[KeyComboToggleMouseMode].keyCombo = KeyComboToggleMouseMode;
     m_SpecialKeyCombos[KeyComboToggleMouseMode].keyCode = SDLK_m;
     m_SpecialKeyCombos[KeyComboToggleMouseMode].scanCode = SDL_SCANCODE_M;
-    m_SpecialKeyCombos[KeyComboToggleMouseMode].enabled = QGuiApplication::platformName() != "eglfs";
+    m_SpecialKeyCombos[KeyComboToggleMouseMode].enabled = true;
 
     m_SpecialKeyCombos[KeyComboToggleCursorHide].keyCombo = KeyComboToggleCursorHide;
     m_SpecialKeyCombos[KeyComboToggleCursorHide].keyCode = SDLK_c;

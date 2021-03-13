@@ -910,7 +910,6 @@ Flickable {
                     width: parent.width
                     text: qsTr("Optimize mouse for remote desktop instead of games")
                     font.pointSize:  12
-                    visible: SystemProperties.hasDesktopEnvironment
                     checked: StreamingPreferences.absoluteMouseMode
                     onCheckedChanged: {
                         StreamingPreferences.absoluteMouseMode = checked
