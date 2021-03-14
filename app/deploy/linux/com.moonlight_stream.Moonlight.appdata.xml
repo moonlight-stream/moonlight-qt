@@ -36,6 +36,28 @@
 	</screenshots>
 
 	<releases>
+		<release version="3.1.0" date="2021-03-14">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>System keyboard shortcuts (Alt+Tab, Super key, Ctrl+Shift+Esc, etc.) can now be (optionally) captured in windowed mode</li>
+					<li>System keyboard shortcuts can now be captured under Wayland</li>
+					<li>Added support for typing the client's clipboard text on the host by pressing Ctrl+Alt+Shift+V</li>
+					<li>Added Ctrl+Alt+Shift+D key combo to minimize the streaming window</li>
+					<li>Added Ctrl+Alt+Shift+C key combo to show the local cursor while streaming in remote desktop mouse mode</li>
+					<li>Added Select+L1+R1+X gamepad button combo to toggle performance overlay</li>
+					<li>Added translations for Simplified Chinese and German</li>
+					<li>Added a language selector on the settings page</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Improved performance of loading the app grid</li>
+					<li>Fixed video scaling in High DPI mode on Wayland</li>
+					<li>Fixed window icons on Wayland</li>
+					<li>Fixed number pad enter key functionality in the UI</li>
+				</ul>
+			</description>
+		</release>
 		<release version="3.0.0" date="2021-01-17">
 			<description>
 				<p>New features:</p>
