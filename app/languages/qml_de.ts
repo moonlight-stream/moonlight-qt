@@ -561,7 +561,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="609"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>Die Deaktivierung von V-Sync ermöglicht eine Sub-Frame-Rendering-Latenz, aber es kann zu sichtbarem Verzerrungen (Tearing) kommen.</translation>
+        <translation>Die Deaktivierung von V-Sync ermöglicht eine Sub-Frame-Rendering-Latenz, aber es kann zu sichtbarem Verzerrungen (Tearing) kommen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="616"/>
@@ -596,7 +596,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="693"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation>Schalte die Host Lautsprecher während des Streamens Stumm.</translation>
+        <translation>Schalte die Host Lautsprecher während des Streamens Stumm</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="703"/>
