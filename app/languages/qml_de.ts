@@ -230,7 +230,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation>Zeieg alle Apps</translation>
+        <translation>Zeig alle Apps</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="352"/>
