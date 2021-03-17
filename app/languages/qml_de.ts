@@ -190,7 +190,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Wenn du veruchst übers Internet zu streamen, installiere das Moonlight Internet Hosting Tool auf deinem Host und starte das dort enthaltene Internet Streaming Tester Tool um deine Hos Internetverbindung zu prüfen.</translation>
+        <translation>Wenn du versuchst übers Internet zu streamen, installiere das Moonlight Internet Hosting Tool auf deinem Host und starte das dort enthaltene Internet Streaming Tester Tool um deine Host Internetverbindung zu prüfen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="340"/>
@@ -290,7 +290,7 @@
         <location filename="../streaming/session.cpp" line="89"/>
         <source>No video received from host.</source>
         <translation>Kein Video vom Host empfangen.</translation>
-    </message>
+    </message> 
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
