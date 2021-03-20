@@ -7,48 +7,48 @@
         <location filename="../gui/AppView.qml" line="139"/>
         <location filename="../gui/AppView.qml" line="293"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Fortsett spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="165"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Avslutt spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="293"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Kjør spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="306"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Direkteoppstart</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="310"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kjør dette programmet umiddelbart når vert er valgt, noe som hopper over utvalgsrutenettet.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="319"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Skjul spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="323"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Skjull dette spillet fra programrutenettet. For å komme til skjulte spill kan du høyreklikke verten og velge %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="323"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Vis alle programmer</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="338"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Er du sikker på at du vil avslutte %1? All ulagret fremdrift vil gå tapt.</translation>
     </message>
 </context>
 <context>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Etablerer tilkobling til PC …</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Avslutter program …</translation>
     </message>
 </context>
 <context>
@@ -69,17 +69,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Etablerer tilkobling til PC …</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Laster inn programliste …</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Er du sikker på at du ønsker å avslutte %1? All ulagret fremdrift vil gå tapt.</translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Tastetilknytning</translation>
     </message>
 </context>
 <context>
@@ -103,12 +103,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Datamaskiner</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ikke ikke koble til denne PC-en.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
@@ -118,7 +118,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Klikk «Hjelp»-knappen for mulige løsninger.</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -150,12 +150,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Gi PC nytt navn</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Slett PC</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="242"/>
@@ -170,7 +170,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="308"/>
         <source>Are you sure you want to remove this PC?</source>
-        <translation type="unfinished"></translation>
+        <translation>Er du sikker på at du vil fjerne denne PC-en?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="325"/>
@@ -180,7 +180,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="325"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Dette kan ta noen sekunder …</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
@@ -215,7 +215,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>PC-status: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -225,17 +225,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Frakoblet</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Vis alle programmer</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="352"/>
         <source>Enter the new name for this PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Skriv inn nytt navn for denne PC-en:</translation>
     </message>
 </context>
 <context>
@@ -252,7 +252,7 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Klarte ikke å koble til %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
@@ -277,7 +277,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Avslutter %1 …</translation>
     </message>
 </context>
 <context>
@@ -289,37 +289,37 @@
     <message>
         <location filename="../streaming/session.cpp" line="89"/>
         <source>No video received from host.</source>
-        <translation type="unfinished"></translation>
+        <translation>Fikk ingen video fra vert.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Sjekk din brannmur og portvideresendingsregler for port(ene): %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Din nettverkstilknytning fungerer ikke så bra. Reduser videobitraten fra dens innstilling, eller prøv en raskere tilkobling.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>Noe gikk galt på din vetts-PC under oppstart av strømmen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="101"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Forsikre deg om at du ikke har noe DRM-beskyttet innhold åpent på din verts-PC. Du kan også prøve å starte verts-PC-en på ny.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="102"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hvis problemet vedvarer kan du prøve å reinstallere dine GPU-drivere og GeForce Experience.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>Tilkobling avsluttet</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="578"/>
@@ -329,7 +329,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="583"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR er ikke støttet med mykvaredekoding.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="587"/>
@@ -364,7 +364,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="639"/>
         <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 støtter ikke HDR10.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="643"/>
