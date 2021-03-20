@@ -436,22 +436,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="209"/>
         <source>720p</source>
-        <translation></translation>
+        <translation>720p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="215"/>
         <source>1080p</source>
-        <translation></translation>
+        <translation>1080p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="221"/>
         <source>1440p</source>
-        <translation></translation>
+        <translation>1440p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="227"/>
         <source>4K</source>
-        <translation></translation>
+        <translation>4K</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="331"/>
@@ -474,7 +474,7 @@
         <location filename="../gui/SettingsView.qml" line="427"/>
         <location filename="../gui/SettingsView.qml" line="430"/>
         <source>%1 FPS</source>
-        <translation></translation>
+        <translation>%1 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="412"/>
@@ -605,17 +605,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="739"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="765"/>
         <source>Automatic</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="792"/>
         <source>You must restart Moonlight for this change to take effect</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="806"/>
@@ -670,12 +670,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="934"/>
         <source>Capture system keyboard shortcuts</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="942"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -693,12 +693,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="972"/>
         <source>in fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="976"/>
         <source>always</source>
-        <translation type="unfinished"></translation>
+        <translation></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1006"/>
@@ -819,12 +819,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1257"/>
         <source>H.264</source>
-        <translation></translation>
+        <translation>H.264</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1261"/>
         <source>HEVC (H.265)</source>
-        <translation></translation>
+        <translation>HEVC (H.265)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1278"/>
@@ -883,12 +883,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Start+Select+L1+R1</source>
-        <translation></translation>
+        <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Ctrl+Alt+Shift+Q</source>
-        <translation></translation>
+        <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
 </context>
 <context>
