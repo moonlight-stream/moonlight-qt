@@ -596,7 +596,7 @@ Flickable {
                     id: vsyncCheck
                     width: parent.width
                     hoverEnabled: true
-                    text: qsTr("V-Sync")
+                    text: qsTr("VSync")
                     font.pointSize:  12
                     checked: StreamingPreferences.enableVsync
                     onCheckedChanged: {
@@ -606,7 +606,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing")
+                    ToolTip.text: qsTr("Disabling VSync allows sub-frame rendering latency, but it can display visible tearing")
                 }
 
                 CheckBox {
