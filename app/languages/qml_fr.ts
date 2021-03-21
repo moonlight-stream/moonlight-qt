@@ -714,7 +714,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1093"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</translation>
+        <translation></translation>
     </message>
     <message>
         <source>This enables mouse control without capturing the client&apos;s mouse cursor. It will not work in most games.</source>
