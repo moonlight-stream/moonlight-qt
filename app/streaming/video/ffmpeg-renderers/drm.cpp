@@ -297,6 +297,8 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     uint32_t handles[4] = {};
     uint32_t pitches[4] = {};
     uint32_t offsets[4] = {};
+    uint64_t modifiers[4] = {};
+    uint32_t flags = 0;
 
     SDL_Rect src, dst;
 
@@ -318,12 +320,18 @@ void DrmRenderer::renderFrame(AVFrame* frame)
         return;
     }
 
+    // Pass along the modifiers to DRM if there are some in the descriptor
+    if (drmFrame->objects[0].format_modifier != DRM_FORMAT_MOD_INVALID) {
+        flags |= DRM_MODE_FB_MODIFIERS;
+    }
+
     SDL_assert(drmFrame->nb_layers == 1);
     SDL_assert(drmFrame->layers[0].nb_planes == 2);
     for (int i = 0; i < drmFrame->layers[0].nb_planes; i++) {
         handles[i] = primeHandle;
         pitches[i] = drmFrame->layers[0].planes[i].pitch;
         offsets[i] = drmFrame->layers[0].planes[i].offset;
+        modifiers[i] = drmFrame->objects[0].format_modifier;
     }
 
     // Remember the last FB object we created so we can free it
@@ -331,12 +339,13 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     uint32_t lastFbId = m_CurrentFbId;
 
     // Create a frame buffer object from the PRIME buffer
-    err = drmModeAddFB2(m_DrmFd, frame->width, frame->height,
-                        drmFrame->layers[0].format,
-                        handles, pitches, offsets, &m_CurrentFbId, 0);
+    err = drmModeAddFB2WithModifiers(m_DrmFd, frame->width, frame->height,
+                                     drmFrame->layers[0].format,
+                                     handles, pitches, offsets, modifiers,
+                                     &m_CurrentFbId, flags);
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmModeAddFB2() failed: %d",
+                     "drmModeAddFB2WithModifiers() failed: %d",
                      errno);
         m_CurrentFbId = lastFbId;
         return;
