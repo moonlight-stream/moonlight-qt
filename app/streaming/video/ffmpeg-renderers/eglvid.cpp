@@ -373,17 +373,24 @@ bool EGLRenderer::compileShaders() {
     SDL_assert(m_EGLImagePixelFormat != AV_PIX_FMT_NONE);
 
     // XXX: TODO: other formats
-    SDL_assert(m_EGLImagePixelFormat == AV_PIX_FMT_NV12);
+    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12) {
+        m_ShaderProgram = compileShader("egl_nv12.vert", "egl_nv12.frag");
+        if (!m_ShaderProgram) {
+            return false;
+        }
 
-    m_ShaderProgram = compileShader("egl.vert", "egl.frag");
-    if (!m_ShaderProgram) {
+        m_ShaderProgramParams[PARAM_YUVMAT] = glGetUniformLocation(m_ShaderProgram, "yuvmat");
+        m_ShaderProgramParams[PARAM_OFFSET] = glGetUniformLocation(m_ShaderProgram, "offset");
+        m_ShaderProgramParams[PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
+        m_ShaderProgramParams[PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unsupported EGL pixel format: %d",
+                     m_EGLImagePixelFormat);
+        SDL_assert(false);
         return false;
     }
-
-    m_ShaderProgramParams[PARAM_YUVMAT] = glGetUniformLocation(m_ShaderProgram, "yuvmat");
-    m_ShaderProgramParams[PARAM_OFFSET] = glGetUniformLocation(m_ShaderProgram, "offset");
-    m_ShaderProgramParams[PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
-    m_ShaderProgramParams[PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
 
     m_OverlayShaderProgram = compileShader("egl_overlay.vert", "egl_overlay.frag");
     if (!m_OverlayShaderProgram) {
@@ -778,10 +785,13 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glUseProgram(m_ShaderProgram);
     m_glBindVertexArrayOES(m_VAO);
 
-    glUniformMatrix3fv(m_ShaderProgramParams[PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix());
-    glUniform3fv(m_ShaderProgramParams[PARAM_OFFSET], 1, getColorOffsets());
-    glUniform1i(m_ShaderProgramParams[PARAM_PLANE1], 0);
-    glUniform1i(m_ShaderProgramParams[PARAM_PLANE2], 1);
+    // Bind parameters for the NV12 shaders
+    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12) {
+        glUniformMatrix3fv(m_ShaderProgramParams[PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix());
+        glUniform3fv(m_ShaderProgramParams[PARAM_OFFSET], 1, getColorOffsets());
+        glUniform1i(m_ShaderProgramParams[PARAM_PLANE1], 0);
+        glUniform1i(m_ShaderProgramParams[PARAM_PLANE2], 1);
+    }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
