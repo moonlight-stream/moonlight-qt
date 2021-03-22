@@ -436,7 +436,8 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     SDL_assert(drmFrame->nb_objects == 1);
     SDL_assert(drmFrame->nb_layers == 1);
 
-    const int MAX_ATTRIB_COUNT = 30;
+    // Max 30 attributes (1 key + 1 value for each)
+    const int MAX_ATTRIB_COUNT = 30 * 2;
     EGLAttrib attribs[MAX_ATTRIB_COUNT] = {
         EGL_LINUX_DRM_FOURCC_EXT, (EGLAttrib)drmFrame->layers[0].format,
         EGL_WIDTH, frame->width,
