@@ -429,7 +429,6 @@ bool DrmRenderer::initializeEGL(EGLDisplay,
 
 ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
                                      EGLImage images[EGL_MAX_PLANES]) {
-    ssize_t count = 0;
     AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
 
     memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
