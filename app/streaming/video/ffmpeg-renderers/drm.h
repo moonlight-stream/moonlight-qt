@@ -35,6 +35,7 @@ private:
     SDL_Rect m_OutputRect;
 
 #ifdef HAVE_EGL
+    bool m_EGLExtDmaBuf;
     PFNEGLCREATEIMAGEPROC m_eglCreateImage;
     PFNEGLDESTROYIMAGEPROC m_eglDestroyImage;
     PFNEGLCREATEIMAGEKHRPROC m_eglCreateImageKHR;

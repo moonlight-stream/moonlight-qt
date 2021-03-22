@@ -26,6 +26,7 @@ DrmRenderer::DrmRenderer()
       m_CurrentFbId(0)
 {
 #ifdef HAVE_EGL
+    m_EGLExtDmaBuf = false;
     m_eglCreateImage = nullptr;
     m_eglCreateImageKHR = nullptr;
     m_eglDestroyImage = nullptr;
@@ -396,7 +397,8 @@ bool DrmRenderer::canExportEGL() {
 }
 
 AVPixelFormat DrmRenderer::getEGLImagePixelFormat() {
-    return AV_PIX_FMT_NV12;
+    // This tells EGLRenderer to treat the EGLImage as a single opaque texture
+    return AV_PIX_FMT_DRM_PRIME;
 }
 
 bool DrmRenderer::initializeEGL(EGLDisplay,
@@ -406,6 +408,8 @@ bool DrmRenderer::initializeEGL(EGLDisplay,
                      "DRM-EGL: DMABUF unsupported");
         return false;
     }
+
+    m_EGLExtDmaBuf = ext.isSupported("EGL_EXT_image_dma_buf_import_modifiers");
 
     // NB: eglCreateImage() and eglCreateImageKHR() have slightly different definitions
     m_eglCreateImage = (typeof(m_eglCreateImage))eglGetProcAddress("eglCreateImage");
@@ -432,54 +436,103 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
 
     SDL_assert(drmFrame->nb_objects == 1);
     SDL_assert(drmFrame->nb_layers == 1);
-    SDL_assert(drmFrame->layers[0].nb_planes == 2);
+
+    const int MAX_ATTRIB_COUNT = 30;
+    EGLAttrib attribs[MAX_ATTRIB_COUNT] = {
+        EGL_LINUX_DRM_FOURCC_EXT, (EGLAttrib)drmFrame->layers[0].format,
+        EGL_WIDTH, frame->width,
+        EGL_HEIGHT, frame->height,
+    };
+    int attribIndex = 6;
 
     for (int i = 0; i < drmFrame->layers[0].nb_planes; ++i) {
         const auto &plane = drmFrame->layers[0].planes[i];
         const auto &object = drmFrame->objects[plane.object_index];
 
-        const int EGL_ATTRIB_COUNT = 13;
-        EGLAttrib attribs[EGL_ATTRIB_COUNT] = {
-            EGL_LINUX_DRM_FOURCC_EXT, i == 0 ? DRM_FORMAT_R8 : DRM_FORMAT_GR88,
-            EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
-            EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
-            EGL_DMA_BUF_PLANE0_FD_EXT, object.fd,
-            EGL_DMA_BUF_PLANE0_OFFSET_EXT, plane.offset,
-            EGL_DMA_BUF_PLANE0_PITCH_EXT, plane.pitch,
-            EGL_NONE
-        };
-
-        if (m_eglCreateImage) {
-            images[i] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
-                                         EGL_LINUX_DMA_BUF_EXT,
-                                         nullptr, attribs);
-            if (!images[i]) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "eglCreateImage() Failed: %d", eglGetError());
-                goto fail;
+        switch (i) {
+        case 0:
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+            attribs[attribIndex++] = object.fd;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+            attribs[attribIndex++] = plane.offset;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+            attribs[attribIndex++] = plane.pitch;
+            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
             }
+            break;
+
+        case 1:
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_FD_EXT;
+            attribs[attribIndex++] = object.fd;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_OFFSET_EXT;
+            attribs[attribIndex++] = plane.offset;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_PITCH_EXT;
+            attribs[attribIndex++] = plane.pitch;
+            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
+            }
+            break;
+
+        case 2:
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_FD_EXT;
+            attribs[attribIndex++] = object.fd;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_OFFSET_EXT;
+            attribs[attribIndex++] = plane.offset;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_PITCH_EXT;
+            attribs[attribIndex++] = plane.pitch;
+            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
+            }
+            break;
+
+        default:
+            Q_UNREACHABLE();
         }
-        else {
-            // Cast the EGLAttrib array elements to EGLint for the KHR extension
-            EGLint intAttribs[EGL_ATTRIB_COUNT];
-            for (int i = 0; i < EGL_ATTRIB_COUNT; i++) {
-                intAttribs[i] = (EGLint)attribs[i];
-            }
-
-            images[i] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
-                                            EGL_LINUX_DMA_BUF_EXT,
-                                            nullptr, intAttribs);
-            if (!images[i]) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "eglCreateImageKHR() Failed: %d", eglGetError());
-                goto fail;
-            }
-        }
-
-        ++count;
     }
 
-    return count;
+    // Terminate the attribute list
+    attribs[attribIndex++] = EGL_NONE;
+    SDL_assert(attribIndex <= MAX_ATTRIB_COUNT);
+
+    // Our EGLImages are non-planar, so we only populate the first entry
+    if (m_eglCreateImage) {
+        images[0] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
+                                     EGL_LINUX_DMA_BUF_EXT,
+                                     nullptr, attribs);
+        if (!images[0]) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "eglCreateImage() Failed: %d", eglGetError());
+            goto fail;
+        }
+    }
+    else {
+        // Cast the EGLAttrib array elements to EGLint for the KHR extension
+        EGLint intAttribs[MAX_ATTRIB_COUNT];
+        for (int i = 0; i < MAX_ATTRIB_COUNT; i++) {
+            intAttribs[i] = (EGLint)attribs[i];
+        }
+
+        images[0] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
+                                        EGL_LINUX_DMA_BUF_EXT,
+                                        nullptr, intAttribs);
+        if (!images[0]) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "eglCreateImageKHR() Failed: %d", eglGetError());
+            goto fail;
+        }
+    }
+
+    return 1;
 
 fail:
     freeEGLImages(dpy, images);
@@ -487,14 +540,16 @@ fail:
 }
 
 void DrmRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
-        if (m_eglDestroyImage) {
-            m_eglDestroyImage(dpy, images[i]);
-        }
-        else {
-            m_eglDestroyImageKHR(dpy, images[i]);
-        }
+    if (m_eglDestroyImage) {
+        m_eglDestroyImage(dpy, images[0]);
     }
+    else {
+        m_eglDestroyImageKHR(dpy, images[0]);
+    }
+
+    // Our EGLImages are non-planar
+    SDL_assert(images[1] == 0);
+    SDL_assert(images[2] == 0);
 }
 
 #endif

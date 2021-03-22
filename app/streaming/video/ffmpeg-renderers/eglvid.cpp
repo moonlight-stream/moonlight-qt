@@ -384,6 +384,14 @@ bool EGLRenderer::compileShaders() {
         m_ShaderProgramParams[NV12_PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
         m_ShaderProgramParams[NV12_PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
     }
+    else if (m_EGLImagePixelFormat == AV_PIX_FMT_DRM_PRIME) {
+        m_ShaderProgram = compileShader("egl_opaque.vert", "egl_opaque.frag");
+        if (!m_ShaderProgram) {
+            return false;
+        }
+
+        m_ShaderProgramParams[OPAQUE_PARAM_TEXTURE] = glGetUniformLocation(m_ShaderProgram, "uTexture");
+    }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unsupported EGL pixel format: %d",
@@ -785,12 +793,15 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glUseProgram(m_ShaderProgram);
     m_glBindVertexArrayOES(m_VAO);
 
-    // Bind parameters for the NV12 shaders
+    // Bind parameters for the shaders
     if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12) {
         glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix());
         glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, getColorOffsets());
         glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE1], 0);
         glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE2], 1);
+    }
+    else if (m_EGLImagePixelFormat == AV_PIX_FMT_DRM_PRIME) {
+        glUniform1i(m_ShaderProgramParams[OPAQUE_PARAM_TEXTURE], 0);
     }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

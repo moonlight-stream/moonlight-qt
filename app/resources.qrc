@@ -29,6 +29,8 @@
         <file alias="ModeSeven.ttf">ModeSeven.ttf</file>
         <file alias="egl_nv12.frag">shaders/egl_nv12.frag</file>
         <file alias="egl_nv12.vert">shaders/egl_nv12.vert</file>
+        <file alias="egl_opaque.frag">shaders/egl_opaque.frag</file>
+        <file alias="egl_opaque.vert">shaders/egl_opaque.vert</file>
         <file alias="egl_overlay.frag">shaders/egl_overlay.frag</file>
         <file alias="egl_overlay.vert">shaders/egl_overlay.vert</file>
     </qresource>

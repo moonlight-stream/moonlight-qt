@@ -55,6 +55,7 @@ private:
 #define NV12_PARAM_OFFSET 1
 #define NV12_PARAM_PLANE1 2
 #define NV12_PARAM_PLANE2 3
+#define OPAQUE_PARAM_TEXTURE 0
     int m_ShaderProgramParams[4];
 
 #define OVERLAY_PARAM_TEXTURE 0
