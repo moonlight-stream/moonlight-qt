@@ -495,6 +495,21 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
             }
             break;
 
+        case 3:
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_FD_EXT;
+            attribs[attribIndex++] = object.fd;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_OFFSET_EXT;
+            attribs[attribIndex++] = plane.offset;
+            attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_PITCH_EXT;
+            attribs[attribIndex++] = plane.pitch;
+            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT;
+                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
+            }
+            break;
+
         default:
             Q_UNREACHABLE();
         }
