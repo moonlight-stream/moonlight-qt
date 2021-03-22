@@ -51,13 +51,13 @@ private:
     PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;
     PFNGLDELETEVERTEXARRAYSOESPROC m_glDeleteVertexArraysOES;
 
-#define PARAM_YUVMAT 0
-#define PARAM_OFFSET 1
-#define PARAM_PLANE1 2
-#define PARAM_PLANE2 3
+#define NV12_PARAM_YUVMAT 0
+#define NV12_PARAM_OFFSET 1
+#define NV12_PARAM_PLANE1 2
+#define NV12_PARAM_PLANE2 3
     int m_ShaderProgramParams[4];
 
-#define PARAM_TEXTURE 0
+#define OVERLAY_PARAM_TEXTURE 0
     int m_OverlayShaderProgramParams[1];
 
     int m_OldContextProfileMask;

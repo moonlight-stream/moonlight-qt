@@ -250,7 +250,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
-    glUniform1i(m_OverlayShaderProgramParams[PARAM_TEXTURE], 0);
+    glUniform1i(m_OverlayShaderProgramParams[OVERLAY_PARAM_TEXTURE], 0);
 
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
@@ -379,10 +379,10 @@ bool EGLRenderer::compileShaders() {
             return false;
         }
 
-        m_ShaderProgramParams[PARAM_YUVMAT] = glGetUniformLocation(m_ShaderProgram, "yuvmat");
-        m_ShaderProgramParams[PARAM_OFFSET] = glGetUniformLocation(m_ShaderProgram, "offset");
-        m_ShaderProgramParams[PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
-        m_ShaderProgramParams[PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
+        m_ShaderProgramParams[NV12_PARAM_YUVMAT] = glGetUniformLocation(m_ShaderProgram, "yuvmat");
+        m_ShaderProgramParams[NV12_PARAM_OFFSET] = glGetUniformLocation(m_ShaderProgram, "offset");
+        m_ShaderProgramParams[NV12_PARAM_PLANE1] = glGetUniformLocation(m_ShaderProgram, "plane1");
+        m_ShaderProgramParams[NV12_PARAM_PLANE2] = glGetUniformLocation(m_ShaderProgram, "plane2");
     }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -397,7 +397,7 @@ bool EGLRenderer::compileShaders() {
         return false;
     }
 
-    m_OverlayShaderProgramParams[PARAM_TEXTURE] = glGetUniformLocation(m_OverlayShaderProgram, "uTexture");
+    m_OverlayShaderProgramParams[OVERLAY_PARAM_TEXTURE] = glGetUniformLocation(m_OverlayShaderProgram, "uTexture");
 
     return true;
 }
@@ -787,10 +787,10 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
     // Bind parameters for the NV12 shaders
     if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12) {
-        glUniformMatrix3fv(m_ShaderProgramParams[PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix());
-        glUniform3fv(m_ShaderProgramParams[PARAM_OFFSET], 1, getColorOffsets());
-        glUniform1i(m_ShaderProgramParams[PARAM_PLANE1], 0);
-        glUniform1i(m_ShaderProgramParams[PARAM_PLANE2], 1);
+        glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix());
+        glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, getColorOffsets());
+        glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE1], 0);
+        glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE2], 1);
     }
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
