@@ -193,17 +193,22 @@ void FFmpegVideoDecoder::reset()
     }
 }
 
-bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params)
+bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool eglOnly)
 {
+    if (eglOnly) {
 #ifdef HAVE_EGL
-    if (m_BackendRenderer->canExportEGL()) {
-        m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
-        if (m_FrontendRenderer->initialize(params)) {
-            return true;
+        if (m_BackendRenderer->canExportEGL()) {
+            m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
+            if (m_FrontendRenderer->initialize(params)) {
+                return true;
+            }
+            delete m_FrontendRenderer;
+            m_FrontendRenderer = nullptr;
         }
-        delete m_FrontendRenderer;
-    }
 #endif
+        // If we made it here, we failed to create the EGLRenderer
+        return false;
+    }
 
     if (m_BackendRenderer->isDirectRenderingSupported()) {
         // The backend renderer can render to the display
@@ -221,13 +226,13 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params)
     return true;
 }
 
-bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame)
+bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame, bool eglOnly)
 {
     // In test-only mode, we should only see test frames
     SDL_assert(!m_TestOnly || testFrame);
 
     // Create the frontend renderer based on the capabilities of the backend renderer
-    if (!createFrontendRenderer(params)) {
+    if (!createFrontendRenderer(params, eglOnly)) {
         return false;
     }
 
@@ -363,6 +368,14 @@ bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAM
                 // Done!
                 break;
             }
+        }
+
+        // Allow the renderer to do any validation it wants on this frame
+        if (!m_FrontendRenderer->testRenderFrame(frame)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Render test failed");
+            av_frame_free(&frame);
+            return false;
         }
 
         av_frame_free(&frame);
@@ -555,42 +568,48 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
                                                const AVCodecHWConfig* hwConfig,
                                                std::function<IFFmpegRenderer*()> createRendererFunc)
 {
-    m_BackendRenderer = createRendererFunc();
     m_HwDecodeCfg = hwConfig;
 
-    if (m_BackendRenderer != nullptr &&
-            m_BackendRenderer->initialize(params) &&
-            completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame())) {
-        if (m_TestOnly) {
-            // This decoder is only for testing capabilities, so don't bother
-            // creating a usable renderer
-            return true;
-        }
-
-        if (m_BackendRenderer->needsTestFrame()) {
-            // The test worked, so now let's initialize it for real
-            reset();
-            if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
-                    m_BackendRenderer->initialize(params) &&
-                    completeInitialization(decoder, params, false)) {
+    // i == 0 - Indirect via EGL frontend with zero-copy DMA-BUF passing
+    // i == 1 - Direct rendering or indirect via SDL read-back
+    for (int i = 0; i < 2; i++) {
+        SDL_assert(m_BackendRenderer == nullptr);
+        if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
+                m_BackendRenderer->initialize(params) &&
+                completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame(), i == 0 /* EGL */)) {
+            if (m_TestOnly) {
+                // This decoder is only for testing capabilities, so don't bother
+                // creating a usable renderer
                 return true;
             }
-            else {
-                SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
-                                "Decoder failed to initialize after successful test");
+
+            if (m_BackendRenderer->needsTestFrame()) {
+                // The test worked, so now let's initialize it for real
                 reset();
+                if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
+                        m_BackendRenderer->initialize(params) &&
+                        completeInitialization(decoder, params, false, i == 0 /* EGL */)) {
+                    return true;
+                }
+                else {
+                    SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Decoder failed to initialize after successful test");
+                    reset();
+                }
+            }
+            else {
+                // No test required. Good to go now.
+                return true;
             }
         }
         else {
-            // No test required. Good to go now.
-            return true;
+            // Failed to initialize, so keep looking
+            reset();
         }
     }
-    else {
-        // Failed to initialize or test frame failed, so keep looking
-        reset();
-    }
 
+    // reset() must be called before we reach this point!
+    SDL_assert(m_BackendRenderer == nullptr);
     return false;
 }
 

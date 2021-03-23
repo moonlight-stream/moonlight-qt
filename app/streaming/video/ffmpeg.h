@@ -26,7 +26,7 @@ public:
     virtual IFFmpegRenderer* getBackendRenderer();
 
 private:
-    bool completeInitialization(AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame);
+    bool completeInitialization(AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame, bool eglOnly);
 
     void stringifyVideoStats(VIDEO_STATS& stats, char* output);
 
@@ -34,7 +34,7 @@ private:
 
     void addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst);
 
-    bool createFrontendRenderer(PDECODER_PARAMETERS params);
+    bool createFrontendRenderer(PDECODER_PARAMETERS params, bool eglOnly);
 
     bool tryInitializeRendererForDecoderByName(const char* decoderName,
                                                PDECODER_PARAMETERS params);

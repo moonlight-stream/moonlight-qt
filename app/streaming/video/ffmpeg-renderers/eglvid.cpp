@@ -836,3 +836,21 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     av_frame_unref(m_LastFrame);
     av_frame_move_ref(m_LastFrame, frame);
 }
+
+bool EGLRenderer::testRenderFrame(AVFrame* frame)
+{
+    EGLImage imgs[EGL_MAX_PLANES];
+
+    // Make sure we can get working EGLImages from the backend renderer.
+    // Some devices (Raspberry Pi) will happily decode into DRM formats that
+    // its own GL implementation won't accept in eglCreateImage().
+    ssize_t plane_count = m_Backend->exportEGLImages(frame, m_EGLDisplay, imgs);
+    if (plane_count <= 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Backend failed to export EGL image for test frame");
+        return false;
+    }
+
+    m_Backend->freeEGLImages(m_EGLDisplay, imgs);
+    return true;
+}

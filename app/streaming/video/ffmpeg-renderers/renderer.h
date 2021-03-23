@@ -86,6 +86,13 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
 
+    virtual bool testRenderFrame(AVFrame*) {
+        // If the renderer doesn't provide an explicit test routine,
+        // we will always assume that any returned AVFrame can be
+        // rendered successfully.
+        return true;
+    }
+
     virtual bool needsTestFrame() {
         // No test frame required by default
         return false;
