@@ -351,3 +351,36 @@ Exit:
         av_frame_free(&swFrame);
     }
 }
+
+bool SdlRenderer::testRenderFrame(AVFrame* frame)
+{
+    // If we are acting as the frontend for a hardware
+    // accelerated decoder, we'll need to read the frame
+    // back to render it. Test that this can be done
+    // for the given frame successfully.
+    if (frame->hw_frames_ctx != nullptr) {
+        auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+
+        AVFrame* swFrame = av_frame_alloc();
+        if (swFrame == nullptr) {
+            return false;
+        }
+
+        swFrame->width = frame->width;
+        swFrame->height = frame->height;
+        swFrame->format = hwFrameCtx->sw_format;
+
+        int err = av_hwframe_transfer_data(swFrame, frame, 0);
+
+        av_frame_free(&swFrame);
+
+        if (err != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwframe_transfer_data() failed: %d",
+                         err);
+            return false;
+        }
+    }
+
+    return true;
+}
