@@ -340,9 +340,11 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     uint32_t lastFbId = m_CurrentFbId;
 
     // Create a frame buffer object from the PRIME buffer
+    // NB: It is an error to pass modifiers without DRM_MODE_FB_MODIFIERS set.
     err = drmModeAddFB2WithModifiers(m_DrmFd, frame->width, frame->height,
                                      drmFrame->layers[0].format,
-                                     handles, pitches, offsets, modifiers,
+                                     handles, pitches, offsets,
+                                     (flags & DRM_MODE_FB_MODIFIERS) ? modifiers : NULL,
                                      &m_CurrentFbId, flags);
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
