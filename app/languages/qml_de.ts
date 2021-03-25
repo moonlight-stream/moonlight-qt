@@ -113,7 +113,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Die Internetverbindung dieses Hosts blockiert Moonlight. Solange eine Verbindung mit diesem Netzwerk besteht, wird das streamen übers Internet möglicherweise nicht funktionieren.</translation>
+        <translation>Die Internetverbindung dieses Hosts blockiert Moonlight. Solange eine Verbindung mit diesem Netzwerk besteht, wird das Streamen übers Internet möglicherweise nicht funktionieren.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
@@ -140,7 +140,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation>Host aufwachen</translation>
+        <translation>Host aufwecken</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
@@ -160,7 +160,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="242"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Solange eine vorherige Session auf dem Host läuft, kann du nicht Pairen. Beende alle laufenden Apps oder state den Host neu. Dann probiere das pairen nochmal.</translation>
+        <translation>Solange eine vorherige Session auf dem Host läuft, kannst du nicht pairen. Beende alle laufenden Apps oder starte den Host neu. Dann probiere das pairen nochmal.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="297"/>
@@ -175,12 +175,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="325"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation>Moonlight testet nun dein Netzwerk umherauszufinden, ob NVIDIA GameStream blockiert ist.</translation>
+        <translation>Moonlight testet nun dein Netzwerk um herauszufinden, ob NVIDIA GameStream blockiert ist.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="325"/>
         <source>This may take a few seconds…</source>
-        <translation>Dies dauert ein paar Sekunden...</translation>
+        <translation>Dies dauert ein paar Sekunden…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
@@ -190,12 +190,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Wenn du veruchst übers Internet zu streamen, installiere das Moonlight Internet Hosting Tool auf deinem Host und starte das dort enthaltene Internet Streaming Tester Tool um deine Hos Internetverbindung zu prüfen.</translation>
+        <translation>Wenn du versuchst übers Internet zu streamen, installiere das Moonlight Internet Hosting Tool auf deinem Host und starte das dort enthaltene Internet Streaming Tester Tool um deine Host Internetverbindung zu prüfen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="340"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Die Internetverbindung dieses Hosts blockiert Moonlight. Solange eine Verbindung mit diesem Netzwerk besteht, wird das streamen übers Internet möglicherweise nicht funktionieren.</translation>
+        <translation>Die Internetverbindung dieses Hosts blockiert Moonlight. Solange eine Verbindung mit diesem Netzwerk besteht, wird das Streamen übers Internet möglicherweise nicht funktionieren.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="340"/>
@@ -230,7 +230,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation>Zeieg alle Apps</translation>
+        <translation>Zeige alle Apps</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="352"/>
@@ -304,7 +304,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>Auf deinem Host ist etwas schiefgelaufen beim starten vom Stream.</translation>
+        <translation>Auf deinem Host ist etwas beim Starten vom Stream schiefgelaufen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="101"/>
@@ -329,32 +329,32 @@
     <message>
         <location filename="../streaming/session.cpp" line="583"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation>HDR wird nicht von Software decodierung unterstützt.</translation>
+        <translation>HDR wird nicht von Software Dekodierung unterstützt.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="587"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>Software decodierung kann zu schlecher streaming Leitung führen.</translation>
+        <translation>Software Dekodierung kann zu schlecher streaming Leitung führen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation>Nicht unterstütze FPS Optionen kann stottern verursachen.</translation>
+        <translation>Nicht unterstützte FPS Optionen können stottern verursachen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="595"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>V-Sync wird deaktiviert wenn mit einer höheren FrameRate als der Display gestreamt wird.</translation>
+        <translation>V-Sync wird deaktiviert wenn mit einer höheren Framerate als der des Display gestreamt wird.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="612"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>Da deine Grafikkarte kein HEVC Decodierung unterstützt wird Software decoding benutzt.  Die kann zu einer schlechten streaming Leistung führen.</translation>
+        <translation>Da deine Grafikkarte kein HEVC Decodierung unterstützt wird Software Dekodierung benutzt. Die kann zu einer schlechten streaming Leistung führen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="615"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation>Die Grafikkarte deines PC&apos;s unterstützt keine HEVC Decodierung.</translation>
+        <translation>Die Grafikkarte deines PC&apos;s unterstützt keine HEVC Dekodierung.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="622"/>
@@ -374,32 +374,32 @@
     <message>
         <location filename="../streaming/session.cpp" line="652"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation>Die Grafikkarte deines PC&apos;s unterstützt keine HEVC Main10 Decodierung für HDR streaming.</translation>
+        <translation>Die Grafikkarte deines PC&apos;s unterstützt keine HEVC Main10 Dekodierung für HDR streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="665"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation>Für 4K steaming wird mindestens GeForce Experience 3.0 benötigt.</translation>
+        <translation>Für 4K Streaming wird mindestens GeForce Experience 3.0 benötigt.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="680"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>Deine ausgewählte Surround Sound Einstellung wird nicht von dem momentanen Audiogerät untertützt.</translation>
+        <translation>Deine ausgewählte Surround Sound Einstellung wird von dem momentanen Audiogerät nicht untertützt.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="687"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>Zugriff auf das Audiogerät fehlgeschlagen. Es wird kein Ton für diese Session Verfügbar sein.</translation>
+        <translation>Zugriff auf das Audiogerät fehlgeschlagen. Es wird kein Ton für diese Session verfügbar sein.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="692"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>Ein angeschlossener Controller hat keine Tastenbelegung und ist somit nicht nutzbar. Besuche die Moonlight help um dies zu lösen.</translation>
+        <translation>Ein angeschlossener Controller hat keine Tastenbelegung und ist somit nicht nutzbar. Besuche die Moonlight Hilfe um dies zu lösen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="700"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>Die Grafikkarte deines Host&apos;s unterstüzt keine Videoauflösung übr 4K zum Streamen.</translation>
+        <translation>Die Grafikkarte deines Host&apos;s unterstüzt keine Videoauflösung über 4K zum Streamen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="704"/>
@@ -409,12 +409,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="718"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation>Erzwungene Hardware Decodierung kann nicht ausgewählt werden, da der PC keine Hardware Decodierung unterstützt.</translation>
+        <translation>Erzwungene Hardware Dekodierung kann nicht ausgewählt werden, da der PC keine Hardware Decodierung unterstützt.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="721"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation>Erzwungene Hardware Decodierung ist nicht mit deinem ausgewähltem Codec kompatibel, da die Grafikkarte deines PC&apos;s den ausgewählen Codec nicht unterstützt.</translation>
+        <translation>Erzwungene Hardware Dekodierung ist nicht mit deinem ausgewähltem Codec kompatibel, da die Grafikkarte deines PC&apos;s den ausgewählen Codec nicht unterstützt.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1022"/>
@@ -442,7 +442,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="78"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>Zu hohe Werte für deinen PC oder deinem Netzwerk kann Lag oder Fehler verursachen.</translation>
+        <translation>Zu hohe Werte für deinen PC oder dein Netzwerk können Lags oder Fehler verursachen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="60"/>
@@ -472,12 +472,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="331"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation>Benutzerdefinierte Auflösungen sind offiziell nicht von GeForce Experience unterstützt, daher wird es deine Host Auflösung nicht setzen. Du musst es manuell setzen während des Streams.</translation>
+        <translation>Benutzerdefinierte Auflösungen sind offiziell nicht von GeForce Experience unterstützt, daher wird es deine Host Auflösung nicht setzen. Du musst es manuell während des Streams setzen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="332"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation>Auflösung die von deinem Host oder Client nicht unterstützt sind, können zu Fehlern beim streamen führen.</translation>
+        <translation>Auflösung die nicht von deinem Host oder Client unterstützt sind, können zu Fehlern beim Streamen führen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="338"/>
@@ -504,7 +504,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="501"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation>Verringere die Bitrate für langsame Verbindungen. Erhöhe sie für eine bessere Videoqualität.</translation>
+        <translation>Verringere die Bitrate bei einer langsamen Verbindung, Erhöhe sie für eine bessere Videoqualität.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="519"/>
@@ -596,12 +596,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="693"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation>Schalte die Host Lautsprecher stumm während des streamens</translation>
+        <translation>Schalte die Host Lautsprecher während des streamens stumm</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="703"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation>Du musst die laufende App neustarten damit diese Einstellung aktiv wird</translation>
+        <translation>Du musst die laufende App neustarten, damit diese Einstellung aktiv wird</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="709"/>
@@ -631,12 +631,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="792"/>
         <source>You must restart Moonlight for this change to take effect</source>
-        <translation>Du musst Moonlight neustarten damit diese Einstellung aktiv wird</translation>
+        <translation>Du musst Moonlight neustarten, damit diese Einstellung aktiv wird</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="806"/>
         <source>GUI display mode</source>
-        <translation>Anzeige Modus der Oberfläche</translation>
+        <translation>Anzeigemodus der Oberfläche</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="843"/>
@@ -714,7 +714,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="923"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>Du kannst dies während des streamens umstellen mit Strg+Alt+Shift+M.</translation>
+        <translation>Du kannst dies während des Streamens umstellen mit Strg+Alt+Shift+M.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1101"/>
@@ -759,7 +759,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="882"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Aktualisiert deinen Discord Status um den Namen der aktuellen App anzuzeigen wenn du steamst.</translation>
+        <translation>Aktualisiert deinen Discord Status um den Namen der aktuellen App anzuzeigen, wenn du streamst.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1094"/>
@@ -799,7 +799,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1142"/>
         <source>Optimize game settings for streaming</source>
-        <translation>Optimiere die Spieleinstellungen für das streamen</translation>
+        <translation>Optimiere die Spieleinstellungen für das Streamen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1153"/>
@@ -909,7 +909,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Ctrl+Alt+Shift+Q</source>
-        <translation>Strg + Alt + Shift + Q</translation>
+        <translation>Strg+Alt+Shift+Q</translation>
     </message>
 </context>
 <context>
@@ -955,7 +955,7 @@
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation>Controller Tastenbelegen</translation>
+        <translation>Controllertasten belegen</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
