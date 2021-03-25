@@ -160,12 +160,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="242"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Solange eine vorherige Session auf dem Host läuft, kannst du nicht pairen. Beende alle laufenden Apps oder starte den Host neu. Dann probiere das pairen nochmal.</translation>
+        <translation>Solange eine vorherige Session auf dem Host läuft, kannst du nicht koppeln. Beende alle laufenden Apps oder starte den Host neu. Dann probiere das Koppeln erneut.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="297"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Bitte gebe %1 auf deinem Host ein. Diese Nachricht wird nach dem Pairen automatisch geschlossen.</translation>
+        <translation>Bitte gebe %1 auf deinem Host ein. Diese Nachricht wird nach dem Koppeln automatisch geschlossen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="308"/>
@@ -258,7 +258,7 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>PC %1 wurde noch nicht gepairt. Bitte öffne Moonlight zum pairen.</translation>
+        <translation>Host %1 wurde noch nicht gekoppelt. Bitte öffne Moonlight zum koppeln.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
