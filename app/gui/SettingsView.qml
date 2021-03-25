@@ -781,6 +781,10 @@ Flickable {
                             text: "简体中文" //Simplified Chinese
                             val: StreamingPreferences.LANG_ZH_CN
                         }
+                        ListElement {
+                            text: "Norwegian Bokmål"
+                            val: StreamingPreferences.LANG_NB_NO
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
