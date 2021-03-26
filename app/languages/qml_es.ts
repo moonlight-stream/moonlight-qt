@@ -7,18 +7,18 @@
         <location filename="../gui/AppView.qml" line="139"/>
         <location filename="../gui/AppView.qml" line="293"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Reanudar juego</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="165"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Salir del juego</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="293"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Abrir juego</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="306"/>
@@ -33,7 +33,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="319"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Ocultar juego</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="323"/>
@@ -43,7 +43,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="323"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Ver todas las aplicaciones</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="338"/>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Estableciendo conexión con PC ...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>Saliendo de la aplicación...</translation>
     </message>
 </context>
 <context>
@@ -69,17 +69,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Estableciendo conexión con PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Cargando lista de aplicaciones...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Seguro que quieres salir de %1? Se perderá cualquier progreso no guardado.</translation>
     </message>
 </context>
 <context>
@@ -103,12 +103,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Ordenadores</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>No se puede conectar con el PC especificado.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
@@ -304,7 +304,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>Algo salió mal en su PC host al iniciar la transmisión.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="101"/>
@@ -319,7 +319,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>Conexión terminada</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="581"/>
@@ -925,27 +925,27 @@
     <message>
         <location filename="../gui/main.qml" line="255"/>
         <source>Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Versión %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="271"/>
         <source>Join our community on Discord</source>
-        <translation type="unfinished"></translation>
+        <translation>Únete a nuestra comunidad en Discord</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="283"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Ordenadores</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="290"/>
         <source>Add PC manually</source>
-        <translation type="unfinished"></translation>
+        <translation>Agregar PC manualmente</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="330"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Actualización disponible para Moonlight: versión % 1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="377"/>
@@ -960,7 +960,7 @@
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight no detectó ningún decodificador de vídeo H.264 acelerado por hardware en funcionamiento. Su rendimiento de transmisión puede verse gravemente degradado en esta configuración.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="423"/>
@@ -1005,7 +1005,7 @@
     <message>
         <location filename="../gui/main.qml" line="481"/>
         <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Ingrese la dirección IP de su PC GameStream:</translation>
     </message>
 </context>
 </TS>
