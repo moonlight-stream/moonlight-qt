@@ -29,6 +29,12 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 - [Raspberry Pi 4](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-Raspberry-Pi-4)
 - [NVIDIA Jetson and Nintendo Switch (Ubuntu L4T)](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-Linux4Tegra-(L4T)-Ubuntu)
 
+#### Special Thanks
+
+[![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.com)
+
+Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously provided for free by [Cloudsmith](https://cloudsmith.com).
+
 ## Building
 
 ### Windows Build Requirements
