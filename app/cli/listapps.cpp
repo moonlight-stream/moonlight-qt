@@ -54,7 +54,7 @@ public:
         NvApp app;
 
         switch (event.type) {
-        // Occurs when CliListAppsSegue becomes visible and the UI calls launcher's execute()
+        // Occurs when CLI main calls execute
         case Event::Executed:
             if (m_State == StateInit) {
                 m_State = StateSeekComputer;
@@ -72,14 +72,17 @@ public:
 
                 m_BoxArtManager = new BoxArtManager(q);
 
-                emit q->searchingComputer();
+                if (m_Arguments.isVerbose()) {
+                    fprintf(stdout, "Establishing connection to PC...\n");
+                }
             }
             break;
         // Occurs when computer search timed out
         case Event::ComputerSeekTimedout:
             if (m_State == StateSeekComputer) {
-                m_State = StateFailure;
-                emit q->failed(QString("Failed to connect to %1").arg(m_ComputerName));
+                fprintf(stderr, "%s\n", qPrintable(QString("Failed to connect to %1").arg(m_ComputerName)));
+
+                QCoreApplication::exit(-1);
             }
             break;
         // Occurs when searched computer is found
@@ -89,20 +92,23 @@ public:
                     m_State = StateSeekApp;
                     m_Computer = event.computer;
                     m_TimeoutTimer->start(APP_SEEK_TIMEOUT);
-                    emit q->searchingApps();
+                    if (m_Arguments.isVerbose()) {
+                        fprintf(stdout, "Loading app list...\n");
+                    }
                 } else {
                     m_State = StateFailure;
-                    QString msg = QObject::tr("Computer %1 has not been paired. "
-                                              "Please open Moonlight to pair before retrieving games list.")
-                            .arg(event.computer->name);
-                    emit q->failed(msg);
+                    fprintf(stderr, "%s\n", qPrintable(QObject::tr("Computer %1 has not been paired. "
+                                            "Please open Moonlight to pair before retrieving games list.")
+                                            .arg(event.computer->name)));
+
+                    QCoreApplication::exit(-1);
                 }
             }
             break;
         // Occurs when a computer is updated
         case Event::ComputerUpdated:
             if (m_State == StateSeekApp) {
-                m_PrintCSV ? printAppsCSV(m_Computer->appList) : printApps(m_Computer->appList);
+                m_Arguments.isPrintCSV() ? printAppsCSV(m_Computer->appList) : printApps(m_Computer->appList);
 
                 QCoreApplication::exit(0);
             }
@@ -142,10 +148,10 @@ public:
     NvComputer *m_Computer;
     State m_State;
     QTimer *m_TimeoutTimer;
-    bool m_PrintCSV;
+    ListCommandLineParser m_Arguments;
 };
 
-Launcher::Launcher(QString computer, bool printCSV, QObject *parent)
+Launcher::Launcher(QString computer, ListCommandLineParser arguments, QObject *parent)
     : QObject(parent),
       m_DPtr(new LauncherPrivate(this))
 {
@@ -154,7 +160,7 @@ Launcher::Launcher(QString computer, bool printCSV, QObject *parent)
     d->m_State = StateInit;
     d->m_TimeoutTimer = new QTimer(this);
     d->m_TimeoutTimer->setSingleShot(true);
-    d->m_PrintCSV = printCSV;
+    d->m_Arguments = arguments;
     connect(d->m_TimeoutTimer, &QTimer::timeout,
             this, &Launcher::onComputerSeekTimeout);
 }

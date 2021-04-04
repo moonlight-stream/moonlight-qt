@@ -1,5 +1,7 @@
 #pragma once
 
+#include "commandlineparser.h"
+
 #include <QObject>
 #include <QVariant>
 
@@ -17,16 +19,11 @@ class Launcher : public QObject
     Q_DECLARE_PRIVATE_D(m_DPtr, Launcher)
 
 public:
-    explicit Launcher(QString computer, bool printCSV, QObject *parent = nullptr);
+    explicit Launcher(QString computer, ListCommandLineParser arguments, QObject *parent = nullptr);
     ~Launcher();
 
     Q_INVOKABLE void execute(ComputerManager *manager);
     Q_INVOKABLE bool isExecuted() const;
-
-signals:
-    void searchingComputer();
-    void searchingApps();
-    void failed(QString text);
 
 private slots:
     void onComputerFound(NvComputer *computer);
@@ -35,7 +32,7 @@ private slots:
 
 private:
     QScopedPointer<LauncherPrivate> m_DPtr;
-    bool m_Print_CSV;
+    ListCommandLineParser m_Arguments;
 };
 
 }

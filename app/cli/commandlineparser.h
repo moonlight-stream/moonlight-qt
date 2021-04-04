@@ -67,8 +67,10 @@ public:
 
     QString getHost() const;
     bool isPrintCSV() const;
+    bool isVerbose() const;
 
 private:
     QString m_Host;
     bool m_PrintCSV;
+    bool m_Verbose;
 };

@@ -487,7 +487,8 @@ void ListCommandLineParser::parse(const QStringList &args)
     parser.addPositionalArgument("list", "list available apps");
     parser.addPositionalArgument("host", "Host computer name, UUID, or IP address", "<host>");
 
-    parser.addFlagOption("csv",  "Print as CSV with additional information");
+    parser.addFlagOption("csv",     "Print as CSV with additional information");
+    parser.addFlagOption("verbose", "Displays additional information");
 
     if (!parser.parse(args)) {
         parser.showError(parser.errorText());
@@ -497,6 +498,7 @@ void ListCommandLineParser::parse(const QStringList &args)
 
 
     m_PrintCSV = parser.isSet("csv");
+    m_Verbose = parser.isSet("verbose");
 
     // This method will not return and terminates the process if --version or
     // --help is specified
@@ -518,4 +520,9 @@ QString ListCommandLineParser::getHost() const
 bool ListCommandLineParser::isPrintCSV() const
 {
     return m_PrintCSV;
+}
+
+bool ListCommandLineParser::isVerbose() const
+{
+    return m_Verbose;
 }
