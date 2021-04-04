@@ -709,7 +709,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1105"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation>Хотя бы один виртуальный геймпад всегда будет &quot;подключён&quot; к хост-ПК, даже если физически к ПК-хосту не подключено ни одного. (Полезно для игр, не поддерживающих &quot;горячее&quot; подключение геймпадов.)</translation>
+        <translation>Хотя бы один виртуальный геймпад всегда будет &quot;подключён&quot; к хост-ПК, даже если физически к ПК-хосту не подключено ни одного.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="935"/>
