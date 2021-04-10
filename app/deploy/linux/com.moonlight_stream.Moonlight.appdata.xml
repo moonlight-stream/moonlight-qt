@@ -36,6 +36,17 @@
 	</screenshots>
 
 	<releases>
+		<release version="3.1.1" date="2021-04-09">
+			<description>
+				<p>Changes:</p>
+				<ul>
+					<li>Added support for streaming from GeForce Experience 3.22</li>
+					<li>Added support for AMF-encoded HEVC streams from servers like Sunshine and OpenStream</li>
+					<li>Added new community-contributed translations from Weblate</li>
+					<li>Fixed KMSDRM rendering with buffer modifiers on embedded devices</li>
+				</ul>
+			</description>
+		</release>
 		<release version="3.1.0" date="2021-03-14">
 			<description>
 				<p>New features:</p>
