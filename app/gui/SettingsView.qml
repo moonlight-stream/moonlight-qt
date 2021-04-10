@@ -785,6 +785,15 @@ Flickable {
                             text: "Norwegian Bokmål"
                             val: StreamingPreferences.LANG_NB_NO
                         }
+                        ListElement {
+                            text: "русский" // Russian
+                            val: StreamingPreferences.LANG_RU
+                        }
+                        // Don't list Spanish until it is more complete
+                        /*ListElement {
+                            text: "Español" // Spanish
+                            val: StreamingPreferences.LANG_ES
+                        }*/
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

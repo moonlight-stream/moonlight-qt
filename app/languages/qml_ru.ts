@@ -1,54 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="nb_NO" sourcelanguage="en_GB">
+<TS version="2.1" language="ru" sourcelanguage="en_GB">
 <context>
     <name>AppView</name>
     <message>
         <location filename="../gui/AppView.qml" line="139"/>
         <location filename="../gui/AppView.qml" line="293"/>
         <source>Resume Game</source>
-        <translation>Fortsett spill</translation>
+        <translation>Продолжить игру</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="165"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Quit Game</source>
-        <translation>Avslutt spill</translation>
+        <translation>Выйти из игры</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="293"/>
         <source>Launch Game</source>
-        <translation>Kjør spill</translation>
+        <translation>Запустить игру</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="306"/>
         <source>Direct Launch</source>
-        <translation>Direkteoppstart</translation>
+        <translation>Прямой запуск</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="310"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Kjør dette programmet umiddelbart når vert er valgt, noe som hopper over utvalgsrutenettet.</translation>
+        <translation>Запустить эту игру при выборе хоста (пропустить страницу выбора игры)</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="319"/>
         <source>Hide Game</source>
-        <translation>Skjul spill</translation>
+        <translation>Скрыть игру</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="323"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>Skjull dette spillet fra programrutenettet. For å komme til skjulte spill kan du høyreklikke verten og velge %1.</translation>
+        <translation>Скроет эту игру из списка. Чтобы показать скрытые игры, нажмите правой кнопкой на хост и выберите %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="323"/>
         <source>View All Apps</source>
-        <translation>Vis alle programmer</translation>
+        <translation>Показать все игры</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="338"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Er du sikker på at du vil avslutte %1? All ulagret fremdrift vil gå tapt.</translation>
+        <translation>Вы уверены, что хотите завершить %1? Несохранённый прогресс может быть утерян.</translation>
     </message>
 </context>
 <context>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Etablerer tilkobling til PC …</translation>
+        <translation>Подключение к ПК...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished">Avslutter program …</translation>
+        <translation>Выход из игры...</translation>
     </message>
 </context>
 <context>
@@ -69,17 +69,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Etablerer tilkobling til PC …</translation>
+        <translation>Подключение к ПК...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>Laster inn programliste …</translation>
+        <translation>Загружается список игр...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Er du sikker på at du ønsker å avslutte %1? All ulagret fremdrift vil gå tapt.</translation>
+        <translation>Вы уверены, что хотите завершить %1? Несохранённый прогресс может быть утерян.</translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished">Tastetilknytning</translation>
+        <translation>Настройки геймпада</translation>
     </message>
 </context>
 <context>
@@ -95,7 +95,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="327"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>Manglende lydopptaksenhet. Å reinstallere GeForce Experience bør løse dette problemet.</translation>
+        <translation>Потеряно виртуальное аудиоустройство. Попробуйте переустановить GeForce Experience.</translation>
     </message>
 </context>
 <context>
@@ -103,22 +103,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation>Datamaskiner</translation>
+        <translation>Компьютеры</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished">Ikke ikke koble til denne PC-en.</translation>
+        <translation>Не удалось подключиться к указанному ПК.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished">Internett-tilkoblingen på denne PC-en blokkerer Moonlight. Strømming over Internett vil muligens ikke fungere når tilkoblet gjennom dette nettverket.</translation>
+        <translation>Эта сеть блокирует выход Moonlight в интернет. Стриминг через интернет может не работать в этой сети.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished">Klikk «Hjelp»-knappen for mulige løsninger.</translation>
+        <translation>Нажмите кнопку Помощь для возможных вариантов решения проблемы.</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -127,7 +127,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished">Automatisk oppdaging av PC er avskrudd. Leg til din PC manuelt.</translation>
+        <translation>Автоматические обнаружение ПК отключено. Добавьте свой ПК вручную.</translation>
     </message>
     <message>
         <source>View Apps</source>
@@ -140,102 +140,102 @@
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation>Vekk PC</translation>
+        <translation>Разбудить ПК</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Test nettverk</translation>
+        <translation>Проверить сеть</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation>Gi PC nytt navn</translation>
+        <translation>Переименовать ПК</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation>Slett PC</translation>
+        <translation>Удалить ПК</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="242"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Du kan ikke parre mens en tidligere økt fremdeles kjører på din verts-PC. Avslutt alle kjørende spill eller utfør omstart av verts-PC-en, før du prøver parring igjen.</translation>
+        <translation>Нельзя создать новую пару, пока на ПК ещё активно соединение. Завершите запущенную на хосте игру или перезапустите ПК-хост, затем попробуйте ещё раз.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="297"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Skriv inn %1 på din GameStream-PC. Denne dialogen vil lukkes når parringen er fullført.</translation>
+        <translation>Введите %1 на ПК с GameStream. Этот диалог закроется автоматически при успешном сопряжении.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="308"/>
         <source>Are you sure you want to remove this PC?</source>
-        <translation>Er du sikker på at du vil fjerne denne PC-en?</translation>
+        <translation>Вы уверены, что хотите удалить этот ПК?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="325"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation>Moonlight tester din nettverkstilkobling for å fastsette hvorvidt NViDIA GameStream er blokkert.</translation>
+        <translation>Moonlight тестирует выше сетевое подключение, чтобы найти проблемы с NVIDIA GameStream.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="325"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished">Dette kan ta noen sekunder …</translation>
+        <translation>Это может занять несколько секунд…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>Dette nettverket ser ikke ut til å blokkere Moonlight. Hvis du fremdeles har problemer med å koble til bør du sjekke PC-ens brannmursinnstillinger.</translation>
+        <translation>Эта сеть не блокирует Moonlight. Если вы всё ещё не можете подключиться, проверьте настроки брандмауэра на ПК-хосте.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation type="unfinished">Hvis du prøver å strømme over Internett, installer Moonlight Internett-vertstjeningsverktøyet på din spill-PC og kjør den inkluderte Internett-strømmingstesteren for å teste tilknytningen den har til Internett.</translation>
+        <translation>Если вы пытаетесь стримить через интернет, установите Moonlight Internet Hosting Tool на хост-ПК и запустите Internet Streaming Tester.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="340"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Nettverkstilkoblingen på din PC ser ut til å blokkere Moonlight. Strømming over Internett vil muligens ikke virke når tilknyttet fra dette nettverket.</translation>
+        <translation>Ваше сетевое подключение блокирует выход Moonlight в интернет. Стриминг через интернет может не работать.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="340"/>
         <source>The following network ports were blocked:</source>
-        <translation type="unfinished">Følgende nettverksporter ble blokkert:</translation>
+        <translation>Следующие порты оказались закрыты:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="332"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation type="unfinished">Nettverkstesten kunne ikke utføres fordi ingen av Moonlight sine tilkoblingstest-tjener kunne nås fra denne PC-en. Sjekk din tilknytning til Internett eller prøv igjen senere.</translation>
+        <translation>Не удалось подключиться к серверам Moonlight для проверки соединения. Проверьте своё подключение к интернету и попробуйте ещё раз.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="unfinished">Søker etter PC-er på ditt lokalnettverk med NVIDIA GameStream påskrudd …</translation>
+        <translation>Поиск ПК с включённым NVIDIA GameStream в вашей локальной сети...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>PC-status: %1</translation>
+        <translation>Статус ПК: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Online</source>
-        <translation>Påkoblet</translation>
+        <translation>В сети</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation>Frakoblet</translation>
+        <translation>Не в сети</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation>Vis alle programmer</translation>
+        <translation>Показать все игры</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="352"/>
         <source>Enter the new name for this PC:</source>
-        <translation>Skriv inn nytt navn for denne PC-en:</translation>
+        <translation>Введите новое имя для этого ПК:</translation>
     </message>
 </context>
 <context>
@@ -243,7 +243,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="538"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>Kjørende spill ble ikke startet på denne PC-en. Du må avslutte spillet på verts-PC-en manuelt eller bruke enheten som opprinnelig startet spillet.</translation>
+        <translation>Выбранная игра уже запущена. Вручную закройте игру на хост-ПК, или используйте устройство, с которого она была запущена.</translation>
     </message>
 </context>
 <context>
@@ -252,24 +252,24 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished">Klarte ikke å koble til %1</translation>
+        <translation>Не удалось подключиться к %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation type="unfinished">Det har ikke blitt satt opp parring til datamaskin %1. Åpne Moonlight for å gjøre dette før du begynner strømmingen.</translation>
+        <translation>Компьютер %1 не сопряжён. Выполните сопряжение перед тем, как начать стримить.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation type="unfinished">Klarte ikke å avslutte program, fordi: %1</translation>
+        <translation>Не удалось выйти из игры, причина: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation type="unfinished">Klarte ikke å finne programmet %1</translation>
+        <translation>Не удалось найти игру &quot;%1&quot;</translation>
     </message>
 </context>
 <context>
@@ -277,7 +277,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation>Avslutter %1 …</translation>
+        <translation>Выход из %1...</translation>
     </message>
 </context>
 <context>
@@ -289,142 +289,142 @@
     <message>
         <location filename="../streaming/session.cpp" line="89"/>
         <source>No video received from host.</source>
-        <translation>Fikk ingen video fra vert.</translation>
+        <translation>Не удалось загрузить видео с хост-ПК. (No video received from host.)</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Sjekk din brannmur og portvideresendingsregler for port(ene): %1</translation>
+        <translation>Проверьте настройки брандмауэра и проброса портов для следующих портов: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>Din nettverkstilknytning fungerer ikke så bra. Reduser videobitraten fra dens innstilling, eller prøv en raskere tilkobling.</translation>
+        <translation>Ваше сетевое подключение не справляется с заданными настройками. Попробуйте изменить битрейт или использовать более быстрое подключение.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>Noe gikk galt på din vetts-PC under oppstart av strømmen.</translation>
+        <translation>Что-то пошло не так на хост-ПК при попытке начать стрим.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="101"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>Forsikre deg om at du ikke har noe DRM-beskyttet innhold åpent på din verts-PC. Du kan også prøve å starte verts-PC-en på ny.</translation>
+        <translation>Убедитесь, что на нём не открыто защищённых DRM материалов. Также попытайтесь перезагрузить ПК.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="102"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation>Hvis problemet vedvarer kan du prøve å reinstallere dine GPU-drivere og GeForce Experience.</translation>
+        <translation>Если проблема не уходит, попробуйте переустановить драйвер видеокарты и/или GeForce Experience.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>Connection terminated</source>
-        <translation>Tilkobling avsluttet</translation>
+        <translation>Подключение разорвано</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="581"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation type="unfinished">At du har satt på fjernskrivebordsmusemodus kan forårsake problemer i spill.</translation>
+        <translation>Вы выбрали режим удалённого рабочего стола. Это может вызвать проблемы с мышью в некоторых играх.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="586"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation>HDR er ikke støttet med mykvaredekoding.</translation>
+        <translation>HDR не поддерживается с программным декодированием.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="590"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation type="unfinished">At du har satt på tvungen mykvaredekoding kan forårsake dårlig strømmingsytelse.</translation>
+        <translation>Вы выбрали программное декодирование, что может ухудшить производительность.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="595"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation>Bruk av ustøttede BPS-valg kan forårsake hakking eller forsinkelse.</translation>
+        <translation>Неподдерживаемые значения FPS могут вызвать подтормаживания или повысить задержку.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="598"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>VSync vil bli avskrudd under strømming i høyere bilderammetakt enn skjermen.</translation>
+        <translation>V-sync будет отключён, если частота кадров стрима превышает частоту развёртки экрана.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="615"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished">Bruker mykvaredekoding som følge av ditt valg om påtvungen HEVC uten skjermkortsstøtte. Dette kan forårsake dårlig strømmingsytelse.</translation>
+        <translation>Ваша видеокарта не поддерживает аппаратное декодирование HEVC, используется программное декодирование. Это может ухудшить производительность.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="618"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation>PC-ens skjermkort støtter ikke HEVC-dekoding.</translation>
+        <translation>Видеокарта этого ПК не поддерживает декодирование HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="625"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="unfinished">Skjermkortet i din verts-PC støtter ikke HEVC. Et GeForce GTX kort i 900-serien (Maxwell) eller senere kreves.</translation>
+        <translation>Видеокарта хост-ПК не поддеживает HEVC. Требуется видеокарты GTX 900 серии или новее. Используйте H264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="642"/>
         <source>%1 doesn&apos;t support HDR10.</source>
-        <translation>%1 støtter ikke HDR10.</translation>
+        <translation>%1 не поддеживает HDR10.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="646"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="unfinished">Skjermkortet i din verts-PC støtter ikke HDR-strømming. Et GeForce GTX kort i 1000-serien (Pascal) eller senere kreves.</translation>
+        <translation>Видеокарты ПК-хоста не поддеживает стрим в HDR. Нужна видеокарта GTX серии 1000 или новее.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="655"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation>Denne PC-ens skjermkort støtter ikke HEVC Main10-dekoding for HDR-strømming.</translation>
+        <translation>Видеокарта этого ПК не поддерживает декодирование HEVC профиля Main10, HDR недоступен.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="668"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation type="unfinished">GeForce Experience 3.0 eller senere kreves for 4k-strømming.</translation>
+        <translation>Разрешение 4K требует GeForce Experience 3.0 или новее.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="683"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>Din valgte kringlydsinnstilling støttes ikke på nåværende lydenhet.</translation>
+        <translation>Ваша настройка объёмного звука не поддерживается текущим аудиоустройством.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="690"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>Klarte ikke å åpne lydenhet. Lyd vil være utilgjengelig under denne økten.</translation>
+        <translation>Не удалось открыть аудиоустройство на этом ПК. Звук будет отключён на этот раз.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="695"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>En tilknyttet spillkontroller har ingen tastetilknytninger, og vil ikke kunne brukes. Besøk Moonlight-hjelpen for å løse dette.</translation>
+        <translation>Подключённый геймпад не настроен и не может быть использован. Посетите раздел помощи Moonlight, чтобы исправить это.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="703"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation type="unfinished">Skjermkortet i din verts-PC støtter ikke strømming av videooppløsninger over 4k.</translation>
+        <translation>Видеокарта хост-ПК не поддерживает разрешения выше 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="707"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation>Videooppløsninger over 4k støttes kun av HEVC-kodeket.</translation>
+        <translation>Разрешения выше 4K работают только с HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="721"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation type="unfinished">At du har satt på tvungen maskinvaredekoding har ingen innvirkning siden det ikke er støtte for det på denne PC-ens skjermkort.</translation>
+        <translation>Вы выбрали аппаратное декодирование, но видеокарта этого ПК не поддерживает аппаратное декодирование для выбранного кодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="724"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation type="unfinished">At du har valgt tungen maskinvaredekoding fungerer ikke sammen med kodekvalget. Denne PC-ens skjermkort mangler støtte for dekoding i valgt kodek.</translation>
+        <translation>Вы выбрали аппаратное декодирование, но видеокарта этого ПК не поддерживает аппаратное декодирование для выбранного кодека.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1025"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation>GeForce Experience returnerte en feil: %1</translation>
+        <translation>Ошибка GeForce Experience: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1503"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation type="unfinished">Kunne ikke starte videodekoder. Sjekk strømmingsinnstillingene dine og prøv igjen.</translation>
+        <translation>Не удалось запустить декодирование видео. Проверьте настройки стрима и попробуйте ещё раз.</translation>
     </message>
 </context>
 <context>
@@ -432,22 +432,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="12"/>
         <source>Settings</source>
-        <translation>Innstillinger</translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="70"/>
         <source>Resolution and FPS</source>
-        <translation>Oppløsning og BPS</translation>
+        <translation>Разрешение и FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="78"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>Å sette verdier som er for høye for PC-en eller nettverket kan forårsake forsinkelse, hakking, eller feil.</translation>
+        <translation>Слишком высокие настройки могут вызвать проблемы с производительностью, подтормаживания, или ошибки.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="60"/>
         <source>Basic Settings</source>
-        <translation>Grunnleggende innstillinger</translation>
+        <translation>Основные настройки</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="209"/>
@@ -467,22 +467,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="227"/>
         <source>4K</source>
-        <translation type="unfinished">4k</translation>
+        <translation>4K</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="331"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation type="unfinished">Brukerdefinerte oppløsninger støttes ikke offisielt av GeForce Experience, så det vil ikke sette din vertsskjermoppløsning. Du vil måtte sette den manuelt mens du er inne i et spill.</translation>
+        <translation>Кастомные разрешения не поддерживаются официально в GeForce Experience, так что разрешения дисплея хост-ПК не будет изменено. Вам нужно будет задать его вручную в игре.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="332"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation type="unfinished">Oppløsninger som ikke er støttet av din klient eller verts-PC kan forårsake strømmingsfeil.</translation>
+        <translation>Если выбранное разрешение не поддерживается хостом или клиентом, могут возникнуть ошибки.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="338"/>
         <source>Enter a custom resolution:</source>
-        <translation>Skriv inn egendefinert oppløsning:</translation>
+        <translation>Введите желаемое разрешение:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="406"/>
@@ -490,7 +490,7 @@
         <location filename="../gui/SettingsView.qml" line="427"/>
         <location filename="../gui/SettingsView.qml" line="430"/>
         <source>%1 FPS</source>
-        <translation>%1 BPS</translation>
+        <translation>%1 FPS</translation>
     </message>
     <message>
         <source>%1 FPS (nicht unterstützt)</source>
@@ -499,44 +499,44 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="493"/>
         <source>Video bitrate:</source>
-        <translation>Videobitrate:</translation>
+        <translation>Битрейт видео:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="501"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation type="unfinished">Senk bitraten på tregere tilkoblinger. Øk bitraten for bedre bildekvalitet.</translation>
+        <translation>Используйте низкий битрейт при медленном соединении. Высокий битрейт улучшит качество видео.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="519"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation>Videobitrate: %1 Mbps</translation>
+        <translation>Битрейт видео: %1 Мб/с</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="527"/>
         <source>Display mode</source>
-        <translation>Visningsmodus</translation>
+        <translation>Режим дисплея</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="545"/>
         <source> (Recommended)</source>
         <translatorcomment>Dont put the space in ransaltions</translatorcomment>
-        <translation> (anbefalt)</translation>
+        <translation> (Рекомендуется)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="573"/>
         <location filename="../gui/SettingsView.qml" line="860"/>
         <source>Fullscreen</source>
-        <translation>Fullskjermsvisning</translation>
+        <translation>На весь экран</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="592"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation type="unfinished">Fullskjermsvisning gir vanligvis best ytelse, men vinduskantløst vindusmodus kan fungere med funksjoner som macOS-«Spaces», Alt+Tab, bildeskjermsverktøy, overleggslag på skjermen, osv.</translation>
+        <translation>Полноэкранный режим уменьшает задержку и улучшает производительность, но режим в окне без рамки может лучше работать с Alt+Tab, инструментами для создания скриншотов, оверлеями и Spaces в MacOS.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="577"/>
         <source>Borderless windowed</source>
-        <translation>Skjermkantløst vindusmodus</translation>
+        <translation>В окне без рамки</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="412"/>
@@ -545,118 +545,118 @@
         <location filename="../gui/SettingsView.qml" line="437"/>
         <location filename="../gui/SettingsView.qml" line="440"/>
         <source>%1 FPS (Unsupported)</source>
-        <translation>%1 BPS (ustøttet)</translation>
+        <translation>%1 FPS (не поддерживается)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
         <location filename="../gui/SettingsView.qml" line="852"/>
         <source>Windowed</source>
-        <translation>Vindusmodus</translation>
+        <translation>В окне</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="599"/>
         <source>V-Sync</source>
-        <translation type="unfinished">VSync</translation>
+        <translation>V-Sync</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="609"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation type="unfinished">Å skru av VSync tillater underramme-opptegningslatens, men det kan vise synlig revning</translation>
+        <translation>Отключение V-Sync позволяет уменьшить задержку до менее 1 кадра, но допускает эффект разрывов экрана</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="616"/>
         <source>Frame pacing</source>
-        <translation type="unfinished">Bilderammetaktslåsing</translation>
+        <translation>Frame pacing (см. описание)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="626"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation type="unfinished">Reduserer mikrohakking ved å forsinke bilderammer som kommer inn for tidlig</translation>
+        <translation>Frame pacing улучшает плавность при стриме через интернет, Wi-Fi, и другие каналы с нестабильной задержкой (пингом), но увеличивает задержку. При стриме через проводной LAN желательно отключить.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="636"/>
         <source>Audio Settings</source>
-        <translation>Lydinnstillinger</translation>
+        <translation>Настройки звука</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="671"/>
         <source>Stereo</source>
-        <translation>Stereo</translation>
+        <translation>Стерео</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="675"/>
         <source>5.1 surround sound</source>
-        <translation>5,1-kringlyd</translation>
+        <translation>5.1 объёмный звук</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="679"/>
         <source>7.1 surround sound</source>
-        <translation>7,1-kringlyd</translation>
+        <translation>7.1 объёмный звук</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="693"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation>Forstum verts-PC-ens høyttalere under strømming</translation>
+        <translation>Не воспроизводить звук на хост-ПК</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="703"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation type="unfinished">Du må starte spill som kjøres på ny for at denne innstillingen skal tre i effekt</translation>
+        <translation>Для применения настроек необходим перезапуск игры</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="709"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation>Forstum lydstrøm når Moonlight ikke er det aktive vinduet</translation>
+        <translation>Отключить звук, когда окно Moonlight становится неактивно</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="720"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>Demper all lyd i Moonlight når du trykker Alt+Tab for å komme deg ut av strømmen eller klikker et annet vindu.</translation>
+        <translation>Когда Вы переключаетесь на другое окно на клиенте, Moonlight будет заглушен, пока Вы не переключитесь обратно.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="729"/>
         <source>UI Settings</source>
-        <translation>Grensesnittsinnstillinger</translation>
+        <translation>Настройки интерфейса</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="739"/>
         <source>Language</source>
-        <translation>Språk</translation>
+        <translation>Язык</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="765"/>
         <source>Automatic</source>
-        <translation>Automatisk</translation>
+        <translation>Автоматически</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="805"/>
         <source>You must restart Moonlight for this change to take effect</source>
-        <translation>Du må starte Moonlight på ny for at denne endringen skal tre i effekt</translation>
+        <translation>Для применения изменений необходим перезапуск Moonlight</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
         <source>GUI display mode</source>
-        <translation>Visningsmodus for brukergrensesnitt</translation>
+        <translation>Режим показа интерфейса</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="856"/>
         <source>Maximized</source>
-        <translation>Maksimert</translation>
+        <translation>Развёрнуто</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="913"/>
         <source>Input Settings</source>
-        <translation type="unfinished">Inndata-innstillinger</translation>
+        <translation>Настройки ввода</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="934"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation type="unfinished">Skrur på sømløs musekontroll uten å fange klientens musepeker. Dette er ideelt for fjernskrivebordsbruk, men fungerer ikke i de fleste spill.</translation>
+        <translation>Удобно для удалённого рабочего стола, т.к. курсор мыши не будет &quot;захвачен&quot; и может уходить за пределы окна Moonlight. Не будет работать в большинстве игр.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="936"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation type="unfinished">Merk: Som følge av en feil i GeForce Experience, vil dette alternativet muligens ikke fungere riktig hvis din verts-PC har flere skjermer.</translation>
+        <translation>Предупреждение: Из-за бага GeForce Experience эта настройка может не работать, если к хост-ПК подключено несколько мониторов.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -669,173 +669,173 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="955"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation type="unfinished">Merk: Gitte tastatursnarveier, som Ctrl+Alt+Del på Windows kan ikke fanges av noe program, inkludert Moonlight.</translation>
+        <translation>Предупреждение: некоторые комбинации клавиш, вроде Ctrl-Alt-Del, не могут быть перехвачены.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1018"/>
         <source>Use touchscreen as a virtual trackpad</source>
-        <translation>Bruk pekeskjerm som virtuell pekeflate</translation>
+        <translation>Использовать сенсорный экран как виртуальный тачпад</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1035"/>
         <source>Swap left and right mouse buttons</source>
-        <translation>Bytt venstre og høyre musetaster</translation>
+        <translation>Поменять местами левую и правую кнопки мыши</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1047"/>
         <source>Reverse mouse scrolling direction</source>
-        <translation>Omvendt muserullingsretning</translation>
+        <translation>Колесо мыши крутит в обратном направлении</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1061"/>
         <source>Gamepad Settings</source>
-        <translation>Spillkontrolller-innstillinger</translation>
+        <translation>Настройки геймпада</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1071"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation>Veksle A/B- og X/Y-spillkontrollerknapper</translation>
+        <translation>Поменять местами кнопки A/B и X/Y</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1089"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>Dette bytter spillkontrollere til knappeoppsett i Nintendo-stil</translation>
+        <translation>Меняет назначения кнопок в стиль Nintendo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1095"/>
         <source>Force gamepad #1 always connected</source>
-        <translation type="unfinished">Krev at spillkontroller nr. 1 alltid er tilkoblet</translation>
+        <translation>Принудительно оставить геймпад №1 подключённым</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1105"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation type="unfinished">Krever at én spillkontroller alltid er tilkoblet verten, selv om ingen spillkontrollere faktisk er tilkoblet til denne PC-en.</translation>
+        <translation>Хотя бы один виртуальный геймпад всегда будет &quot;подключён&quot; к хост-ПК, даже если физически к ПК-хосту не подключено ни одного.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="935"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>Du kan veksle dette under strømming ved bruk av Ctrl+Alt+Shift+M.</translation>
+        <translation>Вы можете переключить эту настройку во время стрима нажатием Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1113"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation type="unfinished">Skrur på musekontroll ved bruk av spillkontrollere ved å holde «Start»-knappen</translation>
+        <translation>Переходить в режим управления курсором мыши удержанием кнопки &quot;Start&quot;</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1124"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>Behandle spillkontrollerinndata når Moonlight er i bakgrunnen</translation>
+        <translation>Геймпад работает, когда окно Moonlight в фоне</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1135"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation type="unfinished">Lar Moonlight fange opp spillkontollerinndata selv når det ikke er i fokus</translation>
+        <translation>Позволяет захватывать ввод с геймпада, даже когда окно Moonlight неактивно</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1144"/>
         <source>Host Settings</source>
-        <translation>Vertsinnstillinger</translation>
+        <translation>Настройки ПК-хоста</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1184"/>
         <source>Advanced Settings</source>
-        <translation>Avanserte innstillinger</translation>
+        <translation>Расширенные настройки</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="646"/>
         <source>Audio configuration</source>
-        <translation>Lydoppsett</translation>
+        <translation>Настройки звука</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="873"/>
         <source>Show connection quality warnings</source>
-        <translation>Vis kvalitetsadvarsler om tilkoblingen</translation>
+        <translation>Показывать предупреждения о качестве соединения</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="885"/>
         <source>Discord Rich Presence integration</source>
-        <translation>Rik tilstedeværelsesintegrasjon for Discord</translation>
+        <translation>Интеграция в Discord Rich Presence</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="895"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Oppdaterer din Discord-status til å vise navnet på spillet du strømmer.</translation>
+        <translation>Пишет статус в Discord с названием запущенноый игры.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1106"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
-        <translation type="unfinished">Kun skru på dette når du strømmer et spill som ikke støtter av spillkontrollere er tilkoblet etter oppstart.</translation>
+        <translation>Необходимо для игр, не поддерживающих &quot;горячее&quot; подключение геймпадов.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="924"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>Optimaliser mus for fjernskrivebord istedenfor spill</translation>
+        <translation>Оптимизировать мышь для удалённого рабочего стола вместо игр</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="946"/>
         <source>Capture system keyboard shortcuts</source>
-        <translation>Fang systemtastatursarveier</translation>
+        <translation>Захватывать нажатия горячих клавиш</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="954"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation>Lar deg fange tastatursnarveier på hele systemet, slik som Alt+Tav som normalt ville blitt håndtert av klient-OS under strømming.</translation>
+        <translation>Это включает захват комбинаций вроде Alt+Tab, которые иначе бы обычно обрабатывались операционной системой.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="984"/>
         <source>in fullscreen</source>
-        <translation>i fullskjermsmodus</translation>
+        <translation>только в режиме на весь экран</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="988"/>
         <source>always</source>
-        <translation>alltid</translation>
+        <translation>всегда</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1028"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation type="unfinished">Får pekeskjermen til å oppføre seg som pekeflate. Ellers vil pekeskjermen kontrollere musepekeren direkte.</translation>
+        <translation>Если включено, сенсорный экран будет использоваться как тачпад. Если отключено, сенсорный экран будет прямо управлять курсором мыши.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1154"/>
         <source>Optimize game settings for streaming</source>
-        <translation>Optimaliser spillinnstillinger for strømming</translation>
+        <translation>Позволить GeForce Experience оптимизировать настройки игры</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1165"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Avslutt program på verts-PC etter at strømmen fullendes</translation>
+        <translation>Завершить игру на ПК-хосте при выходе</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1175"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>Dette vil lukke programmet eller spillet du strømmer når du avslutter strømmen din. All ulagret fremdrift vil gå tapt.</translation>
+        <translation>Это выйдет из игры или приложения при закрытии окна Moonlight или нажатии Ctrl+Alt+Shift+Q. Несохранённый прогресс может быть утерян!</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1194"/>
         <source>Video decoder</source>
-        <translation>Videodekoder</translation>
+        <translation>Декодер видео</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1219"/>
         <location filename="../gui/SettingsView.qml" line="1265"/>
         <source>Automatic (Recommended)</source>
-        <translation>Automatisk (anbefalt)</translation>
+        <translation>Автоматически (рекомендуется)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1223"/>
         <source>Force software decoding</source>
-        <translation>Påtving mykvaredekoding</translation>
+        <translation>Программный</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1227"/>
         <source>Force hardware decoding</source>
-        <translation>Påtving maskinvaredekoding</translation>
+        <translation>Аппаратный</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1240"/>
         <source>Video codec</source>
-        <translation>Videokodek</translation>
+        <translation>Видеокодек</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1269"/>
@@ -850,17 +850,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1290"/>
         <source>Unlock unsupported FPS options</source>
-        <translation>Lås opp ustøttede BPS-innstillinger</translation>
+        <translation>Включить неподдерживаемые настройки FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>Finn PC-er på lokalnettverket automatisk (anbefales)</translation>
+        <translation>Автоматически найти ПК-хосты в локальной сети (рекомендуется)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1334"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation>Oppdag blokkerte tilkoblinger automatisk (anbefales)</translation>
+        <translation>Автоматически определять проблемы с подключением (рекомендуется)</translation>
     </message>
 </context>
 <context>
@@ -868,38 +868,38 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation type="unfinished">Fortsetter %1 …</translation>
+        <translation>Возобновление %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
         <location filename="../gui/StreamSegue.qml" line="19"/>
         <source>Starting %1...</source>
-        <translation type="unfinished">Starter %1 …</translation>
+        <translation>Запуск %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
         <source>Starting %1 failed: Error %2</source>
-        <translation type="unfinished">Kunne ikke starte %1. Feil %2</translation>
+        <translation>Не удалось начать %1: ошибка %2</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Sjekk din brannmur og portvideresendingsregler for port(ene): %1</translation>
+        <translation>Проверьте настройки брандмауэра и проброса портов для следующих портов: %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished">Internett-tilknytningen på denne PC-en blokkerer Moonlight. Strømming over Internett vil muligens ikke virke når tilknyttet fra dette nettverket.</translation>
+        <translation>Интернет-соединение этого ПК блокирует Moonlight. Стриминг через интернет может не работать.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
         <source>Tip:</source>
-        <translation>Tips:</translation>
+        <translation>Совет:</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
         <source>Press %1 to disconnect your session</source>
-        <translation>Trykk %1 for å koble fra økten</translation>
+        <translation>Нажмите %1, чтобы отсоединиться</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
@@ -920,92 +920,92 @@
         <location filename="../gui/main.qml" line="393"/>
         <location filename="../gui/main.qml" line="408"/>
         <source>Settings</source>
-        <translation>Innstillinger</translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="255"/>
         <source>Version %1</source>
-        <translation>Versjon %1</translation>
+        <translation>Версия %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="271"/>
         <source>Join our community on Discord</source>
-        <translation>Ta del i gemenskapen på DIscord</translation>
+        <translation>Присоединитесь к нашему Discord (на английском)</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="283"/>
         <source>Computers</source>
-        <translation>Datamaskiner</translation>
+        <translation>Компьютеры</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="290"/>
         <source>Add PC manually</source>
-        <translation>Legg til PC manuelt</translation>
+        <translation>Добавить ПК вручную</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="330"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation type="unfinished">Ny versjon av Moonlight tilgjengelig: Versjon %1</translation>
+        <translation>Обновление Moonlight доступно: версия %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="377"/>
         <source>Gamepad Mapper</source>
-        <translation>Spillkontroller-knappetilknytter</translation>
+        <translation>Назначения кнопок геймпада</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation>Tilknytning av taster på spillkontroller</translation>
+        <translation>Назначение кнопок геймпада</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished">Ingen funksjonell maskinvareakselerert H.264-videodekoder ble oppdaget av Moonlight. Din strømmingsytelse kan nedgraderes betydelig i dette oppsettet.</translation>
+        <translation>Moonlight не может найти декодер для H.264. Программное декодирование может быть намного медленнее.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="423"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation>Maskrinvareakselerasjon fungerer ikke på XWayland. Fortsatt bruk av XWayland kan resultere i dårlig strømmingsytelse. Prøv å kjøre med QT_QPA_PLATFORM=wayland, eller bytt til X11.</translation>
+        <translation>Аппаратное ускорение не работает с XWayland. Попробуйте переключиться на X11 или добавьте параметр &quot;QT_QPA_PLATFORM=wayland&quot;.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="432"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation>Denne versjonen av Moonlight er ikke optimalisert for din PC. Last ned «%1»-versjonen av Moonlight for best strømmingsytelse.</translation>
+        <translation>Эта версия Moonlight не оптимизирована для Вашего ПК. Пожалуйста, установите &quot;%1&quot; для лучшей производительности.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="441"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight oppdaget spillkontrollere uten tilknyttede knapper:</translation>
+        <translation>Moonilght обнаружил геймпады без настроек:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="354"/>
         <source>Help</source>
-        <translation>Hjelp</translation>
+        <translation>Помощь</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
         <source>Click the Help button for more information on solving this problem.</source>
-        <translation type="unfinished">Klikk på «Hjelp»-knappen for mer løsningsinfo.</translation>
+        <translation>Нажмите кнопку Помощь, чтобы увидеть способы решения проблемы.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="425"/>
         <source>Click the Help button for more information.</source>
-        <translation type="unfinished">Klikk «Hjelp»-knappen for mer info.</translation>
+        <translation>Нажмите кнопку Помощь, чтобы увидеть больше информации.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="443"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>Klikk på «Hjelp»-knappen for info om hvordan du tilknytter taster til dine spillkontrollere.</translation>
+        <translation>Нажмите кнопку Помощь, чтобы узнать, как настроить геймпад.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Er du sikker på at du vil avslutte?</translation>
+        <translation>Вы уверены, что хотите выйти?</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="481"/>
         <source>Enter the IP address of your GameStream PC:</source>
-        <translation>Skriv inn IP-adressen tilhørende din GameStream-PC:</translation>
+        <translation>Введите IP-адрес компьютера с включённым NVIDIA GameStream:</translation>
     </message>
 </context>
 </TS>
