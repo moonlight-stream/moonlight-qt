@@ -451,6 +451,11 @@ NvHTTP::openConnection(QUrl baseUrl,
     // Add our client certificate
     request.setSslConfiguration(IdentityManager::get()->getSslConfig());
 
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+    // Disable HTTP/2 (GFE 3.22 doesn't like it) and Qt 6 enables it by default
+    request.setAttribute(QNetworkRequest::Http2AllowedAttribute, false);
+#endif
+
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && QT_VERSION < QT_VERSION_CHECK(5, 15, 1) && !defined(QT_NO_BEARERMANAGEMENT)
     // HACK: Set network accessibility to work around QTBUG-80947 (introduced in Qt 5.14.0 and fixed in Qt 5.15.1)
     QT_WARNING_PUSH
