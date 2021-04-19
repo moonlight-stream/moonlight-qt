@@ -54,6 +54,7 @@ SOURCES += \
     $$COMMON_C_DIR/src/LinkedBlockingQueue.c \
     $$COMMON_C_DIR/src/Misc.c \
     $$COMMON_C_DIR/src/Platform.c \
+    $$COMMON_C_DIR/src/PlatformCrypto.c \
     $$COMMON_C_DIR/src/PlatformSockets.c \
     $$COMMON_C_DIR/src/RtpFecQueue.c \
     $$COMMON_C_DIR/src/RtpReorderQueue.c \
