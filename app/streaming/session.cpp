@@ -427,6 +427,7 @@ bool Session::initialize()
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
+    m_StreamConfig.encryptionFlags = ENCFLG_ALL;
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Video bitrate: %d kbps",
