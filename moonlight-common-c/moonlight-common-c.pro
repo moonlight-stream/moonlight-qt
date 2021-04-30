@@ -12,6 +12,9 @@ TEMPLATE = lib
 # Build a static library
 CONFIG += staticlib
 
+# Disable warnings
+CONFIG += warn_off
+
 # Include global qmake defs
 include(../globaldefs.pri)
 
