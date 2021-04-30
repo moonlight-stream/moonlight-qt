@@ -181,6 +181,11 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 {
     DECODER_PARAMETERS params;
 
+    // We should never have vsync enabled for test-mode.
+    // It introduces unnecessary delay for renderers that may
+    // block while waiting for a backbuffer swap.
+    SDL_assert(!enableVsync || !testOnly);
+
     params.width = width;
     params.height = height;
     params.frameRate = frameRate;
@@ -292,7 +297,7 @@ void Session::getDecoderInfo(SDL_Window* window,
 
     if (!chooseDecoder(StreamingPreferences::VDS_AUTO,
                        window, VIDEO_FORMAT_H264, 1920, 1080, 60,
-                       true, false, true, decoder)) {
+                       false, false, true, decoder)) {
         isHardwareAccelerated = isFullScreenOnly = false;
         return;
     }
@@ -310,7 +315,7 @@ bool Session::isHardwareDecodeAvailable(SDL_Window* window,
 {
     IVideoDecoder* decoder;
 
-    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, true, false, true, decoder)) {
+    if (!chooseDecoder(vds, window, videoFormat, width, height, frameRate, false, false, true, decoder)) {
         return false;
     }
 
@@ -332,7 +337,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
                        m_StreamConfig.width,
                        m_StreamConfig.height,
                        m_StreamConfig.fps,
-                       true, false, true, decoder)) {
+                       false, false, true, decoder)) {
         return false;
     }
 
