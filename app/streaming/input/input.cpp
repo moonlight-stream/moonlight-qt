@@ -372,11 +372,18 @@ void SdlInputHandler::updateKeyboardGrabState()
         // Ungrab if it's fullscreen only and we left fullscreen
         shouldGrab = false;
     }
+#ifdef Q_OS_DARWIN
     else if (!(windowFlags & SDL_WINDOW_INPUT_FOCUS)) {
-        // Ungrab if we lose input focus (SDL will do this internally, but
-        // not for macOS where SDL is not handling the grab logic).
+        // Ungrab if we lose input focus on macOS. SDL will handle
+        // this internally for platforms where we use the SDL
+        // SDL_SetWindowKeyboardGrab() API exclusively.
+        //
+        // NB: On X11, we may not have input focus at the time of
+        // the initial keyboard grab update, so we must not enable
+        // this codepath on Linux.
         shouldGrab = false;
     }
+#endif
 
     // Don't close the window on Alt+F4 when keyboard grab is enabled
     SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, shouldGrab ? "1" : "0");
