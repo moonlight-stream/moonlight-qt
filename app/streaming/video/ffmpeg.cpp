@@ -572,7 +572,11 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
 
     // i == 0 - Indirect via EGL frontend with zero-copy DMA-BUF passing
     // i == 1 - Direct rendering or indirect via SDL read-back
+#ifdef HAVE_EGL
     for (int i = 0; i < 2; i++) {
+#else
+    for (int i = 1; i < 2; i++) {
+#endif
         SDL_assert(m_BackendRenderer == nullptr);
         if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
                 m_BackendRenderer->initialize(params) &&
