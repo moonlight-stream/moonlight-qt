@@ -193,7 +193,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="325"/>
         <source>This may take a few seconds…</source>
-        <translation>这可能需要几秒钟...</translation>
+        <translation>这可能需要几秒钟……</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="332"/>
@@ -605,17 +605,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="739"/>
         <source>Language</source>
-        <translation></translation>
+        <translation>语言</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="765"/>
         <source>Automatic</source>
-        <translation></translation>
+        <translation>自动化</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="805"/>
         <source>You must restart Moonlight for this change to take effect</source>
-        <translation></translation>
+        <translation>你必须重新启动 Moonlight 才能使更改生效</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
@@ -670,12 +670,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="946"/>
         <source>Capture system keyboard shortcuts</source>
-        <translation></translation>
+        <translation>捕获系统快捷键</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="954"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation></translation>
+        <translation>这样可以捕获系统范围的键盘快捷键，例如 Alt + Tab，这些快捷键通常在流式传输时由客户端系统处理。</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -693,12 +693,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="984"/>
         <source>in fullscreen</source>
-        <translation></translation>
+        <translation>全屏</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="988"/>
         <source>always</source>
-        <translation></translation>
+        <translation>总是</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1018"/>
@@ -858,7 +858,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
         <source>Starting %1 failed: Error %2</source>
-        <translation>启动 %1 错误: 错误 %2</translation>
+        <translation>启动 %1 失败: 错误 %2</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
