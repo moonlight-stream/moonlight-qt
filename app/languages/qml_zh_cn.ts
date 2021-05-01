@@ -171,57 +171,62 @@
         <translation>删除计算机</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="242"/>
+        <location filename="../gui/PcView.qml" line="224"/>
+        <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation>当上一个会话仍在运行时，无法进行配对。请退出所有正在运行的游戏或重新启动目标计算机，然后重试配对。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="297"/>
+        <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
         <translation>请在启用 GameStream 的计算机上输入 %1。配对完成后，此对话框将关闭。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="308"/>
+        <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove this PC?</source>
         <translation>确定要移除这个计算机吗？</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="325"/>
+        <location filename="../gui/PcView.qml" line="330"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
         <translation>Moonlight 正在测试你的网络连接，以检测 NVIDIA GameStream 是否被阻止。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="325"/>
+        <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
         <translation>这可能需要几秒钟……</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="332"/>
+        <location filename="../gui/PcView.qml" line="337"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>无法执行网络测试，因为此计算机无法访问 Moonlight 的连接测试服务器。请检查你的互联网连接或稍后再试。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="336"/>
+        <location filename="../gui/PcView.qml" line="341"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>此网络似乎没有阻止 Moonlight。如果仍然无法连接，请检查计算机的防火墙设置。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="336"/>
+        <location filename="../gui/PcView.qml" line="341"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>如果你想通过互联网进行流式传输，请在你的目标计算机上安装 Moonlight Internet Hosting 工具，并运行包含的互联网流式传输测试程序来检查你目标计算机的互联网连接。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="340"/>
+        <location filename="../gui/PcView.qml" line="345"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>此计算机当前的网络连接似乎被阻塞了。当连接到此网络时，互联网上的流式传输可能无法工作。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="340"/>
+        <location filename="../gui/PcView.qml" line="345"/>
         <source>The following network ports were blocked:</source>
         <translation>下列网络端口被阻止:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="352"/>
+        <location filename="../gui/PcView.qml" line="357"/>
         <source>Enter the new name for this PC:</source>
         <translation>输入这台计算机的新名称:</translation>
     </message>
@@ -229,7 +234,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="538"/>
+        <location filename="../backend/computermanager.cpp" line="542"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>正在运行的游戏不是由这台计算机启动的。你必须在目标计算机上手动退出游戏或使用最初启动游戏的设备。</translation>
     </message>
@@ -306,107 +311,112 @@
         <translation>会话已终止</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="581"/>
+        <location filename="../streaming/session.cpp" line="592"/>
+        <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="597"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>启用远程桌面鼠标模式可能会导致游戏出现问题。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="586"/>
+        <location filename="../streaming/session.cpp" line="602"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>软件解码不支持 HDR。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="590"/>
+        <location filename="../streaming/session.cpp" line="606"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>你选择的用于强制软件解码的设置可能会导致流式传输性能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="595"/>
+        <location filename="../streaming/session.cpp" line="611"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>使用不受支持的 FPS 选项可能会导致卡顿或延迟。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="598"/>
+        <location filename="../streaming/session.cpp" line="614"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>当流式传输的帧率高于显示时，垂直同步将被禁用。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="615"/>
+        <location filename="../streaming/session.cpp" line="631"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>根据你的选择使用软件解码，以在没有显卡支持的情况下强制 HEVC。这可能会导致流式传输性能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="618"/>
+        <location filename="../streaming/session.cpp" line="634"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
         <translation>此计算机的显卡不支持 HEVC 解码。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="625"/>
+        <location filename="../streaming/session.cpp" line="641"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>目标计算机的显卡不支持 HEVC。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="642"/>
+        <location filename="../streaming/session.cpp" line="658"/>
         <source>%1 doesn&apos;t support HDR10.</source>
         <translation>%1 不支持 HDR10。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="646"/>
+        <location filename="../streaming/session.cpp" line="662"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>目标计算机的显卡不支持 HDR 流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="655"/>
+        <location filename="../streaming/session.cpp" line="671"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>此计算机的显卡不支持 HEVC Main10 解码 HDR 流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="668"/>
+        <location filename="../streaming/session.cpp" line="684"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4K 流式传输需要 GeForce Experience 3.0 或更高版本。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="683"/>
+        <location filename="../streaming/session.cpp" line="699"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>当前音频设备不支持你选择的环绕声设置。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="690"/>
+        <location filename="../streaming/session.cpp" line="706"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>无法打开音频设备。音频在此会话期间将不可用。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="695"/>
+        <location filename="../streaming/session.cpp" line="711"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>附加的手柄没有映射，因此无法使用。请访问 Moonlight 帮助解决此问题。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="703"/>
+        <location filename="../streaming/session.cpp" line="719"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>目标计算机的显卡不支持 4K 以上的流式传输视频分辨率。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="707"/>
+        <location filename="../streaming/session.cpp" line="723"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>只有 HEVC 编解码器才支持 4K 以上的视频分辨率。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="721"/>
+        <location filename="../streaming/session.cpp" line="737"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>由于此计算机的显卡上缺少硬件解码支持，无法满足强制硬件解码的选择。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="724"/>
+        <location filename="../streaming/session.cpp" line="740"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>你选择的编解码器和强制硬件解码设置不兼容。此计算机的显卡不支持解码你选择的编解码器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1025"/>
+        <location filename="../streaming/session.cpp" line="1041"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience 返回错误: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1503"/>
+        <location filename="../streaming/session.cpp" line="1519"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>无法初始化视频解码器。请检查你的流式传输设置，然后重试。</translation>
     </message>
