@@ -1,5 +1,6 @@
 #include "nvcomputer.h"
 #include "nvapp.h"
+#include "settings/compatfetcher.h"
 
 #include <QUdpSocket>
 #include <QHostInfo>
@@ -50,6 +51,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->serverCodecModeSupport = 0;
     this->pendingQuit = false;
     this->gpuModel = nullptr;
+    this->isSupportedServerVersion = true;
 }
 
 void NvComputer::serialize(QSettings& settings) const
@@ -143,6 +145,7 @@ NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serv
     this->activeAddress = address;
     this->state = NvComputer::CS_ONLINE;
     this->pendingQuit = false;
+    this->isSupportedServerVersion = CompatFetcher::isGfeVersionSupported(this->gfeVersion);
 }
 
 bool NvComputer::wake()
@@ -408,6 +411,7 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED(state);
     ASSIGN_IF_CHANGED(gfeVersion);
     ASSIGN_IF_CHANGED(appVersion);
+    ASSIGN_IF_CHANGED(isSupportedServerVersion);
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);
     ASSIGN_IF_CHANGED_AND_NONNULL(serverCert);

@@ -131,6 +131,7 @@ SOURCES += \
     cli/commandlineparser.cpp \
     cli/quitstream.cpp \
     cli/startstream.cpp \
+    settings/compatfetcher.cpp \
     settings/mappingfetcher.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
@@ -156,6 +157,7 @@ SOURCES += \
 
 HEADERS += \
     backend/nvapp.h \
+    settings/compatfetcher.h \
     settings/mappingfetcher.h \
     utils.h \
     backend/computerseeker.h \

@@ -2,6 +2,7 @@
 
 #include "nvcomputer.h"
 #include "nvpairingmanager.h"
+#include "settings/compatfetcher.h"
 
 #include <qmdnsengine/server.h>
 #include <qmdnsengine/cache.h>
@@ -214,4 +215,5 @@ private:
     QMdnsEngine::Browser* m_MdnsBrowser;
     QMdnsEngine::Cache m_MdnsCache;
     QVector<MdnsPendingComputer*> m_PendingResolution;
+    CompatFetcher m_CompatFetcher;
 };

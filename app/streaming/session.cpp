@@ -588,6 +588,11 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 {
     QStringList warningList;
 
+    if (!m_Computer->isSupportedServerVersion) {
+        emit displayLaunchError(tr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(m_Computer->name));
+        return false;
+    }
+
     if (m_Preferences->absoluteMouseMode && !m_App.isAppCollectorGame) {
         emitLaunchWarning(tr("Your selection to enable remote desktop mouse mode may cause problems in games."));
     }

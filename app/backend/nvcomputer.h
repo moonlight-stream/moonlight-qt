@@ -65,6 +65,7 @@ public:
     int maxLumaPixelsHEVC;
     int serverCodecModeSupport;
     QString gpuModel;
+    bool isSupportedServerVersion;
 
     // Persisted traits
     QString localAddress;

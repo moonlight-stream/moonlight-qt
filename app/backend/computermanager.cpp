@@ -146,7 +146,8 @@ private:
 ComputerManager::ComputerManager(QObject *parent)
     : QObject(parent),
       m_PollingRef(0),
-      m_MdnsBrowser(nullptr)
+      m_MdnsBrowser(nullptr),
+      m_CompatFetcher(nullptr)
 {
     QSettings settings;
 
@@ -158,6 +159,9 @@ ComputerManager::ComputerManager(QObject *parent)
         m_KnownHosts[computer->uuid] = computer;
     }
     settings.endArray();
+
+    // Fetch latest compatibility data asynchronously
+    m_CompatFetcher.start();
 
     // To quit in a timely manner, we must block additional requests
     // after we receive the aboutToQuit() signal. This is neccessary

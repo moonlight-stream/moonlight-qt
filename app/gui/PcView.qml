@@ -220,7 +220,12 @@ CenteredGridView {
 
         onClicked: {
             if (model.online) {
-                if (model.paired) {
+                if (!model.serverSupported) {
+                    errorDialog.text = qsTr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(model.name)
+                    errorDialog.helpText = ""
+                    errorDialog.open()
+                }
+                else if (model.paired) {
                     // go to game view
                     var component = Qt.createComponent("AppView.qml")
                     var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})

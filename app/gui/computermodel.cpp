@@ -42,6 +42,8 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return !computer->macAddress.isEmpty();
     case StatusUnknownRole:
         return computer->state == NvComputer::CS_UNKNOWN;
+    case ServerSupportedRole:
+        return computer->isSupportedServerVersion;
     default:
         return QVariant();
     }
@@ -68,6 +70,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[BusyRole] = "busy";
     names[WakeableRole] = "wakeable";
     names[StatusUnknownRole] = "statusUnknown";
+    names[ServerSupportedRole] = "serverSupported";
 
     return names;
 }
