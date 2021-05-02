@@ -88,9 +88,14 @@ CenteredGridView {
             source: model.boxart
 
             onSourceSizeChanged: {
-                if ((sourceSize.width == 130 && sourceSize.height == 180) || // GFE 2.0 placeholder image
-                    (sourceSize.width == 628 && sourceSize.height == 888) || // GFE 3.0 placeholder image
-                    (sourceSize.width == 200 && sourceSize.height == 266))   // Our no_app_image.png
+                // Nearly all of Nvidia's official box art does not match the dimensions of placeholder
+                // images, however the one known exeception is Overcooked. Therefore, we only execute
+                // the image size checks if this is not an app collector game. We know the officially
+                // supported games all have box art, so this check is not required.
+                if (!model.isAppCollectorGame &&
+                    ((sourceSize.width == 130 && sourceSize.height == 180) || // GFE 2.0 placeholder image
+                     (sourceSize.width == 628 && sourceSize.height == 888) || // GFE 3.0 placeholder image
+                     (sourceSize.width == 200 && sourceSize.height == 266)))  // Our no_app_image.png
                 {
                     isPlaceholder = true
                 }

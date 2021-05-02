@@ -17,7 +17,8 @@ class AppModel : public QAbstractListModel
         BoxArtRole,
         HiddenRole,
         AppIdRole,
-        DirectLaunchRole
+        DirectLaunchRole,
+        AppCollectorGameRole,
     };
 
 public:

@@ -91,6 +91,8 @@ QVariant AppModel::data(const QModelIndex &index, int role) const
         return app.id;
     case DirectLaunchRole:
         return app.directLaunch;
+    case AppCollectorGameRole:
+        return app.isAppCollectorGame;
     default:
         return QVariant();
     }
@@ -106,6 +108,7 @@ QHash<int, QByteArray> AppModel::roleNames() const
     names[HiddenRole] = "hidden";
     names[AppIdRole] = "appid";
     names[DirectLaunchRole] = "directLaunch";
+    names[AppCollectorGameRole] = "appCollectorGame";
 
     return names;
 }
