@@ -20,7 +20,7 @@ install:
   - sh: '[ "$BUILD_TARGET" != steamlink ] || sudo apt install -y libc6:i386 libstdc++6:i386'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || git clone --depth=1 https://github.com/ValveSoftware/steamlink-sdk.git $HOME/steamlink-sdk'
   - sh: '[ "$BUILD_TARGET" != linux ] || sudo add-apt-repository ppa:beineri/opt-qt-5.14.2-xenial'
-  - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt update'
+  - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt update || true'
   - sh: '[ "$BUILD_TARGET" != linux ] || sudo apt install -y qt514base qt514quickcontrols2 qt514svg qt514wayland nasm libgbm-dev libdrm-dev libfreetype6-dev libasound2-dev libdbus-1-dev libegl1-mesa-dev libgl1-mesa-dev libgles2-mesa-dev libglu1-mesa-dev libibus-1.0-dev libpulse-dev libudev-dev libx11-dev libxcursor-dev libxext-dev libxi-dev libxinerama-dev libxkbcommon-dev libxrandr-dev libxss-dev libxt-dev libxv-dev libxxf86vm-dev wayland-protocols libopus-dev libvdpau-dev'
   - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export SDL2_REV=dfa64eadd38a6a8125290dcf121f1bc285e98dad && git clone https://github.com/libsdl-org/SDL.git SDL2 && cd SDL2 && git checkout $SDL2_REV && ./configure --enable-video-kmsdrm && make -j$(nproc) && sudo make install && cd ..; fi'
   - sh: 'if [[ "$BUILD_TARGET" = linux ]]; then export SDL2_TTF_VER=2.0.15 && wget https://www.libsdl.org/projects/SDL_ttf/release/SDL2_ttf-$SDL2_TTF_VER.tar.gz && tar -xvf SDL2_ttf-$SDL2_TTF_VER.tar.gz && cd SDL2_ttf-$SDL2_TTF_VER && ./configure && make -j$(nproc) && sudo make install && cd ..; fi'
