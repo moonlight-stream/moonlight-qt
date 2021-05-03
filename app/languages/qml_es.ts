@@ -145,17 +145,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Prueba de red</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Renombrar PC</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Borrar PC</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
