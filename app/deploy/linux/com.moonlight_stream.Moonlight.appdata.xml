@@ -36,6 +36,18 @@
 	</screenshots>
 
 	<releases>
+		<release version="3.1.2" date="2021-05-03">
+			<description>
+				<p>Changes:</p>
+				<ul>
+					<li>Improved connection reliability and performance with GeForce Experience 3.22</li>
+					<li>Added support for audio encryption with GeForce Experience 3.22</li>
+					<li>Added compatibility update checks for future versions of GeForce Experience</li>
+					<li>Fixed keyboard capture on X11</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="3.1.1" date="2021-04-09">
 			<description>
 				<p>Changes:</p>
