@@ -4,49 +4,49 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="139"/>
-        <location filename="../gui/AppView.qml" line="293"/>
+        <location filename="../gui/AppView.qml" line="144"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
         <translation>Продолжить игру</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="165"/>
-        <location filename="../gui/AppView.qml" line="298"/>
+        <location filename="../gui/AppView.qml" line="170"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
         <translation>Выйти из игры</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="293"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
         <translation>Запустить игру</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="306"/>
+        <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
         <translation>Прямой запуск</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="310"/>
+        <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>Запустить эту игру при выборе хоста (пропустить страницу выбора игры)</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="319"/>
+        <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
         <translation>Скрыть игру</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="323"/>
+        <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>Скроет эту игру из списка. Чтобы показать скрытые игры, нажмите правой кнопкой на хост и выберите %1.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="323"/>
+        <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
         <translation>Показать все игры</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="338"/>
+        <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>Вы уверены, что хотите завершить %1? Несохранённый прогресс может быть утерян.</translation>
     </message>

@@ -4,49 +4,49 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="139"/>
-        <location filename="../gui/AppView.qml" line="293"/>
+        <location filename="../gui/AppView.qml" line="144"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
         <translation>App fortsetzen</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="165"/>
-        <location filename="../gui/AppView.qml" line="298"/>
+        <location filename="../gui/AppView.qml" line="170"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
         <translation>App beenden</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="293"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
         <translation>App starten</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="306"/>
+        <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
         <translation>Autostart</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="310"/>
+        <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>Starte diese App sofort nachdem dieser Host ausgewählt wurde und überspringe die Appauswahl.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="319"/>
+        <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
         <translation>App ausblenden</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="323"/>
+        <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>Blende diese App in der Appauswahl aus. Um ausgeblendete Apps wieder anzuzeigen, rechsklicke auf den Host und wähle %1.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="323"/>
+        <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
         <translation>Zeige alle Apps</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="338"/>
+        <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>Bist du sicher, dass du &apos;%1&apos; beenden willst? Nicht gespeicherte Fortschritte gehen dabei verloren.</translation>
     </message>

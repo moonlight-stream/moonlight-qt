@@ -4,49 +4,49 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="139"/>
-        <location filename="../gui/AppView.qml" line="293"/>
+        <location filename="../gui/AppView.qml" line="144"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
         <translation>Fortsett spill</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="165"/>
-        <location filename="../gui/AppView.qml" line="298"/>
+        <location filename="../gui/AppView.qml" line="170"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
         <translation>Avslutt spill</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="293"/>
+        <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
         <translation>Kjør spill</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="306"/>
+        <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
         <translation>Direkteoppstart</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="310"/>
+        <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>Kjør dette programmet umiddelbart når vert er valgt, noe som hopper over utvalgsrutenettet.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="319"/>
+        <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
         <translation>Skjul spill</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="323"/>
+        <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>Skjull dette spillet fra programrutenettet. For å komme til skjulte spill kan du høyreklikke verten og velge %1.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="323"/>
+        <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
         <translation>Vis alle programmer</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="338"/>
+        <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>Er du sikker på at du vil avslutte %1? All ulagret fremdrift vil gå tapt.</translation>
     </message>
