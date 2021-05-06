@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="310"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Lancer cette application immédiatement lorsque l&apos;hôte est sélectionné, en passant la grille d&apos;applications.</translation>
+        <translation>Lancer cette application immédiatement lorsque l&apos;hôte est sélectionné, en ignorant la grille d&apos;applications.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="319"/>
@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="338"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Vous êtes sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>connexion au PC...</translation>
+        <translation>Connexion au PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
@@ -69,7 +69,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>connexion au PC...</translation>
+        <translation>Connexion au PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Vous êtes sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>Configuration du controleur</translation>
+        <translation>Configuration du contrôleur</translation>
     </message>
 </context>
 <context>
@@ -160,7 +160,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Cette version de GeForce Experience sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -185,7 +185,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation>Cela peut prendre quelques secondes…</translation>
+        <translation>Ceci peut prendre quelques secondes…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
@@ -205,7 +205,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>The following network ports were blocked:</source>
-        <translation>Les ports de réseau suivants ont été bloqués :</translation>
+        <translation>Les ports réseau suivants ont été bloqués :</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
@@ -220,7 +220,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC&#x202f;: %1</translation>
+        <translation>Statut du PC : %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -263,7 +263,7 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>Le %1 de l&apos;ordinateur n&apos;a pas été jumelé. Veuillez ouvrir Moonlight pour jumeler avant le streaming.</translation>
+        <translation>L&apos;&apos;ordinateur %1 n&apos;a pas été jumelé. Veuillez ouvrir Moonlight pour jumeler avant le streaming.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation>Fermeture %1...</translation>
+        <translation>Fermeture de %1...</translation>
     </message>
 </context>
 <context>
@@ -299,12 +299,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez vos réglages de port et de pare-feu pour le(s) port(s) suivant(s) : %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>Votre connexion réseau ne fonctionne pas bien. Réduisez votre débit vidéo ou essayez une connexion plus rapide.</translation>
+        <translation>Votre connexion réseau ne fonctionne pas très bien. Réduisez votre débit vidéo ou essayez une connexion plus rapide.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
@@ -329,7 +329,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>La version de GeForce Experience sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="597"/>
@@ -344,22 +344,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="606"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>La sélection de vos paramètres pour forcer le décodage du logiciel peut entraîner de mauvaises performances de streaming.</translation>
+        <translation>La sélection de vos paramètres pour forcer le décodage logiciel peut entraîner de mauvaises performances de streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="611"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation>L&apos;utilisation d&apos;options de FPS non prises en charge peut entraîner un stuttering ou des lag.</translation>
+        <translation>L&apos;utilisation d&apos;options FPS non prises en charge peut entraîner des saccades ou des lags.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="614"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>La synchronisation vertical sera désactivée lors de la diffusion en continu à une fréquence d&apos;images supérieure à celle de l&apos;affichage.</translation>
+        <translation>La synchronisation verticale (V-sync) sera désactivée lors de la diffusion en continu à une fréquence d&apos;images supérieure à celle de l&apos;affichage.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="631"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>Utilisation du décodage logiciel dû à votre sélection pour forcer les HEVC sans support GPU. Cela peut entraîner de mauvaises performances de streaming.</translation>
+        <translation>Utilisation du décodage logiciel dû à votre sélection pour forcer le codec HEVC sans support GPU. Ceci peut entraîner de mauvaises performances de streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="634"/>
@@ -369,7 +369,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="641"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation>Le GPU de votre PC hôte ne prend pas en charge les HEVC. Un GPU GeForce GTX série 900 (Maxwell) ou plus récent est nécessaire pour le streaming HEVC.</translation>
+        <translation>Le GPU de votre PC hôte ne prend pas en charge le codec HEVC. Un GPU GeForce GTX série 900 (Maxwell) ou plus récent est nécessaire pour le streaming HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="658"/>
@@ -389,7 +389,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="684"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation>Une expérience GeForce 3.0 ou supérieure est requise pour le streaming 4K.</translation>
+        <translation>GeForce Experience 3.0 ou supérieur est requis pour le streaming 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="699"/>
@@ -399,12 +399,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="706"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>Echec de l&apos;ouverture de l&apos;appareil audio. L&apos;audio ne sera pas disponible pendant cette session.</translation>
+        <translation>Échec de l&apos;ouverture de l&apos;appareil audio. L&apos;audio ne sera pas disponible pendant cette session.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="711"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>Une manette de jeun n&apos;a pas était configurée et ne sera pas utilisable. Visitez le Moonlight pour aider à résoudre ce problème.</translation>
+        <translation>Une manette de jeu attachée n&apos;a pas été configurée et ne sera pas utilisable. Visitez l&apos;aide Moonlight pour résoudre ce problème.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="719"/>
@@ -434,7 +434,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1519"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation>Impossible d&apos;initialiser le décodeur vidéo. Veuillez vérifier vos paramètres de diffusion en continu et réessayer.</translation>
+        <translation>Impossible d&apos;initialiser le décodeur vidéo. Veuillez vérifier vos paramètres de diffusion en continu et réessayez.</translation>
     </message>
 </context>
 <context>
@@ -452,7 +452,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="78"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>Le fait de fixer des valeurs trop élevées pour votre PC ou votre connexion réseau peut entraîner un décalage, des bégaiements ou des erreurs.</translation>
+        <translation>Fixer des valeurs trop élevées pour votre PC ou votre connexion réseau, peut entraîner un décalage, des saccades ou des erreurs.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="60"/>
@@ -554,7 +554,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="577"/>
         <source>Borderless windowed</source>
-        <translation>fenêtré sans bordure</translation>
+        <translation>Fenêtré sans bordure</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
@@ -594,17 +594,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="671"/>
         <source>Stereo</source>
-        <translation>Stereo</translation>
+        <translation>Stéréo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="675"/>
         <source>5.1 surround sound</source>
-        <translation>5.1 son surround</translation>
+        <translation>Son surround 5.1</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="679"/>
         <source>7.1 surround sound</source>
-        <translation>7.1 son surround</translation>
+        <translation>Son surround 7.1</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="693"/>
@@ -649,7 +649,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
         <source>GUI display mode</source>
-        <translation>Mode d&apos;affichage du GUI</translation>
+        <translation>Mode d&apos;affichage de l&apos;interface graphique</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="856"/>
@@ -664,7 +664,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="934"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation>Cela permet un contrôle transparent de la souris, sans capturer le curseur du client. Il est idéal pour l’utilisation de bureau à distance, mais ne fonctionnera pas dans la plupart des jeux.</translation>
+        <translation>Cela permet un contrôle transparent de la souris, sans capturer le curseur du client. C&apos;est idéal pour l’utilisation du bureau à distance, mais ne fonctionnera pas dans la plupart des jeux.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="936"/>
@@ -674,7 +674,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="955"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation>REMARQUE : Certains raccourcis clavier comme Ctrl+Alt+Del sur Windows ne peuvent jamais être interceptés, y compris par Moonlight.</translation>
+        <translation>REMARQUE : Certains raccourcis clavier comme Ctrl+Alt+Suppr sur Windows ne peuvent jamais être interceptés, y compris par Moonlight.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="984"/>
@@ -733,7 +733,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="935"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>Vous pouvez le basculer pendant la diffusion en utilisant Ctrl+Alt+Shift+M.</translation>
+        <translation>Vous pouvez basculer ceci pendant la diffusion en utilisant Ctrl+Alt+Maj+M.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="946"/>
@@ -743,12 +743,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="954"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation>Cela permet la capture de raccourcis clavier système comme Alt+Tab qui seraient normalement utilisés par le système d’exploitation client.</translation>
+        <translation>Ceci permet la capture de raccourcis clavier système comme Alt+Tab, qui seraient normalement utilisés par le système d’exploitation client.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1113"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>Active le contrôle de la souris par la manette en appuyant sur « Start »</translation>
+        <translation>Active le contrôle de la souris par la manette en maintenant le bouton « Start »</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1124"/>
@@ -815,7 +815,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1028"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation>Lorsqu&apos;on le vérifie, l&apos;écran tactile agit comme un pavé tactile. Lorsqu&apos;il n&apos;est pas coché, l&apos;écran tactile contrôle directement le pointeur de la souris.</translation>
+        <translation>Lorsqu&apos;il est coché, l&apos;écran tactile agit comme un pavé tactile. Lorsqu&apos;il n&apos;est pas coché, l&apos;écran tactile contrôle directement le pointeur de la souris.</translation>
     </message>
     <message>
         <source>Gamepad mouse mode support</source>
@@ -850,7 +850,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1175"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>Cela fermera l&apos;application ou le jeu que vous êtes en train de diffuser lorsque vous aurez terminé votre flux. Vous perdrez tout progrès non sauvegardé !</translation>
+        <translation>Ceci fermera l&apos;application ou le jeu que vous êtes en train de diffuser lorsque vous aurez terminé votre flux. Vous perdrez tout progrès non sauvegardé !</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1194"/>
@@ -866,12 +866,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1223"/>
         <source>Force software decoding</source>
-        <translation>Forcer le décodage des logiciels</translation>
+        <translation>Forcer le décodage logiciel</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1227"/>
         <source>Force hardware decoding</source>
-        <translation>Forcer le décodage du matériel</translation>
+        <translation>Forcer le décodage matériel</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1240"/>
@@ -891,7 +891,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1290"/>
         <source>Unlock unsupported FPS options</source>
-        <translation>Débloquer les options non supportées du FPS</translation>
+        <translation>Débloquer les options FPS non supportées</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1309"/>
@@ -925,12 +925,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez vos réglages de port et de pare-feu pour le(s) port(s) suivant(s) : %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>La connexion Internet de ce PC bloque Moonlight. Le streaming sur Internet peut ne pas fonctionner lorsqu&apos;il est connecté à ce réseau.</translation>
+        <translation>La connexion Internet de ce PC bloque Moonlight. Le streaming à travers Internet peut ne pas fonctionner lorsqu&apos;il est connecté à ce réseau.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
@@ -950,7 +950,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Ctrl+Alt+Shift+Q</source>
-        <translation>Ctrl + Alt + Shift + Q</translation>
+        <translation>Ctrl + Alt + Maj + Q</translation>
     </message>
 </context>
 <context>
@@ -991,17 +991,17 @@
     <message>
         <location filename="../gui/main.qml" line="377"/>
         <source>Gamepad Mapper</source>
-        <translation>configuration du controleur</translation>
+        <translation>Configuration du contrôleur</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation>configuration du controleur</translation>
+        <translation>Configuration du contrôleur</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>Aucun décodeur vidéo H.264 accéléré par le matériel n&apos;a été détecté par Moonlight. Dans cette configuration, les performances de votre streaming peuvent être fortement dégradées.</translation>
+        <translation>Aucun décodeur vidéo H.264 accéléré par le matériel n&apos;a été détecté par Moonlight. Dans cette configuration, les performances de streaming peuvent être fortement dégradées.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="423"/>
@@ -1016,7 +1016,7 @@
     <message>
         <location filename="../gui/main.qml" line="441"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration&#x202f;:</translation>
+        <translation>Moonlight a détecté des manettes sans configuration :</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="354"/>
@@ -1045,7 +1045,7 @@
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Vous êtes sûr de vouloir quitter&#x202f;?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="481"/>
