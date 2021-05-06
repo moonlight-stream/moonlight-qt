@@ -48,7 +48,7 @@ bool CompatFetcher::isGfeVersionSupported(QString gfeVersion)
 {
     QSettings settings;
 
-    if (gfeVersion.isEmpty()) {
+    if (gfeVersion.trimmed().isEmpty()) {
         // If we don't have a GFE version, just allow it
         return true;
     }
@@ -62,16 +62,40 @@ bool CompatFetcher::isGfeVersionSupported(QString gfeVersion)
     QStringList latestSupportedVersionQuad = latestSupportedVersion.split('.');
     QStringList gfeVersionQuad = gfeVersion.split('.');
 
+    if (gfeVersionQuad.count() <= 1) {
+        qWarning() << "Failed to parse GFE version:" << gfeVersion;
+        return true;
+    }
+
+    if (latestSupportedVersionQuad.count() <= 1) {
+        qWarning() << "Failed to parse latest supported version:" << latestSupportedVersion;
+        return true;
+    }
+
     for (int i = 0;; i++) {
         int actualVerVal = 0;
         int latestSupportedVal = 0;
 
         // Treat missing decimal places as 0
         if (i < gfeVersionQuad.count()) {
-            actualVerVal = gfeVersionQuad[i].toInt();
+            bool ok;
+
+            actualVerVal = gfeVersionQuad[i].toInt(&ok);
+            if (!ok || actualVerVal < 0) {
+                // Return true to be safe
+                qWarning() << "Failed to parse GFE version:" << gfeVersion;
+                return true;
+            }
         }
         if (i < latestSupportedVersionQuad.count()) {
-            latestSupportedVal = latestSupportedVersionQuad[i].toInt();
+            bool ok;
+
+            latestSupportedVal = latestSupportedVersionQuad[i].toInt(&ok);
+            if (!ok || latestSupportedVal < 0) {
+                // Return true to be safe
+                qWarning() << "Failed to parse latest supported version:" << latestSupportedVersion;
+                return true;
+            }
         }
 
         if (i >= gfeVersionQuad.count() && i >= latestSupportedVersionQuad.count()) {
@@ -85,6 +109,7 @@ bool CompatFetcher::isGfeVersionSupported(QString gfeVersion)
         }
         else if (actualVerVal > latestSupportedVal) {
             // Actual version is greater than latest supported - this is bad
+            qWarning() << "GFE version" << gfeVersion << "is not supported by this version of Moonlight";
             return false;
         }
     }
