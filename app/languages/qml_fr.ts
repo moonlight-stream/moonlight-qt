@@ -257,7 +257,7 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation>N&apos;a pas pu se connecter à %1</translation>
+        <translation>La connexion à %1 a échoué</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
@@ -274,7 +274,7 @@
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>N&apos;a pas trouvé l&apos;application %1</translation>
+        <translation>La recherche de l&apos;application %1 a échoué</translation>
     </message>
 </context>
 <context>
