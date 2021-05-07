@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>Oculta este juego de la cuadrícula de aplicaciones. Para acceder a juegos ocultos, haga clic con el botón derecho en el host y elija % 1.</translation>
+        <translation>Oculta este juego de la cuadrícula de aplicaciones. Para acceder a juegos ocultos, haga clic con el botón derecho en el host y elija %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
@@ -955,7 +955,7 @@
     <message>
         <location filename="../gui/main.qml" line="330"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation>Actualización disponible para Moonlight: versión % 1</translation>
+        <translation>Actualización disponible para Moonlight: versión %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="377"/>
