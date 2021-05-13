@@ -72,7 +72,9 @@ public:
         LANG_DE,
         LANG_NB_NO,
         LANG_RU,
-        LANG_ES
+        LANG_ES,
+        LANG_JA,
+        LANG_VI
     };
     Q_ENUM(Language);
 

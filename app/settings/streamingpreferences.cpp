@@ -195,6 +195,10 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "ru";
     case LANG_ES:
         return "es";
+    case LANG_JA:
+        return "ja";
+    case LANG_VI:
+        return "vi";
     case LANG_AUTO:
     default:
         return QLocale::system().name();
