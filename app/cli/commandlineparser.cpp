@@ -350,8 +350,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --fps option
     if (parser.isSet("fps")) {
         preferences->fps = parser.getIntOption("fps");
-        if (!inRange(preferences->fps, 30, 120)) {
-            parser.showError("FPS must be in range: 30 - 120");
+        if (!inRange(preferences->fps, 30, 240)) {
+            parser.showError("FPS must be in range: 30 - 240");
         }
     }
 
