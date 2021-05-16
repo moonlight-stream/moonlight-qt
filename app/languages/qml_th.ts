@@ -7,48 +7,48 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>กลับสู่เกม</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>ออกจากเกม</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>เปิดเกม</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>เปิดเกมโดยตรง</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>เปิดแอปนี้ทันทีเมื่อโฮสต์ถูกเลือก โดยข้ามตารางเลือกแอป</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>ซ่อนเกม</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>ซ่อนเกมนี้จากตารางแอป หากต้องการเข้าถึงเกมที่ซ่อนอยู่ ให้คลิกขวาที่โฮสต์แล้วเลือก %1</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>ดูแอปทั้งหมด</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>คุณแน่ใจว่าคุณต้องการออกจาก %1? ความคืบหน้าใด ๆ ที่ไม่ได้ถูกบันทึกไว้จะสูญหายไป</translation>
     </message>
 </context>
 <context>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังสร้างการเชื่อมต่อกับคอมพิวเตอร์...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังออกจากแอป...</translation>
     </message>
 </context>
 <context>
@@ -69,17 +69,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังสร้างการเชื่อมต่อกับคอมพิวเตอร์...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังโหลดรายการแอพ...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>คุณแน่ใจว่าคุณต้องการออกจาก %1? ความคืบหน้าใด ๆ ที่ไม่ได้ถูกบันทึกไว้จะสูญหายไป</translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>การตั้งค่าปุ่ม Gamepad</translation>
     </message>
 </context>
 <context>
@@ -95,7 +95,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="327"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่พบอุปกรณ์จับเสียง ติดตั้ง GeForce Experience ใหม่ควรจะแก้ไขข้อผิดพลาดนี้ได้</translation>
     </message>
 </context>
 <context>
@@ -103,22 +103,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>คอมพิวเตอร์</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถเชื่อต่อกับคอมพิวเตอร์ที่ระบุได้</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>การเชื่อมต่ออินเทอร์เน็ตของคอมพิวเตอร์บล็อก Moonlight ไว้ การสตรีมผ่านอินเทอร์เน็ตอาจไม่ทำงานในขณะที่เชื่อมต่อกับเครือข่ายนี้</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished"></translation>
+        <translation>กดปุ่มวิธีใช้เพื่อดูแนวทางแก้ไขที่อาจจะเป็นไปได้</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -127,7 +127,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>การค้นหาคอมพิวเตอร์อัตโนมัติได้ถูกปิดใช้งานไว้ โปรดเพิ่มคอมพิวเตอร์ของคุณด้วยตัวเอง</translation>
     </message>
     <message>
         <source>View Apps</source>
@@ -140,107 +140,107 @@
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation type="unfinished"></translation>
+        <translation>ปลุกคอมพิวเตอร์</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation type="unfinished"></translation>
+        <translation>ทดสอบเครือข่าย</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>เปลี่ยนชื่อคอมพิวเตอร์</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>ลบคอมพิวเตอร์</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>รุ่นของ GeForce Experience บน %1 ไม่รองรับ Moonlight รุ่นนี้ คุณต้องอัปเดต Moonlight เพื่อสตรีมจาก % 1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation>คุณไม่สามารถจับคู่ในขณะที่เซสชันก่อนหน้ายังทำงานอยู่บนคอมพิวเตอร์ตัวหลัก ออกจากเกมที่กำลังทำงานอยู่หรือรีบูตคอมพิวเตอร์ตัวหลัก จากนั้นลองจับคู่อีกครั้ง</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>กรุณาใส่ %1 บนคอมพิวเตอร์ที่ใช้สตรีมเกม กล่องนี้จะปิดเมื่อการจับคู่เสร็จสิ้น</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove this PC?</source>
-        <translation type="unfinished"></translation>
+        <translation>คุณแน่ใจว่าคุณต้องการเอาคอมพิวเตอร์นี้ออกไปหรือไม่?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight กำลังทดสอบการเชื่อมต่อเครือข่ายเพื่อพิจารณาว่า NVIDIA GameStream ถูกบล็อกหรือไม่</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>อาจจะใช้เวลาสักครู่…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่พบว่าเครือข่ายนี้มีการบล็อก Moonlight ถ้าคุณยังมีปัญหากับการเชื่อมต่อกรุณาตรวจสอบการตั้งค่า Firewall ของคอมพิวเตอร์</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>ถ้าคุณกำลังพยายามสตรีมผ่านอินเตอร์เน็ต ติดตั้ง Moonlight Internet Hosting Tool บนคอมพิวเตอร์เล่นเกมของคุณและรันโปรแกรมทดสอบการสตรีมผ่านอินเตอร์เน็ตเพื่อทดสอบการเชื่อมต่ออินเตอร์เน็ตของคอมพิวเตอร์</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>ดูเหมือนว่าการเชื่อมต่ออินเทอร์เน็ตของคอมพิวเตอร์จะบล็อก Moonlight ไว้ การสตรีมผ่านอินเทอร์เน็ตอาจไม่ทำงานในขณะที่เชื่อมต่อกับเครือข่ายนี้</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>The following network ports were blocked:</source>
-        <translation type="unfinished"></translation>
+        <translation>Ports ต่อไปนี้ถูกบล็อก:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถทำการทดสอบเครือข่ายได้เพราะว่าไม่สามารถเข้าถึงเซิร์ฟเวอร์ทดสอบการเชื่อมต่อของ Moonlight จากคอมพิวเตอร์นี้ กรุณาตรวจสอบการเชื่อมต่ออินเตอร์เน็ตหรือลองใหม่อีกครั้ง</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังค้นหาคอมพิวเตอร์บนเคื่องข่ายของคุณที่เปิด NVIDIA GameStream ไว้</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>สถานะคอมพิวเตอร์: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>สามารถติดต่อได้</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถติดต่อได้</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>ดูแอปทั้งหมด</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="357"/>
         <source>Enter the new name for this PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>ใส่ชื่อใหม่สำหรับคอมพิวเตอร์นี้:</translation>
     </message>
 </context>
 <context>
@@ -248,7 +248,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation type="unfinished"></translation>
+        <translation>เกมที่ทำงานอยู่ไม่ได้ถูกเปิดโดยคอมพิวเตอร์นี้ คุณต้องออกจากเกมด้วยคอมพิวเตอร์หลักเองหรือใช้อุปกรณ์ที่เปิดเกม</translation>
     </message>
 </context>
 <context>
@@ -257,24 +257,24 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถเชื่อต่อกับ %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>คอมพิวเตอร์ %1 ยังไม่ถูกจับคู่ กรุณาเปิด Moonlight เพื่อจับคู่ก่อนเริ่มสตรีม</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>การออกจากแอปล้มเหลว เหตุผล: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถค้นหาแอป %1</translation>
     </message>
 </context>
 <context>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังออกจาก %1...</translation>
     </message>
 </context>
 <context>
@@ -294,112 +294,112 @@
     <message>
         <location filename="../streaming/session.cpp" line="89"/>
         <source>No video received from host.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่ได้รับวิดีโอจากเครื่องหลัก</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ตรวจสอบ Firewall และ Port forwarding rules สำหรับ port(s): %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>การเชื่อมต่อเครื่อข่ายทำงานได้ไม่ค่อยดี ลด Bitrate ของวิดีโอหรือลองใช้การเชื่อมต่อที่เร็วกว่านี้</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>เกิดข้อผิดพลาดบางอย่างบนคอมพิวเตอร์หลักขณะที่กำลังเริ่มสตรีม</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="101"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>ทำให้แน่ใจว่าคุณไม่ได้เปิดเนื้อหาที่ถูกป้องกันด้วย DRM บนคอมพิวเตอร์หลัก คุณก็สามารถลองรีสตาร์ทคอมพิวเตอร์หลักได้ด้วย</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="102"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>หากยังคงมีปัญหาอยู่ ลองติดตั้งไดร์เวอร์ของการ์ดจอและ GeForce Experience ใหม่</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>ยุติการเชื่อมต่อแล้ว</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>รุ่นของ GeForce Experience บน %1 ไม่รองรับ Moonlight รุ่นนี้ คุณต้องอัปเดต Moonlight เพื่อสตรีมจาก % 1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="597"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation type="unfinished"></translation>
+        <translation>การเลือกการตั้งค่าของคุณที่จะเปิดโหมดเมาส์ Remote Desktop อาจจะทำให้เกิดปัญหาในเกม</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="602"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่รองรับ HDR ด้วยการถอดรหัสแบบซอฟต์แวร์</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="606"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>การเลือกการตั้งค่าของคุณเพื่อบังคับให้ถอดรหัสแบบซอฟต์แวร์อาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="611"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="unfinished"></translation>
+        <translation>การใช้ FPS ที่ไม่รองรับอาจจะทำให้เกิดการกระตุกหรือความล่าช้าได้</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="614"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="unfinished"></translation>
+        <translation>V-sync จะถูกปิดเมื่อสตรีมที่เฟรมเรทที่สูงกว่าจอ</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="631"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>การใช้การถอดรหัสแบบซอฟต์แวร์เนื่องจากการบังคับ HEVC โดยที่การ์จอไม่รองรับ ให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="634"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation type="unfinished"></translation>
+        <translation>การ์ดจอของคอมพิวเตอร์เครื่องนี้ไม่รองรับการถอดรหัส HEVC</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="641"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>การ์ดจอของคอมพิวเตอร์หลักไม่รองรับ HEVC ต้องใช้ GeForce GTX รุ่น 900 (Maxwell) หรือใหม่กว่าสำหรับการสตรีม HEVC</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="658"/>
         <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ไม่รองรับ HDR10</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="662"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>คอมพิวเตอร์หลักไม่รองรับการสตรีม HDR ต้องใช้ GeForce GTX รุ่น 1000 (Pascal) หรือใหม่กว่าสำหรับการสตรีม HDR</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="671"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>คอมพิวเตอร์นี้ไม่รองรับการถอดรหัส HEVC Main10 สำหรับการสตรีม HDR</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="684"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>ต้องใช้ GeForce Experience 3.0 หรือใหม่กว่าสำหรับการสตรีมแบบ 4K</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="699"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation type="unfinished"></translation>
+        <translation>อุปกรณ์เสียงปัจจุบัน ไม่รองรับการตั้งค่าเสียงรอบทิศทางที่คุณเลือก</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="706"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถเปิดอุปกรณ์เสียงได้ จะไม่สามารถใช้งานเสียงได้ในเซสชันนี้</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="711"/>
@@ -442,42 +442,42 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="12"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>การตั้งค่า</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="70"/>
         <source>Resolution and FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>ความละเอียดและ FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="78"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation type="unfinished"></translation>
+        <translation>ค่า การตั้งค่าสูงเกินไปสำหรับคอมพิวเตอร์ของคุณหรือการเชื่อต่อเครือข่าย อาจจะทำให้ล่าช้ากระตุกหรือข้อผิดพลาด</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="60"/>
         <source>Basic Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>การตั้งค่าพื้นฐาน</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="209"/>
         <source>720p</source>
-        <translation type="unfinished"></translation>
+        <translation>720p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="215"/>
         <source>1080p</source>
-        <translation type="unfinished"></translation>
+        <translation>1080p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="221"/>
         <source>1440p</source>
-        <translation type="unfinished"></translation>
+        <translation>1440p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="227"/>
         <source>4K</source>
-        <translation type="unfinished"></translation>
+        <translation>4K</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="331"/>
