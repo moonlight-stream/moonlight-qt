@@ -258,6 +258,15 @@ ApplicationWindow {
                 verticalAlignment: Qt.AlignVCenter
             }
 
+            Label {
+                id: activeProfileNameLabel
+                visible: stackView.currentItem.objectName !== "Settings" && StreamingPreferences.hasProfiles
+                text: "<b>" + qsTr("Profile") + "</b> <br>" + StreamingPreferences.activeProfileName
+                font.pointSize: 12
+                horizontalAlignment: Qt.AlignRight
+                verticalAlignment: Qt.AlignVCenter
+            }
+
             NavigableToolButton {
                 id: discordButton
                 visible: SystemProperties.hasBrowser &&

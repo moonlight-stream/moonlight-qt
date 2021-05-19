@@ -1,6 +1,5 @@
 #include "streamingpreferences.h"
 
-#include <QSettings>
 #include <QTranslator>
 #include <QCoreApplication>
 #include <QLocale>
@@ -42,6 +41,8 @@
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_LANGUAGE "language"
+#define SER_PROFILES "profiles"
+#define SER_ACTIVEPROFILE "activeprofile"
 
 #define CURRENT_DEFAULT_VER 1
 
@@ -70,6 +71,20 @@ void StreamingPreferences::reload()
 #else
     recommendedFullScreenMode = WindowMode::WM_FULLSCREEN;
 #endif
+
+    //check to see if the user has created any profiles
+    profiles.clear();
+    int size = settings.beginReadArray(SER_PROFILES);
+    for (int i = 0; i < size; ++i) {
+        settings.setArrayIndex(i);
+
+        Profile profile;
+        profile.name = settings.value("name").toString();
+        profiles.append(profile);
+    }
+    settings.endArray();
+
+    activeProfileName = settings.value(SER_ACTIVEPROFILE, QString()).toString();
 
     width = settings.value(SER_WIDTH, 1280).toInt();
     height = settings.value(SER_HEIGHT, 720).toInt();
@@ -241,6 +256,149 @@ void StreamingPreferences::save()
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
+
+    saveProfiles(settings);
+}
+
+void StreamingPreferences::saveProfiles(QSettings& settings)
+{
+    settings.beginWriteArray(SER_PROFILES);
+    for (int i = 0; i < profiles.size(); ++i) {
+        settings.setArrayIndex(i);
+        settings.setValue("name", profiles[i].name);
+    }
+    settings.endArray();
+
+    settings.setValue(SER_ACTIVEPROFILE, activeProfileName);
+}
+
+void StreamingPreferences::createNewProfile(QString profileName)
+{
+    qDebug() << "Create profile " << profileName;
+
+    int prevProfilesSize = profiles.size();
+    
+    bool profileNameAlreadyExists = false;
+    for (int i = 0; i < profiles.size(); i++) 
+    {
+        if (profiles[i].name.compare(profileName) == 0)
+        {
+            qDebug() << "Profile already exists " << profiles[i].name;
+            profileNameAlreadyExists = true;
+            break;
+        }
+    }
+
+    if (!profileNameAlreadyExists)
+    {
+        Profile newProfile;
+        newProfile.name = profileName;
+        profiles.append(newProfile);
+
+        //the new profile is immediately made active for the user
+        activeProfileName = profileName;
+
+        if (prevProfilesSize == 0)
+        {
+            emit hasProfilesChanged();
+        }
+        emit profilesChanged();
+        emit activeProfileNameChanged();
+    }
+}
+
+void StreamingPreferences::deleteProfile(QString profileName)
+{
+    qDebug() << "Trying to delete profile " << profileName;
+
+    bool deleted = false;
+    for (int i = 0; i < profiles.size(); i++) 
+    {
+        if (profiles[i].name.compare(profileName) == 0)
+        {
+            qDebug() << "Deleting profile " << profiles[i].name;
+
+            profiles.remove(i);
+
+            qDebug() << "There are " << profiles.size() << " profiles after deletion.";
+
+            if (profiles.size() > 0)
+            {
+                activeProfileName = profiles[0].name;
+            }
+            else
+            {
+                activeProfileName = QString();
+            }
+
+            qDebug() << "New active profile is " << activeProfileName;
+
+            QSettings settings;
+            //remove all keys for the deleted profile in the save data
+            settings.remove(profileName);
+
+            //remove the deleted profile entry in the profiles list by rewriting all profiles to the save data
+            saveProfiles(settings);
+
+            deleted = true;
+
+            break;
+        }
+    }
+
+    if (deleted) 
+    {
+        reload();
+
+        if (profiles.size() == 0) 
+        {
+            emit hasProfilesChanged();
+        }
+        emit profilesChanged();
+        emit activeProfileNameChanged();
+    }
+}
+
+void StreamingPreferences::deleteAllProfiles()
+{
+    qDebug() << "Deleting all profiles.";
+
+    profiles.clear();
+    activeProfileName = QString();
+
+    QSettings settings;
+    saveProfiles(settings);
+
+    reload();
+
+    emit hasProfilesChanged();
+    emit profilesChanged();
+    emit activeProfileNameChanged();
+}
+
+QVariant StreamingPreferences::getProfiles()
+{
+    QVariantList itemsList;
+
+    qDebug() << "There are " << profiles.size() << " profiles";
+
+    for (int i = 0; i < profiles.size(); i++)
+    {
+        Profile* profile = &profiles[i];
+
+        qDebug() << "Profile " << i << " is " << profile->name;
+
+        QVariantMap itemMap;
+        itemMap.insert("name", profile->name);
+        itemsList.append(itemMap);
+    }
+
+    return QVariant::fromValue(itemsList);
+}
+
+bool StreamingPreferences::getHasProfiles()
+{
+    return profiles.size() > 0;
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)

@@ -3,6 +3,10 @@
 #include <QObject>
 #include <QRect>
 #include <QQmlEngine>
+#include <QSettings>
+#include <QVector>
+#include <QString>
+#include <QVariant>
 
 class StreamingPreferences : public QObject
 {
@@ -86,6 +90,11 @@ public:
     };
     Q_ENUM(CaptureSysKeysMode);
 
+    struct Profile 
+    {
+        QString name;
+    };
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -117,6 +126,16 @@ public:
     Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(QVariant profiles READ getProfiles NOTIFY profilesChanged)
+    Q_PROPERTY(QVariant hasProfiles READ getHasProfiles NOTIFY hasProfilesChanged)
+    Q_PROPERTY(QString activeProfileName MEMBER activeProfileName NOTIFY activeProfileNameChanged);
+
+    Q_INVOKABLE void createNewProfile(QString profileName);
+    Q_INVOKABLE void deleteProfile(QString profileName);
+    Q_INVOKABLE void deleteAllProfiles();
+    QVariant getProfiles();
+    bool getHasProfiles();
+    void saveProfiles(QSettings& settings);
 
     Q_INVOKABLE bool retranslate();
 
@@ -153,6 +172,8 @@ public:
     UIDisplayMode uiDisplayMode;
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
+    QVector<Profile> profiles;
+    QString activeProfileName;
 
 signals:
     void displayModeChanged();
@@ -183,6 +204,9 @@ signals:
     void swapFaceButtonsChanged();
     void captureSysKeysModeChanged();
     void languageChanged();
+    void profilesChanged();
+    void hasProfilesChanged();
+    void activeProfileNameChanged();
 
 private:
     QString getSuffixFromLanguage(Language lang);

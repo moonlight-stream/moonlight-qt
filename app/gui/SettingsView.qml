@@ -54,6 +54,101 @@ Flickable {
         spacing: 15
 
         GroupBox {
+            id: profileChangeGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Change Profile") + "</font>"
+            font.pointSize: 12
+            visible: StreamingPreferences.hasProfiles
+            enabled: StreamingPreferences.hasProfiles
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                Label {
+                    width: parent.width
+                    id: resActiveProfiletitle
+                    text: qsTr("Active Profile")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                AutoResizingComboBox {
+                    function createModel() {
+                        var profilesListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
+
+                        var profilesList = StreamingPreferences.profiles
+                        
+                        for( var i in profilesList) 
+                        {
+                            profilesListModel.append({"text" : profilesList[i].name});
+                        }
+
+                        return profilesListModel
+                    }
+
+                    function reinitialize() {
+                        model = createModel()
+
+                        var activeProfileName = StreamingPreferences.activeProfileName
+                        currentIndex = 0
+                        for (var i = 0; i < model.count; i++) {
+                            var profileName = model.get(i).text
+                            console.log(profileName)
+
+                            // Pick the highest value lesser or equal to the saved FPS
+                            if (profileName == activeProfileName) {
+                                currentIndex = i
+                            }
+                        }
+
+                        // Persist the selected value
+                        activated(currentIndex)
+                    }
+
+                    // ignore setting the index at first, and actually set it when the component is loaded
+                    Component.onCompleted: {
+                        reinitialize()
+                        StreamingPreferences.onProfilesChanged.connect(reinitialize)
+                    }
+
+                    Component.onDestruction: {
+                        StreamingPreferences.onProfilesChanged.disconnect(reinitialize)
+                    }
+
+                    id: profilesComboBox
+                    maximumWidth: parent.width / 2
+                    textRole: "text"
+                    // ::onActivated must be used, as it only listens for when the index is changed by a human
+                    onActivated : {
+                        var item = model.get(currentIndex);
+                        if (item)
+                        {
+                            var selectedProfileName = item.text
+
+                            if (StreamingPreferences.activeProfileName !== selectedProfileName) {
+                                StreamingPreferences.activeProfileName = selectedProfileName
+                            }
+                        }
+                    }
+                }
+
+                Button {
+                    id: deleteActiveProfileButton
+                    text: qsTr("Delete Profile")
+                    onClicked: StreamingPreferences.deleteProfile(StreamingPreferences.activeProfileName)
+                }
+
+                Button {
+                    id: deleteAllProfilesButton
+                    text: qsTr("Delete All Profiles")
+                    onClicked: StreamingPreferences.deleteAllProfiles()
+                }
+            }
+        }
+
+        GroupBox {
             id: basicSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
@@ -1353,6 +1448,32 @@ Flickable {
                             StreamingPreferences.save()
                         }
                     }
+                }
+            }
+        }
+
+        GroupBox {
+            id: profileCreationGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Save As New Profile") + "</font>"
+            font.pointSize: 12
+
+            Row {
+                anchors.fill: parent
+                padding: 5
+                spacing: 15
+
+                TextField {
+                    id: newProfileNameField
+                    maximumLength: 16
+                    placeholderText: qsTr("Profile Name")
+                }
+
+                Button {
+                    id: createNewProfileButton
+                    text: qsTr("Create")
+                    onClicked: StreamingPreferences.createNewProfile(newProfileNameField.text)
                 }
             }
         }
