@@ -30,7 +30,12 @@ Flickable {
 
         // Highlight the first item if a gamepad is connected
         if (SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-            resolutionComboBox.forceActiveFocus(Qt.TabFocus)
+            if (StreamingPreferences.hasProfiles) {
+                profilesComboBox.forceActiveFocus(Qt.TabFocus)
+            }
+            else {
+                resolutionComboBox.forceActiveFocus(Qt.TabFocus)
+            }
         }
 
         StreamingPreferences.onActiveProfileNameChanged.connect(forceReload)
