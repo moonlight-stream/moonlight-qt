@@ -83,70 +83,75 @@ Flickable {
                     wrapMode: Text.Wrap
                 }
 
-                AutoResizingComboBox {
-                    function createModel() {
-                        var profilesListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
+                Row {
+                    spacing: 15
+                    width: parent.width
 
-                        var profilesList = StreamingPreferences.profiles
-                        
-                        for( var i in profilesList) 
-                        {
-                            profilesListModel.append({"text" : profilesList[i].name});
+                    AutoResizingComboBox {
+                        function createModel() {
+                            var profilesListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
+
+                            var profilesList = StreamingPreferences.profiles
+                            
+                            for( var i in profilesList) 
+                            {
+                                profilesListModel.append({"text" : profilesList[i].name});
+                            }
+
+                            return profilesListModel
                         }
 
-                        return profilesListModel
-                    }
+                        function reinitialize() {
+                            model = createModel()
 
-                    function reinitialize() {
-                        model = createModel()
+                            var activeProfileName = StreamingPreferences.activeProfileName
+                            currentIndex = 0
+                            for (var i = 0; i < model.count; i++) {
+                                var profileName = model.get(i).text
+                                console.log(profileName)
 
-                        var activeProfileName = StreamingPreferences.activeProfileName
-                        currentIndex = 0
-                        for (var i = 0; i < model.count; i++) {
-                            var profileName = model.get(i).text
-                            console.log(profileName)
+                                // Pick the highest value lesser or equal to the saved FPS
+                                if (profileName == activeProfileName) {
+                                    currentIndex = i
+                                }
+                            }
 
-                            // Pick the highest value lesser or equal to the saved FPS
-                            if (profileName == activeProfileName) {
-                                currentIndex = i
+                            // Persist the selected value
+                            activated(currentIndex)
+                        }
+
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            reinitialize()
+                            StreamingPreferences.onProfilesChanged.connect(reinitialize)
+                        }
+
+                        Component.onDestruction: {
+                            StreamingPreferences.onProfilesChanged.disconnect(reinitialize)
+                        }
+
+                        id: profilesComboBox
+                        maximumWidth: parent.width / 2
+                        textRole: "text"
+                        // ::onActivated must be used, as it only listens for when the index is changed by a human
+                        onActivated : {
+                            var item = model.get(currentIndex);
+                            if (item)
+                            {
+                                var selectedProfileName = item.text
+
+                                if (StreamingPreferences.activeProfileName !== selectedProfileName) {
+                                    StreamingPreferences.changeActiveProfile(selectedProfileName)
+                                }
                             }
                         }
-
-                        // Persist the selected value
-                        activated(currentIndex)
                     }
 
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
-                        reinitialize()
-                        StreamingPreferences.onProfilesChanged.connect(reinitialize)
+                    Button {
+                        id: deleteActiveProfileButton
+                        text: qsTr("Delete Profile")
+                        onClicked: deleteProfileDialog.open()
                     }
-
-                    Component.onDestruction: {
-                        StreamingPreferences.onProfilesChanged.disconnect(reinitialize)
-                    }
-
-                    id: profilesComboBox
-                    maximumWidth: parent.width / 2
-                    textRole: "text"
-                    // ::onActivated must be used, as it only listens for when the index is changed by a human
-                    onActivated : {
-                        var item = model.get(currentIndex);
-                        if (item)
-                        {
-                            var selectedProfileName = item.text
-
-                            if (StreamingPreferences.activeProfileName !== selectedProfileName) {
-                                StreamingPreferences.changeActiveProfile(selectedProfileName)
-                            }
-                        }
-                    }
-                }
-
-                Button {
-                    id: deleteActiveProfileButton
-                    text: qsTr("Delete Profile")
-                    onClicked: deleteProfileDialog.open()
                 }
 
                 Button {
