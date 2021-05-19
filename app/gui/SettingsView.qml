@@ -38,6 +38,7 @@ Flickable {
             }
         }
 
+        //listen for the active profile name changing, as the whole view is reloaded when that happens
         StreamingPreferences.onActiveProfileNameChanged.connect(forceReload)
     }
 
@@ -100,7 +101,7 @@ Flickable {
                             
                             for( var i in profilesList) 
                             {
-                                profilesListModel.append({"text" : profilesList[i].name});
+                                profilesListModel.append({"text" : profilesList[i].name})
                             }
 
                             return profilesListModel
@@ -113,7 +114,6 @@ Flickable {
                             currentIndex = 0
                             for (var i = 0; i < model.count; i++) {
                                 var profileName = model.get(i).text
-                                console.log(profileName)
 
                                 // Pick the highest value lesser or equal to the saved FPS
                                 if (profileName == activeProfileName) {
@@ -140,7 +140,7 @@ Flickable {
                         textRole: "text"
                         // ::onActivated must be used, as it only listens for when the index is changed by a human
                         onActivated : {
-                            var item = model.get(currentIndex);
+                            var item = model.get(currentIndex)
                             if (item)
                             {
                                 var selectedProfileName = item.text
@@ -157,12 +157,6 @@ Flickable {
                         text: qsTr("Delete Profile")
                         onClicked: deleteProfileDialog.open()
                     }
-                }
-
-                Button {
-                    id: deleteAllProfilesButton
-                    text: qsTr("Delete All Profiles")
-                    onClicked: StreamingPreferences.deleteAllProfiles()
                 }
 
                 NavigableMessageDialog {
@@ -1515,7 +1509,7 @@ Flickable {
                     onClicked: {
                         //store a local reference to the window, as a successful call to createNewProfile will destroy the SettingsView
                         //component and lose the reference to window
-                        var storedWindow = window; 
+                        var storedWindow = window
                         if (StreamingPreferences.createNewProfile(newProfileNameField.text)) {
                             storedWindow.showNewProfileCreatedDialog(newProfileNameField.text)
                         }

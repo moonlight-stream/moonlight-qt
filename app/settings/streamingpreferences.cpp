@@ -235,7 +235,6 @@ void StreamingPreferences::save()
     if (!activeProfileName.isEmpty())
     {
         settings.beginGroup(activeProfileName);
-        qDebug() << "Saving to profile " << activeProfileName;
     }
 
     settings.setValue(SER_WIDTH, width);
@@ -293,8 +292,6 @@ void StreamingPreferences::saveProfiles(QSettings& settings)
 
 bool StreamingPreferences::createNewProfile(QString profileName)
 {
-    qDebug() << "Create profile " << profileName;
-
     int prevProfilesSize = profiles.size();
     
     bool profileNameAlreadyExists = false;
@@ -302,7 +299,6 @@ bool StreamingPreferences::createNewProfile(QString profileName)
     {
         if (profiles[i].name.compare(profileName) == 0)
         {
-            qDebug() << "Profile already exists " << profiles[i].name;
             profileNameAlreadyExists = true;
             break;
         }
@@ -336,18 +332,12 @@ bool StreamingPreferences::createNewProfile(QString profileName)
 
 void StreamingPreferences::deleteProfile(QString profileName)
 {
-    qDebug() << "Trying to delete profile " << profileName;
-
     bool deleted = false;
     for (int i = 0; i < profiles.size(); i++) 
     {
         if (profiles[i].name.compare(profileName) == 0)
         {
-            qDebug() << "Deleting profile " << profiles[i].name;
-
             profiles.remove(i);
-
-            qDebug() << "There are " << profiles.size() << " profiles after deletion.";
 
             if (profiles.size() > 0)
             {
@@ -357,8 +347,6 @@ void StreamingPreferences::deleteProfile(QString profileName)
             {
                 activeProfileName = QString();
             }
-
-            qDebug() << "New active profile is " << activeProfileName;
 
             QSettings settings;
             //remove all keys for the deleted profile in the save data
@@ -386,44 +374,13 @@ void StreamingPreferences::deleteProfile(QString profileName)
     }
 }
 
-void StreamingPreferences::deleteAllProfiles()
-{
-    qDebug() << "Deleting all profiles.";
-
-    profiles.clear();
-    activeProfileName = QString();
-
-    QSettings settings;
-
-    //delete all profile related keys
-    QStringList keys = settings.allKeys();
-    for (int i = 0; i < keys.size(); i++)
-    {
-        if (keys[i].indexOf('/') > -1  && !keys[i].contains("host"))
-        {
-            settings.remove(keys[i]);
-        }
-    }
-    saveProfiles(settings);
-
-    reload();
-
-    emit hasProfilesChanged();
-    emit profilesChanged();
-    changeActiveProfile("");
-}
-
 QVariant StreamingPreferences::getProfiles()
 {
     QVariantList itemsList;
 
-    qDebug() << "There are " << profiles.size() << " profiles";
-
     for (int i = 0; i < profiles.size(); i++)
     {
         Profile* profile = &profiles[i];
-
-        qDebug() << "Profile " << i << " is " << profile->name;
 
         QVariantMap itemMap;
         itemMap.insert("name", profile->name);

@@ -133,7 +133,6 @@ public:
 
     Q_INVOKABLE bool createNewProfile(QString profileName);
     Q_INVOKABLE void deleteProfile(QString profileName);
-    Q_INVOKABLE void deleteAllProfiles();
     Q_INVOKABLE void changeActiveProfile(QString newProfileName);
     QVariant getProfiles();
     bool getHasProfiles() const;
