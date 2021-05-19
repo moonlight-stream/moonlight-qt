@@ -536,4 +536,19 @@ ApplicationWindow {
             }
         }
     }
+
+    //This dialog belongs in SettingsView, but when a new profile is created the view is reloaded, meaning that it cannot show any dialogs
+    //at the same time. Instead, it's hosted here as this component is never destroyed.
+    NavigableMessageDialog {
+        id: newProfileCreatedDialog
+        standardButtons: Dialog.Ok
+        title: qsTr("New profile created")
+        text: qsTr("A profile named %1 has been created and set as the active profile.").arg(profileName)
+        property string profileName: ""
+    }
+
+    function showNewProfileCreatedDialog(profileName) {
+        newProfileCreatedDialog.profileName = profileName
+        newProfileCreatedDialog.open()
+    }
 }

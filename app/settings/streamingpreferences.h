@@ -131,7 +131,7 @@ public:
     //this property is read-only from QML, which is why it has a simple READ function rather than using the MEMBER keyword
     Q_PROPERTY(QString activeProfileName READ getActiveProfileName NOTIFY activeProfileNameChanged);
 
-    Q_INVOKABLE void createNewProfile(QString profileName);
+    Q_INVOKABLE bool createNewProfile(QString profileName);
     Q_INVOKABLE void deleteProfile(QString profileName);
     Q_INVOKABLE void deleteAllProfiles();
     Q_INVOKABLE void changeActiveProfile(QString newProfileName);

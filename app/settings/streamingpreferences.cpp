@@ -291,7 +291,7 @@ void StreamingPreferences::saveProfiles(QSettings& settings)
     settings.setValue(SER_ACTIVEPROFILE, activeProfileName);
 }
 
-void StreamingPreferences::createNewProfile(QString profileName)
+bool StreamingPreferences::createNewProfile(QString profileName)
 {
     qDebug() << "Create profile " << profileName;
 
@@ -325,6 +325,12 @@ void StreamingPreferences::createNewProfile(QString profileName)
         }
         emit profilesChanged();
         emit activeProfileNameChanged();
+
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 

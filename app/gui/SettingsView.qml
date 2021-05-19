@@ -146,13 +146,24 @@ Flickable {
                 Button {
                     id: deleteActiveProfileButton
                     text: qsTr("Delete Profile")
-                    onClicked: StreamingPreferences.deleteProfile(StreamingPreferences.activeProfileName)
+                    onClicked: deleteProfileDialog.open()
                 }
 
                 Button {
                     id: deleteAllProfilesButton
                     text: qsTr("Delete All Profiles")
                     onClicked: StreamingPreferences.deleteAllProfiles()
+                }
+
+                NavigableMessageDialog {
+                    id: deleteProfileDialog
+                    standardButtons: Dialog.Yes | Dialog.No
+                    title: qsTr("Confirm profile deletion")
+                    text: qsTr("Are you sure you want to delete the profile named %1?").arg(StreamingPreferences.activeProfileName)
+
+                    onAccepted: {
+                        StreamingPreferences.deleteProfile(StreamingPreferences.activeProfileName)
+                    }
                 }
             }
         }
@@ -1468,6 +1479,13 @@ Flickable {
             title: "<font color=\"skyblue\">" + qsTr("Save As New Profile") + "</font>"
             font.pointSize: 12
 
+            NavigableMessageDialog {
+                id: profileCreationFailedDialog
+                standardButtons: Dialog.Ok
+                title: qsTr("Failed to create profile")
+                text: qsTr("A profile named %1 already exists.").arg(newProfileNameField.text)
+            }
+
             Row {
                 anchors.fill: parent
                 padding: 5
@@ -1482,7 +1500,18 @@ Flickable {
                 Button {
                     id: createNewProfileButton
                     text: qsTr("Create")
-                    onClicked: StreamingPreferences.createNewProfile(newProfileNameField.text)
+                    enabled: newProfileNameField.text.length > 0
+                    onClicked: {
+                        //store a local reference to the window, as a successful call to createNewProfile will destroy the SettingsView
+                        //component and lose the reference to window
+                        var storedWindow = window; 
+                        if (StreamingPreferences.createNewProfile(newProfileNameField.text)) {
+                            storedWindow.showNewProfileCreatedDialog(newProfileNameField.text)
+                        }
+                        else {
+                            profileCreationFailedDialog.open()
+                        }
+                    }
                 }
             }
         }
