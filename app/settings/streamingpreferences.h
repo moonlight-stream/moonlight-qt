@@ -139,8 +139,6 @@ public:
     bool getHasProfiles();
     void saveProfiles(QSettings& settings);
 
-    Q_INVOKABLE void checkSettingsKeys();
-
     Q_INVOKABLE bool retranslate();
 
     // Directly accessible members for preferences

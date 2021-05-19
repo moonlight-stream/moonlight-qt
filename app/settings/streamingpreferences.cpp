@@ -441,33 +441,6 @@ void StreamingPreferences::changeActiveProfile(QString newProfileName)
     emit activeProfileNameChanged();
 }
 
-void StreamingPreferences::checkSettingsKeys()
-{
-    QSettings settings;
-
-    //TODO - print height /width / bitrate values as they are currently
-    qDebug() << "Start current settings.";
-
-    qDebug() << "Width: " << width;
-    qDebug() << "Height: " << height;
-    qDebug() << "Bitrate: " << bitrateKbps;
-
-    qDebug() << "End current settings.";
-
-    qDebug() << "Start settings keys.";
-
-    QStringList keys = settings.allKeys();
-    for (int i = 0; i < keys.size(); i++)
-    {
-        if (keys[i].indexOf('/') > -1 && !keys[i].contains("host"))
-        {
-            qDebug() << keys[i] << " : " << settings.value(keys[i]);
-        }
-    }
-
-    qDebug() << "End settings keys.";
-}
-
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
 {
     // This table prefers 16:10 resolutions because they are

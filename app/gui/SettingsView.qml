@@ -154,12 +154,6 @@ Flickable {
                     text: qsTr("Delete All Profiles")
                     onClicked: StreamingPreferences.deleteAllProfiles()
                 }
-
-                Button {
-                    id: debugCheckAllKeysButton
-                    text: qsTr("Check Keys")
-                    onClicked: StreamingPreferences.checkSettingsKeys()
-                }
             }
         }
 
