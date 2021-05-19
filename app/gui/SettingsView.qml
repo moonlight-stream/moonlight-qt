@@ -1500,6 +1500,7 @@ Flickable {
                     id: newProfileNameField
                     maximumLength: 16
                     placeholderText: qsTr("Profile Name")
+                    validator: RegExpValidator { regExp: /[0-9A-Za-z\s-_]+/ }
                 }
 
                 Button {
