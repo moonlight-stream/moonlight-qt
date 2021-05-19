@@ -17,6 +17,8 @@ ApplicationWindow {
     // a retranslate() because AppView breaks for some reason.
     property bool clearOnBack: false
 
+    property string settingsViewPath: "qrc:/gui/SettingsView.qml"
+
     id: window
     visible: true
     width: 1280
@@ -45,6 +47,13 @@ ApplicationWindow {
         else {
             stackView.pop()
         }
+    }
+
+    function reloadSettingsView()
+    {
+        //pop the current settings view and immediately push a new one, so that the entire view is refreshed
+        stackView.pop(StackView.Immediate)
+        stackView.push(settingsViewPath, StackView.Immediate)
     }
 
     StackView {
@@ -399,7 +408,7 @@ ApplicationWindow {
 
                 iconSource:  "qrc:/res/settings.svg"
 
-                onClicked: navigateTo("qrc:/gui/SettingsView.qml", qsTr("Settings"))
+                onClicked: navigateTo(settingsViewPath, qsTr("Settings"))
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)

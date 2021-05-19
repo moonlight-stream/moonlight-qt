@@ -85,6 +85,10 @@ void StreamingPreferences::reload()
     settings.endArray();
 
     activeProfileName = settings.value(SER_ACTIVEPROFILE, QString()).toString();
+    if (!activeProfileName.isEmpty())
+    {
+        settings.beginGroup(activeProfileName);
+    }
 
     width = settings.value(SER_WIDTH, 1280).toInt();
     height = settings.value(SER_HEIGHT, 720).toInt();
@@ -128,6 +132,10 @@ void StreamingPreferences::reload()
     language = static_cast<Language>(settings.value(SER_LANGUAGE,
                                                     static_cast<int>(Language::LANG_AUTO)).toInt());
 
+    if (!activeProfileName.isEmpty())
+    {
+        settings.endGroup();
+    }
 
     // Perform default settings updates as required based on last default version
     if (defaultVer == 0) {
@@ -224,6 +232,12 @@ void StreamingPreferences::save()
 {
     QSettings settings;
 
+    if (!activeProfileName.isEmpty())
+    {
+        settings.beginGroup(activeProfileName);
+        qDebug() << "Saving to profile " << activeProfileName;
+    }
+
     settings.setValue(SER_WIDTH, width);
     settings.setValue(SER_HEIGHT, height);
     settings.setValue(SER_FPS, fps);
@@ -256,6 +270,11 @@ void StreamingPreferences::save()
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
+
+    if (!activeProfileName.isEmpty())
+    {
+        settings.endGroup();
+    }
 
     saveProfiles(settings);
 }
@@ -297,6 +316,8 @@ void StreamingPreferences::createNewProfile(QString profileName)
 
         //the new profile is immediately made active for the user
         activeProfileName = profileName;
+
+        save();
 
         if (prevProfilesSize == 0)
         {
@@ -355,7 +376,7 @@ void StreamingPreferences::deleteProfile(QString profileName)
             emit hasProfilesChanged();
         }
         emit profilesChanged();
-        emit activeProfileNameChanged();
+        changeActiveProfile(activeProfileName);
     }
 }
 
@@ -367,13 +388,23 @@ void StreamingPreferences::deleteAllProfiles()
     activeProfileName = QString();
 
     QSettings settings;
+
+    //delete all profile related keys
+    QStringList keys = settings.allKeys();
+    for (int i = 0; i < keys.size(); i++)
+    {
+        if (keys[i].indexOf('/') > -1  && !keys[i].contains("host"))
+        {
+            settings.remove(keys[i]);
+        }
+    }
     saveProfiles(settings);
 
     reload();
 
     emit hasProfilesChanged();
     emit profilesChanged();
-    emit activeProfileNameChanged();
+    changeActiveProfile("");
 }
 
 QVariant StreamingPreferences::getProfiles()
@@ -399,6 +430,42 @@ QVariant StreamingPreferences::getProfiles()
 bool StreamingPreferences::getHasProfiles()
 {
     return profiles.size() > 0;
+}
+
+void StreamingPreferences::changeActiveProfile(QString newProfileName)
+{
+    activeProfileName = newProfileName;
+    QSettings settings;
+    saveProfiles(settings);
+    reload();
+    emit activeProfileNameChanged();
+}
+
+void StreamingPreferences::checkSettingsKeys()
+{
+    QSettings settings;
+
+    //TODO - print height /width / bitrate values as they are currently
+    qDebug() << "Start current settings.";
+
+    qDebug() << "Width: " << width;
+    qDebug() << "Height: " << height;
+    qDebug() << "Bitrate: " << bitrateKbps;
+
+    qDebug() << "End current settings.";
+
+    qDebug() << "Start settings keys.";
+
+    QStringList keys = settings.allKeys();
+    for (int i = 0; i < keys.size(); i++)
+    {
+        if (keys[i].indexOf('/') > -1 && !keys[i].contains("host"))
+        {
+            qDebug() << keys[i] << " : " << settings.value(keys[i]);
+        }
+    }
+
+    qDebug() << "End settings keys.";
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)

@@ -32,6 +32,8 @@ Flickable {
         if (SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
             resolutionComboBox.forceActiveFocus(Qt.TabFocus)
         }
+
+        StreamingPreferences.onActiveProfileNameChanged.connect(forceReload)
     }
 
     StackView.onDeactivating: {
@@ -39,6 +41,13 @@ Flickable {
 
         // Save the prefs so the Session can observe the changes
         StreamingPreferences.save()
+
+        StreamingPreferences.onActiveProfileNameChanged.disconnect(forceReload)
+    }
+
+    function forceReload() 
+    {
+        window.reloadSettingsView()
     }
 
     Component.onDestruction: {
@@ -128,7 +137,7 @@ Flickable {
                             var selectedProfileName = item.text
 
                             if (StreamingPreferences.activeProfileName !== selectedProfileName) {
-                                StreamingPreferences.activeProfileName = selectedProfileName
+                                StreamingPreferences.changeActiveProfile(selectedProfileName)
                             }
                         }
                     }
@@ -144,6 +153,12 @@ Flickable {
                     id: deleteAllProfilesButton
                     text: qsTr("Delete All Profiles")
                     onClicked: StreamingPreferences.deleteAllProfiles()
+                }
+
+                Button {
+                    id: debugCheckAllKeysButton
+                    text: qsTr("Check Keys")
+                    onClicked: StreamingPreferences.checkSettingsKeys()
                 }
             }
         }
