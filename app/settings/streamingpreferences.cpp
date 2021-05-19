@@ -402,10 +402,18 @@ QString StreamingPreferences::getActiveProfileName() const
 
 void StreamingPreferences::changeActiveProfile(QString newProfileName)
 {
+    Language previousLanguage = language;
+
     activeProfileName = newProfileName;
     QSettings settings;
     saveProfiles(settings);
     reload();
+
+    if (language != previousLanguage) 
+    {
+        retranslate();
+    }
+
     emit activeProfileNameChanged();
 }
 
