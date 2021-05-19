@@ -128,15 +128,16 @@ public:
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
     Q_PROPERTY(QVariant profiles READ getProfiles NOTIFY profilesChanged)
     Q_PROPERTY(QVariant hasProfiles READ getHasProfiles NOTIFY hasProfilesChanged)
-    //this property is read-only from QML, and should always be updated using the changeActiveProfile function
-    Q_PROPERTY(QString activeProfileName MEMBER activeProfileName NOTIFY activeProfileNameChanged);
+    //this property is read-only from QML, which is why it has a simple READ function rather than using the MEMBER keyword
+    Q_PROPERTY(QString activeProfileName READ getActiveProfileName NOTIFY activeProfileNameChanged);
 
     Q_INVOKABLE void createNewProfile(QString profileName);
     Q_INVOKABLE void deleteProfile(QString profileName);
     Q_INVOKABLE void deleteAllProfiles();
     Q_INVOKABLE void changeActiveProfile(QString newProfileName);
     QVariant getProfiles();
-    bool getHasProfiles();
+    bool getHasProfiles() const;
+    QString getActiveProfileName() const;
     void saveProfiles(QSettings& settings);
 
     Q_INVOKABLE bool retranslate();

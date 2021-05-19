@@ -427,9 +427,14 @@ QVariant StreamingPreferences::getProfiles()
     return QVariant::fromValue(itemsList);
 }
 
-bool StreamingPreferences::getHasProfiles()
+bool StreamingPreferences::getHasProfiles() const
 {
     return profiles.size() > 0;
+}
+
+QString StreamingPreferences::getActiveProfileName() const
+{
+    return activeProfileName;
 }
 
 void StreamingPreferences::changeActiveProfile(QString newProfileName)
