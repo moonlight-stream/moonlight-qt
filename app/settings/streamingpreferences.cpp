@@ -199,6 +199,8 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "ja";
     case LANG_VI:
         return "vi";
+    case LANG_KO:
+        return "ko";
     case LANG_AUTO:
     default:
         return QLocale::system().name();
