@@ -569,7 +569,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="599"/>
         <source>V-Sync</source>
-        <translation>synchronisation verticale</translation>
+        <translation>Synchronisation verticale (V-Sync)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="609"/>
@@ -584,7 +584,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="626"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>Frame pacing réduit les micro-bégaiements en retardant les images qui arrivent trop tôt</translation>
+        <translation>Le Frame pacing réduit les micro-saccades en retardant les images qui arrivent trop tôt</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="636"/>
