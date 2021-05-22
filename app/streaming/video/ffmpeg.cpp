@@ -418,6 +418,16 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.totalPacerTime += src.totalPacerTime;
     dst.totalRenderTime += src.totalRenderTime;
 
+    if (!LiGetEstimatedRttInfo(&dst.lastRtt, &dst.lastRttVariance)) {
+        dst.lastRtt = 0;
+        dst.lastRttVariance = 0;
+    }
+    else {
+        // Our logic to determine if RTT is valid depends on us never
+        // getting an RTT of 0. ENet currently ensures RTTs are >= 1.
+        SDL_assert(dst.lastRtt > 0);
+    }
+
     Uint32 now = SDL_GetTicks();
 
     // Initialize the measurement start point if this is the first video stat window
@@ -482,11 +492,10 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
     }
 
     if (stats.renderedFrames != 0) {
-        uint32_t rtt, variance;
         char rttString[32];
 
-        if (LiGetEstimatedRttInfo(&rtt, &variance)) {
-            sprintf(rttString, "%u ms (variance: %u ms)", rtt, variance);
+        if (stats.lastRtt != 0) {
+            sprintf(rttString, "%u ms (variance: %u ms)", stats.lastRtt, stats.lastRttVariance);
         }
         else {
             sprintf(rttString, "N/A");
