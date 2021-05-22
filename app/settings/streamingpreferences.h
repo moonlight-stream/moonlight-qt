@@ -74,7 +74,9 @@ public:
         LANG_RU,
         LANG_ES,
         LANG_JA,
-        LANG_VI
+        LANG_VI,
+        LANG_TH,
+        LANG_KO
     };
     Q_ENUM(Language);
 

@@ -33,6 +33,10 @@
         <file>languages/qml_ja.qm</file>
         <file>languages/qml_vi.ts</file>
         <file>languages/qml_vi.qm</file>
+        <file>languages/qml_th.ts</file>
+        <file>languages/qml_th.qm</file>
+        <file>languages/qml_ko.ts</file>
+        <file>languages/qml_ko.qm</file>
     </qresource>
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>

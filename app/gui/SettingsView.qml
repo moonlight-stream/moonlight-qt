@@ -802,6 +802,14 @@ Flickable {
                             text: "Tiếng Việt" // Vietnamese
                             val: StreamingPreferences.LANG_VI
                         }
+                        ListElement {
+                            text: "ภาษาไทย" // Thai
+                            val: StreamingPreferences.LANG_TH
+                        }
+                        ListElement {
+                            text: "한국어" // Korean
+                            val: StreamingPreferences.LANG_KO
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

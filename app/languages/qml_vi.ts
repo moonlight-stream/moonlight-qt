@@ -534,7 +534,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="573"/>
-        <location filename="../gui/SettingsView.qml" line="860"/>
+        <location filename="../gui/SettingsView.qml" line="868"/>
         <source>Fullscreen</source>
         <translation>Toàn màn hình</translation>
     </message>
@@ -559,7 +559,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
-        <location filename="../gui/SettingsView.qml" line="852"/>
+        <location filename="../gui/SettingsView.qml" line="860"/>
         <source>Windowed</source>
         <translation>Cửa sổ</translation>
     </message>
@@ -639,32 +639,32 @@
         <translation>Tự động</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="805"/>
+        <location filename="../gui/SettingsView.qml" line="813"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>Bạn phải khởi động lại Moonlight để thay đổi này có hiệu lực</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="819"/>
+        <location filename="../gui/SettingsView.qml" line="827"/>
         <source>GUI display mode</source>
         <translation>Chế độ hiển thị giao diện đồ hoạ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="856"/>
+        <location filename="../gui/SettingsView.qml" line="864"/>
         <source>Maximized</source>
         <translation>Phóng to</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="913"/>
+        <location filename="../gui/SettingsView.qml" line="921"/>
         <source>Input Settings</source>
         <translation>Cài đặt đầu vào</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="934"/>
+        <location filename="../gui/SettingsView.qml" line="942"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>Việc này bật điều khiển chuột liền mạch mà không bắt con trỏ chuột của máy khách. Nó là lý tưởng cho việc sử dụng máy tính từ xa nhưng sẽ không hoạt động trong đa số trò chơi.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="936"/>
+        <location filename="../gui/SettingsView.qml" line="944"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>LƯU Ý: Vì một lỗi trong GeForce Experience, tuỳ chọn này có thể sẽ không hoạt động đúng nếu PC chủ của bạn có nhiều màn hình.</translation>
     </message>
@@ -677,77 +677,77 @@
         <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="955"/>
+        <location filename="../gui/SettingsView.qml" line="963"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>LƯU Ý: Một số lối tắt bàn phím cụ thể như Ctrl+Alt+Del trên Windows không thể được bất kỳ ứng dụng nào can thiệp, bao gồm cả Moonlight.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1018"/>
+        <location filename="../gui/SettingsView.qml" line="1026"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>Sử dụng màn hình cảm ứng như một trackpad ảo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1035"/>
+        <location filename="../gui/SettingsView.qml" line="1043"/>
         <source>Swap left and right mouse buttons</source>
         <translation>Đảo các nút chuột trái và phải</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1047"/>
+        <location filename="../gui/SettingsView.qml" line="1055"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>Đảo ngược hướng cuộn chuột</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1061"/>
+        <location filename="../gui/SettingsView.qml" line="1069"/>
         <source>Gamepad Settings</source>
         <translation>Cài đặt tay cầm điều khiển</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1071"/>
+        <location filename="../gui/SettingsView.qml" line="1079"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>Đảo các nút A/B và X/Y của tay cầm điều khiển</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1089"/>
+        <location filename="../gui/SettingsView.qml" line="1097"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>Việc này chuyển các tay cầm điều khiển sang một bố cục nút giống Nintendo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1095"/>
+        <location filename="../gui/SettingsView.qml" line="1103"/>
         <source>Force gamepad #1 always connected</source>
         <translation>Buộc tay cầm điều khiển #1 luôn được kết nối</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1105"/>
+        <location filename="../gui/SettingsView.qml" line="1113"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>Buộc một tay cầm điều khiển luôn giữ trạng thái đã kết nối đến máy chủ, kể cả nếu không có tay cầm điều khiển nào thực sự được kết nối đến PC.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="935"/>
+        <location filename="../gui/SettingsView.qml" line="943"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>Bạn có thể bật/tắt việc này trong khi stream bằng Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1113"/>
+        <location filename="../gui/SettingsView.qml" line="1121"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>Bật điều khiển chuột bằng tay cầm điều khiển bằng cách giữ nút &apos;Start&apos;</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1124"/>
+        <location filename="../gui/SettingsView.qml" line="1132"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Xử lý đầu vào của tay cầm điều khiển khi Moonlight ở trong nền</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1135"/>
+        <location filename="../gui/SettingsView.qml" line="1143"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Cho phép Moonlight nắm bắt đầu vào của tay cầm điều khiển kể cả nếu nó không phải là cửa sổ hiện được tập trung</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1144"/>
+        <location filename="../gui/SettingsView.qml" line="1152"/>
         <source>Host Settings</source>
         <translation>Cài đặt máy chủ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1184"/>
+        <location filename="../gui/SettingsView.qml" line="1192"/>
         <source>Advanced Settings</source>
         <translation>Cài đặt nâng cao</translation>
     </message>
@@ -757,118 +757,118 @@
         <translation>Thiết lập âm thanh</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="873"/>
+        <location filename="../gui/SettingsView.qml" line="881"/>
         <source>Show connection quality warnings</source>
         <translation>Hiện cảnh báo chất lượng kết nối</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="885"/>
+        <location filename="../gui/SettingsView.qml" line="893"/>
         <source>Discord Rich Presence integration</source>
         <translation>Tích hợp với Discord Rich Presence</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="895"/>
+        <location filename="../gui/SettingsView.qml" line="903"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>Cập nhật trạng thái Discord của bạn để hiển thị tên trò chơi bạn đang stream.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1106"/>
+        <location filename="../gui/SettingsView.qml" line="1114"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>Chỉ bật tuỳ chọn này khi stream một trò chơi không hỗ trợ tay cầm điều khiển được kết nối sau khi khởi động.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="924"/>
+        <location filename="../gui/SettingsView.qml" line="932"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>Tối ưu hoá chuột cho máy tính từ xa thay vì trò chơi</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="946"/>
+        <location filename="../gui/SettingsView.qml" line="954"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>Nắm bắt các lối tắt bàn phím hệ thống</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="954"/>
+        <location filename="../gui/SettingsView.qml" line="962"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>Việc này bật việc nắm bắt các lối tắt bàn phím toàn hệ thống như Alt+Tab (bình thường sẽ được HĐH máy khách xử lý) trong khi stream.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="984"/>
+        <location filename="../gui/SettingsView.qml" line="992"/>
         <source>in fullscreen</source>
         <translation>trong toàn màn hình</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="988"/>
+        <location filename="../gui/SettingsView.qml" line="996"/>
         <source>always</source>
         <translation>luôn luôn</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1028"/>
+        <location filename="../gui/SettingsView.qml" line="1036"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>Khi được đánh dấu, màn hình cảm ứng hoạt động như một trackpad. Khi không được đánh dấu, màn hình cảm ứng sẽ trực tiếp điều khiển con trỏ chuột.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1154"/>
+        <location filename="../gui/SettingsView.qml" line="1162"/>
         <source>Optimize game settings for streaming</source>
         <translation>Tối ưu hoá cài đặt trò chơi cho việc stream</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1165"/>
+        <location filename="../gui/SettingsView.qml" line="1173"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>Thoát ứng dụng trên PC chủ sau khi kết thúc stream</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1175"/>
+        <location filename="../gui/SettingsView.qml" line="1183"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>Việc này sẽ đóng ứng dụng hoặc trò chơi bạn đang stream khi bạn kết thúc stream. Bạn sẽ mất công việc đang làm chưa được lưu!</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1194"/>
+        <location filename="../gui/SettingsView.qml" line="1202"/>
         <source>Video decoder</source>
         <translation>Trình giải mã video</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1219"/>
-        <location filename="../gui/SettingsView.qml" line="1265"/>
+        <location filename="../gui/SettingsView.qml" line="1227"/>
+        <location filename="../gui/SettingsView.qml" line="1273"/>
         <source>Automatic (Recommended)</source>
         <translation>Tự động (Được khuyến nghị)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1223"/>
+        <location filename="../gui/SettingsView.qml" line="1231"/>
         <source>Force software decoding</source>
         <translation>Buộc giải mã phần mềm</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1227"/>
+        <location filename="../gui/SettingsView.qml" line="1235"/>
         <source>Force hardware decoding</source>
         <translation>Buộc giải mã phần cứng</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1240"/>
+        <location filename="../gui/SettingsView.qml" line="1248"/>
         <source>Video codec</source>
         <translation>Codec video</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1269"/>
+        <location filename="../gui/SettingsView.qml" line="1277"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1273"/>
+        <location filename="../gui/SettingsView.qml" line="1281"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1290"/>
+        <location filename="../gui/SettingsView.qml" line="1298"/>
         <source>Unlock unsupported FPS options</source>
         <translation>Mở khoá các tuỳ chọn FPS không được hỗ trợ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1309"/>
+        <location filename="../gui/SettingsView.qml" line="1317"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Tự động tìm các PC trên mạng cục bộ (Được khuyến nghị)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1334"/>
+        <location filename="../gui/SettingsView.qml" line="1342"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Tự động phát hiện các kết nối bị chặn (Được khuyến nghị)</translation>
     </message>
