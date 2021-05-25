@@ -226,7 +226,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
     return true;
 }
 
-bool FFmpegVideoDecoder::completeInitialization(AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame, bool eglOnly)
+bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame, bool eglOnly)
 {
     // In test-only mode, we should only see test frames
     SDL_assert(!m_TestOnly || testFrame);
@@ -582,7 +582,7 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     }
 }
 
-bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
+bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                                                PDECODER_PARAMETERS params,
                                                const AVCodecHWConfig* hwConfig,
                                                std::function<IFFmpegRenderer*()> createRendererFunc)
@@ -667,7 +667,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(AVCodec* decoder,
 bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decoderName,
                                                                PDECODER_PARAMETERS params)
 {
-    AVCodec* decoder = avcodec_find_decoder_by_name(decoderName);
+    const AVCodec* decoder = avcodec_find_decoder_by_name(decoderName);
     if (decoder == nullptr) {
         return false;
     }
@@ -767,7 +767,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    AVCodec* decoder;
+    const AVCodec* decoder;
 
     if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
         decoder = avcodec_find_decoder(AV_CODEC_ID_H264);
