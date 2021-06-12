@@ -1,10 +1,13 @@
 #include <Limelight.h>
 #include <SDL.h>
-#include <SDL_syswm.h>
 #include "streaming/session.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
 #include "utils.h"
+
+#ifdef Q_OS_WIN32
+#include <SDL_syswm.h>
+#endif
 
 #include <QtGlobal>
 #include <QDir>
