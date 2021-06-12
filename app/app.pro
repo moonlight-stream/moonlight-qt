@@ -45,7 +45,7 @@ win32 {
         LIBS += -L$$PWD/../libs/windows/lib/arm64
     }
 
-    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib qwave.lib
+    LIBS += ws2_32.lib winmm.lib dxva2.lib ole32.lib gdi32.lib user32.lib d3d9.lib dwmapi.lib dbghelp.lib
 }
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
