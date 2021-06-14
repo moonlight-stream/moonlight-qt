@@ -7,23 +7,23 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Játék folytatása</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Kilépés a játékból</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Játék indítása</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Közvetlen indítás</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
