@@ -36,6 +36,17 @@
 	</screenshots>
 
 	<releases>
+		<release version="3.1.4" date="2021-06-25">
+			<description>
+				<p>Changes:</p>
+				<ul>
+					<li>Added network latency statistics to the performance overlay</li>
+					<li>Improved audio quality on unreliable connections (requires GeForce Experience 3.19 or later)</li>
+					<li>Reduced video frame drops on unreliable connections (requires GeForce Experience 3.22 or later)</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="3.1.3" date="2021-05-07">
 			<description>
 				<p>Changes:</p>
