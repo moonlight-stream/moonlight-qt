@@ -7,18 +7,18 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>繼續遊戲</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>退出遊戲</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>啟動遊戲</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
