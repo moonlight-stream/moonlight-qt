@@ -151,7 +151,8 @@ NvHTTP::launchApp(int appId,
                   PSTREAM_CONFIGURATION streamConfig,
                   bool sops,
                   bool localAudio,
-                  int gamepadMask)
+                  int gamepadMask,
+                  QString& rtspSessionUrl)
 {
     int riKeyId;
 
@@ -185,10 +186,12 @@ NvHTTP::launchApp(int appId,
 
     // Throws if the request failed
     verifyResponseStatus(response);
+
+    rtspSessionUrl = getXmlString(response, "sessionUrl0");
 }
 
 void
-NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
+NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig, QString& rtspSessionUrl)
 {
     int riKeyId;
 
@@ -207,6 +210,8 @@ NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
 
     // Throws if the request failed
     verifyResponseStatus(response);
+
+    rtspSessionUrl = getXmlString(response, "sessionUrl0");
 }
 
 void

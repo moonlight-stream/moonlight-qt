@@ -1026,16 +1026,19 @@ bool Session::startConnectionAsync()
         }
     }
 
+    QString rtspSessionUrl;
+
     try {
         NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
         if (m_Computer->currentGameId != 0) {
-            http.resumeApp(&m_StreamConfig);
+            http.resumeApp(&m_StreamConfig, rtspSessionUrl);
         }
         else {
             http.launchApp(m_App.id, &m_StreamConfig,
                            enableGameOptimizations,
                            m_Preferences->playAudioOnHost,
-                           m_InputHandler->getAttachedGamepadMask());
+                           m_InputHandler->getAttachedGamepadMask(),
+                           rtspSessionUrl);
         }
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("GeForce Experience returned error: %1").arg(e.toQString()));
@@ -1059,6 +1062,13 @@ bool Session::startConnectionAsync()
     }
     if (!siGfeVersion.isEmpty()) {
         hostInfo.serverInfoGfeVersion = siGfeVersion.data();
+    }
+
+    // Older GFE and Sunshine versions didn't have this field
+    QByteArray rtspSessionUrlStr;
+    if (!rtspSessionUrl.isEmpty()) {
+        rtspSessionUrlStr = rtspSessionUrl.toLatin1();
+        hostInfo.rtspSessionUrl = rtspSessionUrlStr.data();
     }
 
     if (m_Preferences->packetSize != 0) {

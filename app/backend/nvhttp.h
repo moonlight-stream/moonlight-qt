@@ -150,14 +150,16 @@ public:
     quitApp();
 
     void
-    resumeApp(PSTREAM_CONFIGURATION streamConfig);
+    resumeApp(PSTREAM_CONFIGURATION streamConfig,
+              QString& rtspSessionUrl);
 
     void
     launchApp(int appId,
               PSTREAM_CONFIGURATION streamConfig,
               bool sops,
               bool localAudio,
-              int gamepadMask);
+              int gamepadMask,
+              QString& rtspSessionUrl);
 
     QVector<NvApp>
     getAppList();
