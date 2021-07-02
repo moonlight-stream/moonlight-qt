@@ -181,6 +181,8 @@ NvHTTP::launchApp(int appId,
                                    "&gcmap="+QString::number(gamepadMask),
                                    LAUNCH_TIMEOUT_MS);
 
+    qInfo() << "Launch response:" << response;
+
     // Throws if the request failed
     verifyResponseStatus(response);
 }
@@ -201,6 +203,8 @@ NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig)
                                    "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration)),
                                    RESUME_TIMEOUT_MS);
 
+    qInfo() << "Resume response:" << response;
+
     // Throws if the request failed
     verifyResponseStatus(response);
 }
@@ -213,6 +217,8 @@ NvHTTP::quitApp()
                                    "cancel",
                                    nullptr,
                                    QUIT_TIMEOUT_MS);
+
+    qInfo() << "Quit response:" << response;
 
     // Throws if the request failed
     verifyResponseStatus(response);
