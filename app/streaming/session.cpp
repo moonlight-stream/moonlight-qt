@@ -782,7 +782,7 @@ private:
 
         // Perform a best-effort app quit
         if (shouldQuit) {
-            NvHTTP http(m_Session->m_Computer->activeAddress, m_Session->m_Computer->serverCert);
+            NvHTTP http(m_Session->m_Computer);
 
             // Logging is already done inside NvHTTP
             try {
@@ -1029,7 +1029,7 @@ bool Session::startConnectionAsync()
     QString rtspSessionUrl;
 
     try {
-        NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
+        NvHTTP http(m_Computer);
         if (m_Computer->currentGameId != 0) {
             http.resumeApp(&m_StreamConfig, rtspSessionUrl);
         }

@@ -21,7 +21,7 @@ private:
     bool pendingQuit;
 
 public:
-    explicit NvComputer(QString address, QString serverInfo, QSslCertificate serverCert);
+    explicit NvComputer(NvHTTP& http, QString serverInfo);
 
     explicit NvComputer(QSettings& settings);
 

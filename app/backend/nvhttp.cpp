@@ -1,4 +1,4 @@
-#include "nvhttp.h"
+#include "nvcomputer.h"
 #include <Limelight.h>
 
 #include <QDebug>
@@ -35,6 +35,12 @@ NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
     connect(&m_Nam, &QNetworkAccessManager::sslErrors, this, &NvHTTP::handleSslErrors);
 }
 
+NvHTTP::NvHTTP(NvComputer* computer) :
+    NvHTTP(computer->activeAddress, computer->serverCert)
+{
+
+}
+
 void NvHTTP::setServerCert(QSslCertificate serverCert)
 {
     m_ServerCert = serverCert;
@@ -53,6 +59,21 @@ void NvHTTP::setAddress(QString address)
 QString NvHTTP::address()
 {
     return m_Address;
+}
+
+QSslCertificate NvHTTP::serverCert()
+{
+    return m_ServerCert;
+}
+
+uint16_t NvHTTP::httpPort()
+{
+    return m_BaseUrlHttp.port();
+}
+
+uint16_t NvHTTP::httpsPort()
+{
+    return m_BaseUrlHttps.port();
 }
 
 QVector<int>

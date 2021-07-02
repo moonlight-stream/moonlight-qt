@@ -9,6 +9,8 @@
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
 
+class NvComputer;
+
 class NvDisplayMode
 {
 public:
@@ -108,6 +110,8 @@ public:
 
     explicit NvHTTP(QString address, QSslCertificate serverCert);
 
+    explicit NvHTTP(NvComputer* computer);
+
     static
     int
     getCurrentGame(QString serverInfo);
@@ -141,6 +145,12 @@ public:
     void setAddress(QString address);
 
     QString address();
+
+    QSslCertificate serverCert();
+
+    uint16_t httpPort();
+
+    uint16_t httpsPort();
 
     static
     QVector<int>

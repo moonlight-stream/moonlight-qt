@@ -87,9 +87,9 @@ void NvComputer::sortAppList()
     });
 }
 
-NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serverCert)
+NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
 {
-    this->serverCert = serverCert;
+    this->serverCert = http.serverCert();
 
     this->hasCustomName = false;
     this->name = NvHTTP::getXmlString(serverInfo, "hostname");
@@ -142,7 +142,7 @@ NvComputer::NvComputer(QString address, QString serverInfo, QSslCertificate serv
     this->appVersion = NvHTTP::getXmlString(serverInfo, "appversion");
     this->gfeVersion = NvHTTP::getXmlString(serverInfo, "GfeVersion");
     this->gpuModel = NvHTTP::getXmlString(serverInfo, "gputype");
-    this->activeAddress = address;
+    this->activeAddress = http.address();
     this->state = NvComputer::CS_ONLINE;
     this->pendingQuit = false;
     this->isSupportedServerVersion = CompatFetcher::isGfeVersionSupported(this->gfeVersion);

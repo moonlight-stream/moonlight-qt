@@ -11,8 +11,8 @@
 
 #define REQUEST_TIMEOUT_MS 5000
 
-NvPairingManager::NvPairingManager(QString address) :
-    m_Http(address, QSslCertificate())
+NvPairingManager::NvPairingManager(NvComputer* computer) :
+    m_Http(computer)
 {
     QByteArray cert = IdentityManager::get()->getCertificate();
     BIO *bio = BIO_new_mem_buf(cert.data(), -1);

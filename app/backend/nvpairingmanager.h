@@ -17,7 +17,7 @@ public:
         ALREADY_IN_PROGRESS
     };
 
-    explicit NvPairingManager(QString address);
+    explicit NvPairingManager(NvComputer* computer);
 
     ~NvPairingManager();
 

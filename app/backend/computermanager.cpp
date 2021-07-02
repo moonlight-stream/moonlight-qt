@@ -38,7 +38,7 @@ private:
             return false;
         }
 
-        NvComputer newState(address, serverInfo, QSslCertificate());
+        NvComputer newState(http, serverInfo);
 
         // Ensure the machine that responded is the one we intended to contact
         if (m_Computer->uuid != newState.uuid) {
@@ -54,7 +54,7 @@ private:
     {
         Q_ASSERT(m_Computer->activeAddress != nullptr);
 
-        NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
+        NvHTTP http(m_Computer);
 
         QVector<NvApp> appList;
 
@@ -470,7 +470,7 @@ signals:
 private:
     void run()
     {
-        NvPairingManager pairingManager(m_Computer->activeAddress);
+        NvPairingManager pairingManager(m_Computer);
 
         try {
            NvPairingManager::PairState result = pairingManager.pair(m_Computer->appVersion, m_Pin, m_Computer->serverCert);
@@ -526,7 +526,7 @@ signals:
 private:
     void run()
     {
-        NvHTTP http(m_Computer->activeAddress, m_Computer->serverCert);
+        NvHTTP http(m_Computer);
 
         try {
             if (m_Computer->currentGameId != 0) {
@@ -677,7 +677,7 @@ private:
         }
 
         // Create initial newComputer using HTTP serverinfo with no pinned cert
-        NvComputer* newComputer = new NvComputer(http.address(), serverInfo, QSslCertificate());
+        NvComputer* newComputer = new NvComputer(http, serverInfo);
 
         // Check if we have a record of this host UUID to pull the pinned cert
         NvComputer* existingComputer;
@@ -697,7 +697,7 @@ private:
             }
 
             // Update the polled computer with the HTTPS information
-            NvComputer httpsComputer(http.address(), serverInfo, QSslCertificate());
+            NvComputer httpsComputer(http, serverInfo);
             newComputer->update(httpsComputer);
         }
 
