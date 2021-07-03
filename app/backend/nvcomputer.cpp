@@ -7,8 +7,6 @@
 #include <QNetworkInterface>
 #include <QNetworkProxy>
 
-#define DEFAULT_HTTP_PORT 47989
-
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
 #define SER_MAC "mac"
@@ -62,6 +60,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->gpuModel = nullptr;
     this->isSupportedServerVersion = true;
     this->externalPort = this->remoteAddress.port();
+    this->activeHttpsPort = 0;
 }
 
 void NvComputer::setRemoteAddress(QHostAddress address)
@@ -156,10 +155,15 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
         this->localAddress = NvAddress();
     }
 
+    QString httpsPort = NvHTTP::getXmlString(serverInfo, "HttpsPort");
+    if (httpsPort.isEmpty() || (this->activeHttpsPort = httpsPort.toUShort()) == 0) {
+        this->activeHttpsPort = DEFAULT_HTTPS_PORT;
+    }
+
     // This is an extension which is not present in GFE. It is present for Sunshine to be able
     // to support dynamic HTTP WAN ports without requiring the user to manually enter the port.
     QString remotePortStr = NvHTTP::getXmlString(serverInfo, "ExternalPort");
-    if (remotePortStr.isEmpty() || (this->externalPort = this->remoteAddress.port()) == 0) {
+    if (remotePortStr.isEmpty() || (this->externalPort = remotePortStr.toUShort()) == 0) {
         this->externalPort = DEFAULT_HTTP_PORT;
     }
 
@@ -442,6 +446,8 @@ bool NvComputer::update(NvComputer& that)
     ASSIGN_IF_CHANGED_AND_NONNULL(remoteAddress);
     ASSIGN_IF_CHANGED_AND_NONNULL(ipv6Address);
     ASSIGN_IF_CHANGED_AND_NONNULL(manualAddress);
+    ASSIGN_IF_CHANGED(activeHttpsPort);
+    ASSIGN_IF_CHANGED(externalPort);
     ASSIGN_IF_CHANGED(pairState);
     ASSIGN_IF_CHANGED(serverCodecModeSupport);
     ASSIGN_IF_CHANGED(currentGameId);

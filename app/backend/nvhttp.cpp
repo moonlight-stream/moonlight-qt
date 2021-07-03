@@ -18,16 +18,14 @@
 #define RESUME_TIMEOUT_MS 30000
 #define QUIT_TIMEOUT_MS 30000
 
-NvHTTP::NvHTTP(NvAddress address, QSslCertificate serverCert) :
+NvHTTP::NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert) :
     m_ServerCert(serverCert)
 {
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
 
     setAddress(address);
-
-    // TODO: Use HttpsPort
-    setHttpsPort(47984);
+    setHttpsPort(httpsPort);
 
     // Never use a proxy server
     QNetworkProxy noProxy(QNetworkProxy::NoProxy);
@@ -37,7 +35,7 @@ NvHTTP::NvHTTP(NvAddress address, QSslCertificate serverCert) :
 }
 
 NvHTTP::NvHTTP(NvComputer* computer) :
-    NvHTTP(computer->activeAddress, computer->serverCert)
+    NvHTTP(computer->activeAddress, computer->activeHttpsPort, computer->serverCert)
 {
 
 }
@@ -127,8 +125,8 @@ NvHTTP::getServerInfo(NvLogLevel logLevel, bool fastFail)
 {
     QString serverInfo;
 
-    // Check if we have a pinned cert for this host yet
-    if (!m_ServerCert.isNull())
+    // Check if we have a pinned cert and HTTPS port for this host yet
+    if (!m_ServerCert.isNull() && httpsPort() != 0)
     {
         try
         {
@@ -163,13 +161,26 @@ NvHTTP::getServerInfo(NvLogLevel logLevel, bool fastFail)
     }
     else
     {
-        // Only use HTTP prior to pairing
+        // Only use HTTP prior to pairing or fetching HTTPS port
         serverInfo = openConnectionToString(m_BaseUrlHttp,
                                             "serverinfo",
                                             nullptr,
                                             fastFail ? FAST_FAIL_TIMEOUT_MS : REQUEST_TIMEOUT_MS,
                                             logLevel);
         verifyResponseStatus(serverInfo);
+
+        // Populate the HTTPS port
+        uint16_t httpsPort = getXmlString(serverInfo, "HttpsPort").toUShort();
+        if (httpsPort == 0) {
+            httpsPort = DEFAULT_HTTPS_PORT;
+        }
+        setHttpsPort(httpsPort);
+
+        // If we just needed to determine the HTTPS port, we'll try again over
+        // HTTPS now that we have the port number
+        if (!m_ServerCert.isNull()) {
+            return getServerInfo(logLevel, fastFail);
+        }
     }
 
     return serverInfo;
@@ -477,6 +488,9 @@ NvHTTP::openConnection(QUrl baseUrl,
                        int timeoutMs,
                        NvLogLevel logLevel)
 {
+    // Port must be set
+    Q_ASSERT(baseUrl.port(0) != 0);
+
     // Build a URL for the request
     QUrl url(baseUrl);
     url.setPath("/" + command);

@@ -29,7 +29,7 @@ public:
 private:
     bool tryPollComputer(NvAddress address, bool& changed)
     {
-        NvHTTP http(address, m_Computer->serverCert);
+        NvHTTP http(address, 0, m_Computer->serverCert);
 
         QString serverInfo;
         try {
@@ -595,7 +595,7 @@ void ComputerManager::addNewHostManually(QString address)
     QUrl url = QUrl::fromUserInput(address);
     if (url.isValid() && !url.host().isEmpty()) {
         // If there wasn't a port specified, use the default
-        addNewHost(NvAddress(url.host(), url.port(47989)), false);
+        addNewHost(NvAddress(url.host(), url.port(DEFAULT_HTTP_PORT)), false);
     }
     else {
         emit computerAddCompleted(false, false);
@@ -671,7 +671,7 @@ private:
 
     void run()
     {
-        NvHTTP http(m_Address, QSslCertificate());
+        NvHTTP http(m_Address, 0, QSslCertificate());
 
         qInfo() << "Processing new PC at" << m_Address.toString() << "from" << (m_Mdns ? "mDNS" : "user") << "with IPv6 address" << m_MdnsIpv6Address.toString();
 
@@ -701,6 +701,7 @@ private:
 
         // Fetch serverinfo again over HTTPS with the pinned cert
         if (existingComputer != nullptr) {
+            Q_ASSERT(http.httpsPort() != 0);
             serverInfo = fetchServerInfo(http);
             if (serverInfo.isEmpty()) {
                 return;

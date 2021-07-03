@@ -109,7 +109,7 @@ public:
         NVLL_VERBOSE
     };
 
-    explicit NvHTTP(NvAddress address, QSslCertificate serverCert);
+    explicit NvHTTP(NvAddress address, uint16_t httpsPort, QSslCertificate serverCert);
 
     explicit NvHTTP(NvComputer* computer);
 

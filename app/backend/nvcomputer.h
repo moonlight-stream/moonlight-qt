@@ -62,6 +62,7 @@ public:
     ComputerState state;
     PairState pairState;
     NvAddress activeAddress;
+    uint16_t activeHttpsPort;
     int currentGameId;
     QString gfeVersion;
     QString appVersion;
