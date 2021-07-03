@@ -2,6 +2,7 @@
 
 #include "identitymanager.h"
 #include "nvapp.h"
+#include "nvaddress.h"
 
 #include <Limelight.h>
 
@@ -108,7 +109,7 @@ public:
         NVLL_VERBOSE
     };
 
-    explicit NvHTTP(QString address, QSslCertificate serverCert);
+    explicit NvHTTP(NvAddress address, QSslCertificate serverCert);
 
     explicit NvHTTP(NvComputer* computer);
 
@@ -142,9 +143,10 @@ public:
 
     void setServerCert(QSslCertificate serverCert);
 
-    void setAddress(QString address);
+    void setAddress(NvAddress address);
+    void setHttpsPort(uint16_t port);
 
-    QString address();
+    NvAddress address();
 
     QSslCertificate serverCert();
 
@@ -194,7 +196,7 @@ private:
                    int timeoutMs,
                    NvLogLevel logLevel);
 
-    QString m_Address;
+    NvAddress m_Address;
     QNetworkAccessManager m_Nam;
     QSslCertificate m_ServerCert;
 };

@@ -7,13 +7,19 @@
 #include <QNetworkInterface>
 #include <QNetworkProxy>
 
+#define DEFAULT_HTTP_PORT 47989
+
 #define SER_NAME "hostname"
 #define SER_UUID "uuid"
 #define SER_MAC "mac"
 #define SER_LOCALADDR "localaddress"
+#define SER_LOCALPORT "localport"
 #define SER_REMOTEADDR "remoteaddress"
+#define SER_REMOTEPORT "remoteport"
 #define SER_MANUALADDR "manualaddress"
+#define SER_MANUALPORT "manualport"
 #define SER_IPV6ADDR "ipv6address"
+#define SER_IPV6PORT "ipv6port"
 #define SER_APPLIST "apps"
 #define SER_SRVCERT "srvcert"
 #define SER_CUSTOMNAME "customname"
@@ -24,10 +30,14 @@ NvComputer::NvComputer(QSettings& settings)
     this->uuid = settings.value(SER_UUID).toString();
     this->hasCustomName = settings.value(SER_CUSTOMNAME).toBool();
     this->macAddress = settings.value(SER_MAC).toByteArray();
-    this->localAddress = settings.value(SER_LOCALADDR).toString();
-    this->remoteAddress = settings.value(SER_REMOTEADDR).toString();
-    this->ipv6Address = settings.value(SER_IPV6ADDR).toString();
-    this->manualAddress = settings.value(SER_MANUALADDR).toString();
+    this->localAddress = NvAddress(settings.value(SER_LOCALADDR).toString(),
+                                   settings.value(SER_LOCALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
+    this->remoteAddress = NvAddress(settings.value(SER_REMOTEADDR).toString(),
+                                    settings.value(SER_REMOTEPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
+    this->ipv6Address = NvAddress(settings.value(SER_IPV6ADDR).toString(),
+                                  settings.value(SER_IPV6PORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
+    this->manualAddress = NvAddress(settings.value(SER_MANUALADDR).toString(),
+                                    settings.value(SER_MANUALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
 
     int appCount = settings.beginReadArray(SER_APPLIST);
@@ -41,7 +51,6 @@ NvComputer::NvComputer(QSettings& settings)
     settings.endArray();
     sortAppList();
 
-    this->activeAddress = nullptr;
     this->currentGameId = 0;
     this->pairState = PS_UNKNOWN;
     this->state = CS_UNKNOWN;
@@ -52,6 +61,14 @@ NvComputer::NvComputer(QSettings& settings)
     this->pendingQuit = false;
     this->gpuModel = nullptr;
     this->isSupportedServerVersion = true;
+    this->externalPort = this->remoteAddress.port();
+}
+
+void NvComputer::setRemoteAddress(QHostAddress address)
+{
+    Q_ASSERT(this->externalPort != 0);
+
+    this->remoteAddress = NvAddress(address, this->externalPort);
 }
 
 void NvComputer::serialize(QSettings& settings) const
@@ -62,10 +79,14 @@ void NvComputer::serialize(QSettings& settings) const
     settings.setValue(SER_CUSTOMNAME, hasCustomName);
     settings.setValue(SER_UUID, uuid);
     settings.setValue(SER_MAC, macAddress);
-    settings.setValue(SER_LOCALADDR, localAddress);
-    settings.setValue(SER_REMOTEADDR, remoteAddress);
-    settings.setValue(SER_IPV6ADDR, ipv6Address);
-    settings.setValue(SER_MANUALADDR, manualAddress);
+    settings.setValue(SER_LOCALADDR, localAddress.address());
+    settings.setValue(SER_LOCALPORT, localAddress.port());
+    settings.setValue(SER_REMOTEADDR, remoteAddress.address());
+    settings.setValue(SER_REMOTEPORT, remoteAddress.port());
+    settings.setValue(SER_IPV6ADDR, ipv6Address.address());
+    settings.setValue(SER_IPV6PORT, ipv6Address.port());
+    settings.setValue(SER_MANUALADDR, manualAddress.address());
+    settings.setValue(SER_MANUALPORT, manualAddress.port());
     settings.setValue(SER_SRVCERT, serverCert.toPem());
 
     // Avoid deleting an existing applist if we couldn't get one
@@ -130,12 +151,26 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     });
 
     // We can get an IPv4 loopback address if we're using the GS IPv6 Forwarder
-    this->localAddress = NvHTTP::getXmlString(serverInfo, "LocalIP");
-    if (this->localAddress.startsWith("127.")) {
-        this->localAddress = QString();
+    this->localAddress = NvAddress(NvHTTP::getXmlString(serverInfo, "LocalIP"), http.httpPort());
+    if (this->localAddress.address().startsWith("127.")) {
+        this->localAddress = NvAddress();
     }
 
-    this->remoteAddress = NvHTTP::getXmlString(serverInfo, "ExternalIP");
+    // This is an extension which is not present in GFE. It is present for Sunshine to be able
+    // to support dynamic HTTP WAN ports without requiring the user to manually enter the port.
+    QString remotePortStr = NvHTTP::getXmlString(serverInfo, "ExternalPort");
+    if (remotePortStr.isEmpty() || (this->externalPort = this->remoteAddress.port()) == 0) {
+        this->externalPort = DEFAULT_HTTP_PORT;
+    }
+
+    QString remoteAddress = NvHTTP::getXmlString(serverInfo, "ExternalIP");
+    if (!remoteAddress.isEmpty()) {
+        this->remoteAddress = NvAddress(remoteAddress, this->externalPort);
+    }
+    else {
+        this->remoteAddress = NvAddress();
+    }
+
     this->pairState = NvHTTP::getXmlString(serverInfo, "PairStatus") == "1" ?
                 PS_PAIRED : PS_NOT_PAIRED;
     this->currentGameId = NvHTTP::getCurrentGame(serverInfo);
@@ -177,7 +212,10 @@ bool NvComputer::wake()
     // Add the addresses that we know this host to be
     // and broadcast addresses for this link just in
     // case the host has timed out in ARP entries.
-    QVector<QString> addressList = uniqueAddresses();
+    QVector<QString> addressList;
+    for (const NvAddress& addr : uniqueAddresses()) {
+        addressList.append(addr.address());
+    }
     addressList.append("255.255.255.255");
 
     // Try to broadcast on all available NICs
@@ -238,14 +276,14 @@ bool NvComputer::wake()
 
 bool NvComputer::isReachableOverVpn()
 {
-    if (activeAddress.isEmpty()) {
+    if (activeAddress.isNull()) {
         return false;
     }
 
     QTcpSocket s;
 
     s.setProxy(QNetworkProxy::NoProxy);
-    s.connectToHost(activeAddress, 47984);
+    s.connectToHost(activeAddress.address(), activeAddress.port());
     if (s.waitForConnected(3000)) {
         Q_ASSERT(!s.localAddress().isNull());
 
@@ -331,9 +369,9 @@ bool NvComputer::updateAppList(QVector<NvApp> newAppList) {
     return true;
 }
 
-QVector<QString> NvComputer::uniqueAddresses() const
+QVector<NvAddress> NvComputer::uniqueAddresses() const
 {
-    QVector<QString> uniqueAddressList;
+    QVector<NvAddress> uniqueAddressList;
 
     // Start with addresses correctly ordered
     uniqueAddressList.append(activeAddress);
@@ -344,7 +382,7 @@ QVector<QString> NvComputer::uniqueAddresses() const
 
     // Prune duplicates (always giving precedence to the first)
     for (int i = 0; i < uniqueAddressList.count(); i++) {
-        if (uniqueAddressList[i].isEmpty()) {
+        if (uniqueAddressList[i].isNull()) {
             uniqueAddressList.remove(i);
             i--;
             continue;
@@ -400,10 +438,10 @@ bool NvComputer::update(NvComputer& that)
         ASSIGN_IF_CHANGED(name);
     }
     ASSIGN_IF_CHANGED_AND_NONEMPTY(macAddress);
-    ASSIGN_IF_CHANGED_AND_NONEMPTY(localAddress);
-    ASSIGN_IF_CHANGED_AND_NONEMPTY(remoteAddress);
-    ASSIGN_IF_CHANGED_AND_NONEMPTY(ipv6Address);
-    ASSIGN_IF_CHANGED_AND_NONEMPTY(manualAddress);
+    ASSIGN_IF_CHANGED_AND_NONNULL(localAddress);
+    ASSIGN_IF_CHANGED_AND_NONNULL(remoteAddress);
+    ASSIGN_IF_CHANGED_AND_NONNULL(ipv6Address);
+    ASSIGN_IF_CHANGED_AND_NONNULL(manualAddress);
     ASSIGN_IF_CHANGED(pairState);
     ASSIGN_IF_CHANGED(serverCodecModeSupport);
     ASSIGN_IF_CHANGED(currentGameId);

@@ -493,7 +493,7 @@ ApplicationWindow {
 
         onAccepted: {
             if (editText.text) {
-                ComputerManager.addNewHost(editText.text.trim(), false)
+                ComputerManager.addNewHostManually(editText.text.trim())
             }
         }
 

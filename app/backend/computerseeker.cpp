@@ -20,7 +20,7 @@ void ComputerSeeker::start(int timeout)
     // if m_ComputerName is UUID, or the name that doesn't resolve to an IP
     // address) and by polling it using mDNS, hopefully one of these methods
     // would find the host
-    m_ComputerManager->addNewHost(m_ComputerName, false);
+    m_ComputerManager->addNewHostManually(m_ComputerName);
     m_ComputerManager->startPolling();
 }
 
@@ -44,8 +44,8 @@ bool ComputerSeeker::matchComputer(NvComputer *computer) const
         return true;
     }
 
-    for (const QString& addr : computer->uniqueAddresses()) {
-        if (addr.toLower() == value) {
+    for (const NvAddress& addr : computer->uniqueAddresses()) {
+        if (addr.address().toLower() == value || addr.toString().toLower() == value) {
             return true;
         }
     }

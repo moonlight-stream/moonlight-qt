@@ -24,6 +24,7 @@ public:
     explicit MdnsPendingComputer(QMdnsEngine::Server* server,
                                  const QMdnsEngine::Service& service)
         : m_Hostname(service.hostname()),
+          m_Port(service.port()),
           m_Server(server),
           m_Resolver(nullptr)
     {
@@ -39,6 +40,11 @@ public:
     QString hostname()
     {
         return m_Hostname;
+    }
+
+    uint16_t port()
+    {
+        return m_Port;
     }
 
 private slots:
@@ -75,6 +81,7 @@ private:
     }
 
     QByteArray m_Hostname;
+    uint16_t m_Port;
     QMdnsEngine::Server* m_Server;
     QMdnsEngine::Resolver* m_Resolver;
     QVector<QHostAddress> m_Addresses;
@@ -169,7 +176,9 @@ public:
 
     Q_INVOKABLE void stopPollingAsync();
 
-    Q_INVOKABLE void addNewHost(QString address, bool mdns, QHostAddress mdnsIpv6Address = QHostAddress());
+    Q_INVOKABLE void addNewHostManually(QString address);
+
+    void addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address = NvAddress());
 
     void pairHost(NvComputer* computer, QString pin);
 

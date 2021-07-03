@@ -1048,7 +1048,7 @@ bool Session::startConnectionAsync()
         return false;
     }
 
-    QByteArray hostnameStr = m_Computer->activeAddress.toLatin1();
+    QByteArray hostnameStr = m_Computer->activeAddress.address().toLatin1();
     QByteArray siAppVersion = m_Computer->appVersion.toLatin1();
 
     SERVER_INFORMATION hostInfo;

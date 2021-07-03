@@ -18,15 +18,16 @@
 #define RESUME_TIMEOUT_MS 30000
 #define QUIT_TIMEOUT_MS 30000
 
-NvHTTP::NvHTTP(QString address, QSslCertificate serverCert) :
+NvHTTP::NvHTTP(NvAddress address, QSslCertificate serverCert) :
     m_ServerCert(serverCert)
 {
     m_BaseUrlHttp.setScheme("http");
     m_BaseUrlHttps.setScheme("https");
-    m_BaseUrlHttp.setPort(47989);
-    m_BaseUrlHttps.setPort(47984);
 
     setAddress(address);
+
+    // TODO: Use HttpsPort
+    setHttpsPort(47984);
 
     // Never use a proxy server
     QNetworkProxy noProxy(QNetworkProxy::NoProxy);
@@ -46,17 +47,24 @@ void NvHTTP::setServerCert(QSslCertificate serverCert)
     m_ServerCert = serverCert;
 }
 
-void NvHTTP::setAddress(QString address)
+void NvHTTP::setAddress(NvAddress address)
 {
-    Q_ASSERT(!address.isEmpty());
+    Q_ASSERT(!address.isNull());
 
     m_Address = address;
 
-    m_BaseUrlHttp.setHost(address);
-    m_BaseUrlHttps.setHost(address);
+    m_BaseUrlHttp.setHost(address.address());
+    m_BaseUrlHttps.setHost(address.address());
+
+    m_BaseUrlHttp.setPort(address.port());
 }
 
-QString NvHTTP::address()
+void NvHTTP::setHttpsPort(uint16_t port)
+{
+    m_BaseUrlHttps.setPort(port);
+}
+
+NvAddress NvHTTP::address()
 {
     return m_Address;
 }
@@ -362,6 +370,8 @@ NvHTTP::verifyResponseStatus(QString xml)
             }
         }
     }
+
+    throw GfeHttpResponseException(-1, "Malformed GFE XML (missing root element)");
 }
 
 QImage

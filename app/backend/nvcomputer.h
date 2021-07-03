@@ -1,6 +1,7 @@
 #pragma once
 
 #include "nvhttp.h"
+#include "nvaddress.h"
 
 #include <QThread>
 #include <QReadWriteLock>
@@ -25,6 +26,9 @@ public:
 
     explicit NvComputer(QSettings& settings);
 
+    void
+    setRemoteAddress(QHostAddress);
+
     bool
     update(NvComputer& that);
 
@@ -34,7 +38,7 @@ public:
     bool
     isReachableOverVpn();
 
-    QVector<QString>
+    QVector<NvAddress>
     uniqueAddresses() const;
 
     void
@@ -57,7 +61,7 @@ public:
     // Ephemeral traits
     ComputerState state;
     PairState pairState;
-    QString activeAddress;
+    NvAddress activeAddress;
     int currentGameId;
     QString gfeVersion;
     QString appVersion;
@@ -68,10 +72,10 @@ public:
     bool isSupportedServerVersion;
 
     // Persisted traits
-    QString localAddress;
-    QString remoteAddress;
-    QString ipv6Address;
-    QString manualAddress;
+    NvAddress localAddress;
+    NvAddress remoteAddress;
+    NvAddress ipv6Address;
+    NvAddress manualAddress;
     QByteArray macAddress;
     QString name;
     bool hasCustomName;
@@ -81,4 +85,7 @@ public:
 
     // Synchronization
     mutable QReadWriteLock lock;
+
+private:
+    uint16_t externalPort;
 };

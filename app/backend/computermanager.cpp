@@ -27,7 +27,7 @@ public:
     }
 
 private:
-    bool tryPollComputer(QString address, bool& changed)
+    bool tryPollComputer(NvAddress address, bool& changed)
     {
         NvHTTP http(address, m_Computer->serverCert);
 
@@ -52,8 +52,6 @@ private:
 
     bool updateAppList(bool& changed)
     {
-        Q_ASSERT(m_Computer->activeAddress != nullptr);
-
         NvHTTP http(m_Computer);
 
         QVector<NvApp> appList;
@@ -88,7 +86,7 @@ private:
 
                     if (tryPollComputer(address, stateChanged)) {
                         if (!wasOnline) {
-                            qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress;
+                            qInfo() << m_Computer->name << "is now online at" << m_Computer->activeAddress.toString();
                         }
                         online = true;
                         break;
@@ -326,7 +324,7 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
             // address may not be reachable (if the user hasn't installed the IPv6 helper yet
             // or if this host lacks outbound IPv6 capability). We want to add IPv6 even if
             // it's not currently reachable.
-            addNewHost(address.toString(), true, v6Global);
+            addNewHost(NvAddress(address, computer->port()), true, NvAddress(v6Global, computer->port()));
             added = true;
             break;
         }
@@ -340,7 +338,7 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
                 if (address.isInSubnet(QHostAddress("fe80::"), 10) ||
                         address.isInSubnet(QHostAddress("fec0::"), 10) ||
                         address.isInSubnet(QHostAddress("fc00::"), 7)) {
-                    addNewHost(address.toString(), true, v6Global);
+                    addNewHost(NvAddress(address, computer->port()), true, NvAddress(v6Global, computer->port()));
                     break;
                 }
             }
@@ -592,12 +590,24 @@ void ComputerManager::stopPollingAsync()
     }
 }
 
+void ComputerManager::addNewHostManually(QString address)
+{
+    QUrl url = QUrl::fromUserInput(address);
+    if (!url.isEmpty() && url.isValid()) {
+        // If there wasn't a port specified, use the default
+        addNewHost(NvAddress(url.host(), url.port(47989)), false);
+    }
+    else {
+        emit computerAddCompleted(false, false);
+    }
+}
+
 class PendingAddTask : public QObject, public QRunnable
 {
     Q_OBJECT
 
 public:
-    PendingAddTask(ComputerManager* computerManager, QString address, QHostAddress mdnsIpv6Address, bool mdns)
+    PendingAddTask(ComputerManager* computerManager, NvAddress address, NvAddress mdnsIpv6Address, bool mdns)
         : m_ComputerManager(computerManager),
           m_Address(address),
           m_MdnsIpv6Address(mdnsIpv6Address),
@@ -663,13 +673,13 @@ private:
     {
         NvHTTP http(m_Address, QSslCertificate());
 
-        qInfo() << "Processing new PC at" << m_Address << "from" << (m_Mdns ? "mDNS" : "user") << m_MdnsIpv6Address;
+        qInfo() << "Processing new PC at" << m_Address.toString() << "from" << (m_Mdns ? "mDNS" : "user") << "with IPv6 address" << m_MdnsIpv6Address.toString();
 
         // Perform initial serverinfo fetch over HTTP since we don't know which cert to use
         QString serverInfo = fetchServerInfo(http);
         if (serverInfo.isEmpty() && !m_MdnsIpv6Address.isNull()) {
             // Retry using the global IPv6 address if the IPv4 or link-local IPv6 address fails
-            http.setAddress(m_MdnsIpv6Address.toString());
+            http.setAddress(m_MdnsIpv6Address);
             serverInfo = fetchServerInfo(http);
         }
         if (serverInfo.isEmpty()) {
@@ -711,11 +721,11 @@ private:
             }
 
             // Get the WAN IP address using STUN if we're on mDNS over IPv4
-            if (QHostAddress(newComputer->localAddress).protocol() == QAbstractSocket::IPv4Protocol) {
+            if (QHostAddress(newComputer->localAddress.address()).protocol() == QAbstractSocket::IPv4Protocol) {
                 quint32 addr;
                 int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &addr);
                 if (err == 0) {
-                    newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
+                    newComputer->setRemoteAddress(QHostAddress(qFromBigEndian(addr)));
                 }
                 else {
                     qWarning() << "STUN failed to get WAN address:" << err;
@@ -723,15 +733,15 @@ private:
             }
 
             if (!m_MdnsIpv6Address.isNull()) {
-                Q_ASSERT(m_MdnsIpv6Address.protocol() == QAbstractSocket::IPv6Protocol);
-                newComputer->ipv6Address = m_MdnsIpv6Address.toString();
+                Q_ASSERT(QHostAddress(m_MdnsIpv6Address.address()).protocol() == QAbstractSocket::IPv6Protocol);
+                newComputer->ipv6Address = m_MdnsIpv6Address;
             }
         }
         else {
             newComputer->manualAddress = m_Address;
         }
 
-        QHostAddress hostAddress(m_Address);
+        QHostAddress hostAddress(m_Address.address());
         bool addressIsSiteLocalV4 =
                 hostAddress.isInSubnet(QHostAddress("10.0.0.0"), 8) ||
                 hostAddress.isInSubnet(QHostAddress("172.16.0.0"), 12) ||
@@ -756,7 +766,7 @@ private:
 
                 // Tell our client if something changed
                 if (changed) {
-                    qInfo() << existingComputer->name << "is now at" << existingComputer->activeAddress;
+                    qInfo() << existingComputer->name << "is now at" << existingComputer->activeAddress.toString();
                     emit computerStateChanged(existingComputer);
                 }
             }
@@ -777,7 +787,7 @@ private:
                     int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &addr);
                     if (err == 0) {
                         lock.relock();
-                        newComputer->remoteAddress = QHostAddress(qFromBigEndian(addr)).toString();
+                        newComputer->setRemoteAddress(QHostAddress(qFromBigEndian(addr)));
                         lock.unlock();
                     }
                     else {
@@ -797,12 +807,12 @@ private:
     }
 
     ComputerManager* m_ComputerManager;
-    QString m_Address;
-    QHostAddress m_MdnsIpv6Address;
+    NvAddress m_Address;
+    NvAddress m_MdnsIpv6Address;
     bool m_Mdns;
 };
 
-void ComputerManager::addNewHost(QString address, bool mdns, QHostAddress mdnsIpv6Address)
+void ComputerManager::addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address)
 {
     // Punt to a worker thread to avoid stalling the
     // UI while waiting for serverinfo query to complete

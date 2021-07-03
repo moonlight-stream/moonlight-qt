@@ -118,6 +118,7 @@ macx {
 }
 
 SOURCES += \
+    backend/nvaddress.cpp \
     backend/nvapp.cpp \
     main.cpp \
     backend/computerseeker.cpp \
@@ -156,6 +157,7 @@ SOURCES += \
     wm.cpp
 
 HEADERS += \
+    backend/nvaddress.h \
     backend/nvapp.h \
     settings/compatfetcher.h \
     settings/mappingfetcher.h \
