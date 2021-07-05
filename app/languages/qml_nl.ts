@@ -965,7 +965,7 @@
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation>Gamepad Mapping</translation>
+        <translation>Gamepad Toewijzing</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
