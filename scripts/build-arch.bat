@@ -44,7 +44,7 @@ if /I "%ARCH%" NEQ "x86" (
     )
 )
 
-set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 1B3C676E831A94EC0327C3347EB32C68C26B3A67 /v
+set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 b28642b756ebec4884d1063dfa4de803a6dcecdc /v
 
 set BUILD_ROOT=%cd%\build
 set SOURCE_ROOT=%cd%
