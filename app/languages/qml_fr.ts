@@ -787,7 +787,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="893"/>
         <source>Discord Rich Presence integration</source>
-        <translation>Intégration de la présence Discord Rich</translation>
+        <translation>Activer l&apos;intégration Discord Rich Presence</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="903"/>
