@@ -167,11 +167,7 @@ NvPairingManager::signMessage(const QByteArray& message)
     EVP_MD_CTX *ctx = EVP_MD_CTX_create();
     THROW_BAD_ALLOC_IF_NULL(ctx);
 
-    const EVP_MD *md = EVP_get_digestbyname("SHA256");
-    THROW_BAD_ALLOC_IF_NULL(md);
-
-    EVP_DigestInit_ex(ctx, md, NULL);
-    EVP_DigestSignInit(ctx, NULL, md, NULL, m_PrivateKey);
+    EVP_DigestSignInit(ctx, NULL, EVP_sha256(), NULL, m_PrivateKey);
     EVP_DigestSignUpdate(ctx, reinterpret_cast<unsigned char*>(const_cast<char*>(message.data())), message.length());
 
     size_t signatureLength = 0;
