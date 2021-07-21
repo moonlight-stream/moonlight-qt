@@ -164,6 +164,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "Starts Moonlight normally if no arguments are given.\n"
         "\n"
         "Available actions:\n"
+        "  list            List the available apps as CSV\n"
         "  quit            Quit the currently running app\n"
         "  stream          Start streaming an app\n"
         "\n"
@@ -193,6 +194,8 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
                 return QuitRequested;
             } else if (action == "stream") {
                 return StreamRequested;
+            } else if (action == "list") {
+                return ListRequested;
             }
         }
 
@@ -463,4 +466,63 @@ QString StreamCommandLineParser::getHost() const
 QString StreamCommandLineParser::getAppName() const
 {
     return m_AppName;
+}
+
+ListCommandLineParser::ListCommandLineParser()
+{
+}
+
+ListCommandLineParser::~ListCommandLineParser()
+{
+}
+
+void ListCommandLineParser::parse(const QStringList &args)
+{
+    CommandLineParser parser;
+    parser.setupCommonOptions();
+    parser.setApplicationDescription(
+        "\n"
+        "List the available apps on the given host."
+    );
+    parser.addPositionalArgument("list", "list available apps");
+    parser.addPositionalArgument("host", "Host computer name, UUID, or IP address", "<host>");
+
+    parser.addFlagOption("csv",     "Print as CSV with additional information");
+    parser.addFlagOption("verbose", "Displays additional information");
+
+    if (!parser.parse(args)) {
+        parser.showError(parser.errorText());
+    }
+
+    parser.handleUnknownOptions();
+
+
+    m_PrintCSV = parser.isSet("csv");
+    m_Verbose = parser.isSet("verbose");
+
+    // This method will not return and terminates the process if --version or
+    // --help is specified
+    parser.handleHelpAndVersionOptions();
+
+    // Verify that host has been provided
+    auto posArgs = parser.positionalArguments();
+    if (posArgs.length() < 2) {
+        parser.showError("Host not provided");
+    }
+    m_Host = parser.positionalArguments().at(1);
+}
+
+QString ListCommandLineParser::getHost() const
+{
+    return m_Host;
+}
+
+bool ListCommandLineParser::isPrintCSV() const
+{
+    return m_PrintCSV;
+}
+
+bool ListCommandLineParser::isVerbose() const
+{
+    return m_Verbose;
 }

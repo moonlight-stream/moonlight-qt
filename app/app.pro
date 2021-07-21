@@ -130,6 +130,7 @@ SOURCES += \
     backend/boxartmanager.cpp \
     backend/richpresencemanager.cpp \
     cli/commandlineparser.cpp \
+    cli/listapps.cpp \
     cli/quitstream.cpp \
     cli/startstream.cpp \
     settings/compatfetcher.cpp \
@@ -171,6 +172,7 @@ HEADERS += \
     backend/boxartmanager.h \
     backend/richpresencemanager.h \
     cli/commandlineparser.h \
+    cli/listapps.h \
     cli/quitstream.h \
     cli/startstream.h \
     settings/streamingpreferences.h \
