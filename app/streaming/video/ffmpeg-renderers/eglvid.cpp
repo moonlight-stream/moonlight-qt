@@ -696,9 +696,6 @@ const float *EGLRenderer::getColorMatrix() {
 bool EGLRenderer::specialize() {
     SDL_assert(!m_VAO);
 
-    // Attach our GL context to the render thread
-    SDL_GL_MakeCurrent(m_Window, m_Context);
-
     if (!compileShaders())
         return false;
 
@@ -759,6 +756,12 @@ void EGLRenderer::renderFrame(AVFrame* frame)
         SDL_GL_MakeCurrent(m_Window, nullptr);
         return;
     }
+
+    // Attach our GL context to the render thread
+    // NB: It should already be current, unless the SDL render event watcher
+    // performs a rendering operation (like a viewport update on resize) on
+    // our fake SDL_Renderer. If it's already current, this is a no-op.
+    SDL_GL_MakeCurrent(m_Window, m_Context);
 
     // Find the native read-back format and load the shaders
     if (m_EGLImagePixelFormat == AV_PIX_FMT_NONE) {
