@@ -29,25 +29,6 @@ struct GamepadState {
     unsigned char lt, rt;
 };
 
-#ifdef Q_OS_DARWIN
-#include <CoreGraphics/CGError.h>
-extern "C" {
-    typedef int CGSConnection;
-    typedef enum {
-        CGSGlobalHotKeyEnable = 0,
-        CGSGlobalHotKeyDisable = 1,
-    } CGSGlobalHotKeyOperatingMode;
-
-    extern CGSConnection _CGSDefaultConnection(void);
-
-    extern CGError CGSGetGlobalHotKeyOperatingMode(CGSConnection connection,
-                                                   CGSGlobalHotKeyOperatingMode* mode);
-
-    extern CGError CGSSetGlobalHotKeyOperatingMode(CGSConnection connection,
-                                                   CGSGlobalHotKeyOperatingMode mode);
-}
-#endif
-
 #define MAX_GAMEPADS 4
 #define MAX_FINGERS 2
 
@@ -97,8 +78,6 @@ public:
     void notifyMouseLeave();
 
     void notifyFocusLost();
-
-    void notifyFocusGained();
 
     bool isCaptureActive();
 
@@ -189,10 +168,6 @@ private:
     QString m_OldIgnoreDevicesExcept;
     StreamingPreferences::CaptureSysKeysMode m_CaptureSystemKeysMode;
     int m_MouseCursorCapturedVisibilityState;
-
-#ifdef Q_OS_DARWIN
-    CGSGlobalHotKeyOperatingMode m_OldHotKeyMode;
-#endif
 
     struct {
         KeyCombo keyCombo;

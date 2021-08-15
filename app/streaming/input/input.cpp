@@ -176,10 +176,6 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     }
 #endif
 
-#ifdef Q_OS_DARWIN
-    CGSGetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), &m_OldHotKeyMode);
-#endif
-
     // Initialize the gamepad mask with currently attached gamepads to avoid
     // causing gamepads to unexpectedly disappear and reappear on the host
     // during stream startup as we detect currently attached gamepads one at a time.
@@ -248,10 +244,6 @@ SdlInputHandler::~SdlInputHandler()
     // Now we can safely clean up its resources
     SDL_DestroyCond(m_ClipboardHasData);
     SDL_DestroyMutex(m_ClipboardLock);
-
-#ifdef Q_OS_DARWIN
-    CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
-#endif
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_QuitSubSystem(SDL_INIT_HAPTIC);
@@ -332,25 +324,9 @@ void SdlInputHandler::notifyFocusLost()
         setCaptureActive(false);
     }
 
-#ifdef Q_OS_DARWIN
-    // Ungrab the keyboard
-    updateKeyboardGrabState();
-#endif
-
     // Raise all keys that are currently pressed. If we don't do this, certain keys
     // used in shortcuts that cause focus loss (such as Alt+Tab) may get stuck down.
     raiseAllKeys();
-}
-
-void SdlInputHandler::notifyFocusGained()
-{
-#ifdef Q_OS_DARWIN
-    // Re-grab the keyboard if it was grabbed before focus loss
-    // FIXME: We only do this on macOS because we get a spurious
-    // focus gain when in SDL_WINDOW_FULLSCREEN_DESKTOP on Windows
-    // immediately after losing focus by clicking on another window.
-    updateKeyboardGrabState();
-#endif
 }
 
 bool SdlInputHandler::isCaptureActive()
@@ -376,18 +352,6 @@ void SdlInputHandler::updateKeyboardGrabState()
         // Ungrab if it's fullscreen only and we left fullscreen
         shouldGrab = false;
     }
-#ifdef Q_OS_DARWIN
-    else if (!(windowFlags & SDL_WINDOW_INPUT_FOCUS)) {
-        // Ungrab if we lose input focus on macOS. SDL will handle
-        // this internally for platforms where we use the SDL
-        // SDL_SetWindowKeyboardGrab() API exclusively.
-        //
-        // NB: On X11, we may not have input focus at the time of
-        // the initial keyboard grab update, so we must not enable
-        // this codepath on Linux.
-        shouldGrab = false;
-    }
-#endif
 
     // Don't close the window on Alt+F4 when keyboard grab is enabled
     SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, shouldGrab ? "1" : "0");
@@ -406,19 +370,11 @@ void SdlInputHandler::updateKeyboardGrabState()
             SDL_SetWindowGrab(m_Window, SDL_TRUE);
         }
 #endif
-#ifdef Q_OS_DARWIN
-        // SDL doesn't support this private macOS API
-        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), CGSGlobalHotKeyDisable);
-#endif
     }
     else {
 #if SDL_VERSION_ATLEAST(2, 0, 15)
         // Allow the keyboard to leave the window
         SDL_SetWindowKeyboardGrab(m_Window, SDL_FALSE);
-#endif
-#ifdef Q_OS_DARWIN
-        // SDL doesn't support this private macOS API
-        CGSSetGlobalHotKeyOperatingMode(_CGSDefaultConnection(), m_OldHotKeyMode);
 #endif
     }
 }
