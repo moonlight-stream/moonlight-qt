@@ -1365,6 +1365,16 @@ void Session::execInternal()
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
     for (;;) {
+#if SDL_VERSION_ATLEAST(2, 0, 16) && !defined(STEAM_LINK)
+        // SDL 2.0.16 has a proper wait event implementation that uses platform
+        // support to block on events rather than polling on Windows, macOS, and
+        // X11. It will fall back to 1 ms polling if a joystick is connected, so
+        // we don't use it for STEAM_LINK to ensure we only poll every 10 ms.
+        if (!SDL_WaitEventTimeout(&event, 1000)) {
+            presence.runCallbacks();
+            continue;
+        }
+#else
         // We explicitly use SDL_PollEvent() and SDL_Delay() because
         // SDL_WaitEvent() has an internal SDL_Delay(10) inside which
         // blocks this thread too long for high polling rate mice and high
@@ -1380,6 +1390,7 @@ void Session::execInternal()
             presence.runCallbacks();
             continue;
         }
+#endif
         switch (event.type) {
         case SDL_QUIT:
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -1426,6 +1437,8 @@ void Session::execInternal()
                 m_InputHandler->notifyMouseLeave();
                 break;
             }
+
+            presence.runCallbacks();
 
             // Capture the mouse on SDL_WINDOWEVENT_ENTER if needed
             if (needsFirstEnterCapture && event.window.event == SDL_WINDOWEVENT_ENTER) {
@@ -1546,10 +1559,12 @@ void Session::execInternal()
 
         case SDL_KEYUP:
         case SDL_KEYDOWN:
+            presence.runCallbacks();
             m_InputHandler->handleKeyEvent(&event.key);
             break;
         case SDL_MOUSEBUTTONDOWN:
         case SDL_MOUSEBUTTONUP:
+            presence.runCallbacks();
             m_InputHandler->handleMouseButtonEvent(&event.button);
             break;
         case SDL_MOUSEMOTION:
@@ -1563,6 +1578,7 @@ void Session::execInternal()
             break;
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
+            presence.runCallbacks();
             m_InputHandler->handleControllerButtonEvent(&event.cbutton);
             break;
         case SDL_CONTROLLERDEVICEADDED:
