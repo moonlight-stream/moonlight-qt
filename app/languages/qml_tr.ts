@@ -7,48 +7,48 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Oyuna devam et</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Oyundan çık</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Oyunu başlat</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Doğrudan başlat</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bilgisayar seçildiğinde, uygulama seçim kılavuzunu atlayarak bu uygulamayı hemen başlat.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Oyunu gizle</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bu oyunu uygulama kılavuzundan gizleyin. Gizli oyunlara erişmek için sunucuya sağ tıklayın ve %1 seçin</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Tüm uygulamaları göster</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 den çıkmak istediğinize emin misiniz, Tüm kaydedilmemiş ilerlemeniz silinecektir</translation>
     </message>
 </context>
 <context>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>PC ile bağlantı kuruluyor...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>Uygulamadan çıkılıyor...</translation>
     </message>
 </context>
 <context>
@@ -69,17 +69,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>PC ile bağlantı kuruluyor...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Uygulama listesi yükleniyor...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 den çıkmak istediğinize emin misiniz, Tüm kaydedilmemiş ilerlemeniz silinecektir</translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Oyun kumandası ayarları</translation>
     </message>
 </context>
 <context>
@@ -155,7 +155,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Bilgisayarı sil</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
