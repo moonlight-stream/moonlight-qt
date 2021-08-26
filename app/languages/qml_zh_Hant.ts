@@ -324,7 +324,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>Connection terminated</source>
-        <translation>連線終止</translation>
+        <translation>連線已終止</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
@@ -384,22 +384,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="671"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>此電腦的 GPU 不支援 HEVC Main10 解碼器來進行 HDR 串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="684"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>4K串流需要GeForce Experience 3.0 或更高的版本。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="699"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation type="unfinished"></translation>
+        <translation>您所選擇的環繞音效設定並不支援目前的音訊裝置。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="706"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation type="unfinished"></translation>
+        <translation>無法開啟音訊裝置。音訊在本次的會話中將無法使用。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="711"/>
@@ -409,7 +409,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="719"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機GPU不支援4K影像串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="723"/>
