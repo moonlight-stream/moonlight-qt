@@ -145,7 +145,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Test Réseau</translation>
+        <translation>Test réseau</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
@@ -748,7 +748,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1121"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>Activer le contrôle de la souris par la manette en maintenant « Start »</translation>
+        <translation>Active le contrôle de la souris par la manette en maintenant « Start »</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1132"/>
