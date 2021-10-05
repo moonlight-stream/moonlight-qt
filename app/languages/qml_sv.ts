@@ -7,23 +7,23 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Återuppta spel</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Avsluta spel</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Starta spel</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Direktstart</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
@@ -43,7 +43,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Visa alla appar</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Är du säker på att du vill avsluta %1? Alla osparade framsteg kommer att gå förlorade.</translation>
     </message>
 </context>
 <context>
@@ -103,7 +103,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Datorer</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
@@ -185,7 +185,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>Detta kan ta några sekunder…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
@@ -257,7 +257,7 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Misslyckades med att ansluta till %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
@@ -274,7 +274,7 @@
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Det gick inte att hitta programmet %1</translation>
     </message>
 </context>
 <context>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Avslutar %1...</translation>
     </message>
 </context>
 <context>
@@ -374,7 +374,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="658"/>
         <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 stödjer inte HDR10.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="662"/>
@@ -389,7 +389,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="684"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>GeForce Experience 3.0 eller högre krävs för 4K-streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="699"/>
@@ -414,7 +414,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="723"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Videoupplösningar över 4K stöds endast av HEVC-codec.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="737"/>
@@ -429,7 +429,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1041"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>GeForce Experience returnerade fel: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1519"/>
@@ -442,12 +442,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="12"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Inställningar</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="70"/>
         <source>Resolution and FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>Upplösning och FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="78"/>
@@ -457,27 +457,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="60"/>
         <source>Basic Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Grundläggande inställningar</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="209"/>
         <source>720p</source>
-        <translation type="unfinished"></translation>
+        <translation>720p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="215"/>
         <source>1080p</source>
-        <translation type="unfinished"></translation>
+        <translation>1080p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="221"/>
         <source>1440p</source>
-        <translation type="unfinished"></translation>
+        <translation>1440p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="227"/>
         <source>4K</source>
-        <translation type="unfinished"></translation>
+        <translation>4K</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="331"/>
@@ -492,7 +492,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="338"/>
         <source>Enter a custom resolution:</source>
-        <translation type="unfinished"></translation>
+        <translation>Ange en anpassad upplösning:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="406"/>
@@ -500,7 +500,7 @@
         <location filename="../gui/SettingsView.qml" line="427"/>
         <location filename="../gui/SettingsView.qml" line="430"/>
         <source>%1 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS</translation>
     </message>
     <message>
         <source>%1 FPS (nicht unterstützt)</source>
@@ -519,24 +519,24 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="519"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation type="unfinished"></translation>
+        <translation>Videobitrate: %1 Mbps</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="527"/>
         <source>Display mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Visningsläge</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="545"/>
         <source> (Recommended)</source>
         <translatorcomment>Dont put the space in ransaltions</translatorcomment>
-        <translation type="unfinished"></translation>
+        <translation> (Rekommenderas)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="573"/>
         <location filename="../gui/SettingsView.qml" line="868"/>
         <source>Fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>Helskärm</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="592"/>
@@ -555,18 +555,18 @@
         <location filename="../gui/SettingsView.qml" line="437"/>
         <location filename="../gui/SettingsView.qml" line="440"/>
         <source>%1 FPS (Unsupported)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS (stöds inte)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
         <location filename="../gui/SettingsView.qml" line="860"/>
         <source>Windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Fönsterläge</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="599"/>
         <source>V-Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>V-Sync</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="609"/>
@@ -586,22 +586,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="636"/>
         <source>Audio Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ljudinställningar</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="671"/>
         <source>Stereo</source>
-        <translation type="unfinished"></translation>
+        <translation>Stereo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="675"/>
         <source>5.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>5.1 surroundljud</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="679"/>
         <source>7.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>7.1 surroundljud</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="693"/>
@@ -631,12 +631,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="739"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Språk</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="765"/>
         <source>Automatic</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisk</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="813"/>
@@ -651,7 +651,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="864"/>
         <source>Maximized</source>
-        <translation type="unfinished"></translation>
+        <translation>Maximerad</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="921"/>
@@ -744,17 +744,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1152"/>
         <source>Host Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Värdinställningar</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1192"/>
         <source>Advanced Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Avancerade inställningar</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="646"/>
         <source>Audio configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Ljudkonfiguration</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="881"/>
@@ -779,7 +779,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="932"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation type="unfinished"></translation>
+        <translation>Optimera musen för fjärrskrivbord istället för spel</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="954"/>
@@ -794,12 +794,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="992"/>
         <source>in fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>i helskärm</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="996"/>
         <source>always</source>
-        <translation type="unfinished"></translation>
+        <translation>alltid</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1036"/>
@@ -809,7 +809,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1162"/>
         <source>Optimize game settings for streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Optimera spelinställningar för streaming</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1173"/>
@@ -830,7 +830,7 @@
         <location filename="../gui/SettingsView.qml" line="1227"/>
         <location filename="../gui/SettingsView.qml" line="1273"/>
         <source>Automatic (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatisk (rekommenderas)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1231"/>
@@ -845,17 +845,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1248"/>
         <source>Video codec</source>
-        <translation type="unfinished"></translation>
+        <translation>Videokodec</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1277"/>
         <source>H.264</source>
-        <translation type="unfinished"></translation>
+        <translation>H.264</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1281"/>
         <source>HEVC (H.265)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC (H.265)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1298"/>
@@ -878,13 +878,13 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Återupptar %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
         <location filename="../gui/StreamSegue.qml" line="19"/>
         <source>Starting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Startar %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
@@ -904,7 +904,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
         <source>Tip:</source>
-        <translation type="unfinished"></translation>
+        <translation>Tips:</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
@@ -914,12 +914,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Start+Select+L1+R1</source>
-        <translation type="unfinished"></translation>
+        <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Ctrl+Alt+Shift+Q</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
 </context>
 <context>
@@ -930,22 +930,22 @@
         <location filename="../gui/main.qml" line="393"/>
         <location filename="../gui/main.qml" line="408"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Inställningar</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="255"/>
         <source>Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Version %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="271"/>
         <source>Join our community on Discord</source>
-        <translation type="unfinished"></translation>
+        <translation>Gå med i vår gemenskap på Discord</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="283"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Datorer</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="290"/>
@@ -955,7 +955,7 @@
     <message>
         <location filename="../gui/main.qml" line="330"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Uppdatering tillgänglig för Moonlight: Version %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="377"/>
