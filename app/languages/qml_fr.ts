@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -145,7 +145,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Test Réseau</translation>
+        <translation>Test réseau</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
@@ -200,7 +200,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>La connexion réseau actuelle de votre PC semble bloquer le Moonlight. Il se peut que la diffusion en continu sur Internet ne fonctionne pas lorsque vous êtes connecté à ce réseau.</translation>
+        <translation>La connexion réseau actuelle de votre PC semble bloquer Moonlight. Il se peut que le stream depuis Internet ne fonctionne pas lorsque vous êtes connecté à ce réseau.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
@@ -220,17 +220,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC&#x202f;: %1</translation>
+        <translation>Statut du PC : %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Online</source>
-        <translation></translation>
+        <translation>En ligne</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation></translation>
+        <translation>Hors ligne</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
@@ -248,7 +248,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>Le jeu en cours d’exécution n&apos;a pas été démarré par ce PC. Vous devez fermer le jeu sur le PC hôte manuellement ou utiliser l&apos;appareil qui a démarré le jeu à l&apos;origine.</translation>
+        <translation>Le jeu en cours d’exécution n&apos;a pas été démarré par ce PC. Vous devez le fermer manuellement sur le PC hôte ou le fermer depuis l&apos;appareil qui a démarré ce jeu.</translation>
     </message>
 </context>
 <context>
@@ -274,7 +274,7 @@
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>La recherche de l&apos;application %1 a échoué</translation>
+        <translation>L&apos;application %1 n&apos;a pas été trouvée</translation>
     </message>
 </context>
 <context>
@@ -299,7 +299,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
@@ -334,17 +334,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="597"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>Votre sélection pour activer le mode de souris de bureau à distance peut causer des problèmes dans les jeux.</translation>
+        <translation>Le mode souris pour bureau à distance que vous avez activé peut causer des problèmes dans les jeux.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="602"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation>Le HDR n&apos;est pas pris en charge par le décodage logiciel.</translation>
+        <translation>Le HDR n&apos;est pas pris en charge par le décodeur logiciel.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="606"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>La sélection de vos paramètres pour forcer le décodage logiciel peut entraîner de mauvaises performances de streaming.</translation>
+        <translation>Vos réglages pour forcer le décodage logiciel peut causer de mauvaises performances.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="611"/>
@@ -399,7 +399,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="706"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>Échec de l&apos;ouverture de l&apos;appareil audio. L&apos;audio ne sera pas disponible pendant cette session.</translation>
+        <translation>L&apos;ouverture de l&apos;appareil audio à échoué. L&apos;audio ne sera pas disponible pendant cette session.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="711"/>
@@ -409,7 +409,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="719"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>Le GPU de votre PC hôte ne prend pas en charge les résolutions vidéo en continu supérieures à 4K.</translation>
+        <translation>Le GPU de votre PC hôte ne prend pas en charge le streaming dans des résolutions supérieures à la 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="723"/>
@@ -419,7 +419,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="737"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation>Votre choix pour forcer le décodage matériel ne peut être satisfait en raison de l&apos;absence de support de décodage matériel sur le GPU de ce PC.</translation>
+        <translation>Impossible d&apos;utiliser le décodage matériel car le GPU de cet ordinateur ne supporte pas le décodage matériel.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="740"/>
@@ -452,7 +452,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="78"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>Fixer des valeurs trop élevées pour votre PC ou votre connexion réseau, peut entraîner un décalage, des saccades ou des erreurs.</translation>
+        <translation>Des réglages trop élevés pour votre PC ou connexion peuvent causer du lag, des saccades et d&apos;autres problèmes.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="60"/>
@@ -519,7 +519,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="501"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation>Baissez le débit binaire sur les connexions plus lentes. Augmentez le débit binaire pour améliorer la qualité de l&apos;image.</translation>
+        <translation>Baissez le débit si votre connexion est lente. Augmentez-le pour plus de qualité d&apos;image.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="519"/>
@@ -748,12 +748,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1121"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>Active le contrôle de la souris par la manette en maintenant le bouton « Start »</translation>
+        <translation>Active le contrôle de la souris par la manette en maintenant « Start »</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1132"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>Capturer la manette même lorsque Moonlight est en arrière-plan</translation>
+        <translation>Capturer la manette même quand Moonlight est en arrière-plan</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1143"/>
@@ -782,12 +782,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="881"/>
         <source>Show connection quality warnings</source>
-        <translation>Afficher les avertissements sur la qualité de la connexion</translation>
+        <translation>Afficher des avertissements sur la qualité de la connexion</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="893"/>
         <source>Discord Rich Presence integration</source>
-        <translation>Intégration de la présence Discord Rich</translation>
+        <translation>Activer l&apos;intégration Discord Rich Presence</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="903"/>
@@ -845,7 +845,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1173"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Quitter l&apos;application sur le PC hôte après avoir terminé le flux</translation>
+        <translation>Fermer l&apos;application sur le PC hôte à la fin du stream</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1183"/>
@@ -925,7 +925,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
@@ -1016,7 +1016,7 @@
     <message>
         <location filename="../gui/main.qml" line="441"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration&#x202f;:</translation>
+        <translation>Moonlight a détecté des manettes sans configuration :</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="354"/>
@@ -1045,7 +1045,7 @@
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Êtes-vous sûr de vouloir quitter&#x202f;?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="481"/>

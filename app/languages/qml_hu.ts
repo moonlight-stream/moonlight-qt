@@ -1,54 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="es" sourcelanguage="en_GB">
+<TS version="2.1" language="hu" sourcelanguage="en_GB">
 <context>
     <name>AppView</name>
     <message>
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation>Reanudar juego</translation>
+        <translation>Játék folytatása</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation>Salir del juego</translation>
+        <translation>Kilépés a játékból</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation>Abrir juego</translation>
+        <translation>Játék indítása</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation>Lanzamiento directo</translation>
+        <translation>Közvetlen indítás</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Inicie esta aplicación inmediatamente cuando se seleccione el host, sin pasar por la cuadrícula de selección de aplicaciones.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation>Ocultar juego</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>Oculta este juego de la cuadrícula de aplicaciones. Para acceder a juegos ocultos, haga clic con el botón derecho en el host y elija %1.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation>Ver todas las aplicaciones</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished">Seguro que quieres salir de %1? Se perderá cualquier progreso no guardado.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Estableciendo conexión con PC ...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation>Saliendo de la aplicación...</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -69,17 +69,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Estableciendo conexión con PC...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>Cargando lista de aplicaciones...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Seguro que quieres salir de %1? Se perderá cualquier progreso no guardado.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>Mapeo del mando</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -95,7 +95,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="327"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>Falta el dispositivo de captura de audio. La reinstalación de GeForce Experience debería resolver este error.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -103,22 +103,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation>Ordenadores</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation>No se puede conectar con el PC especificado.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>La conexión a Internet de este PC está bloqueando Moonlight. Es posible que la transmisión por Internet no funcione mientras esté conectado a esta red.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>Haga clic en el botón de ayuda para encontrar posibles soluciones.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -127,7 +127,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation>La detección automática de PCs está desactivada. Añada su PC manualmente.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <source>View Apps</source>
@@ -140,107 +140,107 @@
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation>Despertar PC</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Prueba de red</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation>Renombrar PC</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation>Eliminar PC</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>La versión de GeForce Experience en %1 no es compatible con esta versión de Moonlight. Debes actualizar Moonlight para transmitir desde %1.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>No puedes emparejar mientras una sesión anterior esté en marcha en el PC anfitrión. Salga de cualquier juego que se esté ejecutando o reinicie el PC anfitrión, y luego intente emparejar de nuevo.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Por favor, introduzca %1 en su PC GameStream . Este cuadro de diálogo se cerrará cuando se haya completado el emparejamiento.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove this PC?</source>
-        <translation>¿Estás seguro de que quieres eliminar este PC?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation>Moonlight está probando tu conexión de red para determinar si NVIDIA GameStream está bloqueado.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation>Esto puede llevar unos segundos…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>Esta red no parece estar bloqueando Moonlight. Si sigue teniendo problemas para conectarse, compruebe la configuración del cortafuegos de su PC.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Si estás intentando hacer streaming a través de Internet, instala la herramienta Moonlight Internet Hosting Tool en tu PC de juegos y ejecuta el comprobador de streaming por Internet incluido para comprobar la conexión a Internet de tu PC de juegos.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>La conexión de red actual de tu PC parece estar bloqueando Moonlight. Es posible que la transmisión por Internet no funcione mientras esté conectado a esta red.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>The following network ports were blocked:</source>
-        <translation>Los siguientes puertos de red fueron bloqueados:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>La prueba de red no pudo realizarse porque ninguno de los servidores de prueba de conexión de Moonlight era accesible desde este PC. Compruebe su conexión a Internet o inténtelo de nuevo más tarde.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation>Buscando PCs en tu red local con NVIDIA GameStream activado...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Estado del PC: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Online</source>
-        <translation>En línea</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation>Fuera de línea</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation type="unfinished">Ver todas las aplicaciones</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="357"/>
         <source>Enter the new name for this PC:</source>
-        <translation>Introduzca el nombre nuevo para este PC:</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -248,7 +248,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>El juego que se está ejecutando no fue iniciado por este PC. Debes salir del juego en el PC anfitrión manualmente o utilizar el dispositivo que inició originalmente el juego.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -257,24 +257,24 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation>Fallo en la conexión con %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>El ordenador %1 no ha sido emparejado. Por favor, abra Moonlight para emparejar antes de transmitir.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation>La salida de la aplicación ha fallado, razón: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>No se ha podido encontrar la aplicación %1</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation>Saliendo de %1...</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -294,72 +294,72 @@
     <message>
         <location filename="../streaming/session.cpp" line="89"/>
         <source>No video received from host.</source>
-        <translation>No se ha recibido ningún vídeo del anfitrión.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Compruebe su cortafuegos y las reglas de reenvío de puertos para los puertos: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>Tu conexión de red no funciona bien. Reduce la tasa de bits del vídeo o prueba con una conexión más rápida.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>Algo salió mal en su PC host al iniciar la transmisión.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="101"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>Asegúrate de que no tienes ningún contenido protegido por DRM abierto en tu PC anfitrión. También puedes probar a reiniciar el PC anfitrión.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="102"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation>Si el problema persiste, prueba a reinstalar los controladores de la GPU y GeForce Experience.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="107"/>
         <source>Connection terminated</source>
-        <translation>Conexión terminada</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished">La versión de GeForce Experience en %1 no es compatible con esta versión de Moonlight. Debes actualizar Moonlight para transmitir desde %1.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="597"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>La selección de activar el modo de ratón de escritorio remoto puede causar problemas en los juegos.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="602"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation>El HDR no es compatible con la decodificación por software.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="606"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>Su selección de ajustes para forzar la decodificación por software puede causar un rendimiento deficiente de la transmisión.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="611"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation>El uso de opciones de FPS no compatibles puede causar tartamudeo o retraso.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="614"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>V-sync se desactivará cuando se transmita a una velocidad de fotogramas superior a la de la pantalla.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="631"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>Usando decodificación por software debido a su selección de forzar HEVC sin soporte de GPU. Esto puede causar un bajo rendimiento de streaming.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="634"/>
@@ -899,7 +899,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished">La conexión a Internet de este PC está bloqueando Moonlight. Es posible que la transmisión por Internet no funcione mientras esté conectado a esta red.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
@@ -935,27 +935,27 @@
     <message>
         <location filename="../gui/main.qml" line="255"/>
         <source>Version %1</source>
-        <translation>Versión %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="271"/>
         <source>Join our community on Discord</source>
-        <translation>Únete a nuestra comunidad en Discord</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="283"/>
         <source>Computers</source>
-        <translation>Ordenadores</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="290"/>
         <source>Add PC manually</source>
-        <translation>Agregar PC manualmente</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="330"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation>Actualización disponible para Moonlight: versión %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="377"/>
@@ -965,12 +965,12 @@
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished">Mapeo del mando</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>Moonlight no detectó ningún decodificador de vídeo H.264 acelerado por hardware en funcionamiento. Su rendimiento de transmisión puede verse gravemente degradado en esta configuración.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="423"/>
@@ -1015,7 +1015,7 @@
     <message>
         <location filename="../gui/main.qml" line="481"/>
         <source>Enter the IP address of your GameStream PC:</source>
-        <translation>Ingrese la dirección IP de su PC GameStream:</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 </TS>

@@ -173,7 +173,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>在 %1 上已安装的GeForce Experience版本不支持当前版本的Moonlight。你必须升级Moonlight才能从 %1 串流。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -313,7 +313,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">在 %1 安装的GeForce Experience版本不受当前版本的Moonlight支持。你必须升级Moonlight才能从 %1 串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="597"/>
