@@ -766,7 +766,7 @@ Flickable {
                             val: StreamingPreferences.LANG_AUTO
                         }
                         ListElement {
-                            text: "Deutsch" //German
+                            text: "Deutsch" // German
                             val: StreamingPreferences.LANG_DE
                         }
                         ListElement {
@@ -774,11 +774,11 @@ Flickable {
                             val: StreamingPreferences.LANG_EN
                         }
                         ListElement {
-                            text: "Français" //French
+                            text: "Français" // French
                             val: StreamingPreferences.LANG_FR
                         }
                         ListElement {
-                            text: "简体中文" //Simplified Chinese
+                            text: "简体中文" // Simplified Chinese
                             val: StreamingPreferences.LANG_ZH_CN
                         }
                         ListElement {
@@ -810,6 +810,30 @@ Flickable {
                             text: "한국어" // Korean
                             val: StreamingPreferences.LANG_KO
                         }
+                        /* ListElement {
+                            text: "Magyar" // Hungarian
+                            val: StreamingPreferences.LANG_HU
+                        } */
+                        ListElement {
+                            text: "Nederlands" // Dutch
+                            val: StreamingPreferences.LANG_NL
+                        }
+                        ListElement {
+                            text: "Svenska" // Swedish
+                            val: StreamingPreferences.LANG_SV
+                        }
+                        /* ListElement {
+                            text: "Türkçe" // Turkish
+                            val: StreamingPreferences.LANG_TR
+                        } */
+                        /* ListElement {
+                            text: "Українська" // Ukrainian
+                            val: StreamingPreferences.LANG_UK
+                        } */
+                        /* ListElement {
+                            text: "繁体字" // Traditional Chinese
+                            val: StreamingPreferences.LANG_ZH_HANT
+                        } */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

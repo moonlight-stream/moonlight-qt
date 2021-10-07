@@ -76,7 +76,13 @@ public:
         LANG_JA,
         LANG_VI,
         LANG_TH,
-        LANG_KO
+        LANG_KO,
+        LANG_HU,
+        LANG_NL,
+        LANG_SV,
+        LANG_TR,
+        LANG_UK,
+        LANG_ZH_HANT
     };
     Q_ENUM(Language);
 

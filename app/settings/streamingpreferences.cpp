@@ -203,6 +203,18 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "th";
     case LANG_KO:
         return "ko";
+    case LANG_HU:
+        return "hu";
+    case LANG_NL:
+        return "nl";
+    case LANG_SV:
+        return "sv";
+    case LANG_TR:
+        return "tr";
+    case LANG_UK:
+        return "uk";
+    case LANG_ZH_HANT:
+        return "zh_Hant";
     case LANG_AUTO:
     default:
         return QLocale::system().name();

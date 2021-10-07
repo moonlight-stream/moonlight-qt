@@ -37,6 +37,18 @@
         <file>languages/qml_th.qm</file>
         <file>languages/qml_ko.ts</file>
         <file>languages/qml_ko.qm</file>
+        <file>languages/qml_hu.ts</file>
+        <file>languages/qml_hu.qm</file>
+        <file>languages/qml_nl.ts</file>
+        <file>languages/qml_nl.qm</file>
+        <file>languages/qml_sv.ts</file>
+        <file>languages/qml_sv.qm</file>
+        <file>languages/qml_tr.ts</file>
+        <file>languages/qml_tr.qm</file>
+        <file>languages/qml_uk.ts</file>
+        <file>languages/qml_uk.qm</file>
+        <file>languages/qml_zh_Hant.ts</file>
+        <file>languages/qml_zh_Hant.qm</file>
     </qresource>
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>

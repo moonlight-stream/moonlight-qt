@@ -338,7 +338,13 @@ TRANSLATIONS += \
     languages/qml_ja.ts \
     languages/qml_vi.ts \
     languages/qml_th.ts \
-    languages/qml_ko.ts
+    languages/qml_ko.ts \
+    languages/qml_hu.ts \
+    languages/qml_nl.ts \
+    languages/qml_sv.ts \
+    languages/qml_tr.ts \
+    languages/qml_uk.ts \
+    languages/qml_zh_Hant.ts
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =
