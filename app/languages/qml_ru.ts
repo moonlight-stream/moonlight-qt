@@ -93,7 +93,7 @@
 <context>
     <name>NvHTTP</name>
     <message>
-        <location filename="../backend/nvhttp.cpp" line="327"/>
+        <location filename="../backend/nvhttp.cpp" line="378"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>Потеряно виртуальное аудиоустройство. Попробуйте переустановить GeForce Experience.</translation>
     </message>
@@ -246,7 +246,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="542"/>
+        <location filename="../backend/computermanager.cpp" line="540"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>Выбранная игра уже запущена. Вручную закройте игру на хост-ПК, или используйте устройство, с которого она была запущена.</translation>
     </message>
@@ -427,12 +427,12 @@
         <translation>Вы выбрали аппаратное декодирование, но видеокарта этого ПК не поддерживает аппаратное декодирование для выбранного кодека.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1041"/>
+        <location filename="../streaming/session.cpp" line="1044"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>Ошибка GeForce Experience: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1519"/>
+        <location filename="../streaming/session.cpp" line="1541"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Не удалось запустить декодирование видео. Проверьте настройки стрима и попробуйте ещё раз.</translation>
     </message>
@@ -534,7 +534,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="573"/>
-        <location filename="../gui/SettingsView.qml" line="868"/>
+        <location filename="../gui/SettingsView.qml" line="900"/>
         <source>Fullscreen</source>
         <translation>На весь экран</translation>
     </message>
@@ -559,7 +559,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
-        <location filename="../gui/SettingsView.qml" line="860"/>
+        <location filename="../gui/SettingsView.qml" line="892"/>
         <source>Windowed</source>
         <translation>В окне</translation>
     </message>
@@ -639,32 +639,32 @@
         <translation>Автоматически</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="813"/>
+        <location filename="../gui/SettingsView.qml" line="845"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>Для применения изменений необходим перезапуск Moonlight</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="827"/>
+        <location filename="../gui/SettingsView.qml" line="859"/>
         <source>GUI display mode</source>
         <translation>Режим показа интерфейса</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="864"/>
+        <location filename="../gui/SettingsView.qml" line="896"/>
         <source>Maximized</source>
         <translation>Развёрнуто</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="921"/>
+        <location filename="../gui/SettingsView.qml" line="953"/>
         <source>Input Settings</source>
         <translation>Настройки ввода</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="942"/>
+        <location filename="../gui/SettingsView.qml" line="974"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>Удобно для удалённого рабочего стола, т.к. курсор мыши не будет &quot;захвачен&quot; и может уходить за пределы окна Moonlight. Не будет работать в большинстве игр.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="944"/>
+        <location filename="../gui/SettingsView.qml" line="976"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>Предупреждение: Из-за бага GeForce Experience эта настройка может не работать, если к хост-ПК подключено несколько мониторов.</translation>
     </message>
@@ -677,77 +677,77 @@
         <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="963"/>
+        <location filename="../gui/SettingsView.qml" line="995"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>Предупреждение: некоторые комбинации клавиш, вроде Ctrl-Alt-Del, не могут быть перехвачены.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1026"/>
+        <location filename="../gui/SettingsView.qml" line="1058"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>Использовать сенсорный экран как виртуальный тачпад</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1043"/>
+        <location filename="../gui/SettingsView.qml" line="1075"/>
         <source>Swap left and right mouse buttons</source>
         <translation>Поменять местами левую и правую кнопки мыши</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1055"/>
+        <location filename="../gui/SettingsView.qml" line="1087"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>Колесо мыши крутит в обратном направлении</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1069"/>
+        <location filename="../gui/SettingsView.qml" line="1101"/>
         <source>Gamepad Settings</source>
         <translation>Настройки геймпада</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1079"/>
+        <location filename="../gui/SettingsView.qml" line="1111"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>Поменять местами кнопки A/B и X/Y</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1097"/>
+        <location filename="../gui/SettingsView.qml" line="1129"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>Меняет назначения кнопок в стиль Nintendo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1103"/>
+        <location filename="../gui/SettingsView.qml" line="1135"/>
         <source>Force gamepad #1 always connected</source>
         <translation>Принудительно оставить геймпад №1 подключённым</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1113"/>
+        <location filename="../gui/SettingsView.qml" line="1145"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>Хотя бы один виртуальный геймпад всегда будет &quot;подключён&quot; к хост-ПК, даже если физически к ПК-хосту не подключено ни одного.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="943"/>
+        <location filename="../gui/SettingsView.qml" line="975"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>Вы можете переключить эту настройку во время стрима нажатием Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1121"/>
+        <location filename="../gui/SettingsView.qml" line="1153"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>Переходить в режим управления курсором мыши удержанием кнопки &quot;Start&quot;</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1132"/>
+        <location filename="../gui/SettingsView.qml" line="1164"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Геймпад работает, когда окно Moonlight в фоне</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1143"/>
+        <location filename="../gui/SettingsView.qml" line="1175"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Позволяет захватывать ввод с геймпада, даже когда окно Moonlight неактивно</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1152"/>
+        <location filename="../gui/SettingsView.qml" line="1184"/>
         <source>Host Settings</source>
         <translation>Настройки ПК-хоста</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1192"/>
+        <location filename="../gui/SettingsView.qml" line="1224"/>
         <source>Advanced Settings</source>
         <translation>Расширенные настройки</translation>
     </message>
@@ -757,118 +757,118 @@
         <translation>Настройки звука</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="881"/>
+        <location filename="../gui/SettingsView.qml" line="913"/>
         <source>Show connection quality warnings</source>
         <translation>Показывать предупреждения о качестве соединения</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="893"/>
+        <location filename="../gui/SettingsView.qml" line="925"/>
         <source>Discord Rich Presence integration</source>
         <translation>Интеграция в Discord Rich Presence</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="903"/>
+        <location filename="../gui/SettingsView.qml" line="935"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>Пишет статус в Discord с названием запущенноый игры.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1114"/>
+        <location filename="../gui/SettingsView.qml" line="1146"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>Необходимо для игр, не поддерживающих &quot;горячее&quot; подключение геймпадов.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="932"/>
+        <location filename="../gui/SettingsView.qml" line="964"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>Оптимизировать мышь для удалённого рабочего стола вместо игр</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="954"/>
+        <location filename="../gui/SettingsView.qml" line="986"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>Захватывать нажатия горячих клавиш</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="962"/>
+        <location filename="../gui/SettingsView.qml" line="994"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>Это включает захват комбинаций вроде Alt+Tab, которые иначе бы обычно обрабатывались операционной системой.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="992"/>
+        <location filename="../gui/SettingsView.qml" line="1024"/>
         <source>in fullscreen</source>
         <translation>только в режиме на весь экран</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="996"/>
+        <location filename="../gui/SettingsView.qml" line="1028"/>
         <source>always</source>
         <translation>всегда</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1036"/>
+        <location filename="../gui/SettingsView.qml" line="1068"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>Если включено, сенсорный экран будет использоваться как тачпад. Если отключено, сенсорный экран будет прямо управлять курсором мыши.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1162"/>
+        <location filename="../gui/SettingsView.qml" line="1194"/>
         <source>Optimize game settings for streaming</source>
         <translation>Позволить GeForce Experience оптимизировать настройки игры</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1173"/>
+        <location filename="../gui/SettingsView.qml" line="1205"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>Завершить игру на ПК-хосте при выходе</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1183"/>
+        <location filename="../gui/SettingsView.qml" line="1215"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>Это выйдет из игры или приложения при закрытии окна Moonlight или нажатии Ctrl+Alt+Shift+Q. Несохранённый прогресс может быть утерян!</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1202"/>
+        <location filename="../gui/SettingsView.qml" line="1234"/>
         <source>Video decoder</source>
         <translation>Декодер видео</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1227"/>
-        <location filename="../gui/SettingsView.qml" line="1273"/>
+        <location filename="../gui/SettingsView.qml" line="1259"/>
+        <location filename="../gui/SettingsView.qml" line="1305"/>
         <source>Automatic (Recommended)</source>
         <translation>Автоматически (рекомендуется)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1231"/>
+        <location filename="../gui/SettingsView.qml" line="1263"/>
         <source>Force software decoding</source>
         <translation>Программный</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1235"/>
+        <location filename="../gui/SettingsView.qml" line="1267"/>
         <source>Force hardware decoding</source>
         <translation>Аппаратный</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1248"/>
+        <location filename="../gui/SettingsView.qml" line="1280"/>
         <source>Video codec</source>
         <translation>Видеокодек</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1277"/>
+        <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1281"/>
+        <location filename="../gui/SettingsView.qml" line="1313"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1298"/>
+        <location filename="../gui/SettingsView.qml" line="1330"/>
         <source>Unlock unsupported FPS options</source>
         <translation>Включить неподдерживаемые настройки FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1317"/>
+        <location filename="../gui/SettingsView.qml" line="1349"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Автоматически найти ПК-хосты в локальной сети (рекомендуется)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1342"/>
+        <location filename="../gui/SettingsView.qml" line="1374"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Автоматически определять проблемы с подключением (рекомендуется)</translation>
     </message>

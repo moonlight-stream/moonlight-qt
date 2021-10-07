@@ -93,7 +93,7 @@
 <context>
     <name>NvHTTP</name>
     <message>
-        <location filename="../backend/nvhttp.cpp" line="327"/>
+        <location filename="../backend/nvhttp.cpp" line="378"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>오디오 캡처 장치가 없습니다. GeForce Experience를 다시 설치하면 이 오류가 해결됩니다.</translation>
     </message>
@@ -246,7 +246,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="542"/>
+        <location filename="../backend/computermanager.cpp" line="540"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>실행 중인 게임이 이 PC에서 시작되지 않았습니다. 호스트 PC에서 게임을 수동으로 종료하거나 원래 게임을 시작한 장치를 사용해야 합니다.</translation>
     </message>
@@ -427,12 +427,12 @@
         <translation>선택한 코덱과 하드웨어 디코딩을 강제하도록 선택한 설정이 호환되지 않습니다. 이 PC의 GPU는 선택한 코덱의 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1041"/>
+        <location filename="../streaming/session.cpp" line="1044"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience에서 오류를 반환했습니다: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1519"/>
+        <location filename="../streaming/session.cpp" line="1541"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>비디오 디코더를 초기화 할 수 없습니다. 스트리밍 설정을 확인하고 다시 시도하십시오.</translation>
     </message>
@@ -534,7 +534,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="573"/>
-        <location filename="../gui/SettingsView.qml" line="868"/>
+        <location filename="../gui/SettingsView.qml" line="900"/>
         <source>Fullscreen</source>
         <translation>전체 화면</translation>
     </message>
@@ -559,7 +559,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
-        <location filename="../gui/SettingsView.qml" line="860"/>
+        <location filename="../gui/SettingsView.qml" line="892"/>
         <source>Windowed</source>
         <translation>창</translation>
     </message>
@@ -639,32 +639,32 @@
         <translation>자동</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="813"/>
+        <location filename="../gui/SettingsView.qml" line="845"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>이 변경 사항을 적용하려면 Moonlight를 다시 시작해야합니다</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="827"/>
+        <location filename="../gui/SettingsView.qml" line="859"/>
         <source>GUI display mode</source>
         <translation>GUI 디스플레이 모드</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="864"/>
+        <location filename="../gui/SettingsView.qml" line="896"/>
         <source>Maximized</source>
         <translation>최대화</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="921"/>
+        <location filename="../gui/SettingsView.qml" line="953"/>
         <source>Input Settings</source>
         <translation>입력 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="942"/>
+        <location filename="../gui/SettingsView.qml" line="974"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>클라이언트의 마우스 커서 캡처없이 원활한 마우스 제어가 가능합니다. 원격 데스크톱 사용에 이상적이지만 대부분의 게임에서는 작동하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="944"/>
+        <location filename="../gui/SettingsView.qml" line="976"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>참고: GeForce Experience의 버그로 인해 호스트 PC에 다중 모니터가 있는 경우 이 옵션이 제대로 작동하지 않을 수 있습니다.</translation>
     </message>
@@ -677,77 +677,77 @@
         <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="963"/>
+        <location filename="../gui/SettingsView.qml" line="995"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>참고: Windows의 Ctrl+Alt+Del과 같은 특정 키보드 단축키는 Moonlight를 포함한 모든 응용 프로그램에서 가로챌 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1026"/>
+        <location filename="../gui/SettingsView.qml" line="1058"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>터치스크린을 가상 트랙패드로 사용</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1043"/>
+        <location filename="../gui/SettingsView.qml" line="1075"/>
         <source>Swap left and right mouse buttons</source>
         <translation>왼쪽과 오른쪽 마우스 버튼 전환</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1055"/>
+        <location filename="../gui/SettingsView.qml" line="1087"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>마우스 스크롤 방향 반전</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1069"/>
+        <location filename="../gui/SettingsView.qml" line="1101"/>
         <source>Gamepad Settings</source>
         <translation>게임패드 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1079"/>
+        <location filename="../gui/SettingsView.qml" line="1111"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>게임패드 버튼 A/B와 X/Y 전환</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1097"/>
+        <location filename="../gui/SettingsView.qml" line="1129"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>게임패드를 Nintendo 스타일의 레이아웃으로 전환합니다</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1103"/>
+        <location filename="../gui/SettingsView.qml" line="1135"/>
         <source>Force gamepad #1 always connected</source>
         <translation>게임패드 #1을 항상 연결</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1113"/>
+        <location filename="../gui/SettingsView.qml" line="1145"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>이 PC에 실제로 연결된 게임패드가 없는 경우에도 단일 게임패드가 항상 호스트에 연결되도록 합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="943"/>
+        <location filename="../gui/SettingsView.qml" line="975"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>스트리밍 중에 Ctrl+Alt+Shift+M을 사용하여 전환 할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1121"/>
+        <location filename="../gui/SettingsView.qml" line="1153"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>&apos;Start&apos; 버튼을 누르는 동안 게임패드로 마우스 제어를 활성화</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1132"/>
+        <location filename="../gui/SettingsView.qml" line="1164"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Moonlight가 백그라운드에 있을 때 게임패드 입력 처리</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1143"/>
+        <location filename="../gui/SettingsView.qml" line="1175"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Moonlight가 현재 초점이 맞춰진 창이 아닌 경우에도 게임패드 입력을 캡처할 수 있습니다</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1152"/>
+        <location filename="../gui/SettingsView.qml" line="1184"/>
         <source>Host Settings</source>
         <translation>호스트 설정</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1192"/>
+        <location filename="../gui/SettingsView.qml" line="1224"/>
         <source>Advanced Settings</source>
         <translation>고급 설정</translation>
     </message>
@@ -757,118 +757,118 @@
         <translation>오디오 구성</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="881"/>
+        <location filename="../gui/SettingsView.qml" line="913"/>
         <source>Show connection quality warnings</source>
         <translation>연결 품질 경고 표시</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="893"/>
+        <location filename="../gui/SettingsView.qml" line="925"/>
         <source>Discord Rich Presence integration</source>
         <translation>Discord Rich Presence 통합</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="903"/>
+        <location filename="../gui/SettingsView.qml" line="935"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>스트리밍중인 게임의 이름을 표시하도록 Discord 상태를 업데이트합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1114"/>
+        <location filename="../gui/SettingsView.qml" line="1146"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>시작 후 연결되는 게임패드를 지원하지 않는 게임을 스트리밍할 때만 이 옵션을 활성화하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="932"/>
+        <location filename="../gui/SettingsView.qml" line="964"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>게임 대신 원격 데스크톱에 맞게 마우스 최적화</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="954"/>
+        <location filename="../gui/SettingsView.qml" line="986"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>시스템 키보드 단축키 캡처</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="962"/>
+        <location filename="../gui/SettingsView.qml" line="994"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>일반적으로 클라이언트 OS에서 처리하는 Alt+Tab과 같은 시스템 전체 키보드 단축키를 캡처합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="992"/>
+        <location filename="../gui/SettingsView.qml" line="1024"/>
         <source>in fullscreen</source>
         <translation>전체 화면에서</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="996"/>
+        <location filename="../gui/SettingsView.qml" line="1028"/>
         <source>always</source>
         <translation>항상</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1036"/>
+        <location filename="../gui/SettingsView.qml" line="1068"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>선택하면 터치스크린이 트랙패드처럼 작동합니다. 선택하지 않으면 터치스크린이 마우스 포인터를 직접 제어합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1162"/>
+        <location filename="../gui/SettingsView.qml" line="1194"/>
         <source>Optimize game settings for streaming</source>
         <translation>게임 설정을 스트리밍을 위해 최적화</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1173"/>
+        <location filename="../gui/SettingsView.qml" line="1205"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>스트리밍 종료 후 호스트 PC에서 앱 종료</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1183"/>
+        <location filename="../gui/SettingsView.qml" line="1215"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>스트리밍을 종료하면 스트리밍 중인 앱이나 게임이 종료됩니다. 저장하지 않은 진행 상황을 잃게됩니다!</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1202"/>
+        <location filename="../gui/SettingsView.qml" line="1234"/>
         <source>Video decoder</source>
         <translation>비디오 디코더</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1227"/>
-        <location filename="../gui/SettingsView.qml" line="1273"/>
+        <location filename="../gui/SettingsView.qml" line="1259"/>
+        <location filename="../gui/SettingsView.qml" line="1305"/>
         <source>Automatic (Recommended)</source>
         <translation>자동 (권장)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1231"/>
+        <location filename="../gui/SettingsView.qml" line="1263"/>
         <source>Force software decoding</source>
         <translation>소프트웨어 디코딩 강제</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1235"/>
+        <location filename="../gui/SettingsView.qml" line="1267"/>
         <source>Force hardware decoding</source>
         <translation>하드웨어 디코딩 강제</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1248"/>
+        <location filename="../gui/SettingsView.qml" line="1280"/>
         <source>Video codec</source>
         <translation>비디오 코덱</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1277"/>
+        <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1281"/>
+        <location filename="../gui/SettingsView.qml" line="1313"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1298"/>
+        <location filename="../gui/SettingsView.qml" line="1330"/>
         <source>Unlock unsupported FPS options</source>
         <translation>지원되지 않는 FPS 옵션 잠금 해제</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1317"/>
+        <location filename="../gui/SettingsView.qml" line="1349"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>로컬 네트워크에서 자동으로 PC 찾기 (권장)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1342"/>
+        <location filename="../gui/SettingsView.qml" line="1374"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>차단된 연결 자동 감지 (권장)</translation>
     </message>
