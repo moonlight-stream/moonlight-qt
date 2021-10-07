@@ -313,7 +313,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished">在 %1 安装的GeForce Experience版本不受当前版本的Moonlight支持。你必须升级Moonlight才能从 %1 串流。</translation>
+        <translation>%1 上的 GeForce Experience 版本不受当前版本的 Moonlight 支持。你必须更新 Moonlight才能从 %1 串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="597"/>
