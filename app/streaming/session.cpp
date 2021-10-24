@@ -989,7 +989,10 @@ class AsyncConnectionStartThread : public QThread
 public:
     AsyncConnectionStartThread(Session* session) :
         QThread(nullptr),
-        m_Session(session) {}
+        m_Session(session)
+    {
+        setObjectName("Async Conn Start");
+    }
 
     void run() override
     {
@@ -1131,7 +1134,10 @@ class ExecThread : public QThread
 public:
     ExecThread(Session* session) :
         QThread(nullptr),
-        m_Session(session) {}
+        m_Session(session)
+    {
+        setObjectName("Session Exec");
+    }
 
     void run() override
     {
