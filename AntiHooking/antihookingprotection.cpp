@@ -139,7 +139,7 @@ private:
         L"SS2OSD.dll", // ASUS Sonic Studio 2
         L"Nahimic2OSD.dll",
         L"NahimicMSIOSD.dll",
-        L"nhAsusPhoebusOSD.dll" // ASUS Phoebus
+        L"nhAsusPhoebusOSD.dll", // ASUS Phoebus
 
         // This DLL has been seen in several crash reports. Some Googling
         // suggests it's highly unstable and causes issues in many games.
