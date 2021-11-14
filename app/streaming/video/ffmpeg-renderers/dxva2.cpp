@@ -489,10 +489,11 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                     default:
                         // Intel drivers from before late-2017 had a bug that caused some strange artifacts
                         // when decoding HEVC. Avoid HEVC on drivers prior to build 4836 which I confirmed
-                        // is not affected on my Intel HD 515.
+                        // is not affected on my Intel HD 515. Also account for the driver version rollover
+                        // that happened with the 101.1069 series.
                         // https://github.com/moonlight-stream/moonlight-qt/issues/32
                         // https://www.intel.com/content/www/us/en/support/articles/000005654/graphics-drivers.html
-                        if (LOWORD(id.DriverVersion.LowPart) < 4836) {
+                        if (HIWORD(id.DriverVersion.LowPart) < 100 && LOWORD(id.DriverVersion.LowPart) < 4836) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                         "Detected buggy Intel GPU driver installed. Update your Intel GPU driver to enable HEVC!");
                             result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
