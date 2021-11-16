@@ -16,7 +16,6 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
-    virtual bool isRenderThreadSupported() override;
 
 private:
 

@@ -747,13 +747,6 @@ bool EGLRenderer::specialize() {
     return err == GL_NO_ERROR;
 }
 
-bool EGLRenderer::isRenderThreadSupported()
-{
-    // libdecor may try to draw CSD on our window surface which will race with
-    // our rendering code here, so we must not use the render thread on wayland.
-    return strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0;
-}
-
 void EGLRenderer::renderFrame(AVFrame* frame)
 {
     EGLImage imgs[EGL_MAX_PLANES];
