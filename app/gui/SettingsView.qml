@@ -1313,10 +1313,10 @@ Flickable {
                             text: qsTr("HEVC (H.265)")
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
-                        /*ListElement {
+                        ListElement {
                             text: qsTr("HEVC HDR (Experimental)")
                             val: StreamingPreferences.VCC_FORCE_HEVC_HDR
-                        }*/
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
