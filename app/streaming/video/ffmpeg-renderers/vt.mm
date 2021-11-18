@@ -222,6 +222,12 @@ public:
                                   kCVImageBufferTransferFunction_ITU_R_2020,
                                   kCVAttachmentMode_ShouldPropagate);
             break;
+        case AVCOL_TRC_SMPTE2084:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferTransferFunctionKey,
+                                  kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
         default:
             break;
         }
