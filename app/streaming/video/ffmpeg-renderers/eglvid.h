@@ -23,8 +23,8 @@ private:
     unsigned compileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc);
     bool compileShaders();
     bool specialize();
-    const float *getColorOffsets();
-    const float *getColorMatrix();
+    const float *getColorOffsets(const AVFrame* frame);
+    const float *getColorMatrix(const AVFrame* frame);
     static int loadAndBuildShader(int shaderType, const char *filename);
     bool openDisplay(unsigned int platform, void* nativeDisplay);
 
@@ -43,8 +43,6 @@ private:
     SDL_Window *m_Window;
     IFFmpegRenderer *m_Backend;
     unsigned int m_VAO;
-    int m_ColorSpace;
-    bool m_ColorFull;
     bool m_BlockingSwapBuffers;
     AVFrame* m_LastFrame;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOES;

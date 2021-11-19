@@ -71,8 +71,6 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_Window(nullptr),
         m_Backend(backendRenderer),
         m_VAO(0),
-        m_ColorSpace(AVCOL_SPC_NB),
-        m_ColorFull(false),
         m_BlockingSwapBuffers(false),
         m_LastFrame(av_frame_alloc()),
         m_glEGLImageTargetTexture2DOES(nullptr),
@@ -624,14 +622,14 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     return err == GL_NO_ERROR;
 }
 
-const float *EGLRenderer::getColorOffsets() {
+const float *EGLRenderer::getColorOffsets(const AVFrame* frame) {
     static const float limitedOffsets[] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
     static const float fullOffsets[] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
 
-    return m_ColorFull ? fullOffsets : limitedOffsets;
+    return (frame->color_range == AVCOL_RANGE_JPEG) ? fullOffsets : limitedOffsets;
 }
 
-const float *EGLRenderer::getColorMatrix() {
+const float *EGLRenderer::getColorMatrix(const AVFrame* frame) {
     /* The conversion matrices are shamelessly stolen from linux:
      * drivers/media/platform/imx-pxp.c:pxp_setup_csc
      */
@@ -666,25 +664,26 @@ const float *EGLRenderer::getColorMatrix() {
         1.4746f, -0.5714f, 0.0f
     };
 
-    switch (m_ColorSpace) {
+    bool fullRange = (frame->color_range == AVCOL_RANGE_JPEG);
+    switch (frame->colorspace) {
         case AVCOL_SPC_SMPTE170M:
         case AVCOL_SPC_BT470BG:
-            return m_ColorFull ? bt601Full : bt601Lim;
+            return fullRange ? bt601Full : bt601Lim;
         case AVCOL_SPC_BT709:
-            return m_ColorFull ? bt709Full : bt709Lim;
+            return fullRange ? bt709Full : bt709Lim;
         case AVCOL_SPC_BT2020_NCL:
         case AVCOL_SPC_BT2020_CL:
-            return m_ColorFull ? bt2020Full : bt2020Lim;
+            return fullRange ? bt2020Full : bt2020Lim;
         default:
             // Some backends don't populate this, so we'll assume
             // the host gave us what we asked for by default.
             switch (getDecoderColorspace()) {
                 case COLORSPACE_REC_601:
-                    return m_ColorFull ? bt601Full : bt601Lim;
+                    return fullRange ? bt601Full : bt601Lim;
                 case COLORSPACE_REC_709:
-                    return m_ColorFull ? bt709Full : bt709Lim;
+                    return fullRange ? bt709Full : bt709Lim;
                 case COLORSPACE_REC_2020:
-                    return m_ColorFull ? bt2020Full : bt2020Lim;
+                    return fullRange ? bt2020Full : bt2020Lim;
                 default:
                     SDL_assert(false);
             }
@@ -770,13 +769,6 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
         SDL_assert(m_EGLImagePixelFormat != AV_PIX_FMT_NONE);
 
-        m_ColorSpace = frame->colorspace;
-
-        // This handles the case where the color range is unknown,
-        // so that we use Limited color range which is the default
-        // behavior for Moonlight.
-        m_ColorFull = frame->color_range == AVCOL_RANGE_JPEG;
-
         if (!specialize()) {
             m_EGLImagePixelFormat = AV_PIX_FMT_NONE;
             return;
@@ -798,8 +790,8 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
     // Bind parameters for the shaders
     if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12) {
-        glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix());
-        glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, getColorOffsets());
+        glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix(frame));
+        glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, getColorOffsets(frame));
         glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE1], 0);
         glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE2], 1);
     }
