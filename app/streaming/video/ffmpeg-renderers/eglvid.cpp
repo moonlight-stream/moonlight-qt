@@ -626,6 +626,9 @@ const float *EGLRenderer::getColorOffsets(const AVFrame* frame) {
     static const float limitedOffsets[] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
     static const float fullOffsets[] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
 
+    // This handles the case where the color range is unknown,
+    // so that we use Limited color range which is the default
+    // behavior for Moonlight.
     return (frame->color_range == AVCOL_RANGE_JPEG) ? fullOffsets : limitedOffsets;
 }
 
@@ -664,6 +667,9 @@ const float *EGLRenderer::getColorMatrix(const AVFrame* frame) {
         1.4746f, -0.5714f, 0.0f
     };
 
+    // This handles the case where the color range is unknown,
+    // so that we use Limited color range which is the default
+    // behavior for Moonlight.
     bool fullRange = (frame->color_range == AVCOL_RANGE_JPEG);
     switch (frame->colorspace) {
         case AVCOL_SPC_SMPTE170M:
