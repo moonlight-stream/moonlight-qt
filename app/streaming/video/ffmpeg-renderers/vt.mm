@@ -38,6 +38,7 @@ public:
           m_FormatDesc(nullptr),
           m_StreamView(nullptr),
           m_DisplayLink(nullptr),
+          m_LastAvColorSpace(AVCOL_SPC_UNSPECIFIED),
           m_ColorSpace(nullptr),
           m_VsyncMutex(nullptr),
           m_VsyncPassed(nullptr)
@@ -230,6 +231,17 @@ public:
             break;
         default:
             break;
+        }
+
+        // Reset m_ColorSpace if the colorspace changes. This can happen when
+        // a game enters HDR mode (Rec 601 -> Rec 2020).
+        if (frame->colorspace != m_LastAvColorSpace) {
+            if (m_ColorSpace != nullptr) {
+                CGColorSpaceRelease(m_ColorSpace);
+                m_ColorSpace = nullptr;
+            }
+
+            m_LastAvColorSpace = frame->colorspace;
         }
 
         switch (frame->colorspace) {
@@ -560,6 +572,7 @@ private:
     NSView* m_StreamView;
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
     CVDisplayLinkRef m_DisplayLink;
+    AVColorSpace m_LastAvColorSpace;
     CGColorSpaceRef m_ColorSpace;
     SDL_mutex* m_VsyncMutex;
     SDL_cond* m_VsyncPassed;
