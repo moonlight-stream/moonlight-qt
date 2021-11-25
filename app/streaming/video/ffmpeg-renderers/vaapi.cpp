@@ -59,8 +59,8 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
 
     m_WindowSystem = info.subsystem;
     if (info.subsystem == SDL_SYSWM_X11) {
-        m_XWindow = info.info.x11.window;
 #ifdef HAVE_LIBVA_X11
+        m_XWindow = info.info.x11.window;
         display = vaGetDisplay(info.info.x11.display);
         if (display == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
