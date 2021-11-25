@@ -3,13 +3,13 @@
 #include "renderer.h"
 
 // Avoid X11 if SDL was built without it
-#ifndef SDL_VIDEO_DRIVER_X11
+#if !defined(SDL_VIDEO_DRIVER_X11) && defined(HAVE_LIBVA_X11)
 #warning Unable to use libva-x11 without SDL support
 #undef HAVE_LIBVA_X11
 #endif
 
 // Avoid Wayland if SDL was built without it
-#ifndef SDL_VIDEO_DRIVER_WAYLAND
+#if !defined(SDL_VIDEO_DRIVER_WAYLAND) && defined(HAVE_LIBVA_WAYLAND)
 #warning Unable to use libva-wayland without SDL support
 #undef HAVE_LIBVA_WAYLAND
 #endif
