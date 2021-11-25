@@ -1,8 +1,15 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
 
-ToolButton {
+// We use a RoundButton instead of a ToolButton because ToolButton
+// doesn't seem to like to be sized larger than normal on Qt 6.2.
+RoundButton {
     property string iconSource
+
+    // Style like a ToolButton
+    leftInset: 0
+    rightInset: 0
+    flat: true
 
     activeFocusOnTab: true
 
@@ -13,15 +20,15 @@ ToolButton {
         source: iconSource
         anchors.centerIn: parent.background
         sourceSize {
-            width: parent.background.width * 1.10
-            height: parent.background.height * 1.10
+            width: parent.background.width * 0.80
+            height: parent.background.height * 0.80
         }
     }
 
     // This determines the size of the Material highlight. We increase it
     // from the default because we use larger than normal icons for TV readability.
-    background.width: (parent.height - parent.anchors.bottomMargin - parent.anchors.topMargin) * 0.60
-    background.height: (parent.height - parent.anchors.bottomMargin - parent.anchors.topMargin) * 0.60
+    background.implicitWidth: (parent.height - parent.anchors.bottomMargin - parent.anchors.topMargin) * 0.80
+    background.implicitHeight: (parent.height - parent.anchors.bottomMargin - parent.anchors.topMargin) * 0.80
 
     Keys.onReturnPressed: {
         clicked()
