@@ -212,6 +212,16 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
         }
     }
 
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+    if (event->preciseY != 0.0f) {
+        // Invert the scroll direction if needed
+        if (m_ReverseScrollDirection) {
+            event->preciseY = -event->preciseY;
+        }
+
+        LiSendHighResScrollEvent((short)(event->preciseY * 120)); // WHEEL_DELTA
+    }
+#else
     if (event->y != 0) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
@@ -220,6 +230,7 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 
         LiSendScrollEvent((signed char)event->y);
     }
+#endif
 }
 
 bool SdlInputHandler::isMouseInVideoRegion(int mouseX, int mouseY, int windowWidth, int windowHeight)
