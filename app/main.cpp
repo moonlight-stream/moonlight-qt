@@ -442,9 +442,11 @@ int main(int argc, char *argv[])
     // the mouse motion exactly how it was given to us.
     SDL_SetHint("SDL_MOUSE_RELATIVE_SCALING", "0");
 
-    // Set our app name for SDL to use with PulseAudio. This matches what we provide
-    // as our app name to libsoundio too.
+    // Set our app name for SDL to use with PulseAudio and PipeWire. This matches what we
+    // provide as our app name to libsoundio too. On SDL 2.0.18+, SDL_APP_NAME is also used
+    // for screensaver inhibitor reporting.
     SDL_SetHint("SDL_AUDIO_DEVICE_APP_NAME", "Moonlight");
+    SDL_SetHint("SDL_APP_NAME", "Moonlight");
 
 #ifdef QT_DEBUG
     // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
