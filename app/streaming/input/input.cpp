@@ -5,10 +5,6 @@
 #include "path.h"
 #include "utils.h"
 
-#ifdef Q_OS_WIN32
-#include <SDL_syswm.h>
-#endif
-
 #include <QtGlobal>
 #include <QDir>
 #include <QGuiApplication>
@@ -412,31 +408,6 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 void SdlInputHandler::setCaptureActive(bool active)
 {
     if (active) {
-#if defined(Q_OS_WIN32)
-        // If our window is occluded when mouse is captured, the mouse may
-        // get stuck on top of the occluding window and not be properly
-        // captured. We can avoid this by raising our window before we
-        // capture the mouse. This can also cause problems when keyboard
-        // capture is enabled (modifiers will be eaten by our background window).
-        // We can't use SDL_RaiseWindow() because it doesn't let us know if
-        // SetForegroundWindow() failed. In the failure case, we must not
-        // enable capture to avoid trapping the mouse and/or keyboard.
-        {
-            SDL_SysWMinfo info;
-
-            SDL_VERSION(&info.version);
-            SDL_GetWindowWMInfo(m_Window, &info);
-
-            SDL_assert(info.subsystem == SDL_SYSWM_WINDOWS);
-
-            if (!SetForegroundWindow(info.info.win.window)) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Not enabling input capture - window is not foreground");
-                return;
-            }
-        }
-#endif
-
         // If we're in full-screen exclusive mode, grab the cursor so it can't accidentally leave our window.
         if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
 #if SDL_VERSION_ATLEAST(2, 0, 15)
