@@ -109,6 +109,11 @@ bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context, AVDictionary*
     context->hwaccel_context = &m_DXVAContext;
 
     context->get_buffer2 = ffGetBuffer2;
+#if LIBAVCODEC_VERSION_MAJOR < 60
+    AV_NOWARN_DEPRECATED(
+        context->thread_safe_callbacks = 1;
+    )
+#endif
 
     m_Pool = av_buffer_pool_init2(ARRAYSIZE(m_DecSurfaces), this, ffPoolAlloc, nullptr);
     if (!m_Pool) {
