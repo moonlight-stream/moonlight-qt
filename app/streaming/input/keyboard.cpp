@@ -101,13 +101,18 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         // with the text we're going to type.
         raiseAllKeys();
 
-        const char* text;
+        char* text;
         if (SDL_HasClipboardText() && (text = SDL_GetClipboardText()) != nullptr) {
-            // Append this data to the clipboard data string for the thread to process
-            SDL_LockMutex(m_ClipboardLock);
-            m_ClipboardData.append(text);
-            SDL_CondSignal(m_ClipboardHasData);
-            SDL_UnlockMutex(m_ClipboardLock);
+            // Sending both CR and LF will lead to two newlines in the destination for
+            // each newline in the source, so we fix up any CRLFs into just a single LF.
+            for (char* c = text; *c != 0; c++) {
+                if (*c == '\r' && *(c + 1) == '\n') {
+                    memmove(c, c + 1, strlen(c) - 1);
+                }
+            }
+
+            // Send this text to the PC
+            LiSendUtf8TextEvent(text, strlen(text));
 
             // SDL_GetClipboardText() allocates, so we must free
             SDL_free((void*)text);
@@ -124,8 +129,6 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
     }
 }
 
-#define IS_SYNTHETIC_KEY_EVENT(x) ((x)->timestamp == 0)
-
 void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 {
     short keyCode;
@@ -138,9 +141,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
     }
 
     // Check for our special key combos
-    // Ignore timestamp == 0 which are sent from our keyboard code.
-    if (!IS_SYNTHETIC_KEY_EVENT(event) &&
-            (event->state == SDL_PRESSED) &&
+    if ((event->state == SDL_PRESSED) &&
             (event->keysym.mod & KMOD_CTRL) &&
             (event->keysym.mod & KMOD_ALT) &&
             (event->keysym.mod & KMOD_SHIFT)) {
@@ -403,16 +404,12 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         }
     }
 
-    // If this is a synthetic keypress from the clipboard code,
-    // this will be on a non-main thread, so don't touch m_KeysDown.
-    if (!IS_SYNTHETIC_KEY_EVENT(event)) {
-        // Track the key state so we always know which keys are down
-        if (event->state == SDL_PRESSED) {
-            m_KeysDown.insert(keyCode);
-        }
-        else {
-            m_KeysDown.remove(keyCode);
-        }
+    // Track the key state so we always know which keys are down
+    if (event->state == SDL_PRESSED) {
+        m_KeysDown.insert(keyCode);
+    }
+    else {
+        m_KeysDown.remove(keyCode);
     }
 
     LiSendKeyboardEvent(0x8000 | keyCode,

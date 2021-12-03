@@ -138,9 +138,6 @@ private:
     static
     Uint32 dragTimerCallback(Uint32 interval, void* param);
 
-    static
-    int clipboardThreadProc(void *ptr);
-
     SDL_Window* m_Window;
     bool m_MultiController;
     bool m_GamepadMouse;
@@ -190,12 +187,6 @@ private:
     SDL_TimerID m_DragTimer;
     char m_DragButton;
     int m_NumFingersDown;
-
-    SDL_Thread* m_ClipboardThread;
-    SDL_atomic_t m_ShutdownClipboardThread;
-    QString m_ClipboardData;
-    SDL_cond* m_ClipboardHasData;
-    SDL_mutex* m_ClipboardLock;
 
     static const int k_ButtonMap[];
 };

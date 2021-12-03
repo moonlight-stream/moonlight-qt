@@ -136,7 +136,6 @@ SOURCES += \
     settings/mappingfetcher.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
-    streaming/input/clipboard.cpp \
     streaming/input/gamepad.cpp \
     streaming/input/input.cpp \
     streaming/input/keyboard.cpp \
