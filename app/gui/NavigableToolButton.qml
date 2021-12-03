@@ -1,5 +1,6 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
+import QtQuick.Layouts 1.3
 
 ToolButton {
     property string iconSource
@@ -20,8 +21,7 @@ ToolButton {
 
     // This determines the size of the Material highlight. We increase it
     // from the default because we use larger than normal icons for TV readability.
-    background.width: (parent.height - parent.anchors.bottomMargin - parent.anchors.topMargin) * 0.60
-    background.height: (parent.height - parent.anchors.bottomMargin - parent.anchors.topMargin) * 0.60
+    Layout.preferredHeight: parent.height
 
     Keys.onReturnPressed: {
         clicked()

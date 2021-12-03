@@ -215,7 +215,7 @@ ApplicationWindow {
         }
 
         RowLayout {
-            spacing: 20
+            spacing: 10
             anchors.leftMargin: 10
             anchors.rightMargin: 10
             anchors.fill: parent
