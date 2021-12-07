@@ -107,7 +107,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
                     "VDPAU is not supported on Wayland");
         return false;
     }
-    else {
+    else if (info.subsystem != SDL_SYSWM_X11) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VDPAU is not supported on the current subsystem: %d",
                      info.subsystem);
