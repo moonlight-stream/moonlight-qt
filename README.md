@@ -46,9 +46,9 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
 * [WiX Toolset](https://wixtoolset.org/releases/) v3.11 or later (only if building installers for non-development PCs)
 
 ### macOS Build Requirements
-* Qt 5.15 SDK or later
-* macOS High Sierra (10.13) or later
-* Xcode 11
+* Qt 6.2 SDK or later
+* macOS Mojave (10.14) or later
+* Xcode 13
 * [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
 
 ### Linux/Unix Build Requirements
