@@ -93,6 +93,27 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     #endif
     };
 
+    SDL_VERSION(&info.version);
+
+    if (!SDL_GetWindowWMInfo(params->window, &info)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetWindowWMInfo() failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
+    if (info.subsystem == SDL_SYSWM_WAYLAND) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "VDPAU is not supported on Wayland");
+        return false;
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "VDPAU is not supported on the current subsystem: %d",
+                     info.subsystem);
+        return false;
+    }
+
     m_VideoWidth = params->width;
     m_VideoHeight = params->height;
 
@@ -158,39 +179,17 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 
     SDL_GetWindowSize(params->window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
 
-    SDL_VERSION(&info.version);
-
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
     SDL_assert(info.subsystem == SDL_SYSWM_X11);
 
-    if (info.subsystem == SDL_SYSWM_X11) {
-        GET_PROC_ADDRESS(VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
-                         &m_VdpPresentationQueueTargetCreateX11);
-        status = m_VdpPresentationQueueTargetCreateX11(m_Device,
-                                                       info.info.x11.window,
-                                                       &m_PresentationQueueTarget);
-        if (status != VDP_STATUS_OK) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "VdpPresentationQueueTargetCreateX11() failed: %s",
-                         m_VdpGetErrorString(status));
-            return false;
-        }
-    }
-    else if (info.subsystem == SDL_SYSWM_WAYLAND) {
+    GET_PROC_ADDRESS(VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
+                     &m_VdpPresentationQueueTargetCreateX11);
+    status = m_VdpPresentationQueueTargetCreateX11(m_Device,
+                                                   info.info.x11.window,
+                                                   &m_PresentationQueueTarget);
+    if (status != VDP_STATUS_OK) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "VDPAU backend does not currently support Wayland");
-        return false;
-    }
-    else {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Unsupported VDPAU rendering subsystem: %d",
-                     info.subsystem);
+                     "VdpPresentationQueueTargetCreateX11() failed: %s",
+                     m_VdpGetErrorString(status));
         return false;
     }
 
