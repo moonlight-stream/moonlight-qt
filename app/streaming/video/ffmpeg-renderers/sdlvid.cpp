@@ -5,6 +5,10 @@
 
 #include <Limelight.h>
 
+#ifdef HAVE_CUDA
+#include "cuda.h"
+#endif
+
 SdlRenderer::SdlRenderer()
     : m_Renderer(nullptr),
       m_Texture(nullptr),
@@ -203,7 +207,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
         return;
     }
 
-    if (frame->hw_frames_ctx != nullptr) {
+    if (frame->hw_frames_ctx != nullptr && frame->format != AV_PIX_FMT_CUDA) {
         // If we are acting as the frontend for a hardware
         // accelerated decoder, we'll need to read the frame
         // back to render it.
@@ -254,6 +258,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
         case AV_PIX_FMT_YUV420P:
             sdlFormat = SDL_PIXELFORMAT_YV12;
             break;
+        case AV_PIX_FMT_CUDA:
         case AV_PIX_FMT_NV12:
             sdlFormat = SDL_PIXELFORMAT_NV12;
             break;
@@ -290,7 +295,18 @@ void SdlRenderer::renderFrame(AVFrame* frame)
         }
     }
 
-    if (frame->format == AV_PIX_FMT_YUV420P) {
+    if (frame->format == AV_PIX_FMT_CUDA) {
+#ifdef HAVE_CUDA
+        SDL_GL_BindTexture(m_Texture, nullptr, nullptr);
+        CUDARenderer::copyCudaFrameToBoundTexture(frame);
+        SDL_GL_UnbindTexture(m_Texture);
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Got CUDA frame, but not built with CUDA support!");
+        goto Exit;
+#endif
+    }
+    else if (frame->format == AV_PIX_FMT_YUV420P) {
         SDL_UpdateYUVTexture(m_Texture, nullptr,
                              frame->data[0],
                              frame->linesize[0],

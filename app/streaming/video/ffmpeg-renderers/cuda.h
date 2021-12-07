@@ -12,6 +12,9 @@ public:
     virtual bool needsTestFrame() override;
     virtual bool isDirectRenderingSupported() override;
 
+    // Helper function used by SDLRenderer to read our CUDA frame
+    static bool copyCudaFrameToBoundTexture(AVFrame* frame);
+
 private:
     AVBufferRef* m_HwContext;
 };

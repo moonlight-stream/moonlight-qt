@@ -6,7 +6,6 @@
 #include <h264_stream.h>
 
 #include "ffmpeg-renderers/sdlvid.h"
-#include "ffmpeg-renderers/cuda.h"
 
 #ifdef Q_OS_WIN32
 #include "ffmpeg-renderers/dxva2.h"
@@ -34,6 +33,10 @@
 
 #ifdef HAVE_EGL
 #include "ffmpeg-renderers/eglvid.h"
+#endif
+
+#ifdef HAVE_CUDA
+#include "ffmpeg-renderers/cuda.h"
 #endif
 
 // This is gross but it allows us to use sizeof()
@@ -567,11 +570,11 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     // Second pass for our second-tier hwaccel implementations
     else if (pass == 1) {
         switch (hwDecodeCfg->device_type) {
+#ifdef HAVE_CUDA
         case AV_HWDEVICE_TYPE_CUDA:
-            // CUDA should only be used if all other options fail, since it requires
-            // read-back of frames. This should only be used for the NVIDIA+Wayland case
-            // with VDPAU covering the NVIDIA+X11 scenario.
+            // CUDA should only be used to cover the NVIDIA+Wayland case
             return new CUDARenderer();
+#endif
         default:
             return nullptr;
         }
