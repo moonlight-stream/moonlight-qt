@@ -107,7 +107,9 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
             // each newline in the source, so we fix up any CRLFs into just a single LF.
             for (char* c = text; *c != 0; c++) {
                 if (*c == '\r' && *(c + 1) == '\n') {
-                    memmove(c, c + 1, strlen(c) - 1);
+                    // We're using strlen() rather than strlen() - 1 since we need to add 1
+                    // to copy the null terminator which is not included in strlen()'s count.
+                    memmove(c, c + 1, strlen(c));
                 }
             }
 
