@@ -411,12 +411,12 @@
         <translation>你选择的编解码器和强制硬件解码设置不兼容。此计算机的显卡不支持解码你选择的编解码器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1044"/>
+        <location filename="../streaming/session.cpp" line="1047"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience 返回错误: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1541"/>
+        <location filename="../streaming/session.cpp" line="1547"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>无法初始化视频解码器。请检查你的流式传输设置，然后重试。</translation>
     </message>
@@ -835,6 +835,11 @@
         <location filename="../gui/SettingsView.qml" line="1313"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1317"/>
+        <source>HEVC HDR (Experimental)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1330"/>

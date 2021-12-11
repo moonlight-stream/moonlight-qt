@@ -427,12 +427,12 @@
         <translation>Lựa chọn codec và cài đặt buộc giải mã phần cứng của bạn không tương thích. GPU của PC này thiếu sự hỗ trợ cho việc giải mã codec đã chọn.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1044"/>
+        <location filename="../streaming/session.cpp" line="1047"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience đã trả lời bằng lỗi: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1541"/>
+        <location filename="../streaming/session.cpp" line="1547"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Không thể khởi tạo trình giải mã video. Vui lòng kiểm tra cài đặt stream của bạn và thử lại.</translation>
     </message>
@@ -856,6 +856,11 @@
         <location filename="../gui/SettingsView.qml" line="1313"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1317"/>
+        <source>HEVC HDR (Experimental)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1330"/>

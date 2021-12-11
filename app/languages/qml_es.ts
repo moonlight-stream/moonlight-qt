@@ -427,12 +427,12 @@
         <translation>La selección del códec y la configuración de la decodificación forzada por hardware no son compatibles. La GPU de este PC no es compatible con la descodificación del códec elegido.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1044"/>
+        <location filename="../streaming/session.cpp" line="1047"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience ha devuelto el error: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1541"/>
+        <location filename="../streaming/session.cpp" line="1547"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>No se ha podido inicializar el decodificador de vídeo. Por favor, compruebe la configuración de la transmisión y vuelva a intentarlo.</translation>
     </message>
@@ -858,6 +858,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="1317"/>
+        <source>HEVC HDR (Experimental)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../gui/SettingsView.qml" line="1330"/>
         <source>Unlock unsupported FPS options</source>
         <translation type="unfinished"></translation>
@@ -930,7 +935,7 @@
         <location filename="../gui/main.qml" line="393"/>
         <location filename="../gui/main.qml" line="408"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ajustes</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="255"/>

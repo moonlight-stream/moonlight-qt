@@ -427,12 +427,12 @@
         <translation>選択したコーデックとハードウェアデコードを強制する設定には互換性がありません。このPCのGPUは、選択したコーデックのデコードに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1044"/>
+        <location filename="../streaming/session.cpp" line="1047"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experienceがエラーを返しました: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1541"/>
+        <location filename="../streaming/session.cpp" line="1547"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>ビデオデコーダを初期化できませんでした。ストリーミングの設定を確認して再度お試しください。</translation>
     </message>
@@ -856,6 +856,11 @@
         <location filename="../gui/SettingsView.qml" line="1313"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1317"/>
+        <source>HEVC HDR (Experimental)</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1330"/>
