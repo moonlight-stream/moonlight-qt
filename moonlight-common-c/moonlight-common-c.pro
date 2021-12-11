@@ -19,6 +19,16 @@ CONFIG += warn_off
 include(../globaldefs.pri)
 
 win32 {
+    contains(QT_ARCH, i386) {
+        INCLUDEPATH += $$PWD/../libs/windows/include/x86
+    }
+    contains(QT_ARCH, x86_64) {
+        INCLUDEPATH += $$PWD/../libs/windows/include/x64
+    }
+    contains(QT_ARCH, arm64) {
+        INCLUDEPATH += $$PWD/../libs/windows/include/arm64
+    }
+
     INCLUDEPATH += $$PWD/../libs/windows/include
 }
 macx {
