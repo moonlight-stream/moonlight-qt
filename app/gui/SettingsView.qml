@@ -789,11 +789,10 @@ Flickable {
                             text: "русский" // Russian
                             val: StreamingPreferences.LANG_RU
                         }
-                        // Don't list Spanish until it is more complete
-                        /*ListElement {
+                        ListElement {
                             text: "Español" // Spanish
                             val: StreamingPreferences.LANG_ES
-                        }*/
+                        }
                         ListElement {
                             text: "日本語" // Japanese
                             val: StreamingPreferences.LANG_JA
@@ -830,10 +829,10 @@ Flickable {
                             text: "Українська" // Ukrainian
                             val: StreamingPreferences.LANG_UK
                         } */
-                        /* ListElement {
+                        ListElement {
                             text: "繁体字" // Traditional Chinese
                             val: StreamingPreferences.LANG_ZH_HANT
-                        } */
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
