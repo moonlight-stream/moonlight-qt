@@ -447,7 +447,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="70"/>
         <source>Resolution and FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>解析度和 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="78"/>
@@ -754,7 +754,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="646"/>
         <source>Audio configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>音訊設定</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="913"/>
