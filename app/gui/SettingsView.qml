@@ -1284,6 +1284,13 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
+                        if (SystemProperties.supportsHdr) {
+                            codecListModel.append({
+                                "text": qsTr("HEVC HDR (Experimental)"),
+                                "val": StreamingPreferences.VCC_FORCE_HEVC_HDR
+                            });
+                        }
+
                         var saved_vcc = StreamingPreferences.videoCodecConfig
                         currentIndex = 0
                         for(var i = 0; i < codecListModel.count; i++) {
@@ -1312,10 +1319,7 @@ Flickable {
                             text: qsTr("HEVC (H.265)")
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
-                        ListElement {
-                            text: qsTr("HEVC HDR (Experimental)")
-                            val: StreamingPreferences.VCC_FORCE_HEVC_HDR
-                        }
+                        /* HEVC HDR will be appended here */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

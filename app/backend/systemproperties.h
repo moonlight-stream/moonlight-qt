@@ -26,6 +26,7 @@ public:
     Q_PROPERTY(int maximumStreamingFrameRate MEMBER maximumStreamingFrameRate CONSTANT)
     Q_PROPERTY(QSize maximumResolution MEMBER maximumResolution CONSTANT)
     Q_PROPERTY(QString versionString MEMBER versionString CONSTANT)
+    Q_PROPERTY(bool supportsHdr MEMBER supportsHdr CONSTANT)
 
     Q_INVOKABLE void refreshDisplays();
     Q_INVOKABLE QRect getDesktopResolution(int displayIndex);
@@ -54,5 +55,6 @@ private:
     QList<QRect> monitorDesktopResolutions;
     QList<QRect> monitorNativeResolutions;
     QString versionString;
+    bool supportsHdr;
 };
 
