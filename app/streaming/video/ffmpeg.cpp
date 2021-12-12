@@ -902,6 +902,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 {
     PLENTRY entry = du->bufferList;
     int err;
+    bool submittedFrame = false;
 
     SDL_assert(!m_TestOnly);
 
@@ -991,48 +992,61 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
 
     m_FramesIn++;
 
-    AVFrame* frame = av_frame_alloc();
-    if (!frame) {
-        // Failed to allocate a frame but we did submit,
-        // so we can return DR_OK
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to allocate frame");
-        return DR_OK;
-    }
+    // We can receive 0 or more frames after submission of a packet, so we must
+    // try to read until we get EAGAIN to ensure the queue is drained. Some decoders
+    // run asynchronously and may return several frames at once after warming up.
+    do {
+        AVFrame* frame = av_frame_alloc();
+        if (!frame) {
+            // Failed to allocate a frame but we did submit,
+            // so we can return DR_OK
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to allocate frame");
+            return DR_OK;
+        }
 
-    err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
-    if (err == 0) {
-        m_FramesOut++;
+        err = avcodec_receive_frame(m_VideoDecoderCtx, frame);
+        if (err == 0) {
+            m_FramesOut++;
 
-        // Reset failed decodes count if we reached this far
-        m_ConsecutiveFailedDecodes = 0;
+            // Reset failed decodes count if we reached this far
+            m_ConsecutiveFailedDecodes = 0;
 
-        // Restore default log level after a successful decode
-        av_log_set_level(AV_LOG_INFO);
+            // Restore default log level after a successful decode
+            av_log_set_level(AV_LOG_INFO);
 
-        // Store the presentation time
-        frame->pts = du->presentationTimeMs;
+            // Store the presentation time
+            // FIXME: This is wrong when reading a batch of frames
+            frame->pts = du->presentationTimeMs;
 
-        // Capture a frame timestamp to measuring pacing delay
-        frame->pkt_dts = SDL_GetTicks();
+            // Capture a frame timestamp to measuring pacing delay
+            frame->pkt_dts = SDL_GetTicks();
 
-        // Count time in avcodec_send_packet() and avcodec_receive_frame()
-        // as time spent decoding. Also count time spent in the decode unit
-        // queue because that's directly caused by decoder latency.
-        m_ActiveWndVideoStats.totalDecodeTime += LiGetMillis() - du->enqueueTimeMs;
+            // Count time in avcodec_send_packet() and avcodec_receive_frame()
+            // as time spent decoding. Also count time spent in the decode unit
+            // queue because that's directly caused by decoder latency.
+            m_ActiveWndVideoStats.totalDecodeTime += LiGetMillis() - du->enqueueTimeMs;
 
-        // Also count the frame-to-frame delay if the decoder is delaying frames
-        // until a subsequent frame is submitted.
-        m_ActiveWndVideoStats.totalDecodeTime += (m_FramesIn - m_FramesOut) * (1000 / m_StreamFps);
+            // Also count the frame-to-frame delay if the decoder is delaying frames
+            // until a subsequent frame is submitted.
+            m_ActiveWndVideoStats.totalDecodeTime += (m_FramesIn - m_FramesOut) * (1000 / m_StreamFps);
 
-        m_ActiveWndVideoStats.decodedFrames++;
+            m_ActiveWndVideoStats.decodedFrames++;
 
-        // Queue the frame for rendering (or render now if pacer is disabled)
-        m_Pacer->submitFrame(frame);
-    }
-    else {
-        av_frame_free(&frame);
+            // Queue the frame for rendering (or render now if pacer is disabled)
+            m_Pacer->submitFrame(frame);
+            submittedFrame = true;
+        }
+        else {
+            av_frame_free(&frame);
+        }
+    } while (err == 0);
 
+    // Treat this as a failed decode if we don't manage to receive a single frame or
+    // if we finish the loop above with an error other than EAGAIN. Note that some
+    // limited number of "failed decodes" with EAGAIN are expected for asynchronous
+    // decoders, so we only reset the decoder if we get a ton of them in a row.
+    if (!submittedFrame || err != AVERROR(EAGAIN)) {
         char errorstring[512];
         av_strerror(err, errorstring, sizeof(errorstring));
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
