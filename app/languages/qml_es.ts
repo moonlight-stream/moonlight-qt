@@ -541,12 +541,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="592"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation type="unfinished"></translation>
+        <translation>La pantalla completa suele ofrecer el mejor rendimiento, pero la ventana sin bordes puede funcionar mejor con funciones como macOS Spaces, Alt+Tab, herramientas de captura de pantalla, superposiciones en pantalla, etc.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="577"/>
         <source>Borderless windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Ventana sin bordes</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="412"/>
@@ -555,68 +555,68 @@
         <location filename="../gui/SettingsView.qml" line="437"/>
         <location filename="../gui/SettingsView.qml" line="440"/>
         <source>%1 FPS (Unsupported)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS (No compatible)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
         <location filename="../gui/SettingsView.qml" line="892"/>
         <source>Windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Ventana</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="599"/>
         <source>V-Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>V-Sync</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="609"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation type="unfinished"></translation>
+        <translation>Desactivar V-Sync permite una latencia de renderizado por debajo de los fotogramas, pero puede mostrar un tearing visible</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="616"/>
         <source>Frame pacing</source>
-        <translation type="unfinished"></translation>
+        <translation>Ritmo de fotogramas</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="626"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation type="unfinished"></translation>
+        <translation>El ritmo de los fotogramas reduce el microtartamudeo retrasando los fotogramas que llegan demasiado pronto</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="636"/>
         <source>Audio Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajustes de audio</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="671"/>
         <source>Stereo</source>
-        <translation type="unfinished"></translation>
+        <translation>Estéreo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="675"/>
         <source>5.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>Sonido envolvente 5.1</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="679"/>
         <source>7.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>Sonido envolvente 7.1</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="693"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Silenciar los altavoces del PC anfitrión durante la transmisión</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="703"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation type="unfinished"></translation>
+        <translation>Para que este ajuste surta efecto, debes reiniciar cualquier partida que esté en curso</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="709"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation type="unfinished"></translation>
+        <translation>Silenciar el flujo de audio cuando Moonlight no es la ventana activa</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="720"/>
