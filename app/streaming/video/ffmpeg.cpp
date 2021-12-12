@@ -1047,10 +1047,14 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     // limited number of "failed decodes" with EAGAIN are expected for asynchronous
     // decoders, so we only reset the decoder if we get a ton of them in a row.
     if (!submittedFrame || err != AVERROR(EAGAIN)) {
-        char errorstring[512];
-        av_strerror(err, errorstring, sizeof(errorstring));
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "avcodec_receive_frame() failed: %s", errorstring);
+        // Don't spam EAGAIN log messages for asynchronous decoders as long as
+        // they produce a frame for at least every other submitted packet.
+        if (m_ConsecutiveFailedDecodes > 0 || err != AVERROR(EAGAIN)) {
+            char errorstring[512];
+            av_strerror(err, errorstring, sizeof(errorstring));
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "avcodec_receive_frame() failed: %s", errorstring);
+        }
 
         if (++m_ConsecutiveFailedDecodes == FAILED_DECODES_RESET_THRESHOLD) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
