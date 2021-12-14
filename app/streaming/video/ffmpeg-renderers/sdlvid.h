@@ -2,6 +2,10 @@
 
 #include "renderer.h"
 
+#ifdef HAVE_CUDA
+#include "cuda.h"
+#endif
+
 class SdlRenderer : public IFFmpegRenderer {
 public:
     SdlRenderer();
@@ -21,5 +25,9 @@ private:
     int m_SwPixelFormat;
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
+
+#ifdef HAVE_CUDA
+    CUDAGLInteropHelper* m_CudaGLHelper;
+#endif
 };
 

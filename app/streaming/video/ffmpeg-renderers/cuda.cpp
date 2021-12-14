@@ -1,12 +1,6 @@
 #include "cuda.h"
 
-#include <ffnvcodec/dynlink_loader.h>
-
 #include <SDL_opengl.h>
-
-extern "C" {
-    #include <libavutil/hwcontext_cuda.h>
-}
 
 CUDARenderer::CUDARenderer()
     : m_HwContext(nullptr)
@@ -63,35 +57,47 @@ bool CUDARenderer::isDirectRenderingSupported()
     return false;
 }
 
-bool CUDARenderer::copyCudaFrameToBoundTexture(AVFrame* frame)
+CUDAGLInteropHelper::CUDAGLInteropHelper(AVHWDeviceContext* context)
+    : m_Funcs(nullptr),
+      m_Context((AVCUDADeviceContext*)context->hwctx)
 {
-    static CudaFunctions* funcs;
-    CUresult err;
-    AVCUDADeviceContext* devCtx = (AVCUDADeviceContext*)(((AVHWFramesContext*)frame->hw_frames_ctx->data)->device_ctx->hwctx);
-    bool ret = false;
+    memset(m_Resources, 0, sizeof(m_Resources));
 
-    if (!funcs) {
-        // One-time init of CUDA library
-        cuda_load_functions(&funcs, nullptr);
-        if (!funcs) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to initialize CUDA library");
-            return false;
-        }
+    // One-time init of CUDA library
+    cuda_load_functions(&m_Funcs, nullptr);
+    if (m_Funcs == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "Failed to initialize CUDA library");
+        return;
+    }
+}
+
+CUDAGLInteropHelper::~CUDAGLInteropHelper()
+{
+    unregisterTextures();
+
+    if (m_Funcs != nullptr) {
+        cuda_free_functions(&m_Funcs);
+    }
+}
+
+bool CUDAGLInteropHelper::registerBoundTextures()
+{
+    int err;
+
+    if (m_Funcs == nullptr) {
+        // Already logged in constructor
+        return false;
     }
 
-    SDL_assert(frame->format == AV_PIX_FMT_CUDA);
-
     // Push FFmpeg's CUDA context to use for our CUDA operations
-    err = funcs->cuCtxPushCurrent(devCtx->cuda_ctx);
+    err = m_Funcs->cuCtxPushCurrent(m_Context->cuda_ctx);
     if (err != CUDA_SUCCESS) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuCtxPushCurrent() failed: %d", err);
         return false;
     }
 
-    // NV12 has 2 planes
-    for (int i = 0; i < 2; i++) {
-        CUgraphicsResource cudaResource;
-        CUarray cudaArray;
+    // Register each plane as a separate resource
+    for (int i = 0; i < NV12_PLANES; i++) {
         GLint tex;
 
         // Get the ID of this plane's texture
@@ -99,29 +105,86 @@ bool CUDARenderer::copyCudaFrameToBoundTexture(AVFrame* frame)
         glGetIntegerv(GL_TEXTURE_BINDING_2D, &tex);
 
         // Register it with CUDA
-        err = funcs->cuGraphicsGLRegisterImage(&cudaResource, tex, GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD);
+        err = m_Funcs->cuGraphicsGLRegisterImage(&m_Resources[i], tex, GL_TEXTURE_2D, CU_GRAPHICS_REGISTER_FLAGS_WRITE_DISCARD);
         if (err != CUDA_SUCCESS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuGraphicsGLRegisterImage() failed: %d", err);
+            m_Resources[i] = 0;
+            unregisterTextures();
             goto Exit;
         }
+    }
 
-        // Map it to allow us to use it as a copy destination
-        err = funcs->cuGraphicsMapResources(1, &cudaResource, devCtx->stream);
-        if (err != CUDA_SUCCESS) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuGraphicsMapResources() failed: %d", err);
-            funcs->cuGraphicsUnregisterResource(cudaResource);
-            goto Exit;
+Exit:
+    {
+        CUcontext dummy;
+        m_Funcs->cuCtxPopCurrent(&dummy);
+    }
+    return err == CUDA_SUCCESS;
+}
+
+void CUDAGLInteropHelper::unregisterTextures()
+{
+    int err;
+
+    if (m_Funcs == nullptr) {
+        // Already logged in constructor
+        return;
+    }
+
+    // Push FFmpeg's CUDA context to use for our CUDA operations
+    err = m_Funcs->cuCtxPushCurrent(m_Context->cuda_ctx);
+    if (err != CUDA_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuCtxPushCurrent() failed: %d", err);
+        return;
+    }
+
+    for (int i = 0; i < NV12_PLANES; i++) {
+        if (m_Resources[i] != 0) {
+            m_Funcs->cuGraphicsUnregisterResource(m_Resources[i]);
+            m_Resources[i] = 0;
         }
+    }
 
-        // Get a pointer to the mapped array
-        err = funcs->cuGraphicsSubResourceGetMappedArray(&cudaArray, cudaResource, 0, 0);
+    {
+        CUcontext dummy;
+        m_Funcs->cuCtxPopCurrent(&dummy);
+    }
+}
+
+bool CUDAGLInteropHelper::copyCudaFrameToTextures(AVFrame* frame)
+{
+    int err;
+
+    if (m_Funcs == nullptr) {
+        // Already logged in constructor
+        return false;
+    }
+
+    // Push FFmpeg's CUDA context to use for our CUDA operations
+    err = m_Funcs->cuCtxPushCurrent(m_Context->cuda_ctx);
+    if (err != CUDA_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuCtxPushCurrent() failed: %d", err);
+        return false;
+    }
+
+    // Map our resources
+    err = m_Funcs->cuGraphicsMapResources(NV12_PLANES, m_Resources, m_Context->stream);
+    if (err != CUDA_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuGraphicsMapResources() failed: %d", err);
+        goto PopCtxExit;
+    }
+
+    for (int i = 0; i < NV12_PLANES; i++) {
+        CUarray cudaArray;
+
+        // Get a pointer to the mapped array for this plane
+        err = m_Funcs->cuGraphicsSubResourceGetMappedArray(&cudaArray, m_Resources[i], 0, 0);
         if (err != CUDA_SUCCESS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuGraphicsSubResourceGetMappedArray() failed: %d", err);
-            funcs->cuGraphicsUnmapResources(1, &cudaResource, devCtx->stream);
-            funcs->cuGraphicsUnregisterResource(cudaResource);
-            goto Exit;
+            goto UnmapExit;
         }
 
+        // Do the copy
         CUDA_MEMCPY2D cu2d = {
             .srcMemoryType = CU_MEMORYTYPE_DEVICE,
             .srcDevice = (CUdeviceptr)frame->data[i],
@@ -132,27 +195,19 @@ bool CUDARenderer::copyCudaFrameToBoundTexture(AVFrame* frame)
             .WidthInBytes = (size_t)frame->width,
             .Height = (size_t)frame->height >> i
         };
-
-        // Do the copy
-        err = funcs->cuMemcpy2D(&cu2d);
+        err = m_Funcs->cuMemcpy2D(&cu2d);
         if (err != CUDA_SUCCESS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "cuMemcpy2D() failed: %d", err);
-            funcs->cuGraphicsUnmapResources(1, &cudaResource, devCtx->stream);
-            funcs->cuGraphicsUnregisterResource(cudaResource);
-            goto Exit;
+            goto UnmapExit;
         }
-
-        funcs->cuGraphicsUnmapResources(1, &cudaResource, devCtx->stream);
-        funcs->cuGraphicsUnregisterResource(cudaResource);
     }
 
-    ret = true;
-
-Exit:
+UnmapExit:
+    m_Funcs->cuGraphicsUnmapResources(NV12_PLANES, m_Resources, m_Context->stream);
+PopCtxExit:
     {
         CUcontext dummy;
-        funcs->cuCtxPopCurrent(&dummy);
+        m_Funcs->cuCtxPopCurrent(&dummy);
     }
-    return ret;
+    return err == CUDA_SUCCESS;
 }
-

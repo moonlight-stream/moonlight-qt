@@ -5,20 +5,26 @@
 
 #include <Limelight.h>
 
-#ifdef HAVE_CUDA
-#include "cuda.h"
-#endif
-
 SdlRenderer::SdlRenderer()
     : m_Renderer(nullptr),
       m_Texture(nullptr),
       m_SwPixelFormat(AV_PIX_FMT_NONE)
 {
     SDL_zero(m_OverlayTextures);
+
+#ifdef HAVE_CUDA
+    m_CudaGLHelper = nullptr;
+#endif
 }
 
 SdlRenderer::~SdlRenderer()
 {
+#ifdef HAVE_CUDA
+    if (m_CudaGLHelper != nullptr) {
+        delete m_CudaGLHelper;
+    }
+#endif
+
     for (int i = 0; i < Overlay::OverlayMax; i++) {
         if (m_OverlayTextures[i] != nullptr) {
             SDL_DestroyTexture(m_OverlayTextures[i]);
@@ -208,6 +214,7 @@ void SdlRenderer::renderFrame(AVFrame* frame)
     }
 
     if (frame->hw_frames_ctx != nullptr && frame->format != AV_PIX_FMT_CUDA) {
+ReadbackRetry:
         // If we are acting as the frontend for a hardware
         // accelerated decoder, we'll need to read the frame
         // back to render it.
@@ -293,13 +300,28 @@ void SdlRenderer::renderFrame(AVFrame* frame)
                          SDL_GetError());
             goto Exit;
         }
+
+#ifdef HAVE_CUDA
+        if (frame->format == AV_PIX_FMT_CUDA) {
+            SDL_assert(m_CudaGLHelper == nullptr);
+            m_CudaGLHelper = new CUDAGLInteropHelper(((AVHWFramesContext*)frame->hw_frames_ctx->data)->device_ctx);
+
+            SDL_GL_BindTexture(m_Texture, nullptr, nullptr);
+            if (!m_CudaGLHelper->registerBoundTextures()) {
+                // If we can't register textures, fall back to normal read-back rendering
+                delete m_CudaGLHelper;
+                m_CudaGLHelper = nullptr;
+            }
+            SDL_GL_UnbindTexture(m_Texture);
+        }
+#endif
     }
 
     if (frame->format == AV_PIX_FMT_CUDA) {
 #ifdef HAVE_CUDA
-        SDL_GL_BindTexture(m_Texture, nullptr, nullptr);
-        CUDARenderer::copyCudaFrameToBoundTexture(frame);
-        SDL_GL_UnbindTexture(m_Texture);
+        if (m_CudaGLHelper == nullptr || !m_CudaGLHelper->copyCudaFrameToTextures(frame)) {
+            goto ReadbackRetry;
+        }
 #else
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Got CUDA frame, but not built with CUDA support!");
