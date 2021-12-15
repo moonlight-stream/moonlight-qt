@@ -46,6 +46,8 @@
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
+#define MAX_RECV_FRAME_RETRIES 100
+
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr ||
@@ -134,7 +136,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_StreamFps(0),
       m_VideoFormat(0),
       m_NeedsSpsFixup(false),
-      m_TestOnly(testOnly)
+      m_TestOnly(testOnly),
+      m_CanRetryReceiveFrame(RRF_UNKNOWN)
 {
     SDL_zero(m_ActiveWndVideoStats);
     SDL_zero(m_LastWndVideoStats);
@@ -995,6 +998,11 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     // We can receive 0 or more frames after submission of a packet, so we must
     // try to read until we get EAGAIN to ensure the queue is drained. Some decoders
     // run asynchronously and may return several frames at once after warming up.
+    //
+    // Some decoders support calling avcodec_receive_frame() without queuing a packet.
+    // This allows us to drain excess frames and reduce latency. We will try to learn
+    // if a decoder is capable of this by trying it and seeing if it works.
+    int receiveRetries = 0;
     do {
         AVFrame* frame = av_frame_alloc();
         if (!frame) {
@@ -1036,11 +1044,39 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
             // Queue the frame for rendering (or render now if pacer is disabled)
             m_Pacer->submitFrame(frame);
             submittedFrame = true;
+
+            // Once we receive a frame, transition out of the Unknown state by determining
+            // whether a receive frame retry was needed to get this frame. We assume that
+            // any asynchronous decoder is going to return EAGAIN on the first frame.
+            if (m_CanRetryReceiveFrame == RRF_UNKNOWN) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "RRF mode: %s", receiveRetries > 0 ? "YES" : "NO");
+                m_CanRetryReceiveFrame = receiveRetries > 0 ? RRF_YES : RRF_NO;
+            }
         }
         else {
             av_frame_free(&frame);
+
+            if (err == AVERROR(EAGAIN)) {
+                // Break out if we can't retry or we successfully received a frame. We only want
+                // to retry if we haven't gotten a frame back for this input packet.
+                if (m_CanRetryReceiveFrame == RRF_NO || receiveRetries == MAX_RECV_FRAME_RETRIES || submittedFrame) {
+                    // We will transition from Unknown -> No if we exceed the maximum retries.
+                    if (m_CanRetryReceiveFrame == RRF_UNKNOWN) {
+                        SDL_assert(!submittedFrame);
+                        SDL_assert(receiveRetries == MAX_RECV_FRAME_RETRIES);
+
+                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "RRF mode: NO (timeout)");
+                        m_CanRetryReceiveFrame = RRF_NO;
+                    }
+
+                    break;
+                }
+                else {
+                    SDL_Delay(1);
+                }
+            }
         }
-    } while (err == 0);
+    } while (err == 0 || (err == AVERROR(EAGAIN) && receiveRetries++ < MAX_RECV_FRAME_RETRIES));
 
     // Treat this as a failed decode if we don't manage to receive a single frame or
     // if we finish the loop above with an error other than EAGAIN. Note that some

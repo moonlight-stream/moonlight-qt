@@ -74,6 +74,11 @@ private:
     int m_VideoFormat;
     bool m_NeedsSpsFixup;
     bool m_TestOnly;
+    enum {
+        RRF_UNKNOWN,
+        RRF_YES,
+        RRF_NO
+    } m_CanRetryReceiveFrame;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCMainTestFrame[];
