@@ -359,7 +359,7 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, PDECODER
                 char errorstring[512];
                 av_strerror(err, errorstring, sizeof(errorstring));
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Test decode failed: %s", errorstring);
+                            "Test decode failed (avcodec_send_packet): %s", errorstring);
                 return false;
             }
 
@@ -376,22 +376,24 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, PDECODER
             }
         }
 
+        if (err < 0) {
+            char errorstring[512];
+            av_strerror(err, errorstring, sizeof(errorstring));
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Test decode failed (avcodec_receive_frame): %s", errorstring);
+            av_frame_free(&frame);
+            return false;
+        }
+
         // Allow the renderer to do any validation it wants on this frame
         if (!m_FrontendRenderer->testRenderFrame(frame)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Render test failed");
+                        "Test decode failed (testRenderFrame)");
             av_frame_free(&frame);
             return false;
         }
 
         av_frame_free(&frame);
-        if (err < 0) {
-            char errorstring[512];
-            av_strerror(err, errorstring, sizeof(errorstring));
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Test decode failed: %s", errorstring);
-            return false;
-        }
     }
     else {
         if ((params->videoFormat & VIDEO_FORMAT_MASK_H264) &&
