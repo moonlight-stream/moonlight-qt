@@ -1,6 +1,7 @@
 #include <streaming/session.h>
 #include "vdpau.h"
 #include <streaming/streamutils.h>
+#include <utils.h>
 
 #include <SDL_syswm.h>
 
@@ -111,6 +112,15 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "VDPAU is not supported on the current subsystem: %d",
                      info.subsystem);
+        return false;
+    }
+    else if (qgetenv("VDPAU_XWAYLAND") != "1" && WMUtils::isRunningWayland()) {
+        // VDPAU initialization causes Moonlight to crash when using XWayland in a Flatpak
+        // on a system with the Nvidia 495.44 driver. VDPAU won't work under XWayland anyway,
+        // so let's not risk trying it (unless the user wants to roll the dice).
+        // https://gitlab.freedesktop.org/vdpau/libvdpau/-/issues/2
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "VDPAU is disabled on XWayland. Set VDPAU_XWAYLAND=1 to try your luck.");
         return false;
     }
 
