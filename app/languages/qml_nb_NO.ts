@@ -160,7 +160,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Versjonen av GeForce Experience på %1 støttes ikke av denne byggversjonen av Moonlight. Du må oppdatere Moonlight for å strømme fra %1.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -329,7 +329,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="592"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Versjonen av GeForce Experience på %1 støttes ikke av denne byggversjonen av Moonlight. Du må oppdatere Moonlight for å strømme fra %1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="597"/>
@@ -860,7 +860,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1317"/>
         <source>HEVC HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC-HDR (eksperimentelt)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1330"/>

@@ -404,7 +404,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="711"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation type="unfinished"></translation>
+        <translation>附加的遊戲控制器沒有映射，將無法使用。請造訪Moonlight幫助解決問題。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="719"/>
@@ -424,7 +424,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="740"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>你選擇的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選擇的解編碼器。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1047"/>
@@ -482,7 +482,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="331"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation type="unfinished"></translation>
+        <translation>自訂解析度不受GeForce Experience官方支援，因此不會設定目標主機的顯示解析度。您需要在遊戲內手動設定。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="332"/>
@@ -500,7 +500,7 @@
         <location filename="../gui/SettingsView.qml" line="427"/>
         <location filename="../gui/SettingsView.qml" line="430"/>
         <source>%1 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS</translation>
     </message>
     <message>
         <source>%1 FPS (nicht unterstützt)</source>
@@ -555,7 +555,7 @@
         <location filename="../gui/SettingsView.qml" line="437"/>
         <location filename="../gui/SettingsView.qml" line="440"/>
         <source>%1 FPS (Unsupported)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS (不支援)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="581"/>
@@ -571,7 +571,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="609"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation type="unfinished"></translation>
+        <translation>禁用垂直同步可允許子幀渲染延遲，但會造成顯示畫面撕裂</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="616"/>
@@ -621,7 +621,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="720"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation type="unfinished"></translation>
+        <translation>當你使用Alt+Tab切換離開串流視窗或點擊其他視窗時，Moonlight將靜音。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="729"/>
@@ -646,7 +646,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="859"/>
         <source>GUI display mode</source>
-        <translation type="unfinished"></translation>
+        <translation>GUI(使用者介面)顯示模式</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="896"/>
@@ -684,7 +684,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1058"/>
         <source>Use touchscreen as a virtual trackpad</source>
-        <translation type="unfinished"></translation>
+        <translation>將觸控螢幕用作虛擬觸控板</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1075"/>
@@ -704,17 +704,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1111"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>交換遊戲控制器的A/B 和 X/Y按鈕</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1129"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation type="unfinished"></translation>
+        <translation>這將遊戲控制器切換為任天堂風格的按鍵布局</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1135"/>
         <source>Force gamepad #1 always connected</source>
-        <translation type="unfinished"></translation>
+        <translation>強制遊戲控制器#1始終連接</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1145"/>
@@ -970,7 +970,7 @@
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished">搖桿按鍵對應</translation>
+        <translation>搖桿按鍵對應</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="415"/>

@@ -860,7 +860,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1317"/>
         <source>HEVC HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC HDR (Thử nghiệm)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1330"/>
