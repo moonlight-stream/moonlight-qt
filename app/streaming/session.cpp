@@ -919,6 +919,24 @@ void Session::updateOptimalWindowDisplayMode()
         }
     }
 
+    // For KMSDRM backends where we exclusively own the display, we should opt
+    // to change the resolution if that allows us to hit the desired frame rate
+    if (bestMode.refresh_rate == 0 && strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
+        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+            if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Detected display mode: %dx%dx%d",
+                            mode.w, mode.h, mode.refresh_rate);
+                if (mode.w >= m_ActiveVideoWidth && mode.h >= m_ActiveVideoHeight &&
+                        mode.refresh_rate % m_StreamConfig.fps == 0) {
+                    if (mode.refresh_rate > bestMode.refresh_rate) {
+                        bestMode = mode;
+                    }
+                }
+            }
+        }
+    }
+
     if (bestMode.refresh_rate == 0) {
         // We may find no match if the user has moved a 120 FPS
         // stream onto a 60 Hz monitor (since no refresh rate can
