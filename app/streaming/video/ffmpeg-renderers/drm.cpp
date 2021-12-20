@@ -140,6 +140,15 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     const bool DIRECT_RENDERING_INIT_FAILED = false;
 #endif
 
+    // If we're not sharing the DRM FD with SDL, that means we don't
+    // have DRM master, so we can't call drmModeSetPlane(). We can
+    // only use EGL to render in this situation.
+    if (!m_SdlOwnsDrmFd) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Direct rendering via DRM is disabled");
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
     drmModeRes* resources = drmModeGetResources(m_DrmFd);
     if (resources == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
