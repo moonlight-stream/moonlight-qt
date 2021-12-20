@@ -7,6 +7,9 @@
 
 #include <SDL_syswm.h>
 
+#include <QFile>
+#include <QTextStream>
+
 MmalRenderer::MmalRenderer()
     : m_Renderer(nullptr),
       m_InputPort(nullptr),
@@ -107,6 +110,10 @@ void MmalRenderer::updateDisplayRegion()
 bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
 {
     MMAL_STATUS_T status;
+
+    if (!isMmalOverlaySupported()) {
+        return false;
+    }
 
     m_Window = params->window;
     m_VideoWidth = params->width;
@@ -225,6 +232,45 @@ void MmalRenderer::setupBackground(PDECODER_PARAMETERS params)
 void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)
 {
     mmal_buffer_header_release(buffer);
+}
+
+bool MmalRenderer::isMmalOverlaySupported()
+{
+    bool ret = true;
+
+    // MMAL rendering will silently fail in Full KMS mode. We'll see if that's
+    // enabled by reading kernel log messages. It's gross but it works.
+    QFile file("/var/log/messages");
+    if (file.open(QIODevice::ReadOnly | QFile::Text)) {
+        QTextStream textStream(&file);
+        bool foundRpiVid = false;
+        QString line;
+
+        do {
+            line = textStream.readLine();
+            if (line.contains("vc4_crtc_ops")) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Full KMS Mode is enabled! H.264 video decoding/rendering performance will be degraded!");
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Remove 'dtoverlay=vc4-kms-v3d' from your /boot/config.txt to fix this!");
+                ret = false;
+            }
+            if (line.contains("rpivid")) {
+                foundRpiVid = true;
+            }
+        } while (!line.isNull());
+
+        if (!foundRpiVid) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Raspberry Pi HEVC decoder is not enabled! Add 'dtoverlay=rpivid-v4l2' to your /boot/config.txt to fix this!");
+        }
+        else if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") != 0) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Raspberry Pi HEVC decoder cannot be used from within a desktop environment. H.264 will be used instead.");
+        }
+    }
+
+    return ret;
 }
 
 enum AVPixelFormat MmalRenderer::getPreferredPixelFormat(int)
