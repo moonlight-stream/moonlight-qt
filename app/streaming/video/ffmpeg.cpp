@@ -709,7 +709,11 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
 #ifdef HAVE_MMAL
         TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
 #endif
-        TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+        // HACK: Avoid using YUV420P on h264_mmal. It can cause a deadlock inside the MMAL libraries.
+        // Even if it didn't completely deadlock us, the performance would likely be atrocious.
+        if (strcmp(decoderName, "h264_mmal") != 0) {
+            TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+        }
     }
 
     // Nothing prefers any of them. Let's see if anyone will tolerate one.
@@ -720,7 +724,10 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
 #ifdef HAVE_MMAL
         TRY_SUPPORTED_PIXEL_FORMAT(MmalRenderer);
 #endif
-        TRY_SUPPORTED_PIXEL_FORMAT(SdlRenderer);
+        // HACK: See comment above
+        if (strcmp(decoderName, "h264_mmal") != 0) {
+            TRY_SUPPORTED_PIXEL_FORMAT(SdlRenderer);
+        }
     }
 
     // If we made it here, we couldn't find anything
