@@ -7,7 +7,7 @@
 
 #include <SDL_syswm.h>
 
-#include <QFile>
+#include <QProcess>
 #include <QTextStream>
 
 MmalRenderer::MmalRenderer()
@@ -236,13 +236,31 @@ void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)
 
 bool MmalRenderer::isMmalOverlaySupported()
 {
-    bool ret = true;
+    if (qgetenv("MMAL_DISABLE_SUPPORT_CHECK") == "1") {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "MMAL overlay support check is disabled");
+        return true;
+    }
+
+    static bool mmalOverlayCheckCompleted = false;
+    static bool mmalOverlayCheckResult = true;
+
+    // This overlay support check is expensive, so only do it once. The stuff we're
+    // checking can't change without restarting Moonlight (or the whole system).
+    if (mmalOverlayCheckCompleted) {
+        SDL_MemoryBarrierAcquire();
+        return mmalOverlayCheckResult;
+    }
 
     // MMAL rendering will silently fail in Full KMS mode. We'll see if that's
     // enabled by reading kernel log messages. It's gross but it works.
-    QFile file("/var/log/messages");
-    if (file.open(QIODevice::ReadOnly | QFile::Text)) {
-        QTextStream textStream(&file);
+    QProcess dmesgProc;
+    dmesgProc.setReadChannel(QProcess::StandardOutput);
+    dmesgProc.start("dmesg");
+    dmesgProc.waitForFinished();
+
+    if (dmesgProc.exitStatus() == QProcess::NormalExit && dmesgProc.exitCode() == 0) {
+        QTextStream textStream(&dmesgProc);
         bool foundRpiVid = false;
         QString line;
 
@@ -253,7 +271,7 @@ bool MmalRenderer::isMmalOverlaySupported()
                              "Full KMS Mode is enabled! H.264 video decoding/rendering performance will be degraded!");
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Remove 'dtoverlay=vc4-kms-v3d' from your /boot/config.txt to fix this!");
-                ret = false;
+                mmalOverlayCheckResult = false;
             }
             if (line.contains("rpivid")) {
                 foundRpiVid = true;
@@ -269,8 +287,15 @@ bool MmalRenderer::isMmalOverlaySupported()
                         "Raspberry Pi HEVC decoder cannot be used from within a desktop environment. H.264 will be used instead.");
         }
     }
+    else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Unable to check for Full KMS mode and HEVC decoding support (error %d)",
+                    dmesgProc.exitCode());
+    }
 
-    return ret;
+    SDL_MemoryBarrierRelease();
+    mmalOverlayCheckCompleted = true;
+    return mmalOverlayCheckResult;
 }
 
 enum AVPixelFormat MmalRenderer::getPreferredPixelFormat(int)
