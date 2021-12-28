@@ -821,7 +821,21 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
         // Continue with special non-hwaccel hardware decoders
         if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
-            QList<const char *> knownAvcCodecs = { "h264_mmal", "h264_rkmpp", "h264_nvmpi", "h264_v4l2m2m" };
+            QList<const char *> knownAvcCodecs = {
+#ifdef HAVE_MMAL
+                "h264_mmal",
+#endif
+                "h264_rkmpp",
+                "h264_nvmpi",
+#ifndef HAVE_MMAL
+                // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
+                // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
+                // would rather show the missing hardware acceleration warning when the user
+                // is in Full KMS mode rather than try to use a poorly performing hwaccel.
+                // See discussion on https://github.com/jc-kynesim/rpi-ffmpeg/pull/25
+                "h264_v4l2m2m",
+#endif
+            };
             for (const char* codec : knownAvcCodecs) {
                 if (tryInitializeRendererForDecoderByName(codec, params)) {
                     return true;
