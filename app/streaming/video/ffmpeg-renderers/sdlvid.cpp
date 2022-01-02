@@ -224,9 +224,6 @@ bool SdlRenderer::initializeReadBackFormat(AVBufferRef* hwFrameCtxRef, AVFrame* 
         err = av_hwframe_map(outputFrame, testFrame, AV_HWFRAME_MAP_READ);
         if (err == 0) {
             if (isPixelFormatSupported(m_VideoFormat, (AVPixelFormat)outputFrame->format)) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Found supported hwframe mapping format: %d",
-                            outputFrame->format);
                 m_SwPixelFormat = (AVPixelFormat)outputFrame->format;
                 m_MapFrame = true;
                 goto Exit;
@@ -238,9 +235,10 @@ bool SdlRenderer::initializeReadBackFormat(AVBufferRef* hwFrameCtxRef, AVFrame* 
             }
         }
         else {
-            SDL_assert(err == AVERROR(ENOSYS));
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Hwframe mapping is unsupported");
+                        "av_hwframe_map() is unsupported (error: %d)",
+                        err);
+            SDL_assert(err == AVERROR(ENOSYS));
         }
     }
 
@@ -266,9 +264,6 @@ bool SdlRenderer::initializeReadBackFormat(AVBufferRef* hwFrameCtxRef, AVFrame* 
             continue;
         }
 
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Found supported hwframe transfer format: %d",
-                    formats[i]);
         m_SwPixelFormat = formats[i];
         break;
     }
@@ -285,7 +280,8 @@ Exit:
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Unable to find compatible hwframe transfer format");
+                         "Unable to find compatible hwframe transfer format (sw_format = %d)",
+                         hwFrameCtx->sw_format);
             return false;
         }
     }
@@ -311,6 +307,9 @@ AVFrame* SdlRenderer::getSwFrameFromHwFrame(AVFrame* hwFrame)
     swFrame->format = m_SwPixelFormat;
 
     if (m_MapFrame) {
+        // We don't use AV_HWFRAME_MAP_DIRECT here because it can cause huge
+        // performance penalties on Intel hardware with VAAPI due to mappings
+        // being uncached memory.
         err = av_hwframe_map(swFrame, hwFrame, AV_HWFRAME_MAP_READ);
         if (err < 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
