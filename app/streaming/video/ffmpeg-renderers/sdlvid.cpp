@@ -6,7 +6,8 @@
 #include <Limelight.h>
 
 SdlRenderer::SdlRenderer()
-    : m_Renderer(nullptr),
+    : m_VideoFormat(0),
+      m_Renderer(nullptr),
       m_Texture(nullptr),
       m_SwPixelFormat(AV_PIX_FMT_NONE)
 {
@@ -86,6 +87,8 @@ bool SdlRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
 bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 {
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
+
+    m_VideoFormat = params->videoFormat;
 
     if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
         // SDL doesn't support rendering YUV 10-bit textures yet
@@ -203,6 +206,62 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
     }
 }
 
+enum AVPixelFormat SdlRenderer::getReadBackFormat(AVBufferRef *hwFrameCtxRef)
+{
+    auto hwFrameCtx = (AVHWFramesContext*)hwFrameCtxRef->data;
+    enum AVPixelFormat selectedFormat = AV_PIX_FMT_NONE;
+    int err;
+    enum AVPixelFormat *formats;
+
+    err = av_hwframe_transfer_get_formats(hwFrameCtxRef, AV_HWFRAME_TRANSFER_DIRECTION_FROM, &formats, 0);
+    if (err < 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "av_hwframe_transfer_get_formats() failed: %d",
+                     err);
+        goto Exit;
+    }
+
+    // NB: In this algorithm, we prefer to get a preferred hardware readback format
+    // and non-preferred rendering format rather than the other way around. This is
+    // why we loop through the readback format list in order, rather than searching
+    // for the format from getPreferredPixelFormat() in the list.
+    for (int i = 0; formats[i] != AV_PIX_FMT_NONE; i++) {
+        SDL_assert(m_VideoFormat != 0);
+        if (!isPixelFormatSupported(m_VideoFormat, formats[i])) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Skipping unsupported hwframe transfer format %d",
+                        formats[i]);
+            continue;
+        }
+
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Found supported hwframe transfer format: %d",
+                    formats[i]);
+        selectedFormat = formats[i];
+        break;
+    }
+
+    av_freep(&formats);
+
+Exit:
+    // If we didn't find any supported formats, try hwFrameCtx->sw_format.
+    if (selectedFormat == AV_PIX_FMT_NONE) {
+        if (isPixelFormatSupported(m_VideoFormat, hwFrameCtx->sw_format)) {
+            selectedFormat = hwFrameCtx->sw_format;
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to find compatible hwframe transfer format");
+            return AV_PIX_FMT_NONE;
+        }
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Selected hwframe transfer format: %d",
+                selectedFormat);
+    return selectedFormat;
+}
+
 void SdlRenderer::renderFrame(AVFrame* frame)
 {
     int err;
@@ -214,21 +273,20 @@ void SdlRenderer::renderFrame(AVFrame* frame)
     }
 
     if (frame->hw_frames_ctx != nullptr && frame->format != AV_PIX_FMT_CUDA) {
+#ifdef HAVE_CUDA
 ReadbackRetry:
+#endif
         // If we are acting as the frontend for a hardware
         // accelerated decoder, we'll need to read the frame
         // back to render it.
 
         // Find the native read-back format
         if (m_SwPixelFormat == AV_PIX_FMT_NONE) {
-            auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+            m_SwPixelFormat = getReadBackFormat(frame->hw_frames_ctx);
 
-            m_SwPixelFormat = hwFrameCtx->sw_format;
+            // If we don't support any of the hw transfer formats, we should
+            // have failed inside testRenderFrame() and not made it here.
             SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
-
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Selected read-back format: %d",
-                        m_SwPixelFormat);
         }
 
         swFrame = av_frame_alloc();
@@ -397,7 +455,10 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
     // back to render it. Test that this can be done
     // for the given frame successfully.
     if (frame->hw_frames_ctx != nullptr) {
-        auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+        enum AVPixelFormat swFormat = getReadBackFormat(frame->hw_frames_ctx);
+        if (swFormat == AV_PIX_FMT_NONE) {
+            return false;
+        }
 
         AVFrame* swFrame = av_frame_alloc();
         if (swFrame == nullptr) {
@@ -406,7 +467,7 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
         swFrame->width = frame->width;
         swFrame->height = frame->height;
-        swFrame->format = hwFrameCtx->sw_format;
+        swFrame->format = swFormat;
 
         int err = av_hwframe_transfer_data(swFrame, frame, 0);
 
