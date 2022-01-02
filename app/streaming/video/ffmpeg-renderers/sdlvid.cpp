@@ -467,9 +467,9 @@ ReadbackRetry:
 #endif
         {
             char* pixels;
-            int pitch;
+            int texturePitch;
 
-            err = SDL_LockTexture(m_Texture, nullptr, (void**)&pixels, &pitch);
+            err = SDL_LockTexture(m_Texture, nullptr, (void**)&pixels, &texturePitch);
             if (err < 0) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "SDL_LockTexture() failed: %s",
@@ -477,12 +477,37 @@ ReadbackRetry:
                 goto Exit;
             }
 
-            memcpy(pixels,
-                   frame->data[0],
-                   frame->linesize[0] * frame->height);
-            memcpy(pixels + (frame->linesize[0] * frame->height),
-                   frame->data[1],
-                   frame->linesize[1] * frame->height / 2);
+            // If the planar pitches match, we can use a single memcpy() to transfer
+            // the data. If not, we'll need to do separate memcpy() calls for each
+            // line to ensure the pitch doesn't get screwed up.
+
+            if (frame->linesize[0] == texturePitch) {
+                memcpy(pixels,
+                       frame->data[0],
+                       frame->linesize[0] * frame->height);
+            }
+            else {
+                int pitch = SDL_min(frame->linesize[0], texturePitch);
+                for (int i = 0; i < frame->height; i++) {
+                    memcpy(pixels + (texturePitch * i),
+                           frame->data[0] + (frame->linesize[0] * i),
+                           pitch);
+                }
+            }
+
+            if (frame->linesize[1] == texturePitch) {
+                memcpy(pixels + (texturePitch * frame->height),
+                       frame->data[1],
+                       frame->linesize[1] * frame->height / 2);
+            }
+            else {
+                int pitch = SDL_min(frame->linesize[1], texturePitch);
+                for (int i = 0; i < frame->height / 2; i++) {
+                    memcpy(pixels + (texturePitch * (frame->height + i)),
+                           frame->data[1] + (frame->linesize[1] * i),
+                           pitch);
+                }
+            }
 
             SDL_UnlockTexture(m_Texture);
         }
