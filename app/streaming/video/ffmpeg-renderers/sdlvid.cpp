@@ -549,6 +549,12 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
         av_frame_free(&swFrame);
     }
+    else if (!isPixelFormatSupported(m_VideoFormat, (AVPixelFormat)frame->format)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Swframe pixel format unsupported: %d",
+                    frame->format);
+        return false;
+    }
 
     return true;
 }
