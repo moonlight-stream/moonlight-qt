@@ -131,14 +131,11 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-#ifdef HAVE_EGL
     // Still return true if we fail to initialize DRM direct rendering
-    // stuff, since we have EGL that we can use for indirect rendering.
+    // stuff, since we have EGLRenderer and SDLRenderer that we can use
+    // for indirect rendering. Our FFmpeg renderer selection code will
+    // handle the case where those also fail to render the test frame.
     const bool DIRECT_RENDERING_INIT_FAILED = true;
-#else
-    // Fail if we can't initialize direct rendering and we don't have EGL.
-    const bool DIRECT_RENDERING_INIT_FAILED = false;
-#endif
 
     drmModeRes* resources = drmModeGetResources(m_DrmFd);
     if (resources == nullptr) {
