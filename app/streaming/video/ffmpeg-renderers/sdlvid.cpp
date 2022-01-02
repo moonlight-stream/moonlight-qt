@@ -329,10 +329,10 @@ AVFrame* SdlRenderer::getSwFrameFromHwFrame(AVFrame* hwFrame)
             return nullptr;
         }
 
-        // av_hwframe_transfer_data() can nuke frame metadata,
-        // so anything other than width, height, and format must
-        // be set *after* calling av_hwframe_transfer_data().
-        swFrame->colorspace = hwFrame->colorspace;
+        // av_hwframe_transfer_data() doesn't transfer metadata
+        // (and can even nuke existing metadata in dst), so we
+        // will propagate metadata manually afterwards.
+        av_frame_copy_props(swFrame, hwFrame);
     }
 
     return swFrame;
