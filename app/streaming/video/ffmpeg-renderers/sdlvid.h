@@ -19,12 +19,14 @@ public:
 
 private:
     void renderOverlay(Overlay::OverlayType type);
-    enum AVPixelFormat getReadBackFormat(AVBufferRef* hwFrameCtxRef);
+    bool initializeReadBackFormat(AVBufferRef* hwFrameCtxRef, AVFrame* testFrame);
+    AVFrame* getSwFrameFromHwFrame(AVFrame* hwFrame);
 
     int m_VideoFormat;
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
     enum AVPixelFormat m_SwPixelFormat;
+    bool m_MapFrame;
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
 

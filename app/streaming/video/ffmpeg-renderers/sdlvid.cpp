@@ -9,7 +9,8 @@ SdlRenderer::SdlRenderer()
     : m_VideoFormat(0),
       m_Renderer(nullptr),
       m_Texture(nullptr),
-      m_SwPixelFormat(AV_PIX_FMT_NONE)
+      m_SwPixelFormat(AV_PIX_FMT_NONE),
+      m_MapFrame(false)
 {
     SDL_zero(m_OverlayTextures);
 
@@ -206,13 +207,44 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
     }
 }
 
-enum AVPixelFormat SdlRenderer::getReadBackFormat(AVBufferRef *hwFrameCtxRef)
+bool SdlRenderer::initializeReadBackFormat(AVBufferRef* hwFrameCtxRef, AVFrame* testFrame)
 {
     auto hwFrameCtx = (AVHWFramesContext*)hwFrameCtxRef->data;
-    enum AVPixelFormat selectedFormat = AV_PIX_FMT_NONE;
     int err;
     enum AVPixelFormat *formats;
+    AVFrame* outputFrame;
 
+    // This function must only be called once per instance
+    SDL_assert(m_SwPixelFormat == AV_PIX_FMT_NONE);
+    SDL_assert(!m_MapFrame);
+
+    // Try direct mapping before resorting to copying the frame
+    outputFrame = av_frame_alloc();
+    if (outputFrame != nullptr) {
+        err = av_hwframe_map(outputFrame, testFrame, AV_HWFRAME_MAP_READ);
+        if (err == 0) {
+            if (isPixelFormatSupported(m_VideoFormat, (AVPixelFormat)outputFrame->format)) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Found supported hwframe mapping format: %d",
+                            outputFrame->format);
+                m_SwPixelFormat = (AVPixelFormat)outputFrame->format;
+                m_MapFrame = true;
+                goto Exit;
+            }
+            else {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping unsupported hwframe mapping format: %d",
+                            outputFrame->format);
+            }
+        }
+        else {
+            SDL_assert(err == AVERROR(ENOSYS));
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Hwframe mapping is unsupported");
+        }
+    }
+
+    // Direct mapping didn't work, so let's see what transfer formats we have
     err = av_hwframe_transfer_get_formats(hwFrameCtxRef, AV_HWFRAME_TRANSFER_DIRECTION_FROM, &formats, 0);
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -237,29 +269,74 @@ enum AVPixelFormat SdlRenderer::getReadBackFormat(AVBufferRef *hwFrameCtxRef)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Found supported hwframe transfer format: %d",
                     formats[i]);
-        selectedFormat = formats[i];
+        m_SwPixelFormat = formats[i];
         break;
     }
 
     av_freep(&formats);
 
 Exit:
+    av_frame_free(&outputFrame);
+
     // If we didn't find any supported formats, try hwFrameCtx->sw_format.
-    if (selectedFormat == AV_PIX_FMT_NONE) {
+    if (m_SwPixelFormat == AV_PIX_FMT_NONE) {
         if (isPixelFormatSupported(m_VideoFormat, hwFrameCtx->sw_format)) {
-            selectedFormat = hwFrameCtx->sw_format;
+            m_SwPixelFormat = hwFrameCtx->sw_format;
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Unable to find compatible hwframe transfer format");
-            return AV_PIX_FMT_NONE;
+            return false;
         }
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Selected hwframe transfer format: %d",
-                selectedFormat);
-    return selectedFormat;
+                "Selected hwframe->swframe format: %d (mapping: %s)",
+                m_SwPixelFormat,
+                m_MapFrame ? "yes" : "no");
+    return true;
+}
+
+AVFrame* SdlRenderer::getSwFrameFromHwFrame(AVFrame* hwFrame)
+{
+    int err;
+
+    SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
+
+    AVFrame* swFrame = av_frame_alloc();
+    if (swFrame == nullptr) {
+        return nullptr;
+    }
+
+    swFrame->format = m_SwPixelFormat;
+
+    if (m_MapFrame) {
+        err = av_hwframe_map(swFrame, hwFrame, AV_HWFRAME_MAP_READ);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwframe_map() failed: %d",
+                         err);
+            av_frame_free(&swFrame);
+            return nullptr;
+        }
+    }
+    else {
+        err = av_hwframe_transfer_data(swFrame, hwFrame, 0);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwframe_transfer_data() failed: %d",
+                         err);
+            av_frame_free(&swFrame);
+            return nullptr;
+        }
+
+        // av_hwframe_transfer_data() can nuke frame metadata,
+        // so anything other than width, height, and format must
+        // be set *after* calling av_hwframe_transfer_data().
+        swFrame->colorspace = hwFrame->colorspace;
+    }
+
+    return swFrame;
 }
 
 void SdlRenderer::renderFrame(AVFrame* frame)
@@ -282,36 +359,18 @@ ReadbackRetry:
 
         // Find the native read-back format
         if (m_SwPixelFormat == AV_PIX_FMT_NONE) {
-            m_SwPixelFormat = getReadBackFormat(frame->hw_frames_ctx);
+            initializeReadBackFormat(frame->hw_frames_ctx, frame);
 
             // If we don't support any of the hw transfer formats, we should
             // have failed inside testRenderFrame() and not made it here.
             SDL_assert(m_SwPixelFormat != AV_PIX_FMT_NONE);
         }
 
-        swFrame = av_frame_alloc();
+        // Map or copy this hwframe to a swframe that we can work with
+        frame = swFrame = getSwFrameFromHwFrame(frame);
         if (swFrame == nullptr) {
             return;
         }
-
-        swFrame->width = frame->width;
-        swFrame->height = frame->height;
-        swFrame->format = m_SwPixelFormat;
-
-        err = av_hwframe_transfer_data(swFrame, frame, 0);
-        if (err != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "av_hwframe_transfer_data() failed: %d",
-                         err);
-            goto Exit;
-        }
-
-        // av_hwframe_transfer_data() can nuke frame metadata,
-        // so anything other than width, height, and format must
-        // be set *after* calling av_hwframe_transfer_data().
-        swFrame->colorspace = frame->colorspace;
-
-        frame = swFrame;
     }
 
     if (m_Texture == nullptr) {
@@ -455,30 +514,16 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
     // back to render it. Test that this can be done
     // for the given frame successfully.
     if (frame->hw_frames_ctx != nullptr) {
-        enum AVPixelFormat swFormat = getReadBackFormat(frame->hw_frames_ctx);
-        if (swFormat == AV_PIX_FMT_NONE) {
+        if (!initializeReadBackFormat(frame->hw_frames_ctx, frame)) {
             return false;
         }
 
-        AVFrame* swFrame = av_frame_alloc();
+        AVFrame* swFrame = getSwFrameFromHwFrame(frame);
         if (swFrame == nullptr) {
             return false;
         }
 
-        swFrame->width = frame->width;
-        swFrame->height = frame->height;
-        swFrame->format = swFormat;
-
-        int err = av_hwframe_transfer_data(swFrame, frame, 0);
-
         av_frame_free(&swFrame);
-
-        if (err != 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "av_hwframe_transfer_data() failed: %d",
-                         err);
-            return false;
-        }
     }
 
     return true;
