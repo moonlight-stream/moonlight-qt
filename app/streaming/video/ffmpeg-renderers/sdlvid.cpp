@@ -538,6 +538,20 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
     // back to render it. Test that this can be done
     // for the given frame successfully.
     if (frame->hw_frames_ctx != nullptr) {
+#ifdef HAVE_MMAL
+        // FFmpeg for Raspberry Pi has NEON-optimized routines that allow
+        // us to use av_hwframe_transfer_data() to convert from SAND frames
+        // to standard fully-planar YUV. Unfortunately, the combination of
+        // doing this conversion on the CPU and the slow GL texture upload
+        // performance on the Pi make the performance of this approach
+        // unacceptable. Don't use this copyback path on the Pi by default
+        // to ensure we fall back to H.264 (with the MMAL renderer) in X11
+        // rather than using HEVC+copyback and getting terrible performance.
+        if (qgetenv("RPI_ALLOW_COPYBACK_RENDER") != "1") {
+            return false;
+        }
+#endif
+
         if (!initializeReadBackFormat(frame->hw_frames_ctx, frame)) {
             return false;
         }
