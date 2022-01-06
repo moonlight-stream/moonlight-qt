@@ -296,6 +296,16 @@ public:
             }
         }
 
+        if (m_DisplayLink != nullptr) {
+            // Vsync is enabled, so wait for a swap before returning
+            SDL_LockMutex(m_VsyncMutex);
+            if (SDL_CondWaitTimeout(m_VsyncPassed, m_VsyncMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "V-sync wait timed out after 100 ms");
+            }
+            SDL_UnlockMutex(m_VsyncMutex);
+        }
+
         // Queue this sample for the next v-sync
         CMSampleTimingInfo timingInfo = {
             .duration = kCMTimeInvalid,
@@ -319,16 +329,6 @@ public:
         [m_DisplayLayer enqueueSampleBuffer:sampleBuffer];
 
         CFRelease(sampleBuffer);
-
-        if (m_DisplayLink != nullptr) {
-            // Vsync is enabled, so wait for a swap before returning
-            SDL_LockMutex(m_VsyncMutex);
-            if (SDL_CondWaitTimeout(m_VsyncPassed, m_VsyncMutex, 100) == SDL_MUTEX_TIMEDOUT) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "V-sync wait timed out after 100 ms");
-            }
-            SDL_UnlockMutex(m_VsyncMutex);
-        }
     }
 
     virtual bool initialize(PDECODER_PARAMETERS params) override
