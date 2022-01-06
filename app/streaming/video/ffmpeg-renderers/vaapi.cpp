@@ -543,28 +543,88 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
 
     for (size_t i = 0; i < m_PrimeDescriptor.num_layers; ++i) {
         const auto &layer = m_PrimeDescriptor.layers[i];
-        const auto &object = m_PrimeDescriptor.objects[layer.object_index[0]];
 
-        const int EGL_ATTRIB_COUNT = 17;
+        // Max 30 attributes (1 key + 1 value for each)
+        const int EGL_ATTRIB_COUNT = 30 * 2;
         EGLAttrib attribs[EGL_ATTRIB_COUNT] = {
             EGL_LINUX_DRM_FOURCC_EXT, layer.drm_format,
             EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
             EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
-            EGL_DMA_BUF_PLANE0_FD_EXT, object.fd,
-            EGL_DMA_BUF_PLANE0_OFFSET_EXT, layer.offset[0],
-            EGL_DMA_BUF_PLANE0_PITCH_EXT, layer.pitch[0],
-            EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT, (EGLint)object.drm_format_modifier,
-            EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT, (EGLint)(object.drm_format_modifier >> 32),
-            EGL_NONE
         };
 
-        // Cut off the attribute array before the modifiers if they aren't supported
-        if (!m_EGLExtDmaBuf) {
-            SDL_assert(attribs[12] == EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT);
-            SDL_assert(attribs[14] == EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT);
-            SDL_assert(attribs[16] == EGL_NONE);
-            attribs[12] = EGL_NONE;
+        int attribIndex = 6;
+        for (size_t j = 0; j < layer.num_planes; j++) {
+            const auto &object = m_PrimeDescriptor.objects[layer.object_index[j]];
+
+            switch (j) {
+            case 0:
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_FD_EXT;
+                attribs[attribIndex++] = object.fd;
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
+                attribs[attribIndex++] = layer.offset[0];
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
+                attribs[attribIndex++] = layer.pitch[0];
+                if (m_EGLExtDmaBuf) {
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
+                }
+                break;
+
+            case 1:
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_FD_EXT;
+                attribs[attribIndex++] = object.fd;
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_OFFSET_EXT;
+                attribs[attribIndex++] = layer.offset[1];
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_PITCH_EXT;
+                attribs[attribIndex++] = layer.pitch[1];
+                if (m_EGLExtDmaBuf) {
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
+                }
+                break;
+
+            case 2:
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_FD_EXT;
+                attribs[attribIndex++] = object.fd;
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_OFFSET_EXT;
+                attribs[attribIndex++] = layer.offset[2];
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_PITCH_EXT;
+                attribs[attribIndex++] = layer.pitch[2];
+                if (m_EGLExtDmaBuf) {
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
+                }
+                break;
+
+            case 3:
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_FD_EXT;
+                attribs[attribIndex++] = object.fd;
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_OFFSET_EXT;
+                attribs[attribIndex++] = layer.offset[3];
+                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_PITCH_EXT;
+                attribs[attribIndex++] = layer.pitch[3];
+                if (m_EGLExtDmaBuf) {
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
+                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT;
+                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
+                }
+                break;
+
+            default:
+                Q_UNREACHABLE();
+            }
         }
+
+        // Terminate the attribute list
+        attribs[attribIndex++] = EGL_NONE;
+        SDL_assert(attribIndex <= EGL_ATTRIB_COUNT);
 
         if (m_eglCreateImage) {
             images[i] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
@@ -579,7 +639,7 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         else {
             // Cast the EGLAttrib array elements to EGLint for the KHR extension
             EGLint intAttribs[EGL_ATTRIB_COUNT];
-            for (int i = 0; i < EGL_ATTRIB_COUNT; i++) {
+            for (int i = 0; i < attribIndex; i++) {
                 intAttribs[i] = (EGLint)attribs[i];
             }
 
