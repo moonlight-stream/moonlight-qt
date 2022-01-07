@@ -636,23 +636,6 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         bool hevcForced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
                 m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
 
-        if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
-                m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Already checked in initialize()
-                !isHardwareDecodeAvailable(testWindow,
-                                           m_Preferences->videoDecoderSelection,
-                                           VIDEO_FORMAT_H265,
-                                           m_StreamConfig.width,
-                                           m_StreamConfig.height,
-                                           m_StreamConfig.fps)) {
-            if (hevcForced) {
-                emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
-            }
-            else {
-                emitLaunchWarning(tr("This PC's GPU doesn't support HEVC decoding."));
-                m_StreamConfig.supportsHevc = false;
-            }
-        }
-
         if (m_Computer->maxLumaPixelsHEVC == 0) {
             if (hevcForced) {
                 emitLaunchWarning(tr("Your host PC GPU doesn't support HEVC. "
@@ -663,6 +646,44 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             // to set this explicitly here so we can do our hardware acceleration
             // check below.
             m_StreamConfig.supportsHevc = false;
+        }
+        else if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
+                hevcForced && // Auto VCC is already checked in initialize()
+                !isHardwareDecodeAvailable(testWindow,
+                                           m_Preferences->videoDecoderSelection,
+                                           VIDEO_FORMAT_H265,
+                                           m_StreamConfig.width,
+                                           m_StreamConfig.height,
+                                           m_StreamConfig.fps)) {
+            emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
+        }
+    }
+
+    if (!m_StreamConfig.supportsHevc &&
+            m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO &&
+            !isHardwareDecodeAvailable(testWindow,
+                                       m_Preferences->videoDecoderSelection,
+                                       VIDEO_FORMAT_H264,
+                                       m_StreamConfig.width,
+                                       m_StreamConfig.height,
+                                       m_StreamConfig.fps)) {
+
+        if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_H264) {
+            emitLaunchWarning(tr("Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance."));
+        }
+        else {
+            if (m_Computer->maxLumaPixelsHEVC == 0 &&
+                    isHardwareDecodeAvailable(testWindow,
+                                              m_Preferences->videoDecoderSelection,
+                                              VIDEO_FORMAT_H265,
+                                              m_StreamConfig.width,
+                                              m_StreamConfig.height,
+                                              m_StreamConfig.fps)) {
+                emitLaunchWarning(tr("Your host PC and client PC don't support the same video codecs. This may cause poor streaming performance."));
+            }
+            else {
+                emitLaunchWarning(tr("Your client GPU doesn't support H.264 decoding. This may cause poor streaming performance."));
+            }
         }
     }
 
