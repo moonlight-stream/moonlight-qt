@@ -307,6 +307,23 @@ void Session::getDecoderInfo(SDL_Window* window,
     maxResolution = decoder->getDecoderMaxResolution();
 
     delete decoder;
+
+    // If we don't get back a hardware H.264 decoder, see if we have a hardware
+    // HEVC decoder. This can be the case on the Raspberry Pi with Full KMS
+    // when not running in X11. Everything since Maxwell in 2014 can encode HEVC,
+    // so we probably don't need to be concerned about a lack of fast H.264
+    // decoding enough to bug the user about it every launch.
+    if (!isHardwareAccelerated) {
+        if (chooseDecoder(StreamingPreferences::VDS_FORCE_HARDWARE,
+                          window, VIDEO_FORMAT_H265, 1920, 1080, 60,
+                          false, false, true, decoder)) {
+            isHardwareAccelerated = decoder->isHardwareAccelerated();
+            isFullScreenOnly = decoder->isAlwaysFullScreen();
+            maxResolution = decoder->getDecoderMaxResolution();
+
+            delete decoder;
+        }
+    }
 }
 
 bool Session::isHardwareDecodeAvailable(SDL_Window* window,
