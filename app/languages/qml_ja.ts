@@ -327,44 +327,43 @@
         <translation>接続が終了しました</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="592"/>
+        <location filename="../streaming/session.cpp" line="609"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>%1のGeForce Experienceのバージョンは、このビルドのMoonlightではサポートされていません。%1からストリーミングするには、Moonlightをアップデートする必要があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="597"/>
+        <location filename="../streaming/session.cpp" line="614"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>リモートデスクトップマウスモードを有効にすると、ゲームで問題が発生する場合があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="602"/>
+        <location filename="../streaming/session.cpp" line="619"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>ソフトウェアデコードではHDRに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="606"/>
+        <location filename="../streaming/session.cpp" line="623"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>ソフトウェアデコードを強制する設定になっていると、ストリーミングのパフォーマンスが低下する場合があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="611"/>
+        <location filename="../streaming/session.cpp" line="628"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>サポートされていないFPSオプションを使用すると、スタッタリングやラグの原因となることがあります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="614"/>
+        <location filename="../streaming/session.cpp" line="631"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>ディスプレイよりも高いフレームレートでストリーミングする場合、垂直同期は無効になります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="631"/>
+        <location filename="../streaming/session.cpp" line="658"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>GPUをサポートしていないHEVCを強制する設定を選択したため、ソフトウェアデコーディングを使用しています。これによってストリーミングパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="634"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation>このPCのGPUはHEVCデコーディングに対応していません。</translation>
+        <translation type="vanished">このPCのGPUはHEVCデコーディングに対応していません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="641"/>
@@ -372,67 +371,82 @@
         <translation>ホストPCのGPUはHEVCに対応していません。HEVCストリーミングにはGeForce GTX 900シリーズ(Maxwell)以降のGPUが必要です。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="658"/>
+        <location filename="../streaming/session.cpp" line="672"/>
+        <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="682"/>
+        <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="685"/>
+        <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="696"/>
         <source>%1 doesn&apos;t support HDR10.</source>
         <translation>%1はHDR10に対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="662"/>
+        <location filename="../streaming/session.cpp" line="700"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>ホストPCのGPUはHDRストリーミングに対応していません。HDRストリーミングにはGeForce GTX 1000シリーズ(Pascal)以降のGPUが必要です。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="671"/>
+        <location filename="../streaming/session.cpp" line="709"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>このPCのGPUはHDRストリーミングのHEVC Main10デコーディングに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="684"/>
+        <location filename="../streaming/session.cpp" line="722"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4KストリーミングにはGeForce Experience 3.0以降が必要です。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="699"/>
+        <location filename="../streaming/session.cpp" line="737"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>選択したサラウンド音声設定は現在のオーディオデバイスに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="706"/>
+        <location filename="../streaming/session.cpp" line="744"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>オーディオデバイスのオープンに失敗しました。このセッションでは音声は利用できません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="711"/>
+        <location filename="../streaming/session.cpp" line="749"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>接続されたゲームパッドはマッピングされていないため、使用できません。この問題を解決するには、Moonlightのヘルプをご覧ください。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="719"/>
+        <location filename="../streaming/session.cpp" line="757"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>ホストPCのGPUは4Kを超えるビデオ解像度でのストリーミングに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="723"/>
+        <location filename="../streaming/session.cpp" line="761"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>4Kを超えるビデオ解像度はHEVCコーデックでのみ対応しています。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="737"/>
+        <location filename="../streaming/session.cpp" line="775"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>このPCのGPUはハードウェアデコードに対応していないため、ハードウェアデコードを強制するという選択を満たすことができません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="740"/>
+        <location filename="../streaming/session.cpp" line="778"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>選択したコーデックとハードウェアデコードを強制する設定には互換性がありません。このPCのGPUは、選択したコーデックのデコードに対応していません。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1047"/>
+        <location filename="../streaming/session.cpp" line="1103"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experienceがエラーを返しました: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1547"/>
+        <location filename="../streaming/session.cpp" line="1603"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>ビデオデコーダを初期化できませんでした。ストリーミングの設定を確認して再度お試しください。</translation>
     </message>
@@ -973,9 +987,8 @@
         <translation>ゲームパッドのマッピング</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>ハードウェアアクセラレーションによるH.264ビデオデコーダーがMoonlightによって検出されませんでした。この構成では、ストリーミングのパフォーマンスが大幅に低下する可能性があります。</translation>
+        <translation type="vanished">ハードウェアアクセラレーションによるH.264ビデオデコーダーがMoonlightによって検出されませんでした。この構成では、ストリーミングのパフォーマンスが大幅に低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="423"/>
@@ -996,6 +1009,11 @@
         <location filename="../gui/main.qml" line="354"/>
         <source>Help</source>
         <translation>ヘルプ</translation>
+    </message>
+    <message>
+        <location filename="../gui/main.qml" line="415"/>
+        <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>

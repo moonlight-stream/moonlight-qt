@@ -327,44 +327,43 @@
         <translation>Conexión terminada</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="592"/>
+        <location filename="../streaming/session.cpp" line="609"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation type="unfinished">La versión de GeForce Experience en %1 no es compatible con esta versión de Moonlight. Debes actualizar Moonlight para transmitir desde %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="597"/>
+        <location filename="../streaming/session.cpp" line="614"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>La selección de activar el modo de ratón de escritorio remoto puede causar problemas en los juegos.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="602"/>
+        <location filename="../streaming/session.cpp" line="619"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>HDR no es compatible con la decodificación por software.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="606"/>
+        <location filename="../streaming/session.cpp" line="623"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Su selección de ajustes para forzar la decodificación por software puede causar un rendimiento deficiente de la transmisión.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="611"/>
+        <location filename="../streaming/session.cpp" line="628"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>El uso de opciones de FPS no compatibles puede causar tartamudeo o retraso.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="614"/>
+        <location filename="../streaming/session.cpp" line="631"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>V-sync se desactivará cuando se transmita a una velocidad de fotogramas superior a la de la pantalla.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="631"/>
+        <location filename="../streaming/session.cpp" line="658"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Usando decodificación por software debido a su selección de forzar HEVC sin soporte de GPU. Esto puede causar un bajo rendimiento de streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="634"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation>La GPU de este PC no soporta la descodificación HEVC.</translation>
+        <translation type="vanished">La GPU de este PC no soporta la descodificación HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="641"/>
@@ -372,67 +371,82 @@
         <translation>La GPU de tu PC no es compatible con HEVC. Se necesita una GPU GeForce GTX serie 900 (Maxwell) o posterior para la transmisión de HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="658"/>
+        <location filename="../streaming/session.cpp" line="672"/>
+        <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="682"/>
+        <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="685"/>
+        <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="696"/>
         <source>%1 doesn&apos;t support HDR10.</source>
         <translation>%1 no soporta HDR10.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="662"/>
+        <location filename="../streaming/session.cpp" line="700"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>La GPU de tu PC no es compatible con la transmisión de HDR. Se necesita una GPU de la serie GeForce GTX 1000 (Pascal) o posterior para la transmisión de HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="671"/>
+        <location filename="../streaming/session.cpp" line="709"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>La GPU de este PC no es compatible con la decodificación HEVC Main10 para la transmisión de HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="684"/>
+        <location filename="../streaming/session.cpp" line="722"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>Se requiere GeForce Experience 3.0 o superior para la transmisión en 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="699"/>
+        <location filename="../streaming/session.cpp" line="737"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>La configuración de sonido envolvente seleccionada no es compatible con el dispositivo de audio actual.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="706"/>
+        <location filename="../streaming/session.cpp" line="744"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>No se ha podido abrir el dispositivo de audio. El audio no estará disponible durante esta sesión.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="711"/>
+        <location filename="../streaming/session.cpp" line="749"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Un mando conectado no tiene mapeo y no será utilizable. Visita la ayuda de Moonlight para resolver esto.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="719"/>
+        <location filename="../streaming/session.cpp" line="757"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>La GPU de su PC anfitrión no admite la transmisión de resoluciones de vídeo superiores a 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="723"/>
+        <location filename="../streaming/session.cpp" line="761"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Las resoluciones de vídeo superiores a 4K solo son compatibles con el códec HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="737"/>
+        <location filename="../streaming/session.cpp" line="775"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Su selección para forzar la decodificación por hardware no puede ser satisfecha debido a la falta de soporte de decodificación por hardware en la GPU de este PC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="740"/>
+        <location filename="../streaming/session.cpp" line="778"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>La selección del códec y la configuración de la decodificación forzada por hardware no son compatibles. La GPU de este PC no es compatible con la descodificación del códec elegido.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1047"/>
+        <location filename="../streaming/session.cpp" line="1103"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience ha devuelto el error: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1547"/>
+        <location filename="../streaming/session.cpp" line="1603"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>No se ha podido inicializar el decodificador de vídeo. Por favor, compruebe la configuración de la transmisión y vuelva a intentarlo.</translation>
     </message>
@@ -973,9 +987,8 @@
         <translation type="unfinished">Mapeo del mando</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>Moonlight no detectó ningún decodificador de vídeo H.264 acelerado por hardware en funcionamiento. Su rendimiento de transmisión puede verse gravemente degradado en esta configuración.</translation>
+        <translation type="vanished">Moonlight no detectó ningún decodificador de vídeo H.264 acelerado por hardware en funcionamiento. Su rendimiento de transmisión puede verse gravemente degradado en esta configuración.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="423"/>
@@ -996,6 +1009,11 @@
         <location filename="../gui/main.qml" line="354"/>
         <source>Help</source>
         <translation>Ayuda</translation>
+    </message>
+    <message>
+        <location filename="../gui/main.qml" line="415"/>
+        <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
