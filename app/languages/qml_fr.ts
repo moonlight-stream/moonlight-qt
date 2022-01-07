@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -220,7 +220,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC&#x202f;: %1</translation>
+        <translation>Statut du PC : %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -299,7 +299,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
@@ -373,17 +373,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="672"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le décodage logiciel est utilisé car vous voulez forcer l&apos;utilisation du H.264 sans support matériel du GPU. Ceci peut causer des problèmes de performances.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="682"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre PC hôte et PC client ne supportent pas les mêmes codecs vidéo. Ceci peut causer des problèmes de performance.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="685"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le GPU de votre client ne supporte pas le décodage matériel du H.264. Ceci peut causer des problèmes de performance.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="696"/>
@@ -944,7 +944,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
@@ -1034,7 +1034,7 @@
     <message>
         <location filename="../gui/main.qml" line="441"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration&#x202f;:</translation>
+        <translation>Moonlight a détecté des manettes sans configuration :</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="354"/>
@@ -1044,7 +1044,7 @@
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aucun décodeur vidéo matériel n&apos;a été détecté par Moonlight. Les performances de streaming risquent d&apos;être sévèrement dégradées dans cette configuration.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
@@ -1068,7 +1068,7 @@
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Êtes-vous sûr de vouloir quitter&#x202f;?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="481"/>
