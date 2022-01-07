@@ -653,16 +653,16 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             }
         }
 
-        if (hevcForced) {
-            if (m_Computer->maxLumaPixelsHEVC == 0) {
+        if (m_Computer->maxLumaPixelsHEVC == 0) {
+            if (hevcForced) {
                 emitLaunchWarning(tr("Your host PC GPU doesn't support HEVC. "
                                      "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming."));
-
-                // Moonlight-common-c will handle this case already, but we want
-                // to set this explicitly here so we can do our hardware acceleration
-                // check below.
-                m_StreamConfig.supportsHevc = false;
             }
+
+            // Moonlight-common-c will handle this case already, but we want
+            // to set this explicitly here so we can do our hardware acceleration
+            // check below.
+            m_StreamConfig.supportsHevc = false;
         }
     }
 
