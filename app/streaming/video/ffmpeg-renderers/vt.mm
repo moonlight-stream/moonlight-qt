@@ -336,89 +336,56 @@ public:
         int err;
 
         if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
-            // Prior to 10.13, we'll just assume everything has
-            // H.264 support and fail open to allow VT decode.
-    #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
-            if (__builtin_available(macOS 10.13, *)) {
-                if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_H264)) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "No HW accelerated H.264 decode via VT");
-                    return false;
-                }
-            }
-            else
-    #endif
-            {
+            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_H264)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Assuming H.264 HW decode on < macOS 10.13");
+                            "No HW accelerated H.264 decode via VT");
+                return false;
             }
         }
         else if (params->videoFormat & VIDEO_FORMAT_MASK_H265) {
-    #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
-            if (__builtin_available(macOS 10.13, *)) {
-                if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)) {
+            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "No HW accelerated HEVC decode via VT");
+                return false;
+            }
+
+            // HEVC Main10 requires more extensive checks because there's no
+            // simple API to check for Main10 hardware decoding, and if we don't
+            // have it, we'll silently get software decoding with horrible performance.
+            if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+                id<MTLDevice> device = MTLCreateSystemDefaultDevice();
+                if (device == nullptr) {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "No HW accelerated HEVC decode via VT");
+                                "Unable to get default Metal device");
                     return false;
                 }
 
-                // HEVC Main10 requires more extensive checks because there's no
-                // simple API to check for Main10 hardware decoding, and if we don't
-                // have it, we'll silently get software decoding with horrible performance.
-                if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
-                #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-                    if (__builtin_available(macOS 10.14, *)) {
-                        id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-                        if (device == nullptr) {
+                // Exclude all GPUs earlier than macOSGPUFamily2
+                // https://developer.apple.com/documentation/metal/mtlfeatureset/mtlfeatureset_macos_gpufamily2_v1
+                if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
+                    if ([device.name containsString:@"Intel"]) {
+                        // 500-series Intel GPUs are Skylake and don't support Main10 hardware decoding
+                        if ([device.name containsString:@" 5"]) {
                             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Unable to get default Metal device");
+                                        "No HEVC Main10 support on Skylake iGPU");
+                            [device release];
                             return false;
                         }
-
-                        // Exclude all GPUs earlier than macOSGPUFamily2
-                        // https://developer.apple.com/documentation/metal/mtlfeatureset/mtlfeatureset_macos_gpufamily2_v1
-                        if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
-                            if ([device.name containsString:@"Intel"]) {
-                                // 500-series Intel GPUs are Skylake and don't support Main10 hardware decoding
-                                if ([device.name containsString:@" 5"]) {
-                                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                                "No HEVC Main10 support on Skylake iGPU");
-                                    [device release];
-                                    return false;
-                                }
-                            }
-                            else if ([device.name containsString:@"AMD"]) {
-                                // FirePro D, M200, and M300 series GPUs don't support Main10 hardware decoding
-                                if ([device.name containsString:@"FirePro D"] ||
-                                        [device.name containsString:@" M2"] ||
-                                        [device.name containsString:@" M3"]) {
-                                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                                "No HEVC Main10 support on AMD GPUs until Polaris");
-                                    [device release];
-                                    return false;
-                                }
-                            }
-                        }
-
-                        [device release];
                     }
-                    else
-            #endif
-                    {
-                        // Fail closed for HEVC Main10 if we're not on 10.14+
-                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                    "No HEVC Main10 support on < macOS 10.14");
-                        return false;
+                    else if ([device.name containsString:@"AMD"]) {
+                        // FirePro D, M200, and M300 series GPUs don't support Main10 hardware decoding
+                        if ([device.name containsString:@"FirePro D"] ||
+                                [device.name containsString:@" M2"] ||
+                                [device.name containsString:@" M3"]) {
+                            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                        "No HEVC Main10 support on AMD GPUs until Polaris");
+                            [device release];
+                            return false;
+                        }
                     }
                 }
-            }
-            else
-    #endif
-            {
-                // Fail closed for HEVC if we're not on 10.13+
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "No HEVC support on < macOS 10.13");
-                return false;
+
+                [device release];
             }
         }
 
