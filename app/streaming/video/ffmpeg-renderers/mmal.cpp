@@ -5,9 +5,14 @@
 
 #include <Limelight.h>
 
+// HACK: Avoid including X11 headers which conflict with QDir
+#ifdef SDL_VIDEO_DRIVER_X11
+#undef SDL_VIDEO_DRIVER_X11
+#endif
+
 #include <SDL_syswm.h>
 
-#include <QProcess>
+#include <QDir>
 #include <QTextStream>
 
 MmalRenderer::MmalRenderer()
@@ -234,6 +239,34 @@ void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)
     mmal_buffer_header_release(buffer);
 }
 
+// MMAL rendering will silently fail in Full KMS mode. We'll see if that's
+// enabled by reading sysfs. It's gross but it works.
+bool MmalRenderer::getDtDeviceStatus(QString name, bool ifUnknown)
+{
+    QDir dir("/sys/firmware/devicetree/base/soc");
+    QStringList matchingDir = dir.entryList(QStringList(name + "@*"), QDir::Dirs);
+    if (matchingDir.length() != 1) {
+        Q_ASSERT(matchingDir.isEmpty());
+        return ifUnknown;
+    }
+
+    if (!dir.cd(matchingDir.first())) {
+        return ifUnknown;
+    }
+
+    QFile statusFile(dir.filePath("status"));
+    if (!statusFile.open(QFile::ReadOnly)) {
+        // Per Device Tree docs, missing 'status' means enabled
+        return true;
+    }
+
+    QByteArray statusData = statusFile.readAll();
+    QString statusString(statusData);
+
+    // Per Device Tree docs, 'okay' and 'ok' are both acceptable
+    return statusData == "okay" || statusData == "ok";
+}
+
 bool MmalRenderer::isMmalOverlaySupported()
 {
     if (qgetenv("MMAL_DISABLE_SUPPORT_CHECK") == "1") {
@@ -252,45 +285,25 @@ bool MmalRenderer::isMmalOverlaySupported()
         return mmalOverlayCheckResult;
     }
 
-    // MMAL rendering will silently fail in Full KMS mode. We'll see if that's
-    // enabled by reading kernel log messages. It's gross but it works.
-    QProcess dmesgProc;
-    dmesgProc.setReadChannel(QProcess::StandardOutput);
-    dmesgProc.start("dmesg");
-    dmesgProc.waitForFinished();
-
-    if (dmesgProc.exitStatus() == QProcess::NormalExit && dmesgProc.exitCode() == 0) {
-        QTextStream textStream(&dmesgProc);
-        bool foundRpiVid = false;
-        QString line;
-
-        do {
-            line = textStream.readLine();
-            if (line.contains("vc4_crtc_ops")) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Full KMS Mode is enabled! H.264 video decoding/rendering performance will be degraded!");
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Remove 'dtoverlay=vc4-kms-v3d' from your /boot/config.txt to fix this!");
-                mmalOverlayCheckResult = false;
-            }
-            if (line.contains("rpivid")) {
-                foundRpiVid = true;
-            }
-        } while (!line.isNull());
-
-        if (!foundRpiVid) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Raspberry Pi HEVC decoder is not enabled! Add 'dtoverlay=rpivid-v4l2' to your /boot/config.txt to fix this!");
-        }
-        else if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") != 0) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Raspberry Pi HEVC decoder cannot be used from within a desktop environment. H.264 will be used instead.");
-        }
+    // vc4-fkms-v3d - firmwarekms is 'okay', hvs is 'disabled'
+    // vc4-kms-v3d - firmwarekms is 'disabled', hvs is 'okay' <- this is the bad one
+    // none - firmwarekms is 'disabled', hvs is 'disabled'
+    if (!getDtDeviceStatus("firmwarekms", true) && getDtDeviceStatus("hvs", true)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Full KMS Mode is enabled! Hardware accelerated H.264 decoding will be unavailable!");
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Change 'dtoverlay=vc4-kms-v3d' to 'dtoverlay=vc4-fkms-v3d' in /boot/config.txt to fix this!");
+        mmalOverlayCheckResult = false;
     }
-    else {
+
+    // /dev/video19 is the rpivid stateless HEVC decoder
+    if (!QFile::exists("/dev/video19")) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Unable to check for Full KMS mode and HEVC decoding support (error %d)",
-                    dmesgProc.exitCode());
+                    "Raspberry Pi HEVC decoder is not enabled! Add 'dtoverlay=rpivid-v4l2' to your /boot/config.txt to fix this!");
+    }
+    else if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") != 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Raspberry Pi HEVC decoder cannot be used from within a desktop environment. H.264 will be used instead.");
     }
 
     SDL_MemoryBarrierRelease();

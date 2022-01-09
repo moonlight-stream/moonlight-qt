@@ -20,6 +20,7 @@ public:
 
 private:
     static void InputPortCallback(MMAL_PORT_T* port, MMAL_BUFFER_HEADER_T* buffer);
+    bool getDtDeviceStatus(QString name, bool ifUnknown);
     bool isMmalOverlaySupported();
 
     void setupBackground(PDECODER_PARAMETERS params);
