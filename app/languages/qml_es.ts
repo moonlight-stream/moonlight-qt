@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished">Seguro que quieres salir de %1? Se perderá cualquier progreso no guardado.</translation>
+        <translation>¿Estás seguro de que quieres abandonar %1? Cualquier progreso no guardado se perderá.</translation>
     </message>
 </context>
 <context>
@@ -235,7 +235,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation type="unfinished">Ver todas las aplicaciones</translation>
+        <translation>Ver todas las aplicaciones</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="357"/>
@@ -329,7 +329,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="609"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished">La versión de GeForce Experience en %1 no es compatible con esta versión de Moonlight. Debes actualizar Moonlight para transmitir desde %1.</translation>
+        <translation>La versión de GeForce Experience en %1 no es compatible con esta versión de Moonlight. Debes actualizar Moonlight para transmitir desde %1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="614"/>
@@ -373,17 +373,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="672"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Usando decodificación de software debido a su selección para forzar H.264 sin soporte de GPU. Esto puede provocar un rendimiento de transmisión deficiente.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="682"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Su PC anfitrión y el PC cliente no soportan los mismos códecs de vídeo. Esto puede causar un bajo rendimiento de la transmisión.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="685"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Su GPU cliente no soporta la decodificación H.264. Esto puede causar un bajo rendimiento de la transmisión.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="696"/>
@@ -913,12 +913,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished">Compruebe su cortafuegos y las reglas de reenvío de puertos para los puertos: %1</translation>
+        <translation>Compruebe su cortafuegos y las reglas de reenvío de puertos para los puertos: %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished">La conexión a Internet de este PC está bloqueando Moonlight. Es posible que la transmisión por Internet no funcione mientras esté conectado a esta red.</translation>
+        <translation>La conexión a Internet de este PC está bloqueando Moonlight. Es posible que la transmisión por Internet no funcione mientras esté conectado a esta red.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
@@ -949,7 +949,7 @@
         <location filename="../gui/main.qml" line="393"/>
         <location filename="../gui/main.qml" line="408"/>
         <source>Settings</source>
-        <translation type="unfinished">Ajustes</translation>
+        <translation>Ajustes</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="255"/>
@@ -984,7 +984,7 @@
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished">Mapeo del mando</translation>
+        <translation>Mapeo del mando</translation>
     </message>
     <message>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
@@ -1013,7 +1013,7 @@
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight no ha detectado ningún decodificador de vídeo acelerado por hardware que funcione. El rendimiento de la transmisión puede verse gravemente degradado con esta configuración.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
