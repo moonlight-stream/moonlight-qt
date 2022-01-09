@@ -144,6 +144,12 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
     m_InputPort->format->es->video.crop.y = 0;
     m_InputPort->format->es->video.crop.width = params->width;
     m_InputPort->format->es->video.crop.height = params->height;
+
+    // Setting colorspace like this doesn't seem to make a difference,
+    // but we'll do it just in case it starts working in the future.
+    // The default appears to be Rec. 709 already.
+    m_InputPort->format->es->video.color_space = MMAL_COLOR_SPACE_ITUR_BT709;
+
     status = mmal_port_format_commit(m_InputPort);
     if (status != MMAL_SUCCESS) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -202,6 +208,13 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     return true;
+}
+
+int MmalRenderer::getDecoderColorspace()
+{
+    // MMAL seems to always use Rec. 709 colorspace for rendering
+    // even when we try to set something else in the input format.
+    return COLORSPACE_REC_709;
 }
 
 void MmalRenderer::setupBackground(PDECODER_PARAMETERS params)
