@@ -90,17 +90,28 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     else
 #endif
     {
-        const char* device = SDL_getenv("DRM_DEV");
+        const char* userDevice = SDL_getenv("DRM_DEV");
+        if (userDevice != nullptr) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Opening user-specified DRM device: %s",
+                        userDevice);
 
-        if (device == nullptr) {
-            device = "/dev/dri/card0";
+            m_DrmFd = open(userDevice, O_RDWR | O_CLOEXEC);
+        }
+        else {
+            const char* defaultDevices[] = {"/dev/dri/renderD128", "/dev/dri/card0"};
+
+            for (unsigned int i = 0; i < SDL_arraysize(defaultDevices); i++) {
+                m_DrmFd = open(defaultDevices[i], O_RDWR | O_CLOEXEC);
+                if (m_DrmFd >= 0) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Opened DRM device: %s",
+                                defaultDevices[i]);
+                    break;
+                }
+            }
         }
 
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Opening DRM device: %s",
-                    device);
-
-        m_DrmFd = open(device, O_RDWR | O_CLOEXEC);
         if (m_DrmFd < 0) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to open DRM device: %d",
