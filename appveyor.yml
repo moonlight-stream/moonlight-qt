@@ -4,7 +4,7 @@ clone_depth: 1
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       QTDIR: C:\Qt\5.15
     - APPVEYOR_BUILD_WORKER_IMAGE: macOS-BigSur
       BUILD_TARGET: macos
