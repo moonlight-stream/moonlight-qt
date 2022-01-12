@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>從應用程式選單中隱藏此遊戲，要開啟隱藏的遊戲，請右鍵點擊目標主機並選擇 %1。</translation>
+        <translation>從應用程式選單中隱藏此遊戲，要開啟隱藏的遊戲，請右鍵點選目標主機並選擇 %1。</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>正在與目標主機建立連接...</translation>
+        <translation>正在與目標主機建立連線...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>搖桿按鍵對應</translation>
+        <translation>手把映射</translation>
     </message>
 </context>
 <context>
@@ -118,7 +118,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>點擊幫助按鈕取的可能的解決方法。</translation>
+        <translation>點選幫助按鈕取的可能的解決方法。</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -180,7 +180,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation>Moonlight 正在測試您的網絡連接以確定 NVIDIA GameStream 是否被阻擋。</translation>
+        <translation>Moonlight 正在測試您的網絡連線以確定 NVIDIA GameStream 是否被阻擋。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
@@ -190,17 +190,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>此網絡似乎並未阻擋 Moonlight。如果您仍然無法連接，請檢查您電腦的防火牆設定。</translation>
+        <translation>此網絡似乎並未阻擋 Moonlight。如果您仍然無法連線，請檢查您電腦的防火牆設定。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>如果您嘗試通過網際網路進行流式傳輸，請在您的遊戲 PC 上安裝 Moonlight Internet Hosting Tool 並執行其中的 Internet Streaming Tester 以檢查您的遊戲主機的網際網路連接。</translation>
+        <translation>如果您嘗試通過網際網路進行流式傳輸，請在您的遊戲 PC 上安裝 Moonlight Internet Hosting Tool 並執行其中的 Internet Streaming Tester 以檢查您的遊戲主機的網際網路連線。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>您電腦的當前網絡連接似乎阻擋了 Moonlight。連接到此網絡時，可能無法通過網際網路進行流式傳輸。</translation>
+        <translation>您電腦的當前網絡連線似乎阻擋了 Moonlight。連接到此網絡時，可能無法通過網際網路進行流式傳輸。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
@@ -210,7 +210,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>無法執行網絡測試，因為此 PC 無法訪問 Moonlight 的任何連接測試服務器。請檢查您的網際網路連接或稍後重試。</translation>
+        <translation>無法執行網絡測試，因為此 PC 無法訪問 Moonlight 的任何連接測試服務器。請檢查您的網際網路連線或稍後重試。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -257,7 +257,7 @@
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation>無法連接到 %1</translation>
+        <translation>無法連線到 %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
@@ -299,12 +299,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="90"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>檢查連接埠的防火牆和連接埠轉發規則：%1</translation>
+        <translation>檢查防火牆和連接埠轉發規則：%1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="95"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>您的網絡連接不佳。降低影像位元率或嘗試更快的連接方式。</translation>
+        <translation>您的網絡連線不佳。降低影像位元率或嘗試更快的連線方式。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="100"/>
@@ -373,17 +373,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="672"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>由於你選擇強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="682"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機和用戶端不支援相同的視訊編解碼器。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="685"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的用戶端 GPU 不支援 H.264 解碼。這能會導致串流效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="696"/>
@@ -418,7 +418,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="749"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation>附加的遊戲控制器沒有映射，將無法使用。請造訪Moonlight幫助解決問題。</translation>
+        <translation>附加的手把沒有映射，將無法使用。請造訪 Moonlight 幫助解決問題。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="757"/>
@@ -630,12 +630,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="709"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation type="unfinished"></translation>
+        <translation>當 Moonlight 不是活動視窗時，將音訊串流靜音</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="720"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>當你使用Alt+Tab切換離開串流視窗或點擊其他視窗時，Moonlight將靜音。</translation>
+        <translation>當你使用 Alt+Tab 切換離開串流視窗或點選其他視窗時，Moonlight 將靜音。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="729"/>
@@ -665,7 +665,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="895"/>
         <source>Maximized</source>
-        <translation type="unfinished"></translation>
+        <translation>最大化</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="952"/>
@@ -675,7 +675,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="973"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation type="unfinished"></translation>
+        <translation>這可以實現無縫滑鼠控制，而無須捕捉用戶端的滑鼠指標。這是理想的遠端桌面選擇，但在大多數遊戲中不起作用。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="975"/>
@@ -698,7 +698,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1057"/>
         <source>Use touchscreen as a virtual trackpad</source>
-        <translation>將觸控螢幕用作虛擬觸控板</translation>
+        <translation>將觸控式螢幕用作虛擬觸控板</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1074"/>
@@ -713,27 +713,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1100"/>
         <source>Gamepad Settings</source>
-        <translation>控制器設定</translation>
+        <translation>手把設定</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1110"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation>交換遊戲控制器的A/B 和 X/Y按鈕</translation>
+        <translation>交換手把的 A/B 和 X/Y 按鈕</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1128"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>這將遊戲控制器切換為任天堂風格的按鍵布局</translation>
+        <translation>這將手把切換為任天堂風格的按鍵布局</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1134"/>
         <source>Force gamepad #1 always connected</source>
-        <translation>強制遊戲控制器#1始終連接</translation>
+        <translation>強制手把 #1 始終連線</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1144"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>強制使單個手把始終與主機保持連線，即使沒有任何手把實際連線到此電腦。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="974"/>
@@ -743,17 +743,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1152"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation type="unfinished"></translation>
+        <translation>透過按下手把的「開始」鍵啟用滑鼠控制</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1163"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation type="unfinished"></translation>
+        <translation>當 Moonlight 在背景工作時處理手把輸入</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1174"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation type="unfinished"></translation>
+        <translation>即使不是焦點視窗，也允許 Moonlight 捕獲手把輸入</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1183"/>
@@ -778,22 +778,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="924"/>
         <source>Discord Rich Presence integration</source>
-        <translation type="unfinished"></translation>
+        <translation>Discord Rich Presence 整合</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="934"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>更新你的 Discord 狀態，以顯示正在執行的遊戲名稱。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1145"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
-        <translation type="unfinished"></translation>
+        <translation>僅在遊戲啟動後不支援手把連線時才啟用此選項。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="963"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation type="unfinished"></translation>
+        <translation>為遠端桌面而不是遊戲優化滑鼠</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="985"/>
@@ -803,7 +803,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="993"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>這可以捕獲系統範圍的鍵盤快速鍵，例如 Alt + Tab，這些快速鍵通常在串流時由用戶端系統處理。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1023"/>
@@ -818,22 +818,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1067"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation type="unfinished"></translation>
+        <translation>選中時，觸控式螢幕就像一個觸控板。取消選中時，觸控式螢幕將直接控制滑鼠指標。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1193"/>
         <source>Optimize game settings for streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>最佳化遊戲設定以進行串流</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1204"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation type="unfinished"></translation>
+        <translation>串流結束後退出主機電腦上的應用程式</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1214"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation type="unfinished"></translation>
+        <translation>當你結束串流時，這將關閉正在執行的應用程式或遊戲。這會導致你失去所有未保存的遊戲進度！</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1233"/>
@@ -874,12 +874,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1289"/>
         <source>HEVC HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC HDR (實驗性)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1333"/>
         <source>Unlock unsupported FPS options</source>
-        <translation type="unfinished"></translation>
+        <translation>解除鎖定不支援的 FPS 選項</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1352"/>
@@ -889,7 +889,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1377"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>自動檢測被封鎖的連線 (建議)</translation>
     </message>
 </context>
 <context>
@@ -897,7 +897,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在恢復 %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
@@ -913,12 +913,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished">檢查連接埠的防火牆和連接埠轉發規則：%1</translation>
+        <translation>檢查防火牆和連接埠轉發規則：%1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished">此主機的網路連線遭到封鎖。當連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
+        <translation>此主機的網路連線遭到封鎖。當連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
@@ -959,7 +959,7 @@
     <message>
         <location filename="../gui/main.qml" line="271"/>
         <source>Join our community on Discord</source>
-        <translation type="unfinished"></translation>
+        <translation>加入我們的 Discord 社群</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="283"/>
@@ -979,12 +979,12 @@
     <message>
         <location filename="../gui/main.qml" line="377"/>
         <source>Gamepad Mapper</source>
-        <translation type="unfinished"></translation>
+        <translation>手把映射</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation>搖桿按鍵對應</translation>
+        <translation>手把映射</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="423"/>
@@ -994,12 +994,12 @@
     <message>
         <location filename="../gui/main.qml" line="432"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>此版本的 Moonlight 尚未針對你的電腦最佳化。請下載 &apos;%1&apos; 版本的 Moonlight，以獲得最佳的串流效能。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="441"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight 檢測到沒有映射的手把：</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="354"/>
@@ -1009,22 +1009,22 @@
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight 沒有檢測到有效的硬體加速視訊解碼器。在這種配置下，你的串流效能可能會嚴重下降。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
         <source>Click the Help button for more information on solving this problem.</source>
-        <translation>點擊幫助按鈕以了解更多如何解決此問題的資訊。</translation>
+        <translation>點選幫助按鈕以了解更多如何解決此問題的資訊。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="425"/>
         <source>Click the Help button for more information.</source>
-        <translation>點擊幫助按鈕以了解詳情。</translation>
+        <translation>點選幫助按鈕以了解詳情。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="443"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation type="unfinished"></translation>
+        <translation>點選幫助按鈕以獲取有關如何映射手把的資訊。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="451"/>
@@ -1034,7 +1034,7 @@
     <message>
         <location filename="../gui/main.qml" line="481"/>
         <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入目標電腦的 IP 位址：</translation>
     </message>
 </context>
 </TS>
