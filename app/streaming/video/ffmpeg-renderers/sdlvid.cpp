@@ -376,7 +376,7 @@ ReadbackRetry:
     // Because the specific YUV color conversion shader is established at
     // texture creation for most SDL render backends, we need to recreate
     // the texture when the colorspace changes.
-    if (frame->colorspace != m_ColorSpace && frame->colorspace != AVCOL_SPC_UNSPECIFIED) {
+    if (frame->colorspace != m_ColorSpace) {
         if (m_Texture != nullptr) {
             SDL_DestroyTexture(m_Texture);
             m_Texture = nullptr;
