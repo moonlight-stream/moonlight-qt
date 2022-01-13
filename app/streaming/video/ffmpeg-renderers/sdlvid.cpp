@@ -10,6 +10,7 @@ SdlRenderer::SdlRenderer()
       m_Renderer(nullptr),
       m_Texture(nullptr),
       m_SwPixelFormat(AV_PIX_FMT_NONE),
+      m_ColorSpace(AVCOL_SPC_UNSPECIFIED),
       m_MapFrame(false)
 {
     SDL_zero(m_OverlayTextures);
@@ -370,6 +371,18 @@ ReadbackRetry:
         if (swFrame == nullptr) {
             return;
         }
+    }
+
+    // Because the specific YUV color conversion shader is established at
+    // texture creation for most SDL render backends, we need to recreate
+    // the texture when the colorspace changes.
+    if (frame->colorspace != m_ColorSpace && frame->colorspace != AVCOL_SPC_UNSPECIFIED) {
+        if (m_Texture != nullptr) {
+            SDL_DestroyTexture(m_Texture);
+            m_Texture = nullptr;
+        }
+
+        m_ColorSpace = frame->colorspace;
     }
 
     if (m_Texture == nullptr) {
