@@ -54,20 +54,20 @@
                          Value="DesktopShortcutInstallState"
                          Condition="HasDesktopShortcutInstallStateRegKey" />
 
-    <util:ProductSearch Id="VCREDIST_142_x86"
+    <util:ProductSearch Id="VCREDIST_14_x86"
                         UpgradeCode="$(var.VCREDIST_X86_UPGRADE_CODE)"
                         Result="version"
-                        Variable="VCREDIST_142_x86" />
+                        Variable="VCREDIST_14_x86" />
 
-    <util:ProductSearch Id="VCREDIST_142_x64"
+    <util:ProductSearch Id="VCREDIST_14_x64"
                         UpgradeCode="$(var.VCREDIST_X64_UPGRADE_CODE)"
                         Result="version"
-                        Variable="VCREDIST_142_x64" />
+                        Variable="VCREDIST_14_x64" />
 
-    <util:ProductSearch Id="VCREDIST_142_ARM64"
+    <util:ProductSearch Id="VCREDIST_14_ARM64"
                         UpgradeCode="$(var.VCREDIST_ARM64_UPGRADE_CODE)"
                         Result="version"
-                        Variable="VCREDIST_142_ARM64" />
+                        Variable="VCREDIST_14_ARM64" />
 
     <BootstrapperApplicationRef Id="WixStandardBootstrapperApplication.RtfLicense">
       <bal:WixStandardBootstrapperApplication
@@ -80,7 +80,7 @@
     </BootstrapperApplicationRef>
 
     <Chain>
-      <ExePackage Name="Microsoft Visual C++ 2015-2019 Redistributable - x86"
+      <ExePackage Name="Microsoft Visual C++ 2015-2022 Redistributable - x86"
                   Cache="no"
                   Compressed="no"
                   PerMachine="yes"
@@ -89,10 +89,10 @@
                   InstallCommand="/install /quiet /norestart"
                   DownloadUrl="$(var.VCREDIST_X86_URL)"
                   InstallCondition="(NOT VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 332)"
-                  DetectCondition="VCREDIST_142_x86 &gt;= v$(var.VCREDIST_VER)">
+                  DetectCondition="VCREDIST_14_x86 &gt;= v$(var.VCREDIST_VER)">
         
-        <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - x86"
-                       ProductName="Microsoft Visual C++ 2015-2019 Redistributable - x86"
+        <RemotePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - x86"
+                       ProductName="Microsoft Visual C++ 2015-2022 Redistributable - x86"
                        Size="$(var.VCREDIST_X86_SIZE)"
                        Version="$(var.VCREDIST_VER).0"
                        Hash="$(var.VCREDIST_X86_SHA1)"/>
@@ -101,7 +101,7 @@
         <ExitCode Value="1638" Behavior="success" />
       </ExePackage>
 
-      <ExePackage Name="Microsoft Visual C++ 2015-2019 Redistributable - x64"
+      <ExePackage Name="Microsoft Visual C++ 2015-2022 Redistributable - x64"
                   Cache="no"
                   Compressed="no"
                   PerMachine="yes"
@@ -110,10 +110,10 @@
                   InstallCommand="/install /quiet /norestart"
                   DownloadUrl="$(var.VCREDIST_X64_URL)"
                   InstallCondition="(VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 34404)"
-                  DetectCondition="VCREDIST_142_x64 &gt;= v$(var.VCREDIST_VER)">
+                  DetectCondition="VCREDIST_14_x64 &gt;= v$(var.VCREDIST_VER)">
         
-        <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - x64"
-                       ProductName="Microsoft Visual C++ 2015-2019 Redistributable - x64"
+        <RemotePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - x64"
+                       ProductName="Microsoft Visual C++ 2015-2022 Redistributable - x64"
                        Size="$(var.VCREDIST_X64_SIZE)"
                        Version="$(var.VCREDIST_VER).0"
                        Hash="$(var.VCREDIST_X64_SHA1)"/>
@@ -123,7 +123,7 @@
       </ExePackage>
 
       <?if $(var.INCLUDE_ARM64) != 0 ?>
-        <ExePackage Name="Microsoft Visual C++ 2015-2019 Redistributable - ARM64"
+        <ExePackage Name="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
                     Cache="no"
                     Compressed="no"
                     PerMachine="yes"
@@ -132,10 +132,10 @@
                     InstallCommand="/install /quiet /norestart"
                     DownloadUrl="$(var.VCREDIST_ARM64_URL)"
                     InstallCondition="NativeMachine = 43620"
-                    DetectCondition="VCREDIST_142_ARM64 &gt;= v$(var.VCREDIST_VER)">
+                    DetectCondition="VCREDIST_14_ARM64 &gt;= v$(var.VCREDIST_VER)">
           
-          <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - ARM64"
-                         ProductName="Microsoft Visual C++ 2015-2019 Redistributable - ARM64"
+          <RemotePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
+                         ProductName="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
                          Size="$(var.VCREDIST_ARM64_SIZE)"
                          Version="$(var.VCREDIST_VER).0"
                          Hash="$(var.VCREDIST_ARM64_SHA1)"/>
