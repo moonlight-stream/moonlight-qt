@@ -54,12 +54,6 @@
                          Value="DesktopShortcutInstallState"
                          Condition="HasDesktopShortcutInstallStateRegKey" />
 
-    <util:RegistrySearch Variable="NT_BUILD_STRING"
-                         Root="HKLM"
-                         Key="Software\Microsoft\Windows NT\CurrentVersion"
-                         Value="BuildLabEx"
-                         Win64="yes" />
-
     <util:ProductSearch Id="VCREDIST_142_x86"
                         UpgradeCode="$(var.VCREDIST_X86_UPGRADE_CODE)"
                         Result="version"
@@ -94,7 +88,7 @@
                   Vital="yes"
                   InstallCommand="/install /quiet /norestart"
                   DownloadUrl="$(var.VCREDIST_X86_URL)"
-                  InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;x86&quot;"
+                  InstallCondition="(NOT VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 332)"
                   DetectCondition="VCREDIST_142_x86 &gt;= v$(var.VCREDIST_VER)">
         
         <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - x86"
@@ -115,7 +109,7 @@
                   Vital="yes"
                   InstallCommand="/install /quiet /norestart"
                   DownloadUrl="$(var.VCREDIST_X64_URL)"
-                  InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;amd64&quot;"
+                  InstallCondition="(VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 34404)"
                   DetectCondition="VCREDIST_142_x64 &gt;= v$(var.VCREDIST_VER)">
         
         <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - x64"
@@ -137,7 +131,7 @@
                     Vital="yes"
                     InstallCommand="/install /quiet /norestart"
                     DownloadUrl="$(var.VCREDIST_ARM64_URL)"
-                    InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;arm64&quot;"
+                    InstallCondition="NativeMachine = 43620"
                     DetectCondition="VCREDIST_142_ARM64 &gt;= v$(var.VCREDIST_VER)">
           
           <RemotePayload Description="Microsoft Visual C++ 2015-2019 Redistributable - ARM64"
@@ -153,7 +147,7 @@
 
       <MsiPackage Id="Moonlight_x86"
                   SourceFile="$(env.BUILD_ROOT)\build-x86-$(env.BUILD_CONFIG)\Moonlight.msi"
-                  InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;x86&quot;"
+                  InstallCondition="(NOT VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 332)"
                   Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
@@ -162,7 +156,7 @@
 
       <MsiPackage Id="Moonlight_x64"
                   SourceFile="$(env.BUILD_ROOT)\build-x64-$(env.BUILD_CONFIG)\Moonlight.msi"
-                  InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;amd64&quot;"
+                  InstallCondition="(VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 34404)"
                   Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
@@ -172,7 +166,7 @@
       <?if $(var.INCLUDE_ARM64) != 0 ?>
         <MsiPackage Id="Moonlight_arm64"
                     SourceFile="$(env.BUILD_ROOT)\build-arm64-$(env.BUILD_CONFIG)\Moonlight.msi"
-                    InstallCondition="NT_BUILD_STRING &gt;&lt; &quot;arm64&quot;"
+                    InstallCondition="NativeMachine = 43620"
                     Vital="yes">
           <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
           <MsiProperty Name="REINSTALLMODE" Value="[REINSTALLMODE]" />
