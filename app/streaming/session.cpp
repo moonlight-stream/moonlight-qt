@@ -1381,6 +1381,7 @@ void Session::execInternal()
 
     bool needsFirstEnterCapture = false;
     bool needsPostDecoderCreationCapture = false;
+    bool ignoreDuplicateResizes = false;
 
     // HACK: For Wayland, we wait until we get the first SDL_WINDOWEVENT_ENTER
     // event where it seems to work consistently on GNOME. For other platforms,
@@ -1389,6 +1390,11 @@ void Session::execInternal()
     if (strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
         // Native Wayland: Capture on SDL_WINDOWEVENT_ENTER
         needsFirstEnterCapture = true;
+
+        // As of SDL 2.0.20, we get duplicate SDL_WINDOWEVENT_SIZE_CHANGED events
+        // when focus is lost and gained under GNOME Wayland. This causes us to
+        // recreate our renderer needlessly.
+        ignoreDuplicateResizes = true;
     }
     else {
         // X11/XWayland: Capture after decoder creation
@@ -1426,6 +1432,7 @@ void Session::execInternal()
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
+    Sint32 lastResizeW = -1, lastResizeH = -1;
     for (;;) {
 #if SDL_VERSION_ATLEAST(2, 0, 16) && !defined(STEAM_LINK)
         // SDL 2.0.16 has a proper wait event implementation that uses platform
@@ -1542,6 +1549,19 @@ void Session::execInternal()
                             event.window.data1,
                             event.window.data2);
                 break;
+            }
+
+            if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                if (ignoreDuplicateResizes && lastResizeW == event.window.data1 && lastResizeH == event.window.data2) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Dropping duplicate size changed event: %d %d",
+                                event.window.data1,
+                                event.window.data2);
+                    break;
+                }
+
+                lastResizeW = event.window.data1;
+                lastResizeH = event.window.data2;
             }
 
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
