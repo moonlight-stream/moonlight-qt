@@ -186,6 +186,47 @@ public:
                               kCVImageBufferChromaSubsampling_420,
                               kCVAttachmentMode_ShouldPropagate);
 
+        switch (frame->chroma_location) {
+        case AVCHROMA_LOC_LEFT:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferChromaLocationTopFieldKey,
+                                  kCVImageBufferChromaLocation_Left,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCHROMA_LOC_CENTER:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferChromaLocationTopFieldKey,
+                                  kCVImageBufferChromaLocation_Center,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCHROMA_LOC_TOPLEFT:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferChromaLocationTopFieldKey,
+                                  kCVImageBufferChromaLocation_TopLeft,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCHROMA_LOC_TOP:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferChromaLocationTopFieldKey,
+                                  kCVImageBufferChromaLocation_Top,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCHROMA_LOC_BOTTOMLEFT:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferChromaLocationTopFieldKey,
+                                  kCVImageBufferChromaLocation_BottomLeft,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        case AVCHROMA_LOC_BOTTOM:
+            CVBufferSetAttachment(pixBuf,
+                                  kCVImageBufferChromaLocationTopFieldKey,
+                                  kCVImageBufferChromaLocation_Bottom,
+                                  kCVAttachmentMode_ShouldPropagate);
+            break;
+        default:
+            break;
+        }
+
         switch (frame->color_primaries) {
         case AVCOL_PRI_BT709:
             CVBufferSetAttachment(pixBuf,
