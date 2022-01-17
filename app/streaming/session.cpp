@@ -1443,11 +1443,16 @@ void Session::execInternal()
     SDL_Event event;
     Sint32 lastResizeW = -1, lastResizeH = -1;
     for (;;) {
-#if SDL_VERSION_ATLEAST(2, 0, 16) && !defined(STEAM_LINK)
-        // SDL 2.0.16 has a proper wait event implementation that uses platform
-        // support to block on events rather than polling on Windows, macOS, and
-        // X11. It will fall back to 1 ms polling if a joystick is connected, so
-        // we don't use it for STEAM_LINK to ensure we only poll every 10 ms.
+#if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
+        // SDL 2.0.18 has a proper wait event implementation that uses platform
+        // support to block on events rather than polling on Windows, macOS, X11,
+        // and Wayland. It will fall back to 1 ms polling if a joystick is
+        // connected, so we don't use it for STEAM_LINK to ensure we only poll
+        // every 10 ms.
+        //
+        // NB: This behavior was introduced in SDL 2.0.16, but had a few critical
+        // issues that could cause indefinite timeouts, delayed joystick detection,
+        // and other problems.
         if (!SDL_WaitEventTimeout(&event, 1000)) {
             presence.runCallbacks();
             continue;
