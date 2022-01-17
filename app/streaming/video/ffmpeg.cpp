@@ -1045,6 +1045,9 @@ void FFmpegVideoDecoder::decoderThreadProc()
                         SDL_Event event;
                         event.type = SDL_RENDER_DEVICE_RESET;
                         SDL_PushEvent(&event);
+
+                        // Don't consume any additional data
+                        SDL_AtomicSet(&m_DecoderThreadShouldQuit, 1);
                     }
                 }
             } while (err == AVERROR(EAGAIN) && !SDL_AtomicGet(&m_DecoderThreadShouldQuit));
@@ -1063,6 +1066,11 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     int err;
 
     SDL_assert(!m_TestOnly);
+
+    // If this is the first frame, reject anything that's not an IDR frame
+    if (m_FramesIn == 0 && du->frameType != FRAME_TYPE_IDR) {
+        return DR_NEED_IDR;
+    }
 
     // Bail immediately if we need an IDR frame to continue
     if (Session::get()->getAndClearPendingIdrFrameStatus()) {
@@ -1148,6 +1156,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
             SDL_Event event;
             event.type = SDL_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
+
+            // Don't consume any additional data
+            SDL_AtomicSet(&m_DecoderThreadShouldQuit, 1);
         }
 
         return DR_NEED_IDR;
