@@ -357,6 +357,13 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     }
 
     m_VideoCallbacks.capabilities = decoder->getDecoderCapabilities();
+    if (m_VideoCallbacks.capabilities & CAPABILITY_PULL_RENDERER) {
+        // It is an error to pass a push callback when in pull mode
+        m_VideoCallbacks.submitDecodeUnit = nullptr;
+    }
+    else {
+        m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
+    }
 
     m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
 
@@ -439,7 +446,6 @@ bool Session::initialize()
 
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
-    m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
 
     LiInitializeStreamConfiguration(&m_StreamConfig);
     m_StreamConfig.width = m_Preferences->width;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <functional>
+#include <QQueue>
 
 #include "decoder.h"
 #include "ffmpeg-renderers/renderer.h"
@@ -54,6 +55,10 @@ private:
     enum AVPixelFormat ffGetFormat(AVCodecContext* context,
                                    const enum AVPixelFormat* pixFmts);
 
+    void decoderThreadProc();
+
+    static int decoderThreadProcThunk(void* context);
+
     AVPacket* m_Pkt;
     AVCodecContext* m_VideoDecoderCtx;
     QByteArray m_DecodeBuffer;
@@ -74,11 +79,14 @@ private:
     int m_VideoFormat;
     bool m_NeedsSpsFixup;
     bool m_TestOnly;
-    enum {
-        RRF_UNKNOWN,
-        RRF_YES,
-        RRF_NO
-    } m_CanRetryReceiveFrame;
+    SDL_Thread* m_DecoderThread;
+    SDL_atomic_t m_DecoderThreadShouldQuit;
+
+    typedef struct {
+        uint64_t enqueueTimeMs;
+        uint32_t presentationTimeMs;
+    } FrameInfoTuple;
+    QQueue<FrameInfoTuple> m_FrameInfoQueue;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCMainTestFrame[];
