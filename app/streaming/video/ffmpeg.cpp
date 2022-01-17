@@ -1164,8 +1164,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         return DR_NEED_IDR;
     }
 
-    m_FrameInfoQueue.enqueue({.enqueueTimeMs = du->enqueueTimeMs,
-                              .presentationTimeMs = du->presentationTimeMs});
+    m_FrameInfoQueue.enqueue({ du->enqueueTimeMs, du->presentationTimeMs});
 
     m_FramesIn++;
     return DR_OK;
