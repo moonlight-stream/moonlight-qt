@@ -264,14 +264,12 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // safely return DR_OK and wait for m_NeedsIdr to be set by
     // the decoder reinitialization code.
 
-    if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
-        if (s_ActiveSession->m_NeedsIdr) {
-            // If we reset our decoder, we'll need to request an IDR frame
-            s_ActiveSession->m_NeedsIdr = false;
-            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
-            return DR_NEED_IDR;
-        }
+    if (s_ActiveSession->getAndClearPendingIdrFrameStatus()) {
+        // If we reset our decoder, we'll need to request an IDR frame
+        return DR_NEED_IDR;
+    }
 
+    if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
         if (decoder != nullptr) {
             int ret = decoder->submitDecodeUnit(du);
@@ -379,7 +377,6 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_Window(nullptr),
       m_VideoDecoder(nullptr),
       m_DecoderLock(0),
-      m_NeedsIdr(false),
       m_AudioDisabled(false),
       m_AudioMuted(false),
       m_DisplayOriginX(0),
@@ -397,6 +394,7 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0)
 {
+    SDL_AtomicSet(&m_NeedsIdr, 0);
 }
 
 // NB: This may not get destroyed for a long time! Don't put any vital cleanup here.
@@ -1185,6 +1183,11 @@ void Session::flushWindowEvents()
     SDL_PushEvent(&flushEvent);
 }
 
+bool Session::getAndClearPendingIdrFrameStatus()
+{
+    return SDL_AtomicSet(&m_NeedsIdr, 0);
+}
+
 class ExecThread : public QThread
 {
 public:
@@ -1634,7 +1637,7 @@ void Session::execInternal()
             }
 
             // Request an IDR frame to complete the reset
-            m_NeedsIdr = true;
+            SDL_AtomicSet(&m_NeedsIdr, 1);
 
             SDL_AtomicUnlock(&m_DecoderLock);
             break;
