@@ -373,7 +373,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="676"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>Gebruikmaken van software decodering door selectie om H.264 te forceren zonder GPU ondersteuning. Dit kan slechte streamingkwaliteit veroorzaken.</translation>
+        <translation>Gebruik maken van software decodering door selectie om H.264 te forceren zonder GPU ondersteuning. Dit kan slechte streamingkwaliteit veroorzaken.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="686"/>
