@@ -1402,8 +1402,10 @@ void Session::execInternal()
 
         // As of SDL 2.0.20, we get duplicate SDL_WINDOWEVENT_SIZE_CHANGED events
         // when focus is lost and gained under GNOME Wayland. This causes us to
-        // recreate our renderer needlessly.
+        // recreate our renderer needlessly. This is fixed in SDL 2.0.21.
+#if !SDL_VERSION_ATLEAST(2, 0, 21)
         ignoreDuplicateResizes = true;
+#endif
     }
     else {
         // X11/XWayland: Capture after decoder creation
