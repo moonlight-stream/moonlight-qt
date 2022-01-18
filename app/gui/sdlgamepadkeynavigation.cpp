@@ -12,6 +12,7 @@
 SdlGamepadKeyNavigation::SdlGamepadKeyNavigation()
     : m_Enabled(false),
       m_UiNavMode(false),
+      m_FirstPoll(false),
       m_LastAxisNavigationEventTime(0)
 {
     m_PollingTimer = new QTimer(this);
@@ -62,6 +63,9 @@ void SdlGamepadKeyNavigation::enable()
         }
     }
 
+    // Flush events on the first poll
+    m_FirstPoll = true;
+
     // Poll every 50 ms for a new joystick event
     m_PollingTimer->start(50);
 
@@ -90,6 +94,16 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
 {
     SDL_Event event;
     StreamingPreferences prefs;
+
+    // Discard any pending button events on the first poll to avoid picking up
+    // stale input data from the stream session (like the quit combo).
+    if (m_FirstPoll) {
+        SDL_PumpEvents();
+        SDL_FlushEvent(SDL_CONTROLLERBUTTONDOWN);
+        SDL_FlushEvent(SDL_CONTROLLERBUTTONUP);
+
+        m_FirstPoll = false;
+    }
 
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
