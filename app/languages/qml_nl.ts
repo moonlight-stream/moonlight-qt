@@ -533,7 +533,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="519"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation>Video bitrate: %1 Mbps</translation>
+        <translation>Videobitsnelheid: %1 Mbps</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="527"/>
