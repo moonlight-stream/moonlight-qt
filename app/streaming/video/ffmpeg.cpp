@@ -424,13 +424,15 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, PDECODER
 
         // Tell overlay manager to use this frontend renderer
         Session::get()->getOverlayManager().setOverlayRenderer(m_FrontendRenderer);
-    }
 
-    m_DecoderThread = SDL_CreateThread(FFmpegVideoDecoder::decoderThreadProcThunk, "FFDecoder", (void*)this);
-    if (m_DecoderThread == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create decoder thread: %s", SDL_GetError());
-        return false;
+        // Only create the decoder thread when instantiating the decoder for real. It will use APIs from
+        // moonlight-common-c that can only be legally called with an established connection.
+        m_DecoderThread = SDL_CreateThread(FFmpegVideoDecoder::decoderThreadProcThunk, "FFDecoder", (void*)this);
+        if (m_DecoderThread == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create decoder thread: %s", SDL_GetError());
+            return false;
+        }
     }
 
     return true;

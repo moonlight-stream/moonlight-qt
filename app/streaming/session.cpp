@@ -819,6 +819,11 @@ private:
             emit m_Session->sessionFinished(m_Session->m_PortTestResults);
         }
 
+        // The video decoder must already be destroyed, since it could
+        // try to interact with APIs that can only be called between
+        // LiStartConnection() and LiStopConnection().
+        SDL_assert(m_Session->m_VideoDecoder == nullptr);
+
         // Finish cleanup of the connection state
         LiStopConnection();
 
@@ -1717,6 +1722,8 @@ DispatchDeferredCleanup:
     SDL_AtomicUnlock(&m_InputHandlerLock);
 
     // Destroy the decoder, since this must be done on the main thread
+    // NB: This must happen before LiStopConnection() for pull-based
+    // decoders.
     SDL_AtomicLock(&m_DecoderLock);
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
