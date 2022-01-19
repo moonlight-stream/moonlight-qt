@@ -446,7 +446,7 @@
         <translation>GeForce Experience đã trả lời bằng lỗi: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1632"/>
+        <location filename="../streaming/session.cpp" line="1639"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Không thể khởi tạo trình giải mã video. Vui lòng kiểm tra cài đặt stream của bạn và thử lại.</translation>
     </message>

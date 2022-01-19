@@ -446,7 +446,7 @@
         <translation>Ошибка GeForce Experience: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1632"/>
+        <location filename="../streaming/session.cpp" line="1639"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Не удалось запустить декодирование видео. Проверьте настройки стрима и попробуйте ещё раз.</translation>
     </message>

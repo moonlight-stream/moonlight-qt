@@ -446,7 +446,7 @@
         <translation>GeForce Experience ha devuelto el error: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1632"/>
+        <location filename="../streaming/session.cpp" line="1639"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>No se ha podido inicializar el decodificador de vídeo. Por favor, compruebe la configuración de la transmisión y vuelva a intentarlo.</translation>
     </message>
