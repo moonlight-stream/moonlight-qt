@@ -36,6 +36,25 @@
 	</screenshots>
 
 	<releases>
+		<release version="3.2.0" date="2022-01-18">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Reduced CPU usage while streaming</li>
+					<li>Non-ASCII characters are now supported when pasting clipboard data to the host</li>
+					<li>Added support for zero-copy NVDEC rendering for Nvidia Wayland systems</li>
+					<li>Significantly improved performance with asynchronous decoders like V4L2M2M on Linux</li>
+					<li>Added support for color compression planes on newer Intel systems when using VAAPI decoding</li>
+					<li>Added support for copy-back rendering in non-default pixel formats (like the Raspberry Pi SAND format)</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed unexpected GUI input after using the gamepad quit combo</li>
+					<li>Updated included gamepad mappings</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="3.1.4" date="2021-06-25">
 			<description>
 				<p>Changes:</p>
