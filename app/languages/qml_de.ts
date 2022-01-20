@@ -160,7 +160,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Diese Version von GeForce Experience auf %1 wird nicht von Moonlight unterstützt. Du musst Moonlight aktualisieren um von %1 zu streamen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -329,7 +329,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="613"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Diese Version von GeForce Experience auf %1 wird von diesem Build von Moonlight nicht unterstützt. Du musst Moonlight aktualisieren, um von %1 zu streamen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="618"/>
@@ -373,17 +373,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="676"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Verwendung von Software-Decodierung aufgrund deiner Auswahl, H.264 ohne GPU-Unterstützung zu erzwingen. Dies kann zu einer schlechten Streaming-Leistung führen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="686"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dein Host-PC und dein Client-PC unterstützen nicht die gleichen Videocodecs. Dies kann zu einer schlechten Streaming-Leistung führen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="689"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Deine Client-GPU unterstützt die H.264-Dekodierung nicht. Dies kann zu einer schlechten Streaming-Leistung führen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="700"/>
@@ -874,7 +874,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1289"/>
         <source>HEVC HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC HDR (Experimentell)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1333"/>
@@ -1013,7 +1013,7 @@
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight hat keinen funktionierenden hardwarebeschleunigten Videodecoder erkannt. Deine Streaming-Leistung kann in dieser Konfiguration stark beeinträchtigt sein.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
