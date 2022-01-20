@@ -7,23 +7,23 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>खेल फिर से शुरू करें</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>खेल बंद करें</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>खेल शुरू करें</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>डायरेक्ट लॉन्च</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
@@ -33,22 +33,22 @@
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>खेल छुपाएं</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>इस गेम को ऐप ग्रिड से छिपाएं। छिपे हुए खेलों तक पहुँचने के लिए, होस्ट पर राइट-क्लिक करें और% 1 चुनें।</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>सभी ऐप्स देखें</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>क्या आप वाकई% 1 छोड़ना चाहते हैं? कोई भी सहेजी नहीं गई प्रगति खो जाएगी।</translation>
     </message>
 </context>
 <context>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>PC से कनेक्शन स्थापित किया जा रहा है...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>ऐप्लिकेशन छोड़ा जा रहा है...</translation>
     </message>
 </context>
 <context>
@@ -69,17 +69,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>PC से कनेक्शन स्थापित किया जा रहा है...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>ऐप्लिकेशन सूची लोड हो रही है...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>क्या आप वाकई% 1 छोड़ना चाहते हैं? कोई भी सहेजी नहीं गई प्रगति खो जाएगी।</translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>गेमपैड मैपिंग</translation>
     </message>
 </context>
 <context>
@@ -95,7 +95,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="378"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation type="unfinished"></translation>
+        <translation>ऑडियो कैप्चर डिवाइस नहीं है। कृपया GeForce Experience हटा के फिर से डालें ।</translation>
     </message>
 </context>
 <context>
@@ -103,22 +103,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>कंप्यूटर</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>इस PC से कनेक्शन नहीं लग रहा है।</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>इस PC का इंटरनेट कनेक्शन मूनलाइट को ब्लॉक कर रहा है। हो सकता है कि इस नेटवर्क से कनेक्ट रहने के दौरान इंटरनेट पर स्ट्रीमिंग काम न करे।</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished"></translation>
+        <translation>संभावित समाधानों के लिए सहायता बटन पर क्लिक करें।</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -127,7 +127,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>आटोमेटिक PC खोज बंद है। अपने PC को मैन्युअल रूप से ढूंढें ।</translation>
     </message>
     <message>
         <source>View Apps</source>
@@ -140,22 +140,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation type="unfinished"></translation>
+        <translation>PC जगाएं</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation type="unfinished"></translation>
+        <translation>टेस्ट नेटवर्क</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>PC का नाम बदलें</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>PC हटादें</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
@@ -165,32 +165,32 @@
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation>जब तक होस्ट PC पर पिछला खेल अभी भी चल रहा हो, आप पेयर नहीं कर सकते। किसी भी चल रहे गेम से बाहर निकलें या होस्ट पीसी को रीबूट करें, फिर दोबारा जोड़ने का प्रयास करें।</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>कृपया अपने गेमस्ट्रीम PC पर % 1 दर्ज करें। पेयरिंग पूरी होने पर यह डायलॉग बंद हो जाएगा।</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove this PC?</source>
-        <translation type="unfinished"></translation>
+        <translation>क्या आप वाकई इस PC को हटाना चाहते हैं?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight यह निर्धारित करने के लिए आपके नेटवर्क कनेक्शन का टेस्ट कर रहा है कि क्या NVIDIA GameStream को रोका जा रहा है।</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>इसमें कुछ सेकेंड लग सकते हैं…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>ऐसा लगता है कि यह नेटवर्क मूनलाइट को ब्लॉक नहीं कर रहा है। यदि आपको अभी भी कनेक्ट करने में समस्या हो रही है, तो अपने PC की फ़ायरवॉल सेटिंग्स जांचें।</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
@@ -220,27 +220,27 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>PC स्टेटस: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>ऑनलाइन</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>ऑफ़लाइन</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>सभी ऐप्स देखें</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="357"/>
         <source>Enter the new name for this PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>इस PC के लिए नया नाम दर्ज करें:</translation>
     </message>
 </context>
 <context>
