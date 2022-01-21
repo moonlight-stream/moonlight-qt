@@ -49,6 +49,9 @@ private:
     PFNGLGENVERTEXARRAYSOESPROC m_glGenVertexArraysOES;
     PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;
     PFNGLDELETEVERTEXARRAYSOESPROC m_glDeleteVertexArraysOES;
+    int m_GlesMajorVersion;
+    int m_GlesMinorVersion;
+    bool m_HasExtUnpackSubimage;
 
 #define NV12_PARAM_YUVMAT 0
 #define NV12_PARAM_OFFSET 1

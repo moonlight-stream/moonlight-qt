@@ -15,7 +15,7 @@
 #include <SDL_render.h>
 #include <SDL_syswm.h>
 
-// These are EGL extensions, so some platform headers may not provide them
+// These are extensions, so some platform headers may not provide them
 #ifndef EGL_PLATFORM_WAYLAND_KHR
 #define EGL_PLATFORM_WAYLAND_KHR 0x31D8
 #endif
@@ -24,6 +24,9 @@
 #endif
 #ifndef EGL_PLATFORM_GBM_KHR
 #define EGL_PLATFORM_GBM_KHR 0x31D7
+#endif
+#ifndef GL_UNPACK_ROW_LENGTH_EXT
+#define GL_UNPACK_ROW_LENGTH_EXT 0x0CF2
 #endif
 
 typedef struct _OVERLAY_VERTEX
@@ -77,6 +80,9 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_glGenVertexArraysOES(nullptr),
         m_glBindVertexArrayOES(nullptr),
         m_glDeleteVertexArraysOES(nullptr),
+        m_GlesMajorVersion(0),
+        m_GlesMinorVersion(0),
+        m_HasExtUnpackSubimage(false),
         m_DummyRenderer(nullptr)
 {
     SDL_assert(backendRenderer);
@@ -179,7 +185,33 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
         SDL_assert(!SDL_MUSTLOCK(newSurface));
 
         glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSurface->w, newSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, newSurface->pixels);
+
+        void* packedPixelData = nullptr;
+        if (m_GlesMajorVersion >= 3 || m_HasExtUnpackSubimage) {
+            // If we are GLES 3.0+ or have GL_EXT_unpack_subimage, GL can handle any pitch
+            SDL_assert(newSurface->pitch % newSurface->format->BytesPerPixel == 0);
+            glPixelStorei(GL_UNPACK_ROW_LENGTH_EXT, newSurface->pitch / newSurface->format->BytesPerPixel);
+        }
+        else if (newSurface->pitch != newSurface->w * newSurface->format->BytesPerPixel) {
+            // If we can't use GL_UNPACK_ROW_LENGTH and the surface isn't tightly packed,
+            // we must allocate a tightly packed buffer and copy our pixels there.
+            packedPixelData = malloc(newSurface->w * newSurface->h * newSurface->format->BytesPerPixel);
+            if (!packedPixelData) {
+                SDL_FreeSurface(newSurface);
+                return;
+            }
+
+            SDL_ConvertPixels(newSurface->w, newSurface->h,
+                              newSurface->format->format, newSurface->pixels, newSurface->pitch,
+                              newSurface->format->format, packedPixelData, newSurface->w * newSurface->format->BytesPerPixel);
+        }
+
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, newSurface->w, newSurface->h, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                     packedPixelData ? packedPixelData : newSurface->pixels);
+
+        if (packedPixelData) {
+            free(packedPixelData);
+        }
 
         // SDL_FRect wasn't added until 2.0.10
         struct {
@@ -514,6 +546,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         EGL_LOG(Error, "Cannot use created EGL context: %s", SDL_GetError());
         return false;
     }
+
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &m_GlesMajorVersion);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &m_GlesMinorVersion);
+
+    // We can use GL_UNPACK_ROW_LENGTH for a more optimized upload of non-tightly-packed textures
+    m_HasExtUnpackSubimage = SDL_GL_ExtensionSupported("GL_EXT_unpack_subimage");
 
     const EGLExtensions eglExtensions(m_EGLDisplay);
     if (!eglExtensions.isSupported("EGL_KHR_image_base") &&
