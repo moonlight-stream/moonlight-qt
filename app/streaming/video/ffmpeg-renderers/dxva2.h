@@ -29,8 +29,14 @@ private:
     bool isDXVideoProcessorAPIBlacklisted();
     void renderOverlay(Overlay::OverlayType type);
 
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 68, 0)
+#define FF_POOL_SIZE_TYPE size_t
+#else
+#define FF_POOL_SIZE_TYPE int
+#endif
+
     static
-    AVBufferRef* ffPoolAlloc(void* opaque, int size);
+    AVBufferRef* ffPoolAlloc(void* opaque, FF_POOL_SIZE_TYPE size);
 
     static
     void ffPoolDummyDelete(void*, uint8_t*);

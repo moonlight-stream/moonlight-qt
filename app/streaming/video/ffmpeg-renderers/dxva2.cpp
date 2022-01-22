@@ -83,7 +83,7 @@ void DXVA2Renderer::ffPoolDummyDelete(void*, uint8_t*)
     /* Do nothing */
 }
 
-AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, int)
+AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, FF_POOL_SIZE_TYPE)
 {
     DXVA2Renderer* me = reinterpret_cast<DXVA2Renderer*>(opaque);
 

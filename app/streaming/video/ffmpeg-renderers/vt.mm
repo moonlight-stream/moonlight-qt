@@ -178,101 +178,15 @@ public:
             return;
         }
 
-        // Strip the attachments added by VT. They are likely wrong.
-        CVBufferRemoveAllAttachments(pixBuf);
+        // FFmpeg 5.0+ sets the CVPixelBuffer attachments properly now, so we don't have to
+        // fix them up ourselves (except CGColorSpace and PAR attachments).
 
-        CVBufferSetAttachment(pixBuf,
-                              kCVImageBufferChromaSubsamplingKey,
-                              kCVImageBufferChromaSubsampling_420,
-                              kCVAttachmentMode_ShouldPropagate);
-
-        switch (frame->chroma_location) {
-        case AVCHROMA_LOC_LEFT:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferChromaLocationTopFieldKey,
-                                  kCVImageBufferChromaLocation_Left,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCHROMA_LOC_CENTER:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferChromaLocationTopFieldKey,
-                                  kCVImageBufferChromaLocation_Center,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCHROMA_LOC_TOPLEFT:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferChromaLocationTopFieldKey,
-                                  kCVImageBufferChromaLocation_TopLeft,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCHROMA_LOC_TOP:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferChromaLocationTopFieldKey,
-                                  kCVImageBufferChromaLocation_Top,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCHROMA_LOC_BOTTOMLEFT:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferChromaLocationTopFieldKey,
-                                  kCVImageBufferChromaLocation_BottomLeft,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCHROMA_LOC_BOTTOM:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferChromaLocationTopFieldKey,
-                                  kCVImageBufferChromaLocation_Bottom,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        default:
-            break;
-        }
-
-        switch (frame->color_primaries) {
-        case AVCOL_PRI_BT709:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferColorPrimariesKey,
-                                  kCVImageBufferColorPrimaries_ITU_R_709_2,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCOL_PRI_SMPTE170M:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferColorPrimariesKey,
-                                  kCVImageBufferColorPrimaries_SMPTE_C,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCOL_PRI_BT2020:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferColorPrimariesKey,
-                                  kCVImageBufferColorPrimaries_ITU_R_2020,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        default:
-            break;
-        }
-
-        switch (frame->color_trc) {
-        case AVCOL_TRC_BT709:
-        case AVCOL_TRC_SMPTE170M:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferTransferFunctionKey,
-                                  kCVImageBufferTransferFunction_ITU_R_709_2,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCOL_TRC_BT2020_10:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferTransferFunctionKey,
-                                  kCVImageBufferTransferFunction_ITU_R_2020,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCOL_TRC_SMPTE2084:
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferTransferFunctionKey,
-                                  kCVImageBufferTransferFunction_SMPTE_ST_2084_PQ,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        default:
-            break;
-        }
+        // The VideoToolbox decoder attaches pixel aspect ratio information to the CVPixelBuffer
+        // which will rescale the video stream in accordance with the host display resolution
+        // to preserve the original aspect ratio of the host desktop. This behavior currently
+        // differs from the behavior of all other Moonlight Qt renderers, so we will strip
+        // these attachments for consistent behavior.
+        CVBufferRemoveAttachment(pixBuf, kCVImageBufferPixelAspectRatioKey);
 
         // Reset m_ColorSpace if the colorspace changes. This can happen when
         // a game enters HDR mode (Rec 601 -> Rec 2020).
@@ -282,39 +196,21 @@ public:
                 m_ColorSpace = nullptr;
             }
 
-            m_LastAvColorSpace = frame->colorspace;
-        }
-
-        switch (frame->colorspace) {
-        case AVCOL_SPC_BT709:
-            if (m_ColorSpace == nullptr) {
+            switch (frame->colorspace) {
+            case AVCOL_SPC_BT709:
                 m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
-            }
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferYCbCrMatrixKey,
-                                  kCVImageBufferYCbCrMatrix_ITU_R_709_2,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCOL_SPC_BT2020_NCL:
-            if (m_ColorSpace == nullptr) {
+                break;
+            case AVCOL_SPC_BT2020_NCL:
                 m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
-            }
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferYCbCrMatrixKey,
-                                  kCVImageBufferYCbCrMatrix_ITU_R_2020,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        case AVCOL_SPC_SMPTE170M:
-            if (m_ColorSpace == nullptr) {
+                break;
+            case AVCOL_SPC_SMPTE170M:
                 m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+                break;
+            default:
+                break;
             }
-            CVBufferSetAttachment(pixBuf,
-                                  kCVImageBufferYCbCrMatrixKey,
-                                  kCVImageBufferYCbCrMatrix_ITU_R_601_4,
-                                  kCVAttachmentMode_ShouldPropagate);
-            break;
-        default:
-            break;
+
+            m_LastAvColorSpace = frame->colorspace;
         }
 
         if (m_ColorSpace != nullptr) {
