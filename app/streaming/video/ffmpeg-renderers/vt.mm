@@ -365,8 +365,10 @@ public:
             uint32_t cpuType;
             size_t size = sizeof(cpuType);
 
+            // Apple Silicon Macs have CPU_ARCH_ABI64 set, so we need to mask that off.
+            // For some reason, 64-bit Intel Macs don't seem to have CPU_ARCH_ABI64 set.
             err = sysctlbyname("hw.cputype", &cpuType, &size, NULL, 0);
-            if (err == 0 && cpuType == CPU_TYPE_ARM) {
+            if (err == 0 && (cpuType & ~CPU_ARCH_MASK) == CPU_TYPE_ARM) {
                 if (info.info.cocoa.window.screen != nullptr) {
                     m_DisplayLayer.shouldRasterize = YES;
                     m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
