@@ -4,6 +4,7 @@
 
 #include <initguid.h>
 #include "dxva2.h"
+#include "dxutil.h"
 #include "../ffmpeg.h"
 #include <streaming/streamutils.h>
 #include <streaming/session.h>
@@ -464,89 +465,24 @@ bool DXVA2Renderer::isDecoderBlacklisted()
                             HIWORD(id.DriverVersion.LowPart),
                             LOWORD(id.DriverVersion.LowPart));
 
-                if (id.VendorId == 0x8086) {
-                    // Intel seems to encode the series in the high byte of
-                    // the device ID. We want to avoid the "Partial" acceleration
-                    // support explicitly. Those will claim to have HW acceleration
-                    // but perform badly.
-                    // https://en.wikipedia.org/wiki/Intel_Graphics_Technology#Capabilities_(GPU_video_acceleration)
-                    // https://raw.githubusercontent.com/GameTechDev/gpudetect/master/IntelGfx.cfg
-                    switch (id.DeviceId & 0xFF00) {
-                    case 0x0400: // Haswell
-                    case 0x0A00: // Haswell
-                    case 0x0D00: // Haswell
-                    case 0x1600: // Broadwell
-                    case 0x2200: // Cherry Trail and Braswell
-                        // Blacklist these for HEVC to avoid hybrid decode
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "GPU blacklisted for HEVC due to hybrid decode");
-                        result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
-                        break;
-                    case 0x1900: // Skylake
-                        // Blacklist these for HEVC Main10 to avoid hybrid decode.
-                        // Regular HEVC Main is fine though.
-                        if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "GPU blacklisted for HEVC Main10 due to hybrid decode");
-                            result = false;
-                            break;
-                        }
-                    default:
-                        // Intel drivers from before late-2017 had a bug that caused some strange artifacts
-                        // when decoding HEVC. Avoid HEVC on drivers prior to build 4836 which I confirmed
-                        // is not affected on my Intel HD 515. Also account for the driver version rollover
-                        // that happened with the 101.1069 series.
-                        // https://github.com/moonlight-stream/moonlight-qt/issues/32
-                        // https://www.intel.com/content/www/us/en/support/articles/000005654/graphics-drivers.html
-                        if (HIWORD(id.DriverVersion.LowPart) < 100 && LOWORD(id.DriverVersion.LowPart) < 4836) {
-                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                        "Detected buggy Intel GPU driver installed. Update your Intel GPU driver to enable HEVC!");
-                            result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
-                        }
-                        else {
-                            // Everything else is fine with whatever it says it supports
-                            result = false;
-                        }
-                        break;
-                    }
+                if (DXUtil::isFormatHybridDecodedByHardware(m_VideoFormat, id.VendorId, id.DeviceId)) {
+                    result = true;
                 }
-                else if (id.VendorId == 0x10DE) {
-                    // For NVIDIA, we wait to avoid those GPUs with Feature Set E
-                    // for HEVC decoding, since that's hybrid. It appears that Kepler GPUs
-                    // also had some hybrid decode support (per DXVA2 Checker) so we'll
-                    // blacklist those too.
-                    // https://en.wikipedia.org/wiki/Nvidia_PureVideo
-                    // https://bluesky23.yukishigure.com/en/dxvac/deviceInfo/decoder.html
-                    // http://envytools.readthedocs.io/en/latest/hw/pciid.html (missing GM200)
-                    if ((id.DeviceId >= 0x1180 && id.DeviceId <= 0x11BF) || // GK104
-                            (id.DeviceId >= 0x11C0 && id.DeviceId <= 0x11FF) || // GK106
-                            (id.DeviceId >= 0x0FC0 && id.DeviceId <= 0x0FFF) || // GK107
-                            (id.DeviceId >= 0x1000 && id.DeviceId <= 0x103F) || // GK110/GK110B
-                            (id.DeviceId >= 0x1280 && id.DeviceId <= 0x12BF) || // GK208
-                            (id.DeviceId >= 0x1340 && id.DeviceId <= 0x137F) || // GM108
-                            (id.DeviceId >= 0x1380 && id.DeviceId <= 0x13BF) || // GM107
-                            (id.DeviceId >= 0x13C0 && id.DeviceId <= 0x13FF) || // GM204
-                            (id.DeviceId >= 0x1617 && id.DeviceId <= 0x161A) || // GM204
-                            (id.DeviceId == 0x1667) || // GM204
-                            (id.DeviceId >= 0x17C0 && id.DeviceId <= 0x17FF)) { // GM200
-                        // Avoid HEVC on Feature Set E GPUs
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "GPU blacklisted for HEVC due to hybrid decode");
-                        result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
-                    }
-                    else {
-                        result = false;
-                    }
+                // Intel drivers from before late-2017 had a bug that caused some strange artifacts
+                // when decoding HEVC. Avoid HEVC on drivers prior to build 4836 which I confirmed
+                // is not affected on my Intel HD 515. Also account for the driver version rollover
+                // that happened with the 101.1069 series.
+                // https://github.com/moonlight-stream/moonlight-qt/issues/32
+                // https://www.intel.com/content/www/us/en/support/articles/000005654/graphics-drivers.html
+                else if (id.VendorId == 0x8086 && HIWORD(id.DriverVersion.LowPart) < 100 && LOWORD(id.DriverVersion.LowPart) < 4836) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Detected buggy Intel GPU driver installed. Update your Intel GPU driver to enable HEVC!");
+                    result = (m_VideoFormat & VIDEO_FORMAT_MASK_H265) != 0;
                 }
-                else if (id.VendorId == 0x1002) {
-                    // AMD doesn't seem to do hybrid acceleration?
-                    result = false;
-                }
-                else {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unrecognized vendor ID: %x",
-                                id.VendorId);
-                }
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "GetAdapterIdentifier() failed: %x", hr);
             }
         }
         else {
@@ -563,7 +499,7 @@ bool DXVA2Renderer::isDecoderBlacklisted()
 
     if (result) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "GPU blacklisted for format %x",
+                    "GPU decoding for format %x is blocked due to hardware limitations",
                     m_VideoFormat);
     }
 

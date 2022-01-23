@@ -296,6 +296,9 @@ config_SL {
         streaming/video/slvid.h \
         streaming/audio/renderers/slaud.h
 }
+win32 {
+    HEADERS += streaming/video/ffmpeg-renderers/dxutil.h
+}
 win32:!winrt {
     message(DXVA2 renderer selected)
 
