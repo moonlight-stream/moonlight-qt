@@ -10,6 +10,8 @@
 #include <streaming/session.h>
 
 #include <mach/mach_time.h>
+#include <mach/machine.h>
+#include <sys/sysctl.h>
 #import <Cocoa/Cocoa.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
@@ -350,19 +352,34 @@ public:
         m_DisplayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
         m_DisplayLayer.opaque = YES;
 
-        // This workaround prevents the image from going through processing that doesn't preserve
-        // the colorspace information properly in some cases. HDR seems to be okay without this,
-        // so we'll exclude it out of caution.
-        // See https://github.com/moonlight-stream/moonlight-qt/issues/493 for more details.
+        // This workaround prevents the image from going through processing that causes some
+        // color artifacts in some cases. HDR seems to be okay without this, so we'll exclude
+        // it out of caution. The artifacts seem to be far more significant on M1 Macs and
+        // the workaround can cause performance regressions on Intel Macs, so only use this
+        // on Apple silicon.
+        //
+        // https://github.com/moonlight-stream/moonlight-qt/issues/493
+        // https://github.com/moonlight-stream/moonlight-qt/issues/722
         if (params->videoFormat != VIDEO_FORMAT_H265_MAIN10) {
-            if (info.info.cocoa.window.screen != nullptr) {
-                m_DisplayLayer.shouldRasterize = YES;
-                m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
+            int err;
+            uint32_t cpuType;
+            size_t size = sizeof(cpuType);
+
+            err = sysctlbyname("hw.cputype", &cpuType, &size, NULL, 0);
+            if (err == 0 && cpuType == CPU_TYPE_ARM) {
+                if (info.info.cocoa.window.screen != nullptr) {
+                    m_DisplayLayer.shouldRasterize = YES;
+                    m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
+                }
+                else {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Unable to rasterize layer due to missing NSScreen");
+                    SDL_assert(false);
+                }
             }
-            else {
+            else if (err != 0) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Unable to rasterize layer due to missing NSScreen");
-                SDL_assert(false);
+                            "sysctlbyname(hw.cputype) failed: %d", err);
             }
         }
 
