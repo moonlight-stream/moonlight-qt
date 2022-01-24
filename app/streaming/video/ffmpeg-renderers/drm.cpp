@@ -451,13 +451,21 @@ void DrmRenderer::renderFrame(AVFrame* frame)
                 if (!strcmp(desiredValue, m_ColorRangeProp->enums[i].name)) {
                     err = drmModeObjectSetProperty(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE,
                                                    m_ColorRangeProp->prop_id, m_ColorRangeProp->enums[i].value);
-                    if (err < 0) {
+                    if (err == 0) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "%s: %s",
+                                    m_ColorRangeProp->name,
+                                    desiredValue);
+                    }
+                    else {
                         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                      "drmModeObjectSetProperty(%s) failed: %d",
                                      m_ColorRangeProp->name,
                                      errno);
                         // Non-fatal
                     }
+
+                    break;
                 }
             }
         }
@@ -473,13 +481,21 @@ void DrmRenderer::renderFrame(AVFrame* frame)
                 if (!strcmp(desiredValue, m_ColorEncodingProp->enums[i].name)) {
                     err = drmModeObjectSetProperty(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE,
                                                    m_ColorEncodingProp->prop_id, m_ColorEncodingProp->enums[i].value);
-                    if (err < 0) {
+                    if (err == 0) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "%s: %s",
+                                    m_ColorEncodingProp->name,
+                                    desiredValue);
+                    }
+                    else {
                         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                      "drmModeObjectSetProperty(%s) failed: %d",
                                      m_ColorEncodingProp->name,
                                      errno);
                         // Non-fatal
                     }
+
+                    break;
                 }
             }
         }
