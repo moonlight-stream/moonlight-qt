@@ -25,13 +25,23 @@ public:
 #endif
 
 private:
+    const char* getDrmColorEncodingValue(AVFrame* frame);
+    const char* getDrmColorRangeValue(AVFrame* frame);
+
     AVBufferRef* m_HwContext;
     int m_DrmFd;
     bool m_SdlOwnsDrmFd;
     bool m_SupportsDirectRendering;
+    uint32_t m_ConnectorId;
+    uint32_t m_EncoderId;
     uint32_t m_CrtcId;
     uint32_t m_PlaneId;
     uint32_t m_CurrentFbId;
+    AVColorRange m_LastColorRange;
+    AVColorSpace m_LastColorSpace;
+    drmModePropertyPtr m_ColorEncodingProp;
+    drmModePropertyPtr m_ColorRangeProp;
+    drmModePropertyPtr m_HdrOutputMetadataProp;
     SDL_Rect m_OutputRect;
 
 #ifdef HAVE_EGL

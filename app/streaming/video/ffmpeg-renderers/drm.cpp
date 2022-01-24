@@ -31,9 +31,16 @@ DrmRenderer::DrmRenderer()
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
       m_SupportsDirectRendering(false),
+      m_ConnectorId(0),
+      m_EncoderId(0),
       m_CrtcId(0),
       m_PlaneId(0),
-      m_CurrentFbId(0)
+      m_CurrentFbId(0),
+      m_LastColorRange(AVCOL_RANGE_UNSPECIFIED),
+      m_LastColorSpace(AVCOL_SPC_UNSPECIFIED),
+      m_ColorEncodingProp(nullptr),
+      m_ColorRangeProp(nullptr),
+      m_HdrOutputMetadataProp(nullptr)
 {
 #ifdef HAVE_EGL
     m_EGLExtDmaBuf = false;
@@ -48,6 +55,18 @@ DrmRenderer::~DrmRenderer()
 {
     if (m_CurrentFbId != 0) {
         drmModeRmFB(m_DrmFd, m_CurrentFbId);
+    }
+
+    if (m_ColorEncodingProp != nullptr) {
+        drmModeFreeProperty(m_ColorEncodingProp);
+    }
+
+    if (m_ColorRangeProp != nullptr) {
+        drmModeFreeProperty(m_ColorRangeProp);
+    }
+
+    if (m_HdrOutputMetadataProp != nullptr) {
+        drmModeFreeProperty(m_HdrOutputMetadataProp);
     }
 
     if (m_HwContext != nullptr) {
@@ -176,19 +195,21 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // Look for a connected connector and get the associated encoder
-    uint32_t encoderId = 0;
-    for (i = 0; i < resources->count_connectors && encoderId == 0; i++) {
+    m_ConnectorId = 0;
+    m_EncoderId = 0;
+    for (i = 0; i < resources->count_connectors && m_EncoderId == 0; i++) {
         drmModeConnector* connector = drmModeGetConnector(m_DrmFd, resources->connectors[i]);
         if (connector != nullptr) {
             if (connector->connection == DRM_MODE_CONNECTED && connector->count_modes > 0) {
-                encoderId = connector->encoder_id;
+                m_ConnectorId = resources->connectors[i];
+                m_EncoderId = connector->encoder_id;
             }
 
             drmModeFreeConnector(connector);
         }
     }
 
-    if (encoderId == 0) {
+    if (m_EncoderId == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "No connected displays found!");
         drmModeFreeResources(resources);
@@ -200,7 +221,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     for (i = 0; i < resources->count_encoders && m_CrtcId == 0; i++) {
         drmModeEncoder* encoder = drmModeGetEncoder(m_DrmFd, resources->encoders[i]);
         if (encoder != nullptr) {
-            if (encoder->encoder_id == encoderId) {
+            if (encoder->encoder_id == m_EncoderId) {
                 m_CrtcId = encoder->crtc_id;
             }
 
@@ -283,14 +304,22 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             if ((plane->possible_crtcs & (1 << crtcIndex)) && plane->crtc_id == 0) {
                 drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
                 if (props != nullptr) {
-                    for (uint32_t j = 0; j < props->count_props && m_PlaneId == 0; j++) {
+                    for (uint32_t j = 0; j < props->count_props; j++) {
                         drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
                         if (prop != nullptr) {
                             if (!strcmp(prop->name, "type") && props->prop_values[j] == DRM_PLANE_TYPE_OVERLAY) {
                                 m_PlaneId = plane->plane_id;
                             }
 
-                            drmModeFreeProperty(prop);
+                            if (!strcmp(prop->name, "COLOR_ENCODING")) {
+                                m_ColorEncodingProp = prop;
+                            }
+                            else if (!strcmp(prop->name, "COLOR_RANGE")) {
+                                m_ColorRangeProp = prop;
+                            }
+                            else {
+                                drmModeFreeProperty(prop);
+                            }
                         }
                     }
 
@@ -308,6 +337,23 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to find suitable NV12 overlay plane!");
         return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR);
+    if (props != nullptr) {
+        for (uint32_t j = 0; j < props->count_props; j++) {
+            drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
+            if (prop != nullptr) {
+                if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
+                    m_HdrOutputMetadataProp = prop;
+                }
+                else {
+                    drmModeFreeProperty(prop);
+                }
+            }
+        }
+
+        drmModeFreeObjectProperties(props);
     }
 
     // If we got this far, we can do direct rendering via the DRM FD.
@@ -397,6 +443,50 @@ void DrmRenderer::renderFrame(AVFrame* frame)
         return;
     }
 
+    if (frame->color_range != m_LastColorRange) {
+        const char* desiredValue = getDrmColorRangeValue(frame);
+
+        if (m_ColorRangeProp != nullptr && desiredValue != nullptr) {
+            for (int i = 0; i < m_ColorRangeProp->count_enums; i++) {
+                if (!strcmp(desiredValue, m_ColorRangeProp->enums[i].name)) {
+                    err = drmModeObjectSetProperty(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE,
+                                                   m_ColorRangeProp->prop_id, m_ColorRangeProp->enums[i].value);
+                    if (err < 0) {
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                     "drmModeObjectSetProperty(%s) failed: %d",
+                                     m_ColorRangeProp->name,
+                                     errno);
+                        // Non-fatal
+                    }
+                }
+            }
+        }
+
+        m_LastColorRange = frame->color_range;
+    }
+
+    if (frame->colorspace != m_LastColorSpace) {
+        const char* desiredValue = getDrmColorEncodingValue(frame);
+
+        if (m_ColorEncodingProp != nullptr && desiredValue != nullptr) {
+            for (int i = 0; i < m_ColorEncodingProp->count_enums; i++) {
+                if (!strcmp(desiredValue, m_ColorEncodingProp->enums[i].name)) {
+                    err = drmModeObjectSetProperty(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE,
+                                                   m_ColorEncodingProp->prop_id, m_ColorEncodingProp->enums[i].value);
+                    if (err < 0) {
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                     "drmModeObjectSetProperty(%s) failed: %d",
+                                     m_ColorEncodingProp->name,
+                                     errno);
+                        // Non-fatal
+                    }
+                }
+            }
+        }
+
+        m_LastColorSpace = frame->colorspace;
+    }
+
     // Update the overlay
     err = drmModeSetPlane(m_DrmFd, m_PlaneId, m_CrtcId, m_CurrentFbId, 0,
                           dst.x, dst.y,
@@ -425,6 +515,32 @@ bool DrmRenderer::needsTestFrame()
 bool DrmRenderer::isDirectRenderingSupported()
 {
     return m_SupportsDirectRendering;
+}
+
+const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
+{
+    switch (frame->colorspace) {
+    case AVCOL_SPC_SMPTE170M:
+        return "ITU-R BT.601 YCbCr";
+    case AVCOL_SPC_BT709:
+        return "ITU-R BT.709 YCbCr";
+    case AVCOL_SPC_BT2020_NCL:
+        return "ITU-R BT.2020 YCbCr";
+    default:
+        return NULL;
+    }
+}
+
+const char* DrmRenderer::getDrmColorRangeValue(AVFrame* frame)
+{
+    switch (frame->color_range) {
+    case AVCOL_RANGE_MPEG:
+        return "YCbCr limited range";
+    case AVCOL_RANGE_JPEG:
+        return "YCbCr full range";
+    default:
+        return NULL;
+    }
 }
 
 #ifdef HAVE_EGL
