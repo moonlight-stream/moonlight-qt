@@ -87,11 +87,6 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
-
-    // Save these global parameters so we can restore them in our destructor
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &m_OldContextProfileMask);
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &m_OldContextMajorVersion);
-    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &m_OldContextMinorVersion);
 }
 
 EGLRenderer::~EGLRenderer()
@@ -133,9 +128,7 @@ EGLRenderer::~EGLRenderer()
 
     // Reset the global properties back to what they were before
     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "0");
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, m_OldContextProfileMask);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, m_OldContextMajorVersion);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, m_OldContextMinorVersion);
+    SDL_GL_ResetAttributes();
 }
 
 bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
@@ -403,7 +396,7 @@ bool EGLRenderer::compileShaders() {
     SDL_assert(m_EGLImagePixelFormat != AV_PIX_FMT_NONE);
 
     // XXX: TODO: other formats
-    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12) {
+    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010) {
         m_ShaderProgram = compileShader("egl_nv12.vert", "egl_nv12.frag");
         if (!m_ShaderProgram) {
             return false;
@@ -444,11 +437,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 {
     m_Window = params->window;
 
-    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
-        // EGL doesn't support rendering YUV 10-bit textures yet
-        return false;
-    }
-
     // It's not safe to attempt to opportunistically create a GLES2
     // renderer prior to 2.0.10. If GLES2 isn't available, SDL will
     // attempt to dereference a null pointer and crash Moonlight.
@@ -472,9 +460,22 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
      * https://gitlab.freedesktop.org/mesa/mesa/issues/1011
      */
     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
+    SDL_GL_ResetAttributes();
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+
+    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 10);
+        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 10);
+        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 10);
+        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 2);
+    }
+    else {
+        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    }
 
     int renderIndex;
     int maxRenderers = SDL_GetNumRenderDrivers();
@@ -833,7 +834,7 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     m_glBindVertexArrayOES(m_VAO);
 
     // Bind parameters for the shaders
-    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12) {
+    if (m_EGLImagePixelFormat == AV_PIX_FMT_NV12 || m_EGLImagePixelFormat == AV_PIX_FMT_P010) {
         glUniformMatrix3fv(m_ShaderProgramParams[NV12_PARAM_YUVMAT], 1, GL_FALSE, getColorMatrix(frame));
         glUniform3fv(m_ShaderProgramParams[NV12_PARAM_OFFSET], 1, getColorOffsets(frame));
         glUniform1i(m_ShaderProgramParams[NV12_PARAM_PLANE1], 0);

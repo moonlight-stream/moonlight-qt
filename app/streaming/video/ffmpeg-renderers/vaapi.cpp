@@ -113,6 +113,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
 
+    m_VideoFormat = params->videoFormat;
     m_VideoWidth = params->width;
     m_VideoHeight = params->height;
 
@@ -313,6 +314,11 @@ VAAPIRenderer::isDirectRenderingSupported()
                     "Using indirect rendering due to WM or blacklist");
         return false;
     }
+    else if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using indirect rendering for 10-bit video");
+        return false;
+    }
 
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
@@ -443,11 +449,13 @@ VAAPIRenderer::canExportEGL() {
     attrs[attributeCount].type = VASurfaceAttribPixelFormat;
     attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
     attrs[attributeCount].value.type = VAGenericValueTypeInteger;
-    attrs[attributeCount].value.value.i = VA_FOURCC_NV12;
+    attrs[attributeCount].value.value.i = (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) ?
+                VA_FOURCC_P010 : VA_FOURCC_NV12;
     attributeCount++;
 
     st = vaCreateSurfaces(vaDeviceContext->display,
-                          VA_RT_FORMAT_YUV420,
+                          m_VideoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+                              VA_RT_FORMAT_YUV420_10 : VA_RT_FORMAT_YUV420,
                           1280,
                           720,
                           &surfaceId,
@@ -484,7 +492,8 @@ VAAPIRenderer::canExportEGL() {
 }
 
 AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
-    return AV_PIX_FMT_NV12;
+    return m_VideoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+                AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
 }
 
 bool

@@ -63,10 +63,6 @@ private:
 #define OVERLAY_PARAM_TEXTURE 0
     int m_OverlayShaderProgramParams[1];
 
-    int m_OldContextProfileMask;
-    int m_OldContextMajorVersion;
-    int m_OldContextMinorVersion;
-
     SDL_Renderer *m_DummyRenderer;
 
     // HACK: Work around bug where renderer will repeatedly fail with:

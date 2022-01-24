@@ -63,6 +63,7 @@ private:
 
     int m_VideoWidth;
     int m_VideoHeight;
+    int m_VideoFormat;
     int m_DisplayWidth;
     int m_DisplayHeight;
 
