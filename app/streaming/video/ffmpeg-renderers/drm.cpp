@@ -6,6 +6,16 @@ extern "C" {
 
 #include <libdrm/drm_fourcc.h>
 
+// Special Rockchip type
+#ifndef DRM_FORMAT_NV12_10
+#define DRM_FORMAT_NV12_10 fourcc_code('N', 'A', '1', '2')
+#endif
+
+// Special Raspberry Pi type (upstreamed)
+#ifndef DRM_FORMAT_P030
+#define DRM_FORMAT_P030	fourcc_code('P', '0', '3', '0')
+#endif
+
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -236,16 +246,32 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    // Find an NV12 overlay plane to render on
+    // Find an overlay plane with the required format to render on
+    //
+    // FIXME: We should check the actual DRM format in a real AVFrame rather
+    // than just assuming it will be a certain hardcoded type like NV12 based
+    // on the chosen video format.
     m_PlaneId = 0;
     for (uint32_t i = 0; i < planeRes->count_planes && m_PlaneId == 0; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
             bool matchingFormat = false;
-            for (uint32_t j = 0; j < plane->count_formats; j++) {
-                if (plane->formats[j] == DRM_FORMAT_NV12) {
-                    matchingFormat = true;
-                    break;
+            for (uint32_t j = 0; j < plane->count_formats && !matchingFormat; j++) {
+                if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+                    switch (plane->formats[j]) {
+                    case DRM_FORMAT_P010:
+                    case DRM_FORMAT_P030:
+                    case DRM_FORMAT_NV12_10:
+                        matchingFormat = true;
+                        break;
+                    }
+                }
+                else {
+                    switch (plane->formats[j]) {
+                    case DRM_FORMAT_NV12:
+                        matchingFormat = true;
+                        break;
+                    }
                 }
             }
 
