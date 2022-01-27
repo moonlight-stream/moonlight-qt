@@ -466,6 +466,7 @@ int main(int argc, char *argv[])
     if (WMUtils::isRunningWayland() && QGuiApplication::platformName() == "xcb") {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected XWayland. This will probably break hardware decoding! Try running with QT_QPA_PLATFORM=wayland or switch to X11.");
+        qputenv("SDL_VIDEODRIVER", "x11");
     }
     else if (QGuiApplication::platformName().startsWith("wayland")) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Detected Wayland");
