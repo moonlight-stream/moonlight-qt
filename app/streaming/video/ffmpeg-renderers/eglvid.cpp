@@ -469,7 +469,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 10);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 10);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 10);
-        SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 2);
     }
     else {
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
