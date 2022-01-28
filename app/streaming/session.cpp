@@ -1317,6 +1317,11 @@ void Session::execInternal()
     SDL_Delay(500);
 #endif
 
+    // Request at least 8 bits per color for GL
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+
     m_Window = SDL_CreateWindow("Moonlight",
                                 x,
                                 y,

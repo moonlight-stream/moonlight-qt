@@ -128,7 +128,15 @@ EGLRenderer::~EGLRenderer()
 
     // Reset the global properties back to what they were before
     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "0");
-    SDL_GL_ResetAttributes();
+
+    // We avoid restoring GL profile and version on purpose. SDL
+    // renderers use that internally to determine what GL version
+    // the window is using. If we reset it, it may not properly
+    // reset back to desktop GL if we have to fall back to the
+    // SDL renderer.
+    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 }
 
 bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
@@ -454,26 +462,28 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    /*
-     * Create a dummy renderer in order to craft an accelerated SDL Window.
-     * Request opengl ES 3.0 context, otherwise it will SIGSEGV
-     * https://gitlab.freedesktop.org/mesa/mesa/issues/1011
-     */
+    // This hint will ensure we use EGL to retreive our GL context,
+    // even on X11 where that is not the default. EGL is required
+    // to avoid a crash in Mesa.
+    // https://gitlab.freedesktop.org/mesa/mesa/issues/1011
     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-    SDL_GL_ResetAttributes();
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
+    // Change our GL context to use 10-bit colors for 10-bit content
     if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        // FIXME: We should try to do this only once per window.
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Changing GL context to 10-bit color");
+
+        // Initialize our GL attributes to defaults (desktop GL).
+        // This ensures we will always hit the SDL_RecreateWindow()
+        // path which will ensure our color buffer changes below
+        // take effect.
+        SDL_GL_ResetAttributes();
+
+        // Request 10-bit color for Main10
         SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 10);
         SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 10);
         SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 10);
-    }
-    else {
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
     }
 
     int renderIndex;
@@ -498,6 +508,23 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         EGL_LOG(Error, "SDL_CreateRenderer() failed: %s", SDL_GetError());
         s_LastFailedWindow = m_Window;
         return false;
+    }
+
+    // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
+    // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
+    // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
+    // renderer. This can lead to an infinite to renderer recreation, so discard all
+    // SDL_WINDOWEVENT events after SDL_CreateRenderer().
+    Session* session = Session::get();
+    if (session != nullptr) {
+        // If we get here during a session, we need to synchronize with the event loop
+        // to ensure we don't drop any important events.
+        session->flushWindowEvents();
+    }
+    else {
+        // If we get here prior to the start of a session, just pump and flush ourselves.
+        SDL_PumpEvents();
+        SDL_FlushEvent(SDL_WINDOWEVENT);
     }
 
     SDL_SysWMinfo info;
@@ -545,6 +572,17 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     if (SDL_GL_MakeCurrent(params->window, m_Context)) {
         EGL_LOG(Error, "Cannot use created EGL context: %s", SDL_GetError());
         return false;
+    }
+
+    {
+        int r, g, b, a;
+        SDL_GL_GetAttribute(SDL_GL_RED_SIZE, &r);
+        SDL_GL_GetAttribute(SDL_GL_GREEN_SIZE, &g);
+        SDL_GL_GetAttribute(SDL_GL_BLUE_SIZE, &b);
+        SDL_GL_GetAttribute(SDL_GL_ALPHA_SIZE, &a);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Color buffer is: R%dG%dB%dA%d",
+                    r, g, b, a);
     }
 
     SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &m_GlesMajorVersion);
