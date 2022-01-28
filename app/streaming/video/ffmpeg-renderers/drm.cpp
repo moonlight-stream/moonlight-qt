@@ -31,6 +31,7 @@ DrmRenderer::DrmRenderer()
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
       m_SupportsDirectRendering(false),
+      m_Main10Hdr(false),
       m_ConnectorId(0),
       m_EncoderId(0),
       m_CrtcId(0),
@@ -95,6 +96,8 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
 bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int i;
+
+    m_Main10Hdr = (params->videoFormat == VIDEO_FORMAT_H265_MAIN10);
 
 #if SDL_VERSION_ATLEAST(2, 0, 15)
     SDL_SysWMinfo info;
@@ -278,7 +281,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         if (plane != nullptr) {
             bool matchingFormat = false;
             for (uint32_t j = 0; j < plane->count_formats && !matchingFormat; j++) {
-                if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+                if (m_Main10Hdr) {
                     switch (plane->formats[j]) {
                     case DRM_FORMAT_P010:
                     case DRM_FORMAT_P030:
@@ -565,6 +568,16 @@ bool DrmRenderer::canExportEGL() {
     if (qgetenv("DRM_FORCE_DIRECT") == "1") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using direct rendering due to environment variable");
+        return false;
+    }
+    else if (qgetenv("DRM_FORCE_EGL") == "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using EGL rendering due to environment variable");
+        return true;
+    }
+    else if (m_SupportsDirectRendering && m_Main10Hdr) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using direct rendering for HDR support");
         return false;
     }
 
