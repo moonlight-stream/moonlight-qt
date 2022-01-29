@@ -41,7 +41,8 @@ DrmRenderer::DrmRenderer()
       m_LastColorSpace(AVCOL_SPC_UNSPECIFIED),
       m_ColorEncodingProp(nullptr),
       m_ColorRangeProp(nullptr),
-      m_HdrOutputMetadataProp(nullptr)
+      m_HdrOutputMetadataProp(nullptr),
+      m_HdrOutputMetadataBlobId(0)
 {
 #ifdef HAVE_EGL
     m_EGLExtDmaBuf = false;
@@ -54,8 +55,15 @@ DrmRenderer::DrmRenderer()
 
 DrmRenderer::~DrmRenderer()
 {
+    // Ensure we're out of HDR mode
+    setHdrMode(false);
+
     if (m_CurrentFbId != 0) {
         drmModeRmFB(m_DrmFd, m_CurrentFbId);
+    }
+
+    if (m_HdrOutputMetadataBlobId != 0) {
+        drmModeDestroyPropertyBlob(m_DrmFd, m_HdrOutputMetadataBlobId);
     }
 
     if (m_ColorEncodingProp != nullptr) {
@@ -338,7 +346,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     if (m_PlaneId == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to find suitable NV12 overlay plane!");
+                     "Failed to find suitable overlay plane!");
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
@@ -359,6 +367,34 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         drmModeFreeObjectProperties(props);
     }
 
+    // If we have an HDR output metadata property, construct the metadata blob
+    // to apply when we are called to enter HDR mode.
+    if (m_HdrOutputMetadataProp != nullptr) {
+        struct hdr_output_metadata outputMetadata;
+        outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
+        outputMetadata.hdmi_metadata_type1.eotf = params->hdrMetadata.eotf;
+        outputMetadata.hdmi_metadata_type1.metadata_type = params->hdrMetadata.staticMetadataDescriptorId;
+        for (int i = 0; i < 3; i++) {
+            outputMetadata.hdmi_metadata_type1.display_primaries[i].x = params->hdrMetadata.displayPrimaries[i].x;
+            outputMetadata.hdmi_metadata_type1.display_primaries[i].y = params->hdrMetadata.displayPrimaries[i].y;
+        }
+        outputMetadata.hdmi_metadata_type1.white_point.x = params->hdrMetadata.whitePoint.x;
+        outputMetadata.hdmi_metadata_type1.white_point.y = params->hdrMetadata.whitePoint.y;
+        outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance = params->hdrMetadata.maxDisplayMasteringLuminance;
+        outputMetadata.hdmi_metadata_type1.min_display_mastering_luminance = params->hdrMetadata.minDisplayMasteringLuminance;
+        outputMetadata.hdmi_metadata_type1.max_cll = params->hdrMetadata.maxContentLightLevel;
+        outputMetadata.hdmi_metadata_type1.max_fall = params->hdrMetadata.maxFrameAverageLightLevel;
+
+        err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
+        if (err < 0) {
+            m_HdrOutputMetadataBlobId = 0;
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "drmModeCreatePropertyBlob() failed: %d",
+                         errno);
+            // Non-fatal
+        }
+    }
+
     // If we got this far, we can do direct rendering via the DRM FD.
     m_SupportsDirectRendering = true;
 
@@ -375,6 +411,30 @@ int DrmRenderer::getRendererAttributes()
 {
     // This renderer can only draw in full-screen
     return RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+}
+
+void DrmRenderer::setHdrMode(bool enabled)
+{
+    if (m_HdrOutputMetadataProp != nullptr) {
+        int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
+                                           m_HdrOutputMetadataProp->prop_id,
+                                           enabled ? m_HdrOutputMetadataBlobId : 0);
+        if (err == 0) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Set display HDR mode: %s", enabled ? "enabled" : "disabled");
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "drmModeObjectSetProperty(%s) failed: %d",
+                         m_HdrOutputMetadataProp->name,
+                         errno);
+            // Non-fatal
+        }
+    }
+    else if (enabled) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "HDR_OUTPUT_METADATA is unavailable on this display. Unable to enter HDR mode!");
+    }
 }
 
 void DrmRenderer::renderFrame(AVFrame* frame)

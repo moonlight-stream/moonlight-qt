@@ -16,6 +16,7 @@ public:
     virtual int getRendererAttributes() override;
     virtual bool needsTestFrame() override;
     virtual bool isDirectRenderingSupported() override;
+    virtual void setHdrMode(bool enabled) override;
 #ifdef HAVE_EGL
     virtual bool canExportEGL() override;
     virtual AVPixelFormat getEGLImagePixelFormat() override;
@@ -43,6 +44,7 @@ private:
     drmModePropertyPtr m_ColorEncodingProp;
     drmModePropertyPtr m_ColorRangeProp;
     drmModePropertyPtr m_HdrOutputMetadataProp;
+    uint32_t m_HdrOutputMetadataBlobId;
     SDL_Rect m_OutputRect;
 
 #ifdef HAVE_EGL
