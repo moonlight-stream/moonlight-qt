@@ -52,6 +52,7 @@ public:
 
 private:
     VADisplay openDisplay(SDL_Window* window);
+    bool canExportSurfaceHandle(int layerTypeFlag);
 
     int m_WindowSystem;
     AVBufferRef* m_HwContext;

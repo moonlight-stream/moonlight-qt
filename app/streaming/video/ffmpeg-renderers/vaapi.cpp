@@ -415,11 +415,9 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
     }
 }
 
-#ifdef HAVE_EGL
-
 // Ensure that vaExportSurfaceHandle() is supported by the VA-API driver
 bool
-VAAPIRenderer::canExportEGL() {
+VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
     VASurfaceID surfaceId;
@@ -471,7 +469,7 @@ VAAPIRenderer::canExportEGL() {
     st = vaExportSurfaceHandle(vaDeviceContext->display,
                                surfaceId,
                                VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
-                               VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS,
+                               VA_EXPORT_SURFACE_READ_ONLY | layerTypeFlag,
                                &descriptor);
 
     vaDestroySurfaces(vaDeviceContext->display, &surfaceId, 1);
@@ -487,8 +485,17 @@ VAAPIRenderer::canExportEGL() {
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "VAAPI driver supports exporting DRM PRIME surface handles");
+                "VAAPI driver supports exporting DRM PRIME surface handles with %s layers",
+                layerTypeFlag == VA_EXPORT_SURFACE_COMPOSED_LAYERS ? "composed" : "separate");
     return true;
+}
+
+#ifdef HAVE_EGL
+
+bool
+VAAPIRenderer::canExportEGL() {
+    // Our EGL export logic requires exporting separate layers
+    return canExportSurfaceHandle(VA_EXPORT_SURFACE_SEPARATE_LAYERS);
 }
 
 AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
