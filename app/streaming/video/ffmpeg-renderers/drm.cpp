@@ -26,8 +26,9 @@ extern "C" {
 
 #include <SDL_syswm.h>
 
-DrmRenderer::DrmRenderer()
-    : m_HwContext(nullptr),
+DrmRenderer::DrmRenderer(IFFmpegRenderer *backendRenderer)
+    : m_BackendRenderer(backendRenderer),
+      m_HwContext(nullptr),
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
       m_SupportsDirectRendering(false),
@@ -186,7 +187,10 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // stuff, since we have EGLRenderer and SDLRenderer that we can use
     // for indirect rendering. Our FFmpeg renderer selection code will
     // handle the case where those also fail to render the test frame.
-    const bool DIRECT_RENDERING_INIT_FAILED = true;
+    // If we are just acting as a frontend renderer (m_BackendRenderer
+    // == nullptr), we want to fail if we can't render directly since
+    // that's the whole point it's trying to use us for.
+    const bool DIRECT_RENDERING_INIT_FAILED = (m_BackendRenderer == nullptr);
 
     // If we're not sharing the DRM FD with SDL, that means we don't
     // have DRM master, so we can't call drmModeSetPlane(). We can
@@ -402,10 +406,26 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     return true;
 }
 
-enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int)
+enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int videoFormat)
 {
-    // DRM PRIME buffers
-    return AV_PIX_FMT_DRM_PRIME;
+    // DRM PRIME buffers, or whatever the backend renderer wants
+    if (m_BackendRenderer != nullptr) {
+        return m_BackendRenderer->getPreferredPixelFormat(videoFormat);
+    }
+    else {
+        return AV_PIX_FMT_DRM_PRIME;
+    }
+}
+
+bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) {
+    // Pass through the backend renderer if we have one. Otherwise we use
+    // the default behavior which only supports the preferred format.
+    if (m_BackendRenderer != nullptr) {
+        return m_BackendRenderer->isPixelFormatSupported(videoFormat, pixelFormat);
+    }
+    else {
+        return getPreferredPixelFormat(videoFormat);
+    }
 }
 
 int DrmRenderer::getRendererAttributes()
@@ -447,14 +467,30 @@ void DrmRenderer::setHdrMode(bool enabled)
 
 void DrmRenderer::renderFrame(AVFrame* frame)
 {
+    AVDRMFrameDescriptor mappedFrame;
+    AVDRMFrameDescriptor* drmFrame;
+
     if (frame == nullptr) {
         // End of stream - nothing to do for us
         return;
     }
 
-    AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
+    // If we are acting as the frontend renderer, we'll need to have the backend
+    // map this frame into a DRM PRIME descriptor that we can render.
+    if (m_BackendRenderer != nullptr) {
+        if (!m_BackendRenderer->mapDrmPrimeFrame(frame, &mappedFrame)) {
+            return;
+        }
+
+        drmFrame = &mappedFrame;
+    }
+    else {
+        // If we're the backend renderer, the frame should already have it.
+        SDL_assert(frame->format == AV_PIX_FMT_DRM_PRIME);
+        drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
+    }
+
     int err;
-    uint32_t primeHandle;
     uint32_t handles[4] = {};
     uint32_t pitches[4] = {};
     uint32_t offsets[4] = {};
@@ -470,29 +506,33 @@ void DrmRenderer::renderFrame(AVFrame* frame)
 
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-    // Convert the FD in the AVDRMFrameDescriptor to a PRIME handle
-    // that can be used in drmModeAddFB2()
-    SDL_assert(drmFrame->nb_objects == 1);
-    err = drmPrimeFDToHandle(m_DrmFd, drmFrame->objects[0].fd, &primeHandle);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmPrimeFDToHandle() failed: %d",
-                     errno);
-        return;
-    }
-
-    // Pass along the modifiers to DRM if there are some in the descriptor
-    if (drmFrame->objects[0].format_modifier != DRM_FORMAT_MOD_INVALID) {
-        flags |= DRM_MODE_FB_MODIFIERS;
-    }
-
+    // DRM requires composed layers rather than separate layers per plane
     SDL_assert(drmFrame->nb_layers == 1);
-    SDL_assert(drmFrame->layers[0].nb_planes == 2);
-    for (int i = 0; i < drmFrame->layers[0].nb_planes; i++) {
-        handles[i] = primeHandle;
-        pitches[i] = drmFrame->layers[0].planes[i].pitch;
-        offsets[i] = drmFrame->layers[0].planes[i].offset;
-        modifiers[i] = drmFrame->objects[0].format_modifier;
+
+    const auto &layer = drmFrame->layers[0];
+    for (int i = 0; i < layer.nb_planes; i++) {
+        const auto &object = drmFrame->objects[layer.planes[i].object_index];
+
+        err = drmPrimeFDToHandle(m_DrmFd, object.fd, &handles[i]);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "drmPrimeFDToHandle() failed: %d",
+                         errno);
+            if (m_BackendRenderer != nullptr) {
+                SDL_assert(drmFrame == &mappedFrame);
+                m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
+            }
+            return;
+        }
+
+        pitches[i] = layer.planes[i].pitch;
+        offsets[i] = layer.planes[i].offset;
+        modifiers[i] = object.format_modifier;
+
+        // Pass along the modifiers to DRM if there are some in the descriptor
+        if (modifiers[i] != DRM_FORMAT_MOD_INVALID) {
+            flags |= DRM_MODE_FB_MODIFIERS;
+        }
     }
 
     // Remember the last FB object we created so we can free it
@@ -506,6 +546,12 @@ void DrmRenderer::renderFrame(AVFrame* frame)
                                      handles, pitches, offsets,
                                      (flags & DRM_MODE_FB_MODIFIERS) ? modifiers : NULL,
                                      &m_CurrentFbId, flags);
+
+    if (m_BackendRenderer != nullptr) {
+        SDL_assert(drmFrame == &mappedFrame);
+        m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
+    }
+
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmModeAddFB2WithModifiers() failed: %d",
@@ -596,6 +642,27 @@ void DrmRenderer::renderFrame(AVFrame* frame)
 
 bool DrmRenderer::needsTestFrame()
 {
+    return true;
+}
+
+bool DrmRenderer::testRenderFrame(AVFrame* frame) {
+    // If we have a backend renderer, we must make sure it can
+    // successfully export DRM PRIME frames.
+    if (m_BackendRenderer != nullptr) {
+        AVDRMFrameDescriptor drmDescriptor;
+
+        // We shouldn't get here unless the backend at least claims
+        // it can export DRM PRIME frames.
+        SDL_assert(m_BackendRenderer->canExportDrmPrime());
+
+        if (!m_BackendRenderer->mapDrmPrimeFrame(frame, &drmDescriptor)) {
+            // It can't, so we can't use this renderer.
+            return false;
+        }
+
+        m_BackendRenderer->unmapDrmPrimeFrame(&drmDescriptor);
+    }
+
     return true;
 }
 

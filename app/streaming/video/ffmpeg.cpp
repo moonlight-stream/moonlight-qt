@@ -225,9 +225,24 @@ void FFmpegVideoDecoder::reset()
     }
 }
 
-bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool eglOnly)
+bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend)
 {
-    if (eglOnly) {
+    if (useAlternateFrontend) {
+#ifdef HAVE_DRM
+        // If we're trying to stream HDR, we need to use the DRM renderer in direct
+        // rendering mode so it can set the HDR metadata on the display. EGL does
+        // not currently support this (and even if it did, Mesa and Wayland don't
+        // currently have protocols to actually get that metadata to the display).
+        if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10 && m_BackendRenderer->canExportDrmPrime()) {
+            m_FrontendRenderer = new DrmRenderer(m_BackendRenderer);
+            if (m_FrontendRenderer->initialize(params)) {
+                return true;
+            }
+            delete m_FrontendRenderer;
+            m_FrontendRenderer = nullptr;
+        }
+#endif
+
 #ifdef HAVE_EGL
         if (m_BackendRenderer->canExportEGL()) {
             m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
@@ -258,13 +273,13 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
     return true;
 }
 
-bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame, bool eglOnly)
+bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame, bool useAlternateFrontend)
 {
     // In test-only mode, we should only see test frames
     SDL_assert(!m_TestOnly || testFrame);
 
     // Create the frontend renderer based on the capabilities of the backend renderer
-    if (!createFrontendRenderer(params, eglOnly)) {
+    if (!createFrontendRenderer(params, useAlternateFrontend)) {
         return false;
     }
 
@@ -632,7 +647,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
 {
     m_HwDecodeCfg = hwConfig;
 
-    // i == 0 - Indirect via EGL frontend with zero-copy DMA-BUF passing
+    // i == 0 - Indirect via EGL or DRM frontend with zero-copy DMA-BUF passing
     // i == 1 - Direct rendering or indirect via SDL read-back
 #ifdef HAVE_EGL
     for (int i = 0; i < 2; i++) {
@@ -642,7 +657,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
         SDL_assert(m_BackendRenderer == nullptr);
         if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
                 m_BackendRenderer->initialize(params) &&
-                completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame(), i == 0 /* EGL */)) {
+                completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame(), i == 0 /* EGL/DRM */)) {
             if (m_TestOnly) {
                 // This decoder is only for testing capabilities, so don't bother
                 // creating a usable renderer
@@ -654,7 +669,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                 reset();
                 if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
                         m_BackendRenderer->initialize(params) &&
-                        completeInitialization(decoder, params, false, i == 0 /* EGL */)) {
+                        completeInitialization(decoder, params, false, i == 0 /* EGL/DRM */)) {
                     return true;
                 }
                 else {

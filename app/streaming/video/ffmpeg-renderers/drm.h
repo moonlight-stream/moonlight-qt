@@ -43,14 +43,16 @@ namespace DrmDefs
 
 class DrmRenderer : public IFFmpegRenderer {
 public:
-    DrmRenderer();
+    DrmRenderer(IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~DrmRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
+    virtual bool isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) override;
     virtual int getRendererAttributes() override;
     virtual bool needsTestFrame() override;
+    virtual bool testRenderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
     virtual void setHdrMode(bool enabled) override;
 #ifdef HAVE_EGL
@@ -65,6 +67,7 @@ private:
     const char* getDrmColorEncodingValue(AVFrame* frame);
     const char* getDrmColorRangeValue(AVFrame* frame);
 
+    IFFmpegRenderer* m_BackendRenderer;
     AVBufferRef* m_HwContext;
     int m_DrmFd;
     bool m_SdlOwnsDrmFd;

@@ -698,3 +698,69 @@ VAAPIRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
 }
 
 #endif
+
+#ifdef HAVE_DRM
+
+bool VAAPIRenderer::canExportDrmPrime()
+{
+    // Our DRM renderer requires composed layers
+    return canExportSurfaceHandle(VA_EXPORT_SURFACE_COMPOSED_LAYERS);
+}
+
+bool VAAPIRenderer::mapDrmPrimeFrame(AVFrame* frame, AVDRMFrameDescriptor* drmDescriptor)
+{
+    auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
+    AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)hwFrameCtx->device_ctx->hwctx;
+    VASurfaceID vaSurfaceId = (VASurfaceID)(uintptr_t)frame->data[3];
+    VADRMPRIMESurfaceDescriptor vaDrmPrimeDescriptor;
+
+    VAStatus st = vaExportSurfaceHandle(vaDeviceContext->display,
+                                        vaSurfaceId,
+                                        VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
+                                        VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_COMPOSED_LAYERS,
+                                        &vaDrmPrimeDescriptor);
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaExportSurfaceHandle() failed: %d", st);
+        return false;
+    }
+
+    st = vaSyncSurface(vaDeviceContext->display, vaSurfaceId);
+    if (st != VA_STATUS_SUCCESS) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "vaSyncSurface() failed: %d", st);
+        for (uint32_t i = 0; i < vaDrmPrimeDescriptor.num_objects; i++) {
+            close(vaDrmPrimeDescriptor.objects[i].fd);
+        }
+        return false;
+    }
+
+    // Map our VADRMPRIMESurfaceDescriptor to the AVDRMFrameDescriptor our caller wants
+    drmDescriptor->nb_objects = vaDrmPrimeDescriptor.num_objects;
+    for (uint32_t i = 0; i < vaDrmPrimeDescriptor.num_objects; i++) {
+        drmDescriptor->objects[i].fd = vaDrmPrimeDescriptor.objects[i].fd;
+        drmDescriptor->objects[i].size = vaDrmPrimeDescriptor.objects[i].size;
+        drmDescriptor->objects[i].format_modifier = vaDrmPrimeDescriptor.objects[i].drm_format_modifier;
+    }
+    drmDescriptor->nb_layers = vaDrmPrimeDescriptor.num_layers;
+    for (uint32_t i = 0; i < vaDrmPrimeDescriptor.num_layers; i++) {
+        drmDescriptor->layers[i].format = vaDrmPrimeDescriptor.layers[i].drm_format;
+        drmDescriptor->layers[i].nb_planes = vaDrmPrimeDescriptor.layers[i].num_planes;
+        for (uint32_t j = 0; j < vaDrmPrimeDescriptor.layers[i].num_planes; j++) {
+            drmDescriptor->layers[i].planes[j].object_index = vaDrmPrimeDescriptor.layers[i].object_index[j];
+            drmDescriptor->layers[i].planes[j].offset = vaDrmPrimeDescriptor.layers[i].offset[j];
+            drmDescriptor->layers[i].planes[j].pitch = vaDrmPrimeDescriptor.layers[i].pitch[j];
+        }
+    }
+
+    return true;
+}
+
+void VAAPIRenderer::unmapDrmPrimeFrame(AVDRMFrameDescriptor* drmDescriptor)
+{
+    for (int i = 0; i < drmDescriptor->nb_objects; i++) {
+        close(drmDescriptor->objects[i].fd);
+    }
+}
+
+#endif

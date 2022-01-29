@@ -7,6 +7,10 @@
 
 extern "C" {
 #include <libavcodec/avcodec.h>
+
+#ifdef HAVE_DRM
+#include <libavutil/hwcontext_drm.h>
+#endif
 }
 
 #ifdef HAVE_EGL
@@ -183,5 +187,18 @@ public:
 
     // Free the ressources allocated during the last `exportEGLImages` call
     virtual void freeEGLImages(EGLDisplay, EGLImage[EGL_MAX_PLANES]) {}
+#endif
+
+#if HAVE_DRM
+    // By default we can't do DRM PRIME export
+    virtual bool canExportDrmPrime() {
+        return false;
+    }
+
+    virtual bool mapDrmPrimeFrame(AVFrame*, AVDRMFrameDescriptor*) {
+        return false;
+    }
+
+    virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor*) {}
 #endif
 };
