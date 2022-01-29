@@ -59,6 +59,7 @@ typedef struct _OVERLAY_VERTEX
         "EGLRenderer: " __VA_ARGS__)
 
 SDL_Window* EGLRenderer::s_LastFailedWindow = nullptr;
+int EGLRenderer::s_LastFailedVideoFormat = 0;
 
 EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
     :
@@ -457,7 +458,11 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     // HACK: Work around bug where renderer will repeatedly fail with:
     // SDL_CreateRenderer() failed: Could not create GLES window surface
-    if (m_Window == s_LastFailedWindow) {
+    // Don't retry if we've already failed to create a renderer for this
+    // window *unless* the format has changed from 10-bit to 8-bit.
+    if (m_Window == s_LastFailedWindow &&
+            (params->videoFormat & VIDEO_FORMAT_H265_MAIN10) ==
+                (s_LastFailedVideoFormat & VIDEO_FORMAT_H265_MAIN10)) {
         EGL_LOG(Error, "SDL_CreateRenderer() already failed on this window!");
         return false;
     }
@@ -504,10 +509,11 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if (!(m_DummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED))) {
+    m_DummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
+    if (!m_DummyRenderer) {
+        // Print the error here (before it gets clobbered), but ensure that we flush window
+        // events just in case SDL re-created the window before eventually failing.
         EGL_LOG(Error, "SDL_CreateRenderer() failed: %s", SDL_GetError());
-        s_LastFailedWindow = m_Window;
-        return false;
     }
 
     // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
@@ -525,6 +531,13 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
         SDL_FlushEvent(SDL_WINDOWEVENT);
+    }
+
+    // Now we finally bail if we failed during SDL_CreateRenderer() above.
+    if (!m_DummyRenderer) {
+        s_LastFailedWindow = m_Window;
+        s_LastFailedVideoFormat = params->videoFormat;
+        return false;
     }
 
     SDL_SysWMinfo info;

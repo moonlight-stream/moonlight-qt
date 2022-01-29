@@ -68,4 +68,5 @@ private:
     // HACK: Work around bug where renderer will repeatedly fail with:
     // SDL_CreateRenderer() failed: Could not create GLES window surface
     static SDL_Window* s_LastFailedWindow;
+    static int s_LastFailedVideoFormat;
 };
