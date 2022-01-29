@@ -64,16 +64,6 @@ SystemProperties::SystemProperties()
     hasDiscordIntegration = false;
 #endif
 
-    // TODO: Do something smarter than this. We should be able to query
-    // this from the decoder (or just try VIDEO_FORMAT_H265_MAIN10 and
-    // fail if we don't get a hardware accelerated decoder).
-#ifdef Q_OS_DARWIN
-    // HDR is supported by the VideoToolbox renderer
-    supportsHdr = true;
-#else
-    supportsHdr = false;
-#endif
-
     unmappedGamepads = SdlInputHandler::getUnmappedGamepads();
 
     // Populate data that requires talking to SDL. We do it all in one shot
@@ -158,7 +148,7 @@ void SystemProperties::querySdlVideoInfoInternal()
         }
     }
 
-    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, maximumResolution);
+    Session::getDecoderInfo(testWindow, hasHardwareAcceleration, rendererAlwaysFullScreen, supportsHdr, maximumResolution);
 
     SDL_DestroyWindow(testWindow);
 

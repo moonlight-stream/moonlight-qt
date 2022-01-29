@@ -28,7 +28,8 @@ public:
 
     static
     void getDecoderInfo(SDL_Window* window,
-                       bool& isHardwareAccelerated, bool& isFullScreenOnly, QSize& maxResolution);
+                        bool& isHardwareAccelerated, bool& isFullScreenOnly,
+                        bool& isHdrSupported, QSize& maxResolution);
 
     static Session* get()
     {

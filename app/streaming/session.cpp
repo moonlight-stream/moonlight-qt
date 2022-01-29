@@ -308,39 +308,55 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
 }
 
 void Session::getDecoderInfo(SDL_Window* window,
-                             bool& isHardwareAccelerated, bool& isFullScreenOnly, QSize& maxResolution)
+                             bool& isHardwareAccelerated, bool& isFullScreenOnly,
+                             bool& isHdrSupported, QSize& maxResolution)
 {
     IVideoDecoder* decoder;
 
-    if (!chooseDecoder(StreamingPreferences::VDS_AUTO,
-                       window, VIDEO_FORMAT_H264, 1920, 1080, 60,
-                       false, false, true, decoder)) {
-        isHardwareAccelerated = isFullScreenOnly = false;
+    // Try an HEVC Main10 decoder first to see if we have HDR support
+    if (chooseDecoder(StreamingPreferences::VDS_FORCE_HARDWARE,
+                      window, VIDEO_FORMAT_H265_MAIN10, 1920, 1080, 60,
+                      false, false, true, decoder)) {
+        isHardwareAccelerated = decoder->isHardwareAccelerated();
+        isFullScreenOnly = decoder->isAlwaysFullScreen();
+        isHdrSupported = decoder->isHdrSupported();
+        maxResolution = decoder->getDecoderMaxResolution();
+        delete decoder;
+
         return;
     }
 
-    isHardwareAccelerated = decoder->isHardwareAccelerated();
-    isFullScreenOnly = decoder->isAlwaysFullScreen();
-    maxResolution = decoder->getDecoderMaxResolution();
+    // HDR can only be supported by a hardware codec that can handle HEVC Main10.
+    // If we made it this far, we don't have one, so HDR will not be available.
+    isHdrSupported = false;
 
-    delete decoder;
+    // Try a regular hardware accelerated HEVC decoder now
+    if (chooseDecoder(StreamingPreferences::VDS_FORCE_HARDWARE,
+                      window, VIDEO_FORMAT_H265, 1920, 1080, 60,
+                      false, false, true, decoder)) {
+        isHardwareAccelerated = decoder->isHardwareAccelerated();
+        isFullScreenOnly = decoder->isAlwaysFullScreen();
+        maxResolution = decoder->getDecoderMaxResolution();
+        delete decoder;
 
-    // If we don't get back a hardware H.264 decoder, see if we have a hardware
-    // HEVC decoder. This can be the case on the Raspberry Pi with Full KMS
-    // when not running in X11. Everything since Maxwell in 2014 can encode HEVC,
-    // so we probably don't need to be concerned about a lack of fast H.264
-    // decoding enough to bug the user about it every launch.
-    if (!isHardwareAccelerated) {
-        if (chooseDecoder(StreamingPreferences::VDS_FORCE_HARDWARE,
-                          window, VIDEO_FORMAT_H265, 1920, 1080, 60,
-                          false, false, true, decoder)) {
-            isHardwareAccelerated = decoder->isHardwareAccelerated();
-            isFullScreenOnly = decoder->isAlwaysFullScreen();
-            maxResolution = decoder->getDecoderMaxResolution();
-
-            delete decoder;
-        }
+        return;
     }
+
+    // If we still didn't find a hardware decoder, try H.264 now.
+    // This will fall back to software decoding, so it should always work.
+    if (chooseDecoder(StreamingPreferences::VDS_AUTO,
+                      window, VIDEO_FORMAT_H264, 1920, 1080, 60,
+                      false, false, true, decoder)) {
+        isHardwareAccelerated = decoder->isHardwareAccelerated();
+        isFullScreenOnly = decoder->isAlwaysFullScreen();
+        maxResolution = decoder->getDecoderMaxResolution();
+        delete decoder;
+
+        return;
+    }
+
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "Failed to find ANY working H.264 or HEVC decoder!");
 }
 
 bool Session::isHardwareDecodeAvailable(SDL_Window* window,

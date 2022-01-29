@@ -505,6 +505,12 @@ public:
         return COLORSPACE_REC_601;
     }
 
+    int getRendererAttributes() override
+    {
+        // AVSampleBufferDisplayLayer supports HDR output
+        return RENDERER_ATTRIBUTE_HDR_SUPPORT;
+    }
+
 private:
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;

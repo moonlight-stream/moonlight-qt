@@ -9,19 +9,22 @@ class SLVideoDecoder : public IVideoDecoder
 public:
     SLVideoDecoder(bool testOnly);
     virtual ~SLVideoDecoder();
-    virtual bool initialize(PDECODER_PARAMETERS params);
-    virtual bool isHardwareAccelerated();
-    virtual bool isAlwaysFullScreen();
-    virtual int getDecoderCapabilities();
-    virtual int getDecoderColorspace();
-    virtual QSize getDecoderMaxResolution();
-    virtual int submitDecodeUnit(PDECODE_UNIT du);
+    virtual bool initialize(PDECODER_PARAMETERS params) override;
+    virtual bool isHardwareAccelerated() override;
+    virtual bool isAlwaysFullScreen() override;
+    virtual int getDecoderCapabilities() override;
+    virtual int getDecoderColorspace() override;
+    virtual QSize getDecoderMaxResolution() override;
+    virtual int submitDecodeUnit(PDECODE_UNIT du) override;
 
     // Unused since rendering is done directly from the decode thread
-    virtual void renderFrameOnMainThread() {}
+    virtual void renderFrameOnMainThread() override {}
 
     // HDR is not supported by SLVideo
-    virtual void setHdrMode(bool) {}
+    virtual void setHdrMode(bool) override {}
+    virtual bool isHdrSupported() override {
+        return false;
+    }
 
 private:
     static void slLogCallback(void* context, ESLVideoLog logLevel, const char* message);

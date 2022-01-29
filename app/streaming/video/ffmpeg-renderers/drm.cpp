@@ -410,8 +410,15 @@ enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int)
 
 int DrmRenderer::getRendererAttributes()
 {
+    int attributes = 0;
+
     // This renderer can only draw in full-screen
-    return RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+    attributes |= RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
+
+    // This renderer supports HDR
+    attributes |= RENDERER_ATTRIBUTE_HDR_SUPPORT;
+
+    return attributes;
 }
 
 void DrmRenderer::setHdrMode(bool enabled)

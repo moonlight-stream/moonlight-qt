@@ -18,6 +18,7 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool isHardwareAccelerated() override;
     virtual bool isAlwaysFullScreen() override;
+    virtual bool isHdrSupported() override;
     virtual int getDecoderCapabilities() override;
     virtual int getDecoderColorspace() override;
     virtual QSize getDecoderMaxResolution() override;

@@ -57,6 +57,11 @@ bool FFmpegVideoDecoder::isAlwaysFullScreen()
     return m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_FULLSCREEN_ONLY;
 }
 
+bool FFmpegVideoDecoder::isHdrSupported()
+{
+    return m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT;
+}
+
 void FFmpegVideoDecoder::setHdrMode(bool enabled)
 {
     m_FrontendRenderer->setHdrMode(enabled);
