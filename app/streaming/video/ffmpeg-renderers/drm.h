@@ -5,6 +5,42 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+// Newer libdrm headers have these HDR structs, but some older ones don't.
+namespace DrmDefs
+{
+    // HDR structs is copied from linux include/linux/hdmi.h
+    struct hdr_metadata_infoframe
+    {
+        uint8_t eotf;
+        uint8_t metadata_type;
+
+        struct
+        {
+            uint16_t x, y;
+        } display_primaries[3];
+
+        struct
+        {
+            uint16_t x, y;
+        } white_point;
+
+        uint16_t max_display_mastering_luminance;
+        uint16_t min_display_mastering_luminance;
+
+        uint16_t max_cll;
+        uint16_t max_fall;
+    };
+
+    struct hdr_output_metadata
+    {
+        uint32_t metadata_type;
+
+        union {
+            struct hdr_metadata_infoframe hdmi_metadata_type1;
+        };
+    };
+}
+
 class DrmRenderer : public IFFmpegRenderer {
 public:
     DrmRenderer();

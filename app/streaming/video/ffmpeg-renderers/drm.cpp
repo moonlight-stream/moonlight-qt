@@ -370,7 +370,8 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // If we have an HDR output metadata property, construct the metadata blob
     // to apply when we are called to enter HDR mode.
     if (m_HdrOutputMetadataProp != nullptr) {
-        struct hdr_output_metadata outputMetadata;
+        DrmDefs::hdr_output_metadata outputMetadata;
+
         outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
         outputMetadata.hdmi_metadata_type1.eotf = params->hdrMetadata.eotf;
         outputMetadata.hdmi_metadata_type1.metadata_type = params->hdrMetadata.staticMetadataDescriptorId;
