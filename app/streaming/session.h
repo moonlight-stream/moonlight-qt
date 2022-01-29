@@ -118,6 +118,9 @@ private:
     void clConnectionStatusUpdate(int connectionStatus);
 
     static
+    void clSetHdrMode(bool enabled);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);

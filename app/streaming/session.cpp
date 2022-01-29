@@ -45,7 +45,8 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clConnectionTerminated,
     Session::clLogMessage,
     Session::clRumble,
-    Session::clConnectionStatusUpdate
+    Session::clConnectionStatusUpdate,
+    Session::clSetHdrMode,
 };
 
 Session* Session::s_ActiveSession;
@@ -175,6 +176,20 @@ void Session::clConnectionStatusUpdate(int connectionStatus)
     }
 }
 
+void Session::clSetHdrMode(bool enabled)
+{
+    // If we're in the process of recreating our decoder when we get
+    // this callback, we'll drop it. The main thread will make the
+    // callback when it finishes creating the new decoder.
+    if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
+        IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
+        if (decoder != nullptr) {
+            decoder->setHdrMode(enabled);
+        }
+        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+    }
+}
+
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
                             SDL_Window* window, int videoFormat, int width, int height,
                             int frameRate, bool enableVsync, bool enableFramePacing, bool testOnly, IVideoDecoder*& chosenDecoder)
@@ -194,6 +209,10 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     params.enableVsync = enableVsync;
     params.enableFramePacing = enableFramePacing;
     params.vds = vds;
+
+    memset(&params.hdrMetadata, 0, sizeof(params.hdrMetadata));
+    params.hdrMetadata.eotf = 2; // SMPTE ST 2084
+    params.hdrMetadata.staticMetadataDescriptorId = 0; // Static Metadata Type 1
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "V-sync %s",
@@ -607,8 +626,6 @@ void Session::emitLaunchWarning(QString text)
 
 bool Session::validateLaunch(SDL_Window* testWindow)
 {
-    QStringList warningList;
-
     if (!m_Computer->isSupportedServerVersion) {
         emit displayLaunchError(tr("The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.").arg(m_Computer->name));
         return false;
@@ -1639,6 +1656,10 @@ void Session::execInternal()
 
             // Request an IDR frame to complete the reset
             SDL_AtomicSet(&m_NeedsIdr, 1);
+
+            // Set HDR mode. We may miss the callback if we're in the middle
+            // of recreating our decoder at the time the HDR transition happens.
+            m_VideoDecoder->setHdrMode(LiGetCurrentHostDisplayHdrMode());
 
             SDL_AtomicUnlock(&m_DecoderLock);
             break;

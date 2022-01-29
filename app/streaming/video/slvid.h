@@ -20,6 +20,9 @@ public:
     // Unused since rendering is done directly from the decode thread
     virtual void renderFrameOnMainThread() {}
 
+    // HDR is not supported by SLVideo
+    virtual void setHdrMode(bool) {}
+
 private:
     static void slLogCallback(void* context, ESLVideoLog logLevel, const char* message);
 

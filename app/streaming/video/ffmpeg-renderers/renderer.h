@@ -150,6 +150,10 @@ public:
         return getPreferredPixelFormat(videoFormat) == pixelFormat;
     }
 
+    virtual void setHdrMode(bool) {
+        // Nothing
+    }
+
     // IOverlayRenderer
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing
