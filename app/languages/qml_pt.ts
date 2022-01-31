@@ -808,88 +808,88 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1023"/>
         <source>in fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>em tela-cheia</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1027"/>
         <source>always</source>
-        <translation type="unfinished"></translation>
+        <translation>sempre</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1067"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Quando selecionado, o touchscreen age como um touchpad. Quando não-selecionado, o touchscreen diretamente controlará o ponteiro do mouse.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1193"/>
         <source>Optimize game settings for streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Otimize as configurações do jogo para streaming</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1204"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation type="unfinished"></translation>
+        <translation>Saia do aplicativo no PC de host depois de terminar a stream</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1214"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation type="unfinished"></translation>
+        <translation>Isto fechará o aplicativo ou jogo que estás streamando no momento que ela terminar. Você perderá qualquer progresso não salvo!</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1233"/>
         <source>Video decoder</source>
-        <translation type="unfinished"></translation>
+        <translation>Decodificador de vídeo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1258"/>
         <location filename="../gui/SettingsView.qml" line="1311"/>
         <source>Automatic (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>Automático (Recomendado)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1262"/>
         <source>Force software decoding</source>
-        <translation type="unfinished"></translation>
+        <translation>Forçar decodificação via software</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1266"/>
         <source>Force hardware decoding</source>
-        <translation type="unfinished"></translation>
+        <translation>Forçar decodificação via hardware</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1279"/>
         <source>Video codec</source>
-        <translation type="unfinished"></translation>
+        <translation>Codec de vídeo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1315"/>
         <source>H.264</source>
-        <translation type="unfinished"></translation>
+        <translation>H.264</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1319"/>
         <source>HEVC (H.265)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC (H.265)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1289"/>
         <source>HEVC HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC HRD (Experimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1333"/>
         <source>Unlock unsupported FPS options</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloqueie opções de FPS não-suportadas</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1352"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>Encontre PCs na rede local automaticamente (Recomendado)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1377"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>Detecte conexões bloqueadas automaticamente (Recomendado)</translation>
     </message>
 </context>
 <context>
@@ -897,48 +897,48 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Resumindo %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
         <location filename="../gui/StreamSegue.qml" line="19"/>
         <source>Starting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciando %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
         <source>Starting %1 failed: Error %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciando %1 falhou: Erro %2</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Verifique suas regras de firewall e/ou redirecionamento de portas para a(s) porta(s): %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>A conexão de internet deste PC está bloqueando o Moonlight. Streamando pela internet não deve funcionar enquanto conectado à esta rede.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
         <source>Tip:</source>
-        <translation type="unfinished"></translation>
+        <translation>Dica:</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="161"/>
         <source>Press %1 to disconnect your session</source>
-        <translation type="unfinished"></translation>
+        <translation>Pressione %1 para des-conectar sua sessão</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Start+Select+L1+R1</source>
-        <translation type="unfinished"></translation>
+        <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="162"/>
         <source>Ctrl+Alt+Shift+Q</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
 </context>
 <context>
@@ -949,42 +949,42 @@
         <location filename="../gui/main.qml" line="393"/>
         <location filename="../gui/main.qml" line="408"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Configurações</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="255"/>
         <source>Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Versão %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="271"/>
         <source>Join our community on Discord</source>
-        <translation type="unfinished"></translation>
+        <translation>Participe da nossa comunidade no Discord</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="283"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Computadores</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="290"/>
         <source>Add PC manually</source>
-        <translation type="unfinished"></translation>
+        <translation>Adicione o PC manualmente</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="330"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Atualização disponível para o Moonlight: Versão %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="377"/>
         <source>Gamepad Mapper</source>
-        <translation type="unfinished"></translation>
+        <translation>Mapeador de Controle</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="381"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Mapeamento de Controle</translation>
     </message>
     <message>
         <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
@@ -993,52 +993,52 @@
     <message>
         <location filename="../gui/main.qml" line="423"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation type="unfinished"></translation>
+        <translation>Aceleração de hardware não funciona no XWayland. Continuando com o XWayLand pode resultar em baixa performance de streaming. Tente rodar com QT_QPA_PLATFORM=wayland ou troque para X11.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="432"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Esta versão do Moonlight não é otimizada para seu PC. Por favor baixe a versão &apos;%1&apos; do Moonlight para a melhor performance de streaming.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="441"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation type="unfinished"></translation>
+        <translation>O Moonlight detectou controles sem mapeamento:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="354"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Ajuda</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nenhum decodificador de vídeo acelerado por hardware foi detectado pelo Moonlight. Sua performance de streaming pode ser severamente degradada por esta configuração.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
         <source>Click the Help button for more information on solving this problem.</source>
-        <translation type="unfinished"></translation>
+        <translation>Clique no botão de Ajuda para mais informações sobre a resolução deste problema.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="425"/>
         <source>Click the Help button for more information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Clique o botão de Ajuda para mais informações.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="443"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation type="unfinished"></translation>
+        <translation>Clique no botão de Ajuda para informações em como mapear seus controles.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Are you sure you want to quit?</source>
-        <translation type="unfinished"></translation>
+        <translation>Tem certeza que deseja sair?</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="481"/>
         <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserte o endereço de IP do seu PC de GameStream:</translation>
     </message>
 </context>
 </TS>
