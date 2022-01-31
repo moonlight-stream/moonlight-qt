@@ -16,6 +16,11 @@ extern "C" {
 #define DRM_FORMAT_P030	fourcc_code('P', '0', '3', '0')
 #endif
 
+// Regular P010 (not present in some old libdrm headers)
+#ifndef DRM_FORMAT_P010
+#define DRM_FORMAT_P010	fourcc_code('P', '0', '1', '0')
+#endif
+
 #include <unistd.h>
 #include <fcntl.h>
 
