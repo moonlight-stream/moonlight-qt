@@ -448,7 +448,7 @@ int DrmRenderer::getRendererAttributes()
 
 void DrmRenderer::setHdrMode(bool enabled)
 {
-    if (m_HdrOutputMetadataProp != nullptr) {
+    if (m_HdrOutputMetadataProp != nullptr && m_HdrOutputMetadataBlobId != 0) {
         int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
                                            m_HdrOutputMetadataProp->prop_id,
                                            enabled ? m_HdrOutputMetadataBlobId : 0);
