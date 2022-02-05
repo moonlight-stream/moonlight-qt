@@ -52,7 +52,6 @@ private:
 
     ID3D11PixelShader* m_VideoPixelShader;
     ID3D11Buffer* m_VideoVertexBuffer;
-    ID3D11Buffer* m_VideoConstantBuffer;
 
     SDL_SpinLock m_OverlayLock;
     ID3D11Buffer* m_OverlayVertexBuffers[Overlay::OverlayMax];

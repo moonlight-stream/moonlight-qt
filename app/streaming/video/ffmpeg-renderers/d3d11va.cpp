@@ -83,7 +83,6 @@ D3D11VARenderer::D3D11VARenderer()
       m_FrameWaitableObject(nullptr),
       m_VideoPixelShader(nullptr),
       m_VideoVertexBuffer(nullptr),
-      m_VideoConstantBuffer(nullptr),
       m_OverlayLock(0),
       m_OverlayPixelShader(nullptr),
       m_HwDeviceContext(nullptr),
@@ -100,7 +99,6 @@ D3D11VARenderer::~D3D11VARenderer()
 {
     SDL_DestroyMutex(m_ContextLock);
 
-    SAFE_COM_RELEASE(m_VideoConstantBuffer);
     SAFE_COM_RELEASE(m_VideoVertexBuffer);
     SAFE_COM_RELEASE(m_VideoPixelShader);
 
@@ -739,9 +737,6 @@ void D3D11VARenderer::updateColorConversionConstants(AVFrame* frame)
         return;
     }
 
-    // Free any existing buffer
-    SAFE_COM_RELEASE(m_VideoConstantBuffer);
-
     D3D11_BUFFER_DESC constDesc = {};
     constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
     constDesc.Usage = D3D11_USAGE_IMMUTABLE;
@@ -789,9 +784,13 @@ void D3D11VARenderer::updateColorConversionConstants(AVFrame* frame)
     D3D11_SUBRESOURCE_DATA constData = {};
     constData.pSysMem = &constBuf;
 
-    HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &m_VideoConstantBuffer);
-    if (FAILED(hr)) {
-        m_VideoConstantBuffer = nullptr;
+    ID3D11Buffer* constantBuffer;
+    HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
+    if (SUCCEEDED(hr)) {
+        m_DeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
+        constantBuffer->Release();
+    }
+    else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateBuffer() failed: %x",
                      hr);
@@ -849,9 +848,8 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
     m_DeviceContext->PSSetShaderResources(1, 1, &chrominanceTextureView);
     chrominanceTextureView->Release();
 
-    // Bind video pixel shader and CSC constants
+    // Bind video pixel shader
     m_DeviceContext->PSSetShader(m_VideoPixelShader, nullptr, 0);
-    m_DeviceContext->PSSetConstantBuffers(0, 1, &m_VideoConstantBuffer);
 
     // Draw the video
     m_DeviceContext->DrawIndexed(6, 0, 0);

@@ -17,7 +17,7 @@ struct ShaderInput
 min16float4 main(ShaderInput input) : SV_TARGET
 {
     float y = luminancePlane.Sample(theSampler, input.tex);
-	float2 uv = chrominancePlane.Sample(theSampler, input.tex);
+    float2 uv = chrominancePlane.Sample(theSampler, input.tex);
     float3 yuv = float3(y, uv);
 
     // Subtract the YUV offset for limited vs full range
