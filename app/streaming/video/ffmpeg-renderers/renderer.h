@@ -159,6 +159,11 @@ public:
         // Nothing
     }
 
+    virtual bool prepareDecoderContextInGetFormat(AVCodecContext*, AVPixelFormat) {
+        // Assume no further initialization is required
+        return true;
+    }
+
     // IOverlayRenderer
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing

@@ -61,5 +61,6 @@
         <file alias="egl_overlay.vert">shaders/egl_overlay.vert</file>
         <file alias="d3d11_vertex.fxc">shaders/d3d11_vertex.fxc</file>
         <file alias="d3d11_overlay_pixel.fxc">shaders/d3d11_overlay_pixel.fxc</file>
+        <file alias="d3d11_video_pixel.fxc">shaders/d3d11_video_pixel.fxc</file>
     </qresource>
 </RCC>

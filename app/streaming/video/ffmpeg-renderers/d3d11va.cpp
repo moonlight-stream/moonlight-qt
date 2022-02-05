@@ -19,18 +19,75 @@ typedef struct _VERTEX
     float tu, tv;
 } VERTEX, *PVERTEX;
 
+#define CSC_MATRIX_RAW_ELEMENT_COUNT 9
+#define CSC_MATRIX_PACKED_ELEMENT_COUNT 12
+
+static const float k_CscMatrix_Bt601Lim[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+    1.1644f, 1.1644f, 1.1644f,
+    0.0f, -0.3917f, 2.0172f,
+    1.5960f, -0.8129f, 0.0f,
+};
+static const float k_CscMatrix_Bt601Full[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+    1.0f, 1.0f, 1.0f,
+    0.0f, -0.3441f, 1.7720f,
+    1.4020f, -0.7141f, 0.0f,
+};
+static const float k_CscMatrix_Bt709Lim[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+    1.1644f, 1.1644f, 1.1644f,
+    0.0f, -0.2132f, 2.1124f,
+    1.7927f, -0.5329f, 0.0f,
+};
+static const float k_CscMatrix_Bt709Full[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+    1.0f, 1.0f, 1.0f,
+    0.0f, -0.1873f, 1.8556f,
+    1.5748f, -0.4681f, 0.0f,
+};
+static const float k_CscMatrix_Bt2020Lim[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+    1.1644f, 1.1644f, 1.1644f,
+    0.0f, -0.1874f, 2.1418f,
+    1.6781f, -0.6505f, 0.0f,
+};
+static const float k_CscMatrix_Bt2020Full[CSC_MATRIX_RAW_ELEMENT_COUNT] = {
+    1.0f, 1.0f, 1.0f,
+    0.0f, -0.1646f, 1.8814f,
+    1.4746f, -0.5714f, 0.0f,
+};
+
+#define OFFSETS_ELEMENT_COUNT 3
+
+static const float k_Offsets_Lim[OFFSETS_ELEMENT_COUNT] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
+static const float k_Offsets_Full[OFFSETS_ELEMENT_COUNT] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
+
+typedef struct _CSC_CONST_BUF
+{
+    // CscMatrix value from above but packed appropriately
+    float cscMatrix[CSC_MATRIX_PACKED_ELEMENT_COUNT];
+
+    // YUV offset values from above
+    float offsets[OFFSETS_ELEMENT_COUNT];
+
+    // Padding float to be a multiple of 16 bytes
+    float padding;
+} CSC_CONST_BUF, *PCSC_CONST_BUF;
+static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a multiple of 16");
+
 D3D11VARenderer::D3D11VARenderer()
     : m_Factory(nullptr),
       m_Device(nullptr),
       m_SwapChain(nullptr),
       m_DeviceContext(nullptr),
       m_RenderTargetView(nullptr),
+      m_LastColorSpace(AVCOL_SPC_UNSPECIFIED),
+      m_LastColorRange(AVCOL_RANGE_UNSPECIFIED),
       m_AllowTearing(false),
       m_FrameWaitableObject(nullptr),
       m_VideoPixelShader(nullptr),
+      m_VideoVertexBuffer(nullptr),
+      m_VideoConstantBuffer(nullptr),
       m_OverlayLock(0),
       m_OverlayPixelShader(nullptr),
-      m_HwContext(nullptr)
+      m_HwDeviceContext(nullptr),
+      m_HwFramesContext(nullptr)
 {
     RtlZeroMemory(m_OverlayVertexBuffers, sizeof(m_OverlayVertexBuffers));
     RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
@@ -43,6 +100,8 @@ D3D11VARenderer::~D3D11VARenderer()
 {
     SDL_DestroyMutex(m_ContextLock);
 
+    SAFE_COM_RELEASE(m_VideoConstantBuffer);
+    SAFE_COM_RELEASE(m_VideoVertexBuffer);
     SAFE_COM_RELEASE(m_VideoPixelShader);
 
     for (int i = 0; i < ARRAYSIZE(m_OverlayVertexBuffers); i++) {
@@ -65,16 +124,19 @@ D3D11VARenderer::~D3D11VARenderer()
         CloseHandle(m_FrameWaitableObject);
     }
 
-    if (m_SwapChain != nullptr) {
+    if (m_SwapChain != nullptr && !m_Windowed) {
         // It's illegal to destroy a full-screen swapchain. Make sure we're in windowed mode.
         m_SwapChain->SetFullscreenState(FALSE, nullptr);
+    }
+    SAFE_COM_RELEASE(m_SwapChain);
 
-        SAFE_COM_RELEASE(m_SwapChain);
+    if (m_HwFramesContext != nullptr) {
+        av_buffer_unref(&m_HwFramesContext);
     }
 
-    if (m_HwContext != nullptr) {
+    if (m_HwDeviceContext != nullptr) {
         // This will release m_Device and m_DeviceContext too
-        av_buffer_unref(&m_HwContext);
+        av_buffer_unref(&m_HwDeviceContext);
     }
     else {
         SAFE_COM_RELEASE(m_Device);
@@ -293,31 +355,69 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_D3D11VA);
-    if (!m_HwContext) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                    "Failed to allocate D3D11VA context");
-        return false;
+    {
+        m_HwDeviceContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_D3D11VA);
+        if (!m_HwDeviceContext) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to allocate D3D11VA device context");
+            return false;
+        }
+
+        AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwDeviceContext->data;
+        AVD3D11VADeviceContext* d3d11vaDeviceContext = (AVD3D11VADeviceContext*)deviceContext->hwctx;
+
+        // AVHWDeviceContext takes ownership of these objects
+        d3d11vaDeviceContext->device = m_Device;
+        d3d11vaDeviceContext->device_context = m_DeviceContext;
+
+        // Set lock functions that we will use to synchronize with FFmpeg's usage of our device context
+        d3d11vaDeviceContext->lock = lockContext;
+        d3d11vaDeviceContext->unlock = unlockContext;
+        d3d11vaDeviceContext->lock_ctx = this;
+
+        int err = av_hwdevice_ctx_init(m_HwDeviceContext);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to initialize D3D11VA device context: %d",
+                         err);
+            return false;
+        }
     }
 
-    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
-    AVD3D11VADeviceContext* d3d11vaDeviceContext = (AVD3D11VADeviceContext*)deviceContext->hwctx;
+    {
+        m_HwFramesContext = av_hwframe_ctx_alloc(m_HwDeviceContext);
+        if (!m_HwFramesContext) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "Failed to allocate D3D11VA frame context");
+            return false;
+        }
 
-    // AVHWDeviceContext takes ownership of these objects
-    d3d11vaDeviceContext->device = m_Device;
-    d3d11vaDeviceContext->device_context = m_DeviceContext;
+        AVHWFramesContext* framesContext = (AVHWFramesContext*)m_HwFramesContext->data;
 
-    // Set lock functions that we will use to synchronize with FFmpeg's usage of our device context
-    d3d11vaDeviceContext->lock = lockContext;
-    d3d11vaDeviceContext->unlock = unlockContext;
-    d3d11vaDeviceContext->lock_ctx = this;
+        // We require NV12 or P010 textures for our shader
+        framesContext->format = AV_PIX_FMT_D3D11;
+        framesContext->sw_format = params->videoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+                    AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
 
-    int err = av_hwdevice_ctx_init(m_HwContext);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to initialize D3D11VA context: %d",
-                     err);
-        return false;
+        // Surfaces must be 128 pixel aligned for HEVC and 16 pixel aligned for H.264
+        framesContext->width = FFALIGN(params->width, (params->videoFormat & VIDEO_FORMAT_MASK_H265) ? 128 : 16);
+        framesContext->height = FFALIGN(params->height, (params->videoFormat & VIDEO_FORMAT_MASK_H265) ? 128 : 16);
+
+        // We can have up to 16 reference frames plus a working surface
+        framesContext->initial_pool_size = 17;
+
+        AVD3D11VAFramesContext* d3d11vaFramesContext = (AVD3D11VAFramesContext*)framesContext->hwctx;
+
+        // We need to override the default D3D11VA bind flags to bind the textures as a shader resources
+        d3d11vaFramesContext->BindFlags = D3D11_BIND_DECODER | D3D11_BIND_SHADER_RESOURCE;
+
+        int err = av_hwframe_ctx_init(m_HwFramesContext);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to initialize D3D11VA frame context: %d",
+                         err);
+            return false;
+        }
     }
 
     if (params->enableVsync && m_Windowed) {
@@ -367,10 +467,18 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
 bool D3D11VARenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
-    context->hw_device_ctx = av_buffer_ref(m_HwContext);
+    context->hw_device_ctx = av_buffer_ref(m_HwDeviceContext);
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using D3D11VA accelerated renderer");
+
+    return true;
+}
+
+bool D3D11VARenderer::prepareDecoderContextInGetFormat(AVCodecContext *context, AVPixelFormat)
+{
+    // hw_frames_ctx must be initialized in ffGetFormat().
+    context->hw_frames_ctx = av_buffer_ref(m_HwFramesContext);
 
     return true;
 }
@@ -446,6 +554,11 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 {
     D3D11_VIEWPORT viewPort;
 
+    if (frame == nullptr) {
+        // End of stream - nothing to do for us
+        return;
+    }
+
     // Acquire the context lock for rendering to prevent concurrent
     // access from inside FFmpeg's decoding code
     lockContext(this);
@@ -476,7 +589,8 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
     viewPort.Height = dst.h;
     m_DeviceContext->RSSetViewports(1, &viewPort);
 
-    // TODO: Render video
+    // Render our video frame with the aspect-ratio adjusted viewport
+    renderVideo(frame);
 
     // Set the viewport to render overlays at the full window size
     viewPort.TopLeftX = viewPort.TopLeftY = 0;
@@ -601,7 +715,7 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
 
     SDL_AtomicUnlock(&m_OverlayLock);
 
-    // Bind vertex buffer and shader
+    // Bind vertex buffer
     UINT stride = sizeof(VERTEX);
     UINT offset = 0;
     m_DeviceContext->IASetVertexBuffers(0, 1, &overlayVertexBuffer, &stride, &offset);
@@ -616,6 +730,131 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     overlayTextureResourceView->Release();
     overlayTexture->Release();
     overlayVertexBuffer->Release();
+}
+
+void D3D11VARenderer::updateColorConversionConstants(AVFrame* frame)
+{
+    // If nothing has changed since last frame, we're done
+    if (frame->colorspace == m_LastColorSpace && frame->color_range == m_LastColorRange) {
+        return;
+    }
+
+    // Free any existing buffer
+    SAFE_COM_RELEASE(m_VideoConstantBuffer);
+
+    D3D11_BUFFER_DESC constDesc = {};
+    constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
+    constDesc.Usage = D3D11_USAGE_IMMUTABLE;
+    constDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+    constDesc.CPUAccessFlags = 0;
+    constDesc.MiscFlags = 0;
+
+    // This handles the case where the color range is unknown,
+    // so that we use Limited color range which is the default
+    // behavior for Moonlight.
+    CSC_CONST_BUF constBuf = {};
+    bool fullRange = (frame->color_range == AVCOL_RANGE_JPEG);
+    const float* rawCscMatrix;
+    switch (frame->colorspace) {
+    case AVCOL_SPC_SMPTE170M:
+    case AVCOL_SPC_BT470BG:
+        rawCscMatrix = fullRange ? k_CscMatrix_Bt601Full : k_CscMatrix_Bt601Lim;
+        break;
+    case AVCOL_SPC_BT709:
+        rawCscMatrix = fullRange ? k_CscMatrix_Bt709Full : k_CscMatrix_Bt709Lim;
+        break;
+    case AVCOL_SPC_BT2020_NCL:
+    case AVCOL_SPC_BT2020_CL:
+        rawCscMatrix = fullRange ? k_CscMatrix_Bt2020Full : k_CscMatrix_Bt2020Lim;
+        break;
+    default:
+        SDL_assert(false);
+        return;
+    }
+
+    // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
+    // padded with a float in between each of them to adhere to HLSL requirements.
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            constBuf.cscMatrix[i * 4 + j] = rawCscMatrix[j * 3 + i];
+        }
+    }
+
+    // No adjustments are needed to the float[3] array of offsets, so it can just
+    // be copied with memcpy().
+    memcpy(constBuf.offsets,
+           fullRange ? k_Offsets_Full : k_Offsets_Lim,
+           sizeof(constBuf.offsets));
+
+    D3D11_SUBRESOURCE_DATA constData = {};
+    constData.pSysMem = &constBuf;
+
+    HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &m_VideoConstantBuffer);
+    if (FAILED(hr)) {
+        m_VideoConstantBuffer = nullptr;
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateBuffer() failed: %x",
+                     hr);
+        return;
+    }
+
+    m_LastColorSpace = frame->colorspace;
+    m_LastColorRange = frame->color_range;
+}
+
+void D3D11VARenderer::renderVideo(AVFrame* frame)
+{
+    HRESULT hr;
+
+    // Update our CSC constants if the colorspace has changed
+    updateColorConversionConstants(frame);
+
+    // Bind video rendering vertex buffer
+    UINT stride = sizeof(VERTEX);
+    UINT offset = 0;
+    m_DeviceContext->IASetVertexBuffers(0, 1, &m_VideoVertexBuffer, &stride, &offset);
+
+    // Create shader resource views for the video texture
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+    srvDesc.Texture2DArray.MostDetailedMip = 0;
+    srvDesc.Texture2DArray.MipLevels = 1;
+    srvDesc.Texture2DArray.FirstArraySlice = (uintptr_t)frame->data[1];
+    srvDesc.Texture2DArray.ArraySize = 1;
+
+    // Bind the luminance plane
+    ID3D11ShaderResourceView* luminanceTextureView;
+    srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
+    hr = m_Device->CreateShaderResourceView((ID3D11Resource*)frame->data[0], &srvDesc, &luminanceTextureView);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateShaderResourceView() failed: %x",
+                     hr);
+        return;
+    }
+    m_DeviceContext->PSSetShaderResources(0, 1, &luminanceTextureView);
+    luminanceTextureView->Release();
+
+    // Bind the chrominance plane
+    ID3D11ShaderResourceView* chrominanceTextureView;
+    srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
+    hr = m_Device->CreateShaderResourceView((ID3D11Resource*)frame->data[0], &srvDesc, &chrominanceTextureView);
+    if (FAILED(hr)) {
+        luminanceTextureView->Release();
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateShaderResourceView() failed: %x",
+                     hr);
+        return;
+    }
+    m_DeviceContext->PSSetShaderResources(1, 1, &chrominanceTextureView);
+    chrominanceTextureView->Release();
+
+    // Bind video pixel shader and CSC constants
+    m_DeviceContext->PSSetShader(m_VideoPixelShader, nullptr, 0);
+    m_DeviceContext->PSSetConstantBuffers(0, 1, &m_VideoConstantBuffer);
+
+    // Draw the video
+    m_DeviceContext->DrawIndexed(6, 0, 0);
 }
 
 // This function must NOT use any DXGI or ID3D11DeviceContext methods
@@ -915,7 +1154,19 @@ bool D3D11VARenderer::setupRenderingResources()
         hr = m_Device->CreatePixelShader(overlayPixelShaderBytecode.constData(), overlayPixelShaderBytecode.length(), nullptr, &m_OverlayPixelShader);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "ID3D11Device::CreateVertexShader() failed: %x",
+                         "ID3D11Device::CreatePixelShader() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    {
+        QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_video_pixel.fxc");
+
+        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoPixelShader);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreatePixelShader() failed: %x",
                          hr);
             return false;
         }
@@ -991,6 +1242,36 @@ bool D3D11VARenderer::setupRenderingResources()
             indexBuffer->Release();
         }
         else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateBuffer() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    // Create our fixed vertex buffer for video rendering
+    {
+        VERTEX verts[] =
+        {
+            {-1, -1, 0, 1},
+            {-1,  1, 0, 0},
+            { 1, -1, 1, 1},
+            { 1,  1, 1, 0},
+        };
+
+        D3D11_BUFFER_DESC vbDesc = {};
+        vbDesc.ByteWidth = sizeof(verts);
+        vbDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        vbDesc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
+        vbDesc.CPUAccessFlags = 0;
+        vbDesc.MiscFlags = 0;
+        vbDesc.StructureByteStride = sizeof(VERTEX);
+
+        D3D11_SUBRESOURCE_DATA vbData = {};
+        vbData.pSysMem = verts;
+
+        hr = m_Device->CreateBuffer(&vbDesc, &vbData, &m_VideoVertexBuffer);
+        if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateBuffer() failed: %x",
                          hr);

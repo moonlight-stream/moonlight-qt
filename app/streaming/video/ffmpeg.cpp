@@ -114,9 +114,8 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
         // format (if not using hardware decoding). It's crucial
         // to override the default get_format() which will try
         // to gracefully fall back to software decode and break us.
-        if (*p == (decoder->m_HwDecodeCfg ?
-                   decoder->m_HwDecodeCfg->pix_fmt :
-                   context->pix_fmt)) {
+        if (*p == (decoder->m_HwDecodeCfg ? decoder->m_HwDecodeCfg->pix_fmt : context->pix_fmt) &&
+                decoder->m_BackendRenderer->prepareDecoderContextInGetFormat(context, *p)) {
             return *p;
         }
     }
@@ -124,7 +123,8 @@ enum AVPixelFormat FFmpegVideoDecoder::ffGetFormat(AVCodecContext* context,
     // Failed to match the preferred pixel formats. Try non-preferred options for non-hwaccel decoders.
     if (decoder->m_HwDecodeCfg == nullptr) {
         for (p = pixFmts; *p != -1; p++) {
-            if (decoder->m_FrontendRenderer->isPixelFormatSupported(decoder->m_VideoFormat, *p)) {
+            if (decoder->m_FrontendRenderer->isPixelFormatSupported(decoder->m_VideoFormat, *p) &&
+                    decoder->m_BackendRenderer->prepareDecoderContextInGetFormat(context, *p)) {
                 return *p;
             }
         }
