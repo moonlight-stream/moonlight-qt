@@ -28,6 +28,7 @@ private:
     static void unlockContext(void* lock_ctx);
 
     bool setupRenderingResources();
+    bool setupTexturePoolViews(AVD3D11VAFramesContext* frameContext);
     void renderOverlay(Overlay::OverlayType type);
     void updateColorConversionConstants(AVFrame* frame);
     void renderVideo(AVFrame* frame);
@@ -52,6 +53,9 @@ private:
 
     ID3D11PixelShader* m_VideoPixelShader;
     ID3D11Buffer* m_VideoVertexBuffer;
+
+#define DECODER_BUFFER_POOL_SIZE 17
+    ID3D11ShaderResourceView* m_VideoTextureResourceViews[DECODER_BUFFER_POOL_SIZE][2];
 
     SDL_SpinLock m_OverlayLock;
     ID3D11Buffer* m_OverlayVertexBuffers[Overlay::OverlayMax];

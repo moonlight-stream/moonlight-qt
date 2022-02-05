@@ -91,6 +91,7 @@ D3D11VARenderer::D3D11VARenderer()
     RtlZeroMemory(m_OverlayVertexBuffers, sizeof(m_OverlayVertexBuffers));
     RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
     RtlZeroMemory(m_OverlayTextureResourceViews, sizeof(m_OverlayTextureResourceViews));
+    RtlZeroMemory(m_VideoTextureResourceViews, sizeof(m_VideoTextureResourceViews));
 
     m_ContextLock = SDL_CreateMutex();
 }
@@ -101,6 +102,11 @@ D3D11VARenderer::~D3D11VARenderer()
 
     SAFE_COM_RELEASE(m_VideoVertexBuffer);
     SAFE_COM_RELEASE(m_VideoPixelShader);
+
+    for (int i = 0; i < ARRAYSIZE(m_VideoTextureResourceViews); i++) {
+        SAFE_COM_RELEASE(m_VideoTextureResourceViews[i][0]);
+        SAFE_COM_RELEASE(m_VideoTextureResourceViews[i][1]);
+    }
 
     for (int i = 0; i < ARRAYSIZE(m_OverlayVertexBuffers); i++) {
         SAFE_COM_RELEASE(m_OverlayVertexBuffers[i]);
@@ -402,7 +408,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         framesContext->height = FFALIGN(params->height, (params->videoFormat & VIDEO_FORMAT_MASK_H265) ? 128 : 16);
 
         // We can have up to 16 reference frames plus a working surface
-        framesContext->initial_pool_size = 17;
+        framesContext->initial_pool_size = DECODER_BUFFER_POOL_SIZE;
 
         AVD3D11VAFramesContext* d3d11vaFramesContext = (AVD3D11VAFramesContext*)framesContext->hwctx;
 
@@ -414,6 +420,11 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to initialize D3D11VA frame context: %d",
                          err);
+            return false;
+        }
+
+        // Create SRVs for all textures in the decoder pool
+        if (!setupTexturePoolViews(d3d11vaFramesContext)) {
             return false;
         }
     }
@@ -803,8 +814,6 @@ void D3D11VARenderer::updateColorConversionConstants(AVFrame* frame)
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
 {
-    HRESULT hr;
-
     // Update our CSC constants if the colorspace has changed
     updateColorConversionConstants(frame);
 
@@ -813,43 +822,20 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
     UINT offset = 0;
     m_DeviceContext->IASetVertexBuffers(0, 1, &m_VideoVertexBuffer, &stride, &offset);
 
-    // Create shader resource views for the video texture
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-    srvDesc.Texture2DArray.MostDetailedMip = 0;
-    srvDesc.Texture2DArray.MipLevels = 1;
-    srvDesc.Texture2DArray.FirstArraySlice = (uintptr_t)frame->data[1];
-    srvDesc.Texture2DArray.ArraySize = 1;
-
-    // Bind the luminance plane
-    ID3D11ShaderResourceView* luminanceTextureView;
-    srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
-    hr = m_Device->CreateShaderResourceView((ID3D11Resource*)frame->data[0], &srvDesc, &luminanceTextureView);
-    if (FAILED(hr)) {
+    // Our indexing logic depends on a direct mapping into m_VideoTextureResourceViews
+    // based on the texture index provided by FFmpeg.
+    UINT textureIndex = (uintptr_t)frame->data[1];
+    SDL_assert(textureIndex < DECODER_BUFFER_POOL_SIZE);
+    if (textureIndex >= DECODER_BUFFER_POOL_SIZE) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "ID3D11Device::CreateShaderResourceView() failed: %x",
-                     hr);
+                     "Unexpected texture index: %u",
+                     textureIndex);
         return;
     }
-    m_DeviceContext->PSSetShaderResources(0, 1, &luminanceTextureView);
-    luminanceTextureView->Release();
 
-    // Bind the chrominance plane
-    ID3D11ShaderResourceView* chrominanceTextureView;
-    srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
-    hr = m_Device->CreateShaderResourceView((ID3D11Resource*)frame->data[0], &srvDesc, &chrominanceTextureView);
-    if (FAILED(hr)) {
-        luminanceTextureView->Release();
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "ID3D11Device::CreateShaderResourceView() failed: %x",
-                     hr);
-        return;
-    }
-    m_DeviceContext->PSSetShaderResources(1, 1, &chrominanceTextureView);
-    chrominanceTextureView->Release();
-
-    // Bind video pixel shader
+    // Bind video pixel shader and SRVs for this frame
     m_DeviceContext->PSSetShader(m_VideoPixelShader, nullptr, 0);
+    m_DeviceContext->PSSetShaderResources(0, 2, m_VideoTextureResourceViews[textureIndex]);
 
     // Draw the video
     m_DeviceContext->DrawIndexed(6, 0, 0);
@@ -1300,6 +1286,47 @@ bool D3D11VARenderer::setupRenderingResources()
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateBlendState() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool D3D11VARenderer::setupTexturePoolViews(AVD3D11VAFramesContext* frameContext)
+{
+    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+    srvDesc.Texture2DArray.MostDetailedMip = 0;
+    srvDesc.Texture2DArray.MipLevels = 1;
+    srvDesc.Texture2DArray.ArraySize = 1;
+
+    // Create luminance and chrominance SRVs for each texture in the pool
+    for (int i = 0; i < DECODER_BUFFER_POOL_SIZE; i++) {
+        HRESULT hr;
+
+        // Our rendering logic depends on the texture index working to map into our SRV array
+        SDL_assert(i == frameContext->texture_infos[i].index);
+
+        srvDesc.Texture2DArray.FirstArraySlice = frameContext->texture_infos[i].index;
+
+        srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
+        hr = m_Device->CreateShaderResourceView(frameContext->texture_infos[i].texture, &srvDesc, &m_VideoTextureResourceViews[i][0]);
+        if (FAILED(hr)) {
+            m_VideoTextureResourceViews[i][0] = nullptr;
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateShaderResourceView() failed: %x",
+                         hr);
+            return false;
+        }
+
+        srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
+        hr = m_Device->CreateShaderResourceView(frameContext->texture_infos[i].texture, &srvDesc, &m_VideoTextureResourceViews[i][1]);
+        if (FAILED(hr)) {
+            m_VideoTextureResourceViews[i][1] = nullptr;
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateShaderResourceView() failed: %x",
                          hr);
             return false;
         }
