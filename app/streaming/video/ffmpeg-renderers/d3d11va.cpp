@@ -563,8 +563,6 @@ void D3D11VARenderer::setHdrMode(bool enabled)
 
 void D3D11VARenderer::renderFrame(AVFrame* frame)
 {
-    D3D11_VIEWPORT viewPort;
-
     if (frame == nullptr) {
         // End of stream - nothing to do for us
         return;
@@ -582,32 +580,8 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
     // because the render target view will be unbound by Present().
     m_DeviceContext->OMSetRenderTargets(1, &m_RenderTargetView, nullptr);
 
-    viewPort.MinDepth = 0;
-    viewPort.MaxDepth = 1;
-
-    // Set the viewport to render the video with aspect ratio scaling
-    SDL_Rect src, dst;
-    src.x = src.y = 0;
-    src.w = m_DecoderParams.width;
-    src.h = m_DecoderParams.height;
-    dst.x = dst.y = 0;
-    dst.w = m_DisplayWidth;
-    dst.h = m_DisplayHeight;
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-    viewPort.TopLeftX = dst.x;
-    viewPort.TopLeftY = dst.y;
-    viewPort.Width = dst.w;
-    viewPort.Height = dst.h;
-    m_DeviceContext->RSSetViewports(1, &viewPort);
-
     // Render our video frame with the aspect-ratio adjusted viewport
     renderVideo(frame);
-
-    // Set the viewport to render overlays at the full window size
-    viewPort.TopLeftX = viewPort.TopLeftY = 0;
-    viewPort.Width = m_DisplayWidth;
-    viewPort.Height = m_DisplayHeight;
-    m_DeviceContext->RSSetViewports(1, &viewPort);
 
     // Render overlays on top of the video stream
     for (int i = 0; i < Overlay::OverlayMax; i++) {
@@ -1237,18 +1211,34 @@ bool D3D11VARenderer::setupRenderingResources()
 
     // Create our fixed vertex buffer for video rendering
     {
-        SDL_assert(m_TextureAlignment != 0);
+        // Scale video to the window size while preserving aspect ratio
+        SDL_Rect src, dst;
+        src.x = src.y = 0;
+        src.w = m_DecoderParams.width;
+        src.h = m_DecoderParams.height;
+        dst.x = dst.y = 0;
+        dst.w = m_DisplayWidth;
+        dst.h = m_DisplayHeight;
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // Convert screen space to normalized device coordinates
+        SDL_FRect renderRect;
+        renderRect.x = ((float)dst.x / (m_DisplayWidth / 2)) - 1.0f;
+        renderRect.y = ((float)dst.y / (m_DisplayHeight / 2)) - 1.0f;
+        renderRect.w = (float)dst.w / (m_DisplayWidth / 2);
+        renderRect.h = (float)dst.h / (m_DisplayHeight / 2);
 
         // Don't sample from the alignment padding area since that's not part of the video
+        SDL_assert(m_TextureAlignment != 0);
         float uMax = (float)m_DecoderParams.width / FFALIGN(m_DecoderParams.width, m_TextureAlignment);
         float vMax = (float)m_DecoderParams.height / FFALIGN(m_DecoderParams.height, m_TextureAlignment);
 
         VERTEX verts[] =
         {
-            {-1, -1, 0, vMax},
-            {-1,  1, 0, 0},
-            { 1, -1, uMax, vMax},
-            { 1,  1, uMax, 0},
+            {renderRect.x, renderRect.y, 0, vMax},
+            {renderRect.x, renderRect.y+renderRect.h, 0, 0},
+            {renderRect.x+renderRect.w, renderRect.y, uMax, vMax},
+            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0},
         };
 
         D3D11_BUFFER_DESC vbDesc = {};
@@ -1297,6 +1287,20 @@ bool D3D11VARenderer::setupRenderingResources()
                          hr);
             return false;
         }
+    }
+
+    // Set a viewport that fills the window
+    {
+        D3D11_VIEWPORT viewport;
+
+        viewport.TopLeftX = 0;
+        viewport.TopLeftY = 0;
+        viewport.Width = m_DisplayWidth;
+        viewport.Height = m_DisplayHeight;
+        viewport.MinDepth = 0;
+        viewport.MaxDepth = 1;
+
+        m_DeviceContext->RSSetViewports(1, &viewport);
     }
 
     return true;
