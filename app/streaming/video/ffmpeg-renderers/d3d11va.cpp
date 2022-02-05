@@ -355,6 +355,9 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // Surfaces must be 128 pixel aligned for HEVC and 16 pixel aligned for H.264
+    m_TextureAlignment = (params->videoFormat & VIDEO_FORMAT_MASK_H265) ? 128 : 16;
+
     if (!setupRenderingResources()) {
         return false;
     }
@@ -403,9 +406,8 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         framesContext->sw_format = params->videoFormat == VIDEO_FORMAT_H265_MAIN10 ?
                     AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
 
-        // Surfaces must be 128 pixel aligned for HEVC and 16 pixel aligned for H.264
-        framesContext->width = FFALIGN(params->width, (params->videoFormat & VIDEO_FORMAT_MASK_H265) ? 128 : 16);
-        framesContext->height = FFALIGN(params->height, (params->videoFormat & VIDEO_FORMAT_MASK_H265) ? 128 : 16);
+        framesContext->width = FFALIGN(params->width, m_TextureAlignment);
+        framesContext->height = FFALIGN(params->height, m_TextureAlignment);
 
         // We can have up to 16 reference frames plus a working surface
         framesContext->initial_pool_size = DECODER_BUFFER_POOL_SIZE;
@@ -1235,12 +1237,18 @@ bool D3D11VARenderer::setupRenderingResources()
 
     // Create our fixed vertex buffer for video rendering
     {
+        SDL_assert(m_TextureAlignment != 0);
+
+        // Don't sample from the alignment padding area since that's not part of the video
+        float uMax = (float)m_DecoderParams.width / FFALIGN(m_DecoderParams.width, m_TextureAlignment);
+        float vMax = (float)m_DecoderParams.height / FFALIGN(m_DecoderParams.height, m_TextureAlignment);
+
         VERTEX verts[] =
         {
-            {-1, -1, 0, 1},
+            {-1, -1, 0, vMax},
             {-1,  1, 0, 0},
-            { 1, -1, 1, 1},
-            { 1,  1, 1, 0},
+            { 1, -1, uMax, vMax},
+            { 1,  1, uMax, 0},
         };
 
         D3D11_BUFFER_DESC vbDesc = {};

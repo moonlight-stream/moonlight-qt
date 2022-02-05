@@ -42,6 +42,7 @@ private:
     SDL_mutex* m_ContextLock;
 
     DECODER_PARAMETERS m_DecoderParams;
+    int m_TextureAlignment;
     int m_DisplayWidth;
     int m_DisplayHeight;
     bool m_Windowed;
