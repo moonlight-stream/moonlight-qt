@@ -257,12 +257,14 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         swapChainDesc.Width = sdlMode.w;
         swapChainDesc.Height = sdlMode.h;
 
-        // FIXME: The SDL referesh rate may not match the actual mode due to truncation
-        fullScreenDesc.RefreshRate.Numerator = sdlMode.refresh_rate;
-        fullScreenDesc.RefreshRate.Denominator = 1;
-
+        // Leave these unspecified to ensure we don't end up in an inefficient "proxy"
+        // full-screen swapchain with DXGI doing format conversion behind our backs.
+        // https://youtu.be/E3wTajGZOsA?t=1489
+        fullScreenDesc.RefreshRate.Numerator = 0;
+        fullScreenDesc.RefreshRate.Denominator = 0;
         fullScreenDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
         fullScreenDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
+
         fullScreenDesc.Windowed = FALSE;
     }
 
