@@ -233,10 +233,12 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
-    swapChainDesc.BufferCount = 2;
     swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
     swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     swapChainDesc.Flags = 0;
+
+    // 1 front buffer + 1 back buffer + 1 extra for DWM to hold on to for Flip modes
+    swapChainDesc.BufferCount = 3;
 
     DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullScreenDesc = {};
 
