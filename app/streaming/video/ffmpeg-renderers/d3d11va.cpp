@@ -312,9 +312,13 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
         // We'll use a waitable swapchain to ensure we get the lowest possible latency.
-        // NB: We can only use this option in windowed mode.
+        // NB: We can only use this option in windowed mode (or borderless fullscreen).
         if (m_Windowed) {
-            swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+            // FIXME?: Using a a waitable swapchain in Independent Flip mode causes performance
+            // issues because the swapchain wait sometimes takes longer than the VBlank interval.
+            if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != SDL_WINDOW_FULLSCREEN_DESKTOP) {
+                swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+            }
         }
     }
 
@@ -435,7 +439,11 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    if (params->enableVsync && m_Windowed) {
+    // We have to set the maximum frame latency on waitable swapchains.
+    if (swapChainDesc.Flags & DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT) {
+        SDL_assert(params->enableVsync);
+        SDL_assert(m_Windowed);
+
         // We only want one buffered frame on our waitable swapchain
         hr = m_SwapChain->SetMaximumFrameLatency(1);
         if (FAILED(hr)) {
@@ -610,7 +618,8 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
         syncInterval = 0;
         flags = 0;
     }
-    else if (m_Windowed) {
+    else if (m_FrameWaitableObject != nullptr) {
+        SDL_assert(m_Windowed);
         SDL_assert(m_DecoderParams.enableVsync);
 
         // In windowed mode, we'll have a waitable swapchain, so we can
@@ -619,11 +628,10 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
         flags = 0;
     }
     else {
-        SDL_assert(!m_Windowed);
         SDL_assert(m_DecoderParams.enableVsync);
         SDL_assert(m_FrameWaitableObject == nullptr);
 
-        // In full-screen exclusive mode, we won't have waitable swapchain.
+        // In full-screen mode, we won't have waitable swapchain.
         // We'll use syncInterval 1 to synchronize with VBlank and pass
         // DXGI_PRESENT_DO_NOT_WAIT for our flags to avoid blocking any
         // concurrent decoding operations in flight.
