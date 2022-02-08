@@ -728,12 +728,8 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         // Turn HDR back off unless all criteria are met.
         m_StreamConfig.enableHdr = false;
 
-        // Check that the app supports HDR
-        if (!m_App.hdrSupported) {
-            emitLaunchWarning(tr("%1 doesn't support HDR10.").arg(m_App.name));
-        }
         // Check that the server GPU supports HDR
-        else if (!(m_Computer->serverCodecModeSupport & 0x200)) {
+        if (!(m_Computer->serverCodecModeSupport & 0x200)) {
             emitLaunchWarning(tr("Your host PC GPU doesn't support HDR streaming. "
                                  "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming."));
         }
