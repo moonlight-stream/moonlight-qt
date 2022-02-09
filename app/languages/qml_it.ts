@@ -359,7 +359,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="662"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Decodifica software in uso per la selezione dell&apos;uso forzato di HEVC senza supporto GPU. Questo potrebbe provocare performance scadenti di streaming.</translation>
     </message>
     <message>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
@@ -368,22 +368,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="645"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>La scheda video del PC host non supporta HEVC. Per lo streaming HEVC è richiesta una GeForce serie 900 (Maxwell) o successiva.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="676"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Decodifica software in uso per la selezione dell&apos;uso forzato di H.264 senza supporto GPU. Questo potrebbe provocare performance scadenti di streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="686"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il tuo PC host e il PC client non supportano gli stessi codificatori video. Questo potrebbe provocare performance scadenti di streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="689"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>La tua scheda video non supporta la decodifica H.264. Questo potrebbe provocare performance scadenti di streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="700"/>
@@ -393,27 +393,27 @@
     <message>
         <location filename="../streaming/session.cpp" line="704"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>La scheda video sul PC host non supporta lo streaming in HDR. Per lo streaming in HDR è richiesta una GeForce GTX serie 1000 (Pascal) o successiva.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="713"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>La scheda video di questo PC non supporta la decodifica HEVC Main10 per lo streaming in HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="726"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Per lo streaming in 4K è richiesta GeForce Experience 3.0 o superiore.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="741"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il tipo di surround selezionato non è supportato dal dispositivo audio attuale.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="748"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impossibile aprire il dispositivo audio. Per questa sessione non sarà disponibile l&apos;audio.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="753"/>
