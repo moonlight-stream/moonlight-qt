@@ -319,6 +319,11 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
             if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != SDL_WINDOW_FULLSCREEN_DESKTOP) {
                 swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
             }
+            else if (qgetenv("D3D11VA_FORCE_WAITABLE_SWAPCHAIN") == "1") {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using waitable swapchain in full-screen per environment variable override");
+                swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+            }
         }
     }
 
