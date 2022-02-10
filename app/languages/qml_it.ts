@@ -418,12 +418,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="753"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation type="unfinished"></translation>
+        <translation>Un controller connesso non ha mappatura e non sarà utilizzabile. Visita l&apos;aiuto di Moonlight per risolvere.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="761"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation type="unfinished"></translation>
+        <translation>La scheda video del tuo PC host non supporta lo streaming di risoluzioni video oltre i 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="765"/>
