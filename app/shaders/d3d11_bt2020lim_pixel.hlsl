@@ -2,10 +2,16 @@ Texture2D<min16float> luminancePlane : register(t0);
 Texture2D<min16float2> chrominancePlane : register(t1);
 SamplerState theSampler : register(s0);
 
-cbuffer CSC_CONST_BUF : register(b0)
+static const min16float3x3 cscMatrix =
 {
-    min16float3x3 cscMatrix;
-    min16float3 offsets;
+    1.1644, 1.1644, 1.1644,
+    0.0, -0.1874, 2.1418,
+    1.6781, -0.6505, 0.0,
+};
+
+static const min16float3 offsets =
+{
+    16.0 / 255.0, 128.0 / 255.0, 128.0 / 255.0
 };
 
 struct ShaderInput

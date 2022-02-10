@@ -30,7 +30,7 @@ private:
     bool setupRenderingResources();
     bool setupTexturePoolViews(AVD3D11VAFramesContext* frameContext);
     void renderOverlay(Overlay::OverlayType type);
-    void updateColorConversionConstants(AVFrame* frame);
+    void bindColorConversion(AVFrame* frame);
     void renderVideo(AVFrame* frame);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
 
@@ -52,7 +52,9 @@ private:
     bool m_AllowTearing;
     HANDLE m_FrameWaitableObject;
 
-    ID3D11PixelShader* m_VideoPixelShader;
+    ID3D11PixelShader* m_VideoGenericPixelShader;
+    ID3D11PixelShader* m_VideoBt601LimPixelShader;
+    ID3D11PixelShader* m_VideoBt2020LimPixelShader;
     ID3D11Buffer* m_VideoVertexBuffer;
 
 #define DECODER_BUFFER_POOL_SIZE 17

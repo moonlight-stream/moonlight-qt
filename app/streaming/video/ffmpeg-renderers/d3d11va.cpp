@@ -81,7 +81,9 @@ D3D11VARenderer::D3D11VARenderer()
       m_LastColorRange(AVCOL_RANGE_UNSPECIFIED),
       m_AllowTearing(false),
       m_FrameWaitableObject(nullptr),
-      m_VideoPixelShader(nullptr),
+      m_VideoGenericPixelShader(nullptr),
+      m_VideoBt601LimPixelShader(nullptr),
+      m_VideoBt2020LimPixelShader(nullptr),
       m_VideoVertexBuffer(nullptr),
       m_OverlayLock(0),
       m_OverlayPixelShader(nullptr),
@@ -101,7 +103,9 @@ D3D11VARenderer::~D3D11VARenderer()
     SDL_DestroyMutex(m_ContextLock);
 
     SAFE_COM_RELEASE(m_VideoVertexBuffer);
-    SAFE_COM_RELEASE(m_VideoPixelShader);
+    SAFE_COM_RELEASE(m_VideoBt2020LimPixelShader);
+    SAFE_COM_RELEASE(m_VideoBt601LimPixelShader);
+    SAFE_COM_RELEASE(m_VideoGenericPixelShader);
 
     for (int i = 0; i < ARRAYSIZE(m_VideoTextureResourceViews); i++) {
         SAFE_COM_RELEASE(m_VideoTextureResourceViews[i][0]);
@@ -734,71 +738,88 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     overlayVertexBuffer->Release();
 }
 
-void D3D11VARenderer::updateColorConversionConstants(AVFrame* frame)
+void D3D11VARenderer::bindColorConversion(AVFrame* frame)
 {
-    // If nothing has changed since last frame, we're done
-    if (frame->colorspace == m_LastColorSpace && frame->color_range == m_LastColorRange) {
-        return;
+    // We have purpose-built shaders for the common Rec 601 (SDR) and Rec 2020 (HDR) cases
+    if (frame->color_range == AVCOL_RANGE_MPEG && frame->colorspace == AVCOL_SPC_SMPTE170M) {
+        m_DeviceContext->PSSetShader(m_VideoBt601LimPixelShader, nullptr, 0);
     }
-
-    D3D11_BUFFER_DESC constDesc = {};
-    constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
-    constDesc.Usage = D3D11_USAGE_IMMUTABLE;
-    constDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
-    constDesc.CPUAccessFlags = 0;
-    constDesc.MiscFlags = 0;
-
-    // This handles the case where the color range is unknown,
-    // so that we use Limited color range which is the default
-    // behavior for Moonlight.
-    CSC_CONST_BUF constBuf = {};
-    bool fullRange = (frame->color_range == AVCOL_RANGE_JPEG);
-    const float* rawCscMatrix;
-    switch (frame->colorspace) {
-    case AVCOL_SPC_SMPTE170M:
-    case AVCOL_SPC_BT470BG:
-        rawCscMatrix = fullRange ? k_CscMatrix_Bt601Full : k_CscMatrix_Bt601Lim;
-        break;
-    case AVCOL_SPC_BT709:
-        rawCscMatrix = fullRange ? k_CscMatrix_Bt709Full : k_CscMatrix_Bt709Lim;
-        break;
-    case AVCOL_SPC_BT2020_NCL:
-    case AVCOL_SPC_BT2020_CL:
-        rawCscMatrix = fullRange ? k_CscMatrix_Bt2020Full : k_CscMatrix_Bt2020Lim;
-        break;
-    default:
-        SDL_assert(false);
-        return;
-    }
-
-    // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
-    // padded with a float in between each of them to adhere to HLSL requirements.
-    for (int i = 0; i < 3; i++) {
-        for (int j = 0; j < 3; j++) {
-            constBuf.cscMatrix[i * 4 + j] = rawCscMatrix[j * 3 + i];
-        }
-    }
-
-    // No adjustments are needed to the float[3] array of offsets, so it can just
-    // be copied with memcpy().
-    memcpy(constBuf.offsets,
-           fullRange ? k_Offsets_Full : k_Offsets_Lim,
-           sizeof(constBuf.offsets));
-
-    D3D11_SUBRESOURCE_DATA constData = {};
-    constData.pSysMem = &constBuf;
-
-    ID3D11Buffer* constantBuffer;
-    HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
-    if (SUCCEEDED(hr)) {
-        m_DeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
-        constantBuffer->Release();
+    else if (frame->color_range == AVCOL_RANGE_MPEG && frame->colorspace == AVCOL_SPC_BT2020_NCL) {
+        m_DeviceContext->PSSetShader(m_VideoBt2020LimPixelShader, nullptr, 0);
     }
     else {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "ID3D11Device::CreateBuffer() failed: %x",
-                     hr);
-        return;
+        // We'll need to use the generic shader for this colorspace and color range combo
+        m_DeviceContext->PSSetShader(m_VideoGenericPixelShader, nullptr, 0);
+
+        // If nothing has changed since last frame, we're done
+        if (frame->colorspace == m_LastColorSpace && frame->color_range == m_LastColorRange) {
+            return;
+        }
+
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Falling back to generic video pixel shader for %d:%d",
+                    frame->colorspace,
+                    frame->color_range);
+
+        D3D11_BUFFER_DESC constDesc = {};
+        constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
+        constDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        constDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        constDesc.CPUAccessFlags = 0;
+        constDesc.MiscFlags = 0;
+
+        // This handles the case where the color range is unknown,
+        // so that we use Limited color range which is the default
+        // behavior for Moonlight.
+        CSC_CONST_BUF constBuf = {};
+        bool fullRange = (frame->color_range == AVCOL_RANGE_JPEG);
+        const float* rawCscMatrix;
+        switch (frame->colorspace) {
+        case AVCOL_SPC_SMPTE170M:
+        case AVCOL_SPC_BT470BG:
+            rawCscMatrix = fullRange ? k_CscMatrix_Bt601Full : k_CscMatrix_Bt601Lim;
+            break;
+        case AVCOL_SPC_BT709:
+            rawCscMatrix = fullRange ? k_CscMatrix_Bt709Full : k_CscMatrix_Bt709Lim;
+            break;
+        case AVCOL_SPC_BT2020_NCL:
+        case AVCOL_SPC_BT2020_CL:
+            rawCscMatrix = fullRange ? k_CscMatrix_Bt2020Full : k_CscMatrix_Bt2020Lim;
+            break;
+        default:
+            SDL_assert(false);
+            return;
+        }
+
+        // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
+        // padded with a float in between each of them to adhere to HLSL requirements.
+        for (int i = 0; i < 3; i++) {
+            for (int j = 0; j < 3; j++) {
+                constBuf.cscMatrix[i * 4 + j] = rawCscMatrix[j * 3 + i];
+            }
+        }
+
+        // No adjustments are needed to the float[3] array of offsets, so it can just
+        // be copied with memcpy().
+        memcpy(constBuf.offsets,
+               fullRange ? k_Offsets_Full : k_Offsets_Lim,
+               sizeof(constBuf.offsets));
+
+        D3D11_SUBRESOURCE_DATA constData = {};
+        constData.pSysMem = &constBuf;
+
+        ID3D11Buffer* constantBuffer;
+        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
+        if (SUCCEEDED(hr)) {
+            m_DeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
+            constantBuffer->Release();
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateBuffer() failed: %x",
+                         hr);
+            return;
+        }
     }
 
     m_LastColorSpace = frame->colorspace;
@@ -807,9 +828,6 @@ void D3D11VARenderer::updateColorConversionConstants(AVFrame* frame)
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
 {
-    // Update our CSC constants if the colorspace has changed
-    updateColorConversionConstants(frame);
-
     // Bind video rendering vertex buffer
     UINT stride = sizeof(VERTEX);
     UINT offset = 0;
@@ -826,8 +844,10 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
         return;
     }
 
-    // Bind video pixel shader and SRVs for this frame
-    m_DeviceContext->PSSetShader(m_VideoPixelShader, nullptr, 0);
+    // Bind our CSC shader (and constant buffer, if required)
+    bindColorConversion(frame);
+
+    // Bind SRVs for this frame
     m_DeviceContext->PSSetShaderResources(0, 2, m_VideoTextureResourceViews[textureIndex]);
 
     // Draw the video
@@ -1140,7 +1160,31 @@ bool D3D11VARenderer::setupRenderingResources()
     {
         QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_video_pixel.fxc");
 
-        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoPixelShader);
+        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoGenericPixelShader);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreatePixelShader() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    {
+        QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_bt601lim_pixel.fxc");
+
+        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoBt601LimPixelShader);
+        if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreatePixelShader() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    {
+        QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_bt2020lim_pixel.fxc");
+
+        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoBt2020LimPixelShader);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreatePixelShader() failed: %x",
