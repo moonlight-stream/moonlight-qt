@@ -10,8 +10,8 @@ cbuffer CSC_CONST_BUF : register(b0)
 
 struct ShaderInput
 {
-    min16float4 pos : SV_POSITION;
-    min16float2 tex : TEXCOORD0;
+    float4 pos : SV_POSITION;
+    float2 tex : TEXCOORD0;
 };
 
 min16float4 main(ShaderInput input) : SV_TARGET

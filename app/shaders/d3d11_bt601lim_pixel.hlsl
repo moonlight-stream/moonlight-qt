@@ -16,8 +16,8 @@ static const min16float3 offsets =
 
 struct ShaderInput
 {
-    min16float4 pos : SV_POSITION;
-    min16float2 tex : TEXCOORD0;
+    float4 pos : SV_POSITION;
+    float2 tex : TEXCOORD0;
 };
 
 min16float4 main(ShaderInput input) : SV_TARGET
