@@ -169,10 +169,15 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 
     av_log_format_line(ptr, level, fmt, vl, lineBuffer, sizeof(lineBuffer), &printPrefix);
 
-    QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
-    QString txt = QString("%1 - FFmpeg: %2").arg(logTime.toString()).arg(lineBuffer);
-
-    logToLoggerStream(txt);
+    if (printPrefix) {
+        QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
+        QString txt = QString("%1 - FFmpeg: %2").arg(logTime.toString()).arg(lineBuffer);
+        logToLoggerStream(txt);
+    }
+    else {
+        QString txt = QString(lineBuffer);
+        logToLoggerStream(txt);
+    }
 }
 
 #endif
