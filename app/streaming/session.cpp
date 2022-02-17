@@ -400,7 +400,30 @@ bool Session::populateDecoderProperties(SDL_Window* window)
         m_VideoCallbacks.submitDecodeUnit = drSubmitDecodeUnit;
     }
 
-    m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
+    {
+        bool ok;
+
+        m_StreamConfig.colorSpace = qEnvironmentVariableIntValue("COLOR_SPACE_OVERRIDE", &ok);
+        if (ok) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using colorspace override: %d",
+                        m_StreamConfig.colorSpace);
+        }
+        else {
+            m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
+        }
+
+        m_StreamConfig.colorRange = qEnvironmentVariableIntValue("COLOR_RANGE_OVERRIDE", &ok);
+        if (ok) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using color range override: %d",
+                        m_StreamConfig.colorRange);
+        }
+        else {
+            // Limited is the default for GFE
+            m_StreamConfig.colorRange = COLOR_RANGE_LIMITED;
+        }
+    }
 
     if (decoder->isAlwaysFullScreen()) {
         m_IsFullScreen = true;
