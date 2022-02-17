@@ -1158,7 +1158,7 @@ bool D3D11VARenderer::setupRenderingResources()
     }
 
     {
-        QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_video_pixel.fxc");
+        QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_genyuv_pixel.fxc");
 
         hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoGenericPixelShader);
         if (FAILED(hr)) {
