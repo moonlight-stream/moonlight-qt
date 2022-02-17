@@ -39,7 +39,8 @@ DXVA2Renderer::DXVA2Renderer() :
     m_ProcService(nullptr),
     m_Processor(nullptr),
     m_FrameIndex(0),
-    m_BlockingPresent(false)
+    m_BlockingPresent(false),
+    m_DeviceQuirks(0)
 {
     RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
@@ -286,7 +287,7 @@ bool DXVA2Renderer::initializeRenderer()
     m_DisplayWidth = renderTargetDesc.Width;
     m_DisplayHeight = renderTargetDesc.Height;
 
-    if (!isDXVideoProcessorAPIBlacklisted()) {
+    if (!(m_DeviceQuirks & DXVA2_QUIRK_NO_VP)) {
         hr = DXVA2CreateVideoService(m_Device, IID_IDirectXVideoProcessorService,
                                      reinterpret_cast<void**>(&m_ProcService));
 
@@ -367,16 +368,23 @@ bool DXVA2Renderer::initializeRenderer()
     return true;
 }
 
-bool DXVA2Renderer::isDXVideoProcessorAPIBlacklisted()
+bool DXVA2Renderer::initializeDeviceQuirks()
 {
     IDirect3D9* d3d9;
     HRESULT hr;
-    bool result = false;
 
-    if (qgetenv("DXVA2_DISABLE_VIDPROC_BLACKLIST") == "1") {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "IDirectXVideoProcessor blacklist is disabled");
-        return false;
+    SDL_assert(m_DeviceQuirks == 0);
+
+    {
+        bool ok;
+
+        m_DeviceQuirks = qEnvironmentVariableIntValue("DXVA2_QUIRK_FLAGS", &ok);
+        if (ok) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using DXVA2 quirk override: 0x%x",
+                        m_DeviceQuirks);
+            return true;
+        }
     }
 
     hr = m_Device->GetDirect3D(&d3d9);
@@ -397,7 +405,7 @@ bool DXVA2Renderer::isDXVideoProcessorAPIBlacklisted()
                     // effects that the GPU driver forces on us. In many cases, this makes the video
                     // actually look worse. We can avoid these by using StretchRect() instead on these
                     // platforms.
-                    result = true;
+                    m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
                 }
                 else if (id.VendorId == 0x4d4f4351) { // QCOM in ASCII
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -405,15 +413,28 @@ bool DXVA2Renderer::isDXVideoProcessorAPIBlacklisted()
 
                     // On Qualcomm GPUs (all D3D9on12 GPUs?), the scaling quality of VideoProcessBlt()
                     // is absolutely horrible. StretchRect() is much much better.
-                    result = true;
+                    m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
                 }
-                else {
-                    result = false;
+                else if (id.VendorId == 0x1002) { // AMD
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Using DestFormat quirk for AMD GPU");
+
+                    // AMD's GPU driver ignores the SampleFormat and instead looks only at the DestFormat
+                    // in the blit parameters struct. NVIDIA seems to use both SampleFormat and DestFormat
+                    // (doing double conversion, causing incorrect output) while Intel only uses SampleFormat
+                    // and completely ignores DestFormat.
+                    //
+                    // This used to just work because we used Rec 709 Limited which happened to be what AMD's
+                    // driver defaulted to. However, AMD's driver behavior changed to default to Rec 709 Full
+                    // in late 2021. Fortunately, setting DestFormat works on both new and old drivers.
+                    //
+                    // To sort out this mess, we will use a quirk to tell us to populate DestFormat for AMD.
+                    // For other GPUs, we'll avoid populating it as was our previous behavior.
+                    m_DeviceQuirks |= DXVA2_QUIRK_SET_DEST_FORMAT;
                 }
             }
-            else {
-                result = false;
-            }
+
+            return true;
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -427,7 +448,7 @@ bool DXVA2Renderer::isDXVideoProcessorAPIBlacklisted()
                      "GetDirect3D() failed: %x", hr);
     }
 
-    return result;
+    return false;
 }
 
 bool DXVA2Renderer::isDecoderBlacklisted()
@@ -721,6 +742,10 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    if (!initializeDeviceQuirks()) {
+        return false;
+    }
+
     if (!initializeDecoder()) {
         return false;
     }
@@ -936,14 +961,15 @@ Exit:
 
 int DXVA2Renderer::getDecoderColorspace()
 {
-    if (isDXVideoProcessorAPIBlacklisted()) {
+    if (m_DeviceQuirks & DXVA2_QUIRK_NO_VP) {
         // StretchRect() assumes Rec 601 on Intel and Qualcomm GPUs.
         return COLORSPACE_REC_601;
     }
     else {
-        // VideoProcessBlt() *should* properly handle whatever, since
-        // we provide colorspace information. However, AMD GPUs seem to
-        // always assume Rec 709, so we'll use that as our default.
+        // VideoProcessBlt() should properly handle whatever, since
+        // we provide colorspace information. We used to use this because
+        // we didn't know how to get AMD to respect the requested colorspace,
+        // but now it's just because it's what we used before.
         return COLORSPACE_REC_709;
     }
 }
@@ -1080,7 +1106,12 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
     bltParams.TargetRect = sample.DstRect;
     bltParams.BackgroundColor.Alpha = 0xFFFF;
 
-    bltParams.DestFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
+    if (m_DeviceQuirks & DXVA2_QUIRK_SET_DEST_FORMAT) {
+        bltParams.DestFormat = m_Desc.SampleFormat;
+    }
+    else {
+        bltParams.DestFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
+    }
 
     bltParams.ProcAmpValues.Brightness = m_BrightnessRange.DefaultValue;
     bltParams.ProcAmpValues.Contrast = m_ContrastRange.DefaultValue;
@@ -1123,6 +1154,9 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
     }
 
     if (!m_Processor) {
+        // StretchRect() assumes Rec 601 on Intel and Qualcomm GPUs.
+        SDL_assert(m_Desc.SampleFormat.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601);
+
         // This function doesn't trigger any of Intel's garbage video "enhancements"
         hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget, &sample.DstRect, D3DTEXF_NONE);
         if (FAILED(hr)) {

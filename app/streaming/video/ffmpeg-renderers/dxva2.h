@@ -26,7 +26,7 @@ private:
     bool initializeRenderer();
     bool initializeDevice(SDL_Window* window, bool enableVsync);
     bool isDecoderBlacklisted();
-    bool isDXVideoProcessorAPIBlacklisted();
+    bool initializeDeviceQuirks();
     void renderOverlay(Overlay::OverlayType type);
 
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 68, 0)
@@ -74,4 +74,8 @@ private:
     DXVA2_VideoDesc m_Desc;
     REFERENCE_TIME m_FrameIndex;
     bool m_BlockingPresent;
+
+#define DXVA2_QUIRK_NO_VP 0x01
+#define DXVA2_QUIRK_SET_DEST_FORMAT 0x02
+    int m_DeviceQuirks;
 };
