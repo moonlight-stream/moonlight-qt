@@ -1284,15 +1284,12 @@ Flickable {
                 AutoResizingComboBox {
                     // ignore setting the index at first, and actually set it when the component is loaded
                     Component.onCompleted: {
-                        if (SystemProperties.supportsHdr) {
-                            codecListModel.append({
-                                "text": qsTr("HEVC HDR (Experimental)"),
-                                "val": StreamingPreferences.VCC_FORCE_HEVC_HDR
-                            });
-                        }
-
                         var saved_vcc = StreamingPreferences.videoCodecConfig
+
+                        // Default to Automatic (relevant if HDR is enabled,
+                        // where we will match none of the codecs in the list)
                         currentIndex = 0
+
                         for(var i = 0; i < codecListModel.count; i++) {
                             var el_vcc = codecListModel.get(i).val;
                             if (saved_vcc === el_vcc) {
@@ -1300,11 +1297,13 @@ Flickable {
                                 break
                             }
                         }
+
                         activated(currentIndex)
                     }
 
                     id: codecComboBox
                     textRole: "text"
+                    enabled: !enableHdr.checked
                     model: ListModel {
                         id: codecListModel
                         ListElement {
@@ -1319,12 +1318,47 @@ Flickable {
                             text: qsTr("HEVC (H.265)")
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
-                        /* HEVC HDR will be appended here */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
-                        StreamingPreferences.videoCodecConfig = codecListModel.get(currentIndex).val
+                        if (enabled) {
+                            StreamingPreferences.videoCodecConfig = codecListModel.get(currentIndex).val
+                        }
                     }
+
+                    // This handles the state of the enableHdr checkbox changing
+                    onEnabledChanged: {
+                        if (enabled) {
+                            StreamingPreferences.videoCodecConfig = codecListModel.get(currentIndex).val
+                        }
+                        else {
+                            StreamingPreferences.videoCodecConfig = StreamingPreferences.VCC_FORCE_HEVC_HDR
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered && !enabled
+                    ToolTip.text: qsTr("Enabling HDR overrides manual codec selections.")
+                }
+
+                CheckBox {
+                    id: enableHdr
+                    width: parent.width
+                    text: qsTr("Enable HDR (Experimental)")
+                    font.pointSize: 12
+                    enabled: SystemProperties.supportsHdr
+                    checked: enabled && StreamingPreferences.videoCodecConfig == StreamingPreferences.VCC_FORCE_HEVC_HDR
+
+                    // Updating StreamingPreferences.videoCodecConfig is handled above
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: enabled ?
+                                      qsTr("The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.")
+                                    :
+                                      qsTr("HDR streaming is not supported on this PC.")
                 }
 
                 CheckBox {
