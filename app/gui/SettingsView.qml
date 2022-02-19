@@ -345,7 +345,7 @@ Flickable {
                                         maximumLength: 5
                                         inputMethodHints: Qt.ImhDigitsOnly
                                         placeholderText: resolutionListModel.get(resolutionComboBox.currentIndex).video_width
-                                        validator: IntValidator{bottom:128; top:8192}
+                                        validator: IntValidator{bottom:256; top:8192}
                                         focus: true
 
                                         onTextChanged: {
@@ -374,7 +374,7 @@ Flickable {
                                         maximumLength: 5
                                         inputMethodHints: Qt.ImhDigitsOnly
                                         placeholderText: resolutionListModel.get(resolutionComboBox.currentIndex).video_height
-                                        validator: IntValidator{bottom:128; top:8192}
+                                        validator: IntValidator{bottom:256; top:8192}
 
                                         onTextChanged: {
                                             // standardButton() was added in Qt 5.10, so we must check for it first
