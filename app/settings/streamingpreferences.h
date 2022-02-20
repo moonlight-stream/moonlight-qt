@@ -82,7 +82,12 @@ public:
         LANG_SV,
         LANG_TR,
         LANG_UK,
-        LANG_ZH_HANT
+        LANG_ZH_HANT,
+        LANG_PT,
+        LANG_PT_BR,
+        LANG_EL,
+        LANG_IT,
+        LANG_HI,
     };
     Q_ENUM(Language);
 

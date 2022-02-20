@@ -215,6 +215,16 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "uk";
     case LANG_ZH_HANT:
         return "zh_Hant";
+    case LANG_PT:
+        return "pt";
+    case LANG_PT_BR:
+        return "pt_BR";
+    case LANG_EL:
+        return "el";
+    case LANG_IT:
+        return "it";
+    case LANG_HI:
+        return "hi";
     case LANG_AUTO:
     default:
         return QLocale::system().name();

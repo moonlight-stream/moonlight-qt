@@ -833,6 +833,26 @@ Flickable {
                             text: "繁体字" // Traditional Chinese
                             val: StreamingPreferences.LANG_ZH_HANT
                         }
+                        ListElement {
+                            text: "Português" // Portuguese
+                            val: StreamingPreferences.LANG_PT
+                        }
+                        /* ListElement {
+                            text: "Português do Brasil" // Brazilian Portuguese
+                            val: StreamingPreferences.LANG_PT_BR
+                        } */
+                        ListElement {
+                            text: "Ελληνικά" // Greek
+                            val: StreamingPreferences.LANG_EL
+                        }
+                        ListElement {
+                            text: "Italiano" // Italian
+                            val: StreamingPreferences.LANG_IT
+                        }
+                        /* ListElement {
+                            text: "हिन्दी, हिंदी" // Hindi
+                            val: StreamingPreferences.LANG_HI
+                        } */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
