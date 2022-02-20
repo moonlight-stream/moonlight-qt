@@ -292,72 +292,72 @@
         <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="89"/>
+        <location filename="../streaming/session.cpp" line="90"/>
         <source>No video received from host.</source>
         <translation>沒有接收到來自主機的影像。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="90"/>
+        <location filename="../streaming/session.cpp" line="91"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>檢查防火牆和連接埠轉發規則：%1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="95"/>
+        <location filename="../streaming/session.cpp" line="96"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>您的網絡連線不佳。降低影像位元率或嘗試更快的連線方式。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="100"/>
+        <location filename="../streaming/session.cpp" line="101"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>啟動串流時，您的主機出現問題。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="101"/>
+        <location filename="../streaming/session.cpp" line="102"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>確認您的主機上沒有打開任何受 DRM 保護的內容。您也可以嘗試重新啟動主機。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="102"/>
+        <location filename="../streaming/session.cpp" line="103"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
         <translation>如果問題仍然存在，請嘗試重新安裝 GPU 驅動程式和 GeForce Experience。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="107"/>
+        <location filename="../streaming/session.cpp" line="108"/>
         <source>Connection terminated</source>
         <translation>連線已終止</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="613"/>
+        <location filename="../streaming/session.cpp" line="669"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>此 Moonlight 版本不支持 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="618"/>
+        <location filename="../streaming/session.cpp" line="674"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>您選擇啟動遠端桌面游標模式可能會導致遊戲出現問題。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="623"/>
+        <location filename="../streaming/session.cpp" line="679"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>軟體解碼不支持 HDR。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="627"/>
+        <location filename="../streaming/session.cpp" line="683"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>您選擇強制軟體解碼的設定可能會導致串流媒體效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="632"/>
+        <location filename="../streaming/session.cpp" line="688"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>使用不支援的 FPS 選項可能會導致卡頓或延遲。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="635"/>
+        <location filename="../streaming/session.cpp" line="691"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>當以高於顯示器的刷新率進行串流傳輸時，垂直同步將被禁用。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="662"/>
+        <location filename="../streaming/session.cpp" line="718"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>由於你選擇使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
     </message>
@@ -366,87 +366,86 @@
         <translation type="vanished">此 PC 的 GPU 不支援 HEVC 解碼。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="645"/>
+        <location filename="../streaming/session.cpp" line="701"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>您的主機 GPU 不支援 HEVC。HEVC 串流傳輸需要 GeForce GTX 900 系列 (Maxwell) 或更高階的 GPU。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="676"/>
+        <location filename="../streaming/session.cpp" line="732"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>由於你選擇強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="686"/>
+        <location filename="../streaming/session.cpp" line="742"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>您的主機和用戶端不支援相同的視訊編解碼器。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="689"/>
+        <location filename="../streaming/session.cpp" line="745"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>您的用戶端 GPU 不支援 H.264 解碼。這能會導致串流效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="700"/>
         <source>%1 doesn&apos;t support HDR10.</source>
-        <translation>%1 不支援 HDR10。</translation>
+        <translation type="vanished">%1 不支援 HDR10。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="704"/>
+        <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>您的主機 GPU 不支援 HDR。HDR 串流傳輸需要 GeForce GTX 1000 系列 (Pascal) 或更高階的 GPU。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="713"/>
+        <location filename="../streaming/session.cpp" line="765"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>此電腦的 GPU 不支援 HEVC Main10 解碼器來進行 HDR 串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="726"/>
+        <location filename="../streaming/session.cpp" line="778"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4K串流需要GeForce Experience 3.0 或更高的版本。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="741"/>
+        <location filename="../streaming/session.cpp" line="793"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>您所選擇的環繞音效設定並不支援目前的音訊裝置。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="748"/>
+        <location filename="../streaming/session.cpp" line="800"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>無法開啟音訊裝置。音訊在本次的會話中將無法使用。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="753"/>
+        <location filename="../streaming/session.cpp" line="805"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>附加的手把沒有映射，將無法使用。請造訪 Moonlight 幫助解決問題。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="761"/>
+        <location filename="../streaming/session.cpp" line="813"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>您的主機GPU不支援4K影像串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="765"/>
+        <location filename="../streaming/session.cpp" line="817"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>只有 HEVC 轉碼器支援 4K 以上的視訊解析度。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="779"/>
+        <location filename="../streaming/session.cpp" line="831"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>由於此電腦的 GPU 缺乏硬體解碼支援，故無法強制使用硬體解碼。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="782"/>
+        <location filename="../streaming/session.cpp" line="834"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>你選擇的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選擇的解編碼器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1107"/>
+        <location filename="../streaming/session.cpp" line="1164"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience 回傳錯誤：%1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1639"/>
+        <location filename="../streaming/session.cpp" line="1679"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>無法初始化畫面解碼器。請檢查您的串流設定並再試一次。</translation>
     </message>
@@ -683,6 +682,26 @@
         <translation>提醒：由於 GeForce Experience 的 Bug，如果您的主機有多個螢幕，此選項可能無法正常運作。</translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="1342"/>
+        <source>Enabling HDR overrides manual codec selections.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1348"/>
+        <source>Enable HDR (Experimental)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1359"/>
+        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1361"/>
+        <source>HDR streaming is not supported on this PC.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
         <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
     </message>
@@ -842,7 +861,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1258"/>
-        <location filename="../gui/SettingsView.qml" line="1311"/>
+        <location filename="../gui/SettingsView.qml" line="1310"/>
         <source>Automatic (Recommended)</source>
         <translation>自動 (建議使用)</translation>
     </message>
@@ -862,32 +881,31 @@
         <translation>視訊轉碼器</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1315"/>
+        <location filename="../gui/SettingsView.qml" line="1314"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1319"/>
+        <location filename="../gui/SettingsView.qml" line="1318"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1289"/>
         <source>HEVC HDR (Experimental)</source>
-        <translation>HEVC HDR (實驗性)</translation>
+        <translation type="vanished">HEVC HDR (實驗性)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1333"/>
+        <location filename="../gui/SettingsView.qml" line="1367"/>
         <source>Unlock unsupported FPS options</source>
         <translation>解除鎖定不支援的 FPS 選項</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1352"/>
+        <location filename="../gui/SettingsView.qml" line="1386"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>自動尋找在區域網路中的電腦 (建議使用)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1377"/>
+        <location filename="../gui/SettingsView.qml" line="1411"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>自動檢測被封鎖的連線 (建議)</translation>
     </message>

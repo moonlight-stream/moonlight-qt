@@ -292,72 +292,72 @@
         <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="89"/>
+        <location filename="../streaming/session.cpp" line="90"/>
         <source>No video received from host.</source>
         <translation>ไม่ได้รับวิดีโอจากเครื่องหลัก</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="90"/>
+        <location filename="../streaming/session.cpp" line="91"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>ตรวจสอบ Firewall และ Port forwarding rules สำหรับ port(s): %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="95"/>
+        <location filename="../streaming/session.cpp" line="96"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>การเชื่อมต่อเครื่อข่ายทำงานได้ไม่ค่อยดี ลด Bitrate ของวิดีโอหรือลองใช้การเชื่อมต่อที่เร็วกว่านี้</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="100"/>
+        <location filename="../streaming/session.cpp" line="101"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>เกิดข้อผิดพลาดบางอย่างบนคอมพิวเตอร์หลักขณะที่กำลังเริ่มสตรีม</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="101"/>
+        <location filename="../streaming/session.cpp" line="102"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>ทำให้แน่ใจว่าคุณไม่ได้เปิดเนื้อหาที่ถูกป้องกันด้วย DRM บนคอมพิวเตอร์หลัก คุณก็สามารถลองรีสตาร์ทคอมพิวเตอร์หลักได้ด้วย</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="102"/>
+        <location filename="../streaming/session.cpp" line="103"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
         <translation>หากยังคงมีปัญหาอยู่ ลองติดตั้งไดร์เวอร์ของการ์ดจอและ GeForce Experience ใหม่</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="107"/>
+        <location filename="../streaming/session.cpp" line="108"/>
         <source>Connection terminated</source>
         <translation>ยุติการเชื่อมต่อแล้ว</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="613"/>
+        <location filename="../streaming/session.cpp" line="669"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>รุ่นของ GeForce Experience บน %1 ไม่รองรับ Moonlight รุ่นนี้ คุณต้องอัปเดต Moonlight เพื่อสตรีมจาก % 1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="618"/>
+        <location filename="../streaming/session.cpp" line="674"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>การเลือกการตั้งค่าของคุณที่จะเปิดโหมดเมาส์ Remote Desktop อาจจะทำให้เกิดปัญหาในเกม</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="623"/>
+        <location filename="../streaming/session.cpp" line="679"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>ไม่รองรับ HDR ด้วยการถอดรหัสแบบซอฟต์แวร์</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="627"/>
+        <location filename="../streaming/session.cpp" line="683"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>การเลือกการตั้งค่าของคุณเพื่อบังคับให้ถอดรหัสแบบซอฟต์แวร์อาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="632"/>
+        <location filename="../streaming/session.cpp" line="688"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>การใช้ FPS ที่ไม่รองรับอาจจะทำให้เกิดการกระตุกหรือความล่าช้าได้</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="635"/>
+        <location filename="../streaming/session.cpp" line="691"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>V-sync จะถูกปิดเมื่อสตรีมที่เฟรมเรทที่สูงกว่าจอ</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="662"/>
+        <location filename="../streaming/session.cpp" line="718"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>การใช้การถอดรหัสแบบซอฟต์แวร์เนื่องจากการบังคับ HEVC โดยที่การ์จอไม่รองรับ ให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
@@ -366,87 +366,86 @@
         <translation type="vanished">การ์ดจอของคอมพิวเตอร์เครื่องนี้ไม่รองรับการถอดรหัส HEVC</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="645"/>
+        <location filename="../streaming/session.cpp" line="701"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>การ์ดจอของคอมพิวเตอร์หลักไม่รองรับ HEVC ต้องใช้ GeForce GTX รุ่น 900 (Maxwell) หรือใหม่กว่าสำหรับการสตรีม HEVC</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="676"/>
+        <location filename="../streaming/session.cpp" line="732"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="686"/>
+        <location filename="../streaming/session.cpp" line="742"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="689"/>
+        <location filename="../streaming/session.cpp" line="745"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="700"/>
         <source>%1 doesn&apos;t support HDR10.</source>
-        <translation>%1 ไม่รองรับ HDR10</translation>
+        <translation type="vanished">%1 ไม่รองรับ HDR10</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="704"/>
+        <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>คอมพิวเตอร์หลักไม่รองรับการสตรีม HDR ต้องใช้ GeForce GTX รุ่น 1000 (Pascal) หรือใหม่กว่าสำหรับการสตรีม HDR</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="713"/>
+        <location filename="../streaming/session.cpp" line="765"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>คอมพิวเตอร์นี้ไม่รองรับการถอดรหัส HEVC Main10 สำหรับการสตรีม HDR</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="726"/>
+        <location filename="../streaming/session.cpp" line="778"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>ต้องใช้ GeForce Experience 3.0 หรือใหม่กว่าสำหรับการสตรีมแบบ 4K</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="741"/>
+        <location filename="../streaming/session.cpp" line="793"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>อุปกรณ์เสียงปัจจุบัน ไม่รองรับการตั้งค่าเสียงรอบทิศทางที่คุณเลือก</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="748"/>
+        <location filename="../streaming/session.cpp" line="800"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>ไม่สามารถเปิดอุปกรณ์เสียงได้ จะไม่สามารถใช้งานเสียงได้ในเซสชันนี้</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="753"/>
+        <location filename="../streaming/session.cpp" line="805"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="761"/>
+        <location filename="../streaming/session.cpp" line="813"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="765"/>
+        <location filename="../streaming/session.cpp" line="817"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="779"/>
+        <location filename="../streaming/session.cpp" line="831"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="782"/>
+        <location filename="../streaming/session.cpp" line="834"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1107"/>
+        <location filename="../streaming/session.cpp" line="1164"/>
         <source>GeForce Experience returned error: %1</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1639"/>
+        <location filename="../streaming/session.cpp" line="1679"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation type="unfinished"></translation>
     </message>
@@ -683,6 +682,26 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="1342"/>
+        <source>Enabling HDR overrides manual codec selections.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1348"/>
+        <source>Enable HDR (Experimental)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1359"/>
+        <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1361"/>
+        <source>HDR streaming is not supported on this PC.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
         <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
     </message>
@@ -842,7 +861,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1258"/>
-        <location filename="../gui/SettingsView.qml" line="1311"/>
+        <location filename="../gui/SettingsView.qml" line="1310"/>
         <source>Automatic (Recommended)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -862,32 +881,27 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1315"/>
+        <location filename="../gui/SettingsView.qml" line="1314"/>
         <source>H.264</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1319"/>
+        <location filename="../gui/SettingsView.qml" line="1318"/>
         <source>HEVC (H.265)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1289"/>
-        <source>HEVC HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="1333"/>
+        <location filename="../gui/SettingsView.qml" line="1367"/>
         <source>Unlock unsupported FPS options</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1352"/>
+        <location filename="../gui/SettingsView.qml" line="1386"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1377"/>
+        <location filename="../gui/SettingsView.qml" line="1411"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation type="unfinished"></translation>
     </message>
