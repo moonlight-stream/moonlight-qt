@@ -7,18 +7,18 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation>Fortsett spill</translation>
+        <translation>Fortsett Spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation>Avslutt spill</translation>
+        <translation>Avslutt Spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation>Kjør spill</translation>
+        <translation>Kjør Spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
@@ -28,12 +28,12 @@
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Kjør dette programmet umiddelbart når vert er valgt, noe som hopper over utvalgsrutenettet.</translation>
+        <translation>Kjør dette programmet umiddelbart når verten er valgt, samtidig som programrutenettet hoppes over.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation>Skjul spill</translation>
+        <translation>Skjul Spill</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Etablerer tilkobling til PC …</translation>
+        <translation>Etablerer tilkobling til PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished">Avslutter program …</translation>
+        <translation>Avslutter program...</translation>
     </message>
 </context>
 <context>
@@ -69,12 +69,12 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Etablerer tilkobling til PC …</translation>
+        <translation>Etablerer tilkobling til PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>Laster inn programliste …</translation>
+        <translation>Laster inn programlisten...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished">Tastetilknytning</translation>
+        <translation>Knappetilordning</translation>
     </message>
 </context>
 <context>
@@ -95,7 +95,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="378"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>Manglende lydopptaksenhet. Å reinstallere GeForce Experience bør løse dette problemet.</translation>
+        <translation>Manglende lydopptaksenhet. Reinstallasjon av GeForce Experience bør løse dette problemet.</translation>
     </message>
 </context>
 <context>
@@ -108,17 +108,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished">Ikke ikke koble til denne PC-en.</translation>
+        <translation>Kunne ikke koble til den spesifiserte PC-en.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished">Internett-tilkoblingen på denne PC-en blokkerer Moonlight. Strømming over Internett vil muligens ikke fungere når tilkoblet gjennom dette nettverket.</translation>
+        <translation>Internettforbindelsen til denne PC-en blokkerer Moonlight. Strømming via internett vil muligens ikke fungere på dette nettverket.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished">Klikk «Hjelp»-knappen for mulige løsninger.</translation>
+        <translation>Trykk på Hjelp-knappen for mulige løsninger.</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -127,7 +127,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished">Automatisk oppdaging av PC er avskrudd. Leg til din PC manuelt.</translation>
+        <translation>Automatisk PC-oppdaging er avskrudd. Legg PC-en din manuelt.</translation>
     </message>
     <message>
         <source>View Apps</source>
@@ -145,12 +145,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Test nettverk</translation>
+        <translation>Test Nettverk</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation>Gi PC nytt navn</translation>
+        <translation>Omdøp PC</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
