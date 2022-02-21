@@ -1073,6 +1073,12 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
         return false;
     }
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Detected GPU: %S (%x:%x)",
+                adapterDesc.Description,
+                adapterDesc.VendorId,
+                adapterDesc.DeviceId);
+
     if (DXUtil::isFormatHybridDecodedByHardware(m_DecoderParams.videoFormat, adapterDesc.VendorId, adapterDesc.DeviceId)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "GPU decoding for format %x is blocked due to hardware limitations",
