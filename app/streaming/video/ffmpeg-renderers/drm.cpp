@@ -763,7 +763,7 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
 
     memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
 
-    SDL_assert(drmFrame->nb_objects == 1);
+    // DRM requires composed layers rather than separate layers per plane
     SDL_assert(drmFrame->nb_layers == 1);
 
     // Max 30 attributes (1 key + 1 value for each)
