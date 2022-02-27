@@ -165,12 +165,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Du kan ikke parre mens en tidligere økt fremdeles kjører på din verts-PC. Avslutt alle kjørende spill eller utfør omstart av verts-PC-en, før du prøver parring igjen.</translation>
+        <translation>Du kan ikke koble til maskinen mens en tidligere økt fremdeles kjører på din verts-PC. Avslutt alle kjørende spill eller ta omstart av verten, prøv deretter å koble til igjen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Skriv inn %1 på din GameStream-PC. Denne dialogen vil lukkes når parringen er fullført.</translation>
+        <translation>Skriv inn %1 på din GameStream-PC. Denne dialogen vil lukkes når tilkoblingen er fullført.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
@@ -180,12 +180,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation>Moonlight tester din nettverkstilkobling for å fastsette hvorvidt NViDIA GameStream er blokkert.</translation>
+        <translation>Moonlight tester nettverkstilkoblingen din for å se om NVIDIA GameStream er blokkert.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished">Dette kan ta noen sekunder …</translation>
+        <translation>Dette kan ta noen sekunder…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
@@ -195,17 +195,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation type="unfinished">Hvis du prøver å strømme over Internett, installer Moonlight Internett-vertstjeningsverktøyet på din spill-PC og kjør den inkluderte Internett-strømmingstesteren for å teste tilknytningen den har til Internett.</translation>
+        <translation>Hvis du prøver å strømme over Internett, installer &quot;Moonlight Internet Hosting Tool&quot; på verts-PCen din, og kjør det inkluderte programmet &quot;Internet Streaming Tester&quot; for å teste vertens Internett-tilkobling.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Nettverkstilkoblingen på din PC ser ut til å blokkere Moonlight. Strømming over Internett vil muligens ikke virke når tilknyttet fra dette nettverket.</translation>
+        <translation>Det ser ut som nettverkstilkoblingen på PCen din blokkerer Moonlight. Strømming via Internett vil muligens ikke virke fra dette nettverket.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>The following network ports were blocked:</source>
-        <translation type="unfinished">Følgende nettverksporter ble blokkert:</translation>
+        <translation>Følgende nettverksporter var blokkert:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
