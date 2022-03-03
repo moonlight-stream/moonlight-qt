@@ -882,6 +882,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 "h264_mmal",
 #endif
                 "h264_rkmpp",
+                "h264_nvv4l2",
                 "h264_nvmpi",
 #ifndef HAVE_MMAL
                 // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
