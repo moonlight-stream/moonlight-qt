@@ -88,6 +88,12 @@ void* SdlAudioRenderer::getAudioBuffer(int*)
 
 bool SdlAudioRenderer::submitAudio(int bytesWritten)
 {
+    // Our device may enter a permanent error status upon removal, so we need
+    // to recreate the audio device to pick up the new default audio device.
+    if (SDL_GetAudioDeviceStatus(m_AudioDevice) == SDL_AUDIO_STOPPED) {
+        return false;
+    }
+
     if (bytesWritten == 0) {
         // Nothing to do
         return true;
