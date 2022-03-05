@@ -23,6 +23,7 @@
 #endif
 
 #define SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER 100
+#define SDL_CODE_GAMECONTROLLER_RUMBLE 101
 
 #include <openssl/rand.h>
 
@@ -134,13 +135,15 @@ void Session::clLogMessage(const char* format, ...)
 
 void Session::clRumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor)
 {
-    // The input handler can be closed during the stream if LiStopConnection() hasn't completed yet
-    // but the stream has been stopped by the user. In this case, just discard the rumble.
-    SDL_AtomicLock(&s_ActiveSession->m_InputHandlerLock);
-    if (s_ActiveSession->m_InputHandler != nullptr) {
-        s_ActiveSession->m_InputHandler->rumble(controllerNumber, lowFreqMotor, highFreqMotor);
-    }
-    SDL_AtomicUnlock(&s_ActiveSession->m_InputHandlerLock);
+    // We push an event for the main thread to handle in order to properly synchronize
+    // with the removal of game controllers that could result in our game controller
+    // going away during this callback.
+    SDL_Event rumbleEvent = {};
+    rumbleEvent.type = SDL_USEREVENT;
+    rumbleEvent.user.code = SDL_CODE_GAMECONTROLLER_RUMBLE;
+    rumbleEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
+    rumbleEvent.user.data2 = (void*)(uintptr_t)((lowFreqMotor << 16) | highFreqMotor);
+    SDL_PushEvent(&rumbleEvent);
 }
 
 void Session::clConnectionStatusUpdate(int connectionStatus)
@@ -449,7 +452,6 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_PendingWindowedTransition(false),
       m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
       m_InputHandler(nullptr),
-      m_InputHandlerLock(0),
       m_MouseEmulationRefCount(0),
       m_FlushingWindowEventsRef(0),
       m_AsyncConnectionSuccess(false),
@@ -1552,6 +1554,11 @@ void Session::execInternal()
             case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
                 m_FlushingWindowEventsRef--;
                 break;
+            case SDL_CODE_GAMECONTROLLER_RUMBLE:
+                m_InputHandler->rumble((unsigned short)(uintptr_t)event.user.data1,
+                                       (unsigned short)((uintptr_t)event.user.data2 >> 16),
+                                       (unsigned short)((uintptr_t)event.user.data2 & 0xFFFF));
+                break;
             default:
                 SDL_assert(false);
             }
@@ -1751,14 +1758,11 @@ DispatchDeferredCleanup:
     // Raise any keys that are still down
     m_InputHandler->raiseAllKeys();
 
-    // Destroy the input handler now. Any rumble callbacks that
-    // occur after this point will be discarded. This must be destroyed
-    // before allow the UI to continue execution or it could interfere
-    // with SDLGamepadKeyNavigation.
-    SDL_AtomicLock(&m_InputHandlerLock);
+    // Destroy the input handler now. This must be destroyed
+    // before allowwing the UI to continue execution or it could
+    // interfere with SDLGamepadKeyNavigation.
     delete m_InputHandler;
     m_InputHandler = nullptr;
-    SDL_AtomicUnlock(&m_InputHandlerLock);
 
     // Destroy the decoder, since this must be done on the main thread
     // NB: This must happen before LiStopConnection() for pull-based

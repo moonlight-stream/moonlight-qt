@@ -161,7 +161,6 @@ private:
     bool m_PendingWindowedTransition;
     bool m_UnexpectedTermination;
     SdlInputHandler* m_InputHandler;
-    SDL_SpinLock m_InputHandlerLock;
     int m_MouseEmulationRefCount;
     int m_FlushingWindowEventsRef;
 
