@@ -15,7 +15,11 @@ OverlayManager::OverlayManager() :
     m_Overlays[OverlayType::OverlayStatusUpdate].color = {0xCC, 0x00, 0x00, 0xFF};
     m_Overlays[OverlayType::OverlayStatusUpdate].fontSize = 36;
 
-    SDL_assert(TTF_WasInit() == 0);
+    // While TTF will usually not be initialized here, it is valid for that not to
+    // be the case, since Session destruction is deferred and could overlap with
+    // the lifetime of a new Session object.
+    //SDL_assert(TTF_WasInit() == 0);
+
     if (TTF_Init() != 0) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "TTF_Init() failed: %s",
@@ -36,7 +40,12 @@ OverlayManager::~OverlayManager()
     }
 
     TTF_Quit();
-    SDL_assert(TTF_WasInit() == 0);
+
+    // For similar reasons to the comment in the constructor, this will usually,
+    // but not always, deinitialize TTF. In the cases where Session objects overlap
+    // in lifetime, there may be an additional reference on TTF for the new Session
+    // that means it will not be cleaned up here.
+    //SDL_assert(TTF_WasInit() == 0);
 }
 
 bool OverlayManager::isOverlayEnabled(OverlayType type)

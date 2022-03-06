@@ -22,7 +22,9 @@ class Session : public QObject
 public:
     explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
 
-    virtual ~Session();
+    // NB: This may not get destroyed for a long time! Don't put any cleanup here.
+    // Use Session::exec() or DeferredSessionCleanupTask instead.
+    virtual ~Session() {};
 
     Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);
 
@@ -59,6 +61,9 @@ signals:
     void quitStarting();
 
     void sessionFinished(int portTestResult);
+
+    // Emitted after sessionFinished() when the session is ready to be destroyed
+    void readyForDeletion();
 
 private:
     void execInternal();

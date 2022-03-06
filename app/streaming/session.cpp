@@ -464,16 +464,6 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
     SDL_AtomicSet(&m_NeedsIdr, 0);
 }
 
-// NB: This may not get destroyed for a long time! Don't put any vital cleanup here.
-// Use Session::exec() or DeferredSessionCleanupTask instead.
-Session::~Session()
-{
-    // Acquire session semaphore to ensure all cleanup is done before the destructor returns
-    // and the object is deallocated.
-    s_ActiveSessionSemaphore.acquire();
-    s_ActiveSessionSemaphore.release();
-}
-
 bool Session::initialize()
 {
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
@@ -856,6 +846,9 @@ private:
         // Allow another session to start now that we're cleaned up
         Session::s_ActiveSession = nullptr;
         Session::s_ActiveSessionSemaphore.release();
+
+        // Notify that the session is ready to be cleaned up
+        emit m_Session->readyForDeletion();
     }
 
     void run() override
@@ -1316,6 +1309,7 @@ void Session::execInternal()
     // called on the main thread.
     if (!initialize()) {
         emit sessionFinished(0);
+        emit readyForDeletion();
         return;
     }
 

@@ -103,7 +103,10 @@ Item {
                 streamSegueErrorDialog.open()
             }
         }
+    }
 
+    function sessionReadyForDeletion()
+    {
         // Garbage collect the Session object since it's pretty heavyweight
         // and keeps other libraries (like SDL_TTF) around until it is deleted.
         session = null
@@ -130,6 +133,7 @@ Item {
         session.displayLaunchWarning.connect(displayLaunchWarning)
         session.quitStarting.connect(quitStarting)
         session.sessionFinished.connect(sessionFinished)
+        session.readyForDeletion.connect(sessionReadyForDeletion)
 
         // Kick off the stream
         spinnerTimer.start()
