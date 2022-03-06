@@ -1596,6 +1596,15 @@ void Session::execInternal()
                     break;
                 }
             }
+#ifdef Q_OS_WIN32
+            // We can get a resize event after being minimized. Recreating the renderer at that time can cause
+            // us to start drawing on the screen even while our window is minimized. Minimizing on Windows also
+            // moves the window to -32000, -32000 which can cause a false window display index change. Avoid
+            // that whole mess by never recreating the decoder if we're minimized.
+            else if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
+                break;
+            }
+#endif
 
             // Complete any repositioning that was deferred until
             // the resize from full-screen to windowed had completed.
