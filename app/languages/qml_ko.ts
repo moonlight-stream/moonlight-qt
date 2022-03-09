@@ -373,17 +373,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="732"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>H.264 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="742"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>호스트 PC와 클라이언트 PC가 동일한 비디오 코덱을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="745"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>클라이언트 GPU가 H.264 디코딩을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
         <source>%1 doesn&apos;t support HDR10.</source>
@@ -684,22 +684,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1362"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR을 활성화하면 지정된 코덱 선택이 무시됩니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1368"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR 활성화 (실험적 기능)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1379"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 스트림은 HDR을 지원하지만 일부 게임에서는 HDR 모드를 활성화하기 위해 호스트 PC에 HDR 모니터가 필요할 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1381"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>이 PC에서는 HDR 스트리밍이 지원되지 않습니다.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -1027,7 +1027,7 @@
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight에서 작동하는 하드웨어 가속 비디오 디코더가 감지되지 않았습니다. 이 구성에서는 스트리밍 성능이 심각하게 저하될 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="417"/>
