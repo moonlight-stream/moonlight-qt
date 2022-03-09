@@ -404,13 +404,11 @@ INCLUDEPATH += $$PWD/../h264bitstream/h264bitstream
 DEPENDPATH += $$PWD/../h264bitstream/h264bitstream
 
 !winrt {
-    contains(QT_ARCH, i386)|contains(QT_ARCH, x86_64) {
-        win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
-        else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
+    win32:CONFIG(release, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/release/ -lAntiHooking
+    else:win32:CONFIG(debug, debug|release): LIBS += -L$$OUT_PWD/../AntiHooking/debug/ -lAntiHooking
 
-        INCLUDEPATH += $$PWD/../AntiHooking
-        DEPENDPATH += $$PWD/../AntiHooking
-    }
+    INCLUDEPATH += $$PWD/../AntiHooking
+    DEPENDPATH += $$PWD/../AntiHooking
 }
 
 unix:!macx: {

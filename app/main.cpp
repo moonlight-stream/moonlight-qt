@@ -22,7 +22,7 @@
 #include "streaming/video/ffmpeg.h"
 #endif
 
-#if defined(Q_OS_WIN32) && defined(Q_PROCESSOR_X86)
+#if defined(Q_OS_WIN32)
 #include "antihookingprotection.h"
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>
@@ -293,10 +293,9 @@ int main(int argc, char *argv[])
     SetUnhandledExceptionFilter(UnhandledExceptionHandler);
 #endif
 
-#if defined(Q_OS_WIN32) && defined(Q_PROCESSOR_X86)
+#if defined(Q_OS_WIN32)
     // Force AntiHooking.dll to be statically imported and loaded
-    // by ntdll on x86/x64 platforms by calling a dummy function.
-    // AntiHooking.dll is not currently built for ARM64.
+    // by ntdll on Win32 platforms by calling a dummy function.
     AntiHookingDummyImport();
 #elif defined(Q_OS_LINUX)
     // Force libssl.so to be directly linked to our binary, so

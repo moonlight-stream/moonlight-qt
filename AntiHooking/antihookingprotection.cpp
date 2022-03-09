@@ -1,6 +1,9 @@
 #include "antihookingprotection.h"
 
-#include <NktHookLib.h>
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+
+#include <detours.h>
 
 typedef HMODULE (WINAPI *LoadLibraryAFunc)(LPCSTR lpLibFileName);
 typedef HMODULE (WINAPI *LoadLibraryWFunc)(LPCWSTR lpLibFileName);
@@ -12,25 +15,35 @@ class AntiHookingProtection
 public:
     static void enable()
     {
-    #ifdef QT_DEBUG
-        s_HookManager.SetEnableDebugOutput(true);
-    #endif
+        DetourTransactionBegin();
+        DetourUpdateThread(GetCurrentThread());
 
-        HINSTANCE kernel32Handle = NktHookLibHelpers::GetModuleBaseAddress(L"kernel32.dll");
-        SIZE_T hookId;
+        s_RealLoadLibraryA = LoadLibraryA;
+        DetourAttach(&(PVOID&)s_RealLoadLibraryA, LoadLibraryAHook);
 
-        s_HookManager.Hook(&hookId, (LPVOID*)&s_RealLoadLibraryA,
-                           NktHookLibHelpers::GetProcedureAddress(kernel32Handle, "LoadLibraryA"),
-                           (LPVOID)AntiHookingProtection::LoadLibraryAHook);
-        s_HookManager.Hook(&hookId, (LPVOID*)&s_RealLoadLibraryW,
-                           NktHookLibHelpers::GetProcedureAddress(kernel32Handle, "LoadLibraryW"),
-                           (LPVOID)AntiHookingProtection::LoadLibraryWHook);
-        s_HookManager.Hook(&hookId, (LPVOID*)&s_RealLoadLibraryExA,
-                           NktHookLibHelpers::GetProcedureAddress(kernel32Handle, "LoadLibraryExA"),
-                           (LPVOID)AntiHookingProtection::LoadLibraryExAHook);
-        s_HookManager.Hook(&hookId, (LPVOID*)&s_RealLoadLibraryExW,
-                           NktHookLibHelpers::GetProcedureAddress(kernel32Handle, "LoadLibraryExW"),
-                           (LPVOID)AntiHookingProtection::LoadLibraryExWHook);
+        s_RealLoadLibraryW = LoadLibraryW;
+        DetourAttach(&(PVOID&)s_RealLoadLibraryW, LoadLibraryWHook);
+
+        s_RealLoadLibraryExA = LoadLibraryExA;
+        DetourAttach(&(PVOID&)s_RealLoadLibraryExA, LoadLibraryExAHook);
+
+        s_RealLoadLibraryExW = LoadLibraryExW;
+        DetourAttach(&(PVOID&)s_RealLoadLibraryExW, LoadLibraryExWHook);
+
+        DetourTransactionCommit();
+    }
+
+    static void disable()
+    {
+        DetourTransactionBegin();
+        DetourUpdateThread(GetCurrentThread());
+
+        DetourDetach(&(PVOID&)s_RealLoadLibraryA, LoadLibraryAHook);
+        DetourDetach(&(PVOID&)s_RealLoadLibraryW, LoadLibraryWHook);
+        DetourDetach(&(PVOID&)s_RealLoadLibraryExA, LoadLibraryExAHook);
+        DetourDetach(&(PVOID&)s_RealLoadLibraryExW, LoadLibraryExWHook);
+
+        DetourTransactionCommit();
     }
 
 private:
@@ -124,7 +137,6 @@ private:
         return s_RealLoadLibraryExW(lpLibFileName, hFile, dwFlags);
     }
 
-    static CNktHookLib s_HookManager;
     static LoadLibraryAFunc s_RealLoadLibraryA;
     static LoadLibraryWFunc s_RealLoadLibraryW;
     static LoadLibraryExAFunc s_RealLoadLibraryExA;
@@ -209,7 +221,6 @@ private:
     };
 };
 
-CNktHookLib AntiHookingProtection::s_HookManager;
 LoadLibraryAFunc AntiHookingProtection::s_RealLoadLibraryA;
 LoadLibraryWFunc AntiHookingProtection::s_RealLoadLibraryW;
 LoadLibraryExAFunc AntiHookingProtection::s_RealLoadLibraryExA;
@@ -218,13 +229,25 @@ LoadLibraryExWFunc AntiHookingProtection::s_RealLoadLibraryExW;
 AH_EXPORT void AntiHookingDummyImport() {}
 
 extern "C"
-BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID)
+BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
 {
+    if (DetourIsHelperProcess()) {
+        return TRUE;
+    }
+
     switch (fdwReason)
     {
     case DLL_PROCESS_ATTACH:
+        DetourRestoreAfterWith();
         AntiHookingProtection::enable();
         DisableThreadLibraryCalls(hinstDLL);
+        break;
+    case DLL_PROCESS_DETACH:
+        // Ignore DLL_PROCESS_DETACH on process exit. No need to waste time
+        // unhooking everything if the whole process is being destroyed.
+        if (lpvReserved == NULL) {
+            AntiHookingProtection::disable();
+        }
         break;
     }
 

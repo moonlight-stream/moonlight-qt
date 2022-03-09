@@ -8,11 +8,8 @@ SUBDIRS = \
 # Build the dependencies in parallel before the final app
 app.depends = qmdnsengine moonlight-common-c h264bitstream
 win32:!winrt {
-    contains(QT_ARCH, i386)|contains(QT_ARCH, x86_64) {
-        # We don't build AntiHooking.dll for ARM64 (yet?)
-        SUBDIRS += AntiHooking
-        app.depends += AntiHooking
-    }
+    SUBDIRS += AntiHooking
+    app.depends += AntiHooking
 }
 !winrt:win32|macx {
     SUBDIRS += soundio
