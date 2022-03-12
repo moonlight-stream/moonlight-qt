@@ -167,9 +167,14 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
         return;
     }
 
+    // We need to use the *previous* printPrefix value to determine whether to
+    // print the prefix this time. av_log_format_line() will set the printPrefix
+    // value to indicate whether the prefix should be printed *next time*.
+    bool shouldPrefixThisMessage = printPrefix != 0;
+
     av_log_format_line(ptr, level, fmt, vl, lineBuffer, sizeof(lineBuffer), &printPrefix);
 
-    if (printPrefix) {
+    if (shouldPrefixThisMessage) {
         QTime logTime = QTime::fromMSecsSinceStartOfDay(s_LoggerTime.elapsed());
         QString txt = QString("%1 - FFmpeg: %2").arg(logTime.toString()).arg(lineBuffer);
         logToLoggerStream(txt);
