@@ -684,22 +684,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1362"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Abilitare HDR sovrascrive la selezione manuale del codec.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1368"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Abilita HDR (Sperimentale)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1379"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>La trasmissione supporterà HDR, ma alcuni giochi potrebbero richiedere un monitor HDR sul PC sorgente per abilitare la modalità HDR.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1381"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>La trasmissione HDR non è supportata su questo PC.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
