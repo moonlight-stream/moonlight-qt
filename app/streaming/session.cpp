@@ -1468,8 +1468,10 @@ void Session::execInternal()
     // on macOS.
     SDL_StopTextInput();
 
-    // Disable the screen saver
-    SDL_DisableScreenSaver();
+    // Disable the screen saver if requested or running as embedded platform
+    if (m_Preferences->keepAwake || !WMUtils::isRunningDesktopEnvironment()) {
+        SDL_DisableScreenSaver();
+    }
 
     // Hide Qt's fake mouse cursor on EGLFS systems
     if (QGuiApplication::platformName() == "eglfs") {

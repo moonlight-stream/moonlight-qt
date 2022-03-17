@@ -953,6 +953,23 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Updates your Discord status to display the name of the game you're streaming.")
                 }
+
+                CheckBox {
+                    visible: SystemProperties.hasDesktopEnvironment
+                    id: keepAwakeCheck
+                    width: parent.width
+                    text: qsTr("Keep PC awake while streaming")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.keepAwake
+                    onCheckedChanged: {
+                        StreamingPreferences.keepAwake = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Prevents the display from going to sleep while a stream is active.")
+                }
             }
         }
     }
