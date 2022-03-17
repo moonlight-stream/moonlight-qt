@@ -957,7 +957,7 @@ Flickable {
                 CheckBox {
                     id: keepAwakeCheck
                     width: parent.width
-                    text: qsTr("Keep PC awake while streaming")
+                    text: qsTr("Keep the display awake while streaming")
                     font.pointSize: 12
                     checked: StreamingPreferences.keepAwake
                     onCheckedChanged: {
@@ -967,7 +967,7 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("Prevents the display from going to sleep while a stream is active.")
+                    ToolTip.text: qsTr("Prevents the screensaver from starting or the display from going to sleep while streaming.")
                 }
             }
         }
