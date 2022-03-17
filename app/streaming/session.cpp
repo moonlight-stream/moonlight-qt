@@ -1468,8 +1468,8 @@ void Session::execInternal()
     // on macOS.
     SDL_StopTextInput();
 
-    // Disable the screen saver if requested or running as embedded platform
-    if (m_Preferences->keepAwake || !WMUtils::isRunningDesktopEnvironment()) {
+    // Disable the screen saver if requested
+    if (m_Preferences->keepAwake) {
         SDL_DisableScreenSaver();
     }
 

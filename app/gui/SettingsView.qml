@@ -955,7 +955,6 @@ Flickable {
                 }
 
                 CheckBox {
-                    visible: SystemProperties.hasDesktopEnvironment
                     id: keepAwakeCheck
                     width: parent.width
                     text: qsTr("Keep PC awake while streaming")
