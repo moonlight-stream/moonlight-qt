@@ -7,48 +7,48 @@
         <location filename="../gui/AppView.qml" line="144"/>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Retornar ao Jogo</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="170"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Sair do Jogo</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar Jogo</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Iniciar Diretamente</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Inicia este aplicativo imediatamente quando o host for selecionado, ignorando a parte de seleção de aplicativos.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Esconder Jogo</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Esconde este jogo da grade de aplicativos. Para acessar jogos ocultos, clique com o botão direito do mouse no host e escolha %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Ver Todos os Aplicativos</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tem certeza de que deseja sair do %1? Qualquer progresso não salvo será perdido.</translation>
     </message>
 </context>
 <context>
@@ -56,12 +56,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Estabelecendo conexão com o PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>Saindo do aplicativos...</translation>
     </message>
 </context>
 <context>
@@ -74,12 +74,12 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Carregando lista de aplicativos...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tem certeza de que deseja sair do %1? Qualquer progresso não salvo será perdido.</translation>
     </message>
 </context>
 <context>
@@ -95,7 +95,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="378"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dispositivo de captura de áudio ausente. Reinstalar o GeForce Experience deve resolver esse erro.</translation>
     </message>
 </context>
 <context>
@@ -103,7 +103,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Computadores</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
