@@ -43,7 +43,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation>Ver Todos os Aplicativos</translation>
+        <translation>Ver Todos os Jogos</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
@@ -61,7 +61,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation>Saindo do aplicativos...</translation>
+        <translation>Saindo do jogo...</translation>
     </message>
 </context>
 <context>
