@@ -88,6 +88,11 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
 {
     SDL_assert(backendRenderer);
     SDL_assert(backendRenderer->canExportEGL());
+
+    // Save these global parameters so we can restore them in our destructor
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, &m_OldContextProfileMask);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, &m_OldContextMajorVersion);
+    SDL_GL_GetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, &m_OldContextMinorVersion);
 }
 
 EGLRenderer::~EGLRenderer()
@@ -129,15 +134,9 @@ EGLRenderer::~EGLRenderer()
 
     // Reset the global properties back to what they were before
     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "0");
-
-    // We avoid restoring GL profile and version on purpose. SDL
-    // renderers use that internally to determine what GL version
-    // the window is using. If we reset it, it may not properly
-    // reset back to desktop GL if we have to fall back to the
-    // SDL renderer.
-    SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
-    SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, m_OldContextProfileMask);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, m_OldContextMajorVersion);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, m_OldContextMinorVersion);
 }
 
 bool EGLRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
@@ -472,24 +471,9 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // to avoid a crash in Mesa.
     // https://gitlab.freedesktop.org/mesa/mesa/issues/1011
     SDL_SetHint(SDL_HINT_OPENGL_ES_DRIVER, "1");
-
-    // Change our GL context to use 10-bit colors for 10-bit content
-    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
-        // FIXME: We should try to do this only once per window.
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Changing GL context to 10-bit color");
-
-        // Initialize our GL attributes to defaults (desktop GL).
-        // This ensures we will always hit the SDL_RecreateWindow()
-        // path which will ensure our color buffer changes below
-        // take effect.
-        SDL_GL_ResetAttributes();
-
-        // Request 10-bit color for Main10
-        SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 10);
-        SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 10);
-        SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 10);
-    }
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_ES);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
     int renderIndex;
     int maxRenderers = SDL_GetNumRenderDrivers();
