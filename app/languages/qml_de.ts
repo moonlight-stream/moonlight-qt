@@ -160,7 +160,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Diese Version von GeForce Experience auf %1 wird nicht von Moonlight unterstützt. Du musst Moonlight aktualisieren um von %1 zu streamen.</translation>
+        <translation>Diese Version von GeForce Experience wird auf %1 noch nicht von dieser Moonlight Version unterstützt. Du musst Moonlight aktualisieren, um von %1 zu streamen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -373,7 +373,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="724"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished">Verwendung von Software-Decodierung aufgrund deiner Auswahl, H.264 ohne GPU-Unterstützung zu erzwingen. Dies kann zu einer schlechten Streaming-Leistung führen.</translation>
+        <translation>Verwendung der Software-Decodierung aufgrund deiner Auswahl, H.264 ohne GPU-Unterstützung zu erzwingen. Dies kann zu einer schlechten Streaming-Leistung führen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="734"/>
@@ -684,22 +684,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1378"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Das Aktivieren von HDR überschriebt die manuelle Codec Auswahl.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1384"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR aktivieren (Experimentell)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1395"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der Stream wird HDR unterstützen, aber einige Spiele erfordern einen angeschlossenen HDR Monitor am Host-PC, um den HDR Modus zu aktiveren.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1397"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR Streaming ist an diesem Client-PC nicht unterstützt.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -817,12 +817,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="960"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Verhindere den Bildschirmschoner während des Streamens</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="970"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Verhindern, dass der Bildschirmschoner gestartet wird oder der Monitor in den Standby-Modus wechselt, während ein Stream aktiv ist.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1021"/>
