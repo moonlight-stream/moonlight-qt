@@ -668,12 +668,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="960"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>在串流时保持屏幕开启</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="970"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>防止串流时进入屏保或屏幕休眠。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="988"/>
@@ -713,22 +713,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1378"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>启用HDR将覆盖编码器选择设置。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1384"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>启用HDR（实验性）</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1395"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR功能将在串流中可用，但一些游戏可能需要PC端接入HDR显示器以启用HDR模式。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1397"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>此PC不支持HDR。</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
