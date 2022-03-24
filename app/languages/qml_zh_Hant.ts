@@ -679,7 +679,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1011"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>提醒：由於 GeForce Experience 的 Bug，如果您的主機有多個螢幕，此選項可能無法正常運作。</translation>
+        <translation>提醒：由於 GeForce Experience 的 Bug，如果您的主機有多部顯示器，此選項可能無法正常運作。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1378"/>
@@ -817,12 +817,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="960"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>串流時保持螢幕始終亮起</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="970"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>防止螢幕保護程式啟動或是螢幕在串流時進入睡眠狀態。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1021"/>
