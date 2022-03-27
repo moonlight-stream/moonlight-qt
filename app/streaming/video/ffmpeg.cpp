@@ -900,7 +900,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             }
         }
         else {
-            QList<const char *> knownHevcCodecs = { "hevc_rkmpp", "hevc_nvmpi", "hevc_nvv4l2", "hevc_v4l2m2m" };
+            QList<const char *> knownHevcCodecs = { "hevc_rkmpp", "hevc_nvv4l2", "hevc_nvmpi", "hevc_v4l2m2m" };
             for (const char* codec : knownHevcCodecs) {
                 if (tryInitializeRendererForDecoderByName(codec, params)) {
                     return true;
