@@ -882,6 +882,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 "h264_mmal",
 #endif
                 "h264_rkmpp",
+                "h264_nvv4l2",
                 "h264_nvmpi",
 #ifndef HAVE_MMAL
                 // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
@@ -899,7 +900,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             }
         }
         else {
-            QList<const char *> knownHevcCodecs = { "hevc_rkmpp", "hevc_nvmpi", "hevc_v4l2m2m" };
+            QList<const char *> knownHevcCodecs = { "hevc_rkmpp", "hevc_nvmpi", "hevc_nvv4l2", "hevc_v4l2m2m" };
             for (const char* codec : knownHevcCodecs) {
                 if (tryInitializeRendererForDecoderByName(codec, params)) {
                     return true;
