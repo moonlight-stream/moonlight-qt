@@ -93,6 +93,8 @@ public:
 
     void updateKeyboardGrabState();
 
+    void updatePointerRegionLock();
+
     static
     QString getUnmappedGamepads();
 
@@ -106,6 +108,7 @@ private:
         KeyComboToggleCursorHide,
         KeyComboToggleMinimize,
         KeyComboPasteText,
+        KeyComboTogglePointerRegionLock,
         KeyComboMax
     };
 
@@ -156,6 +159,7 @@ private:
     SDL_atomic_t m_MousePositionUpdated;
     bool m_MouseWasInVideoRegion;
     bool m_PendingMouseButtonsAllUpOnVideoRegionLeave;
+    bool m_PointerRegionLockActive;
 
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];

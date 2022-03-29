@@ -272,3 +272,48 @@ Uint32 SdlInputHandler::mouseMoveTimerCallback(Uint32 interval, void *param)
 
     return interval;
 }
+
+void SdlInputHandler::updatePointerRegionLock()
+{
+    // Pointer region lock is irrelevant in relative mouse mode
+    if (SDL_GetRelativeMouseMode()) {
+        return;
+    }
+
+    // If we're in full-screen exclusive mode or region lock is enabled, grab the cursor so it can't accidentally leave our window.
+    if (isCaptureActive() &&
+            (m_PointerRegionLockActive ||
+            (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN)) {
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+        SDL_Rect src, dst;
+
+        src.x = src.y = 0;
+        src.w = m_StreamWidth;
+        src.h = m_StreamHeight;
+
+        dst.x = dst.y = 0;
+        SDL_GetWindowSize(m_Window, &dst.w, &dst.h);
+
+        // Use the stream and window sizes to determine the video region
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+        // SDL 2.0.18 lets us lock the cursor to a specific region
+        SDL_SetWindowMouseRect(m_Window, &dst);
+#elif SDL_VERSION_ATLEAST(2, 0, 15)
+        // SDL 2.0.15 only lets us lock the cursor to the whole window
+        SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);
+#else
+        SDL_SetWindowGrab(m_Window, SDL_TRUE);
+#endif
+    }
+    else {
+        // Allow the cursor to leave the bounds of our video region or window
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+        SDL_SetWindowMouseRect(m_Window, nullptr);
+#elif SDL_VERSION_ATLEAST(2, 0, 15)
+        SDL_SetWindowMouseGrab(m_Window, SDL_FALSE);
+#else
+        SDL_SetWindowGrab(m_Window, SDL_FALSE);
+#endif
+    }
+}

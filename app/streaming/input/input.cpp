@@ -21,6 +21,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_MousePositionLock(0),
       m_MouseWasInVideoRegion(false),
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
+      m_PointerRegionLockActive(false),
       m_FakeCaptureActive(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
       m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
@@ -114,6 +115,11 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     m_SpecialKeyCombos[KeyComboPasteText].keyCode = SDLK_v;
     m_SpecialKeyCombos[KeyComboPasteText].scanCode = SDL_SCANCODE_V;
     m_SpecialKeyCombos[KeyComboPasteText].enabled = true;
+
+    m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].keyCombo = KeyComboTogglePointerRegionLock;
+    m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].keyCode = SDLK_l;
+    m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].scanCode = SDL_SCANCODE_L;
+    m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].enabled = true;
 
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
@@ -389,15 +395,6 @@ bool SdlInputHandler::isSystemKeyCaptureActive()
 void SdlInputHandler::setCaptureActive(bool active)
 {
     if (active) {
-        // If we're in full-screen exclusive mode, grab the cursor so it can't accidentally leave our window.
-        if ((SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
-#if SDL_VERSION_ATLEAST(2, 0, 15)
-            SDL_SetWindowMouseGrab(m_Window, SDL_TRUE);
-#else
-            SDL_SetWindowGrab(m_Window, SDL_TRUE);
-#endif
-        }
-
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
             // Relative mouse mode didn't work or was disabled, so we'll just hide the cursor
@@ -433,15 +430,10 @@ void SdlInputHandler::setCaptureActive(bool active)
         else {
             SDL_SetRelativeMouseMode(SDL_FALSE);
         }
-
-#if SDL_VERSION_ATLEAST(2, 0, 15)
-        // Allow the cursor to leave the bounds of our window again.
-        SDL_SetWindowMouseGrab(m_Window, SDL_FALSE);
-#else
-        // Allow the cursor to leave the bounds of our window again.
-        SDL_SetWindowGrab(m_Window, SDL_FALSE);
-#endif
     }
+
+    // Update mouse pointer region constraints
+    updatePointerRegionLock();
 
     // Now update the keyboard grab
     updateKeyboardGrabState();

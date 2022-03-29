@@ -1708,6 +1708,9 @@ void Session::execInternal()
             // of recreating our decoder at the time the HDR transition happens.
             m_VideoDecoder->setHdrMode(LiGetCurrentHostDisplayHdrMode());
 
+            // After a window resize, we need to reset the pointer lock region
+            m_InputHandler->updatePointerRegionLock();
+
             SDL_AtomicUnlock(&m_DecoderLock);
             break;
 
