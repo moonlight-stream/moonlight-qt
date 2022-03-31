@@ -69,7 +69,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Estabelecendo conexão com o PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
@@ -235,7 +235,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ver Todos os Jogos</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="357"/>
@@ -984,7 +984,7 @@
     <message>
         <location filename="../gui/main.qml" line="283"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Computadores</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="290"/>
