@@ -817,12 +817,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="960"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Giữ màn hình bật trong khi stream</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="970"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ngăn screensaver hoạt động hoặc màn hình tắt trong khi stream.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1021"/>
