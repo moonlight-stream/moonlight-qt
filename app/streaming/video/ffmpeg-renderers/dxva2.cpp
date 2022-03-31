@@ -415,18 +415,20 @@ bool DXVA2Renderer::initializeDeviceQuirks()
                     // is absolutely horrible. StretchRect() is much much better.
                     m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
                 }
-                else if (id.VendorId == 0x1002) { // AMD
+                else if (id.VendorId == 0x1002 &&
+                         (id.DriverVersion.HighPart > 0x1E0000 ||
+                          (id.DriverVersion.HighPart == 0x1E0000 && HIWORD(id.DriverVersion.LowPart) >= 14000))) { // AMD 21.12.1 or later
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Using DestFormat quirk for AMD GPU");
+                                "Using DestFormat quirk for recent AMD GPU driver");
 
-                    // AMD's GPU driver ignores the SampleFormat and instead looks only at the DestFormat
-                    // in the blit parameters struct. NVIDIA seems to use both SampleFormat and DestFormat
-                    // (doing double conversion, causing incorrect output) while Intel only uses SampleFormat
-                    // and completely ignores DestFormat.
+                    // AMD's GPU driver doesn't correctly handle color range conversion.
                     //
                     // This used to just work because we used Rec 709 Limited which happened to be what AMD's
                     // driver defaulted to. However, AMD's driver behavior changed to default to Rec 709 Full
-                    // in late 2021. Fortunately, setting DestFormat works on both new and old drivers.
+                    // in the 21.12.1 driver, so we must adapt to that.
+                    //
+                    // 30.0.13037.1003 - 21.11.3 - Limited
+                    // 30.0.14011.3017 - 21.12.1 - Full
                     //
                     // To sort out this mess, we will use a quirk to tell us to populate DestFormat for AMD.
                     // For other GPUs, we'll avoid populating it as was our previous behavior.
