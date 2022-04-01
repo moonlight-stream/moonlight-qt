@@ -457,6 +457,10 @@ int main(int argc, char *argv[])
     SDL_SetHint("SDL_AUDIO_DEVICE_APP_NAME", "Moonlight");
     SDL_SetHint("SDL_APP_NAME", "Moonlight");
 
+    // We handle capturing the mouse ourselves when it leaves the window, so we don't need
+    // SDL doing it for us behind our backs.
+    SDL_SetHint("SDL_MOUSE_AUTO_CAPTURE", "0");
+
 #ifdef QT_DEBUG
     // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
     // when throwing the exceptions, so we don't enable it for release builds out
