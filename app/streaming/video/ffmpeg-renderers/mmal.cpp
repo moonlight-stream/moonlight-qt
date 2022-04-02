@@ -277,7 +277,7 @@ bool MmalRenderer::getDtDeviceStatus(QString name, bool ifUnknown)
     QString statusString(statusData);
 
     // Per Device Tree docs, 'okay' and 'ok' are both acceptable
-    return statusData == "okay" || statusData == "ok";
+    return statusString == "okay" || statusString == "ok";
 }
 
 bool MmalRenderer::isMmalOverlaySupported()
