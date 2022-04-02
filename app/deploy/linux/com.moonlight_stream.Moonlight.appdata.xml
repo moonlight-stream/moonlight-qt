@@ -36,6 +36,29 @@
 	</screenshots>
 
 	<releases>
+		<release version="4.0.0" date="2022-04-02">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added a new key combo for locking the mouse cursor to the window (Ctrl+Alt+Shift+L)</li>
+					<li>Added an option to avoid keeping the client display awake while streaming</li>
+				</ul>
+				<p>Behavior Changes:</p>
+				<ul>
+					<li>HDR streaming is now a separate option rather than being part of the Video Codec override dropdown</li>
+					<li>HDR streaming is no longer restricted to apps that are certified by NVIDIA as compatible with GameStream HDR. Some newer games may require an HDR display or EDID emulator dongle connected to your host PC for HDR options to be available.</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed loss of all audio if the active audio device is unplugged while streaming</li>
+					<li>Fixed the GUI being unresponsive after manually quitting when connection to the host is lost</li>
+					<li>Fixed a rare crash if a controller disconnects right as rumble is starting</li>
+					<li>Fixed text rendering on the overlay UI when using SDL_ttf 2.0.18 on Linux</li>
+					<li>Updated included gamepad mappings</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="3.2.0" date="2022-01-18">
 			<description>
 				<p>New features:</p>
