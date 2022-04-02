@@ -762,10 +762,15 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
     // HACK: Avoid using YUV420P on h264_mmal. It can cause a deadlock inside the MMAL libraries.
     // Even if it didn't completely deadlock us, the performance would likely be atrocious.
     if (strcmp(decoderName, "h264_mmal") == 0) {
-        TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
-        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(MmalRenderer);
+        for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+            TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
+        }
 
-        // Give up if we can't use MmalRenderer
+        for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+            TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(MmalRenderer);
+        }
+
+        // Give up if we can't use MmalRenderer for h264_mmal
         return false;
     }
 #endif
