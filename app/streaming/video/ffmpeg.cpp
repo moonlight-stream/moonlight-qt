@@ -714,10 +714,11 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
         } \
     }
 
-#define TRY_SUPPORTED_PIXEL_FORMAT(RENDERER_TYPE) \
+#define TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(RENDERER_TYPE) \
     { \
         RENDERER_TYPE renderer; \
-        if (renderer.isPixelFormatSupported(params->videoFormat, decoder->pix_fmts[i])) { \
+        if (decoder->pix_fmts[i] != renderer.getPreferredPixelFormat(params->videoFormat) && \
+            renderer.isPixelFormatSupported(params->videoFormat, decoder->pix_fmts[i])) { \
             if (tryInitializeRenderer(decoder, params, nullptr, \
                                       []() -> IFFmpegRenderer* { return new RENDERER_TYPE(); })) { \
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
@@ -762,6 +763,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
     // Even if it didn't completely deadlock us, the performance would likely be atrocious.
     if (strcmp(decoderName, "h264_mmal") == 0) {
         TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
+        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(MmalRenderer);
 
         // Give up if we can't use MmalRenderer
         return false;
@@ -779,9 +781,9 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
     // Nothing prefers any of them. Let's see if anyone will tolerate one.
     for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
 #ifdef HAVE_DRM
-        TRY_SUPPORTED_PIXEL_FORMAT(DrmRenderer);
+        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
-        TRY_SUPPORTED_PIXEL_FORMAT(SdlRenderer);
+        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
     }
 
     // If we made it here, we couldn't find anything
