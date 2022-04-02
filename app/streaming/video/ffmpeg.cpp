@@ -757,19 +757,23 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
                                      []() -> IFFmpegRenderer* { return new SdlRenderer(); });
     }
 
+#ifdef HAVE_MMAL
+    // HACK: Avoid using YUV420P on h264_mmal. It can cause a deadlock inside the MMAL libraries.
+    // Even if it didn't completely deadlock us, the performance would likely be atrocious.
+    if (strcmp(decoderName, "h264_mmal") == 0) {
+        TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
+
+        // Give up if we can't use MmalRenderer
+        return false;
+    }
+#endif
+
     // Check if any of our decoders prefer any of the pixel formats first
     for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
 #ifdef HAVE_DRM
         TRY_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
-#ifdef HAVE_MMAL
-        TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
-#endif
-        // HACK: Avoid using YUV420P on h264_mmal. It can cause a deadlock inside the MMAL libraries.
-        // Even if it didn't completely deadlock us, the performance would likely be atrocious.
-        if (strcmp(decoderName, "h264_mmal") != 0) {
-            TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
-        }
+        TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
     }
 
     // Nothing prefers any of them. Let's see if anyone will tolerate one.
@@ -777,13 +781,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
 #ifdef HAVE_DRM
         TRY_SUPPORTED_PIXEL_FORMAT(DrmRenderer);
 #endif
-#ifdef HAVE_MMAL
-        TRY_SUPPORTED_PIXEL_FORMAT(MmalRenderer);
-#endif
-        // HACK: See comment above
-        if (strcmp(decoderName, "h264_mmal") != 0) {
-            TRY_SUPPORTED_PIXEL_FORMAT(SdlRenderer);
-        }
+        TRY_SUPPORTED_PIXEL_FORMAT(SdlRenderer);
     }
 
     // If we made it here, we couldn't find anything
