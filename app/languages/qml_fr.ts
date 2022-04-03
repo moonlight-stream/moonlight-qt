@@ -677,7 +677,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="970"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Désactive l&apos;écran de veille ou la mise en veille de l&apos;écran pendant le streaming.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="988"/>
@@ -752,22 +752,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1378"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Activer l&apos;HDR désactive le choix de codec vidéo.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1384"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Activer le HDR (Expérimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1395"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le stream sera compatible HDR, mais certains jeux requièrent un moniteur HDR côté hôte pour streamer en HDR.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1397"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le streaming en HDR n&apos;est pas supporté sur ce PC.</translation>
     </message>
     <message>
         <source>This enables mouse control without capturing the client&apos;s mouse cursor. It will not work in most games.</source>
