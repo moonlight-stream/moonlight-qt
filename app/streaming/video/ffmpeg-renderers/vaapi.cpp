@@ -415,6 +415,8 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
     }
 }
 
+#if defined(HAVE_EGL) || defined(HAVE_DRM)
+
 // Ensure that vaExportSurfaceHandle() is supported by the VA-API driver
 bool
 VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
@@ -489,6 +491,8 @@ VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
                 layerTypeFlag == VA_EXPORT_SURFACE_COMPOSED_LAYERS ? "composed" : "separate");
     return true;
 }
+
+#endif
 
 #ifdef HAVE_EGL
 

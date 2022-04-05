@@ -58,7 +58,10 @@ public:
 
 private:
     VADisplay openDisplay(SDL_Window* window);
+
+#if defined(HAVE_EGL) || defined(HAVE_DRM)
     bool canExportSurfaceHandle(int layerTypeFlag);
+#endif
 
     int m_WindowSystem;
     AVBufferRef* m_HwContext;
