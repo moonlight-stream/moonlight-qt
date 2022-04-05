@@ -945,12 +945,7 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     renderRect.h = newSurface->h;
 
     // Convert screen space to normalized device coordinates
-    renderRect.x /= m_DisplayWidth / 2;
-    renderRect.w /= m_DisplayWidth / 2;
-    renderRect.y /= m_DisplayHeight / 2;
-    renderRect.h /= m_DisplayHeight / 2;
-    renderRect.x -= 1.0f;
-    renderRect.y -= 1.0f;
+    StreamUtils::screenSpaceToNormalizedDeviceCoords(&renderRect, m_DisplayWidth, m_DisplayHeight);
 
     // The surface is no longer required
     SDL_FreeSurface(newSurface);
@@ -1290,10 +1285,7 @@ bool D3D11VARenderer::setupRenderingResources()
 
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
-        renderRect.x = ((float)dst.x / (m_DisplayWidth / 2)) - 1.0f;
-        renderRect.y = ((float)dst.y / (m_DisplayHeight / 2)) - 1.0f;
-        renderRect.w = (float)dst.w / (m_DisplayWidth / 2);
-        renderRect.h = (float)dst.h / (m_DisplayHeight / 2);
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
 
         // Don't sample from the alignment padding area since that's not part of the video
         SDL_assert(m_TextureAlignment != 0);
