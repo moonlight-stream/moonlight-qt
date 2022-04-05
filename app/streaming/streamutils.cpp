@@ -32,6 +32,22 @@ void StreamUtils::scaleSourceToDestinationSurface(SDL_Rect* src, SDL_Rect* dst)
     }
 }
 
+void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_FRect* rect, int viewportWidth, int viewportHeight)
+{
+    rect->x = (rect->x / (viewportWidth / 2.0f)) - 1.0f;
+    rect->y = (rect->y / (viewportHeight / 2.0f)) - 1.0f;
+    rect->w = rect->w / (viewportWidth / 2.0f);
+    rect->h = rect->h / (viewportHeight / 2.0f);
+}
+
+void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* dst, int viewportWidth, int viewportHeight)
+{
+    dst->x = ((float)src->x / (viewportWidth / 2.0f)) - 1.0f;
+    dst->y = ((float)src->y / (viewportHeight / 2.0f)) - 1.0f;
+    dst->w = (float)src->w / (viewportWidth / 2.0f);
+    dst->h = (float)src->h / (viewportHeight / 2.0f);
+}
+
 int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
 {
     int displayIndex = SDL_GetWindowDisplayIndex(window);

@@ -214,13 +214,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
             free(packedPixelData);
         }
 
-        // SDL_FRect wasn't added until 2.0.10
-        struct {
-            float x;
-            float y;
-            float w;
-            float h;
-        } overlayRect = {};
+        SDL_FRect overlayRect;
 
         // These overlay positions differ from the other renderers because OpenGL
         // places the origin in the lower-left corner instead of the upper-left.
@@ -243,12 +237,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
         SDL_FreeSurface(newSurface);
 
         // Convert screen space to normalized device coordinates
-        overlayRect.x /= m_ViewportWidth / 2;
-        overlayRect.w /= m_ViewportWidth / 2;
-        overlayRect.y /= m_ViewportHeight / 2;
-        overlayRect.h /= m_ViewportHeight / 2;
-        overlayRect.x -= 1.0f;
-        overlayRect.y -= 1.0f;
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&overlayRect, m_ViewportWidth, m_ViewportHeight);
 
         OVERLAY_VERTEX verts[] =
         {
