@@ -50,7 +50,7 @@ public:
     virtual void freeEGLImages(EGLDisplay dpy, EGLImage[EGL_MAX_PLANES]) override;
 #endif
 
-#if HAVE_DRM
+#ifdef HAVE_DRM
     virtual bool canExportDrmPrime() override;
     virtual bool mapDrmPrimeFrame(AVFrame* frame, AVDRMFrameDescriptor* drmDescriptor) override;
     virtual void unmapDrmPrimeFrame(AVDRMFrameDescriptor* drmDescriptor) override;

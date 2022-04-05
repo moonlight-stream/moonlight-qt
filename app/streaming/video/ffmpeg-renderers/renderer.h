@@ -194,7 +194,7 @@ public:
     virtual void freeEGLImages(EGLDisplay, EGLImage[EGL_MAX_PLANES]) {}
 #endif
 
-#if HAVE_DRM
+#ifdef HAVE_DRM
     // By default we can't do DRM PRIME export
     virtual bool canExportDrmPrime() {
         return false;
