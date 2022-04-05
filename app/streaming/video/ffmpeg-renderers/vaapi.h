@@ -26,7 +26,7 @@ extern "C" {
 #include <va/va_drm.h>
 #endif
 #include <libavutil/hwcontext_vaapi.h>
-#ifdef HAVE_EGL
+#if defined(HAVE_EGL) || defined(HAVE_DRM)
 #include <va/va_drmcommon.h>
 #endif
 }
