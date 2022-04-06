@@ -1288,6 +1288,7 @@ Flickable {
 
                     id: decoderComboBox
                     textRole: "text"
+                    enabled: !enableHdr.checked
                     model: ListModel {
                         id: decoderListModel
                         ListElement {
@@ -1304,9 +1305,26 @@ Flickable {
                         }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
-                    onActivated : {
-                        StreamingPreferences.videoDecoderSelection = decoderListModel.get(currentIndex).val
+                    onActivated: {
+                        if (enabled) {
+                            StreamingPreferences.videoDecoderSelection = decoderListModel.get(currentIndex).val
+                        }
                     }
+
+                    // This handles the state of the enableHdr checkbox changing
+                    onEnabledChanged: {
+                        if (enabled) {
+                            StreamingPreferences.videoDecoderSelection = decoderListModel.get(currentIndex).val
+                        }
+                        else {
+                            StreamingPreferences.videoDecoderSelection = StreamingPreferences.VDS_AUTO
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered && !enabled
+                    ToolTip.text: qsTr("Enabling HDR overrides manual decoder selections.")
                 }
 
                 Label {
