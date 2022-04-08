@@ -474,6 +474,15 @@ void VDPAURenderer::renderOverlay(VdpOutputSurface destination, Overlay::Overlay
     }
 }
 
+void VDPAURenderer::waitToRender()
+{
+    VdpOutputSurface chosenSurface = m_OutputSurface[m_NextSurfaceIndex];
+
+    // Wait for the next render target surface to be idle before proceeding
+    VdpTime pts;
+    m_VdpPresentationQueueBlockUntilSurfaceIdle(m_PresentationQueue, chosenSurface, &pts);
+}
+
 void VDPAURenderer::renderFrame(AVFrame* frame)
 {
     VdpStatus status;
@@ -524,7 +533,9 @@ void VDPAURenderer::renderFrame(AVFrame* frame)
         }
     }
 
-    // Wait for this frame to be off the screen
+    // Wait for this frame to be off the screen. This will usually be a no-op
+    // since it already happened in waitToRender(). However, that won't be the
+    // case is when frame pacing is enabled.
     VdpTime pts;
     m_VdpPresentationQueueBlockUntilSurfaceIdle(m_PresentationQueue, chosenSurface, &pts);
 
