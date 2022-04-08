@@ -464,10 +464,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
         m_FrameWaitableObject = m_SwapChain->GetFrameLatencyWaitableObject();
         SDL_assert(m_FrameWaitableObject != nullptr);
-
-        // Wait for the swap chain to be ready. This is required because we don't
-        // we're waiting after presenting in the general case, not before.
-        WaitForSingleObjectEx(m_FrameWaitableObject, 1000, FALSE);
     }
     else {
         IDXGIDevice1* dxgiDevice;
@@ -582,6 +578,22 @@ void D3D11VARenderer::setHdrMode(bool enabled)
     unlockContext(this);
 }
 
+void D3D11VARenderer::waitToRender()
+{
+    if (m_FrameWaitableObject != nullptr) {
+        SDL_assert(m_Windowed);
+        SDL_assert(m_DecoderParams.enableVsync);
+
+        // Wait for the pipeline to be ready for the next frame in V-Sync mode.
+        //
+        // This callback happens before selecting the next frame to render, so
+        // we can wait for the previous frame to finish prior to picking the
+        // next one to display. This reduces the effective display latency
+        // by ensuring we always render the most recent frame immediately.
+        WaitForSingleObjectEx(m_FrameWaitableObject, 500, FALSE);
+    }
+}
+
 void D3D11VARenderer::renderFrame(AVFrame* frame)
 {
     // Acquire the context lock for rendering to prevent concurrent
@@ -668,22 +680,6 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
         event.type = SDL_RENDER_TARGETS_RESET;
         SDL_PushEvent(&event);
         return;
-    }
-
-    if (m_FrameWaitableObject != nullptr) {
-        SDL_assert(m_Windowed);
-        SDL_assert(m_DecoderParams.enableVsync);
-
-        // Wait for the pipeline to be ready for the next frame in V-Sync mode.
-        //
-        // MSDN advises us to wait *before* doing any rendering operations,
-        // however that assumes the a typical game which will latch inputs,
-        // run the engine, draw, etc. after WaitForSingleObjectEx(). In our case,
-        // we actually want wait *after* our rendering operations, because our AVFrame
-        // is already set in stone by the time we enter this function. Waiting after
-        // presenting allows a more recent frame to be received before renderFrame()
-        // is called again.
-        WaitForSingleObjectEx(m_FrameWaitableObject, 1000, FALSE);
     }
 }
 

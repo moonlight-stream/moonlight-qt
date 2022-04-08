@@ -91,6 +91,9 @@ int Pacer::renderThread(void* context)
     }
 
     while (!me->m_Stopping) {
+        // Wait for the renderer to be ready for the next frame
+        me->m_VsyncRenderer->waitToRender();
+
         // Acquire the frame queue lock to protect the queue and
         // the not empty condition
         me->m_FrameQueueLock.lock();

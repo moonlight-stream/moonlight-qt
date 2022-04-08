@@ -19,6 +19,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override;
     virtual bool prepareDecoderContextInGetFormat(AVCodecContext* context, AVPixelFormat pixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
+    virtual void waitToRender() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual void setHdrMode(bool enabled) override;
     virtual int getRendererAttributes() override;

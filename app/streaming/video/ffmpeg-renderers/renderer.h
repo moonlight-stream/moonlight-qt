@@ -102,6 +102,13 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
 
+    // Called for threaded renderers to allow them to wait prior to us latching
+    // the next frame for rendering (as opposed to waiting on buffer swap with
+    // an older frame already queued for display).
+    virtual void waitToRender() {
+        // Don't wait by default
+    }
+
     // Called on the same thread as renderFrame() during destruction of the renderer
     virtual void cleanupRenderContext() {
         // Nothing
