@@ -351,11 +351,6 @@ int VAAPIRenderer::getDecoderColorspace()
 void
 VAAPIRenderer::renderFrame(AVFrame* frame)
 {
-    if (frame == nullptr) {
-        // End of stream - nothing to do for us
-        return;
-    }
-
     VASurfaceID surface = (VASurfaceID)(uintptr_t)frame->data[3];
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;

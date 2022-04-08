@@ -345,11 +345,6 @@ bool MmalRenderer::needsTestFrame()
 
 void MmalRenderer::renderFrame(AVFrame* frame)
 {
-    if (frame == nullptr) {
-        // End of stream - nothing to do for us
-        return;
-    }
-
     MMAL_BUFFER_HEADER_T* buffer = (MMAL_BUFFER_HEADER_T*)frame->data[3];
     MMAL_STATUS_T status;
 

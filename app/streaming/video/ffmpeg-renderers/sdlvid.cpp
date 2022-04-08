@@ -344,11 +344,6 @@ void SdlRenderer::renderFrame(AVFrame* frame)
     int err;
     AVFrame* swFrame = nullptr;
 
-    if (frame == nullptr) {
-        // End of stream - nothing to do for us
-        return;
-    }
-
     if (frame->hw_frames_ctx != nullptr && frame->format != AV_PIX_FMT_CUDA) {
 #ifdef HAVE_CUDA
 ReadbackRetry:

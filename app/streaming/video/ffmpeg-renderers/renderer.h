@@ -102,6 +102,11 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
 
+    // Called on the same thread as renderFrame() during destruction of the renderer
+    virtual void cleanupRenderContext() {
+        // Nothing
+    }
+
     virtual bool testRenderFrame(AVFrame*) {
         // If the renderer doesn't provide an explicit test routine,
         // we will always assume that any returned AVFrame can be

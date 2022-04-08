@@ -814,15 +814,15 @@ bool EGLRenderer::specialize() {
     return err == GL_NO_ERROR;
 }
 
+void EGLRenderer::cleanupRenderContext()
+{
+    // Detach the context from the render thread so the destructor can attach it
+    SDL_GL_MakeCurrent(m_Window, nullptr);
+}
+
 void EGLRenderer::renderFrame(AVFrame* frame)
 {
     EGLImage imgs[EGL_MAX_PLANES];
-
-    if (frame == nullptr) {
-        // End of stream - unbind the GL context
-        SDL_GL_MakeCurrent(m_Window, nullptr);
-        return;
-    }
 
     // Attach our GL context to the render thread
     // NB: It should already be current, unless the SDL render event watcher

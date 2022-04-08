@@ -46,8 +46,9 @@ Pacer::~Pacer()
         SDL_WaitThread(m_RenderThread, nullptr);
     }
     else {
-        // Send a null AVFrame to indicate end of stream on the main thread
-        m_VsyncRenderer->renderFrame(nullptr);
+        // Notify the renderer that it is being destroyed soon
+        // NB: This must happen on the same thread that calls renderFrame().
+        m_VsyncRenderer->cleanupRenderContext();
     }
 
     // Delete any remaining unconsumed frames
@@ -110,8 +111,9 @@ int Pacer::renderThread(void* context)
         me->renderLastFrameAndUnlock();
     }
 
-    // Send a null AVFrame to indicate end of stream on the render thread
-    me->m_VsyncRenderer->renderFrame(nullptr);
+    // Notify the renderer that it is being destroyed soon
+    // NB: This must happen on the same thread that calls renderFrame().
+    me->m_VsyncRenderer->cleanupRenderContext();
 
     return 0;
 }

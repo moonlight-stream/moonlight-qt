@@ -475,11 +475,6 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     AVDRMFrameDescriptor mappedFrame;
     AVDRMFrameDescriptor* drmFrame;
 
-    if (frame == nullptr) {
-        // End of stream - nothing to do for us
-        return;
-    }
-
     // If we are acting as the frontend renderer, we'll need to have the backend
     // map this frame into a DRM PRIME descriptor that we can render.
     if (m_BackendRenderer != nullptr) {

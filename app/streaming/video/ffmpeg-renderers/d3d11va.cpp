@@ -584,11 +584,6 @@ void D3D11VARenderer::setHdrMode(bool enabled)
 
 void D3D11VARenderer::renderFrame(AVFrame* frame)
 {
-    if (frame == nullptr) {
-        // End of stream - nothing to do for us
-        return;
-    }
-
     // Acquire the context lock for rendering to prevent concurrent
     // access from inside FFmpeg's decoding code
     lockContext(this);
