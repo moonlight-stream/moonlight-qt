@@ -21,9 +21,19 @@ extern "C" {
 #ifndef EGL_VERSION_1_5
 typedef intptr_t EGLAttrib;
 typedef void *EGLImage;
+
+typedef void *EGLSync;
+#define EGL_NO_SYNC                       ((EGLSync)0)
+#define EGL_SYNC_FENCE                    0x30F9
+#define EGL_FOREVER                       0xFFFFFFFFFFFFFFFFull
+#define EGL_SYNC_FLUSH_COMMANDS_BIT       0x0001
 #endif
 
 #if !defined(EGL_VERSION_1_5) || !defined(EGL_EGL_PROTOTYPES)
+typedef EGLSync (EGLAPIENTRYP PFNEGLCREATESYNCPROC) (EGLDisplay dpy, EGLenum type, const EGLAttrib *attrib_list);
+typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYSYNCPROC) (EGLDisplay dpy, EGLSync sync);
+typedef EGLint (EGLAPIENTRYP PFNEGLCLIENTWAITSYNCPROC) (EGLDisplay dpy, EGLSync sync, EGLint flags, EGLTime timeout);
+
 typedef EGLImage (EGLAPIENTRYP PFNEGLCREATEIMAGEPROC) (EGLDisplay dpy, EGLContext ctx, EGLenum target, EGLClientBuffer buffer, const EGLAttrib *attrib_list);
 typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYIMAGEPROC) (EGLDisplay dpy, EGLImage image);
 typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYPROC) (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
@@ -38,6 +48,10 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYIMAGEKHRPROC) (EGLDisplay dpy, EGL
 
 #if !defined(EGL_EXT_platform_base) || !defined(EGL_EGLEXT_PROTOTYPES)
 typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYEXTPROC) (EGLenum platform, void *native_display, const EGLint *attrib_list);
+#endif
+
+#if !defined(EGL_KHR_fence_sync) || !defined(EGL_EGLEXT_PROTOTYPES)
+typedef EGLSyncKHR (EGLAPIENTRYP PFNEGLCREATESYNCKHRPROC) (EGLDisplay dpy, EGLenum type, const EGLint *attrib_list);
 #endif
 
 #ifndef EGL_EXT_image_dma_buf_import

@@ -76,11 +76,16 @@ EGLRenderer::EGLRenderer(IFFmpegRenderer *backendRenderer)
         m_Backend(backendRenderer),
         m_VAO(0),
         m_BlockingSwapBuffers(false),
+        m_LastRenderSync(EGL_NO_SYNC),
         m_LastFrame(av_frame_alloc()),
         m_glEGLImageTargetTexture2DOES(nullptr),
         m_glGenVertexArraysOES(nullptr),
         m_glBindVertexArrayOES(nullptr),
         m_glDeleteVertexArraysOES(nullptr),
+        m_eglCreateSync(nullptr),
+        m_eglCreateSyncKHR(nullptr),
+        m_eglDestroySync(nullptr),
+        m_eglClientWaitSync(nullptr),
         m_GlesMajorVersion(0),
         m_GlesMinorVersion(0),
         m_HasExtUnpackSubimage(false),
@@ -100,6 +105,10 @@ EGLRenderer::~EGLRenderer()
     if (m_Context) {
         // Reattach the GL context to the main thread for destruction
         SDL_GL_MakeCurrent(m_Window, m_Context);
+        if (m_LastRenderSync != EGL_NO_SYNC) {
+            SDL_assert(m_eglDestroySync != nullptr);
+            m_eglDestroySync(m_EGLDisplay, m_LastRenderSync);
+        }
         if (m_ShaderProgram) {
             glDeleteProgram(m_ShaderProgram);
         }
@@ -615,6 +624,30 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // EGL_KHR_fence_sync is an extension for EGL 1.1+
+    if (eglExtensions.isSupported("EGL_KHR_fence_sync")) {
+        // eglCreateSyncKHR() has a slightly different prototype to eglCreateSync()
+        m_eglCreateSyncKHR = (typeof(m_eglCreateSyncKHR))eglGetProcAddress("eglCreateSyncKHR");
+        m_eglDestroySync = (typeof(m_eglDestroySync))eglGetProcAddress("eglDestroySyncKHR");
+        m_eglClientWaitSync = (typeof(m_eglClientWaitSync))eglGetProcAddress("eglClientWaitSyncKHR");
+    }
+    else {
+        // EGL 1.5 introduced sync support to the core specification
+        m_eglCreateSync = (typeof(m_eglCreateSync))eglGetProcAddress("eglCreateSync");
+        m_eglDestroySync = (typeof(m_eglDestroySync))eglGetProcAddress("eglDestroySync");
+        m_eglClientWaitSync = (typeof(m_eglClientWaitSync))eglGetProcAddress("eglClientWaitSync");
+    }
+
+    if (!(m_eglCreateSync || m_eglCreateSyncKHR) || !m_eglDestroySync || !m_eglClientWaitSync) {
+        EGL_LOG(Warn, "Failed to find sync functions");
+
+        // Sub-optimal, but not fatal
+        m_eglCreateSync = nullptr;
+        m_eglCreateSyncKHR = nullptr;
+        m_eglDestroySync = nullptr;
+        m_eglClientWaitSync = nullptr;
+    }
+
     /* Compute the video region size in order to keep the aspect ratio of the
      * video stream.
      */
@@ -820,6 +853,18 @@ void EGLRenderer::cleanupRenderContext()
     SDL_GL_MakeCurrent(m_Window, nullptr);
 }
 
+void EGLRenderer::waitToRender()
+{
+    // Ensure our GL context is active on this thread
+    // See comment in renderFrame() for more details.
+    SDL_GL_MakeCurrent(m_Window, m_Context);
+
+    if (m_LastRenderSync != 0) {
+        SDL_assert(m_eglClientWaitSync != nullptr);
+        m_eglClientWaitSync(m_EGLDisplay, m_LastRenderSync, EGL_SYNC_FLUSH_COMMANDS_BIT, EGL_FOREVER);
+    }
+}
+
 void EGLRenderer::renderFrame(AVFrame* frame)
 {
     EGLImage imgs[EGL_MAX_PLANES];
@@ -878,15 +923,34 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     SDL_GL_SwapWindow(m_Window);
 
     if (m_BlockingSwapBuffers) {
-        // This glClear() forces us to block until the buffer swap is
-        // complete to continue rendering. Mesa won't actually wait
-        // for the swap with just glFinish() alone. Waiting here keeps us
-        // in lock step with the display refresh rate. If we don't wait
-        // here, we'll stall on the first GL call next frame. Doing the
-        // wait here instead allows more time for a newer frame to arrive
-        // for next renderFrame() call.
-        glClear(GL_COLOR_BUFFER_BIT);
-        glFinish();
+        // If we this EGL implementation supports fences, use those to delay
+        // rendering the next frame until this one is completed.
+        if (m_eglClientWaitSync != nullptr) {
+            // Delete the sync object from last render
+            if (m_LastRenderSync != EGL_NO_SYNC) {
+                m_eglDestroySync(m_EGLDisplay, m_LastRenderSync);
+            }
+
+            // Create a new sync object that will be signalled when the buffer swap is completed
+            if (m_eglCreateSync != nullptr) {
+                m_LastRenderSync = m_eglCreateSync(m_EGLDisplay, EGL_SYNC_FENCE, nullptr);
+            }
+            else {
+                SDL_assert(m_eglCreateSyncKHR != nullptr);
+                m_LastRenderSync = m_eglCreateSyncKHR(m_EGLDisplay, EGL_SYNC_FENCE, nullptr);
+            }
+        }
+        else {
+            // This glClear() forces us to block until the buffer swap is
+            // complete to continue rendering. Mesa won't actually wait
+            // for the swap with just glFinish() alone. Waiting here keeps us
+            // in lock step with the display refresh rate. If we don't wait
+            // here, we'll stall on the first GL call next frame. Doing the
+            // wait here instead allows more time for a newer frame to arrive
+            // for next renderFrame() call.
+            glClear(GL_COLOR_BUFFER_BIT);
+            glFinish();
+        }
     }
 
     m_Backend->freeEGLImages(m_EGLDisplay, imgs);

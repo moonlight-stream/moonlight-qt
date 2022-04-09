@@ -12,6 +12,7 @@ public:
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void cleanupRenderContext() override;
+    virtual void waitToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
@@ -45,11 +46,16 @@ private:
     IFFmpegRenderer *m_Backend;
     unsigned int m_VAO;
     bool m_BlockingSwapBuffers;
+    EGLSync m_LastRenderSync;
     AVFrame* m_LastFrame;
     PFNGLEGLIMAGETARGETTEXTURE2DOESPROC m_glEGLImageTargetTexture2DOES;
     PFNGLGENVERTEXARRAYSOESPROC m_glGenVertexArraysOES;
     PFNGLBINDVERTEXARRAYOESPROC m_glBindVertexArrayOES;
     PFNGLDELETEVERTEXARRAYSOESPROC m_glDeleteVertexArraysOES;
+    PFNEGLCREATESYNCPROC m_eglCreateSync;
+    PFNEGLCREATESYNCKHRPROC m_eglCreateSyncKHR;
+    PFNEGLDESTROYSYNCPROC m_eglDestroySync;
+    PFNEGLCLIENTWAITSYNCPROC m_eglClientWaitSync;
     int m_GlesMajorVersion;
     int m_GlesMinorVersion;
     bool m_HasExtUnpackSubimage;
