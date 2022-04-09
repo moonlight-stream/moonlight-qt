@@ -42,7 +42,7 @@ popd
 
 echo Creating AppImage
 pushd $INSTALLER_FOLDER
-VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop -qmldir=$SOURCE_ROOT/app/gui -appimage || fail "linuxdeployqt failed!"
+VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop -qmldir=$SOURCE_ROOT/app/gui -extra-plugins=platforms/libqeglfs.so,platforms/libqwayland-egl.so,platforms/libqwayland-generic.so,egldeviceintegrations,platformthemes,wayland-decoration-client,wayland-shell-integration,wayland-graphics-integration-client -appimage || fail "linuxdeployqt failed!"
 popd
 
 echo Build successful
