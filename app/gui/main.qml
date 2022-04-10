@@ -181,10 +181,20 @@ ApplicationWindow {
         }
     }
 
-    function navigateTo(url, objectName)
+    // Workaround for lack of instanceof in Qt 5.9.
+    //
+    // Based on https://stackoverflow.com/questions/13923794/how-to-do-a-is-a-typeof-or-instanceof-in-qml
+    function qmltypeof(obj, className) { // QtObject, string -> bool
+        // className plus "(" is the class instance without modification
+        // className plus "_QML" is the class instance with user-defined properties
+        var str = obj.toString();
+        return str.startsWith(className + "(") || str.startsWith(className + "_QML");
+    }
+
+    function navigateTo(url, objectType)
     {
         var existingItem = stackView.find(function(item, index) {
-            return item.objectName === objectName
+            return qmltypeof(item, objectType)
         })
 
         if (existingItem !== null) {
@@ -251,7 +261,7 @@ ApplicationWindow {
 
             Label {
                 id: versionLabel
-                visible: stackView.currentItem.objectName === qsTr("Settings")
+                visible: qmltypeof(stackView.currentItem, "SettingsView")
                 text: qsTr("Version %1").arg(SystemProperties.versionString)
                 font.pointSize: 12
                 horizontalAlignment: Qt.AlignRight
@@ -261,7 +271,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: discordButton
                 visible: SystemProperties.hasBrowser &&
-                         stackView.currentItem.objectName === qsTr("Settings")
+                         qmltypeof(stackView.currentItem, "SettingsView")
 
                 iconSource: "qrc:/res/Discord-Logo-White.svg"
 
@@ -280,7 +290,7 @@ ApplicationWindow {
 
             NavigableToolButton {
                 id: addPcButton
-                visible: stackView.currentItem.objectName === qsTr("Computers")
+                visible: qmltypeof(stackView.currentItem, "PcView")
 
                 iconSource:  "qrc:/res/ic_add_to_queue_white_48px.svg"
 
@@ -378,7 +388,7 @@ ApplicationWindow {
 
                 iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
 
-                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", qsTr("Gamepad Mapping"))
+                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "GamepadMapper")
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
@@ -390,7 +400,7 @@ ApplicationWindow {
 
                 iconSource:  "qrc:/res/settings.svg"
 
-                onClicked: navigateTo("qrc:/gui/SettingsView.qml", qsTr("Settings"))
+                onClicked: navigateTo("qrc:/gui/SettingsView.qml", "SettingsView")
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
