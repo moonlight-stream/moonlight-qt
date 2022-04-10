@@ -11,6 +11,8 @@ Flickable {
     id: settingsPage
     objectName: qsTr("Settings")
 
+    signal languageChanged()
+
     boundsBehavior: Flickable.OvershootBounds
 
     contentWidth: settingsColumn1.width > settingsColumn2.width ? settingsColumn1.width : settingsColumn2.width
@@ -465,6 +467,7 @@ Flickable {
                         // ignore setting the index at first, and actually set it when the component is loaded
                         Component.onCompleted: {
                             reinitialize()
+                            languageChanged.connect(reinitialize)
                         }
 
                         id: fpsComboBox
@@ -531,28 +534,53 @@ Flickable {
                 }
 
                 AutoResizingComboBox {
-                    // ignore setting the index at first, and actually set it when the component is loaded
-                    Component.onCompleted: {
+                    function createModel() {
+                        var model = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
+
+                        model.append({
+                                         text: qsTr("Fullscreen"),
+                                         val: StreamingPreferences.WM_FULLSCREEN
+                                     })
+
+                        model.append({
+                                         text: qsTr("Borderless windowed"),
+                                         val: StreamingPreferences.WM_FULLSCREEN_DESKTOP
+                                     })
+
+                        model.append({
+                                         text: qsTr("Windowed"),
+                                         val: StreamingPreferences.WM_WINDOWED
+                                     })
+
+
+                        // Set the recommended option based on the OS
+                        for (var i = 0; i < model.count; i++) {
+                            var thisWm = model.get(i).val;
+                            if (thisWm === StreamingPreferences.recommendedFullScreenMode) {
+                                model.get(i).text += qsTr(" (Recommended)")
+                                model.move(i, 0, 1)
+                                break
+                            }
+                        }
+
+                        return model
+                    }
+
+
+                    // This is used on initialization and upon retranslation
+                    function reinitialize() {
                         if (!visible) {
                             // Do nothing if the control won't even be visible
                             return
                         }
 
-                        // Set the recommended option based on the OS
-                        for (var i = 0; i < windowModeListModel.count; i++) {
-                             var thisWm = windowModeListModel.get(i).val;
-                             if (thisWm === StreamingPreferences.recommendedFullScreenMode) {
-                                 windowModeListModel.get(i).text += qsTr(" (Recommended)")
-                                 windowModeListModel.move(i, 0, 1);
-                                 break
-                             }
-                        }
-
+                        model = createModel()
                         currentIndex = 0
 
+                        // Set the current value based on the saved preferences
                         var savedWm = StreamingPreferences.windowMode
-                        for (var i = 0; i < windowModeListModel.count; i++) {
-                             var thisWm = windowModeListModel.get(i).val;
+                        for (var i = 0; i < model.count; i++) {
+                             var thisWm = model.get(i).val;
                              if (savedWm === thisWm) {
                                  currentIndex = i
                                  break
@@ -562,28 +590,18 @@ Flickable {
                         activated(currentIndex)
                     }
 
+                    Component.onCompleted: {
+                        reinitialize()
+                        languageChanged.connect(reinitialize)
+                    }
+
                     id: windowModeComboBox
                     visible: SystemProperties.hasDesktopEnvironment
                     enabled: !SystemProperties.rendererAlwaysFullScreen
                     hoverEnabled: true
                     textRole: "text"
-                    model: ListModel {
-                        id: windowModeListModel
-                        ListElement {
-                            text: qsTr("Fullscreen")
-                            val: StreamingPreferences.WM_FULLSCREEN
-                        }
-                        ListElement {
-                            text: qsTr("Borderless windowed")
-                            val: StreamingPreferences.WM_FULLSCREEN_DESKTOP
-                        }
-                        ListElement {
-                            text: qsTr("Windowed")
-                            val: StreamingPreferences.WM_WINDOWED
-                        }
-                    }
                     onActivated: {
-                        StreamingPreferences.windowMode = windowModeListModel.get(currentIndex).val
+                        StreamingPreferences.windowMode = model.get(currentIndex).val
                     }
 
                     ToolTip.delay: 1000
@@ -867,6 +885,9 @@ Flickable {
                                 // Force the back operation to pop any AppView pages that exist.
                                 // The AppView stops working after retranslate() for some reason.
                                 window.clearOnBack = true
+
+                                // Signal other controls to adjust their text
+                                languageChanged()
                             }
                         }
                     }
