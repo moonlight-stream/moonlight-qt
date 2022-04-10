@@ -17,6 +17,8 @@ ApplicationWindow {
     // a retranslate() because AppView breaks for some reason.
     property bool clearOnBack: false
 
+    property string settingsViewPath: "qrc:/gui/SettingsView.qml"
+
     id: window
     visible: true
     width: 1280
@@ -45,6 +47,13 @@ ApplicationWindow {
         else {
             stackView.pop()
         }
+    }
+
+    function reloadSettingsView()
+    {
+        //pop the current settings view and immediately push a new one, so that the entire view is refreshed
+        stackView.pop(StackView.Immediate)
+        stackView.push(settingsViewPath, StackView.Immediate)
     }
 
     StackView {
@@ -258,6 +267,15 @@ ApplicationWindow {
                 verticalAlignment: Qt.AlignVCenter
             }
 
+            Label {
+                id: activeProfileNameLabel
+                visible: stackView.currentItem.objectName !== "Settings" && StreamingPreferences.hasProfiles
+                text: "<b>" + qsTr("Profile") + "</b> <br>" + StreamingPreferences.activeProfileName
+                font.pointSize: 12
+                horizontalAlignment: Qt.AlignRight
+                verticalAlignment: Qt.AlignVCenter
+            }
+
             NavigableToolButton {
                 id: discordButton
                 visible: SystemProperties.hasBrowser &&
@@ -390,7 +408,7 @@ ApplicationWindow {
 
                 iconSource:  "qrc:/res/settings.svg"
 
-                onClicked: navigateTo("qrc:/gui/SettingsView.qml", qsTr("Settings"))
+                onClicked: navigateTo(settingsViewPath, qsTr("Settings"))
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
@@ -517,5 +535,20 @@ ApplicationWindow {
                 }
             }
         }
+    }
+
+    //This dialog belongs in SettingsView, but when a new profile is created the view is reloaded, meaning that it cannot show any dialogs
+    //at the same time. Instead, it's hosted here as this component is never destroyed.
+    NavigableMessageDialog {
+        id: newProfileCreatedDialog
+        standardButtons: Dialog.Ok
+        title: qsTr("New profile created")
+        text: qsTr("A profile named %1 has been created and set as the active profile.").arg(profileName)
+        property string profileName: ""
+    }
+
+    function showNewProfileCreatedDialog(profileName) {
+        newProfileCreatedDialog.profileName = profileName
+        newProfileCreatedDialog.open()
     }
 }

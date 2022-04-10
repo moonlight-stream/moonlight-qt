@@ -30,8 +30,16 @@ Flickable {
 
         // Highlight the first item if a gamepad is connected
         if (SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
-            resolutionComboBox.forceActiveFocus(Qt.TabFocus)
+            if (StreamingPreferences.hasProfiles) {
+                profilesComboBox.forceActiveFocus(Qt.TabFocus)
+            }
+            else {
+                resolutionComboBox.forceActiveFocus(Qt.TabFocus)
+            }
         }
+
+        //listen for the active profile name changing, as the whole view is reloaded when that happens
+        StreamingPreferences.onActiveProfileNameChanged.connect(forceReload)
     }
 
     StackView.onDeactivating: {
@@ -39,6 +47,13 @@ Flickable {
 
         // Save the prefs so the Session can observe the changes
         StreamingPreferences.save()
+
+        StreamingPreferences.onActiveProfileNameChanged.disconnect(forceReload)
+    }
+
+    function forceReload() 
+    {
+        window.reloadSettingsView()
     }
 
     Component.onDestruction: {
@@ -52,6 +67,110 @@ Flickable {
         id: settingsColumn1
         width: settingsPage.width / 2
         spacing: 15
+
+        GroupBox {
+            id: profileChangeGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Change Profile") + "</font>"
+            font.pointSize: 12
+            visible: StreamingPreferences.hasProfiles
+            enabled: StreamingPreferences.hasProfiles
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                Label {
+                    width: parent.width
+                    id: resActiveProfiletitle
+                    text: qsTr("Active Profile")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                Row {
+                    spacing: 15
+                    width: parent.width
+
+                    AutoResizingComboBox {
+                        function createModel() {
+                            var profilesListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
+
+                            var profilesList = StreamingPreferences.profiles
+                            
+                            for( var i in profilesList) 
+                            {
+                                profilesListModel.append({"text" : profilesList[i].name})
+                            }
+
+                            return profilesListModel
+                        }
+
+                        function reinitialize() {
+                            model = createModel()
+
+                            var activeProfileName = StreamingPreferences.activeProfileName
+                            currentIndex = 0
+                            for (var i = 0; i < model.count; i++) {
+                                var profileName = model.get(i).text
+
+                                // Pick the highest value lesser or equal to the saved FPS
+                                if (profileName == activeProfileName) {
+                                    currentIndex = i
+                                }
+                            }
+
+                            // Persist the selected value
+                            activated(currentIndex)
+                        }
+
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            reinitialize()
+                            StreamingPreferences.onProfilesChanged.connect(reinitialize)
+                        }
+
+                        Component.onDestruction: {
+                            StreamingPreferences.onProfilesChanged.disconnect(reinitialize)
+                        }
+
+                        id: profilesComboBox
+                        maximumWidth: parent.width / 2
+                        textRole: "text"
+                        // ::onActivated must be used, as it only listens for when the index is changed by a human
+                        onActivated : {
+                            var item = model.get(currentIndex)
+                            if (item)
+                            {
+                                var selectedProfileName = item.text
+
+                                if (StreamingPreferences.activeProfileName !== selectedProfileName) {
+                                    StreamingPreferences.changeActiveProfile(selectedProfileName)
+                                }
+                            }
+                        }
+                    }
+
+                    Button {
+                        id: deleteActiveProfileButton
+                        text: qsTr("Delete Profile")
+                        onClicked: deleteProfileDialog.open()
+                    }
+                }
+
+                NavigableMessageDialog {
+                    id: deleteProfileDialog
+                    standardButtons: Dialog.Yes | Dialog.No
+                    title: qsTr("Confirm profile deletion")
+                    text: qsTr("Are you sure you want to delete the profile named %1?").arg(StreamingPreferences.activeProfileName)
+
+                    onAccepted: {
+                        StreamingPreferences.deleteProfile(StreamingPreferences.activeProfileName)
+                    }
+                }
+            }
+        }
 
         GroupBox {
             id: basicSettingsGroupBox
@@ -1474,6 +1593,51 @@ Flickable {
                             // We must save the updated preference to ensure
                             // ComputerManager can observe the change internally.
                             StreamingPreferences.save()
+                        }
+                    }
+                }
+            }
+        }
+
+        GroupBox {
+            id: profileCreationGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Save As New Profile") + "</font>"
+            font.pointSize: 12
+
+            NavigableMessageDialog {
+                id: profileCreationFailedDialog
+                standardButtons: Dialog.Ok
+                title: qsTr("Failed to create profile")
+                text: qsTr("A profile named %1 already exists.").arg(newProfileNameField.text)
+            }
+
+            Row {
+                anchors.fill: parent
+                padding: 5
+                spacing: 15
+
+                TextField {
+                    id: newProfileNameField
+                    maximumLength: 16
+                    placeholderText: qsTr("Profile Name")
+                    validator: RegExpValidator { regExp: /[0-9A-Za-z\s-_]+/ }
+                }
+
+                Button {
+                    id: createNewProfileButton
+                    text: qsTr("Create")
+                    enabled: newProfileNameField.text.length > 0
+                    onClicked: {
+                        //store a local reference to the window, as a successful call to createNewProfile will destroy the SettingsView
+                        //component and lose the reference to window
+                        var storedWindow = window
+                        if (StreamingPreferences.createNewProfile(newProfileNameField.text)) {
+                            storedWindow.showNewProfileCreatedDialog(newProfileNameField.text)
+                        }
+                        else {
+                            profileCreationFailedDialog.open()
                         }
                     }
                 }

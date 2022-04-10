@@ -3,6 +3,10 @@
 #include <QObject>
 #include <QRect>
 #include <QQmlEngine>
+#include <QSettings>
+#include <QVector>
+#include <QString>
+#include <QVariant>
 
 class StreamingPreferences : public QObject
 {
@@ -99,6 +103,11 @@ public:
     };
     Q_ENUM(CaptureSysKeysMode);
 
+    struct Profile 
+    {
+        QString name;
+    };
+
     Q_PROPERTY(int width MEMBER width NOTIFY displayModeChanged)
     Q_PROPERTY(int height MEMBER height NOTIFY displayModeChanged)
     Q_PROPERTY(int fps MEMBER fps NOTIFY displayModeChanged)
@@ -131,6 +140,18 @@ public:
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
+    Q_PROPERTY(QVariant profiles READ getProfiles NOTIFY profilesChanged)
+    Q_PROPERTY(QVariant hasProfiles READ getHasProfiles NOTIFY hasProfilesChanged)
+    //this property is read-only from QML, which is why it has a simple READ function rather than using the MEMBER keyword
+    Q_PROPERTY(QString activeProfileName READ getActiveProfileName NOTIFY activeProfileNameChanged);
+
+    Q_INVOKABLE bool createNewProfile(QString profileName);
+    Q_INVOKABLE void deleteProfile(QString profileName);
+    Q_INVOKABLE void changeActiveProfile(QString newProfileName);
+    QVariant getProfiles();
+    bool getHasProfiles() const;
+    QString getActiveProfileName() const;
+    void saveProfiles(QSettings& settings);
 
     Q_INVOKABLE bool retranslate();
 
@@ -168,6 +189,8 @@ public:
     UIDisplayMode uiDisplayMode;
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
+    QVector<Profile> profiles;
+    QString activeProfileName;
 
 signals:
     void displayModeChanged();
@@ -199,6 +222,9 @@ signals:
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
     void languageChanged();
+    void profilesChanged();
+    void hasProfilesChanged();
+    void activeProfileNameChanged();
 
 private:
     QString getSuffixFromLanguage(Language lang);
