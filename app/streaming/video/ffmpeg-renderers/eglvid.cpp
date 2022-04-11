@@ -859,7 +859,9 @@ void EGLRenderer::waitToRender()
     // See comment in renderFrame() for more details.
     SDL_GL_MakeCurrent(m_Window, m_Context);
 
-    if (m_LastRenderSync != 0) {
+    // Wait for the previous buffer swap to finish before picking the next frame to render.
+    // This way we'll get the latest available frame and render it without blocking.
+    if (m_LastRenderSync != EGL_NO_SYNC) {
         SDL_assert(m_eglClientWaitSync != nullptr);
         m_eglClientWaitSync(m_EGLDisplay, m_LastRenderSync, EGL_SYNC_FLUSH_COMMANDS_BIT, EGL_FOREVER);
     }
