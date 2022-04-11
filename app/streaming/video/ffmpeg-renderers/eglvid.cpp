@@ -861,9 +861,16 @@ void EGLRenderer::waitToRender()
 
     // Wait for the previous buffer swap to finish before picking the next frame to render.
     // This way we'll get the latest available frame and render it without blocking.
-    if (m_LastRenderSync != EGL_NO_SYNC) {
-        SDL_assert(m_eglClientWaitSync != nullptr);
-        m_eglClientWaitSync(m_EGLDisplay, m_LastRenderSync, EGL_SYNC_FLUSH_COMMANDS_BIT, EGL_FOREVER);
+    if (m_BlockingSwapBuffers) {
+        // Try to use eglClientWaitSync() if the driver supports it
+        if (m_LastRenderSync != EGL_NO_SYNC) {
+            SDL_assert(m_eglClientWaitSync != nullptr);
+            m_eglClientWaitSync(m_EGLDisplay, m_LastRenderSync, EGL_SYNC_FLUSH_COMMANDS_BIT, EGL_FOREVER);
+        }
+        else {
+            // Use glFinish() if fences aren't available
+            glFinish();
+        }
     }
 }
 
@@ -925,8 +932,14 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     SDL_GL_SwapWindow(m_Window);
 
     if (m_BlockingSwapBuffers) {
+        // This glClear() requires the new back buffer to complete. This ensures
+        // our eglClientWaitSync() or glFinish() call in waitToRender() will not
+        // return before the new buffer is actually ready for rendering.
+        glClear(GL_COLOR_BUFFER_BIT);
+
         // If we this EGL implementation supports fences, use those to delay
-        // rendering the next frame until this one is completed.
+        // rendering the next frame until this one is completed. If not, we'll
+        // have to just use glFinish().
         if (m_eglClientWaitSync != nullptr) {
             // Delete the sync object from last render
             if (m_LastRenderSync != EGL_NO_SYNC) {
@@ -941,17 +954,6 @@ void EGLRenderer::renderFrame(AVFrame* frame)
                 SDL_assert(m_eglCreateSyncKHR != nullptr);
                 m_LastRenderSync = m_eglCreateSyncKHR(m_EGLDisplay, EGL_SYNC_FENCE, nullptr);
             }
-        }
-        else {
-            // This glClear() forces us to block until the buffer swap is
-            // complete to continue rendering. Mesa won't actually wait
-            // for the swap with just glFinish() alone. Waiting here keeps us
-            // in lock step with the display refresh rate. If we don't wait
-            // here, we'll stall on the first GL call next frame. Doing the
-            // wait here instead allows more time for a newer frame to arrive
-            // for next renderFrame() call.
-            glClear(GL_COLOR_BUFFER_BIT);
-            glFinish();
         }
     }
 
