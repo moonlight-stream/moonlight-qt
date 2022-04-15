@@ -241,8 +241,18 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     swapChainDesc.Flags = 0;
 
-    // 1 front buffer + 1 back buffer + 1 extra for DWM to hold on to for Flip modes
-    swapChainDesc.BufferCount = 3;
+    // 3 front buffers (default GetMaximumFrameLatency() count)
+    // + 1 back buffer
+    // + 1 extra for DWM to hold on to for DirectFlip
+    //
+    // Even though we allocate 3 front buffers for pre-rendered frames,
+    // they won't actually increase presentation latency because we
+    // always use SyncInterval 0 which replaces the last one. See
+    // the SetMaximumFrameLatency comment below for more details.
+    //
+    // NB: 3 total buffers seems sufficient on NVIDIA hardware but
+    // causes performance issues (buffer starvation) on AMD GPUs.
+    swapChainDesc.BufferCount = 3 + 1 + 1;
 
     DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullScreenDesc = {};
 
