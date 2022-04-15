@@ -315,19 +315,10 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         // In V-sync mode, we can always use flip discard
         swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
 
-        // We'll use a waitable swapchain to ensure we get the lowest possible latency.
+        // We'll use a waitable swapchain to pace frame delivery
         // NB: We can only use this option in windowed mode (or borderless fullscreen).
-        if (m_Windowed) {
-            // FIXME?: Using a a waitable swapchain in Independent Flip mode causes performance
-            // issues because the swapchain wait sometimes takes longer than the VBlank interval.
-            if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != SDL_WINDOW_FULLSCREEN_DESKTOP) {
-                swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
-            }
-            else if (qgetenv("D3D11VA_FORCE_WAITABLE_SWAPCHAIN") == "1") {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Using waitable swapchain in full-screen per environment variable override");
-                swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
-            }
+        if (m_Windowed && params->enableFramePacing) {
+            swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
         }
     }
 
@@ -449,11 +440,16 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // We have to set the maximum frame latency on waitable swapchains.
+    //
+    // NB: IDXGIDevice1 has a SetMaximumFrameLatency() function, but counterintuitively
+    // we must avoid it to reduce latency. If we set our max frame latency to 1 on the
+    // device, our SyncInterval 0 Present() calls will block on DWM (acting like
+    // SyncInterval 1) rather than doing the non-blocking present we expect.
     if (swapChainDesc.Flags & DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT) {
         SDL_assert(params->enableVsync);
         SDL_assert(m_Windowed);
 
-        // We only want one buffered frame on our waitable swapchain
+        // We only want one buffered frame on our waitable swapchain to pace properly
         hr = m_SwapChain->SetMaximumFrameLatency(1);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -464,30 +460,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
         m_FrameWaitableObject = m_SwapChain->GetFrameLatencyWaitableObject();
         SDL_assert(m_FrameWaitableObject != nullptr);
-    }
-    else {
-        IDXGIDevice1* dxgiDevice;
-
-        hr = m_Device->QueryInterface(__uuidof(IDXGIDevice1), (void **)&dxgiDevice);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "ID3D11Device::QueryInterface(IDXGIDevice1) failed: %x",
-                         hr);
-            return false;
-        }
-
-        // For the non-vsync case, we won't have a waitable swapchain,
-        // so we must use IDXGIDevice1::SetMaximumFrameLatency() instead.
-        hr = dxgiDevice->SetMaximumFrameLatency(1);
-
-        dxgiDevice->Release();
-
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "IDXGIDevice1::SetMaximumFrameLatency() failed: %x",
-                         hr);
-            return false;
-        }
     }
 
     return true;
@@ -583,8 +555,9 @@ void D3D11VARenderer::waitToRender()
     if (m_FrameWaitableObject != nullptr) {
         SDL_assert(m_Windowed);
         SDL_assert(m_DecoderParams.enableVsync);
+        SDL_assert(m_DecoderParams.enableFramePacing);
 
-        // Wait for the pipeline to be ready for the next frame in V-Sync mode.
+        // Wait for the pipeline to be ready for the next frame in pacing mode.
         //
         // This callback happens before selecting the next frame to render, so
         // we can wait for the previous frame to finish prior to picking the
@@ -617,7 +590,6 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
     }
 
     UINT flags;
-    UINT syncInterval;
 
     if (m_AllowTearing) {
         SDL_assert(!m_DecoderParams.enableVsync);
@@ -625,47 +597,34 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 
         // If tearing is allowed, use DXGI_PRESENT_ALLOW_TEARING with syncInterval 0.
         // It is not valid to use any other syncInterval values in tearing mode.
-        syncInterval = 0;
         flags = DXGI_PRESENT_ALLOW_TEARING;
     }
     else if (!m_DecoderParams.enableVsync) {
         // In any other non-vsync mode, just render with syncInterval 0.
         // We'll probably have a non-flip swapchain here.
-        syncInterval = 0;
         flags = 0;
     }
     else if (m_FrameWaitableObject != nullptr) {
         SDL_assert(m_Windowed);
         SDL_assert(m_DecoderParams.enableVsync);
+        SDL_assert(m_DecoderParams.enableFramePacing);
 
-        // In windowed mode, we'll have a waitable swapchain, so we can
+        // With frame pacing, we'll have a waitable swapchain, so we can
         // use syncInterval 0 and the wait will sync us with VBlank.
-        syncInterval = 0;
         flags = 0;
     }
     else {
         SDL_assert(m_DecoderParams.enableVsync);
+        SDL_assert(!m_DecoderParams.enableFramePacing);
         SDL_assert(m_FrameWaitableObject == nullptr);
 
-        // In full-screen mode, we won't have waitable swapchain.
-        // We'll use syncInterval 1 to synchronize with VBlank and pass
-        // DXGI_PRESENT_DO_NOT_WAIT for our flags to avoid blocking any
-        // concurrent decoding operations in flight.
-        syncInterval = 1;
-        flags = DXGI_PRESENT_DO_NOT_WAIT;
+        // With vsync enabled but frame pacing disabled, we'll submit as
+        // fast as possible and DWM will discard excess frames for us.
+        flags = 0;
     }
 
-    HRESULT hr;
-    do {
-        // Present according to the decoder parameters
-        hr = m_SwapChain->Present(syncInterval, flags);
-        if (hr == DXGI_ERROR_WAS_STILL_DRAWING) {
-            // Unlock the context while we wait to try again
-            unlockContext(this);
-            SDL_Delay(1);
-            lockContext(this);
-        }
-    } while (hr == DXGI_ERROR_WAS_STILL_DRAWING);
+    // Present according to the decoder parameters
+    HRESULT hr = m_SwapChain->Present(0, flags);
 
     // Release the context lock
     unlockContext(this);
@@ -1077,8 +1036,8 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
 
 int D3D11VARenderer::getRendererAttributes()
 {
-    // This renderer supports HDR
-    return RENDERER_ATTRIBUTE_HDR_SUPPORT;
+    // This renderer supports HDR and can frame pace with waitToRender()
+    return RENDERER_ATTRIBUTE_HDR_SUPPORT | RENDERER_ATTRIBUTE_SELF_PACING;
 }
 
 void D3D11VARenderer::lockContext(void *lock_ctx)

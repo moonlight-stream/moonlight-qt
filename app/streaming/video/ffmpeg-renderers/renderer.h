@@ -109,6 +109,7 @@ private:
 #define RENDERER_ATTRIBUTE_FULLSCREEN_ONLY 0x01
 #define RENDERER_ATTRIBUTE_1080P_MAX 0x02
 #define RENDERER_ATTRIBUTE_HDR_SUPPORT 0x04
+#define RENDERER_ATTRIBUTE_SELF_PACING 0x08
 
 class IFFmpegRenderer : public Overlay::IOverlayRenderer {
 public:
