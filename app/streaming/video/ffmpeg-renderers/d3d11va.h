@@ -19,7 +19,6 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override;
     virtual bool prepareDecoderContextInGetFormat(AVCodecContext* context, AVPixelFormat pixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
-    virtual void waitToRender() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual void setHdrMode(bool enabled) override;
     virtual int getRendererAttributes() override;
@@ -46,12 +45,10 @@ private:
     int m_TextureAlignment;
     int m_DisplayWidth;
     int m_DisplayHeight;
-    bool m_Windowed;
     AVColorSpace m_LastColorSpace;
     AVColorRange m_LastColorRange;
 
     bool m_AllowTearing;
-    HANDLE m_FrameWaitableObject;
 
     ID3D11PixelShader* m_VideoGenericPixelShader;
     ID3D11PixelShader* m_VideoBt601LimPixelShader;

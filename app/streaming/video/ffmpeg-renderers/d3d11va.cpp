@@ -80,7 +80,6 @@ D3D11VARenderer::D3D11VARenderer()
       m_LastColorSpace(AVCOL_SPC_UNSPECIFIED),
       m_LastColorRange(AVCOL_RANGE_UNSPECIFIED),
       m_AllowTearing(false),
-      m_FrameWaitableObject(nullptr),
       m_VideoGenericPixelShader(nullptr),
       m_VideoBt601LimPixelShader(nullptr),
       m_VideoBt2020LimPixelShader(nullptr),
@@ -127,15 +126,6 @@ D3D11VARenderer::~D3D11VARenderer()
     SAFE_COM_RELEASE(m_OverlayPixelShader);
 
     SAFE_COM_RELEASE(m_RenderTargetView);
-
-    if (m_FrameWaitableObject != nullptr) {
-        CloseHandle(m_FrameWaitableObject);
-    }
-
-    if (m_SwapChain != nullptr && !m_Windowed) {
-        // It's illegal to destroy a full-screen swapchain. Make sure we're in windowed mode.
-        m_SwapChain->SetFullscreenState(FALSE, nullptr);
-    }
     SAFE_COM_RELEASE(m_SwapChain);
 
     if (m_HwFramesContext != nullptr) {
@@ -224,20 +214,13 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     adapter->Release();
     adapter = nullptr;
 
-#if 0
-    m_Windowed = (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != SDL_WINDOW_FULLSCREEN;
-#else
-    // Always use windowed or borderless windowed mode for now. SDL does mode-setting for us
-    // in full-screen exclusive mode, so this actually works out okay.
-    m_Windowed = true;
-#endif
-
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.Stereo = FALSE;
     swapChainDesc.SampleDesc.Count = 1;
     swapChainDesc.SampleDesc.Quality = 0;
     swapChainDesc.BufferUsage = DXGI_USAGE_RENDER_TARGET_OUTPUT;
     swapChainDesc.Scaling = DXGI_SCALING_STRETCH;
+    swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
     swapChainDesc.AlphaMode = DXGI_ALPHA_MODE_UNSPECIFIED;
     swapChainDesc.Flags = 0;
 
@@ -247,42 +230,20 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     //
     // Even though we allocate 3 front buffers for pre-rendered frames,
     // they won't actually increase presentation latency because we
-    // always use SyncInterval 0 which replaces the last one. See
-    // the SetMaximumFrameLatency comment below for more details.
+    // always use SyncInterval 0 which replaces the last one.
+    //
+    // IDXGIDevice1 has a SetMaximumFrameLatency() function, but counter-
+    // intuitively we must avoid it to reduce latency. If we set our max
+    // frame latency to 1 on thedevice, our SyncInterval 0 Present() calls
+    // will block on DWM (acting like SyncInterval 1) rather than doing
+    // the non-blocking present we expect.
     //
     // NB: 3 total buffers seems sufficient on NVIDIA hardware but
     // causes performance issues (buffer starvation) on AMD GPUs.
     swapChainDesc.BufferCount = 3 + 1 + 1;
 
-    DXGI_SWAP_CHAIN_FULLSCREEN_DESC fullScreenDesc = {};
-
-    if (m_Windowed) {
-        // Use the current window size as the swapchain size
-        SDL_GetWindowSize(params->window, (int*)&swapChainDesc.Width, (int*)&swapChainDesc.Height);
-    }
-    else {
-        // Use the current display mode as the swapchain size
-        SDL_DisplayMode sdlMode;
-        if (SDL_GetWindowDisplayMode(params->window, &sdlMode) < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetWindowDisplayMode() failed: %s",
-                         SDL_GetError());
-            return false;
-        }
-
-        swapChainDesc.Width = sdlMode.w;
-        swapChainDesc.Height = sdlMode.h;
-
-        // Leave these unspecified to ensure we don't end up in an inefficient "proxy"
-        // full-screen swapchain with DXGI doing format conversion behind our backs.
-        // https://youtu.be/E3wTajGZOsA?t=1489
-        fullScreenDesc.RefreshRate.Numerator = 0;
-        fullScreenDesc.RefreshRate.Denominator = 0;
-        fullScreenDesc.Scaling = DXGI_MODE_SCALING_UNSPECIFIED;
-        fullScreenDesc.ScanlineOrdering = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED;
-
-        fullScreenDesc.Windowed = FALSE;
-    }
+    // Use the current window size as the swapchain size
+    SDL_GetWindowSize(params->window, (int*)&swapChainDesc.Width, (int*)&swapChainDesc.Height);
 
     m_DisplayWidth = swapChainDesc.Width;
     m_DisplayHeight = swapChainDesc.Height;
@@ -294,41 +255,21 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     }
 
-    // Use DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING with flip mode for non-vsync case, if possible
+    // Use DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING with flip mode for non-vsync case, if possible.
+    // NOTE: This is only possible in windowed or borderless windowed mode.
     if (!params->enableVsync) {
-        // DXGI_PRESENT_ALLOW_TEARING may only be used in windowed mode
-        if (m_Windowed) {
-            BOOL allowTearing = FALSE;
-            hr = m_Factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING,
-                                                &allowTearing,
-                                                sizeof(allowTearing));
-            if (SUCCEEDED(hr)) {
-                // Use flip discard with allow tearing mode if possible.
-                swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
-                swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-                m_AllowTearing = true;
-            }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "GPU driver doesn't support DXGI_FEATURE_PRESENT_ALLOW_TEARING");
-
-                // Without tearing support, we'll have to use regular discard mode to get tearing
-                swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-            }
+        BOOL allowTearing = FALSE;
+        hr = m_Factory->CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING,
+                                            &allowTearing,
+                                            sizeof(allowTearing));
+        if (SUCCEEDED(hr)) {
+            // Use flip discard with allow tearing mode if possible.
+            swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+            m_AllowTearing = true;
         }
         else {
-            // In full-screen exclusive mode, we'll have to use regular discard mode
-            swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
-        }
-    }
-    else {
-        // In V-sync mode, we can always use flip discard
-        swapChainDesc.SwapEffect = DXGI_SWAP_EFFECT_FLIP_DISCARD;
-
-        // We'll use a waitable swapchain to pace frame delivery
-        // NB: We can only use this option in windowed mode (or borderless fullscreen).
-        if (m_Windowed && params->enableFramePacing) {
-            swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT;
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "GPU driver doesn't support DXGI_FEATURE_PRESENT_ALLOW_TEARING");
         }
     }
 
@@ -337,11 +278,13 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     SDL_GetWindowWMInfo(params->window, &info);
     SDL_assert(info.subsystem == SDL_SYSWM_WINDOWS);
 
+    // Always use windowed or borderless windowed mode.. SDL does mode-setting for us in
+    // full-screen exclusive mode (SDL_WINDOW_FULLSCREEN), so this actually works out okay.
     IDXGISwapChain1* swapChain;
     hr = m_Factory->CreateSwapChainForHwnd(m_Device,
                                            info.info.win.window,
                                            &swapChainDesc,
-                                           m_Windowed ? nullptr : &fullScreenDesc,
+                                           nullptr,
                                            nullptr,
                                            &swapChain);
 
@@ -449,29 +392,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    // We have to set the maximum frame latency on waitable swapchains.
-    //
-    // NB: IDXGIDevice1 has a SetMaximumFrameLatency() function, but counterintuitively
-    // we must avoid it to reduce latency. If we set our max frame latency to 1 on the
-    // device, our SyncInterval 0 Present() calls will block on DWM (acting like
-    // SyncInterval 1) rather than doing the non-blocking present we expect.
-    if (swapChainDesc.Flags & DXGI_SWAP_CHAIN_FLAG_FRAME_LATENCY_WAITABLE_OBJECT) {
-        SDL_assert(params->enableVsync);
-        SDL_assert(m_Windowed);
-
-        // We only want one buffered frame on our waitable swapchain to pace properly
-        hr = m_SwapChain->SetMaximumFrameLatency(1);
-        if (FAILED(hr)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "IDXGISwapChain::SetMaximumFrameLatency() failed: %x",
-                         hr);
-            return false;
-        }
-
-        m_FrameWaitableObject = m_SwapChain->GetFrameLatencyWaitableObject();
-        SDL_assert(m_FrameWaitableObject != nullptr);
-    }
-
     return true;
 }
 
@@ -560,23 +480,6 @@ void D3D11VARenderer::setHdrMode(bool enabled)
     unlockContext(this);
 }
 
-void D3D11VARenderer::waitToRender()
-{
-    if (m_FrameWaitableObject != nullptr) {
-        SDL_assert(m_Windowed);
-        SDL_assert(m_DecoderParams.enableVsync);
-        SDL_assert(m_DecoderParams.enableFramePacing);
-
-        // Wait for the pipeline to be ready for the next frame in pacing mode.
-        //
-        // This callback happens before selecting the next frame to render, so
-        // we can wait for the previous frame to finish prior to picking the
-        // next one to display. This reduces the effective display latency
-        // by ensuring we always render the most recent frame immediately.
-        WaitForSingleObjectEx(m_FrameWaitableObject, 500, FALSE);
-    }
-}
-
 void D3D11VARenderer::renderFrame(AVFrame* frame)
 {
     // Acquire the context lock for rendering to prevent concurrent
@@ -603,33 +506,15 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 
     if (m_AllowTearing) {
         SDL_assert(!m_DecoderParams.enableVsync);
-        SDL_assert(m_Windowed);
 
         // If tearing is allowed, use DXGI_PRESENT_ALLOW_TEARING with syncInterval 0.
         // It is not valid to use any other syncInterval values in tearing mode.
         flags = DXGI_PRESENT_ALLOW_TEARING;
     }
-    else if (!m_DecoderParams.enableVsync) {
-        // In any other non-vsync mode, just render with syncInterval 0.
-        // We'll probably have a non-flip swapchain here.
-        flags = 0;
-    }
-    else if (m_FrameWaitableObject != nullptr) {
-        SDL_assert(m_Windowed);
-        SDL_assert(m_DecoderParams.enableVsync);
-        SDL_assert(m_DecoderParams.enableFramePacing);
-
-        // With frame pacing, we'll have a waitable swapchain, so we can
-        // use syncInterval 0 and the wait will sync us with VBlank.
-        flags = 0;
-    }
     else {
-        SDL_assert(m_DecoderParams.enableVsync);
-        SDL_assert(!m_DecoderParams.enableFramePacing);
-        SDL_assert(m_FrameWaitableObject == nullptr);
-
-        // With vsync enabled but frame pacing disabled, we'll submit as
-        // fast as possible and DWM will discard excess frames for us.
+        // Otherwise, we'll submit as fast as possible and DWM will discard excess
+        // frames for us. If frame pacing is also enabled, our Vsync source will keep
+        // us in sync with VBlank.
         flags = 0;
     }
 
@@ -1046,8 +931,8 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
 
 int D3D11VARenderer::getRendererAttributes()
 {
-    // This renderer supports HDR and can frame pace with waitToRender()
-    return RENDERER_ATTRIBUTE_HDR_SUPPORT | RENDERER_ATTRIBUTE_SELF_PACING;
+    // This renderer supports HDR
+    return RENDERER_ATTRIBUTE_HDR_SUPPORT;
 }
 
 void D3D11VARenderer::lockContext(void *lock_ctx)
