@@ -1004,6 +1004,9 @@ void Session::updateOptimalWindowDisplayMode()
     bestMode.refresh_rate = 0;
     for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
         if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Detected display mode: %dx%dx%d",
+                        mode.w, mode.h, mode.refresh_rate);
             if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
                     mode.refresh_rate % m_StreamConfig.fps == 0) {
                 if (mode.refresh_rate > bestMode.refresh_rate) {
@@ -1013,18 +1016,23 @@ void Session::updateOptimalWindowDisplayMode()
         }
     }
 
-    // For KMSDRM backends where we exclusively own the display, we should opt
-    // to change the resolution if that allows us to hit the desired frame rate
-    if (bestMode.refresh_rate == 0 && strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
+    // If we didn't find a mode that matched the current resolution and
+    // had a high enough refresh rate, start looking for lower resolution
+    // modes that can meet the required refresh rate and minimum video
+    // resolution. We will also try to pick a display mode that matches
+    // aspect ratio closest to the video stream.
+    if (bestMode.refresh_rate == 0) {
+        float bestModeAspectRatio = 0;
+        float videoAspectRatio = (float)m_ActiveVideoWidth / (float)m_ActiveVideoHeight;
         for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
             if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Detected display mode: %dx%dx%d",
-                            mode.w, mode.h, mode.refresh_rate);
+                float modeAspectRatio = (float)mode.w / (float)mode.h;
                 if (mode.w >= m_ActiveVideoWidth && mode.h >= m_ActiveVideoHeight &&
                         mode.refresh_rate % m_StreamConfig.fps == 0) {
-                    if (mode.refresh_rate > bestMode.refresh_rate) {
+                    if (mode.refresh_rate >= bestMode.refresh_rate &&
+                            (bestModeAspectRatio == 0 || fabs(videoAspectRatio - modeAspectRatio) <= fabs(videoAspectRatio - bestModeAspectRatio))) {
                         bestMode = mode;
+                        bestModeAspectRatio = modeAspectRatio;
                     }
                 }
             }
