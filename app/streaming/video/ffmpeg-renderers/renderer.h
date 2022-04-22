@@ -21,6 +21,7 @@ extern "C" {
 #ifndef EGL_VERSION_1_5
 typedef intptr_t EGLAttrib;
 typedef void *EGLImage;
+typedef khronos_utime_nanoseconds_t EGLTime;
 
 typedef void *EGLSync;
 #define EGL_NO_SYNC                       ((EGLSync)0)
