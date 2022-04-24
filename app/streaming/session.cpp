@@ -1004,11 +1004,11 @@ void Session::updateOptimalWindowDisplayMode()
     bestMode.refresh_rate = 0;
     for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
         if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected display mode: %dx%dx%d",
-                        mode.w, mode.h, mode.refresh_rate);
             if (mode.w == desktopMode.w && mode.h == desktopMode.h &&
                     mode.refresh_rate % m_StreamConfig.fps == 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Found display mode with desktop resolution: %dx%dx%d",
+                            mode.w, mode.h, mode.refresh_rate);
                 if (mode.refresh_rate > bestMode.refresh_rate) {
                     bestMode = mode;
                 }
@@ -1029,6 +1029,9 @@ void Session::updateOptimalWindowDisplayMode()
                 float modeAspectRatio = (float)mode.w / (float)mode.h;
                 if (mode.w >= m_ActiveVideoWidth && mode.h >= m_ActiveVideoHeight &&
                         mode.refresh_rate % m_StreamConfig.fps == 0) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Found display mode with video resolution: %dx%dx%d",
+                                mode.w, mode.h, mode.refresh_rate);
                     if (mode.refresh_rate >= bestMode.refresh_rate &&
                             (bestModeAspectRatio == 0 || fabs(videoAspectRatio - modeAspectRatio) <= fabs(videoAspectRatio - bestModeAspectRatio))) {
                         bestMode = mode;
@@ -1045,7 +1048,7 @@ void Session::updateOptimalWindowDisplayMode()
         // divide our FPS setting). We'll stick to the default in
         // this case.
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "No matching refresh rate found; using desktop mode");
+                    "No matching display mode found; using desktop mode");
         bestMode = desktopMode;
     }
 
