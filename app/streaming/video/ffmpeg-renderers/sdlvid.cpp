@@ -91,8 +91,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     Uint32 rendererFlags = SDL_RENDERER_ACCELERATED;
 
     m_VideoFormat = params->videoFormat;
-    m_VideoWidth = params->width;
-    m_VideoHeight = params->height;
 
     if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
         // SDL doesn't support rendering YUV 10-bit textures yet
@@ -141,8 +139,18 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_FlushEvent(SDL_WINDOWEVENT);
     }
 
-    // Set the renderer viewport to draw the video while preserving aspect ratio
-    updateViewport();
+    // Calculate the video region size, scaling to fill the output size while
+    // preserving the aspect ratio of the video stream.
+    SDL_Rect src, dst;
+    src.x = src.y = 0;
+    src.w = params->width;
+    src.h = params->height;
+    dst.x = dst.y = 0;
+    SDL_GetRendererOutputSize(m_Renderer, &dst.w, &dst.h);
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    // Ensure the viewport is set to the desired video region
+    SDL_RenderSetViewport(m_Renderer, &dst);
 
     // Draw a black frame until the video stream starts rendering
     SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -329,22 +337,6 @@ AVFrame* SdlRenderer::getSwFrameFromHwFrame(AVFrame* hwFrame)
     }
 
     return swFrame;
-}
-
-void SdlRenderer::updateViewport()
-{
-    // Calculate the video region size, scaling to fill the output size while
-    // preserving the aspect ratio of the video stream.
-    SDL_Rect src, dst;
-    src.x = src.y = 0;
-    src.w = m_VideoWidth;
-    src.h = m_VideoHeight;
-    dst.x = dst.y = 0;
-    SDL_GetRendererOutputSize(m_Renderer, &dst.w, &dst.h);
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-    // Ensure the viewport is set to the desired video region
-    SDL_RenderSetViewport(m_Renderer, &dst);
 }
 
 void SdlRenderer::renderFrame(AVFrame* frame)
@@ -587,14 +579,4 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
     }
 
     return true;
-}
-
-bool SdlRenderer::applyWindowChange(int, int, int flags)
-{
-    if (flags == WINDOW_SIZE_CHANGED) {
-        updateViewport();
-        return true;
-    }
-
-    return false;
 }
