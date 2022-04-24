@@ -16,13 +16,17 @@ public:
     virtual bool isRenderThreadSupported() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
+    virtual bool applyWindowChange(int width, int height, int flags) override;
 
 private:
     void renderOverlay(Overlay::OverlayType type);
     bool initializeReadBackFormat(AVBufferRef* hwFrameCtxRef, AVFrame* testFrame);
     AVFrame* getSwFrameFromHwFrame(AVFrame* hwFrame);
+    void updateViewport();
 
     int m_VideoFormat;
+    int m_VideoWidth;
+    int m_VideoHeight;
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
     enum AVPixelFormat m_SwPixelFormat;

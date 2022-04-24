@@ -68,6 +68,11 @@ void FFmpegVideoDecoder::setHdrMode(bool enabled)
     m_FrontendRenderer->setHdrMode(enabled);
 }
 
+bool FFmpegVideoDecoder::applyWindowChange(int width, int height, int flags)
+{
+    return m_FrontendRenderer->applyWindowChange(width, height, flags);
+}
+
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
     int capabilities = m_BackendRenderer->getDecoderCapabilities();

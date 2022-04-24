@@ -167,6 +167,12 @@ public:
         return true;
     }
 
+    virtual bool applyWindowChange(int, int, int) {
+        // By default, we cannot apply any changes. The renderer
+        // will be recreated after any window change.
+        return false;
+    }
+
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) {
         if (videoFormat == VIDEO_FORMAT_H265_MAIN10) {
             // 10-bit YUV 4:2:0

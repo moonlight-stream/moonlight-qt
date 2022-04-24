@@ -58,6 +58,11 @@ typedef struct _DECODER_PARAMETERS {
     HDR_MASTERING_METADATA hdrMetadata;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 
+
+// Flags for applyWindowChange()
+#define WINDOW_SIZE_CHANGED 0x01
+#define WINDOW_DISPLAY_CHANGED 0x02
+
 class IVideoDecoder {
 public:
     virtual ~IVideoDecoder() {}
@@ -71,4 +76,5 @@ public:
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual void renderFrameOnMainThread() = 0;
     virtual void setHdrMode(bool enabled) = 0;
+    virtual bool applyWindowChange(int width, int height, int flags) = 0;
 };

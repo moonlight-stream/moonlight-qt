@@ -1640,6 +1640,50 @@ void Session::execInternal()
                 break;
             }
 
+            // If we have a window size or display change, ask the decoder if it can apply the change
+            if (m_VideoDecoder != nullptr &&
+                    (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED || SDL_GetWindowDisplayIndex(m_Window) != currentDisplayIndex)) {
+                int width, height;
+                bool handled;
+                int flags = 0;
+
+                // If this is a resize, use the new width and height from the event itself
+                if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    flags |= WINDOW_SIZE_CHANGED;
+                    width = event.window.data1;
+                    height = event.window.data2;
+                }
+                else {
+                    SDL_GetWindowSize(m_Window, &width, &height);
+                }
+
+                if (SDL_GetWindowDisplayIndex(m_Window) != currentDisplayIndex) {
+                    flags |= WINDOW_DISPLAY_CHANGED;
+                }
+
+                // See if the decoder can apply this change
+                SDL_AtomicLock(&m_DecoderLock);
+                handled = m_VideoDecoder->applyWindowChange(width, height, flags);
+                SDL_AtomicUnlock(&m_DecoderLock);
+
+                // If it did, we don't need to recreate the decoder
+                if (handled) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Applied seamless window change: %x", flags);
+
+                    if (currentDisplayIndex != SDL_GetWindowDisplayIndex(m_Window)) {
+                        // Update the window display mode based on our current monitor
+                        currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+                        updateOptimalWindowDisplayMode();
+                    }
+
+                    // After a window resize, we need to reset the pointer lock region
+                    m_InputHandler->updatePointerRegionLock();
+
+                    break;
+                }
+            }
+
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Recreating renderer for window event: %d (%d %d)",
                         event.window.event,
@@ -1661,9 +1705,11 @@ void Session::execInternal()
             // important events to be lost.
             flushWindowEvents();
 
-            // Update the window display mode based on our current monitor
-            currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
-            updateOptimalWindowDisplayMode();
+            if (currentDisplayIndex != SDL_GetWindowDisplayIndex(m_Window)) {
+                // Update the window display mode based on our current monitor
+                currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+                updateOptimalWindowDisplayMode();
+            }
 
             // Now that the old decoder is dead, flush any events it may
             // have queued to reset itself (if this reset was the result

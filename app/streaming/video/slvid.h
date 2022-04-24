@@ -26,6 +26,11 @@ public:
         return false;
     }
 
+    // SLVideo cannot apply any window changes (nor do we expect any)
+    virtual bool applyWindowChange(int, int, int) override {
+        return false;
+    }
+
 private:
     static void slLogCallback(void* context, ESLVideoLog logLevel, const char* message);
 
