@@ -643,6 +643,9 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     // in a separate thread with this device.
     int deviceFlags = D3DCREATE_MULTITHREADED;
 
+    // We don't need D3D to mess with our window at all. SDL does that.
+    deviceFlags |= D3DCREATE_NOWINDOWCHANGES;
+
     if (deviceCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT) {
         deviceFlags |= D3DCREATE_HARDWARE_VERTEXPROCESSING;
     }
