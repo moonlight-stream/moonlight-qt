@@ -1662,8 +1662,11 @@ void Session::execInternal()
             flushWindowEvents();
 
             // Update the window display mode based on our current monitor
-            currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
-            updateOptimalWindowDisplayMode();
+            // NB: Avoid a useless modeset by only doing this if it changed.
+            if (currentDisplayIndex != SDL_GetWindowDisplayIndex(m_Window)) {
+                currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+                updateOptimalWindowDisplayMode();
+            }
 
             // Now that the old decoder is dead, flush any events it may
             // have queued to reset itself (if this reset was the result
