@@ -269,6 +269,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
     settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
+    settings.setValue(SER_KEEPAWAKE, keepAwake);
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
