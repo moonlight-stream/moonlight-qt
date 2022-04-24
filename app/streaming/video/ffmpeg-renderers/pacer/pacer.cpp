@@ -72,8 +72,10 @@ void Pacer::renderOnMainThread()
     m_FrameQueueLock.lock();
 
     if (!m_RenderQueue.isEmpty()) {
-        // Releases m_FrameQueueLock
-        renderLastFrameAndUnlock();
+        AVFrame* frame = m_RenderQueue.dequeue();
+        m_FrameQueueLock.unlock();
+
+        renderFrame(frame);
     }
     else {
         m_FrameQueueLock.unlock();
@@ -109,9 +111,10 @@ int Pacer::renderThread(void* context)
             break;
         }
 
-        // Render the latest frame and discard the others
-        // NB: m_FrameQueueLock still held here!
-        me->renderLastFrameAndUnlock();
+        AVFrame* frame = me->m_RenderQueue.dequeue();
+        me->m_FrameQueueLock.unlock();
+
+        me->renderFrame(frame);
     }
 
     // Notify the renderer that it is being destroyed soon
@@ -139,33 +142,6 @@ void Pacer::enqueueFrameForRenderingAndUnlock(AVFrame *frame)
         event.user.code = SDL_CODE_FRAME_READY;
         SDL_PushEvent(&event);
     }
-}
-
-// Caller must hold m_FrameQueueLock
-void Pacer::renderLastFrameAndUnlock()
-{
-    // Dequeue the most recent frame for rendering and free the others.
-    AVFrame* lastFrame = nullptr;
-    while (!m_RenderQueue.isEmpty()) {
-        if (lastFrame != nullptr) {
-            // Don't hold the frame queue lock across av_frame_free(),
-            // since it could need to talk to the GPU driver. This is safe
-            // because we're guaranteed that the queue will not shrink during
-            // this time (and so dequeue() below will always get something).
-            m_FrameQueueLock.unlock();
-            av_frame_free(&lastFrame);
-            m_VideoStats->pacerDroppedFrames++;
-            m_FrameQueueLock.lock();
-        }
-
-        lastFrame = m_RenderQueue.dequeue();
-    }
-
-    // Release the frame queue lock before rendering
-    m_FrameQueueLock.unlock();
-
-    // Render and free the mot current frame
-    renderFrame(lastFrame);
 }
 
 // Called in an arbitrary thread by the IVsyncSource on V-sync
