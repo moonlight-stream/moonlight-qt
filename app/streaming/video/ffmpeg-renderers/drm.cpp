@@ -443,6 +443,9 @@ int DrmRenderer::getRendererAttributes()
     // This renderer supports HDR
     attributes |= RENDERER_ATTRIBUTE_HDR_SUPPORT;
 
+    // This renderer does not buffer any frames in the graphics pipeline
+    attributes |= RENDERER_ATTRIBUTE_NO_BUFFERING;
+
     return attributes;
 }
 

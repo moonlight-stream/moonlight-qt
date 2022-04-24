@@ -581,8 +581,8 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
     }
     else {
         // Otherwise, we'll submit as fast as possible and DWM will discard excess
-        // frames for us. If frame pacing is also enabled, our Vsync source will keep
-        // us in sync with VBlank.
+        // frames for us. If frame pacing is also enabled or we're in full-screen,
+        // our Vsync source will keep us in sync with VBlank.
         flags = 0;
     }
 
@@ -993,8 +993,19 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
 
 int D3D11VARenderer::getRendererAttributes()
 {
+    int attributes = 0;
+
     // This renderer supports HDR
-    return RENDERER_ATTRIBUTE_HDR_SUPPORT;
+    attributes |= RENDERER_ATTRIBUTE_HDR_SUPPORT;
+
+    // This renderer requires frame pacing to synchronize with VBlank when we're
+    // in full-screen. In windowed mode, we will render as fast we can and DWM
+    // will grab whatever is latest at the time unless the user opts for pacing.
+    if (SDL_GetWindowFlags(m_DecoderParams.window) & SDL_WINDOW_FULLSCREEN) {
+        attributes |= RENDERER_ATTRIBUTE_FORCE_PACING;
+    }
+
+    return attributes;
 }
 
 bool D3D11VARenderer::needsTestFrame()
