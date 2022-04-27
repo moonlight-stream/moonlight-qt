@@ -182,11 +182,13 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* indexWa
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDXGIAdapter::GetDesc() failed: %x",
                      hr);
+        adapter->Release();
         return false;
     }
 
     if (adapterDesc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
         // Skip the WARP device
+        adapter->Release();
         return false;
     }
 
@@ -283,6 +285,8 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
 
         if (invalidIndex) {
+            SDL_assert(m_Device == nullptr);
+            SDL_assert(m_DeviceContext == nullptr);
             return false;
         }
     }
