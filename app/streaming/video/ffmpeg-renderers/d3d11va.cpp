@@ -1002,6 +1002,15 @@ int D3D11VARenderer::getRendererAttributes()
     return RENDERER_ATTRIBUTE_HDR_SUPPORT;
 }
 
+bool D3D11VARenderer::needsTestFrame()
+{
+    // We can usually determine when D3D11VA will work based on which decoder GUIDs are supported,
+    // however there are some strange cases (Quadro P400 + Radeon HD 5570) where something goes
+    // horribly wrong and D3D11VideoDevice::CreateVideoDecoder() fails inside FFmpeg. We need to
+    // catch that case before we commit to using D3D11VA.
+    return true;
+}
+
 void D3D11VARenderer::lockContext(void *lock_ctx)
 {
     auto me = (D3D11VARenderer*)lock_ctx;
