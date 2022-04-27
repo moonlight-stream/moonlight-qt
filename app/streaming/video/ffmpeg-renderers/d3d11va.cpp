@@ -144,6 +144,95 @@ D3D11VARenderer::~D3D11VARenderer()
     SAFE_COM_RELEASE(m_Factory);
 }
 
+bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* indexWasInvalid)
+{
+    IDXGIAdapter1* adapter;
+    HRESULT hr;
+
+    SDL_assert(m_Device == nullptr);
+    SDL_assert(m_DeviceContext == nullptr);
+
+    // If we fail in EnumAdapters(), assume it was an invalid index.
+    // Even if it wasn't, there's a good chance it will result in an
+    // infinite loop if we don't treat it like one anyway.
+    if (indexWasInvalid != nullptr) {
+        *indexWasInvalid = true;
+    }
+
+    hr = m_Factory->EnumAdapters1(adapterIndex, &adapter);
+    if (hr == DXGI_ERROR_NOT_FOUND) {
+        // Expected at the end of enumeration
+        return false;
+    }
+    else if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "IDXGIFactory::EnumAdapters1() failed: %x",
+                     hr);
+        return false;
+    }
+
+    // From now on, we know the adapter was valid
+    if (indexWasInvalid != nullptr) {
+        *indexWasInvalid = false;
+    }
+
+    DXGI_ADAPTER_DESC1 adapterDesc;
+    hr = adapter->GetDesc1(&adapterDesc);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "IDXGIAdapter::GetDesc() failed: %x",
+                     hr);
+        return false;
+    }
+
+    if (adapterDesc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
+        // Skip the WARP device
+        return false;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Detected GPU %d: %S (%x:%x)",
+                adapterIndex,
+                adapterDesc.Description,
+                adapterDesc.VendorId,
+                adapterDesc.DeviceId);
+
+    hr = D3D11CreateDevice(adapter,
+                           D3D_DRIVER_TYPE_UNKNOWN,
+                           nullptr,
+                           D3D11_CREATE_DEVICE_VIDEO_SUPPORT
+                       #ifdef QT_DEBUG
+                               | D3D11_CREATE_DEVICE_DEBUG
+                       #endif
+                           ,
+                           nullptr,
+                           0,
+                           D3D11_SDK_VERSION,
+                           &m_Device,
+                           nullptr,
+                           &m_DeviceContext);
+    if (FAILED(hr)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "D3D11CreateDevice() failed: %x",
+                     hr);
+        adapter->Release();
+        return false;
+    }
+
+    if (!checkDecoderSupport(adapter)) {
+        m_DeviceContext->Release();
+        m_DeviceContext = nullptr;
+        m_Device->Release();
+        m_Device = nullptr;
+
+        adapter->Release();
+        return false;
+    }
+
+    adapter->Release();
+    return true;
+}
+
 bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 {
     int adapterIndex, outputIndex;
@@ -175,44 +264,28 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    IDXGIAdapter* adapter;
-    hr = m_Factory->EnumAdapters(adapterIndex, &adapter);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "IDXGIFactory::EnumAdapters() failed: %x",
-                     hr);
-        return false;
-    }
+    // First try the adapter corresponding to the display where our window resides.
+    // This will let us avoid a copy if the display GPU has the required decoder.
+    if (!createDeviceByAdapterIndex(adapterIndex)) {
+        // If that didn't work, we'll try all GPUs in order until we find one
+        // or run out of GPUs (DXGI_ERROR_NOT_FOUND from EnumAdapters())
+        bool invalidIndex = false;
+        for (int i = 0; !invalidIndex; i++) {
+            if (i == adapterIndex) {
+                // Don't try the same GPU again
+                continue;
+            }
 
-    hr = D3D11CreateDevice(adapter,
-                           D3D_DRIVER_TYPE_UNKNOWN,
-                           nullptr,
-                           D3D11_CREATE_DEVICE_VIDEO_SUPPORT
-                       #ifdef QT_DEBUG
-                               | D3D11_CREATE_DEVICE_DEBUG
-                       #endif
-                           ,
-                           nullptr,
-                           0,
-                           D3D11_SDK_VERSION,
-                           &m_Device,
-                           nullptr,
-                           &m_DeviceContext);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "D3D11CreateDevice() failed: %x",
-                     hr);
-        adapter->Release();
-        return false;
-    }
+            if (createDeviceByAdapterIndex(i, &invalidIndex)) {
+                // This GPU worked! Continue initialization.
+                break;
+            }
+        }
 
-    if (!checkDecoderSupport(adapter)) {
-        adapter->Release();
-        return false;
+        if (invalidIndex) {
+            return false;
+        }
     }
-
-    adapter->Release();
-    adapter = nullptr;
 
     DXGI_SWAP_CHAIN_DESC1 swapChainDesc = {};
     swapChainDesc.Stereo = FALSE;
@@ -912,12 +985,6 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
                      hr);
         return false;
     }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Detected GPU: %S (%x:%x)",
-                adapterDesc.Description,
-                adapterDesc.VendorId,
-                adapterDesc.DeviceId);
 
     if (DXUtil::isFormatHybridDecodedByHardware(m_DecoderParams.videoFormat, adapterDesc.VendorId, adapterDesc.DeviceId)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
