@@ -34,7 +34,7 @@ private:
     void bindColorConversion(AVFrame* frame);
     void renderVideo(AVFrame* frame);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
-    bool createDeviceByAdapterIndex(int adapterIndex, bool* indexWasInvalid = nullptr);
+    bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
 
     IDXGIFactory5* m_Factory;
     ID3D11Device* m_Device;

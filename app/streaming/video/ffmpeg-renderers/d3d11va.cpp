@@ -144,52 +144,39 @@ D3D11VARenderer::~D3D11VARenderer()
     SAFE_COM_RELEASE(m_Factory);
 }
 
-bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* indexWasInvalid)
+bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
 {
-    IDXGIAdapter1* adapter;
+    bool success = false;
+    IDXGIAdapter1* adapter = nullptr;
+    DXGI_ADAPTER_DESC1 adapterDesc;
     HRESULT hr;
 
     SDL_assert(m_Device == nullptr);
     SDL_assert(m_DeviceContext == nullptr);
 
-    // If we fail in EnumAdapters(), assume it was an invalid index.
-    // Even if it wasn't, there's a good chance it will result in an
-    // infinite loop if we don't treat it like one anyway.
-    if (indexWasInvalid != nullptr) {
-        *indexWasInvalid = true;
-    }
-
     hr = m_Factory->EnumAdapters1(adapterIndex, &adapter);
     if (hr == DXGI_ERROR_NOT_FOUND) {
         // Expected at the end of enumeration
-        return false;
+        goto Exit;
     }
     else if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDXGIFactory::EnumAdapters1() failed: %x",
                      hr);
-        return false;
+        goto Exit;
     }
 
-    // From now on, we know the adapter was valid
-    if (indexWasInvalid != nullptr) {
-        *indexWasInvalid = false;
-    }
-
-    DXGI_ADAPTER_DESC1 adapterDesc;
     hr = adapter->GetDesc1(&adapterDesc);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDXGIAdapter::GetDesc() failed: %x",
                      hr);
-        adapter->Release();
-        return false;
+        goto Exit;
     }
 
     if (adapterDesc.Flags & DXGI_ADAPTER_FLAG_SOFTWARE) {
-        // Skip the WARP device
-        adapter->Release();
-        return false;
+        // Skip the WARP device. We know it will fail.
+        goto Exit;
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -217,8 +204,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* indexWa
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D11CreateDevice() failed: %x",
                      hr);
-        adapter->Release();
-        return false;
+        goto Exit;
     }
 
     if (!checkDecoderSupport(adapter)) {
@@ -227,12 +213,17 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* indexWa
         m_Device->Release();
         m_Device = nullptr;
 
-        adapter->Release();
-        return false;
+        goto Exit;
     }
 
-    adapter->Release();
-    return true;
+    success = true;
+
+Exit:
+    if (adapterNotFound != nullptr) {
+        *adapterNotFound = (adapter == nullptr);
+    }
+    SAFE_COM_RELEASE(adapter);
+    return success;
 }
 
 bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
@@ -271,20 +262,20 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     if (!createDeviceByAdapterIndex(adapterIndex)) {
         // If that didn't work, we'll try all GPUs in order until we find one
         // or run out of GPUs (DXGI_ERROR_NOT_FOUND from EnumAdapters())
-        bool invalidIndex = false;
-        for (int i = 0; !invalidIndex; i++) {
+        bool adapterNotFound = false;
+        for (int i = 0; !adapterNotFound; i++) {
             if (i == adapterIndex) {
                 // Don't try the same GPU again
                 continue;
             }
 
-            if (createDeviceByAdapterIndex(i, &invalidIndex)) {
+            if (createDeviceByAdapterIndex(i, &adapterNotFound)) {
                 // This GPU worked! Continue initialization.
                 break;
             }
         }
 
-        if (invalidIndex) {
+        if (adapterNotFound) {
             SDL_assert(m_Device == nullptr);
             SDL_assert(m_DeviceContext == nullptr);
             return false;
