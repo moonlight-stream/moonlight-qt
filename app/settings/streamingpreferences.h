@@ -88,6 +88,8 @@ public:
         LANG_EL,
         LANG_IT,
         LANG_HI,
+        LANG_PL,
+        LANG_CS,
     };
     Q_ENUM(Language);
 
