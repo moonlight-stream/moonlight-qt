@@ -54,6 +54,11 @@ macx {
     INCLUDEPATH += $$PWD/../libs/mac/Frameworks/SDL2.framework/Versions/A/Headers
     INCLUDEPATH += $$PWD/../libs/mac/Frameworks/SDL2_ttf.framework/Versions/A/Headers
     LIBS += -L$$PWD/../libs/mac/lib -F$$PWD/../libs/mac/Frameworks
+
+    # QMake doesn't handle framework-style includes correctly on its own
+    QMAKE_CFLAGS += -F$$PWD/../libs/mac/Frameworks
+    QMAKE_CXXFLAGS += -F$$PWD/../libs/mac/Frameworks
+    QMAKE_OBJECTIVE_CFLAGS += -F$$PWD/../libs/mac/Frameworks
 }
 
 unix:!macx {
