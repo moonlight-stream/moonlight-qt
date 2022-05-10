@@ -11,6 +11,8 @@
 #include <SDL_syswm.h>
 #include <VersionHelpers.h>
 
+#include <dwmapi.h>
+
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
 typedef struct _VERTEX
@@ -95,10 +97,14 @@ D3D11VARenderer::D3D11VARenderer()
     RtlZeroMemory(m_VideoTextureResourceViews, sizeof(m_VideoTextureResourceViews));
 
     m_ContextLock = SDL_CreateMutex();
+
+    DwmEnableMMCSS(TRUE);
 }
 
 D3D11VARenderer::~D3D11VARenderer()
 {
+    DwmEnableMMCSS(FALSE);
+
     SDL_DestroyMutex(m_ContextLock);
 
     SAFE_COM_RELEASE(m_VideoVertexBuffer);
