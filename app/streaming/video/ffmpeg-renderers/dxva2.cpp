@@ -601,11 +601,19 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         // If composition enabled, disable v-sync and let DWM manage things
         // to reduce latency by avoiding double v-syncing.
         d3dpp.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-
-        // D3DSWAPEFFECT_FLIPEX requires at least 2 back buffers to allow us to
-        // continue while DWM is waiting to render the surface to the display.
         d3dpp.SwapEffect = D3DSWAPEFFECT_FLIPEX;
-        d3dpp.BackBufferCount = 2;
+
+        if (enableVsync) {
+            // D3DSWAPEFFECT_FLIPEX requires at least 3 back buffers to allow us to
+            // continue while DWM is waiting to render the surface to the display.
+            // NVIDIA seems to be fine with 2, but AMD needs 3 to perform well.
+            d3dpp.BackBufferCount = 3;
+        }
+        else {
+            // With V-sync off, we need 1 more back buffer to render to while the
+            // driver/DWM are holding the others.
+            d3dpp.BackBufferCount = 4;
+        }
 
         m_BlockingPresent = false;
 
