@@ -321,6 +321,12 @@ public:
                         }
                     }
                 }
+                else {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "No HEVC Main10 support on macOS GPUFamily1 GPUs");
+                    [device release];
+                    return false;
+                }
 
                 [device release];
             }
