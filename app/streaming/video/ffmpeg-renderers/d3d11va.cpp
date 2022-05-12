@@ -337,13 +337,21 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
                                             &allowTearing,
                                             sizeof(allowTearing));
         if (SUCCEEDED(hr)) {
-            // Use flip discard with allow tearing mode if possible.
-            swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
-            m_AllowTearing = true;
+            if (allowTearing) {
+                // Use flip discard with allow tearing mode if possible.
+                swapChainDesc.Flags |= DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING;
+                m_AllowTearing = true;
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "OS/GPU doesn't support DXGI_FEATURE_PRESENT_ALLOW_TEARING");
+            }
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "GPU driver doesn't support DXGI_FEATURE_PRESENT_ALLOW_TEARING");
+                         "IDXGIFactory::CheckFeatureSupport(DXGI_FEATURE_PRESENT_ALLOW_TEARING) failed: %x",
+                         hr);
+            // Non-fatal
         }
     }
 
