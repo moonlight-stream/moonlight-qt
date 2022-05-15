@@ -1012,10 +1012,11 @@ int D3D11VARenderer::getRendererAttributes()
     // This renderer supports HDR
     attributes |= RENDERER_ATTRIBUTE_HDR_SUPPORT;
 
-    // This renderer requires frame pacing to synchronize with VBlank when we're
-    // in full-screen. In windowed mode, we will render as fast we can and DWM
-    // will grab whatever is latest at the time unless the user opts for pacing.
-    if (SDL_GetWindowFlags(m_DecoderParams.window) & SDL_WINDOW_FULLSCREEN) {
+    // This renderer requires frame pacing to synchronize with VBlank when we're in full-screen.
+    // In windowed mode, we will render as fast we can and DWM will grab whatever is latest at the
+    // time unless the user opts for pacing. We will use pacing in full-screen mode and normal DWM
+    // sequencing in full-screen desktop mode to behave similarly to the DXVA2 renderer.
+    if ((SDL_GetWindowFlags(m_DecoderParams.window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
         attributes |= RENDERER_ATTRIBUTE_FORCE_PACING;
     }
 
