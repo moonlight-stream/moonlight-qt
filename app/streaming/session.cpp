@@ -1653,6 +1653,12 @@ void Session::execInternal()
         case SDL_RENDER_DEVICE_RESET:
         case SDL_RENDER_TARGETS_RESET:
 
+            if (event.type != SDL_WINDOWEVENT) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Recreating renderer by internal request: %d",
+                            event.type);
+            }
+
             SDL_AtomicLock(&m_DecoderLock);
 
             // Destroy the old decoder

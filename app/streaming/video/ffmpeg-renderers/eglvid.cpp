@@ -893,6 +893,18 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
         if (!specialize()) {
             m_EGLImagePixelFormat = AV_PIX_FMT_NONE;
+
+            // Failure to specialize is fatal. We must reset the renderer
+            // to recover successfully.
+            //
+            // Note: This seems to be easy to trigger when transitioning from
+            // maximized mode by dragging the window down on GNOME 42 using
+            // XWayland. Other strategies like calling glGetError() don't seem
+            // to be able to detect this situation for some reason.
+            SDL_Event event;
+            event.type = SDL_RENDER_TARGETS_RESET;
+            SDL_PushEvent(&event);
+
             return;
         }
     }
