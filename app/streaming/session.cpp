@@ -1605,9 +1605,17 @@ void Session::execInternal()
                 // Check that the window display hasn't changed. If it has, we want
                 // to recreate the decoder to allow it to adapt to the new display.
                 // This will allow Pacer to pull the new display refresh rate.
+#if SDL_VERSION_ATLEAST(2, 0, 18)
+                // On SDL 2.0.18+, there's an event for this specific situation
+                if (event.window.event != SDL_WINDOWEVENT_DISPLAY_CHANGED) {
+                    break;
+                }
+#else
+                // Prior to SDL 2.0.18, we must check the display index for each window event
                 if (SDL_GetWindowDisplayIndex(m_Window) == currentDisplayIndex) {
                     break;
                 }
+#endif
             }
 #ifdef Q_OS_WIN32
             // We can get a resize event after being minimized. Recreating the renderer at that time can cause
