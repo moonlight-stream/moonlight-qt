@@ -1,4 +1,5 @@
 #include "streamingpreferences.h"
+#include "utils.h"
 
 #include <QSettings>
 #include <QTranslator>
@@ -44,7 +45,7 @@
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
 
-#define CURRENT_DEFAULT_VER 1
+#define CURRENT_DEFAULT_VER 2
 
 StreamingPreferences::StreamingPreferences(QObject *parent)
     : QObject(parent),
@@ -69,7 +70,13 @@ void StreamingPreferences::reload()
 #ifdef Q_OS_DARWIN
     recommendedFullScreenMode = WindowMode::WM_FULLSCREEN_DESKTOP;
 #else
-    recommendedFullScreenMode = WindowMode::WM_FULLSCREEN;
+    // Wayland doesn't support modesetting, so use fullscreen desktop mode.
+    if (WMUtils::isRunningWayland()) {
+        recommendedFullScreenMode = WindowMode::WM_FULLSCREEN_DESKTOP;
+    }
+    else {
+        recommendedFullScreenMode = WindowMode::WM_FULLSCREEN;
+    }
 #endif
 
     width = settings.value(SER_WIDTH, 1280).toInt();
@@ -117,13 +124,18 @@ void StreamingPreferences::reload()
 
 
     // Perform default settings updates as required based on last default version
-    if (defaultVer == 0) {
+    if (defaultVer < 1) {
 #ifdef Q_OS_DARWIN
         // Update window mode setting on macOS from full-screen (old default) to borderless windowed (new default)
         if (windowMode == WindowMode::WM_FULLSCREEN) {
             windowMode = WindowMode::WM_FULLSCREEN_DESKTOP;
         }
 #endif
+    }
+    if (defaultVer < 2) {
+        if (windowMode == WindowMode::WM_FULLSCREEN && WMUtils::isRunningWayland()) {
+            windowMode = WindowMode::WM_FULLSCREEN_DESKTOP;
+        }
     }
 }
 
