@@ -130,6 +130,12 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected pointer region lock toggle combo");
         m_PointerRegionLockActive = !m_PointerRegionLockActive;
+
+        // Remember that the user changed this manually, so we don't mess with it anymore
+        // during windowed <-> full-screen transitions.
+        m_PointerRegionLockToggledByUser = true;
+
+        // Apply the new region lock
         updatePointerRegionLock();
         break;
 

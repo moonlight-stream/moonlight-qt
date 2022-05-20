@@ -22,6 +22,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
       m_MouseWasInVideoRegion(false),
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_PointerRegionLockActive(false),
+      m_PointerRegionLockToggledByUser(false),
       m_FakeCaptureActive(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
       m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
@@ -339,27 +340,11 @@ void SdlInputHandler::updateKeyboardGrabState()
     // Don't close the window on Alt+F4 when keyboard grab is enabled
     SDL_SetHint(SDL_HINT_WINDOWS_NO_CLOSE_ON_ALT_F4, shouldGrab ? "1" : "0");
 
-    if (shouldGrab) {
 #if SDL_VERSION_ATLEAST(2, 0, 15)
-        // On SDL 2.0.15, we can get keyboard-only grab on Win32, X11, and Wayland.
-        // This does nothing on macOS but it sets the SDL_WINDOW_KEYBOARD_GRABBED flag
-        // that we look for to see if keyboard capture is enabled. We'll handle macOS
-        // ourselves below using the private CGSSetGlobalHotKeyOperatingMode() API.
-        SDL_SetWindowKeyboardGrab(m_Window, SDL_TRUE);
-#else
-        // If we're in full-screen desktop mode and SDL doesn't have keyboard grab yet,
-        // grab the cursor (will grab the keyboard too on X11).
-        if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN) {
-            SDL_SetWindowGrab(m_Window, SDL_TRUE);
-        }
+    // On SDL 2.0.15+, we can get keyboard-only grab on Win32, X11, and Wayland.
+    // SDL 2.0.18 adds keyboard grab on macOS (if built with non-AppStore APIs).
+    SDL_SetWindowKeyboardGrab(m_Window, shouldGrab ? SDL_TRUE : SDL_FALSE);
 #endif
-    }
-    else {
-#if SDL_VERSION_ATLEAST(2, 0, 15)
-        // Allow the keyboard to leave the window
-        SDL_SetWindowKeyboardGrab(m_Window, SDL_FALSE);
-#endif
-    }
 }
 
 bool SdlInputHandler::isSystemKeyCaptureActive()

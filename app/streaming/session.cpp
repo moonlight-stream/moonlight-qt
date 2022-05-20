@@ -1068,18 +1068,10 @@ void Session::toggleFullscreen()
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
 
     if (fullScreen) {
-        if (m_FullScreenFlag == SDL_WINDOW_FULLSCREEN && m_InputHandler->isCaptureActive()) {
-            // Confine the cursor to the window if we're capturing input while transitioning to full screen.
-            SDL_SetWindowGrab(m_Window, SDL_TRUE);
-        }
-
         SDL_SetWindowResizable(m_Window, SDL_FALSE);
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
     else {
-        // Unconfine the cursor
-        SDL_SetWindowGrab(m_Window, SDL_FALSE);
-
         SDL_SetWindowFullscreen(m_Window, 0);
         SDL_SetWindowResizable(m_Window, SDL_TRUE);
 
@@ -1089,6 +1081,9 @@ void Session::toggleFullscreen()
 
     // Input handler might need to start/stop keyboard grab after changing modes
     m_InputHandler->updateKeyboardGrabState();
+
+    // Input handler might need stop/stop mouse grab after changing modes
+    m_InputHandler->updatePointerRegionLock();
 }
 
 void Session::notifyMouseEmulationMode(bool enabled)

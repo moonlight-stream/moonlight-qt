@@ -160,6 +160,7 @@ private:
     bool m_MouseWasInVideoRegion;
     bool m_PendingMouseButtonsAllUpOnVideoRegionLeave;
     bool m_PointerRegionLockActive;
+    bool m_PointerRegionLockToggledByUser;
 
     int m_GamepadMask;
     GamepadState m_GamepadState[MAX_GAMEPADS];
