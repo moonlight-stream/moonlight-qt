@@ -61,7 +61,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation>應用程式結束中...</translation>
+        <translation>正在結束應用程式...</translation>
     </message>
 </context>
 <context>
@@ -74,7 +74,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>載入應用程式清單中...</translation>
+        <translation>正在載入應用程式清單...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
@@ -180,7 +180,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation>Moonlight 正在測試您的網路連線以確定 NVIDIA GameStream 是否被阻擋。</translation>
+        <translation>Moonlight 正在測試您的網路連線以確定 NVIDIA GameStream 是否被封鎖。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
@@ -190,7 +190,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>此網路似乎並未阻擋 Moonlight。如果您仍然無法連線，請檢查您電腦的防火牆設定。</translation>
+        <translation>此網路似乎並未封鎖 Moonlight。如果您仍然無法連線，請檢查您電腦的防火牆設定。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
@@ -200,12 +200,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>您電腦的當前網路連線似乎阻擋了 Moonlight。連線到此網路時，可能無法透過網際網路進行流式傳輸。</translation>
+        <translation>您電腦的當前網路連線似乎封鎖了 Moonlight。連線到此網路時，可能無法透過網際網路進行流式傳輸。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="345"/>
         <source>The following network ports were blocked:</source>
-        <translation>以下網路埠被阻擋：</translation>
+        <translation>以下網路通訊埠被封鎖：</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
@@ -299,7 +299,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="92"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>檢查防火牆和埠轉送規則：%1</translation>
+        <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="97"/>
@@ -412,7 +412,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="792"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
-        <translation>無法開啟音訊裝置。音訊在本次的會話中將無法使用。</translation>
+        <translation>無法開啟音訊裝置。音訊在本次工作階段中將無法使用。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="797"/>
@@ -684,7 +684,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>啟用 HDR 覆寫手動解碼器選取項目。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
@@ -727,7 +727,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1139"/>
         <source>Swap left and right mouse buttons</source>
-        <translation>交換滑鼠左右鍵</translation>
+        <translation>交換滑鼠左右按鍵</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1151"/>
@@ -747,7 +747,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1193"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>這將手把切換為任天堂風格的按鍵布局</translation>
+        <translation>這將手把切換為任天堂風格的按鈕版面配置</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1199"/>
@@ -922,7 +922,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1494"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation>自動檢測被封鎖的連線 (建議)</translation>
+        <translation>自動偵測被封鎖的連線 (建議)</translation>
     </message>
 </context>
 <context>
@@ -946,7 +946,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>檢查防火牆和埠轉送規則：%1</translation>
+        <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
@@ -1027,7 +1027,7 @@
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight 檢測到沒有對應的手把：</translation>
+        <translation>Moonlight 偵測到沒有對應的手把：</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="364"/>
@@ -1037,7 +1037,7 @@
     <message>
         <location filename="../gui/main.qml" line="425"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation>Moonlight 沒有檢測到有效的硬體加速視訊解碼器。在這種組態下，你的串流效能可能會嚴重下降。</translation>
+        <translation>Moonlight 沒有偵測到有效的硬體加速視訊解碼器。在這種組態下，你的串流效能可能會嚴重下降。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="427"/>
