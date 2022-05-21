@@ -1,5 +1,8 @@
 #include <QString>
 
+// HACK: Include before vaapi.h to prevent conflicts with Xlib.h
+#include <QTextStream>
+
 #include "vaapi.h"
 #include "utils.h"
 #include <streaming/streamutils.h>
