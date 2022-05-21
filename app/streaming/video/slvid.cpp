@@ -4,7 +4,9 @@
 SLVideoDecoder::SLVideoDecoder(bool)
     : m_VideoContext(nullptr),
       m_VideoStream(nullptr),
-      m_Overlay(nullptr)
+      m_Overlay(nullptr),
+      m_ViewportWidth(0),
+      m_ViewportHeight(0)
 {
     SLVideo_SetLogFunction(SLVideoDecoder::slLogCallback, nullptr);
 }
@@ -26,6 +28,18 @@ SLVideoDecoder::~SLVideoDecoder()
     }
 
     if (m_VideoContext != nullptr) {
+        if (session != nullptr && m_ViewportWidth != 0 && m_ViewportHeight != 0) {
+            // HACK: Fix the overlay that Qt uses to render otherwise the GUI will
+            // be squished into an overlay the size of what Moonlight used.
+            CSLVideoOverlay* hackOverlay = SLVideo_CreateOverlay(m_VideoContext, m_ViewportWidth, m_ViewportHeight);
+
+            // Quickly show and hide the overlay to flush the overlay changes to the display hardware
+            SLVideo_SetOverlayDisplayFullscreen(hackOverlay);
+            SLVideo_ShowOverlay(hackOverlay);
+            SLVideo_HideOverlay(hackOverlay);
+            SLVideo_FreeOverlay(hackOverlay);
+        }
+
         SLVideo_FreeContext(m_VideoContext);
     }
 }
