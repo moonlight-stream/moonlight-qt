@@ -204,13 +204,13 @@ void SLVideoDecoder::notifyOverlayUpdated(Overlay::OverlayType type)
     SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format, newSurface->pixels, newSurface->pitch,
                       SDL_PIXELFORMAT_ARGB8888, pixels, pitch);
 
-    // We're done with the surface now
-    SDL_FreeSurface(newSurface);
-
     // Position the status overlay at the bottom left corner
     float flWidth = (float)newSurface->w / m_ViewportWidth;
     float flHeight = (float)newSurface->h / m_ViewportHeight;
     SLVideo_SetOverlayDisplayArea(m_Overlay, 0.0f, 1.0f - flHeight, flWidth, flHeight);
+
+    // We're done with the surface now
+    SDL_FreeSurface(newSurface);
 
     // Show the overlay
     SLVideo_ShowOverlay(m_Overlay);
