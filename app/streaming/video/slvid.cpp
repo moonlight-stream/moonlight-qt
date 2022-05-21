@@ -1,16 +1,28 @@
 #include "slvid.h"
+#include "streaming/session.h"
 
 SLVideoDecoder::SLVideoDecoder(bool)
     : m_VideoContext(nullptr),
-      m_VideoStream(nullptr)
+      m_VideoStream(nullptr),
+      m_Overlay(nullptr)
 {
     SLVideo_SetLogFunction(SLVideoDecoder::slLogCallback, nullptr);
 }
 
 SLVideoDecoder::~SLVideoDecoder()
 {
+    Session* session = Session::get();
+    if (session != nullptr) {
+        session->getOverlayManager().setOverlayRenderer(nullptr);
+    }
+
     if (m_VideoStream != nullptr) {
         SLVideo_FreeStream(m_VideoStream);
+    }
+
+    if (m_Overlay != nullptr) {
+        SLVideo_HideOverlay(m_Overlay);
+        SLVideo_FreeOverlay(m_Overlay);
     }
 
     if (m_VideoContext != nullptr) {
@@ -78,6 +90,14 @@ SLVideoDecoder::initialize(PDECODER_PARAMETERS params)
     SLVideo_SetStreamVideoTransferMatrix(m_VideoStream, k_ESLVideoTransferMatrix_BT709);
     SLVideo_SetStreamTargetFramerate(m_VideoStream, params->frameRate, 1);
 
+    SDL_GetWindowSize(params->window, &m_ViewportWidth, &m_ViewportHeight);
+
+    // Register ourselves for overlay callbacks
+    Session* session = Session::get();
+    if (session != nullptr) {
+        session->getOverlayManager().setOverlayRenderer(this);
+    }
+
     return true;
 }
 
@@ -124,6 +144,62 @@ SLVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     }
 
     return DR_OK;
+}
+
+void SLVideoDecoder::notifyOverlayUpdated(Overlay::OverlayType type)
+{
+    // SLVideo supports only one visible overlay at a time. Since we don't have
+    // stats like the FFmpeg-based decoders, we'll just support the status update
+    // overlay and nothing else.
+    if (type != Overlay::OverlayStatusUpdate) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unsupported overlay type: %d", type);
+        return;
+    }
+
+    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+    if (newSurface == nullptr && Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        // There's no updated surface and the overlay is enabled, so just leave the old surface alone.
+        return;
+    }
+
+    // Hide and free any existing overlay
+    if (m_Overlay != nullptr) {
+        SLVideo_HideOverlay(m_Overlay);
+        SLVideo_FreeOverlay(m_Overlay);
+        m_Overlay = nullptr;
+    }
+
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        SDL_FreeSurface(newSurface);
+        return;
+    }
+
+    m_Overlay = SLVideo_CreateOverlay(m_VideoContext, newSurface->w, newSurface->h);
+    if (m_Overlay == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SLVideo_CreateOverlay() failed");
+        return;
+    }
+
+    uint32_t* pixels;
+    int pitch;
+    SLVideo_GetOverlayPixels(m_Overlay, &pixels, &pitch);
+
+    // Copy surface pixels into the new overlay
+    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format, newSurface->pixels, newSurface->pitch,
+                      SDL_PIXELFORMAT_ARGB8888, pixels, pitch);
+
+    // We're done with the surface now
+    SDL_FreeSurface(newSurface);
+
+    // Position the status overlay at the bottom left corner
+    float flWidth = (float)newSurface->w / m_ViewportWidth;
+    float flHeight = (float)newSurface->h / m_ViewportHeight;
+    SLVideo_SetOverlayDisplayArea(m_Overlay, 0.0f, 1.0f - flHeight, flWidth, flHeight);
+
+    // Show the overlay
+    SLVideo_ShowOverlay(m_Overlay);
 }
 
 void SLVideoDecoder::slLogCallback(void*, ESLVideoLog logLevel, const char *message)

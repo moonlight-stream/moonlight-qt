@@ -1,10 +1,11 @@
 #pragma once
 
 #include "decoder.h"
+#include "overlaymanager.h"
 
 #include <SLVideo.h>
 
-class SLVideoDecoder : public IVideoDecoder
+class SLVideoDecoder : public IVideoDecoder, public Overlay::IOverlayRenderer
 {
 public:
     SLVideoDecoder(bool testOnly);
@@ -16,6 +17,7 @@ public:
     virtual int getDecoderColorspace() override;
     virtual QSize getDecoderMaxResolution() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
+    virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
 
     // Unused since rendering is done directly from the decode thread
     virtual void renderFrameOnMainThread() override {}
@@ -31,4 +33,8 @@ private:
 
     CSLVideoContext* m_VideoContext;
     CSLVideoStream* m_VideoStream;
+    CSLVideoOverlay* m_Overlay;
+
+    int m_ViewportWidth;
+    int m_ViewportHeight;
 };
