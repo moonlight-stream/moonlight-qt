@@ -41,11 +41,11 @@ VAAPIRenderer::~VAAPIRenderer()
         VADisplay display = vaDeviceContext->display;
 
         for (int i = 0; i < Overlay::OverlayMax; i++) {
-            if (m_OverlayImage[i].image_id != 0) {
-                vaDestroyImage(display, m_OverlayImage[i].image_id);
-            }
             if (m_OverlaySubpicture[i] != 0) {
                 vaDestroySubpicture(display, m_OverlaySubpicture[i]);
+            }
+            if (m_OverlayImage[i].image_id != 0) {
+                vaDestroyImage(display, m_OverlayImage[i].image_id);
             }
         }
 
@@ -483,17 +483,19 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     m_OverlaySubpicture[type] = 0;
     SDL_UnlockMutex(m_OverlayMutex);
 
+    if (oldSubpictureId != 0) {
+        status = vaDestroySubpicture(vaDeviceContext->display, oldSubpictureId);
+        if (status != VA_STATUS_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaDestroySubpicture() failed: %d",
+                         status);
+        }
+    }
     if (oldImageId != 0) {
         status = vaDestroyImage(vaDeviceContext->display, oldImageId);
         if (status != VA_STATUS_SUCCESS) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "vaDestroyImage() failed: %d",
-                         status);
-        }
-        status = vaDestroySubpicture(vaDeviceContext->display, oldSubpictureId);
-        if (status != VA_STATUS_SUCCESS) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "vaDestroySubpicture() failed: %d",
                          status);
         }
     }
