@@ -3,6 +3,7 @@
 #include "vaapi.h"
 #include "utils.h"
 #include <streaming/streamutils.h>
+#include <streaming/session.h>
 
 #include <SDL_syswm.h>
 
@@ -11,7 +12,8 @@
 
 VAAPIRenderer::VAAPIRenderer()
     : m_HwContext(nullptr),
-      m_BlacklistedForDirectRendering(false)
+      m_BlacklistedForDirectRendering(false),
+      m_OverlayMutex(nullptr)
 {
 #ifdef HAVE_EGL
     m_PrimeDescriptor.num_layers = 0;
@@ -23,6 +25,10 @@ VAAPIRenderer::VAAPIRenderer()
     m_eglDestroyImage = nullptr;
     m_eglDestroyImageKHR = nullptr;
 #endif
+
+    SDL_zero(m_OverlayImage);
+    SDL_zero(m_OverlaySubpicture);
+    SDL_zero(m_OverlayFormat);
 }
 
 VAAPIRenderer::~VAAPIRenderer()
@@ -34,11 +40,24 @@ VAAPIRenderer::~VAAPIRenderer()
         // Hold onto this VADisplay since we'll need it to uninitialize VAAPI
         VADisplay display = vaDeviceContext->display;
 
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            if (m_OverlayImage[i].image_id != 0) {
+                vaDestroyImage(display, m_OverlayImage[i].image_id);
+            }
+            if (m_OverlaySubpicture[i] != 0) {
+                vaDestroySubpicture(display, m_OverlaySubpicture[i]);
+            }
+        }
+
         av_buffer_unref(&m_HwContext);
 
         if (display) {
             vaTerminate(display);
         }
+    }
+
+    if (m_OverlayMutex != nullptr) {
+        SDL_DestroyMutex(m_OverlayMutex);
     }
 }
 
@@ -271,6 +290,88 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // Allocate mutex to synchronize overlay updates and rendering
+    m_OverlayMutex = SDL_CreateMutex();
+    if (m_OverlayMutex == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create overlay mutex");
+        return false;
+    }
+
+    unsigned int formatCount = vaMaxNumSubpictureFormats(vaDeviceContext->display);
+    if (formatCount != 0) {
+        auto formats = new VAImageFormat[formatCount];
+        auto flags = new unsigned int[formatCount];
+
+        status = vaQuerySubpictureFormats(vaDeviceContext->display, formats, flags, &formatCount);
+        if (status == VA_STATUS_SUCCESS) {
+            for (unsigned int i = 0; i < formatCount; i++) {
+                // Format must have 32-bit color depth
+                if (formats[i].depth != 32) {
+                    continue;
+                }
+
+                // Select an RGB format with alpha
+                if (formats[i].byte_order == VA_MSB_FIRST) {
+                    switch (formats[i].fourcc) {
+                    case VA_FOURCC_RGBA:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_RGBA8888;
+                        break;
+                    case VA_FOURCC_ARGB:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_ARGB8888;
+                        break;
+                    case VA_FOURCC_BGRA:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_BGRA8888;
+                        break;
+                    case VA_FOURCC_ABGR:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_ABGR8888;
+                        break;
+                    default:
+                        continue;
+                    }
+                }
+                else {
+                    SDL_assert(formats[i].byte_order == VA_LSB_FIRST);
+                    switch (formats[i].fourcc) {
+                    case VA_FOURCC_RGBA:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_ABGR8888;
+                        break;
+                    case VA_FOURCC_ARGB:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_BGRA8888;
+                        break;
+                    case VA_FOURCC_BGRA:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_ARGB8888;
+                        break;
+                    case VA_FOURCC_ABGR:
+                        m_OverlaySdlPixelFormat = SDL_PIXELFORMAT_RGBA8888;
+                        break;
+                    default:
+                        continue;
+                    }
+                }
+
+                // If we made it here, we found a format that works for us
+                m_OverlayFormat = formats[i];
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Selected overlay subpicture format: %c%c%c%c8888",
+                            (m_OverlayFormat.fourcc >> 0) & 0xff,
+                            (m_OverlayFormat.fourcc >> 8) & 0xff,
+                            (m_OverlayFormat.fourcc >> 16) & 0xff,
+                            (m_OverlayFormat.fourcc >> 24) & 0xff);
+                break;
+            }
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaQuerySubpictureFormats() failed: %d",
+                         status);
+        }
+
+        delete[] formats;
+        delete[] flags;
+    }
+
     return true;
 }
 
@@ -331,6 +432,12 @@ VAAPIRenderer::isDirectRenderingSupported()
             if (entrypoints[i] == VAEntrypointVideoProc) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using direct rendering with VAEntrypointVideoProc");
+
+                if (m_OverlayFormat.fourcc == 0) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Unable to find supported subpicture format. Overlays will be unavailable!");
+                }
+
                 return true;
             }
         }
@@ -346,6 +453,131 @@ int VAAPIRenderer::getDecoderColorspace()
     // Gallium drivers don't support Rec 709 yet - https://gitlab.freedesktop.org/mesa/mesa/issues/1915
     // Intel-vaapi-driver defaults to Rec 601 - https://github.com/intel/intel-vaapi-driver/blob/021bcb79d1bd873bbd9fbca55f40320344bab866/src/i965_output_dri.c#L186
     return COLORSPACE_REC_601;
+}
+
+void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
+{
+    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+    AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
+    VAStatus status;
+
+    if (m_OverlayFormat.fourcc == 0) {
+        // We already logged for this in isDirectRenderingSupported()
+        return;
+    }
+
+    SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+    if (newSurface == nullptr && Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        // There's no updated surface and the overlay is enabled, so just leave the old surface alone.
+        return;
+    }
+
+    // Destroy the old image and subpicture
+    // NB: The mutex ensures the overlay is not currently being read for rendering.
+    // NB 2: It is safe to unlock here because this thread is the only surface producer.
+    SDL_LockMutex(m_OverlayMutex);
+    VAImageID oldImageId = m_OverlayImage[type].image_id;
+    SDL_zero(m_OverlayImage[type]);
+
+    VASubpictureID oldSubpictureId = m_OverlaySubpicture[type];
+    m_OverlaySubpicture[type] = 0;
+    SDL_UnlockMutex(m_OverlayMutex);
+
+    if (oldImageId != 0) {
+        status = vaDestroyImage(vaDeviceContext->display, oldImageId);
+        if (status != VA_STATUS_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaDestroyImage() failed: %d",
+                         status);
+        }
+        status = vaDestroySubpicture(vaDeviceContext->display, oldSubpictureId);
+        if (status != VA_STATUS_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaDestroySubpicture() failed: %d",
+                         status);
+        }
+    }
+
+    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+        SDL_FreeSurface(newSurface);
+        return;
+    }
+
+    if (newSurface != nullptr) {
+        VAImage newImage;
+
+        SDL_assert(!SDL_MUSTLOCK(newSurface));
+
+        status = vaCreateImage(vaDeviceContext->display, &m_OverlayFormat, newSurface->w, newSurface->h, &newImage);
+        if (status != VA_STATUS_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaCreateImage() failed: %d",
+                         status);
+            SDL_FreeSurface(newSurface);
+            return;
+        }
+
+        void* imagePixels;
+        status = vaMapBuffer(vaDeviceContext->display, newImage.buf, &imagePixels);
+        if (status != VA_STATUS_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaMapBuffer() failed: %d",
+                         status);
+            SDL_FreeSurface(newSurface);
+            vaDestroyImage(vaDeviceContext->display, newImage.image_id);
+            return;
+        }
+
+        // Convert the surface to the proper format for the VAImage
+        SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format,
+                          newSurface->pixels, newSurface->pitch, m_OverlaySdlPixelFormat,
+                          imagePixels, (int)newImage.pitches[0]);
+
+        status = vaUnmapBuffer(vaDeviceContext->display, newImage.buf);
+        if (status != VA_STATUS_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaUnmapBuffer() failed: %d",
+                         status);
+            SDL_FreeSurface(newSurface);
+            vaDestroyImage(vaDeviceContext->display, newImage.image_id);
+            return;
+        }
+
+        SDL_Rect overlayRect;
+
+        if (type == Overlay::OverlayStatusUpdate) {
+            // Bottom Left
+            overlayRect.x = 0;
+            overlayRect.y = m_DisplayHeight - newSurface->h;
+        }
+        else if (type == Overlay::OverlayDebug) {
+            // Top left
+            overlayRect.x = 0;
+            overlayRect.y = 0;
+        }
+
+        overlayRect.w = newSurface->w;
+        overlayRect.h = newSurface->h;
+
+        // Surface data is no longer needed
+        SDL_FreeSurface(newSurface);
+
+        VASubpictureID newSubpicture;
+        status = vaCreateSubpicture(vaDeviceContext->display, newImage.image_id, &newSubpicture);
+        if (status != VA_STATUS_SUCCESS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "vaCreateSubpicture() failed: %d",
+                         status);
+            vaDestroyImage(vaDeviceContext->display, newImage.image_id);
+            return;
+        }
+
+        SDL_LockMutex(m_OverlayMutex);
+        m_OverlayImage[type] = newImage;
+        m_OverlaySubpicture[type] = newSubpicture;
+        m_OverlayRect[type] = overlayRect;
+        SDL_UnlockMutex(m_OverlayMutex);
+    }
 }
 
 void
@@ -388,6 +620,37 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
             break;
         }
 
+        SDL_LockMutex(m_OverlayMutex);
+
+        // Associate our overlay subpictures to the current surface
+        for (int type = 0; type < Overlay::OverlayMax; type++) {
+            VAStatus status;
+
+            if (m_OverlaySubpicture[type] == 0) {
+                continue;
+            }
+
+            status = vaAssociateSubpicture(vaDeviceContext->display,
+                                           m_OverlaySubpicture[type],
+                                           &surface,
+                                           1,
+                                           0,
+                                           0,
+                                           m_OverlayImage[type].width,
+                                           m_OverlayImage[type].height,
+                                           m_OverlayRect[type].x,
+                                           m_OverlayRect[type].y,
+                                           m_OverlayRect[type].w,
+                                           m_OverlayRect[type].h,
+                                           0);
+            if (status != VA_STATUS_SUCCESS) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "vaAssociateSubpicture() failed: %d",
+                             status);
+            }
+        }
+
+        // This will draw the surface and any associated subpictures
         vaPutSurface(vaDeviceContext->display,
                      surface,
                      m_XWindow,
@@ -396,6 +659,27 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
                      dst.x, dst.y,
                      dst.w, dst.h,
                      NULL, 0, flags);
+
+        // Deassociate the subpictures so the subpictures can be safely destroyed/replaced
+        //
+        // NB: We don't release the mutex between associating and deassociating to ensure
+        // the subpictures don't change underneath us.
+        for (int type = 0; type < Overlay::OverlayMax; type++) {
+            VAStatus status;
+
+            if (m_OverlaySubpicture[type] == 0) {
+                continue;
+            }
+
+            status = vaDeassociateSubpicture(vaDeviceContext->display, m_OverlaySubpicture[type], &surface, 1);
+            if (status != VA_STATUS_SUCCESS) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "vaDeassociateSubpicture() failed: %d",
+                             status);
+            }
+        }
+
+        SDL_UnlockMutex(m_OverlayMutex);
 #endif
     }
     else if (m_WindowSystem == SDL_SYSWM_WAYLAND) {

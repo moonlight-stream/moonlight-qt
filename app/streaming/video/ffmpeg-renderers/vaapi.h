@@ -42,6 +42,8 @@ public:
     virtual bool needsTestFrame() override;
     virtual bool isDirectRenderingSupported() override;
     virtual int getDecoderColorspace() override;
+    virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+
 #ifdef HAVE_EGL
     virtual bool canExportEGL() override;
     virtual AVPixelFormat getEGLImagePixelFormat() override;
@@ -58,6 +60,7 @@ public:
 
 private:
     VADisplay openDisplay(SDL_Window* window);
+    void renderOverlay(VADisplay display, VASurfaceID surface, Overlay::OverlayType type);
 
 #if defined(HAVE_EGL) || defined(HAVE_DRM)
     bool canExportSurfaceHandle(int layerTypeFlag);
@@ -66,6 +69,13 @@ private:
     int m_WindowSystem;
     AVBufferRef* m_HwContext;
     bool m_BlacklistedForDirectRendering;
+
+    SDL_mutex* m_OverlayMutex;
+    VAImageFormat m_OverlayFormat;
+    Uint32 m_OverlaySdlPixelFormat;
+    VAImage m_OverlayImage[Overlay::OverlayMax];
+    VASubpictureID m_OverlaySubpicture[Overlay::OverlayMax];
+    SDL_Rect m_OverlayRect[Overlay::OverlayMax];
 
 #ifdef HAVE_LIBVA_X11
     Window m_XWindow;
