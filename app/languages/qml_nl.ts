@@ -684,27 +684,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bij het aanzetten van HDR worden manuele decoder selecties overschreden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bij het aanzetten van HDR worden manuele codec selecties overschreden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR inschakelen (Experimenteel)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1442"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Dit zet de stream om in HDR, maar sommige spellen hebben een HDR-monitor nodig dat is aangesloten aan de Host&apos;s Computer.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Deze PC voldoet zich niet aan de verreisten om in HDR modus te streamen.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -822,12 +822,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Houd het scherm wakker tijdens het streamen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Voorkomt dat de screensaver start of dat het scherm in slaapstand gaat tijdens het streamen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1050"/>
