@@ -36,6 +36,32 @@
 	</screenshots>
 
 	<releases>
+		<release version="4.1.0" date="2022-05-23">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Overlays are now supported on the non-EGL X11 VAAPI renderer (requires RGBA subpicture support in the VAAPI driver)</li>
+					<li>Cursor lock can now be disabled when in full-screen mode</li>
+				</ul>
+				<p>Behavior Changes:</p>
+				<ul>
+					<li>Moonlight can now reduce the client display resolution in full-screen mode if the current display mode doesn't have a high enough refresh rate for the selected stream frame rate</li>
+					<li>When choosing a new client display resolution in full-screen mode, Moonlight will pick a display mode with the closest aspect ratio to the selected stream resolution</li>
+					<li>Moonlight now defaults to borderless windowed mode on Wayland systems</li>
+
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed missing toolbar buttons in certain languages</li>
+					<li>Fixed some text on the settings page not updating when the language is changed</li>
+					<li>Fixed a frame pacing bug that could cause excessive frame drops</li>
+					<li>Fixed the "keep display awake" setting not being saved when Moonlight restarts</li>
+					<li>Fixed black screen after unmaximizing the Moonlight window on some Linux systems</li>
+					<li>Updated included gamepad mappings</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="4.0.0" date="2022-04-02">
 			<description>
 				<p>New features:</p>
