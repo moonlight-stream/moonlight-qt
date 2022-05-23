@@ -700,11 +700,19 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
         return false;
     }
+#ifdef Q_PROCESSOR_X86
     else if (qgetenv("DXVA2_ENABLED") == "0") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "DXVA2 is disabled by environment variable");
         return false;
     }
+#else
+    else if (qgetenv("DXVA2_ENABLED") != "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "DXVA2 is disabled by default on ARM64. Set DXVA2_ENABLED=1 to override.");
+        return false;
+    }
+#endif
 
     m_VideoFormat = params->videoFormat;
     m_VideoWidth = params->width;
