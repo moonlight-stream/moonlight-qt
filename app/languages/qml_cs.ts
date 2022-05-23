@@ -440,12 +440,12 @@
         <translation>Váš výběr kodeku a vynucení hardwarového dekódování nejsou kompatibilní. GPU tohoto počítače nepodporuje dekódování vámi zvoleného kodeku.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1170"/>
+        <location filename="../streaming/session.cpp" line="1165"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience vrátilo chybu: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1705"/>
+        <location filename="../streaming/session.cpp" line="1714"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Nezdařilo se inicializovat dekodér videa. Prosím zkontrolujte nastavení streamování a zkuste to znovu.</translation>
     </message>

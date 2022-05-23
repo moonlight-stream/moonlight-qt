@@ -440,12 +440,12 @@
         <translation>Erzwungene Hardware Dekodierung ist nicht mit deinem ausgewähltem Codec kompatibel, da die Grafikkarte deines PC&apos;s den ausgewählen Codec nicht unterstützt.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1170"/>
+        <location filename="../streaming/session.cpp" line="1165"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience hat einen Fehler gemeldet: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1705"/>
+        <location filename="../streaming/session.cpp" line="1714"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Video Decoder konnte nicht initialisiert werden. Bitte prüfe deine Streaming Einstellungen und versuche es erneut.</translation>
     </message>

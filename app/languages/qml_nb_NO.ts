@@ -440,12 +440,12 @@
         <translation type="unfinished">At du har valgt tungen maskinvaredekoding fungerer ikke sammen med kodekvalget. Denne PC-ens skjermkort mangler støtte for dekoding i valgt kodek.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1170"/>
+        <location filename="../streaming/session.cpp" line="1165"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience returnerte en feil: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1705"/>
+        <location filename="../streaming/session.cpp" line="1714"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation type="unfinished">Kunne ikke starte videodekoder. Sjekk strømmingsinnstillingene dine og prøv igjen.</translation>
     </message>
