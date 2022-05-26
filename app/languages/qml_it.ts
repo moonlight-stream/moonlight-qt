@@ -170,7 +170,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Iserisci %1 sul tuo PC GameStream. Questa finestra si chiuderà quando l&apos;accoppiamento sarà concluso.</translation>
+        <translation>Inserisci %1 sul tuo PC GameStream. Questa finestra si chiuderà al termine dell&apos;accoppiamento.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
@@ -822,12 +822,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
         <source>Keep the display awake while streaming</source>
-        <translation>Mantieni il display attivo durante lo streaming</translation>
+        <translation>Mantieni lo schermo acceso durante la trasmissione</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>Impedisce l&apos;avvio del salvaschermo o la sospensione del display durante lo streaming.</translation>
+        <translation>Evita che il salvaschermo si avii o che lo schermo si spenga durante la trasmissione.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1050"/>
