@@ -684,12 +684,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;abilitazione dell&apos;HDR sostituisce le selezioni manuali del decodificatore.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation>Abilitare HDR sovrascrive la selezione manuale del codec.</translation>
+        <translation>Abilitare l&apos;HDR sovrascrive la selezione manuale del codec.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
@@ -704,7 +704,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation>La trasmissione HDR non è supportata su questo PC.</translation>
+        <translation>Lo streaming HDR non è supportata su questo PC.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -822,12 +822,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantieni il display attivo durante lo streaming</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impedisce l&apos;avvio del salvaschermo o la sospensione del display durante lo streaming.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1050"/>
