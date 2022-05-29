@@ -193,6 +193,7 @@ void SLVideoDecoder::notifyOverlayUpdated(Overlay::OverlayType type)
     if (m_Overlay == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SLVideo_CreateOverlay() failed");
+        SDL_FreeSurface(newSurface);
         return;
     }
 
