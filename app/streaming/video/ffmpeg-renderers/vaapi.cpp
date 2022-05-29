@@ -626,6 +626,9 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 
         SDL_LockMutex(m_OverlayMutex);
 
+        VAImage associatedOverlayImages[Overlay::OverlayMax] = {};
+        VASubpictureID associatedOverlaySubpictures[Overlay::OverlayMax] = {};
+
         // Associate our overlay subpictures to the current surface
         for (int type = 0; type < Overlay::OverlayMax; type++) {
             VAStatus status;
@@ -647,14 +650,27 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
                                            m_OverlayRect[type].w,
                                            m_OverlayRect[type].h,
                                            0);
-            if (status != VA_STATUS_SUCCESS) {
+            if (status == VA_STATUS_SUCCESS) {
+                // Take temporary ownership of the overlay to prevent notifyOverlayUpdated()
+                // from freeing them frum underneath us. We need to release the lock while
+                // we render for performance reasons.
+                associatedOverlayImages[type] = m_OverlayImage[type];
+                associatedOverlaySubpictures[type] = m_OverlaySubpicture[type];
+
+                SDL_zero(m_OverlayImage[type]);
+                m_OverlaySubpicture[type] = 0;
+            }
+            else {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "vaAssociateSubpicture() failed: %d",
                              status);
             }
         }
 
+        SDL_UnlockMutex(m_OverlayMutex);
+
         // This will draw the surface and any associated subpictures
+        // NB: This can take a full VBlank period to complete!
         vaPutSurface(vaDeviceContext->display,
                      surface,
                      m_XWindow,
@@ -664,22 +680,51 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
                      dst.w, dst.h,
                      NULL, 0, flags);
 
-        // Deassociate the subpictures so the subpictures can be safely destroyed/replaced
-        //
-        // NB: We don't release the mutex between associating and deassociating to ensure
-        // the subpictures don't change underneath us.
+        SDL_LockMutex(m_OverlayMutex);
+
+        // Now that we've reacquired the lock, we will need to reconcile the current
+        // state of the overlay with our saved state from before we unlocked.
         for (int type = 0; type < Overlay::OverlayMax; type++) {
             VAStatus status;
 
-            if (m_OverlaySubpicture[type] == 0) {
+            if (associatedOverlaySubpictures[type] == 0) {
                 continue;
             }
 
-            status = vaDeassociateSubpicture(vaDeviceContext->display, m_OverlaySubpicture[type], &surface, 1);
+            // Deassociate the subpicture so it can be safely destroyed/replaced
+            status = vaDeassociateSubpicture(vaDeviceContext->display, associatedOverlaySubpictures[type], &surface, 1);
             if (status != VA_STATUS_SUCCESS) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "vaDeassociateSubpicture() failed: %d",
                              status);
+            }
+
+            // If a new subpicture was populated while we were unlocked, free the old one we took ownership of
+            if (m_OverlaySubpicture[type] != 0) {
+                status = vaDestroySubpicture(vaDeviceContext->display, associatedOverlaySubpictures[type]);
+                if (status != VA_STATUS_SUCCESS) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "vaDestroySubpicture() failed: %d",
+                                 status);
+                }
+            }
+            else {
+                // If no new subpicture was populated, return ownership of this one
+                m_OverlaySubpicture[type] = associatedOverlaySubpictures[type];
+            }
+
+            // If a new image was populated while we were unlocked, free the one old we took ownership of
+            if (m_OverlayImage[type].image_id != 0) {
+                status = vaDestroyImage(vaDeviceContext->display, associatedOverlayImages[type].image_id);
+                if (status != VA_STATUS_SUCCESS) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                 "vaDestroyImage() failed: %d",
+                                 status);
+                }
+            }
+            else {
+                // If no new image was populated, return ownership of this one
+                m_OverlayImage[type] = associatedOverlayImages[type];
             }
         }
 
