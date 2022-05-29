@@ -365,6 +365,7 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     if (newSurface != nullptr) {
         SDL_assert(!SDL_MUSTLOCK(newSurface));
+        SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
 
         VdpBitmapSurface newBitmapSurface = 0;
         status = m_VdpBitmapSurfaceCreate(m_Device,

@@ -193,6 +193,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
     SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
     if (newSurface != nullptr) {
         SDL_assert(!SDL_MUSTLOCK(newSurface));
+        SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
 
         glBindTexture(GL_TEXTURE_2D, m_OverlayTextures[type]);
 

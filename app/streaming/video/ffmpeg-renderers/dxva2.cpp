@@ -834,19 +834,9 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    if (newSurface->pitch == lockedRect.Pitch) {
-        // If the pitch matches, we can take the fast path and use a single copy to transfer the pixels
-        RtlCopyMemory(lockedRect.pBits, newSurface->pixels, newSurface->pitch * newSurface->h);
-    }
-    else {
-        // If the pitch doesn't match, we'll need to copy each row separately
-        int pitch = SDL_min(newSurface->pitch, lockedRect.Pitch);
-        for (int i = 0; i < newSurface->h; i++) {
-            RtlCopyMemory(((PUCHAR)lockedRect.pBits) + (lockedRect.Pitch * i),
-                          ((PUCHAR)newSurface->pixels) + (newSurface->pitch * i),
-                          pitch);
-        }
-    }
+    // Copy (and convert, if necessary) the surface pixels to the texture
+    SDL_ConvertPixels(newSurface->w, newSurface->h, newSurface->format->format, newSurface->pixels,
+                      newSurface->pitch, SDL_PIXELFORMAT_ARGB8888, lockedRect.pBits, lockedRect.Pitch);
 
     newTexture->UnlockRect(0);
 

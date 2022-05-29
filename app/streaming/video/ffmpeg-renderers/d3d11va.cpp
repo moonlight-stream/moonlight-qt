@@ -816,6 +816,7 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     // Create a texture with our pixel data
     SDL_assert(!SDL_MUSTLOCK(newSurface));
+    SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
 
     D3D11_TEXTURE2D_DESC texDesc = {};
     texDesc.Width = newSurface->w;
