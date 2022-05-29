@@ -372,6 +372,13 @@ ReadbackRetry:
     // texture creation for most SDL render backends, we need to recreate
     // the texture when the colorspace changes.
     if (frame->colorspace != m_ColorSpace) {
+#ifdef HAVE_CUDA
+        if (m_CudaGLHelper != nullptr) {
+            delete m_CudaGLHelper;
+            m_CudaGLHelper = nullptr;
+        }
+#endif
+
         if (m_Texture != nullptr) {
             SDL_DestroyTexture(m_Texture);
             m_Texture = nullptr;
