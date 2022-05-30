@@ -113,7 +113,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>La connexion Internet de ce PC bloque Moonlight. Le streaming sur Internet peut ne pas fonctionner lorsqu&apos;il est connecté à ce réseau.</translation>
+        <translation>La connexion Internet de ce PC bloque Moonlight. Le streaming sur Internet peut ne pas fonctionner sur ce réseau.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
@@ -145,7 +145,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Test réseau</translation>
+        <translation>Tester le réseau</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
@@ -160,7 +160,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Cette version de GeForce Experience sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
+        <translation>La version de GeForce Experience installée sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -185,7 +185,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation>Ceci peut prendre quelques secondes…</translation>
+        <translation>Cela peut prendre quelques secondes…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
