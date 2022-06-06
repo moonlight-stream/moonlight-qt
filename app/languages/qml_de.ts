@@ -170,7 +170,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Bitte gebe %1 auf deinem Host ein. Diese Nachricht wird nach dem Koppeln automatisch geschlossen.</translation>
+        <translation>Bitte gib %1 auf deinem Host ein. Diese Nachricht wird nach dem Koppeln automatisch geschlossen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
@@ -240,7 +240,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="357"/>
         <source>Enter the new name for this PC:</source>
-        <translation>Gebe einen neuen Namen für diesen Host ein:</translation>
+        <translation>Gib einen neuen Namen für diesen Host ein:</translation>
     </message>
 </context>
 <context>
