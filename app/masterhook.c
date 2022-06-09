@@ -35,14 +35,23 @@ struct stat64 g_DrmMasterStat;
 // The DRM master FD created for SDL
 int g_SdlDrmMasterFd = -1;
 
+int drmIsMaster(int fd)
+{
+    /* Detect master by attempting something that requires master.
+     * This method is available in Mesa DRM since Feb 2019.
+     */
+    return drmAuthMagic(fd, 0) != -EACCES;
+
+}
+
 // This hook will handle legacy DRM rendering
 int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
                    uint32_t x, uint32_t y, uint32_t *connectors, int count,
                    drmModeModeInfoPtr mode)
 {
-    // Grab the first DRM FD that makes it in here. This will be the Qt
-    // EGLFS backend's DRM FD, which we will need later.
-    if (g_QtDrmMasterFd == -1) {
+    // Grab the first DRM Master FD that makes it in here. This will be the Qt
+    // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
+    if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
         g_QtDrmMasterFd = fd;
         fstat64(g_QtDrmMasterFd, &g_DrmMasterStat);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -58,9 +67,9 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
 int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
                         uint32_t flags, void *user_data)
 {
-    // Grab the first DRM FD that makes it in here. This will be the Qt
-    // EGLFS backend's DRM FD, which we will need later.
-    if (g_QtDrmMasterFd == -1) {
+    // Grab the first DRM Master FD that makes it in here. This will be the Qt
+    // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
+    if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
         g_QtDrmMasterFd = fd;
         fstat64(g_QtDrmMasterFd, &g_DrmMasterStat);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
