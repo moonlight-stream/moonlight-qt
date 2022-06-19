@@ -684,7 +684,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Włączenie HDR nadpisuje manualny wybór dekodera.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
@@ -957,7 +957,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="165"/>
         <source>Press %1 to disconnect your session</source>
-        <translation>Naciśnij % 1, aby rozłączyć sesję</translation>
+        <translation>Naciśnij %1, aby rozłączyć sesję</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="166"/>
@@ -980,7 +980,7 @@
     <message>
         <location filename="../gui/main.qml" line="265"/>
         <source>Version %1</source>
-        <translation>Wersja 1</translation>
+        <translation>Wersja %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="281"/>
