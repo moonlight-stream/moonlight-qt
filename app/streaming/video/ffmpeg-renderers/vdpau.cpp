@@ -216,7 +216,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         VdpBool supported;
         uint32_t maxWidth, maxHeight;
         VdpRGBAFormat candidateFormat =
-                params->videoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+                (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) ?
                     k_OutputFormats10Bit[i] : k_OutputFormats8Bit[i];
 
         status = m_VdpOutputSurfaceQueryCapabilities(m_Device, candidateFormat,

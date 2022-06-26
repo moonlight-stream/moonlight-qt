@@ -322,7 +322,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     m_DisplayWidth = swapChainDesc.Width;
     m_DisplayHeight = swapChainDesc.Height;
 
-    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+    if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
         swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
     }
     else {
@@ -446,7 +446,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
         // We require NV12 or P010 textures for our shader
         framesContext->format = AV_PIX_FMT_D3D11;
-        framesContext->sw_format = params->videoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+        framesContext->sw_format = (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) ?
                     AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
 
         framesContext->width = FFALIGN(params->width, m_TextureAlignment);
@@ -1325,7 +1325,7 @@ bool D3D11VARenderer::setupTexturePoolViews(AVD3D11VAFramesContext* frameContext
 
         srvDesc.Texture2DArray.FirstArraySlice = frameContext->texture_infos[i].index;
 
-        srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
+        srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
         hr = m_Device->CreateShaderResourceView(frameContext->texture_infos[i].texture, &srvDesc, &m_VideoTextureResourceViews[i][0]);
         if (FAILED(hr)) {
             m_VideoTextureResourceViews[i][0] = nullptr;
@@ -1335,7 +1335,7 @@ bool D3D11VARenderer::setupTexturePoolViews(AVD3D11VAFramesContext* frameContext
             return false;
         }
 
-        srvDesc.Format = m_DecoderParams.videoFormat == VIDEO_FORMAT_H265_MAIN10 ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
+        srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
         hr = m_Device->CreateShaderResourceView(frameContext->texture_infos[i].texture, &srvDesc, &m_VideoTextureResourceViews[i][1]);
         if (FAILED(hr)) {
             m_VideoTextureResourceViews[i][1] = nullptr;

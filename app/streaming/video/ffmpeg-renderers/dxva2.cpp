@@ -559,7 +559,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     d3dpp.hDeviceWindow = info.info.win.window;
     d3dpp.Flags = D3DPRESENTFLAG_VIDEO;
 
-    if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+    if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
         // Verify 10-bit A2R10G10B10 color support. This is only available
         // as a display format in full-screen exclusive mode on DX9.
         hr = d3d9ex->CheckDeviceType(adapterIndex,

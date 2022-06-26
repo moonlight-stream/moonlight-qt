@@ -169,7 +169,7 @@ public:
     }
 
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) {
-        if (videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
             // 10-bit YUV 4:2:0
             return AV_PIX_FMT_P010;
         }

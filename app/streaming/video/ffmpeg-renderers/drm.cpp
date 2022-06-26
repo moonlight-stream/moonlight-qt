@@ -111,7 +111,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int i;
 
-    m_Main10Hdr = (params->videoFormat == VIDEO_FORMAT_H265_MAIN10);
+    m_Main10Hdr = (params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
 
 #if SDL_VERSION_ATLEAST(2, 0, 15)
     SDL_SysWMinfo info;

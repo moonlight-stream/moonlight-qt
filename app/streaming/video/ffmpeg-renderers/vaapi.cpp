@@ -417,7 +417,7 @@ VAAPIRenderer::isDirectRenderingSupported()
                     "Using indirect rendering due to WM or blacklist");
         return false;
     }
-    else if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+    else if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using indirect rendering for 10-bit video");
         return false;
@@ -777,12 +777,12 @@ VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
     attrs[attributeCount].type = VASurfaceAttribPixelFormat;
     attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
     attrs[attributeCount].value.type = VAGenericValueTypeInteger;
-    attrs[attributeCount].value.value.i = (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) ?
+    attrs[attributeCount].value.value.i = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
                 VA_FOURCC_P010 : VA_FOURCC_NV12;
     attributeCount++;
 
     st = vaCreateSurfaces(vaDeviceContext->display,
-                          m_VideoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+                          (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
                               VA_RT_FORMAT_YUV420_10 : VA_RT_FORMAT_YUV420,
                           1280,
                           720,
@@ -831,7 +831,7 @@ VAAPIRenderer::canExportEGL() {
 }
 
 AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
-    return m_VideoFormat == VIDEO_FORMAT_H265_MAIN10 ?
+    return (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
                 AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
 }
 

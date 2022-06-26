@@ -234,7 +234,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
         // rendering mode so it can set the HDR metadata on the display. EGL does
         // not currently support this (and even if it did, Mesa and Wayland don't
         // currently have protocols to actually get that metadata to the display).
-        if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10 && m_BackendRenderer->canExportDrmPrime()) {
+        if ((params->videoFormat & VIDEO_FORMAT_MASK_10BIT) && m_BackendRenderer->canExportDrmPrime()) {
             m_FrontendRenderer = new DrmRenderer(m_BackendRenderer);
             if (m_FrontendRenderer->initialize(params)) {
                 return true;

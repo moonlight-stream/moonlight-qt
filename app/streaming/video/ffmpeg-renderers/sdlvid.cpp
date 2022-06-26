@@ -92,7 +92,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
 
     m_VideoFormat = params->videoFormat;
 
-    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
+    if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
         // SDL doesn't support rendering YUV 10-bit textures yet
         return false;
     }

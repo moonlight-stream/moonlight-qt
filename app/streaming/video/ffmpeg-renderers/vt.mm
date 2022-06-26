@@ -364,7 +364,7 @@ public:
         //
         // https://github.com/moonlight-stream/moonlight-qt/issues/493
         // https://github.com/moonlight-stream/moonlight-qt/issues/722
-        if (params->videoFormat != VIDEO_FORMAT_H265_MAIN10) {
+        if (!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
             int err;
             uint32_t cpuType;
             size_t size = sizeof(cpuType);

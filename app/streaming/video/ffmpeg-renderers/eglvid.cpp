@@ -459,8 +459,8 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // Don't retry if we've already failed to create a renderer for this
     // window *unless* the format has changed from 10-bit to 8-bit.
     if (m_Window == s_LastFailedWindow &&
-            (params->videoFormat & VIDEO_FORMAT_H265_MAIN10) ==
-                (s_LastFailedVideoFormat & VIDEO_FORMAT_H265_MAIN10)) {
+            !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) ==
+                !!(s_LastFailedVideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
         EGL_LOG(Error, "SDL_CreateRenderer() already failed on this window!");
         return false;
     }
