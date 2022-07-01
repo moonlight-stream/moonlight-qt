@@ -29,7 +29,14 @@ extern "C" {
 
 #include <Limelight.h>
 
+// HACK: Avoid including X11 headers which conflict with QDir
+#ifdef SDL_VIDEO_DRIVER_X11
+#undef SDL_VIDEO_DRIVER_X11
+#endif
+
 #include <SDL_syswm.h>
+
+#include <QDir>
 
 DrmRenderer::DrmRenderer(IFFmpegRenderer *backendRenderer)
     : m_BackendRenderer(backendRenderer),
@@ -145,15 +152,34 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             m_DrmFd = open(userDevice, O_RDWR | O_CLOEXEC);
         }
         else {
-            const char* defaultDevices[] = {"/dev/dri/renderD128", "/dev/dri/card0"};
+            QDir driDir("/dev/dri");
 
-            for (unsigned int i = 0; i < SDL_arraysize(defaultDevices); i++) {
-                m_DrmFd = open(defaultDevices[i], O_RDWR | O_CLOEXEC);
+            // We have to explicitly ask for devices to be returned
+            driDir.setFilter(QDir::Files | QDir::System);
+
+            // Try a render node first since we aren't using DRM for output in this codepath
+            for (QFileInfo& node : driDir.entryInfoList(QStringList("renderD*"))) {
+                QByteArray absolutePath = node.absoluteFilePath().toUtf8();
+                m_DrmFd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
                 if (m_DrmFd >= 0) {
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Opened DRM device: %s",
-                                defaultDevices[i]);
+                                "Opened DRM render node: %s",
+                                absolutePath.constData());
                     break;
+                }
+            }
+
+            // If that fails, try to use a primary node and hope for the best
+            if (m_DrmFd < 0) {
+                for (QFileInfo& node : driDir.entryInfoList(QStringList("card*"))) {
+                    QByteArray absolutePath = node.absoluteFilePath().toUtf8();
+                    m_DrmFd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
+                    if (m_DrmFd >= 0) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Opened DRM primary node: %s",
+                                    absolutePath.constData());
+                        break;
+                    }
                 }
             }
         }
