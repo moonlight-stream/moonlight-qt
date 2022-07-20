@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>選擇目標主機後立刻開啟此應用程式，繞過應用程式選單。</translation>
+        <translation>選取目標主機後立刻開啟此應用程式，略過應用程式選單。</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
@@ -334,7 +334,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="666"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>您選擇啟動遠端桌面游標模式可能會導致遊戲出現問題。</translation>
+        <translation>您選取啟動遠端桌面游標模式可能會導致遊戲出現問題。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="671"/>
@@ -344,7 +344,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="675"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>您選擇強制軟體解碼的設定可能會導致串流媒體效能不佳。</translation>
+        <translation>您選取強制軟體解碼的設定可能會導致串流媒體效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="680"/>
@@ -359,7 +359,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="710"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation>由於你選擇使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
+        <translation>由於你選取使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
@@ -373,7 +373,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="724"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation>由於你選擇強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
+        <translation>由於你選取強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="734"/>
@@ -407,7 +407,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="785"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>您所選擇的環繞音效設定並不支援目前的音訊裝置。</translation>
+        <translation>您選取的環場音效設定並不支援目前的音訊裝置。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="792"/>
@@ -437,7 +437,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="826"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation>你選擇的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選擇的解編碼器。</translation>
+        <translation>你選取的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選取的解編碼器。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1165"/>
@@ -689,7 +689,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation>啟用 HDR 將覆寫手動編解碼器的選擇。</translation>
+        <translation>啟用 HDR 將覆寫手動編解碼器的選取。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
