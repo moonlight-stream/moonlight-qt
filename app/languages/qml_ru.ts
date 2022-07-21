@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Запустить эту игру при выборе хоста (пропустить страницу выбора игры)</translation>
+        <translation>Запустить это приложение сразу после выбора хоста, пропуская страницу выбора приложений.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
@@ -294,7 +294,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="91"/>
         <source>No video received from host.</source>
-        <translation>Не удалось загрузить видео с хост-ПК. (No video received from host.)</translation>
+        <translation>Видео не получена с раздающего компьютера.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="92"/>
@@ -373,17 +373,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="724"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Использования программного обеспечения с декодированием в следствие выбора H.264 без поддержки ГП. Это может вызвать низкий уровень производительности при трансляции.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="734"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш компьютер, осуществляющий раздачу, или компьютер-клиент не поддерживают одинаковые видео кодеки. Это может вызвать низкую производительность потока.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="737"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Клиентская графическая карта не поддерживает H.264 кодировку. Это может вызвать низкую производительность потока.</translation>
     </message>
     <message>
         <source>%1 doesn&apos;t support HDR10.</source>
@@ -579,7 +579,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="617"/>
         <source>V-Sync</source>
-        <translation>V-Sync</translation>
+        <translation>Вертикальная синхронизация</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="627"/>
@@ -684,27 +684,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Включение HDR перезаписывает ручные настройки декодера.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Включение HDR перезаписывает ручные настроки кодеков.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Включить HDR (Эксперементальна опция)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1442"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Поток будет поддерживать HDR, но часть игр может потребовать HDR монитор на раздающем компьютере, чтобы переключиться на режим HDR.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Поток с HDR не поддерживается на данном персональном компьютере.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -822,12 +822,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Оставляйте экран включеным, пока осуществляется передача</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Предотвращает запуск записи экрана или выключения монитора в процессе передачи.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1050"/>
@@ -966,7 +966,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="166"/>
         <source>Start+Select+L1+R1</source>
-        <translation>Start+Select+L1+R1</translation>
+        <translation type="unfinished">Start+Select+L1+R1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="166"/>
