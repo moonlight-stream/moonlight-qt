@@ -884,7 +884,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1258"/>
         <source>Optimize game settings for streaming</source>
-        <translation>Optimiser les paramètres du jeu pour la diffusion en continu</translation>
+        <translation>Optimiser les paramètres du jeu pour le streaming</translation>
     </message>
     <message>
         <source>Play audio on host PC</source>
