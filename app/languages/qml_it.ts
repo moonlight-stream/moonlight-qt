@@ -122,7 +122,7 @@
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
+        <translation type="vanished">Cercando dei PC con NVIDIA GameStream abilitato</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
@@ -131,11 +131,11 @@
     </message>
     <message>
         <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
+        <translation type="vanished">Mostra applicazioni</translation>
     </message>
     <message>
         <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
+        <translation type="vanished">Mostra applicazioni nascoste</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -930,7 +930,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation>Rispristino %1...</translation>
+        <translation>Ripristino %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
