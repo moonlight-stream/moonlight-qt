@@ -684,7 +684,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Die Aktivierung von HDR setzt die manuelle Decoderauswahl außer Kraft.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
