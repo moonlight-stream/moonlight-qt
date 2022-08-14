@@ -667,7 +667,22 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     glClearColor(0, 0, 0, 1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    if (params->enableVsync) {
+    // SDL always uses swap interval 0 under the hood on Wayland systems,
+    // because the compositor guarantees tear-free rendering. In this
+    // situation, swap interval > 0 behaves as a frame pacing option
+    // rather than a way to eliminate tearing as SDL will block in
+    // SwapBuffers until the compositor consumes the frame. This will
+    // needlessly increases latency, so we should avoid it unless asked.
+    //
+    // HACK: In SDL 2.0.22+ on GNOME systems with fractional DPI scaling,
+    // the Wayland viewport can be stale when using Super+Left/Right/Up
+    // to resize the window. This seems to happen significantly more often
+    // with vsync enabled, so this also mitigates that problem too.
+    if (params->enableVsync
+#ifdef SDL_VIDEO_DRIVER_WAYLAND
+            && (info.subsystem != SDL_SYSWM_WAYLAND || params->enableFramePacing)
+#endif
+            ) {
         SDL_GL_SetSwapInterval(1);
 
 #if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
