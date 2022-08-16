@@ -29,7 +29,6 @@ public:
     Q_PROPERTY(bool supportsHdr MEMBER supportsHdr CONSTANT)
 
     Q_INVOKABLE void refreshDisplays();
-    Q_INVOKABLE QRect getDesktopResolution(int displayIndex);
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
 
 signals:
@@ -52,7 +51,6 @@ private:
     QString unmappedGamepads;
     int maximumStreamingFrameRate;
     QSize maximumResolution;
-    QList<QRect> monitorDesktopResolutions;
     QList<QRect> monitorNativeResolutions;
     QString versionString;
     bool supportsHdr;

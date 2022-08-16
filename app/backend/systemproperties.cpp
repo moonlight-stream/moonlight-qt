@@ -71,14 +71,7 @@ SystemProperties::SystemProperties()
     querySdlVideoInfo();
 
     Q_ASSERT(maximumStreamingFrameRate >= 60);
-    Q_ASSERT(!monitorDesktopResolutions.isEmpty());
     Q_ASSERT(!monitorNativeResolutions.isEmpty());
-}
-
-QRect SystemProperties::getDesktopResolution(int displayIndex)
-{
-    // Returns default constructed QRect if out of bounds
-    return monitorDesktopResolutions.value(displayIndex);
 }
 
 QRect SystemProperties::getNativeResolution(int displayIndex)
@@ -193,7 +186,6 @@ void SystemProperties::refreshDisplaysInternal()
         return;
     }
 
-    monitorDesktopResolutions.clear();
     monitorNativeResolutions.clear();
 
     // Never let the maximum drop below 60 FPS
@@ -202,24 +194,6 @@ void SystemProperties::refreshDisplaysInternal()
     SDL_DisplayMode bestMode;
     for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
         SDL_DisplayMode desktopMode;
-        int err;
-
-        err = SDL_GetDesktopDisplayMode(displayIndex, &desktopMode);
-        if (err == 0) {
-            if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
-                monitorDesktopResolutions.insert(displayIndex, QRect(0, 0, desktopMode.w, desktopMode.h));
-            }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Skipping resolution over 8K: %dx%d",
-                            desktopMode.w, desktopMode.h);
-            }
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_GetDesktopDisplayMode() failed: %s",
-                         SDL_GetError());
-        }
 
         if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode)) {
             if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
