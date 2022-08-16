@@ -221,7 +221,7 @@ void SystemProperties::refreshDisplaysInternal()
                          SDL_GetError());
         }
 
-        if (StreamUtils::getRealDesktopMode(displayIndex, &desktopMode)) {
+        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode)) {
             if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
                 monitorNativeResolutions.insert(displayIndex, QRect(0, 0, desktopMode.w, desktopMode.h));
             }

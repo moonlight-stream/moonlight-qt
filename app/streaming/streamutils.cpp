@@ -94,7 +94,7 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
     return mode.refresh_rate;
 }
 
-bool StreamUtils::getRealDesktopMode(int displayIndex, SDL_DisplayMode* mode)
+bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
 {
 #ifdef Q_OS_DARWIN
 #define MAX_DISPLAYS 16
@@ -138,11 +138,26 @@ bool StreamUtils::getRealDesktopMode(int displayIndex, SDL_DisplayMode* mode)
         }
     }
 #else
-    if (SDL_GetDesktopDisplayMode(displayIndex, mode) != 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetDesktopDisplayMode() failed: %s",
-                     SDL_GetError());
-        return false;
+    // We need to get the true display resolution without DPI scaling (since we use High DPI).
+    // Windows returns the real display resolution here, even if DPI scaling is enabled.
+    // macOS and Wayland report a resolution that includes the DPI scaling factor. Picking
+    // the first mode on Wayland will get the native resolution without the scaling factor
+    // (and macOS is handled in the #ifdef above).
+    if (!strcmp(SDL_GetCurrentVideoDriver(), "wayland")) {
+        if (SDL_GetDisplayMode(displayIndex, 0, mode) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetDisplayMode() failed: %s",
+                         SDL_GetError());
+            return false;
+        }
+    }
+    else {
+        if (SDL_GetDesktopDisplayMode(displayIndex, mode) != 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetDesktopDisplayMode() failed: %s",
+                         SDL_GetError());
+            return false;
+        }
     }
 #endif
 
