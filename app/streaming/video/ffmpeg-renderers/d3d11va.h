@@ -13,7 +13,7 @@ extern "C" {
 class D3D11VARenderer : public IFFmpegRenderer
 {
 public:
-    D3D11VARenderer();
+    D3D11VARenderer(int decoderSelectionPass);
     virtual ~D3D11VARenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override;
@@ -35,6 +35,8 @@ private:
     void renderVideo(AVFrame* frame);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
+
+    int m_DecoderSelectionPass;
 
     IDXGIFactory5* m_Factory;
     ID3D11Device* m_Device;

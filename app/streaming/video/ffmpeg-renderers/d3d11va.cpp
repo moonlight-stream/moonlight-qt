@@ -73,8 +73,9 @@ typedef struct _CSC_CONST_BUF
 } CSC_CONST_BUF, *PCSC_CONST_BUF;
 static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a multiple of 16");
 
-D3D11VARenderer::D3D11VARenderer()
-    : m_Factory(nullptr),
+D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
+    : m_DecoderSelectionPass(decoderSelectionPass),
+      m_Factory(nullptr),
       m_Device(nullptr),
       m_SwapChain(nullptr),
       m_DeviceContext(nullptr),

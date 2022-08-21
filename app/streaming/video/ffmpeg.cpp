@@ -601,13 +601,14 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     if (pass == 0) {
         switch (hwDecodeCfg->device_type) {
 #ifdef Q_OS_WIN32
-        // DXVA2 appears in the hwaccel list before D3D11VA, so we will implicitly
-        // prefer it. When we want to switch to D3D11VA by default, we'll need to
-        // move it into the second pass set below.
+        // DXVA2 appears in the hwaccel list before D3D11VA, so we will prefer it.
+        //
+        // There is logic in DXVA2 that may elect to fail on the first selection pass
+        // to allow D3D11VA to be used in cases where it is known to be better.
         case AV_HWDEVICE_TYPE_DXVA2:
-            return new DXVA2Renderer();
+            return new DXVA2Renderer(pass);
         case AV_HWDEVICE_TYPE_D3D11VA:
-            return new D3D11VARenderer();
+            return new D3D11VARenderer(pass);
 #endif
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
@@ -636,6 +637,15 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
         case AV_HWDEVICE_TYPE_CUDA:
             // CUDA should only be used to cover the NVIDIA+Wayland case
             return new CUDARenderer();
+#endif
+#ifdef Q_OS_WIN32
+        // This gives DXVA2 and D3D11VA another shot at handling cases where they
+        // chose to purposefully fail in the first selection pass to allow a more
+        // optimal decoder to be tried.
+        case AV_HWDEVICE_TYPE_DXVA2:
+            return new DXVA2Renderer(pass);
+        case AV_HWDEVICE_TYPE_D3D11VA:
+            return new D3D11VARenderer(pass);
 #endif
         default:
             return nullptr;

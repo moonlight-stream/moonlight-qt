@@ -13,7 +13,7 @@ extern "C" {
 class DXVA2Renderer : public IFFmpegRenderer
 {
 public:
-    DXVA2Renderer();
+    DXVA2Renderer(int decoderSelectionPass);
     virtual ~DXVA2Renderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
@@ -43,6 +43,8 @@ private:
 
     static
     int ffGetBuffer2(AVCodecContext* context, AVFrame* frame, int flags);
+
+    int m_DecoderSelectionPass;
 
     int m_VideoFormat;
     int m_VideoWidth;
@@ -77,5 +79,6 @@ private:
 
 #define DXVA2_QUIRK_NO_VP 0x01
 #define DXVA2_QUIRK_SET_DEST_FORMAT 0x02
+#define DXVA2_QUIRK_WDDM_20_PLUS 0x04
     int m_DeviceQuirks;
 };

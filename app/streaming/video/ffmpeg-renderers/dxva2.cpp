@@ -28,7 +28,8 @@ typedef struct _VERTEX
     float tu, tv;
 } VERTEX, *PVERTEX;
 
-DXVA2Renderer::DXVA2Renderer() :
+DXVA2Renderer::DXVA2Renderer(int decoderSelectionPass) :
+    m_DecoderSelectionPass(decoderSelectionPass),
     m_DecService(nullptr),
     m_Decoder(nullptr),
     m_SurfacesUsed(0),
@@ -434,6 +435,13 @@ bool DXVA2Renderer::initializeDeviceQuirks()
                     // For other GPUs, we'll avoid populating it as was our previous behavior.
                     m_DeviceQuirks |= DXVA2_QUIRK_SET_DEST_FORMAT;
                 }
+
+                // Tag this display device if it has a WDDM 2.0+ driver for the decoder selection logic
+                if (HIWORD(id.DriverVersion.HighPart) >= 20) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Detected WDDM 2.0 or later display driver");
+                    m_DeviceQuirks |= DXVA2_QUIRK_WDDM_20_PLUS;
+                }
             }
 
             return true;
@@ -707,7 +715,7 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 #else
-    else if (qgetenv("DXVA2_ENABLED") != "1") {
+    else if (qgetenv("DXVA2_ENABLED") != "1" && m_DecoderSelectionPass == 0) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "DXVA2 is disabled by default on ARM64. Set DXVA2_ENABLED=1 to override.");
         return false;
@@ -756,6 +764,26 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     }
 
     if (!initializeDeviceQuirks()) {
+        return false;
+    }
+
+    // If we have a WDDM 2.0 or later display driver and we're not running in
+    // full-screen exclusive mode, prefer the D3D11VA renderer.
+    //
+    // D3D11VA is better in this case because it can enable tearing in non-FSE
+    // modes when the user has V-Sync disabled. In non-FSE V-Sync cases, D3D11VA
+    // provides lower display latency on systems that support Independent Flip
+    // in windowed mode. When using D3D9, DWM will not promote us to IFlip unless
+    // we're full-screen (exclusive or not).
+    //
+    // NB: The reason we only do this for WDDM 2.0 and later is because older
+    // AMD drivers (such as those for the HD 5570) render garbage when using
+    // the D3D11VA renderer.
+    if (m_DecoderSelectionPass == 0 &&
+            (m_DeviceQuirks & DXVA2_QUIRK_WDDM_20_PLUS) &&
+            !((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Defaulting to D3D11VA for non-FSE mode");
         return false;
     }
 
