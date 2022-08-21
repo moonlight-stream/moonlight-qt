@@ -219,19 +219,21 @@ int MmalRenderer::getDecoderColorspace()
 
 void MmalRenderer::setupBackground(PDECODER_PARAMETERS params)
 {
-    // Create a renderer and draw a black background for the area not covered by the MMAL overlay.
-    // On the KMSDRM backend, this triggers the modeset that puts the CRTC into the mode we selected.
-    m_BackgroundRenderer = SDL_CreateRenderer(params->window, -1, SDL_RENDERER_SOFTWARE);
-    if (m_BackgroundRenderer == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                    "SDL_CreateRenderer() failed: %s",
-                    SDL_GetError());
-        return;
-    }
+    if (!params->testOnly) {
+        // Create a renderer and draw a black background for the area not covered by the MMAL overlay.
+        // On the KMSDRM backend, this triggers the modeset that puts the CRTC into the mode we selected.
+        m_BackgroundRenderer = SDL_CreateRenderer(params->window, -1, SDL_RENDERER_SOFTWARE);
+        if (m_BackgroundRenderer == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDL_CreateRenderer() failed: %s",
+                        SDL_GetError());
+            return;
+        }
 
-    SDL_SetRenderDrawColor(m_BackgroundRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(m_BackgroundRenderer);
-    SDL_RenderPresent(m_BackgroundRenderer);
+        SDL_SetRenderDrawColor(m_BackgroundRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(m_BackgroundRenderer);
+        SDL_RenderPresent(m_BackgroundRenderer);
+    }
 }
 
 void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)

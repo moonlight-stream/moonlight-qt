@@ -664,9 +664,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     m_ViewportWidth = dst.w;
     m_ViewportHeight = dst.h;
 
-    glClearColor(0, 0, 0, 1);
-    glClear(GL_COLOR_BUFFER_BIT);
-
     // SDL always uses swap interval 0 under the hood on Wayland systems,
     // because the compositor guarantees tear-free rendering. In this
     // situation, swap interval > 0 behaves as a frame pacing option
@@ -699,7 +696,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_GL_SetSwapInterval(0);
     }
 
-    SDL_GL_SwapWindow(params->window);
+    if (!params->testOnly) {
+        // Draw a black frame until the video stream starts rendering
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        SDL_GL_SwapWindow(params->window);
+    }
 
     glGenTextures(EGL_MAX_PLANES, m_Textures);
     for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {

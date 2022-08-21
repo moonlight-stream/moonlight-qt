@@ -211,6 +211,7 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     params.window = window;
     params.enableVsync = enableVsync;
     params.enableFramePacing = enableFramePacing;
+    params.testOnly = testOnly;
     params.vds = vds;
 
     memset(&params.hdrMetadata, 0, sizeof(params.hdrMetadata));

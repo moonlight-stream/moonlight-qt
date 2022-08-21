@@ -55,6 +55,7 @@ typedef struct _DECODER_PARAMETERS {
     int frameRate;
     bool enableVsync;
     bool enableFramePacing;
+    bool testOnly;
     HDR_MASTERING_METADATA hdrMetadata;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 

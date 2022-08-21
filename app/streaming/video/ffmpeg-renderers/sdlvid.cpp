@@ -152,10 +152,12 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     // Ensure the viewport is set to the desired video region
     SDL_RenderSetViewport(m_Renderer, &dst);
 
-    // Draw a black frame until the video stream starts rendering
-    SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-    SDL_RenderClear(m_Renderer);
-    SDL_RenderPresent(m_Renderer);
+    if (!params->testOnly) {
+        // Draw a black frame until the video stream starts rendering
+        SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+        SDL_RenderClear(m_Renderer);
+        SDL_RenderPresent(m_Renderer);
+    }
 
 #ifdef Q_OS_WIN32
     // For some reason, using Direct3D9Ex breaks this with multi-monitor setups.
