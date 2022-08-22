@@ -240,9 +240,14 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
     m_DecoderParams = *params;
 
-    // Use DXVA2 on anything older than Win10, so we don't have to handle a bunch
-    // of legacy Win7/Win8 codepaths in here.
-    if (!IsWindows10OrGreater()) {
+    if (qgetenv("D3D11VA_ENABLED") == "0") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "D3D11VA is disabled by environment variable");
+        return false;
+    }
+    else if (!IsWindows10OrGreater()) {
+        // Use DXVA2 on anything older than Win10, so we don't have to handle a bunch
+        // of legacy Win7/Win8 codepaths in here.
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D11VA renderer is only supported on Windows 10 or later.");
         return false;
