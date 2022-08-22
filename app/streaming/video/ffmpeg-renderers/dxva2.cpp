@@ -703,18 +703,17 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 
 bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 {
-    // Don't use DXVA2 for HDR10. While it can render 10-bit color, it doesn't support
-    // the HDR colorspace and HDR display metadata required to enable HDR mode properly.
-    if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
-        return false;
-    }
-#ifdef Q_PROCESSOR_X86
-    else if (qgetenv("DXVA2_ENABLED") == "0") {
+    if (qgetenv("DXVA2_ENABLED") == "0") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "DXVA2 is disabled by environment variable");
         return false;
     }
-#else
+    else if ((params->videoFormat & VIDEO_FORMAT_MASK_10BIT) && m_DecoderSelectionPass == 0) {
+        // Avoid using DXVA2 for HDR10. While it can render 10-bit color, it doesn't support
+        // the HDR colorspace and HDR display metadata required to enable HDR mode properly.
+        return false;
+    }
+#ifndef Q_PROCESSOR_X86
     else if (qgetenv("DXVA2_ENABLED") != "1" && m_DecoderSelectionPass == 0) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "DXVA2 is disabled by default on ARM64. Set DXVA2_ENABLED=1 to override.");
