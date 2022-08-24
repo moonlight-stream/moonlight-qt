@@ -166,6 +166,7 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
         "Available actions:\n"
         "  quit            Quit the currently running app\n"
         "  stream          Start streaming an app\n"
+        "  pair            Pair a new host\n"
         "\n"
         "See 'moonlight <action> --help' for help of specific action."
     );
@@ -193,6 +194,8 @@ GlobalCommandLineParser::ParseResult GlobalCommandLineParser::parse(const QStrin
                 return QuitRequested;
             } else if (action == "stream") {
                 return StreamRequested;
+            } else if (action == "pair") {
+                return PairRequested;
             }
         }
 
@@ -240,6 +243,58 @@ void QuitCommandLineParser::parse(const QStringList &args)
 QString QuitCommandLineParser::getHost() const
 {
     return m_Host;
+}
+
+PairCommandLineParser::PairCommandLineParser()
+{
+}
+
+PairCommandLineParser::~PairCommandLineParser()
+{
+}
+
+void PairCommandLineParser::parse(const QStringList &args)
+{
+    CommandLineParser parser;
+    parser.setupCommonOptions();
+    parser.setApplicationDescription(
+        "\n"
+        "Pair with the specified host."
+    );
+    parser.addPositionalArgument("pair", "pair host");
+    parser.addPositionalArgument("host", "Host computer name, UUID, or IP address", "<host>");
+    parser.addValueOption("pin", "4 digit pairing PIN");
+
+    if (!parser.parse(args)) {
+        parser.showError(parser.errorText());
+    }
+
+    parser.handleUnknownOptions();
+
+    // This method will not return and terminates the process if --version or
+    // --help is specified
+    parser.handleHelpAndVersionOptions();
+
+    // Verify that host has been provided
+    auto posArgs = parser.positionalArguments();
+    if (posArgs.length() < 2) {
+        parser.showError("Host not provided");
+    }
+    m_Host = parser.positionalArguments().at(1);
+    m_PredefinedPin = parser.value("pin");
+    if (!m_PredefinedPin.isEmpty() && m_PredefinedPin.length() != 4) {
+        parser.showError("PIN must be 4 digits");
+    }
+}
+
+QString PairCommandLineParser::getHost() const
+{
+    return m_Host;
+}
+
+QString PairCommandLineParser::getPredefinedPin() const
+{
+    return m_PredefinedPin;
 }
 
 StreamCommandLineParser::StreamCommandLineParser()

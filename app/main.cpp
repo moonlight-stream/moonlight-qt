@@ -30,6 +30,7 @@
 
 #include "cli/quitstream.h"
 #include "cli/startstream.h"
+#include "cli/pair.h"
 #include "cli/commandlineparser.h"
 #include "path.h"
 #include "utils.h"
@@ -607,6 +608,15 @@ int main(int argc, char *argv[])
             QuitCommandLineParser quitParser;
             quitParser.parse(app.arguments());
             auto launcher = new CliQuitStream::Launcher(quitParser.getHost(), &app);
+            engine.rootContext()->setContextProperty("launcher", launcher);
+            break;
+        }
+    case GlobalCommandLineParser::PairRequested:
+        {
+            initialView = "qrc:/gui/CliPair.qml";
+            PairCommandLineParser pairParser;
+            pairParser.parse(app.arguments());
+            auto launcher = new CliPair::Launcher(pairParser.getHost(), pairParser.getPredefinedPin(), &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }

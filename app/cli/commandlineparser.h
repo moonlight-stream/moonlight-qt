@@ -12,6 +12,7 @@ public:
         NormalStartRequested,
         StreamRequested,
         QuitRequested,
+        PairRequested,
     };
 
     GlobalCommandLineParser();
@@ -33,6 +34,22 @@ public:
 
 private:
     QString m_Host;
+};
+
+class PairCommandLineParser
+{
+public:
+    PairCommandLineParser();
+    virtual ~PairCommandLineParser();
+
+    void parse(const QStringList &args);
+
+    QString getHost() const;
+    QString getPredefinedPin() const;
+
+private:
+    QString m_Host;
+    QString m_PredefinedPin;
 };
 
 class StreamCommandLineParser
