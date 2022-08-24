@@ -455,7 +455,8 @@ class PendingPairingTask : public QObject, public QRunnable
 
 public:
     PendingPairingTask(ComputerManager* computerManager, NvComputer* computer, QString pin)
-        : m_Computer(computer),
+        : m_ComputerManager(computerManager),
+          m_Computer(computer),
           m_Pin(pin)
     {
         connect(this, &PendingPairingTask::pairingCompleted,
@@ -484,6 +485,9 @@ private:
                emit pairingCompleted(m_Computer, "Another pairing attempt is already in progress.");
                break;
            case NvPairingManager::PairState::PAIRED:
+               // Persist the newly pinned server certificate for this host
+               m_ComputerManager->saveHosts();
+
                emit pairingCompleted(m_Computer, nullptr);
                break;
            }
@@ -494,6 +498,7 @@ private:
         }
     }
 
+    ComputerManager* m_ComputerManager;
     NvComputer* m_Computer;
     QString m_Pin;
 };
