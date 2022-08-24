@@ -10,6 +10,8 @@
 #include <QThreadPool>
 #include <QCoreApplication>
 
+#include <random>
+
 #define SER_HOSTS "hosts"
 
 class PcMonitorThread : public QThread
@@ -824,6 +826,16 @@ void ComputerManager::addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv
     // UI while waiting for serverinfo query to complete
     PendingAddTask* addTask = new PendingAddTask(this, address, mdnsIpv6Address, mdns);
     QThreadPool::globalInstance()->start(addTask);
+}
+
+// TODO: Use QRandomGenerator when we drop Qt 5.9 support
+QString ComputerManager::generatePinString()
+{
+    std::uniform_int_distribution<int> dist(0, 9999);
+    std::random_device rd;
+    std::mt19937 engine(rd());
+
+    return QString::asprintf("%04u", dist(engine));
 }
 
 #include "computermanager.moc"

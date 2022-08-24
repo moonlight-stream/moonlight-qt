@@ -181,6 +181,8 @@ public:
 
     void addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address = NvAddress());
 
+    QString generatePinString();
+
     void pairHost(NvComputer* computer, QString pin);
 
     void quitRunningApp(NvComputer* computer);

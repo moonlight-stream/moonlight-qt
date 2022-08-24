@@ -2,8 +2,6 @@
 
 #include <QThreadPool>
 
-#include <random>
-
 ComputerModel::ComputerModel(QObject* object)
     : QAbstractListModel(object) {}
 
@@ -140,14 +138,9 @@ void ComputerModel::renameComputer(int computerIndex, QString name)
     m_ComputerManager->renameHost(m_Computers[computerIndex], name);
 }
 
-// TODO: Use QRandomGenerator when we drop Qt 5.9 support
 QString ComputerModel::generatePinString()
 {
-    std::uniform_int_distribution<int> dist(0, 9999);
-    std::random_device rd;
-    std::mt19937 engine(rd());
-
-    return QString::asprintf("%04u", dist(engine));
+    return m_ComputerManager->generatePinString();
 }
 
 class DeferredTestConnectionTask : public QObject, public QRunnable
