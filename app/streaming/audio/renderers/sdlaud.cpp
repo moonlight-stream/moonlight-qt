@@ -1,5 +1,5 @@
 #include "sdl.h"
-
+#include <algorithm>
 #include <Limelight.h>
 #include <SDL.h>
 
@@ -30,7 +30,7 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     // frames contain a non-power of 2 number of samples,
     // so the slop would require buffering another full frame.
     // Specifying non-Po2 seems to work for our supported platforms.
-    want.samples = opusConfig->samplesPerFrame;
+    want.samples = std::max(480, opusConfig->samplesPerFrame);
 
     m_FrameSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
 
