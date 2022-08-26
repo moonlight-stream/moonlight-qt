@@ -26,11 +26,10 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
     want.format = AUDIO_S16;
     want.channels = opusConfig->channelCount;
 
-    // This is supposed to be a power of 2, but our
-    // frames contain a non-power of 2 number of samples,
-    // so the slop would require buffering another full frame.
-    // Specifying non-Po2 seems to work for our supported platforms.
-    want.samples = opusConfig->samplesPerFrame;
+    // On PulseAudio systems, setting a value too small can cause underruns for other
+    // applications sharing this output device. We impose a floor of 480 samples (10 ms)
+    // to mitigate this issue.
+    want.samples = SDL_max(480, opusConfig->samplesPerFrame);
 
     m_FrameSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
 
