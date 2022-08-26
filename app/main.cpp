@@ -63,6 +63,7 @@
 static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stdout);
 static QMutex s_LoggerLock;
+static bool s_SuppressVerboseOutput;
 #ifdef LOG_TO_FILE
 #define MAX_LOG_LINES 10000
 static int s_LogLinesWritten = 0;
@@ -103,15 +104,27 @@ void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const ch
 
     switch (priority) {
     case SDL_LOG_PRIORITY_VERBOSE:
+        if (s_SuppressVerboseOutput) {
+            return;
+        }
         priorityTxt = "Verbose";
         break;
     case SDL_LOG_PRIORITY_DEBUG:
+        if (s_SuppressVerboseOutput) {
+            return;
+        }
         priorityTxt = "Debug";
         break;
     case SDL_LOG_PRIORITY_INFO:
+        if (s_SuppressVerboseOutput) {
+            return;
+        }
         priorityTxt = "Info";
         break;
     case SDL_LOG_PRIORITY_WARN:
+        if (s_SuppressVerboseOutput) {
+            return;
+        }
         priorityTxt = "Warn";
         break;
     case SDL_LOG_PRIORITY_ERROR:
@@ -137,9 +150,15 @@ void qtLogToDiskHandler(QtMsgType type, const QMessageLogContext&, const QString
 
     switch (type) {
     case QtDebugMsg:
+        if (s_SuppressVerboseOutput) {
+            return;
+        }
         typeTxt = "Debug";
         break;
     case QtInfoMsg:
+        if (s_SuppressVerboseOutput) {
+            return;
+        }
         typeTxt = "Info";
         break;
     case QtWarningMsg:
@@ -167,6 +186,9 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
     static int printPrefix = 1;
 
     if ((level & 0xFF) > av_log_get_level()) {
+        return;
+    }
+    else if ((level & 0xFF) > AV_LOG_WARNING && s_SuppressVerboseOutput) {
         return;
     }
 
@@ -263,7 +285,6 @@ int main(int argc, char *argv[])
     QCoreApplication::setApplicationName("Moonlight");
 
     if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
-        qInfo() << "Running in portable mode from:" << QDir::currentPath();
         QSettings::setDefaultFormat(QSettings::IniFormat);
         QSettings::setPath(QSettings::IniFormat, QSettings::UserScope, QDir::currentPath());
         QSettings::setPath(QSettings::IniFormat, QSettings::SystemScope, QDir::currentPath());
@@ -281,7 +302,7 @@ int main(int argc, char *argv[])
     QDir tempDir(Path::getLogDir());
     s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
     if (s_LoggerFile->open(QIODevice::WriteOnly)) {
-        qInfo() << "Redirecting log output to " << s_LoggerFile->fileName();
+        QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
         s_LoggerStream.setDevice(s_LoggerFile);
     }
 #endif
@@ -630,6 +651,12 @@ int main(int argc, char *argv[])
             auto launcher = new CliListApps::Launcher(listParser.getHost(), listParser, &app);
             launcher->execute(new ComputerManager(&app));
             hasGUI = false;
+
+#ifdef USE_CUSTOM_LOGGER
+            // Don't log to the console since it will jumble the command output
+            s_SuppressVerboseOutput = true;
+#endif
+
             break;
         }
     }
