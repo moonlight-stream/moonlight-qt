@@ -493,6 +493,22 @@ int main(int argc, char *argv[])
         // Don't log to the console since it will jumble the command output
         s_SuppressVerboseOutput = true;
 #endif
+#ifdef Q_OS_WIN32
+        // Attach to the console to be able to print output.
+        // Since we're a /SUBSYSTEM:WINDOWS app, we won't be attached by default.
+        if (AttachConsole(ATTACH_PARENT_PROCESS)) {
+            HANDLE conOut = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (conOut != INVALID_HANDLE_VALUE && conOut != NULL) {
+                freopen("CONOUT$", "w", stdout);
+                setvbuf(stdout, NULL, _IONBF, 0);
+            }
+            HANDLE conErr = GetStdHandle(STD_ERROR_HANDLE);
+            if (conErr != INVALID_HANDLE_VALUE && conErr != NULL) {
+                freopen("CONOUT$", "w", stderr);
+                setvbuf(stderr, NULL, _IONBF, 0);
+            }
+        }
+#endif
         break;
     default:
         break;
