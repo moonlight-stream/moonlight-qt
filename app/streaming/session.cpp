@@ -1068,6 +1068,17 @@ void Session::toggleFullscreen()
 {
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
 
+#ifdef Q_OS_WIN32
+    // Destroy the video decoder before toggling full-screen because D3D9 can try
+    // to put the window back into full-screen before we've managed to destroy
+    // the renderer. This leads to excessive flickering and can cause the window
+    // decorations to get messed up as SDL and D3D9 fight over the window style.
+    SDL_AtomicLock(&m_DecoderLock);
+    delete m_VideoDecoder;
+    m_VideoDecoder = nullptr;
+    SDL_AtomicUnlock(&m_DecoderLock);
+#endif
+
     if (fullScreen) {
         SDL_SetWindowResizable(m_Window, SDL_FALSE);
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
@@ -1543,7 +1554,9 @@ void Session::execInternal()
         case SDL_USEREVENT:
             switch (event.user.code) {
             case SDL_CODE_FRAME_READY:
-                m_VideoDecoder->renderFrameOnMainThread();
+                if (m_VideoDecoder != nullptr) {
+                    m_VideoDecoder->renderFrameOnMainThread();
+                }
                 break;
             case SDL_CODE_HIDE_CURSOR:
                 SDL_ShowCursor(SDL_DISABLE);
