@@ -170,7 +170,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Iserisci %1 sul tuo PC GameStream. Questa finestra si chiuderà quando l&apos;accoppiamento sarà concluso.</translation>
+        <translation>Inserisci %1 sul tuo PC GameStream. Questa finestra si chiuderà al termine dell&apos;accoppiamento.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
@@ -684,12 +684,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;abilitazione dell&apos;HDR sostituisce le selezioni manuali del decodificatore.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation>Abilitare HDR sovrascrive la selezione manuale del codec.</translation>
+        <translation>Abilitare l&apos;HDR sovrascrive la selezione manuale del codec.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
@@ -704,7 +704,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation>La trasmissione HDR non è supportata su questo PC.</translation>
+        <translation>Lo streaming HDR non è supportata su questo PC.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -822,12 +822,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantieni lo schermo acceso durante la trasmissione</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Evita che il salvaschermo si avii o che lo schermo si spenga durante la trasmissione.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1050"/>
@@ -930,7 +930,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation>Rispristino %1...</translation>
+        <translation>Ripristino %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>

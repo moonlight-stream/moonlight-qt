@@ -684,7 +684,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR을 활성화하면 지정된 디코더 선택이 무시됩니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>

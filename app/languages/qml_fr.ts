@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -113,7 +113,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>La connexion Internet de ce PC bloque Moonlight. Le streaming sur Internet peut ne pas fonctionner lorsqu&apos;il est connecté à ce réseau.</translation>
+        <translation>La connexion Internet de ce PC bloque Moonlight. Le streaming sur Internet peut ne pas fonctionner sur ce réseau.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
@@ -145,7 +145,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Test réseau</translation>
+        <translation>Tester le réseau</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
@@ -160,7 +160,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Cette version de GeForce Experience sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
+        <translation>La version de GeForce Experience installée sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -185,7 +185,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
         <source>This may take a few seconds…</source>
-        <translation>Ceci peut prendre quelques secondes…</translation>
+        <translation>Cela peut prendre quelques secondes…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="341"/>
@@ -220,7 +220,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC&#x202f;: %1</translation>
+        <translation>Statut du PC : %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -299,7 +299,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="92"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="97"/>
@@ -752,7 +752,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Activer le HDR désactive la sélection manuelle de décodeur.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
@@ -884,7 +884,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1258"/>
         <source>Optimize game settings for streaming</source>
-        <translation>Optimiser les paramètres du jeu pour la diffusion en continu</translation>
+        <translation>Optimiser les paramètres du jeu pour le streaming</translation>
     </message>
     <message>
         <source>Play audio on host PC</source>
@@ -977,7 +977,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
@@ -1062,7 +1062,7 @@
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration&#x202f;:</translation>
+        <translation>Moonlight a détecté des manettes sans configuration :</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="364"/>
@@ -1096,7 +1096,7 @@
     <message>
         <location filename="../gui/main.qml" line="461"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Êtes-vous sûr de vouloir quitter&#x202f;?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="491"/>

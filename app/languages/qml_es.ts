@@ -579,7 +579,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="617"/>
         <source>V-Sync</source>
-        <translation>V-Sync</translation>
+        <translation>V-Sync (Sincronización Vertical)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="627"/>
@@ -684,7 +684,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Activar HDR anula la selección manual de codecs.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
@@ -822,12 +822,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="989"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Mantener la pantalla encendida mientras dura la transmisión</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="999"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Prevenir que el protector de pantallas inicie o la pantalla entre en modo dormir durante la transmisión.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1050"/>

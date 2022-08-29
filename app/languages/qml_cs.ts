@@ -282,7 +282,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
         <source>Quitting %1...</source>
-        <translation>Vypínání %1...</translation>
+        <translation>Ukončování %1...</translation>
     </message>
 </context>
 <context>
@@ -684,7 +684,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1356"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Povolení HDR přepíše manuální nastavení dekodéru.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1425"/>
@@ -932,7 +932,7 @@
         <location filename="../gui/StreamSegue.qml" line="12"/>
         <location filename="../gui/StreamSegue.qml" line="19"/>
         <source>Starting %1...</source>
-        <translation>Zapínání %1...</translation>
+        <translation>Spouštění %1...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
