@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">PC에 연결하는 중...</translation>
+        <translation>PC에 연결하는 중...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 중... %2에 &apos;%1&apos;을(를) 입력하십시오.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링이 성공적으로 완료되었습니다</translation>
     </message>
 </context>
 <context>
@@ -274,12 +274,12 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1은(는) 이미 페어링되었습니다</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
+        <translation>이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -308,7 +308,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>컴퓨터 %1이(가) 페어링되지 않았습니다. 게임 목록을 검색하기 전에 Moonlight를 열어 페어링하십시오.</translation>
     </message>
 </context>
 <context>
