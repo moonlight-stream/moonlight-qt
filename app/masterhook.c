@@ -69,7 +69,7 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     }
 
     // Call into the real thing
-    return ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, "drmModeSetCrtc"))(fd, crtcId, bufferId, x, y, connectors, count, mode);
+    return ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtcId, bufferId, x, y, connectors, count, mode);
 }
 
 // This hook will handle atomic DRM rendering
@@ -87,7 +87,7 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
     }
 
     // Call into the real thing
-    return ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, "drmModeAtomicCommit"))(fd, req, flags, user_data);
+    return ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
 }
 
 // This hook will handle SDL's open() on the DRM device. We just need to
@@ -156,7 +156,7 @@ int open(const char *pathname, int flags, ...)
 {
     va_list va;
     va_start(va, flags);
-    int fd = openHook("open", pathname, flags, va);
+    int fd = openHook(__FUNCTION__, pathname, flags, va);
     va_end(va);
     return fd;
 }
@@ -165,7 +165,7 @@ int open64(const char *pathname, int flags, ...)
 {
     va_list va;
     va_start(va, flags);
-    int fd = openHook("open64", pathname, flags, va);
+    int fd = openHook(__FUNCTION__, pathname, flags, va);
     va_end(va);
     return fd;
 }
@@ -175,7 +175,7 @@ int open64(const char *pathname, int flags, ...)
 int close(int fd)
 {
     // Call the real thing
-    int ret = ((typeof(close)*)dlsym(RTLD_NEXT, "close"))(fd);
+    int ret = ((typeof(close)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd);
     if (ret == 0) {
         // If we just closed the SDL DRM master FD, restore master
         // to the Qt DRM FD. This works because the Qt DRM master FD
