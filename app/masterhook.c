@@ -13,12 +13,23 @@
 
 #include <SDL.h>
 #include <dlfcn.h>
+#include <fcntl.h>
 #include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
+
+// __OPEN_NEEDS_MODE is a glibc-ism, so define it ourselves for other libc
+#ifndef __OPEN_NEEDS_MODE
+#ifdef __O_TMPFILE
+# define __OPEN_NEEDS_MODE(oflag) \
+  (((oflag) & O_CREAT) != 0 || ((oflag) & __O_TMPFILE) == __O_TMPFILE)
+#else
+# define __OPEN_NEEDS_MODE(oflag) (((oflag) & O_CREAT) != 0)
+#endif
+#endif
 
 // We require SDL 2.0.15+ to hook because it supports sharing
 // the DRM FD with our code. This avoids having multiple DRM FDs
@@ -37,11 +48,9 @@ int g_SdlDrmMasterFd = -1;
 
 int drmIsMaster(int fd)
 {
-    /* Detect master by attempting something that requires master.
-     * This method is available in Mesa DRM since Feb 2019.
-     */
+    // Detect master by attempting something that requires master.
+    // This method is available in Mesa DRM since Feb 2019.
     return drmAuthMagic(fd, 0) != -EACCES;
-
 }
 
 // This hook will handle legacy DRM rendering
@@ -85,10 +94,21 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
 // hook this variant of open(), since that's what SDL uses. When we see
 // the open a FD for the same card as the Qt DRM master FD, we'll drop
 // master on the Qt FD to allow the new FD to have master.
-int open(const char *pathname, int flags)
+int open(const char *pathname, int flags, ...)
 {
+    int fd;
+
     // Call the real thing to do the open operation
-    int fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags);
+    if (__OPEN_NEEDS_MODE(flags)) {
+        va_list va;
+        va_start(va, flags);
+        mode_t mode = va_arg(va, mode_t);
+        fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags, mode);
+        va_end(va);
+    }
+    else {
+        fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags);
+    }
 
     // If the file was successfully opened and we have a DRM master FD,
     // check if the FD we just opened is a DRM device.
@@ -119,7 +139,16 @@ int open(const char *pathname, int flags)
                 // but since we just dropped the master, we can become master by
                 // simply creating a new FD. Let's do it.
                 close(fd);
-                fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags);
+                if (__OPEN_NEEDS_MODE(flags)) {
+                    va_list va;
+                    va_start(va, flags);
+                    mode_t mode = va_arg(va, mode_t);
+                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags, mode);
+                    va_end(va);
+                }
+                else {
+                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags);
+                }
                 g_SdlDrmMasterFd = fd;
             }
         }
