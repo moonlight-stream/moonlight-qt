@@ -94,20 +94,19 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
 // hook this variant of open(), since that's what SDL uses. When we see
 // the open a FD for the same card as the Qt DRM master FD, we'll drop
 // master on the Qt FD to allow the new FD to have master.
-int open(const char *pathname, int flags, ...)
+int openHook(const char *funcname, const char *pathname, int flags, va_list va)
 {
     int fd;
+    mode_t mode;
 
     // Call the real thing to do the open operation
     if (__OPEN_NEEDS_MODE(flags)) {
-        va_list va;
-        va_start(va, flags);
-        mode_t mode = va_arg(va, mode_t);
-        fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags, mode);
-        va_end(va);
+        mode = va_arg(va, mode_t);
+        fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags, mode);
     }
     else {
-        fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags);
+        mode = 0;
+        fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags);
     }
 
     // If the file was successfully opened and we have a DRM master FD,
@@ -140,20 +139,34 @@ int open(const char *pathname, int flags, ...)
                 // simply creating a new FD. Let's do it.
                 close(fd);
                 if (__OPEN_NEEDS_MODE(flags)) {
-                    va_list va;
-                    va_start(va, flags);
-                    mode_t mode = va_arg(va, mode_t);
-                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags, mode);
-                    va_end(va);
+                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags, mode);
                 }
                 else {
-                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, "open"))(pathname, flags);
+                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags);
                 }
                 g_SdlDrmMasterFd = fd;
             }
         }
     }
 
+    return fd;
+}
+
+int open(const char *pathname, int flags, ...)
+{
+    va_list va;
+    va_start(va, flags);
+    int fd = openHook("open", pathname, flags, va);
+    va_end(va);
+    return fd;
+}
+
+int open64(const char *pathname, int flags, ...)
+{
+    va_list va;
+    va_start(va, flags);
+    int fd = openHook("open64", pathname, flags, va);
+    va_end(va);
     return fd;
 }
 
