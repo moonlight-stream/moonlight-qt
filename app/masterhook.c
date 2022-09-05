@@ -94,6 +94,32 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
 // hook this variant of open(), since that's what SDL uses. When we see
 // the open a FD for the same card as the Qt DRM master FD, we'll drop
 // master on the Qt FD to allow the new FD to have master.
+int openHook(const char *funcname, const char *pathname, int flags, va_list va);
+
+// fcntl.h may define open to open64 which will cause us to define open64 twice.
+// Remove this redirection to allow our hooks to build properly with _FILE_OFFSET_BITS=64.
+#ifdef open
+#undef open
+#endif
+
+int open(const char *pathname, int flags, ...)
+{
+    va_list va;
+    va_start(va, flags);
+    int fd = openHook(__FUNCTION__, pathname, flags, va);
+    va_end(va);
+    return fd;
+}
+
+int open64(const char *pathname, int flags, ...)
+{
+    va_list va;
+    va_start(va, flags);
+    int fd = openHook(__FUNCTION__, pathname, flags, va);
+    va_end(va);
+    return fd;
+}
+
 int openHook(const char *funcname, const char *pathname, int flags, va_list va)
 {
     int fd;
@@ -149,24 +175,6 @@ int openHook(const char *funcname, const char *pathname, int flags, va_list va)
         }
     }
 
-    return fd;
-}
-
-int open(const char *pathname, int flags, ...)
-{
-    va_list va;
-    va_start(va, flags);
-    int fd = openHook(__FUNCTION__, pathname, flags, va);
-    va_end(va);
-    return fd;
-}
-
-int open64(const char *pathname, int flags, ...)
-{
-    va_list va;
-    va_start(va, flags);
-    int fd = openHook(__FUNCTION__, pathname, flags, va);
-    va_end(va);
     return fd;
 }
 
