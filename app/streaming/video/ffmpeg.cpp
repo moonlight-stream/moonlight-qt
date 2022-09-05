@@ -957,7 +957,6 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
 {
     if (m_NeedsSpsFixup && entry->bufferType == BUFFER_TYPE_SPS) {
-        const char naluHeader[] = {0x00, 0x00, 0x00, 0x01};
         h264_stream_t* stream = h264_new();
         int nalStart, nalEnd;
 
@@ -967,7 +966,7 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
                       (unsigned char *)&entry->data[nalStart],
                       nalEnd - nalStart);
 
-        SDL_assert(nalStart == sizeof(naluHeader));
+        SDL_assert(nalStart == 3 || nalStart == 4); // 3 or 4 byte Annex B start sequence
         SDL_assert(nalEnd == entry->length);
 
         // Fixup the SPS to what OS X needs to use hardware acceleration
@@ -976,15 +975,14 @@ void FFmpegVideoDecoder::writeBuffer(PLENTRY entry, int& offset)
 
         int initialOffset = offset;
 
-        // Copy the modified NALU data. This assumes a 3 byte prefix and
-        // begins writing from the 2nd byte, so we must write the data
-        // first, then go back and write the Annex B prefix.
-        offset += write_nal_unit(stream, (uint8_t*)&m_DecodeBuffer.data()[initialOffset + 3],
-                                 MAX_SPS_EXTRA_SIZE + entry->length - sizeof(naluHeader));
+        // Copy the modified NALU data. This clobbers byte 0 and starts NALU data at byte 1.
+        // Since it prepended one extra byte, subtract one from the returned length.
+        offset += write_nal_unit(stream, (uint8_t*)&m_DecodeBuffer.data()[initialOffset + nalStart - 1],
+                                 MAX_SPS_EXTRA_SIZE + entry->length - nalStart) - 1;
 
         // Copy the NALU prefix over from the original SPS
-        memcpy(&m_DecodeBuffer.data()[initialOffset], naluHeader, sizeof(naluHeader));
-        offset += sizeof(naluHeader);
+        memcpy(&m_DecodeBuffer.data()[initialOffset], entry->data, nalStart);
+        offset += nalStart;
 
         h264_free(stream);
     }
