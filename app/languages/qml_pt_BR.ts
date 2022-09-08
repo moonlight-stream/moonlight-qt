@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Estabelecendo conexão com o PC...</translation>
+        <translation>Estabelecendo conexão com o computador...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pareando... Por favor inserir &apos;%1&apos; on %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Pareamento finalizado com sucesso</translation>
     </message>
 </context>
 <context>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Estabelecendo conexão com o PC...</translation>
+        <translation>Estabelecendo conexão com o computador...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
@@ -105,7 +105,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Mapeando Gamepad</translation>
     </message>
 </context>
 <context>
@@ -126,17 +126,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Não foi possível conectar ao computador especificado.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>A conexão com a internet deste computador está bloqueando o Moonlight. Streaming através da Internet pode não funcionar corretamente enquanto conectado à esta rede.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished"></translation>
+        <translation>Clique no botão de Ajuda para possíveis soluções.</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -145,7 +145,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>A descoberta automática de computador está desabilitada. Adicione seu computador manualmente.</translation>
     </message>
     <message>
         <source>View Apps</source>
@@ -158,42 +158,42 @@
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Acordar computador</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Testar conexão</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Renomear PC</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Excluir PC</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>A versão do GeForce Experience em %1 não é suportada por esta versão do Moonlight. Você deve atualizar o Moonlight to stream para %1.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Você não pode parear enquanto a sessão anterior está em progresso no PC do host. Encerre jogos em andamento ou reinicie o PC host, e tente parear novamente.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Por favor inserir %1 no seu GameStream PC. Este diálogo irá encerrar quando o pareamento estiver completo.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove this PC?</source>
-        <translation type="unfinished"></translation>
+        <translation>Tem certeza que quer remover este computador?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>
