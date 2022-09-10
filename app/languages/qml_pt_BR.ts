@@ -279,7 +279,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Você não pode parear enquanto a sessão anterior está em progresso no PC do host. Encerre jogos em andamento ou reinicie o PC host, e tente parear novamente.</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -363,7 +363,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="662"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">A versão do GeForce Experience em %1 não é suportada por esta versão do Moonlight. Você deve atualizar o Moonlight to stream para %1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="667"/>
@@ -977,7 +977,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">A conexão com a internet deste computador está bloqueando o Moonlight. Streaming através da Internet pode não funcionar corretamente enquanto conectado à esta rede.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="165"/>
