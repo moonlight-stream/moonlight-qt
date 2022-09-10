@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Estabeleçendo conexão com o PC...</translation>
+        <translation>Estabelecendo conexão com o PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pareando... Por favor inserir &apos;%1&apos; em %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Pareamento realizado com sucesso</translation>
     </message>
 </context>
 <context>
@@ -274,12 +274,12 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 já se encontra pareado</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Você não pode conectar-se enquanto uma sessão ainda está ativa no PC de host. Saia de qualquer jogo em execução ou re-inicie o PC de host, daí tente conectar-se novamente.</translation>
+        <translation>Você não pode se conectar enquanto uma sessão ainda está ativa no PC de host. Encerre qualquer jogo em execução ou reinicie o PC de host, daí tente conectar-se novamente.</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -308,7 +308,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Computador %1 ainda não foi pareado. Por favor abrir o Moonlight para parear antes de buscar lista de jogos.</translation>
     </message>
 </context>
 <context>
@@ -613,7 +613,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="606"/>
         <source>V-Sync</source>
-        <translation>V-Sync</translation>
+        <translation>Sincronização Visual (V-Sync)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="616"/>
@@ -718,27 +718,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1345"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar HDR sobrescreve seleções de decodificação manual.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1414"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar HDR sobrescreve seleções de codec manuais.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1420"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Habilitar HDR (Experimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>O stream será HDR-capaz, más alguns jogos podem requerer monitor de HDR no seu host PC para habilitar modo HDR.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1433"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR streaming não é suportado por este PC.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -856,12 +856,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="978"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Manter o display ativo durante streaming</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="988"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Impede que a tela de descanso inicie ou que o display adormeça durante streaming.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1039"/>

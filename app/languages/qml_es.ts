@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Estableciendo conexión al PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
