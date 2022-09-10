@@ -36,6 +36,24 @@
 	</screenshots>
 
 	<releases>
+		<release version="4.2.0" date="2022-09-10">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Added support for pairing via the terminal</li>
+					<li>Added support for listing installed apps on a host via the terminal</li>
+					<li>Improved handling of V-Sync on Wayland systems to reduce latency</li>
+					<li>Improved performance using the legacy non-EGL VAAPI rendering code</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed native resolution detection on high DPI Wayland systems</li>
+					<li>Fixed audio crackling with SDL 2.24.0 on systems using PulseAudio</li>
+					<li>Updated included gamepad mappings</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="4.1.0" date="2022-05-23">
 			<description>
 				<p>New features:</p>
