@@ -720,8 +720,22 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
             rawCscMatrix = fullRange ? k_CscMatrix_Bt2020Full : k_CscMatrix_Bt2020Lim;
             break;
         default:
-            SDL_assert(false);
-            return;
+            // Sunshine doesn't always populate this data correctly,
+            // so fallback to assuming they're sending what we asked for.
+            switch (getDecoderColorspace()) {
+            case COLORSPACE_REC_601:
+                rawCscMatrix = fullRange ? k_CscMatrix_Bt601Full : k_CscMatrix_Bt601Lim;
+                break;
+            case COLORSPACE_REC_709:
+                rawCscMatrix = fullRange ? k_CscMatrix_Bt709Full : k_CscMatrix_Bt709Lim;
+                break;
+            case COLORSPACE_REC_2020:
+                rawCscMatrix = fullRange ? k_CscMatrix_Bt2020Full : k_CscMatrix_Bt2020Lim;
+                break;
+            default:
+                SDL_assert(false);
+                return;
+            }
         }
 
         // We need to adjust our raw CSC matrix to be column-major and with float3 vectors
