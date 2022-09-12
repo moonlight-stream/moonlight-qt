@@ -36,6 +36,15 @@
 	</screenshots>
 
 	<releases>
+		<release version="4.2.1" date="2022-09-12">
+			<description>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed streaming from hosts running Sunshine</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="4.2.0" date="2022-09-10">
 			<description>
 				<p>New features:</p>
