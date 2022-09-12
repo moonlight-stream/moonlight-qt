@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Verbindung zum Host wird aufgebaut...</translation>
+        <translation>Verbindung zum Host wird aufgebaut&#xa0;...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Koppeln ... Bitte geben Sie &quot;%1&quot; auf %2 ein.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Koppeln erfolgreich abgeschlossen</translation>
     </message>
 </context>
 <context>
@@ -188,7 +188,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="302"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>Bitte gebe %1 auf deinem Host ein. Diese Nachricht wird nach dem Koppeln automatisch geschlossen.</translation>
+        <translation>Bitte gib %1 auf deinem Host ein. Diese Nachricht wird nach dem Koppeln automatisch geschlossen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
@@ -258,7 +258,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="357"/>
         <source>Enter the new name for this PC:</source>
-        <translation>Gebe einen neuen Namen für diesen Host ein:</translation>
+        <translation>Gib einen neuen Namen für diesen Host ein:</translation>
     </message>
 </context>
 <context>
@@ -274,12 +274,12 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ist bereits gekoppelt</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Solange eine vorherige Session auf dem Host läuft, kannst du nicht koppeln. Beende alle laufenden Apps oder starte den Host neu. Dann probiere das Koppeln erneut.</translation>
+        <translation>Solange eine vorherige Session auf dem Host läuft, kannst du nicht koppeln. Beende alle laufenden Anwendungen oder starte den Host neu. Dann probiere das Koppeln erneut.</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -308,7 +308,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gerät %1 wurde noch nicht gekoppelt. Bitte öffne Moonlight zum Koppeln, bevor die Anwendungsliste abrufen werden kann.</translation>
     </message>
 </context>
 <context>
@@ -718,12 +718,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1345"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation>Die Aktivierung von HDR setzt die manuelle Decoderauswahl außer Kraft.</translation>
+        <translation>Das Aktivieren von HDR überschreibt die manuelle Decoder-Auswahl.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1414"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation>Das Aktivieren von HDR überschriebt die manuelle Codec Auswahl.</translation>
+        <translation>Das Aktivieren von HDR überschreibt die manuelle Codec-Auswahl.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1420"/>
@@ -733,12 +733,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation>Der Stream wird HDR unterstützen, aber einige Spiele erfordern einen angeschlossenen HDR Monitor am Host-PC, um den HDR Modus zu aktiveren.</translation>
+        <translation>Der Stream wird HDR unterstützen, aber einige Spiele erfordern einen angeschlossenen HDR-Monitor am Host-PC, um den HDR-Modus zu aktiveren.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1433"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation>HDR Streaming ist an diesem Client-PC nicht unterstützt.</translation>
+        <translation>Dieser Client-PC bietet keine Unterstützung für HDR Streaming.</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -751,7 +751,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1048"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation>HINWEIS: Bestimmte Tastenkombinationen wie Strg+Alt+Entf unter Windows können von keiner Anwendung abgefangen werden, auch nicht von Moonlight.</translation>
+        <translation>HINWEIS: Bestimmte Tastenkombinationen wie Strg+Alt+Entf können unter Windows von keiner Anwendung abgefangen werden, auch nicht von Moonlight.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1111"/>
@@ -771,22 +771,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1154"/>
         <source>Gamepad Settings</source>
-        <translation>Controller Einstellungen</translation>
+        <translation>Controller-Einstellungen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1164"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation>Tausche A/B und X/Y Controller Tasten</translation>
+        <translation>Tausche A/B und X/Y Controller-Tasten</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>Dies ändert das Controller Tastenlayout in ein Nintento Controller Style Layout</translation>
+        <translation>Dies ändert das Controller-Tastenlayout in eines im Nintendo-Stil</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1188"/>
         <source>Force gamepad #1 always connected</source>
-        <translation>Erzwinge das Controller #1 immer verbunden ist</translation>
+        <translation>Erzwinge, dass Controller #1 immer verbunden ist</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1198"/>
@@ -796,27 +796,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1028"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation>Du kannst dies während des Streamens umstellen mit Strg+Alt+Shift+M.</translation>
+        <translation>Du kannst dies während des Streamens mit Strg+Alt+Shift+M umstellen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1206"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>Aktivieren Sie die Maussteuerung mit Controllern, indem Sie die &apos;Start&apos;-Taste gedrückt halten</translation>
+        <translation>Halte die &apos;Start&apos;-Taste gedrückt, um die Maussteuerung mit einem Controller zu aktivieren</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1217"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>Controller-Eingaben ausführen auch wenn Moonlight im Hintergrund ist</translation>
+        <translation>Controller-Eingaben ausführen, auch wenn sich Moonlight im Hintergrund befindet</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1228"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation>Erlaubt es Moonlight Controller-Eingaben an den Stream zu schicken auch wenn es nicht das aktive Fenster ist</translation>
+        <translation>Erlaubt es Moonlight Controller-Eingaben an den Stream zu schicken, auch wenn es nicht das aktive Fenster ist</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1237"/>
         <source>Host Settings</source>
-        <translation>Host Einstellungen</translation>
+        <translation>Host-Einstellungen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1277"/>
@@ -826,7 +826,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="653"/>
         <source>Audio configuration</source>
-        <translation>Audio Einstellungen</translation>
+        <translation>Audio-Einstellungen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="950"/>
@@ -841,7 +841,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="972"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Aktualisiert deinen Discord Status um den Namen der aktuellen App anzuzeigen, wenn du streamst.</translation>
+        <translation>Aktualisiert deinen Discord-Status, um den Namen der aktuellen App anzuzeigen, wenn du streamst.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1199"/>
@@ -851,7 +851,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1017"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>Optimiere die Maus für Remote Desktop statt für Apps</translation>
+        <translation>Optimiere die Maus für Remotedesktop statt für Anwendungen</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="978"/>
@@ -866,12 +866,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1039"/>
         <source>Capture system keyboard shortcuts</source>
-        <translation>Erfasse Systemtastatur Shortcuts</translation>
+        <translation>Erfasse System-Tastenkürzel</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1047"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation>Dies aktiviert das Erfassen von Systemweiten Tastatur Shortcuts wie Alt+Tab, welche nomalerweise auf dem Client ausgeführt werden würden.</translation>
+        <translation>Dies aktiviert das Erfassen systemweiter Tastaturkürzeln wie Alt+Tab, auf welche der Client normalerweise reagieren würde.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1077"/>
@@ -896,17 +896,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1258"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Schließe die App auf dem Host nach dem beenden des Streams</translation>
+        <translation>Schließe die App auf dem Host nach dem Beenden des Streams</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1268"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>Dadurch wird die App, dass du streamst, geschlossen, wenn du deinen Stream beendest. Du verlierst dabei alle ungespeicherten Fortschritte!</translation>
+        <translation>Dadurch wird die App, die du streamst, geschlossen, wenn du deinen Stream beendest. Du verlierst sämtlichen ungespeicherten Fortschritt!</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1287"/>
         <source>Video decoder</source>
-        <translation>Video Decoder</translation>
+        <translation>Video-Decoder</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1313"/>
@@ -917,17 +917,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1317"/>
         <source>Force software decoding</source>
-        <translation>Erwzinge Software decoding</translation>
+        <translation>Erwzinge Software-Decoding</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1321"/>
         <source>Force hardware decoding</source>
-        <translation>Erzwinge Hardware decoding</translation>
+        <translation>Erzwinge Hardware-Decoding</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1351"/>
         <source>Video codec</source>
-        <translation>Video Codec</translation>
+        <translation>Video-Codec</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1386"/>
@@ -942,12 +942,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1439"/>
         <source>Unlock unsupported FPS options</source>
-        <translation>Zeige nicht unterstützte FPS Optionen an</translation>
+        <translation>Zeige nicht unterstützte FPS-Optionen an</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1458"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>Suche automatisch nach Hosts im lokalen Netzwerk (empfohlen)</translation>
+        <translation>Suche automatisch im lokalen Netzwerk nach Hosts (empfohlen)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1483"/>
@@ -960,7 +960,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation>Fortsetzen von %1...</translation>
+        <translation>Setze %1 fort ...</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
@@ -976,7 +976,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Prüfe deine Firewall- und Portweiterleitungsregeln für die Port(s): %1</translation>
+        <translation>Prüfe deine Firewall- und Portweiterleitungsregeln für (die) Port(s): %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
@@ -1033,12 +1033,12 @@
     <message>
         <location filename="../gui/main.qml" line="340"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation>Es gibt eine neue Version für Moonlight: Version %1</translation>
+        <translation>Eine neue Version ist verfügbar: Version %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="387"/>
         <source>Gamepad Mapper</source>
-        <translation>Controller Tastenbelegung</translation>
+        <translation>Controller-Tastenbelegung</translation>
     </message>
     <message>
         <source>Gamepad Mapping</source>
@@ -1086,7 +1086,7 @@
     <message>
         <location filename="../gui/main.qml" line="453"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>Klicke auf Hilfe, um zu erfahren wie du deinen Controller Tastenbelegung änderst.</translation>
+        <translation>Klicke auf Hilfe, um zu erfahren wie du deinen Controller-Tastenbelegung änderst.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="461"/>
@@ -1096,7 +1096,7 @@
     <message>
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your GameStream PC:</source>
-        <translation>Gib die IP-Adresse deines GameStream Hosts ein:</translation>
+        <translation>Gib die IP-Adresse deines GameStream-Hosts ein:</translation>
     </message>
 </context>
 </TS>
