@@ -158,7 +158,7 @@ public:
         return COLORSPACE_REC_601;
     }
 
-    virtual int getFrameColorspace(AVFrame* frame) {
+    virtual int getFrameColorspace(const AVFrame* frame) {
         // Prefer the colorspace field on the AVFrame itself
         switch (frame->colorspace) {
         case AVCOL_SPC_SMPTE170M:
@@ -176,7 +176,7 @@ public:
         }
     }
 
-    virtual bool isFrameFullRange(AVFrame* frame) {
+    virtual bool isFrameFullRange(const AVFrame* frame) {
         // This handles the case where the color range is unknown,
         // so that we use Limited color range which is the default
         // behavior for Moonlight.
