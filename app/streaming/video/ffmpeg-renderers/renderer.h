@@ -158,6 +158,31 @@ public:
         return COLORSPACE_REC_601;
     }
 
+    virtual int getFrameColorspace(AVFrame* frame) {
+        // Prefer the colorspace field on the AVFrame itself
+        switch (frame->colorspace) {
+        case AVCOL_SPC_SMPTE170M:
+        case AVCOL_SPC_BT470BG:
+            return COLORSPACE_REC_601;
+        case AVCOL_SPC_BT709:
+            return COLORSPACE_REC_709;
+        case AVCOL_SPC_BT2020_NCL:
+        case AVCOL_SPC_BT2020_CL:
+            return COLORSPACE_REC_2020;
+        default:
+            // If the colorspace is not populated, assume the encoder
+            // is sending the colorspace that we requested.
+            return getDecoderColorspace();
+        }
+    }
+
+    virtual bool isFrameFullRange(AVFrame* frame) {
+        // This handles the case where the color range is unknown,
+        // so that we use Limited color range which is the default
+        // behavior for Moonlight.
+        return frame->color_range == AVCOL_RANGE_JPEG;
+    }
+
     virtual bool isRenderThreadSupported() {
         // Render thread is supported by default
         return true;

@@ -10,7 +10,7 @@ SdlRenderer::SdlRenderer()
       m_Renderer(nullptr),
       m_Texture(nullptr),
       m_SwPixelFormat(AV_PIX_FMT_NONE),
-      m_ColorSpace(AVCOL_SPC_UNSPECIFIED),
+      m_ColorSpace(-1),
       m_MapFrame(false)
 {
     SDL_zero(m_OverlayTextures);
@@ -373,7 +373,8 @@ ReadbackRetry:
     // Because the specific YUV color conversion shader is established at
     // texture creation for most SDL render backends, we need to recreate
     // the texture when the colorspace changes.
-    if (frame->colorspace != m_ColorSpace) {
+    int colorspace = getFrameColorspace(frame);
+    if (colorspace != m_ColorSpace) {
 #ifdef HAVE_CUDA
         if (m_CudaGLHelper != nullptr) {
             delete m_CudaGLHelper;
@@ -386,7 +387,7 @@ ReadbackRetry:
             m_Texture = nullptr;
         }
 
-        m_ColorSpace = frame->colorspace;
+        m_ColorSpace = colorspace;
     }
 
     if (m_Texture == nullptr) {
@@ -410,13 +411,12 @@ ReadbackRetry:
             goto Exit;
         }
 
-        switch (frame->colorspace)
+        switch (colorspace)
         {
-        case AVCOL_SPC_BT709:
+        case COLORSPACE_REC_709:
             SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT709);
             break;
-        case AVCOL_SPC_BT470BG:
-        case AVCOL_SPC_SMPTE170M:
+        case COLORSPACE_REC_601:
         default:
             SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
             break;

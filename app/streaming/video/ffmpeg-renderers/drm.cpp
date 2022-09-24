@@ -50,8 +50,8 @@ DrmRenderer::DrmRenderer(IFFmpegRenderer *backendRenderer)
       m_CrtcId(0),
       m_PlaneId(0),
       m_CurrentFbId(0),
-      m_LastColorRange(AVCOL_RANGE_UNSPECIFIED),
-      m_LastColorSpace(AVCOL_SPC_UNSPECIFIED),
+      m_LastFullRange(false),
+      m_LastColorSpace(-1),
       m_ColorEncodingProp(nullptr),
       m_ColorRangeProp(nullptr),
       m_HdrOutputMetadataProp(nullptr),
@@ -608,7 +608,12 @@ void DrmRenderer::renderFrame(AVFrame* frame)
         return;
     }
 
-    if (frame->color_range != m_LastColorRange) {
+    int colorspace = getFrameColorspace(frame);
+    bool fullRange = isFrameFullRange(frame);
+
+    // We also update the color range when the colorspace changes in order to handle initialization
+    // where the last color range value may not actual be applied to the plane.
+    if (fullRange != m_LastFullRange || colorspace != m_LastColorSpace) {
         const char* desiredValue = getDrmColorRangeValue(frame);
 
         if (m_ColorRangeProp != nullptr && desiredValue != nullptr) {
@@ -647,10 +652,10 @@ void DrmRenderer::renderFrame(AVFrame* frame)
                         "COLOR_RANGE property does not exist on output plane. Colors may be inaccurate!");
         }
 
-        m_LastColorRange = frame->color_range;
+        m_LastFullRange = fullRange;
     }
 
-    if (frame->colorspace != m_LastColorSpace) {
+    if (colorspace != m_LastColorSpace) {
         const char* desiredValue = getDrmColorEncodingValue(frame);
 
         if (m_ColorEncodingProp != nullptr && desiredValue != nullptr) {
@@ -689,7 +694,7 @@ void DrmRenderer::renderFrame(AVFrame* frame)
                         "COLOR_ENCODING property does not exist on output plane. Colors may be inaccurate!");
         }
 
-        m_LastColorSpace = frame->colorspace;
+        m_LastColorSpace = colorspace;
     }
 
     // Update the overlay
@@ -745,12 +750,12 @@ bool DrmRenderer::isDirectRenderingSupported()
 
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
 {
-    switch (frame->colorspace) {
-    case AVCOL_SPC_SMPTE170M:
+    switch (getFrameColorspace(frame)) {
+    case COLORSPACE_REC_601:
         return "ITU-R BT.601 YCbCr";
-    case AVCOL_SPC_BT709:
+    case COLORSPACE_REC_709:
         return "ITU-R BT.709 YCbCr";
-    case AVCOL_SPC_BT2020_NCL:
+    case COLORSPACE_REC_2020:
         return "ITU-R BT.2020 YCbCr";
     default:
         return NULL;
@@ -759,14 +764,7 @@ const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
 
 const char* DrmRenderer::getDrmColorRangeValue(AVFrame* frame)
 {
-    switch (frame->color_range) {
-    case AVCOL_RANGE_MPEG:
-        return "YCbCr limited range";
-    case AVCOL_RANGE_JPEG:
-        return "YCbCr full range";
-    default:
-        return NULL;
-    }
+    return isFrameFullRange(frame) ? "YCbCr full range" : "YCbCr limited range";
 }
 
 #ifdef HAVE_EGL

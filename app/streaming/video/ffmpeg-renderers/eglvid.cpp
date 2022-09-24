@@ -739,10 +739,7 @@ const float *EGLRenderer::getColorOffsets(const AVFrame* frame) {
     static const float limitedOffsets[] = { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f };
     static const float fullOffsets[] = { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f };
 
-    // This handles the case where the color range is unknown,
-    // so that we use Limited color range which is the default
-    // behavior for Moonlight.
-    return (frame->color_range == AVCOL_RANGE_JPEG) ? fullOffsets : limitedOffsets;
+    return isFrameFullRange(frame) ? fullOffsets : limitedOffsets;
 }
 
 const float *EGLRenderer::getColorMatrix(const AVFrame* frame) {
@@ -780,33 +777,17 @@ const float *EGLRenderer::getColorMatrix(const AVFrame* frame) {
         1.4746f, -0.5714f, 0.0f
     };
 
-    // This handles the case where the color range is unknown,
-    // so that we use Limited color range which is the default
-    // behavior for Moonlight.
-    bool fullRange = (frame->color_range == AVCOL_RANGE_JPEG);
-    switch (frame->colorspace) {
-        case AVCOL_SPC_SMPTE170M:
-        case AVCOL_SPC_BT470BG:
+    bool fullRange = isFrameFullRange(frame);
+    switch (getFrameColorspace(frame)) {
+        case COLORSPACE_REC_601:
             return fullRange ? bt601Full : bt601Lim;
-        case AVCOL_SPC_BT709:
+        case COLORSPACE_REC_709:
             return fullRange ? bt709Full : bt709Lim;
-        case AVCOL_SPC_BT2020_NCL:
-        case AVCOL_SPC_BT2020_CL:
+        case COLORSPACE_REC_2020:
             return fullRange ? bt2020Full : bt2020Lim;
         default:
-            // Some backends don't populate this, so we'll assume
-            // the host gave us what we asked for by default.
-            switch (getDecoderColorspace()) {
-                case COLORSPACE_REC_601:
-                    return fullRange ? bt601Full : bt601Lim;
-                case COLORSPACE_REC_709:
-                    return fullRange ? bt709Full : bt709Lim;
-                case COLORSPACE_REC_2020:
-                    return fullRange ? bt2020Full : bt2020Lim;
-                default:
-                    SDL_assert(false);
-            }
-    };
+            SDL_assert(false);
+    }
 
     return bt601Lim;
 }

@@ -49,8 +49,8 @@ private:
     int m_TextureAlignment;
     int m_DisplayWidth;
     int m_DisplayHeight;
-    AVColorSpace m_LastColorSpace;
-    AVColorRange m_LastColorRange;
+    int m_LastColorSpace;
+    bool m_LastFullRange;
 
     bool m_AllowTearing;
 

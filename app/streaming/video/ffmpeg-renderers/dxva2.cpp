@@ -1009,17 +1009,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);
     HRESULT hr;
 
-    switch (frame->color_range) {
-    case AVCOL_RANGE_JPEG:
-        m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_0_255;
-        break;
-    case AVCOL_RANGE_MPEG:
-        m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_16_235;
-        break;
-    default:
-        m_Desc.SampleFormat.NominalRange = DXVA2_NominalRange_Unknown;
-        break;
-    }
+    m_Desc.SampleFormat.NominalRange = isFrameFullRange(frame) ? DXVA2_NominalRange_0_255 : DXVA2_NominalRange_16_235;
 
     switch (frame->color_primaries) {
     case AVCOL_PRI_BT709:
@@ -1067,16 +1057,12 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
         break;
     }
 
-    switch (frame->colorspace) {
-    case AVCOL_SPC_BT709:
+    switch (getFrameColorspace(frame)) {
+    case COLORSPACE_REC_709:
         m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT709;
         break;
-    case AVCOL_SPC_BT470BG:
-    case AVCOL_SPC_SMPTE170M:
+    case COLORSPACE_REC_601:
         m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_BT601;
-        break;
-    case AVCOL_SPC_SMPTE240M:
-        m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_SMPTE240M;
         break;
     default:
         m_Desc.SampleFormat.VideoTransferMatrix = DXVA2_VideoTransferMatrix_Unknown;

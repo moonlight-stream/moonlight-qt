@@ -78,8 +78,8 @@ private:
     uint32_t m_CrtcId;
     uint32_t m_PlaneId;
     uint32_t m_CurrentFbId;
-    AVColorRange m_LastColorRange;
-    AVColorSpace m_LastColorSpace;
+    bool m_LastFullRange;
+    int m_LastColorSpace;
     drmModePropertyPtr m_ColorEncodingProp;
     drmModePropertyPtr m_ColorRangeProp;
     drmModePropertyPtr m_HdrOutputMetadataProp;

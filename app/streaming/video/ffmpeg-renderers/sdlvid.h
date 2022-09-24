@@ -26,7 +26,7 @@ private:
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
     enum AVPixelFormat m_SwPixelFormat;
-    enum AVColorSpace m_ColorSpace;
+    int m_ColorSpace;
     bool m_MapFrame;
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
