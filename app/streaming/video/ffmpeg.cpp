@@ -523,7 +523,12 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
         break;
 
     case VIDEO_FORMAT_H265_MAIN10:
-        codecString = "HEVC Main 10";
+        if (LiGetCurrentHostDisplayHdrMode()) {
+            codecString = "HEVC Main 10 HDR";
+        }
+        else {
+            codecString = "HEVC Main 10 SDR";
+        }
         break;
 
     default:
