@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">正在與目標主機建立連線...</translation>
+        <translation>正在與目標主機建立連線…</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>正在配對…請在 %2 輸入「%1」。</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>配對成功</translation>
     </message>
 </context>
 <context>
@@ -274,12 +274,12 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 已配對</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">當上一個工作階段仍在主機 PC 上執行時，您無法配對。結束所有正在執行的遊戲或重新啟動主機，然後再次嘗試配對。</translation>
+        <translation>當上一個工作階段仍在主機 PC 上執行時，您無法配對。結束所有正在執行的遊戲或重新啟動主機，然後再次嘗試配對。</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -308,7 +308,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>電腦 %1 未配對，請在擷取遊戲清單前開啟 Moonlight 進行配對。</translation>
     </message>
 </context>
 <context>
@@ -499,7 +499,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="80"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
-        <translation>設置對您的電腦或網路連線過高的數值可能會導致延遲、卡頓、或是發生錯誤。</translation>
+        <translation>設定對您的電腦或網路連線過高的數值可能會導致延遲、卡頓、或是發生錯誤。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="62"/>
