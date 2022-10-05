@@ -508,6 +508,11 @@ public:
         return COLORSPACE_REC_601;
     }
 
+    int getDecoderCapabilities() override
+    {
+        return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+    }
+
     int getRendererAttributes() override
     {
         // AVSampleBufferDisplayLayer supports HDR output
