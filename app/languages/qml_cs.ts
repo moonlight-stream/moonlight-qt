@@ -341,57 +341,67 @@
         <translation>Vaše připojení k síti není stabilní. Snižte datový tok videa nebo použijte rychlejší připojeni.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="102"/>
+        <location filename="../streaming/session.cpp" line="103"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>Na vašem hostitelském počítači se něco pokazilo při spouštění streamu.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="103"/>
+        <location filename="../streaming/session.cpp" line="104"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Ujistěte se, že na vašem hostitelském počítači není otevřený žádný obsah s ochranou DRM. Můžete také zkusit restartovat hostitelský počítač.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="104"/>
+        <location filename="../streaming/session.cpp" line="105"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
         <translation>Pokud tento problém přetrvává, zkuste přeinstalovat ovladače grafiky a GeForce Experience.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="109"/>
+        <location filename="../streaming/session.cpp" line="110"/>
+        <source>The host PC reported a fatal video encoding error.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="111"/>
+        <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="116"/>
         <source>Connection terminated</source>
         <translation>Připojení ukončeno</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="662"/>
+        <location filename="../streaming/session.cpp" line="669"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Verze GeForce Experience na %1 není touto verzí Moonlightu podporována. Abyste mohli streamovat z %1, musíte aktualizovat Moonlight na novější verzi.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="667"/>
+        <location filename="../streaming/session.cpp" line="674"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Vybrali jste režim myši pro vzdálenou plochu, to může způsobit problémy ve hrách.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="672"/>
+        <location filename="../streaming/session.cpp" line="679"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>HDR není u softwarového dekódování podporováno.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="676"/>
+        <location filename="../streaming/session.cpp" line="683"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Vybrali jste, že chcete vynutit softwarové dekódování, to může způsobit špatný výkon streamování.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="681"/>
+        <location filename="../streaming/session.cpp" line="688"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>Používání nepodporovaných možností FPS může způsobit zadrhávání nebo zasekávání.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="684"/>
+        <location filename="../streaming/session.cpp" line="691"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>V-sync bude vypnuto, pokud budete streamovat s větší snímkovou frekvencí, než má váš displej.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="711"/>
+        <location filename="../streaming/session.cpp" line="718"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Využívá se softwarové dekódování, protože jste vynutili HEVC bez podpory GPU. To může způsobit špatný výkon při streamování.</translation>
     </message>
@@ -400,22 +410,22 @@
         <translation type="vanished">Die Grafikkarte deines PC&apos;s unterstützt keine HEVC Dekodierung.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="694"/>
+        <location filename="../streaming/session.cpp" line="701"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>GPU vašeho hostitelského počítače nepodporuje HEVC. Pro HEVC stream je vyžadována GeForce GTX 900-series (Maxwell) nebo novější.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="725"/>
+        <location filename="../streaming/session.cpp" line="732"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Využívá se softwarové dekódování, protože jste zvolili vynucené H.264 bez podpory GPU. To může způsobit špatný výkon streamování.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="735"/>
+        <location filename="../streaming/session.cpp" line="742"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>Váš hostitelský a klientský počítač nepodporují stejné video kodeky. To může způsobit špatný výkon streamování.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="738"/>
+        <location filename="../streaming/session.cpp" line="745"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Vaše GPU na klientovi nepodporuje dekódování H.264. To může způsobit špatný výkon streamování.</translation>
     </message>
@@ -424,62 +434,62 @@
         <translation type="vanished">%1 unterstützt kein HDR10.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="749"/>
+        <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>GPU vašeho hostitelského počítače nepodporuje HDR streamování. Pro HDR streamování je vyžadována GeForce GTX 1000-series (Pascal) nebo novější.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="758"/>
+        <location filename="../streaming/session.cpp" line="765"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>GPU tohoto počítače nepodporuje dekódování HEVC Main10 pro HDR streamování.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="771"/>
+        <location filename="../streaming/session.cpp" line="778"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>Pro 4K streamování je vyžadováno GeForce Experience 3.0 nebo novější.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="786"/>
+        <location filename="../streaming/session.cpp" line="793"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Vámi zvolené nastavení prostorového zvuku není podporováno současným zvukovým zařízením.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="793"/>
+        <location filename="../streaming/session.cpp" line="800"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Nezdařilo se otevřít zvukové zařízení. Během tohoto připojení nebude k dispozici zvuk.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="798"/>
+        <location filename="../streaming/session.cpp" line="805"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Připojený gamepad nemá žádné mapování a není použitelný. Navštivte nápovědu Moonlightu pro pomoc s řešením.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="806"/>
+        <location filename="../streaming/session.cpp" line="813"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>GPU vašeho hostitelského počítače nepodporuje stremování v rozlišení větším než 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="810"/>
+        <location filename="../streaming/session.cpp" line="817"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Rozlišení videa větší než 4K jsou podporovány pouze s kodekem HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="824"/>
+        <location filename="../streaming/session.cpp" line="831"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Zvolili jste vynucené hardwarové dekódování, které ale nelze vynutit, protože na GPU tohoto počítače chybí hardwarova podpora dekódování tohoto kodeku.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="827"/>
+        <location filename="../streaming/session.cpp" line="834"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Váš výběr kodeku a vynucení hardwarového dekódování nejsou kompatibilní. GPU tohoto počítače nepodporuje dekódování vámi zvoleného kodeku.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1177"/>
+        <location filename="../streaming/session.cpp" line="1184"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience vrátilo chybu: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1728"/>
+        <location filename="../streaming/session.cpp" line="1735"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Nezdařilo se inicializovat dekodér videa. Prosím zkontrolujte nastavení streamování a zkuste to znovu.</translation>
     </message>

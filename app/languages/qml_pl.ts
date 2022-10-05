@@ -341,57 +341,67 @@
         <translation>Twoje połączenie sieciowe ma słabą wydajność. Zmniejsz bitrate wideo lub spróbuj użyć szybszego połączenia.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="102"/>
+        <location filename="../streaming/session.cpp" line="103"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>Podczas uruchamiania strumieniowania coś poszło nie tak na komputerze-gospodarzu.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="103"/>
+        <location filename="../streaming/session.cpp" line="104"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Upewnij się, że na komputerze-gospodarzu nie ma otwartej żadnej zawartości chronionej systemem DRM. Możesz także spróbować uruchomić ponownie komputer, który jest gospodarzem.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="104"/>
+        <location filename="../streaming/session.cpp" line="105"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
         <translation>Jeśli problem wciąż się powtarza, spróbuj ponownie zainstalować sterowniki do układu graficznego (GPU) oraz GeForce Experience.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="109"/>
+        <location filename="../streaming/session.cpp" line="110"/>
+        <source>The host PC reported a fatal video encoding error.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="111"/>
+        <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="116"/>
         <source>Connection terminated</source>
         <translation>Połączenie przerwane</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="662"/>
+        <location filename="../streaming/session.cpp" line="669"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Wersja GeForce Experience na %1 nie jest obsługiwana przez tę wersję Moonlight. Musisz zaktualizować Moonlight, aby móc strumieniować z %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="667"/>
+        <location filename="../streaming/session.cpp" line="674"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Wybranie opcji włączenia trybu myszy pulpitu zdalnego może powodować problemy w grach.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="672"/>
+        <location filename="../streaming/session.cpp" line="679"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>Technologia HDR nie jest obsługiwana przy dekodowaniu programowym.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="676"/>
+        <location filename="../streaming/session.cpp" line="683"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Wybranie opcji wymuszenia dekodowania programowego może spowodować niską wydajność strumieniowania.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="681"/>
+        <location filename="../streaming/session.cpp" line="688"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>Wykorzystanie nieobsługiwanych opcji dotyczących FPS może spowodować opóźnienia lub zacinanie się obrazu.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="684"/>
+        <location filename="../streaming/session.cpp" line="691"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>Synchronizacja pionowa (V-Sync) zostanie wyłączona podczas strumieniowania z wyższą liczbą klatek na sekundę niż obsługuje to używany ekran.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="711"/>
+        <location filename="../streaming/session.cpp" line="718"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Wykorzystywanie dekodowania programowego spowodowane wymuszeniem HEVC bez obsługi przez procesor graficzny. Może to spowodować niską wydajność strumieniowania.</translation>
     </message>
@@ -400,22 +410,22 @@
         <translation type="vanished">Die Grafikkarte deines PC&apos;s unterstützt keine HEVC Dekodierung.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="694"/>
+        <location filename="../streaming/session.cpp" line="701"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>Komputer-gospodarz nie obsługuje kodeka HEVC. Do strumieniowania z użyciem HEVC wymagany jest układ graficzny serii GTX 900 (Maxwell) lub nowszy.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="725"/>
+        <location filename="../streaming/session.cpp" line="732"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Wykorzystywanie dekodowania programowego z powodu wymuszenia kodowania H.264 bez wsparcia ze strony układu graficznego (GPU).</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="735"/>
+        <location filename="../streaming/session.cpp" line="742"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>Komputer gospodarza oraz ten komputer nie wspierają tych samych kodeków wideo. To może spowodować niską wydajność strumieniowania.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="738"/>
+        <location filename="../streaming/session.cpp" line="745"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Twój układ graficzny (GPU) nie obsługuje dekodowania H.264. To może spowodować niską wydajność strumieniowania.</translation>
     </message>
@@ -424,62 +434,62 @@
         <translation type="vanished">%1 unterstützt kein HDR10.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="749"/>
+        <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>Układ graficzny (GPU) komputera gospodarza nie wspiera strumieniowana z użyciem technologii HDR. Strumieniowanie z HDR obsługiwane jest na układach graficznych serii GTX 1000 (Pascal) i nowszych.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="758"/>
+        <location filename="../streaming/session.cpp" line="765"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>Układ graficzny (GPU) tego komputera nie wspiera dekodowania HDR w trybie HEVC Main10.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="771"/>
+        <location filename="../streaming/session.cpp" line="778"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>Strumieniowanie w trybie 4K jest dostępne w GeForce Expierence 3.0 i nowszych.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="786"/>
+        <location filename="../streaming/session.cpp" line="793"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Wybrane ustawienia dźwięku przestrzennego nie są obsługiwane przez wybrane urządzenie dźwięku.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="793"/>
+        <location filename="../streaming/session.cpp" line="800"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Nie można otworzyć urządzenia dźwiękowego. Dźwięk będzie niedostępny w tej sesji.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="798"/>
+        <location filename="../streaming/session.cpp" line="805"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Podłączony kontroler nie posiada mapowania i nie jest zdatny do użytku. Odwiedź pomoc Moonlight w celu rozwiązania tego problemu.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="806"/>
+        <location filename="../streaming/session.cpp" line="813"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>Układ graficzny (GPU) komputera-gospodarza nie obsługuje strumieniowania w rozdzielczościach wyższych niż 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="810"/>
+        <location filename="../streaming/session.cpp" line="817"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Rozdzielczość wyższa niż 4K jest tylko obsługiwana przez kodek HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="824"/>
+        <location filename="../streaming/session.cpp" line="831"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Wybrana opcja wymuszenia dekodowania sprzętowego nie może zostać wykorzystana, ponieważ układ graficzny (GPU) tego komputera nie obsługuje dekodowania sprzętowego.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="827"/>
+        <location filename="../streaming/session.cpp" line="834"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Wybrany kodek i wymuszenie opcji dekodowania sprzętowego są niekompatybilne. Układ graficzny (GPU) tego komputera nie wspiera dekodowania sprzętowego wybranego kodeka.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1177"/>
+        <location filename="../streaming/session.cpp" line="1184"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience zwrócił błąd: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1728"/>
+        <location filename="../streaming/session.cpp" line="1735"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Nie udało się zainicjalizować dekodera wideo. Sprawdź ustawienia strumieniowania i spróbuj ponownie.</translation>
     </message>
