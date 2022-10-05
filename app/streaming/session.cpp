@@ -291,13 +291,8 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // We need to destroy the decoder on the main thread to satisfy
     // some API constraints (like DXVA2). If we can't acquire it,
     // that means the decoder is about to be destroyed, so we can
-    // safely return DR_OK and wait for m_NeedsIdr to be set by
+    // safely return DR_OK and wait for the IDR frame request by
     // the decoder reinitialization code.
-
-    if (s_ActiveSession->getAndClearPendingIdrFrameStatus()) {
-        // If we reset our decoder, we'll need to request an IDR frame
-        return DR_NEED_IDR;
-    }
 
     if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
@@ -469,7 +464,6 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioSampleCount(0),
       m_DropAudioEndTime(0)
 {
-    SDL_AtomicSet(&m_NeedsIdr, 0);
 }
 
 bool Session::initialize()
@@ -1266,11 +1260,6 @@ void Session::flushWindowEvents()
     SDL_PushEvent(&flushEvent);
 }
 
-bool Session::getAndClearPendingIdrFrameStatus()
-{
-    return SDL_AtomicSet(&m_NeedsIdr, 0);
-}
-
 class ExecThread : public QThread
 {
 public:
@@ -1746,7 +1735,7 @@ void Session::execInternal()
             }
 
             // Request an IDR frame to complete the reset
-            SDL_AtomicSet(&m_NeedsIdr, 1);
+            LiRequestIdrFrame();
 
             // Set HDR mode. We may miss the callback if we're in the middle
             // of recreating our decoder at the time the HDR transition happens.
