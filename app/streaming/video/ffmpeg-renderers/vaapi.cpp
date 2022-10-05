@@ -193,6 +193,17 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
             }
 
+            if (status != VA_STATUS_SUCCESS
+        #if defined(HAVE_CUDA) || defined(HAVE_LIBVDPAU)
+                    && m_WindowSystem != SDL_SYSWM_X11
+        #endif
+                    ) {
+                // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
+                // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
+                qputenv("LIBVA_DRIVER_NAME", "nvidia");
+                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+            }
+
             if (status != VA_STATUS_SUCCESS) {
                 // Unset LIBVA_DRIVER_NAME if none of the drivers we tried worked. This ensures
                 // we will get a fresh start using the default driver selection behavior after
@@ -268,6 +279,15 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
             return false;
         }
     }
+
+#if defined(HAVE_CUDA) || defined(HAVE_LIBVDPAU)
+    if (m_WindowSystem == SDL_SYSWM_X11 && qgetenv("FORCE_VAAPI") != "1" && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
+        // Prefer CUDA for XWayland and VDPAU for regular X11.
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Avoiding VAAPI for NVIDIA on X11/XWayland");
+        return false;
+    }
+#endif
 
     if (WMUtils::isRunningWayland()) {
         // The iHD VAAPI driver can initialize on XWayland but it crashes in
