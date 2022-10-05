@@ -437,6 +437,11 @@ int VDPAURenderer::getDecoderColorspace()
     return COLORSPACE_REC_601;
 }
 
+int VDPAURenderer::getDecoderCapabilities()
+{
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+}
+
 void VDPAURenderer::renderOverlay(VdpOutputSurface destination, Overlay::OverlayType type)
 {
     VdpStatus status;

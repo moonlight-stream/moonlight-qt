@@ -20,6 +20,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
     virtual int getDecoderColorspace() override;
+    virtual int getDecoderCapabilities() override;
 
 private:
     void renderOverlay(VdpOutputSurface destination, Overlay::OverlayType type);

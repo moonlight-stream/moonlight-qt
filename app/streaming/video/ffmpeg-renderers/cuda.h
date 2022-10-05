@@ -17,6 +17,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
     virtual bool isDirectRenderingSupported() override;
+    virtual int getDecoderCapabilities() override;
 
 private:
     AVBufferRef* m_HwContext;

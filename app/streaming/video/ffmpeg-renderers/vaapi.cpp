@@ -477,6 +477,11 @@ int VAAPIRenderer::getDecoderColorspace()
     return COLORSPACE_REC_601;
 }
 
+int VAAPIRenderer::getDecoderCapabilities()
+{
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+}
+
 void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 {
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;

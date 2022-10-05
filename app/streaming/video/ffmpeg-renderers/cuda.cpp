@@ -57,6 +57,11 @@ bool CUDARenderer::isDirectRenderingSupported()
     return false;
 }
 
+int CUDARenderer::getDecoderCapabilities()
+{
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+}
+
 CUDAGLInteropHelper::CUDAGLInteropHelper(AVHWDeviceContext* context)
     : m_Funcs(nullptr),
       m_Context((AVCUDADeviceContext*)context->hwctx)
