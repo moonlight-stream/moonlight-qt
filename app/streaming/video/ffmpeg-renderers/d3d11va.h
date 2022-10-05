@@ -22,6 +22,7 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual void setHdrMode(bool enabled) override;
     virtual int getRendererAttributes() override;
+    virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
 
 private:

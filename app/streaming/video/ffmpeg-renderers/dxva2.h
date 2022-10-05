@@ -20,6 +20,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override;
     virtual int getDecoderColorspace() override;
+    virtual int getDecoderCapabilities() override;
 
 private:
     bool initializeDecoder();

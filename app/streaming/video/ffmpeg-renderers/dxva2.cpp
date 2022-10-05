@@ -1004,6 +1004,11 @@ int DXVA2Renderer::getDecoderColorspace()
     }
 }
 
+int DXVA2Renderer::getDecoderCapabilities()
+{
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+}
+
 void DXVA2Renderer::renderFrame(AVFrame *frame)
 {
     IDirect3DSurface9* surface = reinterpret_cast<IDirect3DSurface9*>(frame->data[3]);

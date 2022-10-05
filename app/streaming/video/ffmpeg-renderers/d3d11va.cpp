@@ -1027,6 +1027,11 @@ int D3D11VARenderer::getRendererAttributes()
     return attributes;
 }
 
+int D3D11VARenderer::getDecoderCapabilities()
+{
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+}
+
 bool D3D11VARenderer::needsTestFrame()
 {
     // We can usually determine when D3D11VA will work based on which decoder GUIDs are supported,
