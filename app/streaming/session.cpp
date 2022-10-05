@@ -105,6 +105,12 @@ void Session::clConnectionTerminated(int errorCode)
                                                  tr("If the issue persists, try reinstalling your GPU drivers and GeForce Experience."));
         break;
 
+    case ML_ERROR_FRAME_CONVERSION:
+        s_ActiveSession->m_UnexpectedTermination = true;
+        emit s_ActiveSession->displayLaunchError(tr("The host PC reported a fatal video encoding error.") + "\n\n" +
+                                                 tr("Try disabling HDR mode, changing the streaming resolution, or changing your host PC's display resolution."));
+        break;
+
     default:
         s_ActiveSession->m_UnexpectedTermination = true;
         emit s_ActiveSession->displayLaunchError(tr("Connection terminated"));
