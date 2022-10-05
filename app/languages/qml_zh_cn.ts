@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">正在建立与目标计算机的连接...</translation>
+        <translation>正在建立与目标计算机的连接...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>配对中……请在 %2 输入 “%1”。</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>配对成功</translation>
     </message>
 </context>
 <context>
@@ -191,7 +191,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>在 %1 上已安装的GeForce Experience版本不支持当前版本的Moonlight。你必须升级Moonlight才能从 %1 串流。</translation>
+        <translation>此版本 Moonlight 不支持 %1 版本的 GeForce Experience，请更新 Moonlight 以支持从 %1 串流。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="247"/>
@@ -262,12 +262,12 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 已被配对</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">当上一个会话仍在运行时，无法进行配对。请退出所有正在运行的游戏或重新启动目标计算机，然后重试配对。</translation>
+        <translation>当上一个会话仍在运行时，无法进行配对。请退出所有正在运行的游戏或重新启动目标计算机，然后重试配对。</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -296,7 +296,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>电脑 %1 未配对，请在请求游戏列表前使用 Moonlight 配对。</translation>
     </message>
 </context>
 <context>
@@ -347,7 +347,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="662"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>%1 上的 GeForce Experience 版本不受当前版本的 Moonlight 支持。你必须更新 Moonlight才能从 %1 串流。</translation>
+        <translation>在 %1 安装的 GeForce Experience 版本不受当前版本的 Moonlight 支持。你必须升级 Moonlight 才能从 %1 串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="667"/>
@@ -747,7 +747,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1345"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>启用 HDR 会覆盖自定义解码器的选择。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1414"/>

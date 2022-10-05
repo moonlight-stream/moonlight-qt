@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Đang lập kết nối đến PC...</translation>
+        <translation>Đang lập kết nối đến PC...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Đang ghép đôi… Vui lòng nhập &apos;%1&apos; trên %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Ghép đôi thành công</translation>
     </message>
 </context>
 <context>
@@ -274,12 +274,12 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 đã được ghép đôi</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Bạn không thể ghép đôi trong khi một phiên làm việc trước vẫn đang chạy trên PC chủ. Hãy thoát các trò chơi hoặc khởi động lại PC chủ, sau đó thử ghép đôi lại.</translation>
+        <translation>Bạn không thể ghép đôi khi một phiên làm việc trước vẫn đang chạy trên PC chủ. Hãy thoát các trò chơi hoặc khởi động lại PC chủ, sau đó thử ghép đôi lại.</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -308,7 +308,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Máy tính %1 chưa được ghép đôi. Vui lòng mở Moonlight để ghép đôi trước khi lấy danh sách trò chơi.</translation>
     </message>
 </context>
 <context>
@@ -718,7 +718,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1345"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>Việc bật HDR sẽ ghi đè lên lựa chọn trình giải mã.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1414"/>
