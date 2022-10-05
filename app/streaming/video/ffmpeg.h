@@ -84,11 +84,8 @@ private:
     SDL_Thread* m_DecoderThread;
     SDL_atomic_t m_DecoderThreadShouldQuit;
 
-    typedef struct {
-        uint64_t enqueueTimeMs;
-        uint32_t presentationTimeMs;
-    } FrameInfoTuple;
-    QQueue<FrameInfoTuple> m_FrameInfoQueue;
+    // Data buffers in the queued DU are not valid
+    QQueue<DECODE_UNIT> m_FrameInfoQueue;
 
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCMainTestFrame[];

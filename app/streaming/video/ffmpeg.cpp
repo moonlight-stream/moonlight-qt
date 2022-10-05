@@ -1054,15 +1054,16 @@ void FFmpegVideoDecoder::decoderThreadProc()
                     frame->pkt_dts = SDL_GetTicks();
 
                     if (!m_FrameInfoQueue.isEmpty()) {
-                        FrameInfoTuple infoTuple = m_FrameInfoQueue.dequeue();
+                        // Data buffers in the DU are not valid here!
+                        DECODE_UNIT du = m_FrameInfoQueue.dequeue();
 
                         // Count time in avcodec_send_packet() and avcodec_receive_frame()
                         // as time spent decoding. Also count time spent in the decode unit
                         // queue because that's directly caused by decoder latency.
-                        m_ActiveWndVideoStats.totalDecodeTime += LiGetMillis() - infoTuple.enqueueTimeMs;
+                        m_ActiveWndVideoStats.totalDecodeTime += LiGetMillis() - du.enqueueTimeMs;
 
                         // Store the presentation time
-                        frame->pts = infoTuple.presentationTimeMs;
+                        frame->pts = du.presentationTimeMs;
                     }
 
                     m_ActiveWndVideoStats.decodedFrames++;
@@ -1087,9 +1088,14 @@ void FFmpegVideoDecoder::decoderThreadProc()
                 }
                 else {
                     char errorstring[512];
+
+                    // FIXME: Should we pop an entry off m_FrameInfoQueue here?
+
                     av_strerror(err, errorstring, sizeof(errorstring));
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "avcodec_receive_frame() failed: %s", errorstring);
+                                "avcodec_receive_frame() failed: %s (frame %d)",
+                                errorstring,
+                                !m_FrameInfoQueue.isEmpty() ? m_FrameInfoQueue.head().frameNumber : -1);
 
                     if (++m_ConsecutiveFailedDecodes == FAILED_DECODES_RESET_THRESHOLD) {
                         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1197,7 +1203,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         char errorstring[512];
         av_strerror(err, errorstring, sizeof(errorstring));
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "avcodec_send_packet() failed: %s", errorstring);
+                    "avcodec_send_packet() failed: %s (frame %d)",
+                    errorstring,
+                    du->frameNumber);
 
         // If we've failed a bunch of decodes in a row, the decoder/renderer is
         // clearly unhealthy, so let's generate a synthetic reset event to trigger
@@ -1217,7 +1225,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         return DR_NEED_IDR;
     }
 
-    m_FrameInfoQueue.enqueue({ du->enqueueTimeMs, du->presentationTimeMs});
+    m_FrameInfoQueue.enqueue(*du);
 
     m_FramesIn++;
     return DR_OK;
