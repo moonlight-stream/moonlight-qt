@@ -910,40 +910,25 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         }
     }
 
-    // Add colorspace data if present
-    switch (frame->colorspace) {
-    case AVCOL_SPC_BT2020_CL:
-    case AVCOL_SPC_BT2020_NCL:
-        attribs[attribIndex++] = EGL_YUV_COLOR_SPACE_HINT_EXT;
-        attribs[attribIndex++] = EGL_ITU_REC2020_EXT;
-        break;
-    case AVCOL_SPC_SMPTE170M:
-    case AVCOL_SPC_BT470BG:
-    case AVCOL_SPC_FCC:
+    // Add colorspace metadata
+    switch (getFrameColorspace(frame)) {
+    case COLORSPACE_REC_601:
         attribs[attribIndex++] = EGL_YUV_COLOR_SPACE_HINT_EXT;
         attribs[attribIndex++] = EGL_ITU_REC601_EXT;
         break;
-    case AVCOL_SPC_BT709:
+    case COLORSPACE_REC_709:
         attribs[attribIndex++] = EGL_YUV_COLOR_SPACE_HINT_EXT;
         attribs[attribIndex++] = EGL_ITU_REC709_EXT;
         break;
-    default:
+    case COLORSPACE_REC_2020:
+        attribs[attribIndex++] = EGL_YUV_COLOR_SPACE_HINT_EXT;
+        attribs[attribIndex++] = EGL_ITU_REC2020_EXT;
         break;
     }
 
-    // Add color range data if present
-    switch (frame->color_range) {
-    case AVCOL_RANGE_JPEG:
-        attribs[attribIndex++] = EGL_SAMPLE_RANGE_HINT_EXT;
-        attribs[attribIndex++] = EGL_YUV_FULL_RANGE_EXT;
-        break;
-    case AVCOL_RANGE_MPEG:
-        attribs[attribIndex++] = EGL_SAMPLE_RANGE_HINT_EXT;
-        attribs[attribIndex++] = EGL_YUV_NARROW_RANGE_EXT;
-        break;
-    default:
-        break;
-    }
+    // Add color range metadata
+    attribs[attribIndex++] = EGL_SAMPLE_RANGE_HINT_EXT;
+    attribs[attribIndex++] = isFrameFullRange(frame) ? EGL_YUV_FULL_RANGE_EXT : EGL_YUV_NARROW_RANGE_EXT;
 
     // Terminate the attribute list
     attribs[attribIndex++] = EGL_NONE;
