@@ -275,7 +275,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 vendorStr.contains("Radeon", Qt::CaseInsensitive)) {
             // Fail and let VDPAU pick this up
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Avoiding VAAPI on AMD driver");
+                        "Avoiding VAAPI on AMD driver. Set FORCE_VAAPI=1 to override.");
             return false;
         }
     }
@@ -284,7 +284,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     if (m_WindowSystem == SDL_SYSWM_X11 && qgetenv("FORCE_VAAPI") != "1" && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
         // Prefer CUDA for XWayland and VDPAU for regular X11.
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Avoiding VAAPI for NVIDIA on X11/XWayland");
+                    "Avoiding VAAPI for NVIDIA driver on X11/XWayland. Set FORCE_VAAPI=1 to override.");
         return false;
     }
 #endif
