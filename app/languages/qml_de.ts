@@ -358,12 +358,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="110"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der Host-PC hat einen schwerwiegenden Videocodierungsfehler gemeldet.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Versuchen Sie, den HDR-Modus zu deaktivieren, die Streaming-Auflösung zu ändern oder die Bildschirmauflösung des Host-PCs zu ändern.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="116"/>
