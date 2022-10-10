@@ -61,12 +61,12 @@
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Сопряжение... Пожалуйста, введите &quot;%1&quot; на %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Сопряжение успешно завершено</translation>
     </message>
 </context>
 <context>
@@ -274,7 +274,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 уже сопряжен</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
@@ -308,7 +308,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Компьютер %1 не был сопряжен. Пожалуйста, откройте Moonlight для сопряжения перед получением списка игр.</translation>
     </message>
 </context>
 <context>
