@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Подключение к ПК...</translation>
+        <translation>Подключение к ПК...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
@@ -279,7 +279,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Нельзя создать новую пару, пока на ПК ещё активно соединение. Завершите запущенную на хосте игру или перезапустите ПК-хост, затем попробуйте ещё раз.</translation>
+        <translation>Нельзя создать новую пару, пока на ПК ещё активно соединение. Завершите запущенную на хосте игру или перезапустите ПК-хост, затем попробуйте ещё раз.</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="114"/>
@@ -358,12 +358,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="110"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Хост-ПК сообщил о критической ошибке видео кодирования.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Попробуйте отключить HDR, изменить разрешение стрима или изменить разрешение дисплея на хост-ПК.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="116"/>
@@ -1010,7 +1010,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="166"/>
         <source>Start+Select+L1+R1</source>
-        <translation type="unfinished">Start+Select+L1+R1</translation>
+        <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="166"/>
@@ -1085,7 +1085,7 @@
     <message>
         <location filename="../gui/main.qml" line="425"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight не обнаружил ни одного работающего декодера видео с аппаратным ускорением. Производительность стрима может сильно снизиться.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="427"/>
