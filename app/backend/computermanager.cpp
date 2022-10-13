@@ -481,7 +481,12 @@ private:
                emit pairingCompleted(m_Computer, "The PIN from the PC didn't match. Please try again.");
                break;
            case NvPairingManager::PairState::FAILED:
-               emit pairingCompleted(m_Computer, "Pairing failed. Please try again.");
+               if (m_Computer->currentGameId != 0) {
+                   emit pairingCompleted(m_Computer, "You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.");
+               }
+               else {
+                   emit pairingCompleted(m_Computer, "Pairing failed. Please try again.");
+               }
                break;
            case NvPairingManager::PairState::ALREADY_IN_PROGRESS:
                emit pairingCompleted(m_Computer, "Another pairing attempt is already in progress.");

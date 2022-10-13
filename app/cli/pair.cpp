@@ -80,11 +80,6 @@ public:
                     QString msg = QObject::tr("%1 is already paired").arg(event.computer->name);
                     emit q->failed(msg);
                 }
-                else if (event.computer->currentGameId != 0) {
-                    m_State = StateFailure;
-                    QString msg = QObject::tr("You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.");
-                    emit q->failed(msg);
-                }
                 else {
                     Q_ASSERT(!m_PredefinedPin.isEmpty());
 

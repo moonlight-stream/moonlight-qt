@@ -232,22 +232,14 @@ CenteredGridView {
                     stackView.push(appView)
                 }
                 else {
-                    if (!model.busy) {
-                        var pin = computerModel.generatePinString()
+                    var pin = computerModel.generatePinString()
 
-                        // Kick off pairing in the background
-                        computerModel.pairComputer(index, pin)
+                    // Kick off pairing in the background
+                    computerModel.pairComputer(index, pin)
 
-                        // Display the pairing dialog
-                        pairDialog.pin = pin
-                        pairDialog.open()
-                    }
-                    else {
-                        // cannot pair while something is streaming or attempting to pair
-                        errorDialog.text = qsTr("You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.")
-                        errorDialog.helpText = ""
-                        errorDialog.open()
-                    }
+                    // Display the pairing dialog
+                    pairDialog.pin = pin
+                    pairDialog.open()
                 }
             } else if (!model.online) {
                 // Using open() here because it may be activated by keyboard
