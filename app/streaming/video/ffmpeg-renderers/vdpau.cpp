@@ -428,7 +428,7 @@ bool VDPAURenderer::needsTestFrame()
     return true;
 }
 
-int VDPAURenderer::getDecoderColorspace()
+int VDPAURenderer::getDecoderSdrColorspace()
 {
     // VDPAU defaults to Rec 601.
     // https://http.download.nvidia.com/XFree86/vdpau/doxygen/html/group___vdp_video_mixer.html#ga65580813e9045d94b739ed2bb8b62b46

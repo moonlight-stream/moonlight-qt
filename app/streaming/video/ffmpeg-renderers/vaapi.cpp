@@ -470,7 +470,7 @@ VAAPIRenderer::isDirectRenderingSupported()
     return false;
 }
 
-int VAAPIRenderer::getDecoderColorspace()
+int VAAPIRenderer::getDecoderSdrColorspace()
 {
     // Gallium drivers don't support Rec 709 yet - https://gitlab.freedesktop.org/mesa/mesa/issues/1915
     // Intel-vaapi-driver defaults to Rec 601 - https://github.com/intel/intel-vaapi-driver/blob/021bcb79d1bd873bbd9fbca55f40320344bab866/src/i965_output_dri.c#L186

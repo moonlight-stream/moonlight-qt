@@ -63,7 +63,7 @@ SLVideoDecoder::getDecoderCapabilities()
 }
 
 int
-SLVideoDecoder::getDecoderColorspace()
+SLVideoDecoder::getDecoderSdrColorspace()
 {
     return COLORSPACE_REC_709;
 }

@@ -20,7 +20,7 @@ public:
     virtual bool isAlwaysFullScreen() override;
     virtual bool isHdrSupported() override;
     virtual int getDecoderCapabilities() override;
-    virtual int getDecoderColorspace() override;
+    virtual int getDecoderSdrColorspace() override;
     virtual int getDecoderColorRange() override;
     virtual QSize getDecoderMaxResolution() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;

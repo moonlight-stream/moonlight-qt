@@ -41,7 +41,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool needsTestFrame() override;
     virtual bool isDirectRenderingSupported() override;
-    virtual int getDecoderColorspace() override;
+    virtual int getDecoderSdrColorspace() override;
     virtual int getDecoderCapabilities() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
 

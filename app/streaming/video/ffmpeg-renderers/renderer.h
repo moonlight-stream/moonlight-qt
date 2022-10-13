@@ -153,7 +153,7 @@ public:
         return 0;
     }
 
-    virtual int getDecoderColorspace() {
+    virtual int getDecoderSdrColorspace() {
         // Rec 601 is default
         return COLORSPACE_REC_601;
     }
@@ -177,7 +177,7 @@ public:
         default:
             // If the colorspace is not populated, assume the encoder
             // is sending the colorspace that we requested.
-            return getDecoderColorspace();
+            return getDecoderSdrColorspace();
         }
     }
 

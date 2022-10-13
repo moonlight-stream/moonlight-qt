@@ -210,7 +210,7 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
     return true;
 }
 
-int MmalRenderer::getDecoderColorspace()
+int MmalRenderer::getDecoderSdrColorspace()
 {
     // MMAL seems to always use Rec. 709 colorspace for rendering
     // even when we try to set something else in the input format.
