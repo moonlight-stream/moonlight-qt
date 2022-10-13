@@ -87,9 +87,9 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
     return capabilities;
 }
 
-int FFmpegVideoDecoder::getDecoderSdrColorspace()
+int FFmpegVideoDecoder::getDecoderColorspace()
 {
-    return m_FrontendRenderer->getDecoderSdrColorspace();
+    return m_FrontendRenderer->getDecoderColorspace();
 }
 
 int FFmpegVideoDecoder::getDecoderColorRange()

@@ -67,7 +67,7 @@ public:
     virtual bool isAlwaysFullScreen() = 0;
     virtual bool isHdrSupported() = 0;
     virtual int getDecoderCapabilities() = 0;
-    virtual int getDecoderSdrColorspace() = 0;
+    virtual int getDecoderColorspace() = 0;
     virtual int getDecoderColorRange() = 0;
     virtual QSize getDecoderMaxResolution() = 0;
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;

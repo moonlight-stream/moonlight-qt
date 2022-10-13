@@ -415,12 +415,8 @@ bool Session::populateDecoderProperties(SDL_Window* window)
                         "Using colorspace override: %d",
                         m_StreamConfig.colorSpace);
         }
-        else if (!m_StreamConfig.enableHdr) {
-            m_StreamConfig.colorSpace = decoder->getDecoderSdrColorspace();
-        }
         else {
-            // In HDR mode, we opt for Rec 2020 for WCG displays
-            m_StreamConfig.colorSpace = COLORSPACE_REC_2020;
+            m_StreamConfig.colorSpace = decoder->getDecoderColorspace();
         }
 
         m_StreamConfig.colorRange = qEnvironmentVariableIntValue("COLOR_RANGE_OVERRIDE", &ok);

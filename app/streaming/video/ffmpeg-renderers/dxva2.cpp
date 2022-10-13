@@ -989,7 +989,7 @@ Exit:
     overlayVertexBuffer->Release();
 }
 
-int DXVA2Renderer::getDecoderSdrColorspace()
+int DXVA2Renderer::getDecoderColorspace()
 {
     if (m_DeviceQuirks & DXVA2_QUIRK_NO_VP) {
         // StretchRect() assumes Rec 601 on Intel and Qualcomm GPUs.
