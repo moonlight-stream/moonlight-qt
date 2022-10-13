@@ -15,6 +15,7 @@ public:
     virtual bool isAlwaysFullScreen() override;
     virtual int getDecoderCapabilities() override;
     virtual int getDecoderColorspace() override;
+    virtual int getDecoderColorRange() override;
     virtual QSize getDecoderMaxResolution() override;
     virtual int submitDecodeUnit(PDECODE_UNIT du) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;

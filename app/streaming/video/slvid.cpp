@@ -68,6 +68,12 @@ SLVideoDecoder::getDecoderColorspace()
     return COLORSPACE_REC_709;
 }
 
+int
+SLVideoDecoder::getDecoderColorRange()
+{
+    return COLOR_RANGE_LIMITED;
+}
+
 QSize SLVideoDecoder::getDecoderMaxResolution()
 {
     return QSize(1920, 1080);

@@ -158,6 +158,11 @@ public:
         return COLORSPACE_REC_601;
     }
 
+    virtual int getDecoderColorRange() {
+        // Limited is the default
+        return COLOR_RANGE_LIMITED;
+    }
+
     virtual int getFrameColorspace(const AVFrame* frame) {
         // Prefer the colorspace field on the AVFrame itself
         switch (frame->colorspace) {

@@ -92,6 +92,11 @@ int FFmpegVideoDecoder::getDecoderColorspace()
     return m_FrontendRenderer->getDecoderColorspace();
 }
 
+int FFmpegVideoDecoder::getDecoderColorRange()
+{
+    return m_FrontendRenderer->getDecoderColorRange();
+}
+
 QSize FFmpegVideoDecoder::getDecoderMaxResolution()
 {
     if (m_BackendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_1080P_MAX) {

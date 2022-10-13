@@ -426,8 +426,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
                         m_StreamConfig.colorRange);
         }
         else {
-            // Limited is the default for GFE
-            m_StreamConfig.colorRange = COLOR_RANGE_LIMITED;
+            m_StreamConfig.colorRange = decoder->getDecoderColorRange();
         }
     }
 
