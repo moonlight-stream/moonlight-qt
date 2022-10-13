@@ -589,7 +589,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         d3dpp.BackBufferHeight = currentMode.Height;
         d3dpp.FullScreen_RefreshRateInHz = currentMode.RefreshRate;
 
-        if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+        if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
             d3dpp.BackBufferFormat = currentMode.Format = D3DFMT_A2R10G10B10;
         }
         else {
@@ -751,7 +751,7 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
 
-    if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
+    if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
         m_Desc.Format = (D3DFORMAT)MAKEFOURCC('P','0','1','0');
     }
     else {
