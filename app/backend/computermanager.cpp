@@ -478,18 +478,18 @@ private:
            switch (result)
            {
            case NvPairingManager::PairState::PIN_WRONG:
-               emit pairingCompleted(m_Computer, "The PIN from the PC didn't match. Please try again.");
+               emit pairingCompleted(m_Computer, tr("The PIN from the PC didn't match. Please try again."));
                break;
            case NvPairingManager::PairState::FAILED:
                if (m_Computer->currentGameId != 0) {
-                   emit pairingCompleted(m_Computer, "You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.");
+                   emit pairingCompleted(m_Computer, tr("You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again."));
                }
                else {
-                   emit pairingCompleted(m_Computer, "Pairing failed. Please try again.");
+                   emit pairingCompleted(m_Computer, tr("Pairing failed. Please try again."));
                }
                break;
            case NvPairingManager::PairState::ALREADY_IN_PROGRESS:
-               emit pairingCompleted(m_Computer, "Another pairing attempt is already in progress.");
+               emit pairingCompleted(m_Computer, tr("Another pairing attempt is already in progress."));
                break;
            case NvPairingManager::PairState::PAIRED:
                // Persist the newly pinned server certificate for this host
@@ -499,7 +499,7 @@ private:
                break;
            }
         } catch (const GfeHttpResponseException& e) {
-            emit pairingCompleted(m_Computer, "GeForce Experience returned error: " + e.toQString());
+            emit pairingCompleted(m_Computer, tr("GeForce Experience returned error: %1").arg(e.toQString()));
         } catch (const QtNetworkReplyException& e) {
             emit pairingCompleted(m_Computer, e.toQString());
         }
