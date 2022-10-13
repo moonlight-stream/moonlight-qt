@@ -822,6 +822,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     // - AV_PIX_FMT_DRM_PRIME
     // - AV_PIX_FMT_MMAL
     // - AV_PIX_FMT_YUV420P
+    // - AV_PIX_FMT_YUVJ420P
     // - AV_PIX_FMT_NV12
     // - AV_PIX_FMT_NV21
     {

@@ -77,6 +77,7 @@ bool SdlRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
     switch (pixelFormat)
     {
     case AV_PIX_FMT_YUV420P:
+    case AV_PIX_FMT_YUVJ420P:
     case AV_PIX_FMT_NV12:
     case AV_PIX_FMT_NV21:
         return true;
@@ -397,6 +398,7 @@ ReadbackRetry:
         switch (frame->format)
         {
         case AV_PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUVJ420P:
             sdlFormat = SDL_PIXELFORMAT_YV12;
             break;
         case AV_PIX_FMT_CUDA:
@@ -414,11 +416,19 @@ ReadbackRetry:
         switch (colorspace)
         {
         case COLORSPACE_REC_709:
+            SDL_assert(!isFrameFullRange(frame));
             SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT709);
             break;
         case COLORSPACE_REC_601:
+            if (isFrameFullRange(frame)) {
+                // SDL's JPEG mode is Rec 601 Full Range
+                SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_JPEG);
+            }
+            else {
+                SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
+            }
+            break;
         default:
-            SDL_SetYUVConversionMode(SDL_YUV_CONVERSION_BT601);
             break;
         }
 
@@ -461,7 +471,7 @@ ReadbackRetry:
         goto Exit;
 #endif
     }
-    else if (frame->format == AV_PIX_FMT_YUV420P) {
+    else if (frame->format == AV_PIX_FMT_YUV420P || frame->format == AV_PIX_FMT_YUVJ420P) {
         SDL_UpdateYUVTexture(m_Texture, nullptr,
                              frame->data[0],
                              frame->linesize[0],
