@@ -502,7 +502,7 @@ public:
         return true;
     }
 
-    int getDecoderColorspace() override
+    int getDecoderSdrColorspace() override
     {
         // macOS seems to handle Rec 601 best
         return COLORSPACE_REC_601;
