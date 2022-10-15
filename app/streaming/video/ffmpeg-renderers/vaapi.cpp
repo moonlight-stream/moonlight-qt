@@ -632,19 +632,15 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 
         // NB: Not all VAAPI drivers respect these flags. Many drivers
         // just ignore them and do the color conversion as Rec 601.
-        switch (frame->colorspace) {
-        case AVCOL_SPC_BT709:
+        switch (getFrameColorspace(frame)) {
+        case COLORSPACE_REC_709:
             flags |= VA_SRC_BT709;
             break;
-        case AVCOL_SPC_BT470BG:
-        case AVCOL_SPC_SMPTE170M:
+        case COLORSPACE_REC_601:
             flags |= VA_SRC_BT601;
             break;
-        case AVCOL_SPC_SMPTE240M:
-            flags |= VA_SRC_SMPTE_240;
-            break;
         default:
-            // Unknown colorspace
+            // Unsupported colorspace
             SDL_assert(false);
             break;
         }
