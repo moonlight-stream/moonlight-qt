@@ -46,10 +46,22 @@ public:
           m_VsyncPassed(nullptr)
     {
         SDL_zero(m_OverlayTextFields);
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            m_OverlayUpdateBlocks[i] = dispatch_block_create(DISPATCH_BLOCK_DETACHED, ^{
+                updateOverlayOnMainThread((Overlay::OverlayType)i);
+            });
+        }
     }
 
     virtual ~VTRenderer() override
     {
+        // We may have overlay update blocks enqueued for execution.
+        // We must cancel those to avoid a UAF.
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            dispatch_block_cancel(m_OverlayUpdateBlocks[i]);
+            Block_release(m_OverlayUpdateBlocks[i]);
+        }
+
         if (m_DisplayLink != nullptr) {
             CVDisplayLinkStop(m_DisplayLink);
             CVDisplayLinkRelease(m_DisplayLink);
@@ -453,34 +465,11 @@ public:
         [m_OverlayTextFields[type] setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(type)];
     }
 
-    static void updateDebugOverlayOnMainThread(void* context)
-    {
-        VTRenderer* me = (VTRenderer*)context;
-
-        me->updateOverlayOnMainThread(Overlay::OverlayDebug);
-    }
-
-    static void updateStatusOverlayOnMainThread(void* context)
-    {
-        VTRenderer* me = (VTRenderer*)context;
-
-        me->updateOverlayOnMainThread(Overlay::OverlayStatusUpdate);
-    }
-
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
     {
         // We must do the actual UI updates on the main thread, so queue an
         // async callback on the main thread via GCD to do the UI update.
-        switch (type) {
-        case Overlay::OverlayDebug:
-            dispatch_async_f(dispatch_get_main_queue(), this, updateDebugOverlayOnMainThread);
-            break;
-        case Overlay::OverlayStatusUpdate:
-            dispatch_async_f(dispatch_get_main_queue(), this, updateStatusOverlayOnMainThread);
-            break;
-        default:
-            break;
-        }
+        dispatch_async(dispatch_get_main_queue(), m_OverlayUpdateBlocks[type]);
     }
 
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override
@@ -524,6 +513,7 @@ private:
     AVSampleBufferDisplayLayer* m_DisplayLayer;
     CMVideoFormatDescriptionRef m_FormatDesc;
     NSView* m_StreamView;
+    dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
     CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
