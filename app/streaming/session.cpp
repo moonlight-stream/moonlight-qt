@@ -932,12 +932,14 @@ void Session::getWindowDimensions(int& x, int& y,
     SDL_Rect usableBounds;
     if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
         // Don't use more than 80% of the display to leave room for system UI
+        // and ensure the target size is not odd (otherwise one of the sides
+        // of the image will have a one-pixel black bar next to it).
         SDL_Rect src, dst;
         src.x = src.y = dst.x = dst.y = 0;
         src.w = m_StreamConfig.width;
         src.h = m_StreamConfig.height;
-        dst.w = (int)SDL_roundf(usableBounds.w * 0.80f);
-        dst.h = (int)SDL_roundf(usableBounds.h * 0.80f);
+        dst.w = ((int)SDL_roundf(usableBounds.w * 0.80f) & ~0x1);
+        dst.h = ((int)SDL_roundf(usableBounds.h * 0.80f) & ~0x1);
 
         // Scale the window size while preserving aspect ratio
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
