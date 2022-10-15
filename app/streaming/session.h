@@ -160,7 +160,6 @@ private:
     int m_DisplayOriginX;
     int m_DisplayOriginY;
     bool m_ThreadedExec;
-    bool m_PendingWindowedTransition;
     bool m_UnexpectedTermination;
     SdlInputHandler* m_InputHandler;
     int m_MouseEmulationRefCount;

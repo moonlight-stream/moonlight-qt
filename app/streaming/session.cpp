@@ -451,7 +451,6 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_AudioMuted(false),
       m_DisplayOriginX(0),
       m_DisplayOriginY(0),
-      m_PendingWindowedTransition(false),
       m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
       m_InputHandler(nullptr),
       m_MouseEmulationRefCount(0),
@@ -898,12 +897,10 @@ void Session::getWindowDimensions(int& x, int& y,
                                   int& width, int& height)
 {
     int displayIndex = 0;
-    bool fullScreen;
 
     if (m_Window != nullptr) {
         displayIndex = SDL_GetWindowDisplayIndex(m_Window);
         SDL_assert(displayIndex >= 0);
-        fullScreen = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN);
     }
     // Create our window on the same display that Qt's UI
     // was being displayed on.
@@ -930,38 +927,30 @@ void Session::getWindowDimensions(int& x, int& y,
                             i, SDL_GetError());
             }
         }
-
-        fullScreen = m_IsFullScreen;
     }
 
     SDL_Rect usableBounds;
-    if (fullScreen && SDL_GetDisplayBounds(displayIndex, &usableBounds) == 0) {
-        width = usableBounds.w;
-        height = usableBounds.h;
-    }
-    else if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
-        width = usableBounds.w;
-        height = usableBounds.h;
+    if (SDL_GetDisplayUsableBounds(displayIndex, &usableBounds) == 0) {
+        // Don't use more than 80% of the display to leave room for system UI
+        SDL_Rect src, dst;
+        src.x = src.y = dst.x = dst.y = 0;
+        src.w = m_StreamConfig.width;
+        src.h = m_StreamConfig.height;
+        dst.w = (int)SDL_roundf(usableBounds.w * 0.80f);
+        dst.h = (int)SDL_roundf(usableBounds.h * 0.80f);
 
-        if (m_Window != nullptr) {
-            int top, left, bottom, right;
+        // Scale the window size while preserving aspect ratio
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-            if (SDL_GetWindowBordersSize(m_Window, &top, &left, &bottom, &right) == 0) {
-                width -= left + right;
-                height -= top + bottom;
-            }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "Unable to get window border size: %s",
-                            SDL_GetError());
-            }
-
-            // If the stream window can fit within the usable drawing area with 1:1
-            // scaling, do that rather than filling the screen.
-            if (m_StreamConfig.width < width && m_StreamConfig.height < height) {
-                width = m_StreamConfig.width;
-                height = m_StreamConfig.height;
-            }
+        // If the stream window can fit within the usable drawing area with 1:1
+        // scaling, do that rather than filling the screen.
+        if (m_StreamConfig.width < dst.w && m_StreamConfig.height < dst.h) {
+            width = m_StreamConfig.width;
+            height = m_StreamConfig.height;
+        }
+        else {
+            width = dst.w;
+            height = dst.h;
         }
     }
     else {
@@ -1079,17 +1068,8 @@ void Session::toggleFullscreen()
     SDL_AtomicUnlock(&m_DecoderLock);
 #endif
 
-    if (fullScreen) {
-        SDL_SetWindowResizable(m_Window, SDL_FALSE);
-        SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
-    }
-    else {
-        SDL_SetWindowFullscreen(m_Window, 0);
-        SDL_SetWindowResizable(m_Window, SDL_TRUE);
-
-        // Reposition the window when the resize is complete
-        m_PendingWindowedTransition = true;
-    }
+    // Actually enter/leave fullscreen
+    SDL_SetWindowFullscreen(m_Window, fullScreen ? m_FullScreenFlag : 0);
 
     // Input handler might need to start/stop keyboard grab after changing modes
     m_InputHandler->updateKeyboardGrabState();
@@ -1383,12 +1363,15 @@ void Session::execInternal()
     SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 
+    // We always want a resizable window with High DPI enabled
+    const Uint32 defaultWindowFlags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+
     m_Window = SDL_CreateWindow("Moonlight",
                                 x,
                                 y,
                                 width,
                                 height,
-                                SDL_WINDOW_ALLOW_HIGHDPI | StreamUtils::getPlatformWindowFlags());
+                                defaultWindowFlags | StreamUtils::getPlatformWindowFlags());
     if (!m_Window) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL_CreateWindow() failed with platform flags: %s",
@@ -1399,7 +1382,7 @@ void Session::execInternal()
                                     y,
                                     width,
                                     height,
-                                    SDL_WINDOW_ALLOW_HIGHDPI);
+                                    defaultWindowFlags);
         if (!m_Window) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_CreateWindow() failed: %s",
@@ -1436,26 +1419,12 @@ void Session::execInternal()
     }
 #endif
 
-    // For non-full screen windows, call getWindowDimensions()
-    // again after creating a window to allow it to account
-    // for window chrome size.
-    if (!m_IsFullScreen) {
-        getWindowDimensions(x, y, width, height);
+    // Update the window display mode based on our current monitor
+    // for if/when we enter full-screen mode.
+    updateOptimalWindowDisplayMode();
 
-        // We must set the size before the position because centering
-        // won't work unless it knows the final size of the window.
-        SDL_SetWindowSize(m_Window, width, height);
-        SDL_SetWindowPosition(m_Window, x, y);
-
-        // Passing SDL_WINDOW_RESIZABLE to set this during window
-        // creation causes our window to be full screen for some reason
-        SDL_SetWindowResizable(m_Window, SDL_TRUE);
-    }
-    else {
-        // Update the window display mode based on our current monitor
-        updateOptimalWindowDisplayMode();
-
-        // Enter full screen
+    // Enter full screen if requested
+    if (m_IsFullScreen) {
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
     }
 
@@ -1630,20 +1599,6 @@ void Session::execInternal()
                 break;
             }
 #endif
-
-            // Complete any repositioning that was deferred until
-            // the resize from full-screen to windowed had completed.
-            // If we try to do this immediately, the resize won't take effect
-            // properly on Windows.
-            if (m_PendingWindowedTransition) {
-                m_PendingWindowedTransition = false;
-
-                int x, y, width, height;
-                getWindowDimensions(x, y, width, height);
-
-                SDL_SetWindowSize(m_Window, width, height);
-                SDL_SetWindowPosition(m_Window, x, y);
-            }
 
             if (m_FlushingWindowEventsRef > 0) {
                 // Ignore window events for renderer reset if flushing
