@@ -70,18 +70,31 @@ void FFmpegVideoDecoder::setHdrMode(bool enabled)
 
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
-    int capabilities = m_BackendRenderer->getDecoderCapabilities();
+    bool ok;
 
-    if (!isHardwareAccelerated()) {
-        // Slice up to 4 times for parallel CPU decoding, once slice per core
-        int slices = qMin(MAX_SLICES, SDL_GetCPUCount());
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Encoder configured for %d slices per frame",
-                    slices);
-        capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
+    int capabilities = qEnvironmentVariableIntValue("DECODER_CAPS", &ok);
+    if (ok) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using decoder capability override: 0x%x",
+                    capabilities);
+    }
+    else {
+        // Start with the backend renderer's capabilities
+        capabilities = m_BackendRenderer->getDecoderCapabilities();
+
+        if (!isHardwareAccelerated()) {
+            // Slice up to 4 times for parallel CPU decoding, once slice per core
+            int slices = qMin(MAX_SLICES, SDL_GetCPUCount());
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Encoder configured for %d slices per frame",
+                        slices);
+            capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
+        }
     }
 
-    // We use our own decoder thread with the "pull" model
+    // We use our own decoder thread with the "pull" model. This cannot
+    // be overridden using the by the user because it is critical to
+    // our operation.
     capabilities |= CAPABILITY_PULL_RENDERER;
 
     return capabilities;
