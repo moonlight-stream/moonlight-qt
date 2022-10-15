@@ -181,52 +181,51 @@
         <translation>%1의 GeForce Experience 버전은 현재 빌드의 Moonlight에서 지원되지 않습니다. %1에서 스트리밍하려면 Moonlight를 업데이트 해야 합니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
+        <translation type="vanished">이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="302"/>
+        <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
         <translation>GameStream PC에 %1을(를) 입력하십시오. 페어링이 완료되면 이 대화 상자가 닫힙니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="313"/>
+        <location filename="../gui/PcView.qml" line="305"/>
         <source>Are you sure you want to remove this PC?</source>
         <translation>이 PC를 제거 하시겠습니까?</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="330"/>
+        <location filename="../gui/PcView.qml" line="322"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
         <translation>NVIDIA GameStream이 차단되었는지 확인하기 위해 네트워크 연결을 검사하고 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="330"/>
+        <location filename="../gui/PcView.qml" line="322"/>
         <source>This may take a few seconds…</source>
         <translation>몇 초 정도 걸릴 수 있습니다…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="341"/>
+        <location filename="../gui/PcView.qml" line="333"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>이 네트워크는 Moonlight를 차단하지 않는 것 같습니다. 여전히 연결에 문제가 있으면 PC의 방화벽 설정을 확인하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="341"/>
+        <location filename="../gui/PcView.qml" line="333"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>인터넷을 통해 스트리밍하려는 경우 게임 PC에 Moonlight Internet Hosting Tool을 설치하고 포함된 Internet Streaming Tester를 실행하여 게임 PC의 인터넷 연결을 확인하십시오.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="345"/>
+        <location filename="../gui/PcView.qml" line="337"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>PC의 현재 네트워크 연결이 Moonlight를 차단하는 것 같습니다. 이 네트워크에 연결되어 있으면 인터넷을 통한 스트리밍이 작동하지 않을 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="345"/>
+        <location filename="../gui/PcView.qml" line="337"/>
         <source>The following network ports were blocked:</source>
         <translation>다음 네트워크 포트가 차단되었습니다:</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="337"/>
+        <location filename="../gui/PcView.qml" line="329"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>이 PC에서 Moonlight의 연결 테스트 서버에 연결할 수 없기 때문에 네트워크 검사를 수행할 수 없습니다. 인터넷 연결을 확인하거나 나중에 다시 시도하십시오.</translation>
     </message>
@@ -256,15 +255,43 @@
         <translation>모든 앱 보기</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="357"/>
+        <location filename="../gui/PcView.qml" line="349"/>
         <source>Enter the new name for this PC:</source>
         <translation>이 PC의 새로운 이름 입력:</translation>
     </message>
 </context>
 <context>
+    <name>PendingPairingTask</name>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="481"/>
+        <source>The PIN from the PC didn&apos;t match. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="485"/>
+        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
+        <translation type="unfinished">이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="488"/>
+        <source>Pairing failed. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="492"/>
+        <source>Another pairing attempt is already in progress.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="502"/>
+        <source>GeForce Experience returned error: %1</source>
+        <translation type="unfinished">GeForce Experience에서 오류를 반환했습니다: %1</translation>
+    </message>
+</context>
+<context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="547"/>
+        <location filename="../backend/computermanager.cpp" line="552"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>실행 중인 게임이 이 PC에서 시작되지 않았습니다. 호스트 PC에서 게임을 수동으로 종료하거나 원래 게임을 시작한 장치를 사용해야 합니다.</translation>
     </message>
@@ -277,12 +304,11 @@
         <translation>%1은(는) 이미 페어링되었습니다</translation>
     </message>
     <message>
-        <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
+        <translation type="vanished">이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
     </message>
     <message>
-        <location filename="../cli/pair.cpp" line="114"/>
+        <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
@@ -371,37 +397,37 @@
         <translation>연결이 종료되었습니다</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="669"/>
+        <location filename="../streaming/session.cpp" line="662"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>%1의 GeForce Experience 버전은 이 빌드의 Moonlight에서 지원되지 않습니다. %1에서 스트리밍하려면 Moonlight를 업데이트 해야 합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="674"/>
+        <location filename="../streaming/session.cpp" line="667"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>원격 데스크톱 마우스 모드를 활성화하도록 선택하면 게임에서 문제가 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="679"/>
+        <location filename="../streaming/session.cpp" line="672"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>HDR는 소프트웨어 디코딩에서 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="683"/>
+        <location filename="../streaming/session.cpp" line="676"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>소프트웨어 디코딩을 강제하도록 선택하면 스트리밍 성능이 저하 될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="688"/>
+        <location filename="../streaming/session.cpp" line="681"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>지원되지 않는 FPS 옵션을 사용하면 끊김 또는 지연이 발생할 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="691"/>
+        <location filename="../streaming/session.cpp" line="684"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>수직동기화는 디스플레이보다 높은 프레임 레이트로 스트리밍 할 때 비활성화됩니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="718"/>
+        <location filename="../streaming/session.cpp" line="711"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>GPU 지원 없이 HEVC를 강제하도록 선택하여 소프트웨어 디코딩을 사용합니다. 이로 인해 스트리밍 성능이 저하 될 수 있습니다.</translation>
     </message>
@@ -410,22 +436,22 @@
         <translation type="vanished">이 PC의 GPU는 HEVC 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="701"/>
+        <location filename="../streaming/session.cpp" line="694"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>호스트 PC의 GPU가 HEVC를 지원하지 않습니다. HEVC 스트리밍에는 GeForce GTX 900 시리즈 (Maxwell) 이상의 GPU가 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="732"/>
+        <location filename="../streaming/session.cpp" line="725"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>H.264 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="742"/>
+        <location filename="../streaming/session.cpp" line="735"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>호스트 PC와 클라이언트 PC가 동일한 비디오 코덱을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="745"/>
+        <location filename="../streaming/session.cpp" line="738"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>클라이언트 GPU가 H.264 디코딩을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
@@ -434,62 +460,62 @@
         <translation type="vanished">%1은(는) HDR10을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="756"/>
+        <location filename="../streaming/session.cpp" line="749"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>호스트 PC의 GPU가 HDR 스트리밍을 지원하지 않습니다. HDR 스트리밍에는 GeForce GTX 1000 시리즈 (Pascal) 이상의 GPU가 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="765"/>
+        <location filename="../streaming/session.cpp" line="758"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>이 PC의 GPU는 HDR 스트리밍을 위한 HEVC Main10 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="778"/>
+        <location filename="../streaming/session.cpp" line="771"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4K 스트리밍에는 GeForce Experience 3.0 이상이 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="793"/>
+        <location filename="../streaming/session.cpp" line="786"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>선택한 서라운드 사운드 설정은 현재 오디오 장치에서 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="800"/>
+        <location filename="../streaming/session.cpp" line="793"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>오디오 장치를 열지 못했습니다. 이 세션에서는 오디오를 사용할 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="805"/>
+        <location filename="../streaming/session.cpp" line="798"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>연결된 게임 패드에 매핑이 없으며 사용할 수 없습니다. 이 문제를 해결하려면 Moonlight 도움말을 방문하십시오.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="813"/>
+        <location filename="../streaming/session.cpp" line="806"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>호스트 PC의 GPU가 4K 이상의 비디오 해상도의 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="817"/>
+        <location filename="../streaming/session.cpp" line="810"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>4K 이상의 비디오 해상도는 HEVC 코덱에서만 지원됩니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="831"/>
+        <location filename="../streaming/session.cpp" line="824"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>이 PC의 GPU가 하드웨어 디코딩을 지원하지 않아 하드웨어 디코딩을 강제하도록 선택하였으나 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="834"/>
+        <location filename="../streaming/session.cpp" line="827"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>선택한 코덱과 하드웨어 디코딩을 강제하도록 선택한 설정이 호환되지 않습니다. 이 PC의 GPU는 선택한 코덱의 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1184"/>
+        <location filename="../streaming/session.cpp" line="1177"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience에서 오류를 반환했습니다: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1735"/>
+        <location filename="../streaming/session.cpp" line="1723"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>비디오 디코더를 초기화 할 수 없습니다. 스트리밍 설정을 확인하고 다시 시도하십시오.</translation>
     </message>

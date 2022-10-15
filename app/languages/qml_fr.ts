@@ -181,52 +181,51 @@
         <translation>La version de GeForce Experience installée sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="247"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Vous ne pouvez pas effectuer de couplage alors qu&apos;une session précédente est encore en cours sur le PC hôte. Fermez les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d&apos;effectuer l&apos;appariement.</translation>
+        <translation type="vanished">Vous ne pouvez pas effectuer de couplage alors qu&apos;une session précédente est encore en cours sur le PC hôte. Fermez les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d&apos;effectuer l&apos;appariement.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="302"/>
+        <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
         <translation>Veuillez saisir %1 sur votre PC GameStream. Cette boîte de dialogue se fermera lorsque l&apos;appariement sera terminé.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="313"/>
+        <location filename="../gui/PcView.qml" line="305"/>
         <source>Are you sure you want to remove this PC?</source>
         <translation>Êtes-vous sûr de vouloir supprimer ce PC ?</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="330"/>
+        <location filename="../gui/PcView.qml" line="322"/>
         <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
         <translation>Moonlight teste votre connexion réseau pour déterminer si NVIDIA GameStream est bloqué.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="330"/>
+        <location filename="../gui/PcView.qml" line="322"/>
         <source>This may take a few seconds…</source>
         <translation>Cela peut prendre quelques secondes…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="341"/>
+        <location filename="../gui/PcView.qml" line="333"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>Ce réseau ne semble pas bloquer Moonlight. Si vous avez toujours des problèmes de connexion, vérifiez les paramètres du pare-feu de votre PC.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="341"/>
+        <location filename="../gui/PcView.qml" line="333"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>Si vous essayez d&apos;utiliser la diffusion en continu sur Internet, installez l&apos;outil d&apos;hébergement Internet Moonlight sur votre PC de jeu et exécutez le testeur de diffusion en continu sur Internet inclus pour vérifier la connexion Internet de votre PC de jeu.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="345"/>
+        <location filename="../gui/PcView.qml" line="337"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>La connexion réseau actuelle de votre PC semble bloquer Moonlight. Il se peut que le stream depuis Internet ne fonctionne pas lorsque vous êtes connecté à ce réseau.</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="345"/>
+        <location filename="../gui/PcView.qml" line="337"/>
         <source>The following network ports were blocked:</source>
         <translation>Les ports réseau suivants ont été bloqués :</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="337"/>
+        <location filename="../gui/PcView.qml" line="329"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>Le test de réseau n&apos;a pas pu être effectué car aucun des serveurs de test de connexion de Moonlight n&apos;était accessible depuis ce PC. Vérifiez votre connexion Internet ou réessayez plus tard.</translation>
     </message>
@@ -256,15 +255,43 @@
         <translation>Voir toutes les applis</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="357"/>
+        <location filename="../gui/PcView.qml" line="349"/>
         <source>Enter the new name for this PC:</source>
         <translation>Saisissez le nouveau nom de ce PC :</translation>
     </message>
 </context>
 <context>
+    <name>PendingPairingTask</name>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="481"/>
+        <source>The PIN from the PC didn&apos;t match. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="485"/>
+        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
+        <translation type="unfinished">Vous ne pouvez pas effectuer de couplage alors qu&apos;une session précédente est encore en cours sur le PC hôte. Fermez les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d&apos;effectuer l&apos;appariement.</translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="488"/>
+        <source>Pairing failed. Please try again.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="492"/>
+        <source>Another pairing attempt is already in progress.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../backend/computermanager.cpp" line="502"/>
+        <source>GeForce Experience returned error: %1</source>
+        <translation type="unfinished">GeForce Experience a renvoyé l&apos;erreur : %1</translation>
+    </message>
+</context>
+<context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="547"/>
+        <location filename="../backend/computermanager.cpp" line="552"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>Le jeu en cours d’exécution n&apos;a pas été démarré par ce PC. Vous devez le fermer manuellement sur le PC hôte ou le fermer depuis l&apos;appareil qui a démarré ce jeu.</translation>
     </message>
@@ -277,12 +304,11 @@
         <translation>%1 est déjà couplé</translation>
     </message>
     <message>
-        <location filename="../cli/pair.cpp" line="85"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Vous ne pouvez pas effectuer de couplage alors qu&apos;une session précédente est encore en cours sur le PC hôte. Fermez les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d&apos;effectuer l&apos;appariement.</translation>
+        <translation type="vanished">Vous ne pouvez pas effectuer de couplage alors qu&apos;une session précédente est encore en cours sur le PC hôte. Fermez les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d&apos;effectuer l&apos;appariement.</translation>
     </message>
     <message>
-        <location filename="../cli/pair.cpp" line="114"/>
+        <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
@@ -371,37 +397,37 @@
         <translation>Connexion terminée</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="669"/>
+        <location filename="../streaming/session.cpp" line="662"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>La version de GeForce Experience sur %1 n&apos;est pas supportée par cette version de Moonlight. Vous devez mettre à jour Moonlight pour streamer depuis %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="674"/>
+        <location filename="../streaming/session.cpp" line="667"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Le mode souris pour bureau à distance que vous avez activé peut causer des problèmes dans les jeux.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="679"/>
+        <location filename="../streaming/session.cpp" line="672"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>Le HDR n&apos;est pas pris en charge par le décodeur logiciel.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="683"/>
+        <location filename="../streaming/session.cpp" line="676"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Vos réglages pour forcer le décodage logiciel peut causer de mauvaises performances.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="688"/>
+        <location filename="../streaming/session.cpp" line="681"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>L&apos;utilisation d&apos;options FPS non prises en charge peut entraîner des saccades ou des lags.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="691"/>
+        <location filename="../streaming/session.cpp" line="684"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>La synchronisation verticale (V-sync) sera désactivée lors de la diffusion en continu à une fréquence d&apos;images supérieure à celle de l&apos;affichage.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="718"/>
+        <location filename="../streaming/session.cpp" line="711"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Utilisation du décodage logiciel dû à votre sélection pour forcer le codec HEVC sans support GPU. Ceci peut entraîner de mauvaises performances de streaming.</translation>
     </message>
@@ -410,22 +436,22 @@
         <translation type="vanished">Le GPU de ce PC ne prend pas en charge le décodage HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="701"/>
+        <location filename="../streaming/session.cpp" line="694"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>Le GPU de votre PC hôte ne prend pas en charge le codec HEVC. Un GPU GeForce GTX série 900 (Maxwell) ou plus récent est nécessaire pour le streaming HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="732"/>
+        <location filename="../streaming/session.cpp" line="725"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Le décodage logiciel est utilisé car vous voulez forcer l&apos;utilisation du H.264 sans support matériel du GPU. Ceci peut causer des problèmes de performances.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="742"/>
+        <location filename="../streaming/session.cpp" line="735"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>Votre PC hôte et PC client ne supportent pas les mêmes codecs vidéo. Ceci peut causer des problèmes de performance.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="745"/>
+        <location filename="../streaming/session.cpp" line="738"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Le GPU de votre client ne supporte pas le décodage matériel du H.264. Ceci peut causer des problèmes de performance.</translation>
     </message>
@@ -434,62 +460,62 @@
         <translation type="vanished">%1 ne prend pas en charge le HDR10.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="756"/>
+        <location filename="../streaming/session.cpp" line="749"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>Le GPU de votre PC hôte ne prend pas en charge le streaming HDR. Un GPU GeForce GTX série 1000 (Pascal) ou plus récent est nécessaire pour la diffusion HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="765"/>
+        <location filename="../streaming/session.cpp" line="758"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>Le GPU de ce PC ne prend pas en charge le décodage HEVC pour le streaming HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="778"/>
+        <location filename="../streaming/session.cpp" line="771"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>GeForce Experience 3.0 ou supérieur est requis pour le streaming 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="793"/>
+        <location filename="../streaming/session.cpp" line="786"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Le réglage du son surround que vous avez sélectionné n&apos;est pas pris en charge par l&apos;appareil audio actuel.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="800"/>
+        <location filename="../streaming/session.cpp" line="793"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>L&apos;ouverture de l&apos;appareil audio à échoué. L&apos;audio ne sera pas disponible pendant cette session.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="805"/>
+        <location filename="../streaming/session.cpp" line="798"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Une manette de jeu attachée n&apos;a pas été configurée et ne sera pas utilisable. Visitez l&apos;aide Moonlight pour résoudre ce problème.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="813"/>
+        <location filename="../streaming/session.cpp" line="806"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>Le GPU de votre PC hôte ne prend pas en charge le streaming dans des résolutions supérieures à la 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="817"/>
+        <location filename="../streaming/session.cpp" line="810"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Les résolutions vidéo supérieures à 4K sont uniquement prises en charge par le codec HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="831"/>
+        <location filename="../streaming/session.cpp" line="824"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Impossible d&apos;utiliser le décodage matériel car le GPU de cet ordinateur ne supporte pas le décodage matériel.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="834"/>
+        <location filename="../streaming/session.cpp" line="827"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Votre sélection de codecs et le réglage du décodage matériel ne sont pas compatibles. Le GPU de ce PC ne prend pas en charge le décodage du codec que vous avez choisi.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1184"/>
+        <location filename="../streaming/session.cpp" line="1177"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience a renvoyé l&apos;erreur : %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1735"/>
+        <location filename="../streaming/session.cpp" line="1723"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Impossible d&apos;initialiser le décodeur vidéo. Veuillez vérifier vos paramètres de diffusion en continu et réessayez.</translation>
     </message>
