@@ -47,6 +47,22 @@
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
+static const struct {
+    const char* codec;
+    int capabilities;
+} k_NonHwaccelCodecInfo[] = {
+    {"h264_mmal", 0},
+    {"h264_rkmpp", 0},
+    {"h264_nvv4l2", 0},
+    {"h264_nvmpi", 0},
+    {"h264_v4l2m2m", 0},
+
+    {"hevc_rkmpp", 0},
+    {"hevc_nvv4l2", CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC},
+    {"hevc_nvmpi", 0},
+    {"hevc_v4l2m2m", 0},
+};
+
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr ||
@@ -89,6 +105,21 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
                         "Encoder configured for %d slices per frame",
                         slices);
             capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
+        }
+        else if (m_HwDecodeCfg == nullptr) {
+            // We have a non-hwaccel hardware decoder. This will always
+            // be using SDLRenderer so we will pick decoder capabilities
+            // based on the decoder name.
+            for (int i = 0; i < SDL_arraysize(k_NonHwaccelCodecInfo); i++) {
+                if (strcmp(m_VideoDecoderCtx->codec->name, k_NonHwaccelCodecInfo[i].codec) == 0) {
+                    capabilities = k_NonHwaccelCodecInfo[i].capabilities;
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Found capabilities for non-hwaccel decoder: %s -> %d",
+                                m_VideoDecoderCtx->codec->name,
+                                capabilities);
+                    break;
+                }
+            }
         }
     }
 
