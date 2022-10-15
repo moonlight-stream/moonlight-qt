@@ -1073,6 +1073,18 @@ void Session::toggleFullscreen()
     // Actually enter/leave fullscreen
     SDL_SetWindowFullscreen(m_Window, fullScreen ? m_FullScreenFlag : 0);
 
+#ifdef Q_OS_DARWIN
+    // SDL on macOS has a bug that causes the window size to be reset to crazy
+    // large dimensions when exiting out of true fullscreen mode. We can work
+    // around the issue by manually resetting the position and size here.
+    if (!fullScreen && m_FullScreenFlag == SDL_WINDOW_FULLSCREEN) {
+        int x, y, width, height;
+        getWindowDimensions(x, y, width, height);
+        SDL_SetWindowSize(m_Window, width, height);
+        SDL_SetWindowPosition(m_Window, x, y);
+    }
+#endif
+
     // Input handler might need to start/stop keyboard grab after changing modes
     m_InputHandler->updateKeyboardGrabState();
 
