@@ -11,8 +11,11 @@
 #endif
 
 // Limit the number of queued frames to prevent excessive memory consumption
-// if the V-Sync source or renderer is blocked for a while.
-#define MAX_QUEUED_FRAMES 8
+// if the V-Sync source or renderer is blocked for a while. It's important
+// that the sum of all queued frames between both pacing and rendering queues
+// must not exceed the number buffer pool size to avoid running the decoder
+// out of available decoding surfaces.
+#define MAX_QUEUED_FRAMES 4
 
 // We may be woken up slightly late so don't go all the way
 // up to the next V-sync since we may accidentally step into
