@@ -458,7 +458,8 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         framesContext->width = FFALIGN(params->width, m_TextureAlignment);
         framesContext->height = FFALIGN(params->height, m_TextureAlignment);
 
-        // We can have up to 16 reference frames plus a working surface
+        // We can have up to 16 reference frames plus a working surface plus the maximum
+        // number of frames in our various pacing and rendering queues.
         framesContext->initial_pool_size = DECODER_BUFFER_POOL_SIZE;
 
         AVD3D11VAFramesContext* d3d11vaFramesContext = (AVD3D11VAFramesContext*)framesContext->hwctx;

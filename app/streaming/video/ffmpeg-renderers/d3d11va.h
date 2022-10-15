@@ -60,7 +60,7 @@ private:
     ID3D11PixelShader* m_VideoBt2020LimPixelShader;
     ID3D11Buffer* m_VideoVertexBuffer;
 
-#define DECODER_BUFFER_POOL_SIZE 17
+#define DECODER_BUFFER_POOL_SIZE 32
     ID3D11ShaderResourceView* m_VideoTextureResourceViews[DECODER_BUFFER_POOL_SIZE][2];
 
     SDL_SpinLock m_OverlayLock;
