@@ -55,7 +55,7 @@ private:
     int m_DisplayHeight;
 
     struct dxva_context m_DXVAContext;
-    IDirect3DSurface9* m_DecSurfaces[32];
+    IDirect3DSurface9* m_DecSurfaces[19];
     DXVA2_ConfigPictureDecode m_Config;
     IDirectXVideoDecoderService* m_DecService;
     IDirectXVideoDecoder* m_Decoder;
