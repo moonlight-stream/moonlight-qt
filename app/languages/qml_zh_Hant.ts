@@ -358,12 +358,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="110"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>主機電腦回報了一個嚴重的視訊編碼錯誤。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>嘗試停用 HDR 模式，變更串流解析度，或變更您的主機電腦顯示器解析度。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="116"/>
