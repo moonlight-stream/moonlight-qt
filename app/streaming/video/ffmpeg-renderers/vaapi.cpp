@@ -12,8 +12,9 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-VAAPIRenderer::VAAPIRenderer()
-    : m_HwContext(nullptr),
+VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
+    : m_DecoderSelectionPass(decoderSelectionPass),
+      m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
       m_OverlayMutex(nullptr)
 {
@@ -193,11 +194,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
             }
 
-            if (status != VA_STATUS_SUCCESS
-        #if defined(HAVE_CUDA) || defined(HAVE_LIBVDPAU)
-                    && m_WindowSystem != SDL_SYSWM_X11
-        #endif
-                    ) {
+            if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
                 // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
                 // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
                 qputenv("LIBVA_DRIVER_NAME", "nvidia");
@@ -265,29 +262,32 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 "Driver: %s",
                 vendorString ? vendorString : "<unknown>");
 
-    // Older versions of the Gallium VAAPI driver have a nasty memory leak that
-    // causes memory to be leaked for each submitted frame. I believe this is
-    // resolved in the libva2 drivers (VAAPI 1.x).
-    // If we're using Wayland, we have no choice but to use VAAPI because VDPAU
-    // is only supported under X11 or XWayland.
-    if (major == 0 && qgetenv("FORCE_VAAPI") != "1" && !WMUtils::isRunningWayland()) {
-        if (vendorStr.contains("AMD", Qt::CaseInsensitive) ||
-                vendorStr.contains("Radeon", Qt::CaseInsensitive)) {
-            // Fail and let VDPAU pick this up
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Avoiding VAAPI on AMD driver. Set FORCE_VAAPI=1 to override.");
-            return false;
-        }
+    // The Snap (core22) and Focal/Jammy Mesa drivers have a bug that causes
+    // a large amount of video latency when using more than one reference frame
+    // and severe rendering glitches on my Ryzen 3300U system.
+    m_HasRfiLatencyBug = vendorStr.contains("Gallium", Qt::CaseInsensitive) && qgetenv("IGNORE_RFI_LATENCY_BUG") != "1";
+    if (m_HasRfiLatencyBug) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "VAAPI driver is affected by RFI latency bug");
     }
 
-#if defined(HAVE_CUDA) || defined(HAVE_LIBVDPAU)
-    if (m_WindowSystem == SDL_SYSWM_X11 && qgetenv("FORCE_VAAPI") != "1" && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
-        // Prefer CUDA for XWayland and VDPAU for regular X11.
+    // Older versions of the Gallium VAAPI driver have a nasty memory leak that
+    // causes memory to be leaked for each submitted frame. I believe this is
+    // resolved in the libva2 drivers (VAAPI 1.x). We will try to use VDPAU
+    // instead for old VAAPI versions or drivers affected by the RFI latency bug.
+    if (m_DecoderSelectionPass == 0 && (major == 0 || m_HasRfiLatencyBug) && qgetenv("FORCE_VAAPI") != "1" && vendorStr.contains("Gallium", Qt::CaseInsensitive)) {
+        // Fail and let VDPAU pick this up
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Avoiding VAAPI for NVIDIA driver on X11/XWayland. Set FORCE_VAAPI=1 to override.");
+                    "Deprioritizing VAAPI on Gallium driver. Set FORCE_VAAPI=1 to override.");
         return false;
     }
-#endif
+
+    if (m_DecoderSelectionPass == 0 && qgetenv("FORCE_VAAPI") != "1" && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
+        // Prefer CUDA for XWayland and VDPAU for regular X11.
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Deprioritizing VAAPI for NVIDIA driver on X11/XWayland. Set FORCE_VAAPI=1 to override.");
+        return false;
+    }
 
     if (WMUtils::isRunningWayland()) {
         // The iHD VAAPI driver can initialize on XWayland but it crashes in
@@ -479,7 +479,13 @@ int VAAPIRenderer::getDecoderColorspace()
 
 int VAAPIRenderer::getDecoderCapabilities()
 {
-    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+    int caps = 0;
+
+    if (!m_HasRfiLatencyBug) {
+        caps |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+    }
+
+    return caps;
 }
 
 void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)

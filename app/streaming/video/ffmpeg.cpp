@@ -670,7 +670,7 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #endif
 #ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
-            return new VAAPIRenderer();
+            return new VAAPIRenderer(pass);
 #endif
 #ifdef HAVE_LIBVDPAU
         case AV_HWDEVICE_TYPE_VDPAU:
@@ -700,6 +700,14 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
             return new DXVA2Renderer(pass);
         case AV_HWDEVICE_TYPE_D3D11VA:
             return new D3D11VARenderer(pass);
+#endif
+#ifdef HAVE_LIBVA
+        case AV_HWDEVICE_TYPE_VAAPI:
+            return new VAAPIRenderer(pass);
+#endif
+#ifdef HAVE_LIBVDPAU
+        case AV_HWDEVICE_TYPE_VDPAU:
+            return new VDPAURenderer();
 #endif
         default:
             return nullptr;
