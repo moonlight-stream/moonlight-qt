@@ -265,7 +265,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="481"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Der eingegebene Pin stimmte nicht überein. Bitte versuche es erneut.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="485"/>
