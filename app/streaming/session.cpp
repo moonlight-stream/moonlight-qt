@@ -797,8 +797,8 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         emitLaunchWarning(tr("An attached gamepad has no mapping and won't be usable. Visit the Moonlight help to resolve this."));
     }
 
-    // NVENC will fail to initialize when using dimensions over 4096 and H.264.
-    if (m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) {
+    // NVENC will fail to initialize when using dimensions over 8847360 pixels (4096 * 2160) and H.264.
+    if (m_StreamConfig.width*m_StreamConfig.height > 8847360) {
         // Pascal added support for 8K HEVC encoding support. Maxwell 2 could encode HEVC but only up to 4K.
         // We can't directly identify Pascal, but we can look for HEVC Main10 which was added in the same generation.
         if (m_Computer->maxLumaPixelsHEVC == 0 || !(m_Computer->serverCodecModeSupport & 0x200)) {
