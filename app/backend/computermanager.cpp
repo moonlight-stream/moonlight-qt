@@ -623,12 +623,15 @@ public:
         : m_ComputerManager(computerManager),
           m_Address(address),
           m_MdnsIpv6Address(mdnsIpv6Address),
-          m_Mdns(mdns)
+          m_Mdns(mdns),
+          m_AboutToQuit(false)
     {
         connect(this, &PendingAddTask::computerAddCompleted,
                 computerManager, &ComputerManager::computerAddCompleted);
         connect(this, &PendingAddTask::computerStateChanged,
                 computerManager, &ComputerManager::handleComputerStateChanged);
+        connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit,
+                this, &PendingAddTask::handleAboutToQuit);
     }
 
 signals:
@@ -637,9 +640,20 @@ signals:
     void computerStateChanged(NvComputer* computer);
 
 private:
+    void handleAboutToQuit()
+    {
+        m_AboutToQuit = true;
+    }
+
     QString fetchServerInfo(NvHTTP& http)
     {
         QString serverInfo;
+
+        // Do nothing if we're quitting
+        if (m_AboutToQuit) {
+            return QString();
+        }
+
         try {
             // There's a race condition between GameStream servers reporting presence over
             // mDNS and the HTTPS server being ready to respond to our queries. To work
@@ -823,6 +837,7 @@ private:
     NvAddress m_Address;
     NvAddress m_MdnsIpv6Address;
     bool m_Mdns;
+    bool m_AboutToQuit;
 };
 
 void ComputerManager::addNewHost(NvAddress address, bool mdns, NvAddress mdnsIpv6Address)
