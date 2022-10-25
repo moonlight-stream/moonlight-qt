@@ -188,6 +188,9 @@ ComputerManager::~ComputerManager()
         // Wait for it to terminate (and finish any pending flush)
         m_DelayedFlushThread->wait();
         delete m_DelayedFlushThread;
+
+        // Delayed flushes should have completed by now
+        Q_ASSERT(!m_NeedsDelayedFlush);
     }
 
     QWriteLocker lock(&m_Lock);
@@ -220,7 +223,7 @@ ComputerManager::~ComputerManager()
 }
 
 void DelayedFlushThread::run() {
-    while (!QThread::currentThread()->isInterruptionRequested()) {
+    for (;;) {
         // Wait for a delayed flush request or an interruption
         {
             QMutexLocker locker(&m_ComputerManager->m_DelayedFlushMutex);
@@ -229,13 +232,15 @@ void DelayedFlushThread::run() {
                 m_ComputerManager->m_DelayedFlushCondition.wait(&m_ComputerManager->m_DelayedFlushMutex);
             }
 
+            // Bail without flushing if we woke up for an interruption alone.
+            // If we have both an interruption and a flush request, do the flush.
+            if (!m_ComputerManager->m_NeedsDelayedFlush) {
+                Q_ASSERT(QThread::currentThread()->isInterruptionRequested());
+                break;
+            }
+
             // Reset the delayed flush flag to ensure any racing saveHosts() call will set it again
             m_ComputerManager->m_NeedsDelayedFlush = false;
-        }
-
-        if (QThread::currentThread()->isInterruptionRequested()) {
-            // Bail without flushing if we woke up for an interruption
-            break;
         }
 
         // Perform the flush
