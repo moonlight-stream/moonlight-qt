@@ -258,7 +258,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="485"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">当上一个会话仍在运行时，无法进行配对。请退出所有正在运行的游戏或重新启动目标计算机，然后重试配对。</translation>
+        <translation>当主机 PC 上仍在运行之前的会话时，你无法配对。 退出任何正在运行的游戏或重新启动主机 PC，然后再次尝试配对。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="488"/>
@@ -273,7 +273,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="502"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience 返回错误: %1</translation>
+        <translation>GeForce Experience 返回错误: %1</translation>
     </message>
 </context>
 <context>
