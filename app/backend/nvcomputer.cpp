@@ -65,6 +65,8 @@ NvComputer::NvComputer(QSettings& settings)
 
 void NvComputer::setRemoteAddress(QHostAddress address)
 {
+    QWriteLocker lock(&this->lock);
+
     Q_ASSERT(this->externalPort != 0);
 
     this->remoteAddress = NvAddress(address, this->externalPort);
@@ -187,16 +189,29 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     this->isSupportedServerVersion = CompatFetcher::isGfeVersionSupported(this->gfeVersion);
 }
 
-bool NvComputer::wake()
+bool NvComputer::wake() const
 {
-    if (state == NvComputer::CS_ONLINE) {
-        qWarning() << name << "is already online";
-        return true;
-    }
+    QByteArray wolPayload;
 
-    if (macAddress.isEmpty()) {
-        qWarning() << name << "has no MAC address stored";
-        return false;
+    {
+        QReadLocker readLocker(&lock);
+
+        if (state == NvComputer::CS_ONLINE) {
+            qWarning() << name << "is already online";
+            return true;
+        }
+
+        if (macAddress.isEmpty()) {
+            qWarning() << name << "has no MAC address stored";
+            return false;
+        }
+
+        // Create the WoL payload
+        wolPayload.append(QByteArray::fromHex("FFFFFFFFFFFF"));
+        for (int i = 0; i < 16; i++) {
+            wolPayload.append(macAddress);
+        }
+        Q_ASSERT(wolPayload.count() == 102);
     }
 
     const quint16 WOL_PORTS[] = {
@@ -204,14 +219,6 @@ bool NvComputer::wake()
         47998, 47999, 48000, 48002, 48010, // Ports opened by GFE
         47009, // Port opened by Moonlight Internet Hosting Tool for WoL (non-privileged port)
     };
-
-    // Create the WoL payload
-    QByteArray wolPayload;
-    wolPayload.append(QByteArray::fromHex("FFFFFFFFFFFF"));
-    for (int i = 0; i < 16; i++) {
-        wolPayload.append(macAddress);
-    }
-    Q_ASSERT(wolPayload.count() == 102);
 
     // Add the addresses that we know this host to be
     // and broadcast addresses for this link just in
@@ -278,16 +285,25 @@ bool NvComputer::wake()
     return success;
 }
 
-bool NvComputer::isReachableOverVpn()
+bool NvComputer::isReachableOverVpn() const
 {
-    if (activeAddress.isNull()) {
-        return false;
+    NvAddress copyOfActiveAddress;
+
+    {
+        QReadLocker readLocker(&lock);
+
+        if (activeAddress.isNull()) {
+            return false;
+        }
+
+        // Grab a copy of the active address to avoid having to hold
+        // the computer lock while doing socket operations
+        copyOfActiveAddress = activeAddress;
     }
 
     QTcpSocket s;
-
     s.setProxy(QNetworkProxy::NoProxy);
-    s.connectToHost(activeAddress.address(), activeAddress.port());
+    s.connectToHost(copyOfActiveAddress.address(), copyOfActiveAddress.port());
     if (s.waitForConnected(3000)) {
         Q_ASSERT(!s.localAddress().isNull());
 
@@ -375,6 +391,7 @@ bool NvComputer::updateAppList(QVector<NvApp> newAppList) {
 
 QVector<NvAddress> NvComputer::uniqueAddresses() const
 {
+    QReadLocker readLocker(&lock);
     QVector<NvAddress> uniqueAddressList;
 
     // Start with addresses correctly ordered
@@ -406,7 +423,7 @@ QVector<NvAddress> NvComputer::uniqueAddresses() const
     return uniqueAddressList;
 }
 
-bool NvComputer::update(NvComputer& that)
+bool NvComputer::update(const NvComputer& that)
 {
     bool changed = false;
 
