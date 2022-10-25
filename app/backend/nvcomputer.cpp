@@ -21,6 +21,7 @@
 #define SER_APPLIST "apps"
 #define SER_SRVCERT "srvcert"
 #define SER_CUSTOMNAME "customname"
+#define SER_NVIDIASOFTWARE "nvidiasw"
 
 NvComputer::NvComputer(QSettings& settings)
 {
@@ -37,6 +38,7 @@ NvComputer::NvComputer(QSettings& settings)
     this->manualAddress = NvAddress(settings.value(SER_MANUALADDR).toString(),
                                     settings.value(SER_MANUALPORT, QVariant(DEFAULT_HTTP_PORT)).toUInt());
     this->serverCert = QSslCertificate(settings.value(SER_SRVCERT).toByteArray());
+    this->isNvidiaServerSoftware = settings.value(SER_NVIDIASOFTWARE).toBool();
 
     int appCount = settings.beginReadArray(SER_APPLIST);
     this->appList.reserve(appCount);
@@ -89,6 +91,7 @@ void NvComputer::serialize(QSettings& settings) const
     settings.setValue(SER_MANUALADDR, manualAddress.address());
     settings.setValue(SER_MANUALPORT, manualAddress.port());
     settings.setValue(SER_SRVCERT, serverCert.toPem());
+    settings.setValue(SER_NVIDIASOFTWARE, isNvidiaServerSoftware);
 
     // Avoid deleting an existing applist if we couldn't get one
     if (!appList.isEmpty()) {
@@ -176,6 +179,11 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     else {
         this->remoteAddress = NvAddress();
     }
+
+    // Real Nvidia host software (GeForce Experience and RTX Experience) both use the 'Mjolnir'
+    // codename in the state field and no version of Sunshine does. We can use this to bypass
+    // some assumptions about Nvidia hardware that don't apply to Sunshine hosts.
+    this->isNvidiaServerSoftware = NvHTTP::getXmlString(serverInfo, "state").contains("MJOLNIR");
 
     this->pairState = NvHTTP::getXmlString(serverInfo, "PairStatus") == "1" ?
                 PS_PAIRED : PS_NOT_PAIRED;
@@ -473,6 +481,7 @@ bool NvComputer::update(const NvComputer& that)
     ASSIGN_IF_CHANGED(gfeVersion);
     ASSIGN_IF_CHANGED(appVersion);
     ASSIGN_IF_CHANGED(isSupportedServerVersion);
+    ASSIGN_IF_CHANGED(isNvidiaServerSoftware);
     ASSIGN_IF_CHANGED(maxLumaPixelsHEVC);
     ASSIGN_IF_CHANGED(gpuModel);
     ASSIGN_IF_CHANGED_AND_NONNULL(serverCert);

@@ -798,7 +798,10 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     }
 
     // NVENC will fail to initialize when using dimensions over 4096 and H.264.
-    if (m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) {
+    //
+    // However, if we aren't using Nvidia hosting software, don't assume anything
+    // about H.264 capabilities by using HEVC Main10 support. It will likely be wrong.
+    if ((m_StreamConfig.width > 4096 || m_StreamConfig.height > 4096) && m_Computer->isNvidiaServerSoftware) {
         // Pascal added support for 8K HEVC encoding support. Maxwell 2 could encode HEVC but only up to 4K.
         // We can't directly identify Pascal, but we can look for HEVC Main10 which was added in the same generation.
         if (m_Computer->maxLumaPixelsHEVC == 0 || !(m_Computer->serverCodecModeSupport & 0x200)) {

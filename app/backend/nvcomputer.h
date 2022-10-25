@@ -83,6 +83,7 @@ public:
     QString uuid;
     QSslCertificate serverCert;
     QVector<NvApp> appList;
+    bool isNvidiaServerSoftware;
 
     // Synchronization
     mutable QReadWriteLock lock;
