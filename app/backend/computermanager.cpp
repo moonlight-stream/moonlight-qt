@@ -148,7 +148,7 @@ ComputerManager::ComputerManager(QObject *parent)
       m_PollingRef(0),
       m_MdnsBrowser(nullptr),
       m_CompatFetcher(nullptr),
-      m_HostsListDirty(false)
+      m_NeedsDelayedFlush(false)
 {
     QSettings settings;
 
@@ -164,6 +164,10 @@ ComputerManager::ComputerManager(QObject *parent)
     // Fetch latest compatibility data asynchronously
     m_CompatFetcher.start();
 
+    // Start the delayed flush thread to handle saveHosts() calls
+    m_DelayedFlushThread = new DelayedFlushThread(this);
+    m_DelayedFlushThread->start();
+
     // To quit in a timely manner, we must block additional requests
     // after we receive the aboutToQuit() signal. This is neccessary
     // because NvHTTP uses aboutToQuit() to abort requests in progres
@@ -174,6 +178,18 @@ ComputerManager::ComputerManager(QObject *parent)
 
 ComputerManager::~ComputerManager()
 {
+    // Stop the delayed flush thread before acquiring the lock in write mode
+    // to avoid deadlocking with a flush that needs the lock in read mode.
+    {
+        // Wake the delayed flush thread
+        m_DelayedFlushThread->requestInterruption();
+        m_DelayedFlushCondition.wakeOne();
+
+        // Wait for it to terminate (and finish any pending flush)
+        m_DelayedFlushThread->wait();
+        delete m_DelayedFlushThread;
+    }
+
     QWriteLocker lock(&m_Lock);
 
     // Delete machines that haven't been resolved yet
@@ -203,19 +219,27 @@ ComputerManager::~ComputerManager()
     }
 }
 
-class DeferredHostSaveTask : public QRunnable
-{
-public:
-    DeferredHostSaveTask(ComputerManager* cm)
-        : m_ComputerManager(cm) {}
+void DelayedFlushThread::run() {
+    while (!QThread::currentThread()->isInterruptionRequested()) {
+        // Wait for a delayed flush request or an interruption
+        {
+            QMutexLocker locker(&m_ComputerManager->m_DelayedFlushMutex);
 
-    void run()
-    {
-        // Only persist the host list if it was dirty.
-        //
-        // NB: We can have multiple save tasks queued up and so another one could
-        // have persisted the changes already.
-        if (m_ComputerManager->m_HostsListDirty.testAndSetAcquire(true, false)) {
+            while (!QThread::currentThread()->isInterruptionRequested() && !m_ComputerManager->m_NeedsDelayedFlush) {
+                m_ComputerManager->m_DelayedFlushCondition.wait(&m_ComputerManager->m_DelayedFlushMutex);
+            }
+
+            // Reset the delayed flush flag to ensure any racing saveHosts() call will set it again
+            m_ComputerManager->m_NeedsDelayedFlush = false;
+        }
+
+        if (QThread::currentThread()->isInterruptionRequested()) {
+            // Bail without flushing if we woke up for an interruption
+            break;
+        }
+
+        // Perform the flush
+        {
             QReadLocker lock(&m_ComputerManager->m_Lock);
 
             QSettings settings;
@@ -229,17 +253,17 @@ public:
             settings.endArray();
         }
     }
-
-private:
-    ComputerManager* m_ComputerManager;
-};
+}
 
 void ComputerManager::saveHosts()
 {
+    Q_ASSERT(m_DelayedFlushThread != nullptr && m_DelayedFlushThread->isRunning());
+
     // Punt to a worker thread because QSettings on macOS can take ages (> 500 ms)
     // to persist our host list to disk (especially when a host has a bunch of apps).
-    m_HostsListDirty.storeRelease(true);
-    QThreadPool::globalInstance()->start(new DeferredHostSaveTask(this));
+    QMutexLocker locker(&m_DelayedFlushMutex);
+    m_NeedsDelayedFlush = true;
+    m_DelayedFlushCondition.wakeOne();
 }
 
 QHostAddress ComputerManager::getBestGlobalAddressV6(QVector<QHostAddress> &addresses)
