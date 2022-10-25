@@ -442,7 +442,7 @@ void ComputerManager::clientSideAttributeUpdated(NvComputer* computer)
 
 void ComputerManager::handleAboutToQuit()
 {
-    QWriteLocker lock(&m_Lock);
+    QReadLocker lock(&m_Lock);
 
     // Interrupt polling threads immediately, so they
     // avoid making additional requests while quitting
@@ -775,16 +775,31 @@ private:
                 hostAddress.isInSubnet(QHostAddress("192.168.0.0"), 16);
 
         {
-            // Check if this PC already exists
-            QWriteLocker lock(&m_ComputerManager->m_Lock);
+            // Check if this PC already exists using opportunistic read lock
+            m_ComputerManager->m_Lock.lockForRead();
             NvComputer* existingComputer = m_ComputerManager->m_KnownHosts.value(newComputer->uuid);
+
+            // If it doesn't already exist, convert to a write lock in preparation for updating.
+            //
+            // NB: ComputerManager's lock protects the host map itself, not the elements inside.
+            // Those are protected by their individual locks. Since we only mutate the map itself
+            // when the PC doesn't exist, we need the lock in write-mode for that case only.
+            if (existingComputer == nullptr) {
+                m_ComputerManager->m_Lock.unlock();
+                m_ComputerManager->m_Lock.lockForWrite();
+
+                // Since we had to unlock to lock for write, someone could have raced and added
+                // this PC before us. We have to check again whether it already exists.
+                existingComputer = m_ComputerManager->m_KnownHosts.value(newComputer->uuid);
+            }
+
             if (existingComputer != nullptr) {
                 // Fold it into the existing PC
                 bool changed = existingComputer->update(*newComputer);
                 delete newComputer;
 
                 // Drop the lock before notifying
-                lock.unlock();
+                m_ComputerManager->m_Lock.unlock();
 
                 // For non-mDNS clients, let them know it succeeded
                 if (!m_Mdns) {
@@ -805,7 +820,7 @@ private:
                 m_ComputerManager->startPollingComputer(newComputer);
 
                 // Drop the lock before notifying
-                lock.unlock();
+                m_ComputerManager->m_Lock.unlock();
 
                 // If this wasn't added via mDNS but it is a RFC 1918 IPv4 address and not a VPN,
                 // go ahead and do the STUN request now to populate an external address.
@@ -813,9 +828,7 @@ private:
                     quint32 addr;
                     int err = LiFindExternalAddressIP4("stun.moonlight-stream.org", 3478, &addr);
                     if (err == 0) {
-                        lock.relock();
                         newComputer->setRemoteAddress(QHostAddress(qFromBigEndian(addr)));
-                        lock.unlock();
                     }
                     else {
                         qWarning() << "STUN failed to get WAN address:" << err;
