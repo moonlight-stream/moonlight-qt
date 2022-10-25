@@ -263,27 +263,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="481"/>
+        <location filename="../backend/computermanager.cpp" line="506"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="485"/>
+        <location filename="../backend/computermanager.cpp" line="510"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation type="unfinished">Нельзя создать новую пару, пока на ПК ещё активно соединение. Завершите запущенную на хосте игру или перезапустите ПК-хост, затем попробуйте ещё раз.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="488"/>
+        <location filename="../backend/computermanager.cpp" line="513"/>
         <source>Pairing failed. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="492"/>
+        <location filename="../backend/computermanager.cpp" line="517"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="502"/>
+        <location filename="../backend/computermanager.cpp" line="527"/>
         <source>GeForce Experience returned error: %1</source>
         <translation type="unfinished">Ошибка GeForce Experience: %1</translation>
     </message>
@@ -291,7 +291,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="552"/>
+        <location filename="../backend/computermanager.cpp" line="577"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>Выбранная игра уже запущена. Вручную закройте игру на хост-ПК, или используйте устройство, с которого она была запущена.</translation>
     </message>
@@ -397,37 +397,37 @@
         <translation>Подключение разорвано</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="662"/>
+        <location filename="../streaming/session.cpp" line="661"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Версия GeForce Experience на %1 не поддерживается данной сборкой Moonlight. Вы должны обновить Moonlight для потоковой передачи с %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="667"/>
+        <location filename="../streaming/session.cpp" line="666"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Вы выбрали режим удалённого рабочего стола. Это может вызвать проблемы с мышью в некоторых играх.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="672"/>
+        <location filename="../streaming/session.cpp" line="671"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>HDR не поддерживается с программным декодированием.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="676"/>
+        <location filename="../streaming/session.cpp" line="675"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Вы выбрали программное декодирование, что может ухудшить производительность.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="681"/>
+        <location filename="../streaming/session.cpp" line="680"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>Неподдерживаемые значения FPS могут вызвать подтормаживания или повысить задержку.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="684"/>
+        <location filename="../streaming/session.cpp" line="683"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>V-sync будет отключён, если частота кадров стрима превышает частоту развёртки экрана.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="711"/>
+        <location filename="../streaming/session.cpp" line="710"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Ваша видеокарта не поддерживает аппаратное декодирование HEVC, используется программное декодирование. Это может ухудшить производительность.</translation>
     </message>
@@ -436,22 +436,22 @@
         <translation type="vanished">Видеокарта этого ПК не поддерживает декодирование HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="694"/>
+        <location filename="../streaming/session.cpp" line="693"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>Видеокарта хост-ПК не поддеживает HEVC. Требуется видеокарты GTX 900 серии или новее. Используйте H264.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="725"/>
+        <location filename="../streaming/session.cpp" line="724"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Использования программного обеспечения с декодированием в следствие выбора H.264 без поддержки ГП. Это может вызвать низкий уровень производительности при трансляции.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="735"/>
+        <location filename="../streaming/session.cpp" line="734"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>Ваш компьютер, осуществляющий раздачу, или компьютер-клиент не поддерживают одинаковые видео кодеки. Это может вызвать низкую производительность потока.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="738"/>
+        <location filename="../streaming/session.cpp" line="737"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Клиентская графическая карта не поддерживает H.264 кодировку. Это может вызвать низкую производительность потока.</translation>
     </message>
@@ -460,62 +460,62 @@
         <translation type="vanished">%1 не поддеживает HDR10.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="749"/>
+        <location filename="../streaming/session.cpp" line="748"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>Видеокарты ПК-хоста не поддеживает стрим в HDR. Нужна видеокарта GTX серии 1000 или новее.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="758"/>
+        <location filename="../streaming/session.cpp" line="757"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>Видеокарта этого ПК не поддерживает декодирование HEVC профиля Main10, HDR недоступен.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="771"/>
+        <location filename="../streaming/session.cpp" line="770"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>Разрешение 4K требует GeForce Experience 3.0 или новее.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="786"/>
+        <location filename="../streaming/session.cpp" line="785"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Ваша настройка объёмного звука не поддерживается текущим аудиоустройством.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="793"/>
+        <location filename="../streaming/session.cpp" line="792"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Не удалось открыть аудиоустройство на этом ПК. Звук будет отключён на этот раз.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="798"/>
+        <location filename="../streaming/session.cpp" line="797"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Подключённый геймпад не настроен и не может быть использован. Посетите раздел помощи Moonlight, чтобы исправить это.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="806"/>
+        <location filename="../streaming/session.cpp" line="805"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>Видеокарта хост-ПК не поддерживает разрешения выше 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="810"/>
+        <location filename="../streaming/session.cpp" line="809"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Разрешения выше 4K работают только с HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="824"/>
+        <location filename="../streaming/session.cpp" line="823"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Вы выбрали аппаратное декодирование, но видеокарта этого ПК не поддерживает аппаратное декодирование для выбранного кодека.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="827"/>
+        <location filename="../streaming/session.cpp" line="826"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Вы выбрали аппаратное декодирование, но видеокарта этого ПК не поддерживает аппаратное декодирование для выбранного кодека.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1177"/>
+        <location filename="../streaming/session.cpp" line="1171"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>Ошибка GeForce Experience: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1723"/>
+        <location filename="../streaming/session.cpp" line="1692"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Не удалось запустить декодирование видео. Проверьте настройки стрима и попробуйте ещё раз.</translation>
     </message>
