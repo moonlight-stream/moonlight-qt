@@ -147,7 +147,8 @@ ComputerManager::ComputerManager(QObject *parent)
     : QObject(parent),
       m_PollingRef(0),
       m_MdnsBrowser(nullptr),
-      m_CompatFetcher(nullptr)
+      m_CompatFetcher(nullptr),
+      m_HostsListDirty(false)
 {
     QSettings settings;
 
@@ -202,19 +203,43 @@ ComputerManager::~ComputerManager()
     }
 }
 
+class DeferredHostSaveTask : public QRunnable
+{
+public:
+    DeferredHostSaveTask(ComputerManager* cm)
+        : m_ComputerManager(cm) {}
+
+    void run()
+    {
+        // Only persist the host list if it was dirty.
+        //
+        // NB: We can have multiple save tasks queued up and so another one could
+        // have persisted the changes already.
+        if (m_ComputerManager->m_HostsListDirty.testAndSetAcquire(true, false)) {
+            QReadLocker lock(&m_ComputerManager->m_Lock);
+
+            QSettings settings;
+            settings.remove(SER_HOSTS);
+            settings.beginWriteArray(SER_HOSTS);
+            int i = 0;
+            for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
+                settings.setArrayIndex(i++);
+                computer->serialize(settings);
+            }
+            settings.endArray();
+        }
+    }
+
+private:
+    ComputerManager* m_ComputerManager;
+};
+
 void ComputerManager::saveHosts()
 {
-    QSettings settings;
-    QReadLocker lock(&m_Lock);
-
-    settings.remove(SER_HOSTS);
-    settings.beginWriteArray(SER_HOSTS);
-    int i = 0;
-    for (const NvComputer* computer : m_KnownHosts) {
-        settings.setArrayIndex(i++);
-        computer->serialize(settings);
-    }
-    settings.endArray();
+    // Punt to a worker thread because QSettings on macOS can take ages (> 500 ms)
+    // to persist our host list to disk (especially when a host has a bunch of apps).
+    m_HostsListDirty.storeRelease(true);
+    QThreadPool::globalInstance()->start(new DeferredHostSaveTask(this));
 }
 
 QHostAddress ComputerManager::getBestGlobalAddressV6(QVector<QHostAddress> &addresses)

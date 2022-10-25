@@ -167,6 +167,7 @@ class ComputerManager : public QObject
     friend class DeferredHostDeletionTask;
     friend class PendingAddTask;
     friend class PendingPairingTask;
+    friend class DeferredHostSaveTask;
 
 public:
     explicit ComputerManager(QObject *parent = nullptr);
@@ -228,4 +229,5 @@ private:
     QMdnsEngine::Cache m_MdnsCache;
     QVector<MdnsPendingComputer*> m_PendingResolution;
     CompatFetcher m_CompatFetcher;
+    QAtomicInteger<bool> m_HostsListDirty;
 };
