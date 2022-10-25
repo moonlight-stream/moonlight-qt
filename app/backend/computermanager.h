@@ -18,6 +18,8 @@
 #include <QMutex>
 #include <QWaitCondition>
 
+class ComputerManager;
+
 class DelayedFlushThread : public QThread
 {
     Q_OBJECT
