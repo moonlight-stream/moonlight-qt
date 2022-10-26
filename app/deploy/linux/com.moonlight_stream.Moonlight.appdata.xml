@@ -36,6 +36,27 @@
 	</screenshots>
 
 	<releases>
+		<release version="4.3.0" date="2022-10-27">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>Improved support for GeForce Experience 3.26</li>
+					<li>Improved image quality and performance when recovering from video packet loss using HEVC</li>
+					<li>Improved error concealment after audio packet loss</li>
+					<li>Improved UI performance when paired with many hosts or hosts with large numbers of apps</li>
+					<li>Pairing with Sunshine hosts is now supported even if the host is in a streaming session</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed streaming at resolutions below 720x480 with GeForce Experience 3.26</li>
+					<li>Fixed window position and size being lost when toggling between full-screen and windowed mode</li>
+					<li>Fixed initial window size not always respecting the stream aspect ratio</li>
+					<li>Fixed unexpected error when streaming at resolutions above 4096x4096 using Sunshine<li>
+					<li>Updated included gamepad mappings</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="4.2.1" date="2022-09-12">
 			<description>
 				<p>Bugfixes:</p>
