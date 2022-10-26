@@ -263,27 +263,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="506"/>
+        <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="510"/>
+        <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation type="unfinished">Du kan ikke koble til maskinen mens en tidligere økt fremdeles kjører på din verts-PC. Avslutt alle kjørende spill eller ta omstart av verten, prøv deretter å koble til igjen.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="513"/>
+        <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="517"/>
+        <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="527"/>
+        <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
         <translation type="unfinished">GeForce Experience returnerte en feil: %1</translation>
     </message>
@@ -291,7 +291,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="577"/>
+        <location filename="../backend/computermanager.cpp" line="606"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>Kjørende spill ble ikke startet på denne PC-en. Du må avslutte spillet på verts-PC-en manuelt eller bruke enheten som opprinnelig startet spillet.</translation>
     </message>
@@ -490,32 +490,32 @@
         <translation>En tilknyttet spillkontroller har ingen tastetilknytninger, og vil ikke kunne brukes. Besøk Moonlight-hjelpen for å løse dette.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="805"/>
+        <location filename="../streaming/session.cpp" line="810"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation type="unfinished">Skjermkortet i din verts-PC støtter ikke strømming av videooppløsninger over 4k.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="809"/>
+        <location filename="../streaming/session.cpp" line="814"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Videooppløsninger over 4k støttes kun av HEVC-kodeket.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="823"/>
+        <location filename="../streaming/session.cpp" line="828"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation type="unfinished">At du har satt på tvungen maskinvaredekoding har ingen innvirkning siden det ikke er støtte for det på denne PC-ens skjermkort.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="826"/>
+        <location filename="../streaming/session.cpp" line="831"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation type="unfinished">At du har valgt tungen maskinvaredekoding fungerer ikke sammen med kodekvalget. Denne PC-ens skjermkort mangler støtte for dekoding i valgt kodek.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1171"/>
+        <location filename="../streaming/session.cpp" line="1176"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience returnerte en feil: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1692"/>
+        <location filename="../streaming/session.cpp" line="1697"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation type="unfinished">Kunne ikke starte videodekoder. Sjekk strømmingsinnstillingene dine og prøv igjen.</translation>
     </message>

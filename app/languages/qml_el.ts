@@ -263,27 +263,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="506"/>
+        <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="510"/>
+        <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation type="unfinished">Δεν μπορείτε να πραγματοποιήσετε ζεύξη ενώ μια προηγούμενη συνεδρία εξακολουθεί να εκτελείται στον κεντρικό υπολογιστή. Τερματίστε τυχόν παιχνίδια που εκτελούνται ή επανεκκινήστε τον κεντρικό υπολογιστή και, στη συνέχεια, δοκιμάστε ξανά τη ζεύξη.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="513"/>
+        <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="517"/>
+        <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="527"/>
+        <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
         <translation type="unfinished">Το GeForce Experience επέστρεψε σφάλμα: %1</translation>
     </message>
@@ -291,7 +291,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="577"/>
+        <location filename="../backend/computermanager.cpp" line="606"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>Το παιχνίδι που τρέχει δεν ξεκίνησε από αυτόν τον υπολογιστή. Πρέπει να κλείσετε το παιχνίδι στον κεντρικό υπολογιστή με μη αυτόματο τρόπο ή να χρησιμοποιήσετε τη συσκευή που ξεκίνησε αρχικά το παιχνίδι.</translation>
     </message>
@@ -490,32 +490,32 @@
         <translation>Ένα συνδεδεμένο gamepad δεν έχει χαρτογράφηση και δεν μπορεί να χρησιμοποιηθεί. Επισκεφτείτε τη βοήθεια του Moonlight για να το επιλύσετε.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="805"/>
+        <location filename="../streaming/session.cpp" line="810"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>Η κάρτα γραφικών του κεντρικού υπολογιστή σας δεν υποστηρίζει αναλύσεις βίντεο ροής πάνω από 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="809"/>
+        <location filename="../streaming/session.cpp" line="814"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Οι αναλύσεις βίντεο άνω των 4K υποστηρίζονται μόνο από τον κωδικοποιητή HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="823"/>
+        <location filename="../streaming/session.cpp" line="828"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Η επιλογή σας για επιβολή αποκωδικοποίησης υλικού δεν μπορεί να ικανοποιηθεί λόγω έλλειψης υποστήριξης αποκωδικοποίησης υλικού στη κάρτα γραφικών αυτού του υπολογιστή.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="826"/>
+        <location filename="../streaming/session.cpp" line="831"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Η επιλογή κωδικοποιητή και η αναγκαστική αποκωδικοποίηση υλικού δεν είναι συμβατές. Η κάρτα γραφικών αυτού του υπολογιστή δεν υποστηρίζει την αποκωδικοποίηση του κωδικοποιητή που έχετε επιλέξει.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1171"/>
+        <location filename="../streaming/session.cpp" line="1176"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>Το GeForce Experience επέστρεψε σφάλμα: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1692"/>
+        <location filename="../streaming/session.cpp" line="1697"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Αδυναμία αρχικοποίησης του αποκωδικοποιητή βίντεο. Ελέγξτε τις ρυθμίσεις ροής και δοκιμάστε ξανά.</translation>
     </message>
