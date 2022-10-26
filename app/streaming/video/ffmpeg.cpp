@@ -105,6 +105,9 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
                         "Encoder configured for %d slices per frame",
                         slices);
             capabilities |= CAPABILITY_SLICES_PER_FRAME(slices);
+
+            // Enable HEVC RFI when using the FFmpeg software decoder
+            capabilities |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
         }
         else if (m_HwDecodeCfg == nullptr) {
             // We have a non-hwaccel hardware decoder. This will always
