@@ -253,7 +253,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="506"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>来自电脑的密码不匹配。请再试一次。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="510"/>
@@ -263,12 +263,12 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="513"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>配对失败。请再试一次。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="517"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>另一个配对的尝试正在进行中。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="527"/>
