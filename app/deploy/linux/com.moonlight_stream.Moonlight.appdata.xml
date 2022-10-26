@@ -36,7 +36,7 @@
 	</screenshots>
 
 	<releases>
-		<release version="4.3.0" date="2022-10-27">
+		<release version="4.3.0" date="2022-10-26">
 			<description>
 				<p>New features:</p>
 				<ul>
@@ -51,7 +51,7 @@
 					<li>Fixed streaming at resolutions below 720x480 with GeForce Experience 3.26</li>
 					<li>Fixed window position and size being lost when toggling between full-screen and windowed mode</li>
 					<li>Fixed initial window size not always respecting the stream aspect ratio</li>
-					<li>Fixed unexpected error when streaming at resolutions above 4096x4096 using Sunshine<li>
+					<li>Fixed unexpected error when streaming at resolutions above 4096x4096 using Sunshine</li>
 					<li>Updated included gamepad mappings</li>
 					<li>Updated community-contributed translations from Weblate</li>
 				</ul>
