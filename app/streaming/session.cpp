@@ -22,6 +22,19 @@
 #define ICON_SIZE 64
 #endif
 
+// HACK: Remove once proper Dark Mode support lands in SDL
+#ifdef Q_OS_WIN32
+#include <SDL_syswm.h>
+#include <dwmapi.h>
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE_OLD
+#define DWMWA_USE_IMMERSIVE_DARK_MODE_OLD 19
+#endif
+#ifndef DWMWA_USE_IMMERSIVE_DARK_MODE
+#define DWMWA_USE_IMMERSIVE_DARK_MODE 20
+#endif
+#endif
+
+
 #define SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER 100
 #define SDL_CODE_GAMECONTROLLER_RUMBLE 101
 
@@ -35,6 +48,7 @@
 #include <QImage>
 #include <QGuiApplication>
 #include <QCursor>
+#include <QWindow>
 
 #define CONN_TEST_SERVER "qt.conntest.moonlight-stream.org"
 
@@ -1414,6 +1428,34 @@ void Session::execInternal()
             return;
         }
     }
+
+    // HACK: Remove once proper Dark Mode support lands in SDL
+#ifdef Q_OS_WIN32
+    {
+        BOOL darkModeEnabled = FALSE;
+
+        // Query whether dark mode is enabled for our Qt window (which tracks the OS dark mode state)
+        QWindowList windows = QGuiApplication::topLevelWindows();
+        for (const QWindow* window : windows) {
+            if (SUCCEEDED(DwmGetWindowAttribute((HWND)window->winId(), DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled))) ||
+                    SUCCEEDED(DwmGetWindowAttribute((HWND)window->winId(), DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, &darkModeEnabled, sizeof(darkModeEnabled)))) {
+                break;
+            }
+        }
+
+        // If dark mode is enabled, propagate that to our SDL window
+        if (darkModeEnabled) {
+            SDL_SysWMinfo info;
+
+            SDL_VERSION(&info.version);
+            if (SDL_GetWindowWMInfo(m_Window, &info) && info.subsystem == SDL_SYSWM_WINDOWS) {
+                if (FAILED(DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled)))) {
+                    DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, &darkModeEnabled, sizeof(darkModeEnabled));
+                }
+            }
+        }
+    }
+#endif
 
     m_InputHandler->setWindow(m_Window);
 
