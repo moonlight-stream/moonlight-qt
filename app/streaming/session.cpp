@@ -1463,6 +1463,13 @@ void Session::execInternal()
                 if (FAILED(DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled)))) {
                     DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE_OLD, &darkModeEnabled, sizeof(darkModeEnabled));
                 }
+
+                // Toggle non-client rendering off and back on to ensure dark mode takes effect on Windows 10.
+                // DWM doesn't seem to correctly invalidate the non-client area after enabling dark mode.
+                DWMNCRENDERINGPOLICY ncPolicy = DWMNCRP_DISABLED;
+                DwmSetWindowAttribute(info.info.win.window, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
+                ncPolicy = DWMNCRP_ENABLED;
+                DwmSetWindowAttribute(info.info.win.window, DWMWA_NCRENDERING_POLICY, &ncPolicy, sizeof(ncPolicy));
             }
         }
     }
