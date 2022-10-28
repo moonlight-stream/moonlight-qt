@@ -265,27 +265,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>PC의 PIN이 일치하지 않습니다. 다시 시도해 주세요.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
+        <translation>이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링에 실패했습니다. 다시 시도해 주세요.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>다른 페어링 시도가 이미 진행 중입니다.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience에서 오류를 반환했습니다: %1</translation>
+        <translation>GeForce Experience에서 오류를 반환했습니다: %1</translation>
     </message>
 </context>
 <context>
@@ -364,7 +364,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="97"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>네트워크 연결이 제대로 작동하지 않습니다. 영상 비트레이트 설정을 줄이거나 더 빠른 연결을 시도하십시오.</translation>
+        <translation>네트워크 연결이 제대로 작동하지 않습니다. 비디오 비트레이트 설정을 줄이거나 더 빠른 연결을 시도하십시오.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="103"/>
@@ -384,12 +384,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="110"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>호스트 PC에서 치명적인 비디오 인코딩 오류를 보고했습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR 모드를 비활성화하거나 스트리밍 해상도를 변경하거나 호스트 PC의 디스플레이 해상도를 변경해 보십시오.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="116"/>
@@ -492,7 +492,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="810"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>호스트 PC의 GPU가 4K 이상의 비디오 해상도의 스트리밍을 지원하지 않습니다.</translation>
+        <translation>호스트 PC의 GPU가 4K 이상의 비디오 해상도 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="814"/>
@@ -592,7 +592,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="485"/>
         <source>Video bitrate:</source>
-        <translation>영상 비트레이트:</translation>
+        <translation>비디오 비트레이트:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="493"/>
@@ -602,7 +602,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="511"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation>영상 비트레이트: %1 Mbps</translation>
+        <translation>비디오 비트레이트: %1 Mbps</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="519"/>
