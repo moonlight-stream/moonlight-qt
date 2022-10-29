@@ -764,7 +764,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1420"/>
         <source>Enable HDR (Experimental)</source>
-        <translation>HDR 활성화 (실험적 기능)</translation>
+        <translation>HDR 활성화 (실험용)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
