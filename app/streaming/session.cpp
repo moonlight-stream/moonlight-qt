@@ -1397,7 +1397,19 @@ void Session::execInternal()
     SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 
     // We always want a resizable window with High DPI enabled
-    const Uint32 defaultWindowFlags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+    Uint32 defaultWindowFlags = SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_RESIZABLE;
+
+    // If we're starting in windowed mode and the Moonlight GUI is maximized,
+    // match that with the streaming window.
+    if (!m_IsFullScreen) {
+        QWindowList windows = QGuiApplication::topLevelWindows();
+        for (const QWindow* window : windows) {
+            if (window->windowState() & Qt::WindowMaximized) {
+                defaultWindowFlags |= SDL_WINDOW_MAXIMIZED;
+                break;
+            }
+        }
+    }
 
     m_Window = SDL_CreateWindow("Moonlight",
                                 x,
