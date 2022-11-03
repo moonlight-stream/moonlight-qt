@@ -65,8 +65,9 @@ static QTextStream s_LoggerStream(stdout);
 static QMutex s_LoggerLock;
 static bool s_SuppressVerboseOutput;
 #ifdef LOG_TO_FILE
-#define MAX_LOG_LINES 10000
-static int s_LogLinesWritten = 0;
+// Max log file size of 10 MB
+#define MAX_LOG_SIZE_BYTES (10 * 1024 * 1024)
+static int s_LogBytesWritten = 0;
 static bool s_LogLimitReached = false;
 static QFile* s_LoggerFile;
 #endif
@@ -79,7 +80,7 @@ void logToLoggerStream(QString& message)
     if (s_LogLimitReached) {
         return;
     }
-    else if (s_LogLinesWritten == MAX_LOG_LINES) {
+    else if (s_LogBytesWritten >= MAX_LOG_SIZE_BYTES) {
         s_LoggerStream << "Log size limit reached!";
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         s_LoggerStream << Qt::endl;
@@ -90,7 +91,7 @@ void logToLoggerStream(QString& message)
         return;
     }
     else {
-        s_LogLinesWritten++;
+        s_LogBytesWritten += message.size();
     }
 #endif
 
