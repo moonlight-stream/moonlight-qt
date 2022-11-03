@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Připojování k počítači...</translation>
+        <translation>Připojování k počítači...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Párovní... Prosím vložte &apos;%1&apos; do %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Párování bylo úspěšně dokončeno</translation>
     </message>
 </context>
 <context>
@@ -265,27 +265,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN nesouhlasí s PINem z počítače. Zkuste to prosím znovu.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Nemůžete spárovat počítač, pokud na něm už běží streamování. Vypněte jakékoliv běžící hry nebo restartujte hostitelský počítač, poté můžete zkusit párování znovu.</translation>
+        <translation>Nemůžete spárovat počítač, pokud na něm už běží streamování. Vypněte jakékoliv běžící hry nebo restartujte hostitelský počítač, poté můžete zkusit párování znovu.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Párování selhalo. Zkuste to prosím znovu.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Již probíhá pokus o párování.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience vrátilo chybu: %1</translation>
+        <translation>GeForce Experience vrátilo chybu: %1</translation>
     </message>
 </context>
 <context>
@@ -301,7 +301,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 již bylo spárováno</translation>
     </message>
     <message>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
@@ -334,7 +334,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Počítač %1 nebyl spárován. Prosím otevřete Moonlight pro spárování, než si zobrazíte seznam her.</translation>
     </message>
 </context>
 <context>
@@ -384,12 +384,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="110"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hostitelský počítač hlásí fatální chybu při enkódování videa.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Zkuste vypnout HDR, změňte rozlišení streamu nebo změňte rozlišení displeje hostitelského počítače.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="116"/>
