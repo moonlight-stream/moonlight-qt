@@ -36,11 +36,12 @@
 	</screenshots>
 
 	<releases>
-		<release version="4.3.1" date="2022-11-02">
+		<release version="4.3.1" date="2022-11-03">
 			<description>
 				<p>Changes:</p>
 				<ul>
 					<li>Fixed crash during specific patterns of audio packet loss</li>
+					<li>Fixed detection of local streaming when using IPv6 addresses</li>
 					<li>Windowed mode streaming now starts maximized if the GUI window was maximized</li>
 					<li>Updated community-contributed translations from Weblate</li>
 				</ul>
