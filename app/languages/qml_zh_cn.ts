@@ -1015,7 +1015,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="166"/>
         <source>Start+Select+L1+R1</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="166"/>
