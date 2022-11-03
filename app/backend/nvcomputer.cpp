@@ -293,7 +293,7 @@ bool NvComputer::wake() const
     return success;
 }
 
-bool NvComputer::isReachableOverVpn() const
+NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
 {
     NvAddress copyOfActiveAddress;
 
@@ -301,7 +301,7 @@ bool NvComputer::isReachableOverVpn() const
         QReadLocker readLocker(&lock);
 
         if (activeAddress.isNull()) {
-            return false;
+            return ReachabilityType::RI_UNKNOWN;
         }
 
         // Grab a copy of the active address to avoid having to hold
@@ -332,48 +332,55 @@ bool NvComputer::isReachableOverVpn() const
                     if (nic.type() == QNetworkInterface::Virtual ||
                             nic.type() == QNetworkInterface::Ppp) {
                         // Treat PPP and virtual interfaces as likely VPNs
-                        return true;
+                        return ReachabilityType::RI_VPN;
                     }
 
                     if (nic.maximumTransmissionUnit() != 0 && nic.maximumTransmissionUnit() < 1500) {
                         // Treat MTUs under 1500 as likely VPNs
-                        return true;
+                        return ReachabilityType::RI_VPN;
                     }
 #endif
 
                     if (nic.flags() & QNetworkInterface::IsPointToPoint) {
                         // Treat point-to-point links as likely VPNs.
                         // This check detects OpenVPN on Unix-like OSes.
-                        return true;
+                        return ReachabilityType::RI_VPN;
                     }
 
                     if (nic.hardwareAddress().startsWith("00:FF", Qt::CaseInsensitive)) {
                         // OpenVPN TAP interfaces have a MAC address starting with 00:FF on Windows
-                        return true;
+                        return ReachabilityType::RI_VPN;
                     }
 
                     if (nic.humanReadableName().startsWith("ZeroTier")) {
                         // ZeroTier interfaces always start with "ZeroTier"
-                        return true;
+                        return ReachabilityType::RI_VPN;
                     }
 
                     if (nic.humanReadableName().contains("VPN")) {
-                        // This one is just a final heuristic if all else fails
-                        return true;
+                        // This one is just a final VPN heuristic if all else fails
+                        return ReachabilityType::RI_VPN;
                     }
 
-                    // Didn't meet any of our VPN heuristics
-                    return false;
+                    // Didn't meet any of our VPN heuristics. Let's see if it's on-link.
+                    Q_ASSERT(addr.prefixLength() >= 0);
+                    if (addr.prefixLength() >= 0 && s.localAddress().isInSubnet(addr.ip(), addr.prefixLength())) {
+                        return ReachabilityType::RI_LAN;
+                    }
+
+                    // Default to unknown if nothing else matched
+                    return ReachabilityType::RI_UNKNOWN;
                 }
             }
         }
 
         qWarning() << "No match found for address:" << s.localAddress();
-        return false;
+        return ReachabilityType::RI_UNKNOWN;
     }
     else {
         // If we fail to connect, just pretend that it's not a VPN
-        return false;
+        qWarning() << "Unable to check for reachability within 3 seconds";
+        return ReachabilityType::RI_UNKNOWN;
     }
 }
 

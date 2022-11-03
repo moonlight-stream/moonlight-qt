@@ -35,8 +35,15 @@ public:
     bool
     wake() const;
 
-    bool
-    isReachableOverVpn() const;
+    enum ReachabilityType
+    {
+        RI_UNKNOWN,
+        RI_LAN,
+        RI_VPN,
+    };
+
+    ReachabilityType
+    getActiveAddressReachability() const;
 
     QVector<NvAddress>
     uniqueAddresses() const;
