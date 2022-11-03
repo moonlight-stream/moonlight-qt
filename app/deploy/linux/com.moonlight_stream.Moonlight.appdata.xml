@@ -36,6 +36,16 @@
 	</screenshots>
 
 	<releases>
+		<release version="4.3.1" date="2022-11-02">
+			<description>
+				<p>Changes:</p>
+				<ul>
+					<li>Fixed crash during specific patterns of audio packet loss</li>
+					<li>Windowed mode streaming now starts maximized if the GUI window was maximized</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="4.3.0" date="2022-10-28">
 			<description>
 				<p>New features:</p>
