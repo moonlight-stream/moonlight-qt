@@ -305,7 +305,7 @@ int main(int argc, char *argv[])
 #ifdef LOG_TO_FILE
     QDir tempDir(Path::getLogDir());
     s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
-    if (s_LoggerFile->open(QIODevice::WriteOnly)) {
+    if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
         s_LoggerStream.setDevice(s_LoggerFile);
     }
