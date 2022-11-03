@@ -352,82 +352,82 @@
         <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="91"/>
+        <location filename="../streaming/session.cpp" line="105"/>
         <source>No video received from host.</source>
         <translation>Không nhận được video từ máy chủ.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="92"/>
+        <location filename="../streaming/session.cpp" line="106"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>Hãy kiểm tra tường lửa và các quy tắc chuyển tiếp cổng cho (các) cổng: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="97"/>
+        <location filename="../streaming/session.cpp" line="111"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>Kết nối mạng của bạn đang không hoạt động tốt. Hãy giảm cài đặt tốc độ bit video hoặc thử một kết nối nhanh hơn.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="103"/>
+        <location filename="../streaming/session.cpp" line="117"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>Có gì đó sai đã xảy ra trên PC chủ của bạn khi bắt đầu stream.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="104"/>
+        <location filename="../streaming/session.cpp" line="118"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Hãy chắc chắn là bạn không mở bất kỳ nội dung được DRM bảo vệ nào trên PC chủ. Bạn cũng có thể thử khởi động lại PC chủ.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="105"/>
+        <location filename="../streaming/session.cpp" line="119"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
         <translation>Nếu vấn đề vẫn tiếp diễn, hãy thử cài đặt lại driver GPU và GeForce Experience.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="110"/>
+        <location filename="../streaming/session.cpp" line="124"/>
         <source>The host PC reported a fatal video encoding error.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="111"/>
+        <location filename="../streaming/session.cpp" line="125"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="116"/>
+        <location filename="../streaming/session.cpp" line="130"/>
         <source>Connection terminated</source>
         <translation>Kết nối bị chấm dứt</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="661"/>
+        <location filename="../streaming/session.cpp" line="675"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Phiên bản của GeForce Experience trên %1 không được bản dựng Moonlight này hỗ trợ. Bạn phải cập nhật Moonlight để stream từ %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="666"/>
+        <location filename="../streaming/session.cpp" line="680"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Lựa chọn bật chế độ chuột máy tính từ xa của bạn có thể sẽ gây ra vấn đề trong các trò chơi.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="671"/>
+        <location filename="../streaming/session.cpp" line="685"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>HDR không được hỗ trợ với giải mã phần mềm.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="675"/>
+        <location filename="../streaming/session.cpp" line="689"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Lựa chọn cài đặt buộc giải mã phần mềm của bạn có thể sẽ gây ra hiệu năng stream kém.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="680"/>
+        <location filename="../streaming/session.cpp" line="694"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
         <translation>Việc sử dụng các tuỳ chọn FPS không được hỗ trợ có thể sẽ gây ra khựng hoặc lag.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="683"/>
+        <location filename="../streaming/session.cpp" line="697"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
         <translation>V-sync sẽ bị tắt khi stream tại tốc độ khung hình cao hơn màn hình.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="710"/>
+        <location filename="../streaming/session.cpp" line="724"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Đang sử dụng giải mã phần mềm do lựa chọn buộc HEVC của bạn mà không có sự hỗ trợ của GPU. Việc này có thể sẽ gây ra hiệu năng stream kém.</translation>
     </message>
@@ -436,22 +436,22 @@
         <translation type="vanished">GPU của PC này không hỗ trợ giải mã HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="693"/>
+        <location filename="../streaming/session.cpp" line="707"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
         <translation>GPU của PC chủ không hỗ trợ HEVC. Một GPU GeForce GTX 900-series (Maxwell) hoặc mới hơn được yêu cầu để stream HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="724"/>
+        <location filename="../streaming/session.cpp" line="738"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Đang sử dụng giải mã phần mềm do lựa chọn buộc dùng H.264 mà GPU không hỗ trợ. Việc này có thể gây ra hiệu năng stream thấp.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="734"/>
+        <location filename="../streaming/session.cpp" line="748"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>PC chủ và PC khách không hỗ trợ cùng codec video. Việc này có thể gây ra hiệu năng stream thấp.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="737"/>
+        <location filename="../streaming/session.cpp" line="751"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>GPU khách không hỗ trợ giải mã H.264. Việc này có thể gây ra hiệu năng stream thấp.</translation>
     </message>
@@ -460,62 +460,62 @@
         <translation type="vanished">%1 không hỗ trợ HDR10.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="748"/>
+        <location filename="../streaming/session.cpp" line="762"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
         <translation>GPU của PC chủ không hỗ trợ stream HDR. Một GPU GTX 1000-series (Pascal) hoặc mới hơn được yêu cầu để stream HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="757"/>
+        <location filename="../streaming/session.cpp" line="771"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>GPU của PC chủ không hỗ trợ giải mã HEVC Main10 để stream HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="770"/>
+        <location filename="../streaming/session.cpp" line="784"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>GeForce Experience 3.0 hoặc cao hơn được yêu cầu để stream 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="785"/>
+        <location filename="../streaming/session.cpp" line="799"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Cài đặt âm thanh bao quanh đã chọn của bạn không được thiết bị âm thanh hiện tại hỗ trợ.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="792"/>
+        <location filename="../streaming/session.cpp" line="806"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Mở thiết bị âm thanh thất bại. Âm thanh sẽ không có sẵn trong phiên làm việc này.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="797"/>
+        <location filename="../streaming/session.cpp" line="811"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Một tay cầm điều khiển không được chỉ định nút và sẽ không thể sử dụng được. Hãy đi đến trợ giúp của Moonlight để giải quyết điều này.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="810"/>
+        <location filename="../streaming/session.cpp" line="824"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>GPU của PC chủ không hỗ trợ stream độ phân giải video trên 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="814"/>
+        <location filename="../streaming/session.cpp" line="828"/>
         <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
         <translation>Các độ phân giải video trên 4K chỉ được codec HEVC hỗ trợ.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="828"/>
+        <location filename="../streaming/session.cpp" line="842"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Lựa chọn buộc giải mã phần cứng của bạn không thể được thoả mãn do thiếu sự hỗ trợ giải mã phần cứng trên GPU của PC này.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="831"/>
+        <location filename="../streaming/session.cpp" line="845"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Lựa chọn codec và cài đặt buộc giải mã phần cứng của bạn không tương thích. GPU của PC này thiếu sự hỗ trợ cho việc giải mã codec đã chọn.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1176"/>
+        <location filename="../streaming/session.cpp" line="1190"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience đã trả lời bằng lỗi: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1697"/>
+        <location filename="../streaming/session.cpp" line="1788"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Không thể khởi tạo trình giải mã video. Vui lòng kiểm tra cài đặt stream của bạn và thử lại.</translation>
     </message>
