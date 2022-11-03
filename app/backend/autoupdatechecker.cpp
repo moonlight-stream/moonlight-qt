@@ -201,7 +201,7 @@ void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
                    << QSysInfo::buildCpuArchitecture() << getPlatform() << QSysInfo::kernelVersion();
     }
     else {
-        qWarning() << "Update checking failed with error: " << reply->error();
+        qWarning() << "Update checking failed with error:" << reply->error();
         reply->deleteLater();
     }
 }

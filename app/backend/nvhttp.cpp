@@ -551,7 +551,7 @@ NvHTTP::openConnection(QUrl baseUrl,
     if (reply->error() != QNetworkReply::NoError)
     {
         if (logLevel >= NvLogLevel::NVLL_ERROR) {
-            qWarning() << command << " request failed with error " << reply->error();
+            qWarning() << command << "request failed with error:" << reply->error();
         }
 
         if (reply->error() == QNetworkReply::SslHandshakeFailedError) {

@@ -163,13 +163,13 @@ bool StreamingPreferences::retranslate()
     }
 
     if (newTranslator->load(QString(":/languages/qml_") + languageSuffix)) {
-        qInfo() << "Successfully loaded translation for " << languageSuffix;
+        qInfo() << "Successfully loaded translation for" << languageSuffix;
 
         translator = newTranslator;
         QCoreApplication::installTranslator(translator);
     }
     else {
-        qInfo() << "No translation available for " << languageSuffix;
+        qInfo() << "No translation available for" << languageSuffix;
         delete newTranslator;
     }
 
