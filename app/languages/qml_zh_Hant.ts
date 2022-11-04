@@ -265,27 +265,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>來自電腦的 PIN 碼不相符，請重試。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">當上一個工作階段仍在主機 PC 上執行時，您無法配對。結束所有正在執行的遊戲或重新啟動主機，然後再次嘗試配對。</translation>
+        <translation>上一個工作階段仍在主機 PC 上執行時，您將無法配對。結束所有正在執行的遊戲或重新啟動主機，然後再次嘗試配對。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>配對失敗，請重試。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>另一個配對嘗試正在進行。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience 回傳錯誤：%1</translation>
+        <translation>GeForce Experience 傳回錯誤：%1</translation>
     </message>
 </context>
 <context>
