@@ -202,7 +202,7 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
     case LANG_FR:
         return "fr";
     case LANG_ZH_CN:
-        return "zh_cn";
+        return "zh_CN";
     case LANG_NB_NO:
         return "nb_NO";
     case LANG_RU:
