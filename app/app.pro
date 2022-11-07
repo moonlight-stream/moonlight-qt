@@ -359,7 +359,7 @@ RESOURCES += \
     qml.qrc
 
 TRANSLATIONS += \
-    languages/qml_zh_cn.ts \
+    languages/qml_zh_CN.ts \
     languages/qml_de.ts \
     languages/qml_fr.ts \
     languages/qml_nb_NO.ts \
