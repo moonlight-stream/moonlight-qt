@@ -338,6 +338,34 @@
     </message>
 </context>
 <context>
+    <name>QPlatformTheme</name>
+    <message>
+        <location filename="../main.cpp" line="535"/>
+        <source>&amp;Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="536"/>
+        <source>&amp;No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="537"/>
+        <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="538"/>
+        <source>Help</source>
+        <translation type="unfinished">도움말</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="539"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QuitSegue</name>
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
@@ -515,7 +543,7 @@
         <translation>GeForce Experience에서 오류를 반환했습니다: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1788"/>
+        <location filename="../streaming/session.cpp" line="1798"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>비디오 디코더를 초기화 할 수 없습니다. 스트리밍 설정을 확인하고 다시 시도하십시오.</translation>
     </message>

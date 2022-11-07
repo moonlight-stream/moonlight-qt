@@ -531,6 +531,13 @@ int main(int argc, char *argv[])
     StreamingPreferences prefs;
     prefs.retranslate();
 
+    // Trickily declare the translation for dialog buttons
+    QCoreApplication::translate("QPlatformTheme", "&Yes");
+    QCoreApplication::translate("QPlatformTheme", "&No");
+    QCoreApplication::translate("QPlatformTheme", "OK");
+    QCoreApplication::translate("QPlatformTheme", "Help");
+    QCoreApplication::translate("QPlatformTheme", "Cancel");
+
     // After the QGuiApplication is created, the platform stuff will be initialized
     // and we can set the SDL video driver to match Qt.
     if (WMUtils::isRunningWayland() && QGuiApplication::platformName() == "xcb") {
