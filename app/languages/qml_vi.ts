@@ -338,6 +338,34 @@
     </message>
 </context>
 <context>
+    <name>QPlatformTheme</name>
+    <message>
+        <location filename="../main.cpp" line="535"/>
+        <source>&amp;Yes</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="536"/>
+        <source>&amp;No</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="537"/>
+        <source>OK</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="538"/>
+        <source>Help</source>
+        <translation type="unfinished">Trợ giúp</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="539"/>
+        <source>Cancel</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>QuitSegue</name>
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
@@ -515,7 +543,7 @@
         <translation>GeForce Experience đã trả lời bằng lỗi: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1788"/>
+        <location filename="../streaming/session.cpp" line="1798"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Không thể khởi tạo trình giải mã video. Vui lòng kiểm tra cài đặt stream của bạn và thử lại.</translation>
     </message>

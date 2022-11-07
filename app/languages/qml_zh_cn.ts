@@ -326,6 +326,34 @@
     </message>
 </context>
 <context>
+    <name>QPlatformTheme</name>
+    <message>
+        <location filename="../main.cpp" line="535"/>
+        <source>&amp;Yes</source>
+        <translation>是(&amp;Y)</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="536"/>
+        <source>&amp;No</source>
+        <translation>否(&amp;N)</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="537"/>
+        <source>OK</source>
+        <translation>确定</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="538"/>
+        <source>Help</source>
+        <translation>帮助</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="539"/>
+        <source>Cancel</source>
+        <translation>取消</translation>
+    </message>
+</context>
+<context>
     <name>QuitSegue</name>
     <message>
         <location filename="../gui/QuitSegue.qml" line="12"/>
@@ -499,7 +527,7 @@
         <translation>GeForce Experience 返回错误: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1788"/>
+        <location filename="../streaming/session.cpp" line="1798"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>无法初始化视频解码器。请检查你的流式传输设置，然后重试。</translation>
     </message>
