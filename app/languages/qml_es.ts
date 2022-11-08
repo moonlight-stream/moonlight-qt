@@ -61,12 +61,12 @@
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Emparejando... Introduce &apos;1%&apos; en %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Emparejamiento completado exitosamente</translation>
     </message>
 </context>
 <context>
@@ -265,27 +265,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>El código Pin del PC no coincide. Por favor inténtelo de nuevo.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">No puedes emparejar mientras una sesión anterior esté en marcha en el PC anfitrión. Salga de cualquier juego que se esté ejecutando o reinicie el PC anfitrión, y luego intente emparejar de nuevo.</translation>
+        <translation>No puedes emparejar mientras una sesión anterior esté en marcha en el PC anfitrión. Salga de cualquier juego que se esté ejecutando o reinicie el PC anfitrión, y luego intente emparejar de nuevo.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sincroinización fallida. Inténtelo de nuevo.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Otro intento de emparejamiento ya esta en proceso.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience ha devuelto el error: %1</translation>
+        <translation>GeForce Experience ha devuelto el error: %1</translation>
     </message>
 </context>
 <context>
@@ -301,7 +301,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ya estaba sincronizado</translation>
     </message>
     <message>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
@@ -334,7 +334,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>El PC %1 no se ha emparejado. Por favor abra Moonlight para emparejar antes de obtener la lista de juegos.</translation>
     </message>
 </context>
 <context>
@@ -384,12 +384,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>El PC anfitrión ha reportado un error fatal del codificador de video.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="125"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Intenta deshabilitar el modo HDR, cambiar la resolución de la transmisión, o cambiar la resolución de pantalla del PC anfitrión.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
