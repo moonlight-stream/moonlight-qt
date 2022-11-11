@@ -342,27 +342,27 @@
     <message>
         <location filename="../main.cpp" line="535"/>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Sí</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="536"/>
         <source>&amp;No</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;No</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="537"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>Aceptar</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="538"/>
         <source>Help</source>
-        <translation type="unfinished">Ayuda</translation>
+        <translation>Ayuda</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="539"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Cancelar</translation>
     </message>
 </context>
 <context>
