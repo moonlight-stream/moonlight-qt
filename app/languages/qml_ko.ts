@@ -342,27 +342,27 @@
     <message>
         <location filename="../main.cpp" line="535"/>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>예(&amp;Y)</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="536"/>
         <source>&amp;No</source>
-        <translation type="unfinished"></translation>
+        <translation>아니요(&amp;N)</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="537"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>확인</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="538"/>
         <source>Help</source>
-        <translation type="unfinished">도움말</translation>
+        <translation>도움말</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="539"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>취소</translation>
     </message>
 </context>
 <context>
