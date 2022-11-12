@@ -47,6 +47,7 @@ Pacer::~Pacer()
 
     // Stop the V-sync thread
     if (m_VsyncThread != nullptr) {
+        m_PacingQueueNotEmpty.wakeAll();
         m_VsyncSignalled.wakeAll();
         SDL_WaitThread(m_VsyncThread, nullptr);
     }
@@ -241,6 +242,11 @@ void Pacer::handleVsync(int timeUntilNextVsyncMillis)
         // Wait for a frame to arrive or our V-sync timeout to expire
         if (!m_PacingQueueNotEmpty.wait(&m_FrameQueueLock, SDL_max(timeUntilNextVsyncMillis, TIMER_SLACK_MS) - TIMER_SLACK_MS)) {
             // Wait timed out - unlock and bail
+            m_FrameQueueLock.unlock();
+            return;
+        }
+
+        if (m_Stopping) {
             m_FrameQueueLock.unlock();
             return;
         }
