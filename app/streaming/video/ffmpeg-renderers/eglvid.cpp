@@ -669,7 +669,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // situation, swap interval > 0 behaves as a frame pacing option
     // rather than a way to eliminate tearing as SDL will block in
     // SwapBuffers until the compositor consumes the frame. This will
-    // needlessly increases latency, so we should avoid it unless asked.
+    // needlessly increases latency, so we should avoid it.
     //
     // HACK: In SDL 2.0.22+ on GNOME systems with fractional DPI scaling,
     // the Wayland viewport can be stale when using Super+Left/Right/Up
@@ -677,7 +677,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // with vsync enabled, so this also mitigates that problem too.
     if (params->enableVsync
 #ifdef SDL_VIDEO_DRIVER_WAYLAND
-            && (info.subsystem != SDL_SYSWM_WAYLAND || params->enableFramePacing)
+            && info.subsystem != SDL_SYSWM_WAYLAND
 #endif
             ) {
         SDL_GL_SetSwapInterval(1);
