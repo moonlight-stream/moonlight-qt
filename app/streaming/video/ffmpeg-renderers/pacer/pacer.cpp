@@ -1,8 +1,6 @@
 #include "pacer.h"
 #include "streaming/streamutils.h"
 
-#include "nullthreadedvsyncsource.h"
-
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
