@@ -30,6 +30,7 @@
 
 Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
     m_RenderThread(nullptr),
+    m_VsyncThread(nullptr),
     m_Stopping(false),
     m_VsyncSource(nullptr),
     m_VsyncRenderer(renderer),
@@ -42,12 +43,19 @@ Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
 
 Pacer::~Pacer()
 {
+    m_Stopping = true;
+
+    // Stop the V-sync thread
+    if (m_VsyncThread != nullptr) {
+        m_VsyncSignalled.wakeAll();
+        SDL_WaitThread(m_VsyncThread, nullptr);
+    }
+
     // Stop V-sync callbacks
     delete m_VsyncSource;
     m_VsyncSource = nullptr;
 
     // Stop the render thread
-    m_Stopping = true;
     if (m_RenderThread != nullptr) {
         m_RenderQueueNotEmpty.wakeAll();
         SDL_WaitThread(m_RenderThread, nullptr);
@@ -87,6 +95,39 @@ void Pacer::renderOnMainThread()
     else {
         m_FrameQueueLock.unlock();
     }
+}
+
+int Pacer::vsyncThread(void *context)
+{
+    Pacer* me = reinterpret_cast<Pacer*>(context);
+
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_TIME_CRITICAL);
+#else
+    SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
+#endif
+
+    bool async = me->m_VsyncSource->isAsync();
+    while (!me->m_Stopping) {
+        if (async) {
+            // Wait for the VSync source to invoke signalVsync() or 100ms to elapse
+            me->m_FrameQueueLock.lock();
+            me->m_VsyncSignalled.wait(&me->m_FrameQueueLock, 100);
+            me->m_FrameQueueLock.unlock();
+        }
+        else {
+            // Let the VSync source wait in the context of our thread
+            me->m_VsyncSource->waitForVsync();
+        }
+
+        if (me->m_Stopping) {
+            break;
+        }
+
+        me->handleVsync(1000 / me->m_DisplayFps);
+    }
+
+    return 0;
 }
 
 int Pacer::renderThread(void* context)
@@ -153,7 +194,7 @@ void Pacer::enqueueFrameForRenderingAndUnlock(AVFrame *frame)
 
 // Called in an arbitrary thread by the IVsyncSource on V-sync
 // or an event synchronized with V-sync
-void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
+void Pacer::handleVsync(int timeUntilNextVsyncMillis)
 {
     // Make sure initialize() has been called
     SDL_assert(m_MaxVideoFps != 0);
@@ -217,7 +258,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
 
     if (enablePacing) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Frame pacing active: target %d Hz with %d FPS stream",
+                    "Frame pacing: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
 
         SDL_SysWMinfo info;
@@ -255,7 +296,10 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
         SDL_assert(m_VsyncSource != nullptr || !(m_RendererAttributes & RENDERER_ATTRIBUTE_FORCE_PACING));
 
         if (m_VsyncSource != nullptr && !m_VsyncSource->initialize(window, m_DisplayFps)) {
-            return false;
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Vsync source failed to initialize. Frame pacing will not be available!");
+            delete m_VsyncSource;
+            m_VsyncSource = nullptr;
         }
     }
     else {
@@ -264,11 +308,20 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     m_DisplayFps, m_MaxVideoFps);
     }
 
+    if (m_VsyncSource != nullptr) {
+        m_VsyncThread = SDL_CreateThread(Pacer::vsyncThread, "PacerVsync", this);
+    }
+
     if (m_VsyncRenderer->isRenderThreadSupported()) {
         m_RenderThread = SDL_CreateThread(Pacer::renderThread, "PacerRender", this);
     }
 
     return true;
+}
+
+void Pacer::signalVsync()
+{
+    m_VsyncSignalled.wakeOne();
 }
 
 void Pacer::renderFrame(AVFrame* frame)

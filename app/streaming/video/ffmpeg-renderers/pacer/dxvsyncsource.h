@@ -35,17 +35,18 @@ public:
 
     virtual ~DxVsyncSource();
 
-    virtual bool initialize(SDL_Window* window, int displayFps);
+    virtual bool initialize(SDL_Window* window, int) override;
+
+    virtual bool isAsync() override;
+
+    virtual void waitForVsync() override;
 
 private:
-    static int vsyncThread(void* context);
-
     Pacer* m_Pacer;
-    SDL_Thread* m_Thread;
-    SDL_atomic_t m_Stopping;
     HMODULE m_Gdi32Handle;
     HWND m_Window;
-    int m_DisplayFps;
+    HMONITOR m_LastMonitor;
+    D3DKMT_WAITFORVERTICALBLANKEVENT m_WaitForVblankEventParams;
 
     PFND3DKMTOPENADAPTERFROMHDC m_D3DKMTOpenAdapterFromHdc;
     PFND3DKMTCLOSEADAPTER m_D3DKMTCloseAdapter;

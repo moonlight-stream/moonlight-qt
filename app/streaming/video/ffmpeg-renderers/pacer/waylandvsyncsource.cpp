@@ -10,8 +10,7 @@ WaylandVsyncSource::WaylandVsyncSource(Pacer* pacer)
     : m_Pacer(pacer),
       m_Display(nullptr),
       m_Surface(nullptr),
-      m_Callback(nullptr),
-      m_LastFrameTime(0)
+      m_Callback(nullptr)
 {
 
 }
@@ -24,7 +23,7 @@ WaylandVsyncSource::~WaylandVsyncSource()
     }
 }
 
-bool WaylandVsyncSource::initialize(SDL_Window* window, int displayFps)
+bool WaylandVsyncSource::initialize(SDL_Window* window, int)
 {
     SDL_SysWMinfo info;
 
@@ -40,7 +39,6 @@ bool WaylandVsyncSource::initialize(SDL_Window* window, int displayFps)
     // Pacer shoud not create us for non-Wayland windows
     SDL_assert(info.subsystem == SDL_SYSWM_WAYLAND);
 
-    m_DisplayFps = displayFps;
     m_Display = info.info.wl.display;
     m_Surface = info.info.wl.surface;
 
@@ -52,7 +50,13 @@ bool WaylandVsyncSource::initialize(SDL_Window* window, int displayFps)
     return true;
 }
 
-void WaylandVsyncSource::frameDone(void* data, struct wl_callback* oldCb, uint32_t time)
+bool WaylandVsyncSource::isAsync()
+{
+    // Wayland frame callbacks are asynchronous
+    return true;
+}
+
+void WaylandVsyncSource::frameDone(void* data, struct wl_callback* oldCb, uint32_t)
 {
     auto me = (WaylandVsyncSource*)data;
 
@@ -60,18 +64,12 @@ void WaylandVsyncSource::frameDone(void* data, struct wl_callback* oldCb, uint32
     SDL_assert(oldCb == me->m_Callback);
     wl_callback_destroy(oldCb);
 
-    // Register for another callback before invoking Pacer to ensure we don't miss
-    // a frame callback if Pacer takes too long.
+    // Wake the Pacer Vsync thread
+    me->m_Pacer->signalVsync();
+
+    // Register for another callback
     me->m_Callback = wl_surface_frame(me->m_Surface);
     wl_callback_add_listener(me->m_Callback, &s_FrameListener, data);
     wl_surface_commit(me->m_Surface);
     wl_display_flush(me->m_Display);
-
-    if (me->m_LastFrameTime != 0) {
-        // Assuming that the time until the next V-Sync will usually be equal to the
-        // time from last callback to this one but cap it at 2x the expected frame period.
-        me->m_Pacer->vsyncCallback(SDL_min(time - me->m_LastFrameTime, 2000 / me->m_DisplayFps));
-    }
-
-    me->m_LastFrameTime = time;
 }

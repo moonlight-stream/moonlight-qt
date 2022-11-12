@@ -11,6 +11,15 @@ class IVsyncSource {
 public:
     virtual ~IVsyncSource() {}
     virtual bool initialize(SDL_Window* window, int displayFps) = 0;
+
+    // Asynchronous sources produce callbacks on their own, while synchronous
+    // sources require calls to waitForVsync().
+    virtual bool isAsync() = 0;
+
+    virtual void waitForVsync() {
+        // Synchronous sources must implement waitForVsync()!
+        SDL_assert(false);
+    }
 };
 
 class Pacer
@@ -24,12 +33,16 @@ public:
 
     bool initialize(SDL_Window* window, int maxVideoFps, bool enablePacing);
 
-    void vsyncCallback(int timeUntilNextVsyncMillis);
+    void signalVsync();
 
     void renderOnMainThread();
 
 private:
+    static int vsyncThread(void* context);
+
     static int renderThread(void* context);
+
+    void handleVsync(int timeUntilNextVsyncMillis);
 
     void enqueueFrameForRenderingAndUnlock(AVFrame* frame);
 
@@ -44,7 +57,9 @@ private:
     QMutex m_FrameQueueLock;
     QWaitCondition m_RenderQueueNotEmpty;
     QWaitCondition m_PacingQueueNotEmpty;
+    QWaitCondition m_VsyncSignalled;
     SDL_Thread* m_RenderThread;
+    SDL_Thread* m_VsyncThread;
     bool m_Stopping;
 
     IVsyncSource* m_VsyncSource;
