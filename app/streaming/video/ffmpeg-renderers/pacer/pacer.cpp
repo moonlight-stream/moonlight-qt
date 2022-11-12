@@ -10,6 +10,12 @@
 #include "dxvsyncsource.h"
 #endif
 
+#ifdef HAS_WAYLAND
+#include "waylandvsyncsource.h"
+#endif
+
+#include <SDL_syswm.h>
+
 // Limit the number of queued frames to prevent excessive memory consumption
 // if the V-Sync source or renderer is blocked for a while. It's important
 // that the sum of all queued frames between both pacing and rendering queues
@@ -154,8 +160,6 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
     // Make sure initialize() has been called
     SDL_assert(m_MaxVideoFps != 0);
 
-    SDL_assert(timeUntilNextVsyncMillis >= TIMER_SLACK_MS);
-
     m_FrameQueueLock.lock();
 
     // If the queue length history entries are large, be strict
@@ -196,7 +200,7 @@ void Pacer::vsyncCallback(int timeUntilNextVsyncMillis)
 
     if (m_PacingQueue.isEmpty()) {
         // Wait for a frame to arrive or our V-sync timeout to expire
-        if (!m_PacingQueueNotEmpty.wait(&m_FrameQueueLock, timeUntilNextVsyncMillis - TIMER_SLACK_MS)) {
+        if (!m_PacingQueueNotEmpty.wait(&m_FrameQueueLock, SDL_max(timeUntilNextVsyncMillis, TIMER_SLACK_MS) - TIMER_SLACK_MS)) {
             // Wait timed out - unlock and bail
             m_FrameQueueLock.unlock();
             return;
@@ -218,16 +222,37 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     "Frame pacing active: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
 
-    #if defined(Q_OS_WIN32)
-        // Don't use D3DKMTWaitForVerticalBlankEvent() on Windows 7, because
-        // it blocks during other concurrent DX operations (like actually rendering).
-        if (IsWindows8OrGreater()) {
-            m_VsyncSource = new DxVsyncSource(this);
+        SDL_SysWMinfo info;
+        SDL_VERSION(&info.version);
+        if (!SDL_GetWindowWMInfo(window, &info)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_GetWindowWMInfo() failed: %s",
+                         SDL_GetError());
+            return false;
         }
-    #else
-        // Platforms without a VsyncSource will just render frames
-        // immediately like they used to.
+
+        switch (info.subsystem) {
+    #ifdef Q_OS_WIN32
+        case SDL_SYSWM_WINDOWS:
+            // Don't use D3DKMTWaitForVerticalBlankEvent() on Windows 7, because
+            // it blocks during other concurrent DX operations (like actually rendering).
+            if (IsWindows8OrGreater()) {
+                m_VsyncSource = new DxVsyncSource(this);
+            }
+            break;
     #endif
+
+    #if defined(SDL_VIDEO_DRIVER_WAYLAND) && defined(HAS_WAYLAND)
+        case SDL_SYSWM_WAYLAND:
+            m_VsyncSource = new WaylandVsyncSource(this);
+            break;
+    #endif
+
+        default:
+            // Platforms without a VsyncSource will just render frames
+            // immediately like they used to.
+            break;
+        }
 
         SDL_assert(m_VsyncSource != nullptr || !(m_RendererAttributes & RENDERER_ATTRIBUTE_FORCE_PACING));
 

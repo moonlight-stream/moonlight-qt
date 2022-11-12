@@ -103,7 +103,7 @@ unix:!macx {
     }
 
     packagesExist(wayland-client) {
-        DEFINES += HAS_WAYLAND
+        CONFIG += wayland
         PKGCONFIG += wayland-client
     }
 
@@ -347,6 +347,13 @@ embedded {
     message(Embedded build)
 
     DEFINES += EMBEDDED_BUILD
+}
+wayland {
+    message(Wayland extensions enabled)
+
+    DEFINES += HAS_WAYLAND
+    SOURCES += streaming/video/ffmpeg-renderers/pacer/waylandvsyncsource.cpp
+    HEADERS += streaming/video/ffmpeg-renderers/pacer/waylandvsyncsource.h
 }
 
 RESOURCES += \
