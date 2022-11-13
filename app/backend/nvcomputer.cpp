@@ -169,7 +169,7 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     // to support dynamic HTTP WAN ports without requiring the user to manually enter the port.
     QString remotePortStr = NvHTTP::getXmlString(serverInfo, "ExternalPort");
     if (remotePortStr.isEmpty() || (this->externalPort = remotePortStr.toUShort()) == 0) {
-        this->externalPort = DEFAULT_HTTP_PORT;
+        this->externalPort = http.httpPort();
     }
 
     QString remoteAddress = NvHTTP::getXmlString(serverInfo, "ExternalIP");
