@@ -2,6 +2,10 @@
 
 #include <SDL_syswm.h>
 
+#ifndef SDL_VIDEO_DRIVER_WAYLAND
+#warning Unable to use WaylandVsyncSource without SDL support
+#else
+
 const struct wl_callback_listener WaylandVsyncSource::s_FrameListener = {
     .done = WaylandVsyncSource::frameDone,
 };
@@ -73,3 +77,5 @@ void WaylandVsyncSource::frameDone(void* data, struct wl_callback* oldCb, uint32
     wl_surface_commit(me->m_Surface);
     wl_display_flush(me->m_Display);
 }
+
+#endif
