@@ -33,10 +33,25 @@ if /I "%BUILD_CONFIG%"=="debug" (
     )
 )
 
+rem Locate qmake and determine if we're using qmake.exe or qmake.bat
+rem qmake.bat is an ARM64 forwarder to the x64 version of qmake.exe
+where qmake.bat
+if !ERRORLEVEL! EQU 0 (
+    set QMAKE_CMD=call qmake.bat
+) else (
+    where qmake.exe
+    if !ERRORLEVEL! EQU 0 (
+        set QMAKE_CMD=qmake.exe
+    ) else (
+        echo Unable to find QMake. Did you add Qt bins to your PATH?
+        goto Error
+    )
+)
+
 rem Find Qt path to determine our architecture
 for /F %%i in ('where qmake') do set QT_PATH=%%i
 if not x%QT_PATH:_arm64=%==x%QT_PATH% (
-    set ARCH=ARM64
+    set ARCH=arm64
 ) else (
     if not x%QT_PATH:_64=%==x%QT_PATH% (
         set ARCH=x64
@@ -98,7 +113,7 @@ mkdir %SYMBOLS_FOLDER%
 
 echo Configuring the project
 pushd %BUILD_FOLDER%
-qmake %SOURCE_ROOT%\moonlight-qt.pro
+%QMAKE_CMD% %SOURCE_ROOT%\moonlight-qt.pro
 if !ERRORLEVEL! NEQ 0 goto Error
 popd
 
