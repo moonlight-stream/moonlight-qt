@@ -10,8 +10,6 @@
 #include <Limelight.h>
 #include <unistd.h>
 
-#include <SDL_egl.h>
-#include <SDL_opengles2.h>
 #include <SDL_render.h>
 #include <SDL_syswm.h>
 

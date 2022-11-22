@@ -2,8 +2,9 @@
 
 #include "renderer.h"
 
+#define SDL_USE_BUILTIN_OPENGL_DEFINITIONS 1
+#include <SDL_egl.h>
 #include <SDL_opengles2.h>
-#include <SDL_opengles2_gl2ext.h>
 
 class EGLRenderer : public IFFmpegRenderer {
 public:
