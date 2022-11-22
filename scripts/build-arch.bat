@@ -4,7 +4,6 @@ setlocal enableDelayedExpansion
 rem Run from Qt command prompt with working directory set to root of repo
 
 set BUILD_CONFIG=%1
-set ARCH=%2
 
 rem Convert to lower case for windeployqt
 if /I "%BUILD_CONFIG%"=="debug" (
@@ -28,21 +27,30 @@ if /I "%BUILD_CONFIG%"=="debug" (
             )
         ) else (
             echo Invalid build configuration - expected 'debug' or 'release'
-            echo Usage: scripts\build-arch.bat ^(release^|debug^) ^(x86^|x64^|ARM64^)
+            echo Usage: scripts\build-arch.bat ^(release^|debug^)
             exit /b 1
         )
     )
 )
 
-if /I "%ARCH%" NEQ "x86" (
-    if /I "%ARCH%" NEQ "x64" (
-        if /I "%ARCH%" NEQ "ARM64" (
-            echo Invalid build architecture - expected 'x86', 'x64', or 'ARM64'
-            echo Usage: scripts\build-arch.bat ^(release^|debug^) ^(x86^|x64^|ARM64^)
-            exit /b 1
+rem Find Qt path to determine our architecture
+for /F %%i in ('where qmake') do set QT_PATH=%%i
+if not x%QT_PATH:_arm64=%==x%QT_PATH% (
+    set ARCH=ARM64
+) else (
+    if not x%QT_PATH:_64=%==x%QT_PATH% (
+        set ARCH=x64
+    ) else (
+        if not x%QT_PATH:msvc=%==x%QT_PATH% (
+            set ARCH=x86
+        ) else (
+            echo Unable to determine Qt architecture
+            goto Error
         )
     )
 )
+
+echo Detected target architecture: %ARCH%
 
 set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 b28642b756ebec4884d1063dfa4de803a6dcecdc /v
 

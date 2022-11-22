@@ -39,9 +39,9 @@ before_build:
 
 build_script:
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019_64\bin;%ProgramFiles(x86)%\WiX Toolset v3.11\bin'
-  - cmd: 'scripts\build-arch.bat Release x64'
+  - cmd: 'scripts\build-arch.bat Release'
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019\bin;%ProgramFiles(x86)%\WiX Toolset v3.11\bin'
-  - cmd: 'scripts\build-arch.bat Release x86'
+  - cmd: 'scripts\build-arch.bat Release'
   - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt515/bin/qt515-env.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
