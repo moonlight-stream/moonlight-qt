@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Під&apos;єднання до ПК...</translation>
+        <translation>Під&apos;єднання до ПК...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>З&apos;єднання... Будь ласка, введіть &apos;%1&apos; на %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>З&apos;єднання успішно завершено</translation>
     </message>
 </context>
 <context>
@@ -265,27 +265,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>ПІН-код від ПК не збігається. Спробуйте ще раз.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Ви не можете створити пару, доки попередній сеанс не закінчено на хост-ПК. Вийдіть із запущених ігор або перезавантажте хост-ПК, а потім спробуйте створити пару знову.</translation>
+        <translation>Ви не можете створити пару, доки попередній сеанс не закінчено на хост-ПК. Вийдіть із запущених ігор або перезавантажте хост-ПК, а потім спробуйте створити пару знову.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>З&apos;єднання не вдалося. Спробуйте ще раз.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ще одна спроба з&apos;єднатися вже триває.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Помилка GeForce Experience: %1</translation>
     </message>
 </context>
 <context>
@@ -301,7 +301,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">%1 вже з&apos;єднано</translation>
     </message>
     <message>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
@@ -334,7 +334,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Комп&apos;ютер %1 не було з&apos;єднано. Будь ласка, запустіть Moonlight для з&apos;єднання перед тим, як отримати список ігор.</translation>
     </message>
 </context>
 <context>
