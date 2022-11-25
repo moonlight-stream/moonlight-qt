@@ -374,7 +374,7 @@ TRANSLATIONS += \
     languages/qml_sv.ts \
     languages/qml_tr.ts \
     languages/qml_uk.ts \
-    languages/qml_zh_Hant.ts \
+    languages/qml_zh_TW.ts \
     languages/qml_el.ts \
     languages/qml_hi.ts \
     languages/qml_it.ts \

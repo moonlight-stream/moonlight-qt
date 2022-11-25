@@ -227,8 +227,8 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "tr";
     case LANG_UK:
         return "uk";
-    case LANG_ZH_HANT:
-        return "zh_Hant";
+    case LANG_ZH_TW:
+        return "zh_TW";
     case LANG_PT:
         return "pt";
     case LANG_PT_BR:

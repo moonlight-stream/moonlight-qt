@@ -82,7 +82,7 @@ public:
         LANG_SV,
         LANG_TR,
         LANG_UK,
-        LANG_ZH_HANT,
+        LANG_ZH_TW,
         LANG_PT,
         LANG_PT_BR,
         LANG_EL,
