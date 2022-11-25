@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Connessione al PC in corso...</translation>
+        <translation>Connessione al PC in corso...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Accoppiamento... Per favore inserisci &apos;%1&apos; in %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Accoppiamento completato con successo</translation>
     </message>
 </context>
 <context>
@@ -265,27 +265,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il PIN del PC non corrisponde. Riprova.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Non puoi effettuare l&apos;accoppiamento mentre una sessione precedente è in esecuzione sul PC. Chiudi i giochi in esecuzione o riavvia il PC, quindi prova nuovamente.</translation>
+        <translation>Non puoi effettuare l&apos;accoppiamento mentre una sessione precedente è in esecuzione sul PC. Chiudi i giochi in esecuzione o riavvia il PC, quindi prova nuovamente.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Accoppiamento non riuscito. Riprova.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Un altro tentativo di accoppiamento è già in corso.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience ha restituito un errore: %1</translation>
+        <translation>GeForce Experience ha restituito un errore: %1</translation>
     </message>
 </context>
 <context>
@@ -301,7 +301,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 è già accoppiato</translation>
     </message>
     <message>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
@@ -334,7 +334,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il computer %1 non è stato accoppiato. Apri Moonlight per accoppiarlo prima di recuperare la lista dei giochi.</translation>
     </message>
 </context>
 <context>
@@ -412,12 +412,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il PC host ha segnalato un errore fatale di codifica video.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="125"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Prova a disabilitare la modalità HDR, modificare la risoluzione dello streaming o la risoluzione del display del tuo PC host.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
