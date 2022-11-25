@@ -1122,7 +1122,7 @@
     <message>
         <location filename="../gui/main.qml" line="364"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Ajuda</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="425"/>

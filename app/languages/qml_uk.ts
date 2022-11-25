@@ -532,7 +532,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1190"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Помилка GeForce Experience: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1798"/>
@@ -1110,7 +1110,7 @@
     <message>
         <location filename="../gui/main.qml" line="364"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation type="unfinished">Довідка</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="425"/>
