@@ -301,7 +301,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished">%1 вже з&apos;єднано</translation>
+        <translation>%1 вже з&apos;єднано</translation>
     </message>
     <message>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
@@ -407,7 +407,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="119"/>
         <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="unfinished"></translation>
+        <translation>Якщо проблема не зникає, спробуйте переінсталювати драйвери графічного процесора та GeForce Experience.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
