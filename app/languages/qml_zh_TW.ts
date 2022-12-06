@@ -452,7 +452,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="697"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>當以高於顯示器的畫面更新率進行串流傳輸時，垂直同步將被停用。</translation>
+        <translation>當以高於顯示器的影格速率進行串流傳輸時，垂直同步將被停用。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="724"/>
@@ -682,7 +682,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="616"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>停用垂直同步可允許子影格渲染延遲，但會造成顯示畫面撕裂</translation>
+        <translation>停用垂直同步可允許子畫面轉譯延遲，但會造成顯示畫面撕裂</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="623"/>
