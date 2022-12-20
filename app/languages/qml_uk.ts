@@ -212,7 +212,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="333"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Якщо ви намагаєтеся вести трансляцію через Інтернет, встановіть додаток Moonlight Internet Hosting Tool на свій ігровий ПК та запустіть Internet Streaming Tester, щоб перевірити під&apos;єднання до Інтернету вашого ігрового ПК.</translation>
+        <translation>Якщо ви намагаєтеся вести трансляцію через Інтернет, встановіть застосунок Moonlight Internet Hosting Tool на свій ігровий ПК та запустіть Internet Streaming Tester, щоб перевірити під&apos;єднання до Інтернету вашого ігрового ПК.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
