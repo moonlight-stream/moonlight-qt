@@ -11,12 +11,13 @@
 
 #define MOUSE_POLLING_INTERVAL 5
 
-SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int streamWidth, int streamHeight)
+SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer, int streamWidth, int streamHeight)
     : m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_SwapMouseButtons(prefs.swapMouseButtons),
       m_ReverseScrollDirection(prefs.reverseScrollDirection),
       m_SwapFaceButtons(prefs.swapFaceButtons),
+      m_BatchMouseMotion(computer->isNvidiaServerSoftware),
       m_MouseMoveTimer(0),
       m_MousePositionLock(0),
       m_MouseWasInVideoRegion(false),
@@ -193,17 +194,19 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer*, int s
     SDL_AtomicSet(&m_MouseDeltaY, 0);
     SDL_AtomicSet(&m_MousePositionUpdated, 0);
 
-    Uint32 pollingInterval = QString(qgetenv("MOUSE_POLLING_INTERVAL")).toUInt();
-    if (pollingInterval == 0) {
-        pollingInterval = MOUSE_POLLING_INTERVAL;
-    }
-    else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using custom mouse polling interval: %u ms",
-                    pollingInterval);
-    }
+    if (m_BatchMouseMotion) {
+        Uint32 pollingInterval = QString(qgetenv("MOUSE_POLLING_INTERVAL")).toUInt();
+        if (pollingInterval == 0) {
+            pollingInterval = MOUSE_POLLING_INTERVAL;
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using custom mouse polling interval: %u ms",
+                        pollingInterval);
+        }
 
-    m_MouseMoveTimer = SDL_AddTimer(pollingInterval, SdlInputHandler::mouseMoveTimerCallback, this);
+        m_MouseMoveTimer = SDL_AddTimer(pollingInterval, SdlInputHandler::mouseMoveTimerCallback, this);
+    }
 }
 
 SdlInputHandler::~SdlInputHandler()

@@ -181,14 +181,26 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         return;
     }
 
-    // Batch until the next mouse polling window or we'll get awful
-    // input lag everything except GFE 3.14 and 3.15.
-    if (m_AbsoluteMouseMode) {
-        updateMousePositionReport(event->x, event->y);
+    if (m_BatchMouseMotion) {
+        // Batch until the next mouse polling window or we'll get awful
+        // input lag everything except GFE 3.14 and 3.15.
+        if (m_AbsoluteMouseMode) {
+            updateMousePositionReport(event->x, event->y);
+        }
+        else {
+            SDL_AtomicAdd(&m_MouseDeltaX, event->xrel);
+            SDL_AtomicAdd(&m_MouseDeltaY, event->yrel);
+        }
     }
     else {
-        SDL_AtomicAdd(&m_MouseDeltaX, event->xrel);
-        SDL_AtomicAdd(&m_MouseDeltaY, event->yrel);
+        // On Sunshine, we can send input immediately
+        if (m_AbsoluteMouseMode) {
+            updateMousePositionReport(event->x, event->y);
+            flushMousePositionUpdate();
+        }
+        else {
+            LiSendMouseMoveEvent(event->xrel, event->yrel);
+        }
     }
 }
 

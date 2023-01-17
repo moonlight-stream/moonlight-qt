@@ -147,6 +147,7 @@ private:
     bool m_SwapMouseButtons;
     bool m_ReverseScrollDirection;
     bool m_SwapFaceButtons;
+    bool m_BatchMouseMotion;
     SDL_TimerID m_MouseMoveTimer;
     SDL_atomic_t m_MouseDeltaX;
     SDL_atomic_t m_MouseDeltaY;
