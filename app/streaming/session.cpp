@@ -235,10 +235,6 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
     params.testOnly = testOnly;
     params.vds = vds;
 
-    memset(&params.hdrMetadata, 0, sizeof(params.hdrMetadata));
-    params.hdrMetadata.eotf = 2; // SMPTE ST 2084
-    params.hdrMetadata.staticMetadataDescriptorId = 0; // Static Metadata Type 1
-
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "V-sync %s",
                 enableVsync ? "enabled" : "disabled");

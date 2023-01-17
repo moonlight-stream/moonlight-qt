@@ -28,23 +28,6 @@ typedef struct _VIDEO_STATS {
     uint32_t measurementStartTimestamp;
 } VIDEO_STATS, *PVIDEO_STATS;
 
-typedef struct _HDR_MASTERING_METADATA {
-    uint8_t eotf;
-    uint8_t staticMetadataDescriptorId;
-    struct {
-        uint16_t x;
-        uint16_t y;
-    } displayPrimaries[3];
-    struct {
-        uint16_t x;
-        uint16_t y;
-    } whitePoint;
-    uint16_t maxDisplayMasteringLuminance;
-    uint16_t minDisplayMasteringLuminance;
-    uint16_t maxContentLightLevel;
-    uint16_t maxFrameAverageLightLevel;
-} HDR_MASTERING_METADATA, *PHDR_MASTERING_METADATA;
-
 typedef struct _DECODER_PARAMETERS {
     SDL_Window* window;
     StreamingPreferences::VideoDecoderSelection vds;
@@ -56,7 +39,6 @@ typedef struct _DECODER_PARAMETERS {
     bool enableVsync;
     bool enableFramePacing;
     bool testOnly;
-    HDR_MASTERING_METADATA hdrMetadata;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 
 class IVideoDecoder {

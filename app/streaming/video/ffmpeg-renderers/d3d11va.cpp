@@ -512,19 +512,25 @@ void D3D11VARenderer::setHdrMode(bool enabled)
 
     if (enabled) {
         DXGI_HDR_METADATA_HDR10 hdr10Metadata;
+        SS_HDR_METADATA sunshineHdrMetadata;
 
-        hdr10Metadata.RedPrimary[0] = m_DecoderParams.hdrMetadata.displayPrimaries[0].x;
-        hdr10Metadata.RedPrimary[1] = m_DecoderParams.hdrMetadata.displayPrimaries[0].y;
-        hdr10Metadata.GreenPrimary[0] = m_DecoderParams.hdrMetadata.displayPrimaries[1].x;
-        hdr10Metadata.GreenPrimary[1] = m_DecoderParams.hdrMetadata.displayPrimaries[1].y;
-        hdr10Metadata.BluePrimary[0] = m_DecoderParams.hdrMetadata.displayPrimaries[2].x;
-        hdr10Metadata.BluePrimary[1] = m_DecoderParams.hdrMetadata.displayPrimaries[2].y;
-        hdr10Metadata.WhitePoint[0] = m_DecoderParams.hdrMetadata.whitePoint.x;
-        hdr10Metadata.WhitePoint[1] = m_DecoderParams.hdrMetadata.whitePoint.y;
-        hdr10Metadata.MaxMasteringLuminance = m_DecoderParams.hdrMetadata.maxDisplayMasteringLuminance;
-        hdr10Metadata.MinMasteringLuminance = m_DecoderParams.hdrMetadata.minDisplayMasteringLuminance;
-        hdr10Metadata.MaxContentLightLevel = m_DecoderParams.hdrMetadata.maxContentLightLevel;
-        hdr10Metadata.MaxFrameAverageLightLevel = m_DecoderParams.hdrMetadata.maxFrameAverageLightLevel;
+        // Sunshine will have HDR metadata but GFE will not
+        if (!LiGetHdrMetadata(&sunshineHdrMetadata)) {
+            RtlZeroMemory(&sunshineHdrMetadata, sizeof(sunshineHdrMetadata));
+        }
+
+        hdr10Metadata.RedPrimary[0] = sunshineHdrMetadata.displayPrimaries[0].x;
+        hdr10Metadata.RedPrimary[1] = sunshineHdrMetadata.displayPrimaries[0].y;
+        hdr10Metadata.GreenPrimary[0] = sunshineHdrMetadata.displayPrimaries[1].x;
+        hdr10Metadata.GreenPrimary[1] = sunshineHdrMetadata.displayPrimaries[1].y;
+        hdr10Metadata.BluePrimary[0] = sunshineHdrMetadata.displayPrimaries[2].x;
+        hdr10Metadata.BluePrimary[1] = sunshineHdrMetadata.displayPrimaries[2].y;
+        hdr10Metadata.WhitePoint[0] = sunshineHdrMetadata.whitePoint.x;
+        hdr10Metadata.WhitePoint[1] = sunshineHdrMetadata.whitePoint.y;
+        hdr10Metadata.MaxMasteringLuminance = sunshineHdrMetadata.maxDisplayLuminance;
+        hdr10Metadata.MinMasteringLuminance = sunshineHdrMetadata.minDisplayLuminance;
+        hdr10Metadata.MaxContentLightLevel = sunshineHdrMetadata.maxContentLightLevel;
+        hdr10Metadata.MaxFrameAverageLightLevel = sunshineHdrMetadata.maxFrameAverageLightLevel;
 
         hr = m_SwapChain->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_HDR10, sizeof(hdr10Metadata), &hdr10Metadata);
         if (SUCCEEDED(hr)) {

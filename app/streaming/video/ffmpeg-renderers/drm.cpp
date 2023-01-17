@@ -421,35 +421,6 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         drmModeFreeObjectProperties(props);
     }
 
-    // If we have an HDR output metadata property, construct the metadata blob
-    // to apply when we are called to enter HDR mode.
-    if (m_HdrOutputMetadataProp != nullptr) {
-        DrmDefs::hdr_output_metadata outputMetadata;
-
-        outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
-        outputMetadata.hdmi_metadata_type1.eotf = params->hdrMetadata.eotf;
-        outputMetadata.hdmi_metadata_type1.metadata_type = params->hdrMetadata.staticMetadataDescriptorId;
-        for (int i = 0; i < 3; i++) {
-            outputMetadata.hdmi_metadata_type1.display_primaries[i].x = params->hdrMetadata.displayPrimaries[i].x;
-            outputMetadata.hdmi_metadata_type1.display_primaries[i].y = params->hdrMetadata.displayPrimaries[i].y;
-        }
-        outputMetadata.hdmi_metadata_type1.white_point.x = params->hdrMetadata.whitePoint.x;
-        outputMetadata.hdmi_metadata_type1.white_point.y = params->hdrMetadata.whitePoint.y;
-        outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance = params->hdrMetadata.maxDisplayMasteringLuminance;
-        outputMetadata.hdmi_metadata_type1.min_display_mastering_luminance = params->hdrMetadata.minDisplayMasteringLuminance;
-        outputMetadata.hdmi_metadata_type1.max_cll = params->hdrMetadata.maxContentLightLevel;
-        outputMetadata.hdmi_metadata_type1.max_fall = params->hdrMetadata.maxFrameAverageLightLevel;
-
-        err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
-        if (err < 0) {
-            m_HdrOutputMetadataBlobId = 0;
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "drmModeCreatePropertyBlob() failed: %d",
-                         errno);
-            // Non-fatal
-        }
-    }
-
     // If we got this far, we can do direct rendering via the DRM FD.
     m_SupportsDirectRendering = true;
 
@@ -495,8 +466,46 @@ int DrmRenderer::getRendererAttributes()
 }
 
 void DrmRenderer::setHdrMode(bool enabled)
-{
-    if (m_HdrOutputMetadataProp != nullptr && m_HdrOutputMetadataBlobId != 0) {
+{    
+    if (m_HdrOutputMetadataProp != nullptr) {
+        if (m_HdrOutputMetadataBlobId != 0) {
+            drmModeDestroyPropertyBlob(m_DrmFd, m_HdrOutputMetadataBlobId);
+            m_HdrOutputMetadataBlobId = 0;
+        }
+
+        if (enabled) {
+            DrmDefs::hdr_output_metadata outputMetadata;
+            SS_HDR_METADATA sunshineHdrMetadata;
+
+            // Sunshine will have HDR metadata but GFE will not
+            if (!LiGetHdrMetadata(&sunshineHdrMetadata)) {
+                memset(&sunshineHdrMetadata, 0, sizeof(sunshineHdrMetadata));
+            }
+
+            outputMetadata.metadata_type = 0; // HDMI_STATIC_METADATA_TYPE1
+            outputMetadata.hdmi_metadata_type1.eotf = 2; // SMPTE ST 2084
+            outputMetadata.hdmi_metadata_type1.metadata_type = 0; // Static Metadata Type 1
+            for (int i = 0; i < 3; i++) {
+                outputMetadata.hdmi_metadata_type1.display_primaries[i].x = sunshineHdrMetadata.displayPrimaries[i].x;
+                outputMetadata.hdmi_metadata_type1.display_primaries[i].y = sunshineHdrMetadata.displayPrimaries[i].y;
+            }
+            outputMetadata.hdmi_metadata_type1.white_point.x = sunshineHdrMetadata.whitePoint.x;
+            outputMetadata.hdmi_metadata_type1.white_point.y = sunshineHdrMetadata.whitePoint.y;
+            outputMetadata.hdmi_metadata_type1.max_display_mastering_luminance = sunshineHdrMetadata.maxDisplayLuminance;
+            outputMetadata.hdmi_metadata_type1.min_display_mastering_luminance = sunshineHdrMetadata.minDisplayLuminance;
+            outputMetadata.hdmi_metadata_type1.max_cll = sunshineHdrMetadata.maxContentLightLevel;
+            outputMetadata.hdmi_metadata_type1.max_fall = sunshineHdrMetadata.maxFrameAverageLightLevel;
+
+            err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
+            if (err < 0) {
+                m_HdrOutputMetadataBlobId = 0;
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "drmModeCreatePropertyBlob() failed: %d",
+                             errno);
+                // Non-fatal
+            }
+        }
+
         int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
                                            m_HdrOutputMetadataProp->prop_id,
                                            enabled ? m_HdrOutputMetadataBlobId : 0);

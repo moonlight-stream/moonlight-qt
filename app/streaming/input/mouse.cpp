@@ -227,6 +227,21 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 
         LiSendHighResScrollEvent((short)(event->preciseY * 120)); // WHEEL_DELTA
     }
+
+    if (event->preciseX != 0.0f) {
+        // Invert the scroll direction if needed
+        if (m_ReverseScrollDirection) {
+            event->preciseX = -event->preciseY;
+        }
+
+#ifdef Q_OS_DARWIN
+        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
+        // from generating wild scroll deltas when scrolling quickly.
+        event->preciseX = SDL_clamp(event->preciseX, -1.0f, 1.0f);
+#endif
+
+        LiSendHighResHScrollEvent((short)(event->preciseX * 120)); // WHEEL_DELTA
+    }
 #else
     if (event->y != 0) {
         // Invert the scroll direction if needed
@@ -240,6 +255,20 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
 #endif
 
         LiSendScrollEvent((signed char)event->y);
+    }
+
+    if (event->x != 0) {
+        // Invert the scroll direction if needed
+        if (m_ReverseScrollDirection) {
+            event->x = -event->x;
+        }
+
+#ifdef Q_OS_DARWIN
+        // See comment above
+        event->x = SDL_clamp(event->x, -1, 1);
+#endif
+
+        LiSendHScrollEvent((signed char)event->x);
     }
 #endif
 }
