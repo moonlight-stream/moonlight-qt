@@ -496,7 +496,7 @@ void DrmRenderer::setHdrMode(bool enabled)
             outputMetadata.hdmi_metadata_type1.max_cll = sunshineHdrMetadata.maxContentLightLevel;
             outputMetadata.hdmi_metadata_type1.max_fall = sunshineHdrMetadata.maxFrameAverageLightLevel;
 
-            err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
+            int err = drmModeCreatePropertyBlob(m_DrmFd, &outputMetadata, sizeof(outputMetadata), &m_HdrOutputMetadataBlobId);
             if (err < 0) {
                 m_HdrOutputMetadataBlobId = 0;
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
