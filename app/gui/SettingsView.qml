@@ -388,48 +388,58 @@ Flickable {
                     }
 
                     AutoResizingComboBox {
+                        function addRefreshRateOrdered(fpsListModel, refreshRate, description) {
+                            var indexToAdd = 0
+                            for (var j = 0; j < fpsListModel.count; j++) {
+                                var existing_fps = parseInt(fpsListModel.get(j).video_fps);
+
+                                if (refreshRate === existing_fps) {
+                                    // Duplicate entry, skip
+                                    indexToAdd = -1
+                                    break
+                                }
+                                else if (refreshRate > existing_fps) {
+                                    // Candidate entrypoint after this entry
+                                    indexToAdd = j + 1
+                                }
+                            }
+
+                            // Insert this display's resolution if it's not a duplicate
+                            if (indexToAdd >= 0) {
+                                fpsListModel.insert(indexToAdd,
+                                                    {
+                                                       "text": description,
+                                                       "video_fps": ""+refreshRate
+                                                    })
+                            }
+
+                            return indexToAdd
+                        }
+
                         function createModel() {
                             var fpsListModel = Qt.createQmlObject('import QtQuick 2.0; ListModel {}', parent, '')
-
-                            var max_fps = SystemProperties.maximumStreamingFrameRate
 
                             // Default entries
                             fpsListModel.append({"text": qsTr("%1 FPS").arg("30"), "video_fps": "30"})
                             fpsListModel.append({"text": qsTr("%1 FPS").arg("60"), "video_fps": "60"})
 
-                            // Add unsupported FPS values that come before the display max FPS
-                            if (StreamingPreferences.unsupportedFps) {
-                                if (max_fps > 90) {
-                                    fpsListModel.append({"text": qsTr("%1 FPS (Unsupported)").arg("90"), "video_fps": "90"})
+                            // Add native refresh rate for all attached displays
+                            var done = false
+                            for (var displayIndex = 0; !done; displayIndex++) {
+                                var refreshRate = SystemProperties.getRefreshRate(displayIndex);
+                                if (refreshRate === 0) {
+                                    // Exceeded max count of displays
+                                    done = true
+                                    break
                                 }
-                                if (max_fps > 120) {
-                                    fpsListModel.append({"text": qsTr("%1 FPS (Unsupported)").arg("120"), "video_fps": "120"})
-                                }
+
+                                addRefreshRateOrdered(fpsListModel, refreshRate, qsTr("%1 FPS").arg(refreshRate))
                             }
 
-                            // Use 64 as the cutoff for adding a separate option to
-                            // handle wonky displays that report just over 60 Hz.
-                            if (max_fps > 64) {
-                                // Mark any FPS value greater than 120 as unsupported
-                                if (StreamingPreferences.unsupportedFps && max_fps > 120) {
-                                    fpsListModel.append({"text": qsTr("%1 FPS (Unsupported)").arg(max_fps), "video_fps": ""+max_fps})
-                                }
-                                else if (max_fps > 120) {
-                                    fpsListModel.append({"text": qsTr("%1 FPS").arg("120"), "video_fps": "120"})
-                                }
-                                else {
-                                    fpsListModel.append({"text": qsTr("%1 FPS").arg(max_fps), "video_fps": ""+max_fps})
-                                }
-                            }
-
-                            // Add unsupported FPS values that come after the display max FPS
+                            // Add unsupported FPS values
                             if (StreamingPreferences.unsupportedFps) {
-                                if (max_fps < 90) {
-                                    fpsListModel.append({"text":qsTr("%1 FPS (Unsupported)").arg("90"), "video_fps": "90"})
-                                }
-                                if (max_fps < 120) {
-                                    fpsListModel.append({"text":qsTr("%1 FPS (Unsupported)").arg("120"), "video_fps": "120"})
-                                }
+                                addRefreshRateOrdered(fpsListModel, 90, qsTr("%1 FPS (Unsupported)").arg(90))
+                                addRefreshRateOrdered(fpsListModel, 120, qsTr("%1 FPS (Unsupported)").arg(120))
                             }
 
                             return fpsListModel
@@ -439,14 +449,20 @@ Flickable {
                             model = createModel()
 
                             var saved_fps = StreamingPreferences.fps
-                            currentIndex = 0
+                            currentIndex = -1
                             for (var i = 0; i < model.count; i++) {
                                 var el_fps = parseInt(model.get(i).video_fps);
 
-                                // Pick the highest value lesser or equal to the saved FPS
-                                if (saved_fps >= el_fps) {
+                                // Look for a matching frame rate
+                                if (saved_fps === el_fps) {
                                     currentIndex = i
+                                    break
                                 }
+                            }
+
+                            // If we didn't find one, add a custom frame rate for the current value
+                            if (currentIndex === -1) {
+                                currentIndex = addRefreshRateOrdered(model, saved_fps, qsTr("%1 FPS (Custom)").arg(saved_fps))
                             }
 
                             // Persist the selected value
