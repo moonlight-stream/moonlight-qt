@@ -187,12 +187,14 @@ NvHTTP::getServerInfo(NvLogLevel logLevel, bool fastFail)
 }
 
 void
-NvHTTP::launchApp(int appId,
-                  PSTREAM_CONFIGURATION streamConfig,
-                  bool sops,
-                  bool localAudio,
-                  int gamepadMask,
-                  QString& rtspSessionUrl)
+NvHTTP::startApp(QString verb,
+                 bool isGfe,
+                 int appId,
+                 PSTREAM_CONFIGURATION streamConfig,
+                 bool sops,
+                 bool localAudio,
+                 int gamepadMask,
+                 QString& rtspSessionUrl)
 {
     int riKeyId;
 
@@ -201,15 +203,15 @@ NvHTTP::launchApp(int appId,
 
     QString response =
             openConnectionToString(m_BaseUrlHttps,
-                                   "launch",
+                                   verb,
                                    "appid="+QString::number(appId)+
                                    "&mode="+QString::number(streamConfig->width)+"x"+
                                    QString::number(streamConfig->height)+"x"+
                                    // Using an FPS value over 60 causes SOPS to default to 720p60,
                                    // so force it to 0 to ensure the correct resolution is set. We
                                    // used to use 60 here but that locked the frame rate to 60 FPS
-                                   // on GFE 3.20.3.
-                                   QString::number(streamConfig->fps > 60 ? 0 : streamConfig->fps)+
+                                   // on GFE 3.20.3. We don't need this hack for Sunshine.
+                                   QString::number((streamConfig->fps > 60 && isGfe) ? 0 : streamConfig->fps)+
                                    "&additionalStates=1&sops="+QString::number(sops ? 1 : 0)+
                                    "&rikey="+QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex()+
                                    "&rikeyid="+QString::number(riKeyId)+
@@ -223,30 +225,6 @@ NvHTTP::launchApp(int appId,
                                    LAUNCH_TIMEOUT_MS);
 
     qInfo() << "Launch response:" << response;
-
-    // Throws if the request failed
-    verifyResponseStatus(response);
-
-    rtspSessionUrl = getXmlString(response, "sessionUrl0");
-}
-
-void
-NvHTTP::resumeApp(PSTREAM_CONFIGURATION streamConfig, QString& rtspSessionUrl)
-{
-    int riKeyId;
-
-    memcpy(&riKeyId, streamConfig->remoteInputAesIv, sizeof(riKeyId));
-    riKeyId = qFromBigEndian(riKeyId);
-
-    QString response =
-            openConnectionToString(m_BaseUrlHttps,
-                                   "resume",
-                                   "rikey="+QString(QByteArray(streamConfig->remoteInputAesKey, sizeof(streamConfig->remoteInputAesKey)).toHex())+
-                                   "&rikeyid="+QString::number(riKeyId)+
-                                   "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration)),
-                                   RESUME_TIMEOUT_MS);
-
-    qInfo() << "Resume response:" << response;
 
     // Throws if the request failed
     verifyResponseStatus(response);

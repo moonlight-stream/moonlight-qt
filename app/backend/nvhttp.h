@@ -162,16 +162,14 @@ public:
     quitApp();
 
     void
-    resumeApp(PSTREAM_CONFIGURATION streamConfig,
-              QString& rtspSessionUrl);
-
-    void
-    launchApp(int appId,
-              PSTREAM_CONFIGURATION streamConfig,
-              bool sops,
-              bool localAudio,
-              int gamepadMask,
-              QString& rtspSessionUrl);
+    startApp(QString verb,
+             bool isGfe,
+             int appId,
+             PSTREAM_CONFIGURATION streamConfig,
+             bool sops,
+             bool localAudio,
+             int gamepadMask,
+             QString& rtspSessionUrl);
 
     QVector<NvApp>
     getAppList();

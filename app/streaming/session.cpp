@@ -1172,16 +1172,13 @@ bool Session::startConnectionAsync()
 
     try {
         NvHTTP http(m_Computer);
-        if (m_Computer->currentGameId != 0) {
-            http.resumeApp(&m_StreamConfig, rtspSessionUrl);
-        }
-        else {
-            http.launchApp(m_App.id, &m_StreamConfig,
-                           enableGameOptimizations,
-                           m_Preferences->playAudioOnHost,
-                           m_InputHandler->getAttachedGamepadMask(),
-                           rtspSessionUrl);
-        }
+        http.startApp(m_Computer->currentGameId != 0 ? "resume" : "launch",
+                      m_Computer->isNvidiaServerSoftware,
+                      m_App.id, &m_StreamConfig,
+                      enableGameOptimizations,
+                      m_Preferences->playAudioOnHost,
+                      m_InputHandler->getAttachedGamepadMask(),
+                      rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
         emit displayLaunchError(tr("GeForce Experience returned error: %1").arg(e.toQString()));
         return false;
