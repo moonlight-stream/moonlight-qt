@@ -5,10 +5,6 @@
 
 #include <SDL.h>
 
-#define SDL_CODE_HIDE_CURSOR 1
-#define SDL_CODE_SHOW_CURSOR 2
-#define SDL_CODE_UNCAPTURE_MOUSE 3
-
 struct GamepadState {
     SDL_GameController* controller;
     SDL_JoystickID jsId;
@@ -87,10 +83,6 @@ public:
 
     bool isMouseInVideoRegion(int mouseX, int mouseY, int windowWidth = -1, int windowHeight = -1);
 
-    void updateMousePositionReport(int mouseX, int mouseY);
-
-    void flushMousePositionUpdate();
-
     void updateKeyboardGrabState();
 
     void updatePointerRegionLock();
@@ -127,9 +119,6 @@ private:
     Uint32 longPressTimerCallback(Uint32 interval, void* param);
 
     static
-    Uint32 mouseMoveTimerCallback(Uint32 interval, void* param);
-
-    static
     Uint32 mouseEmulationTimerCallback(Uint32 interval, void* param);
 
     static
@@ -147,17 +136,7 @@ private:
     bool m_SwapMouseButtons;
     bool m_ReverseScrollDirection;
     bool m_SwapFaceButtons;
-    bool m_BatchMouseMotion;
-    SDL_TimerID m_MouseMoveTimer;
-    SDL_atomic_t m_MouseDeltaX;
-    SDL_atomic_t m_MouseDeltaY;
 
-    SDL_SpinLock m_MousePositionLock;
-    struct {
-        int x, y;
-        int windowWidth, windowHeight;
-    } m_MousePositionReport;
-    SDL_atomic_t m_MousePositionUpdated;
     bool m_MouseWasInVideoRegion;
     bool m_PendingMouseButtonsAllUpOnVideoRegionLeave;
     bool m_PointerRegionLockActive;

@@ -9,17 +9,12 @@
 #include <QDir>
 #include <QGuiApplication>
 
-#define MOUSE_POLLING_INTERVAL 5
-
 SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* computer, int streamWidth, int streamHeight)
     : m_MultiController(prefs.multiController),
       m_GamepadMouse(prefs.gamepadMouse),
       m_SwapMouseButtons(prefs.swapMouseButtons),
       m_ReverseScrollDirection(prefs.reverseScrollDirection),
       m_SwapFaceButtons(prefs.swapFaceButtons),
-      m_BatchMouseMotion(computer->isNvidiaServerSoftware),
-      m_MouseMoveTimer(0),
-      m_MousePositionLock(0),
       m_MouseWasInVideoRegion(false),
       m_PendingMouseButtonsAllUpOnVideoRegionLeave(false),
       m_PointerRegionLockActive(false),
@@ -188,25 +183,6 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, NvComputer* comput
     SDL_zero(m_LastTouchDownEvent);
     SDL_zero(m_LastTouchUpEvent);
     SDL_zero(m_TouchDownEvent);
-    SDL_zero(m_MousePositionReport);
-
-    SDL_AtomicSet(&m_MouseDeltaX, 0);
-    SDL_AtomicSet(&m_MouseDeltaY, 0);
-    SDL_AtomicSet(&m_MousePositionUpdated, 0);
-
-    if (m_BatchMouseMotion) {
-        Uint32 pollingInterval = QString(qgetenv("MOUSE_POLLING_INTERVAL")).toUInt();
-        if (pollingInterval == 0) {
-            pollingInterval = MOUSE_POLLING_INTERVAL;
-        }
-        else {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using custom mouse polling interval: %u ms",
-                        pollingInterval);
-        }
-
-        m_MouseMoveTimer = SDL_AddTimer(pollingInterval, SdlInputHandler::mouseMoveTimerCallback, this);
-    }
 }
 
 SdlInputHandler::~SdlInputHandler()
@@ -226,7 +202,6 @@ SdlInputHandler::~SdlInputHandler()
         }
     }
 
-    SDL_RemoveTimer(m_MouseMoveTimer);
     SDL_RemoveTimer(m_LongPressTimer);
     SDL_RemoveTimer(m_LeftButtonReleaseTimer);
     SDL_RemoveTimer(m_RightButtonReleaseTimer);
@@ -405,7 +380,14 @@ void SdlInputHandler::setCaptureActive(bool active)
             mouseY -= windowY;
 
             if (isMouseInVideoRegion(mouseX, mouseY)) {
-                updateMousePositionReport(mouseX, mouseY);
+                // Synthesize a mouse event to synchronize the cursor
+                SDL_MouseMotionEvent motionEvent = {};
+                motionEvent.type = SDL_MOUSEMOTION;
+                motionEvent.timestamp = SDL_GetTicks();
+                motionEvent.windowID = SDL_GetWindowID(m_Window);
+                motionEvent.x = mouseX;
+                motionEvent.y = mouseY;
+                handleMouseMotionEvent(&motionEvent);
             }
         }
     }

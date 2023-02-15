@@ -1636,15 +1636,6 @@ void Session::execInternal()
                     m_VideoDecoder->renderFrameOnMainThread();
                 }
                 break;
-            case SDL_CODE_HIDE_CURSOR:
-                SDL_ShowCursor(SDL_DISABLE);
-                break;
-            case SDL_CODE_SHOW_CURSOR:
-                SDL_ShowCursor(SDL_ENABLE);
-                break;
-            case SDL_CODE_UNCAPTURE_MOUSE:
-                SDL_CaptureMouse(SDL_FALSE);
-                break;
             case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
                 m_FlushingWindowEventsRef--;
                 break;
