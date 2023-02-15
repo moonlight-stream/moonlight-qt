@@ -1,0 +1,184 @@
+name: Bug report
+description: Follow the troubleshooting guide before reporting a bug
+title: "[Issue]: "
+labels: bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to fill out this bug form!
+        
+        **READ ME FIRST!**
+        If you're here because something basic is not working (like gamepad input, video, or similar), it's probably something specific to your setup, so make sure you've gone through the Troubleshooting Guide first: https://github.com/moonlight-stream/moonlight-docs/wiki/Troubleshooting
+        
+        If you still have trouble with basic functionality after following the guide, join our Discord server where there are many other volunteers who can help (or direct you back here if it looks like a Moonlight bug after all). https://moonlight-stream.org/discord
+  - type: textarea
+    id: describe-bug
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: steps-reproduce
+    attributes:
+      label: Steps to reproduce
+      description: Any special steps that are required for the bug to appear.
+    validations:
+      required: true
+  - type: textarea
+    id: affected-games
+    attributes:
+      label: Affected games
+      description: List the games you've tried that exhibit the issue. To see if the issue is game-specific, try streaming Steam Big Picture with Moonlight and see if the issue persists there.
+    validations:
+      required: true   
+  - type: dropdown
+    id: other-clients
+    attributes:
+      label: Other Moonlight clients
+      description: Does the issue occur when using Moonlight on Android or iOS?
+      options:
+        - "Android"
+        - "iOS"
+    validations:
+      required: true
+  - type: dropdown
+    id: settings-adjusted
+    attributes:
+      label: Moonlight adjusted settings
+      description: Have any settings been adjusted from defaults?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: textarea
+    id: settings-adjusted-settings
+    attributes:
+      label: Moonlight adjusted settings (please complete the following information)
+      description: If the settings have been adjusted, which settings have been changed?
+    validations:
+      required: true
+  - type: dropdown
+    id: settings-default
+    attributes:
+      label: Moonlight default settings
+      description: Does the problem still occur after reverting settings back to default?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: dropdown
+    id: gamepad-connected
+    attributes:
+      label: Gamepad-related connection issue
+      description: Do you have any gamepads connected to your host PC directly?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: dropdown
+    id: gamepad-on-screen
+    attributes:
+      label: Gamepad-related input issue
+      description: If gamepad input is not working, does it work if you use Moonlight's on-screen controls?
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+  - type: dropdown
+    id: gamepad-test
+    attributes:
+      label: Gamepad-related streaming issue
+      description: |
+        Does the problem still remain if you stream the desktop and use https://html5gamepad.com to test your gamepad? 
+        Instructions for streaming the desktop can be found here: https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide
+      options:
+        - "Yes"
+        - "No"
+    validations:
+      required: true
+ - type: input
+    id: client-os
+    attributes:
+      label: Client PC OS version
+      description: What is the Client PC OS version?
+      placeholder: e.g. Windows 10 1809
+    validations:
+      required: true
+  - type: input
+    id: client-moonlight
+    attributes:
+      label: Client PC Moonlight version
+      description: What is the Moonlight version?
+      placeholder: e.g. v0.9.0
+    validations:
+      required: true
+  - type: input
+    id: client-gpu
+    attributes:
+      label: Client PC gpu
+      description: Which gpu is being used in the Client PC?
+      placeholder: e.g. Intel HD Graphics 520
+    validations:
+      required: true
+  - type: input
+    id: server-os
+    attributes:
+      label: Server PC OS version
+      description: What is the Server PC OS version?
+      placeholder: e.g. Windows 10 1809
+    validations:
+      required: true
+  - type: input
+    id: server-geforce
+    attributes:
+      label: Server PC GeForce Experience version
+      description: What is the GeForce Experience version?
+      placeholder: e.g. 3.16.0.140
+    validations:
+      required: true
+  - type: input
+    id: server-driver
+    attributes:
+      label: Server PC Nvidia GPU driver version
+      description: What is the Nvidia GPU driver version?
+      placeholder: e.g. 417.35
+    validations:
+      required: true
+  - type: input
+    id: server-antivirus
+    attributes:
+      label: Server PC antivirus and firewall software
+      description: Which antivirus and firewall software are installed on the Server PC?
+      placeholder: e.g. Windows Defender and Windows Firewall
+    validations:
+      required: true      
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots
+      description: If applicable, add screenshots to help explain your problem. If the issue is related to video glitching or poor quality, please include screenshots.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: |
+        Please copy and paste any relevant log output. This will be automatically formatted into code, so no need for backticks.
+      render: Shell
+    validations:
+      required: false      
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Anything else you think may be relevant to the issue or special about your specific setup.
+    validations:
+      required: false
+      
