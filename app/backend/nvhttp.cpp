@@ -194,6 +194,7 @@ NvHTTP::startApp(QString verb,
                  bool sops,
                  bool localAudio,
                  int gamepadMask,
+                 bool persistGameControllersOnDisconnect,
                  QString& rtspSessionUrl)
 {
     int riKeyId;
@@ -221,7 +222,8 @@ NvHTTP::startApp(QString verb,
                                    "&localAudioPlayMode="+QString::number(localAudio ? 1 : 0)+
                                    "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration))+
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
-                                   "&gcmap="+QString::number(gamepadMask),
+                                   "&gcmap="+QString::number(gamepadMask)+
+                                   "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0),
                                    LAUNCH_TIMEOUT_MS);
 
     qInfo() << "Launch response:" << response;
