@@ -212,6 +212,12 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
             else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_DOWN) {
                 LiSendScrollEvent(-1);
             }
+            else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_RIGHT) {
+                LiSendHScrollEvent(1);
+            }
+            else if (event->button == SDL_CONTROLLER_BUTTON_DPAD_LEFT) {
+                LiSendHScrollEvent(-1);
+            }
         }
     }
     else {
