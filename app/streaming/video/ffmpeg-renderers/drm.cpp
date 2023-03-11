@@ -7,8 +7,13 @@ extern "C" {
 #include <libdrm/drm_fourcc.h>
 
 // Special Rockchip type
-#ifndef DRM_FORMAT_NV12_10
-#define DRM_FORMAT_NV12_10 fourcc_code('N', 'A', '1', '2')
+#ifndef DRM_FORMAT_NA12
+#define DRM_FORMAT_NA12 fourcc_code('N', 'A', '1', '2')
+#endif
+
+// Same as NA12 but upstreamed
+#ifndef DRM_FORMAT_NV15
+#define DRM_FORMAT_NV15 fourcc_code('N', 'V', '1', '5')
 #endif
 
 // Special Raspberry Pi type (upstreamed)
@@ -347,7 +352,8 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     switch (plane->formats[j]) {
                     case DRM_FORMAT_P010:
                     case DRM_FORMAT_P030:
-                    case DRM_FORMAT_NV12_10:
+                    case DRM_FORMAT_NA12:
+                    case DRM_FORMAT_NV15:
                         matchingFormat = true;
                         break;
                     }
