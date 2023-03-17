@@ -369,12 +369,12 @@ bool DXVA2Renderer::initializeRenderer()
     return true;
 }
 
-bool DXVA2Renderer::initializeDeviceQuirks()
+bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapterIndex)
 {
-    IDirect3D9* d3d9;
     HRESULT hr;
 
     SDL_assert(m_DeviceQuirks == 0);
+    SDL_assert(m_Device == nullptr);
 
     {
         bool ok;
@@ -388,82 +388,72 @@ bool DXVA2Renderer::initializeDeviceQuirks()
         }
     }
 
-    hr = m_Device->GetDirect3D(&d3d9);
+    UINT adapterCount = d3d9ex->GetAdapterCount();
+    if (adapterCount > 1) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Detected multi-GPU system with %d GPUs",
+                    adapterCount);
+        m_DeviceQuirks |= DXVA2_QUIRK_MULTI_GPU;
+    }
+
+    D3DCAPS9 caps;
+    hr = d3d9ex->GetDeviceCaps(adapterIndex, D3DDEVTYPE_HAL, &caps);
     if (SUCCEEDED(hr)) {
-        D3DCAPS9 caps;
+        D3DADAPTER_IDENTIFIER9 id;
 
-        UINT adapterCount = d3d9->GetAdapterCount();
-        if (adapterCount > 1) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Detected multi-GPU system with %d GPUs",
-                        adapterCount);
-            m_DeviceQuirks |= DXVA2_QUIRK_MULTI_GPU;
-        }
-
-        hr = m_Device->GetDeviceCaps(&caps);
+        hr = d3d9ex->GetAdapterIdentifier(adapterIndex, 0, &id);
         if (SUCCEEDED(hr)) {
-            D3DADAPTER_IDENTIFIER9 id;
+            if (id.VendorId == 0x8086) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding IDirectXVideoProcessor API on Intel GPU");
 
-            hr = d3d9->GetAdapterIdentifier(caps.AdapterOrdinal, 0, &id);
-            if (SUCCEEDED(hr)) {
-                if (id.VendorId == 0x8086) {
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Avoiding IDirectXVideoProcessor API on Intel GPU");
+                // On Intel GPUs, we can get unwanted video "enhancements" due to post-processing
+                // effects that the GPU driver forces on us. In many cases, this makes the video
+                // actually look worse. We can avoid these by using StretchRect() instead on these
+                // platforms.
+                m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
+            }
+            else if (id.VendorId == 0x4d4f4351) { // QCOM in ASCII
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding IDirectXVideoProcessor API on Qualcomm GPU");
 
-                    // On Intel GPUs, we can get unwanted video "enhancements" due to post-processing
-                    // effects that the GPU driver forces on us. In many cases, this makes the video
-                    // actually look worse. We can avoid these by using StretchRect() instead on these
-                    // platforms.
-                    m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
-                }
-                else if (id.VendorId == 0x4d4f4351) { // QCOM in ASCII
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Avoiding IDirectXVideoProcessor API on Qualcomm GPU");
+                // On Qualcomm GPUs (all D3D9on12 GPUs?), the scaling quality of VideoProcessBlt()
+                // is absolutely horrible. StretchRect() is much much better.
+                m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
+            }
+            else if (id.VendorId == 0x1002 &&
+                     (id.DriverVersion.HighPart > 0x1E0000 ||
+                      (id.DriverVersion.HighPart == 0x1E0000 && HIWORD(id.DriverVersion.LowPart) >= 14000))) { // AMD 21.12.1 or later
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using DestFormat quirk for recent AMD GPU driver");
 
-                    // On Qualcomm GPUs (all D3D9on12 GPUs?), the scaling quality of VideoProcessBlt()
-                    // is absolutely horrible. StretchRect() is much much better.
-                    m_DeviceQuirks |= DXVA2_QUIRK_NO_VP;
-                }
-                else if (id.VendorId == 0x1002 &&
-                         (id.DriverVersion.HighPart > 0x1E0000 ||
-                          (id.DriverVersion.HighPart == 0x1E0000 && HIWORD(id.DriverVersion.LowPart) >= 14000))) { // AMD 21.12.1 or later
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Using DestFormat quirk for recent AMD GPU driver");
-
-                    // AMD's GPU driver doesn't correctly handle color range conversion.
-                    //
-                    // This used to just work because we used Rec 709 Limited which happened to be what AMD's
-                    // driver defaulted to. However, AMD's driver behavior changed to default to Rec 709 Full
-                    // in the 21.12.1 driver, so we must adapt to that.
-                    //
-                    // 30.0.13037.1003 - 21.11.3 - Limited
-                    // 30.0.14011.3017 - 21.12.1 - Full
-                    //
-                    // To sort out this mess, we will use a quirk to tell us to populate DestFormat for AMD.
-                    // For other GPUs, we'll avoid populating it as was our previous behavior.
-                    m_DeviceQuirks |= DXVA2_QUIRK_SET_DEST_FORMAT;
-                }
-
-                // Tag this display device if it has a WDDM 2.0+ driver for the decoder selection logic
-                if (HIWORD(id.DriverVersion.HighPart) >= 20) {
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Detected WDDM 2.0 or later display driver");
-                    m_DeviceQuirks |= DXVA2_QUIRK_WDDM_20_PLUS;
-                }
+                // AMD's GPU driver doesn't correctly handle color range conversion.
+                //
+                // This used to just work because we used Rec 709 Limited which happened to be what AMD's
+                // driver defaulted to. However, AMD's driver behavior changed to default to Rec 709 Full
+                // in the 21.12.1 driver, so we must adapt to that.
+                //
+                // 30.0.13037.1003 - 21.11.3 - Limited
+                // 30.0.14011.3017 - 21.12.1 - Full
+                //
+                // To sort out this mess, we will use a quirk to tell us to populate DestFormat for AMD.
+                // For other GPUs, we'll avoid populating it as was our previous behavior.
+                m_DeviceQuirks |= DXVA2_QUIRK_SET_DEST_FORMAT;
             }
 
-            return true;
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "GetDeviceCaps() failed: %x", hr);
+            // Tag this display device if it has a WDDM 2.0+ driver for the decoder selection logic
+            if (HIWORD(id.DriverVersion.HighPart) >= 20) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Detected WDDM 2.0 or later display driver");
+                m_DeviceQuirks |= DXVA2_QUIRK_WDDM_20_PLUS;
+            }
         }
 
-        d3d9->Release();
+        return true;
     }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "GetDirect3D() failed: %x", hr);
+                     "GetDeviceCaps() failed: %x", hr);
     }
 
     return false;
@@ -563,6 +553,48 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 
     int adapterIndex = SDL_Direct3D9GetAdapterIndex(SDL_GetWindowDisplayIndex(window));
     Uint32 windowFlags = SDL_GetWindowFlags(window);
+
+    // Initialize quirks *before* calling CreateDeviceEx() to allow our below
+    // logic to avoid a hang with NahimicOSD.dll's broken full-screen handling.
+    if (!initializeQuirksForAdapter(d3d9ex, adapterIndex)) {
+        d3d9ex->Release();
+        return false;
+    }
+
+    // If we have a WDDM 2.0 or later display driver and we're not running in
+    // full-screen exclusive mode (or we're on a multi-GPU system in FSE),
+    // prefer the D3D11VA renderer.
+    //
+    // D3D11VA is better in this case because it can enable tearing in non-FSE
+    // modes when the user has V-Sync disabled. In non-FSE V-Sync cases, D3D11VA
+    // provides lower display latency on systems that support Independent Flip
+    // in windowed mode. When using D3D9, DWM will not promote us to IFlip unless
+    // we're full-screen (exclusive or not).
+    //
+    // We prefer D3D11VA in FSE multi-GPU cases due to a plethora of issues with
+    // D3D9Ex PresentEx()/D3DPRESENT_DONOTWAIT on hybrid graphics systems (See
+    // issues #235, #240, #386, and #951 on GitHub). Clearly this codepath is not
+    // well tested by Microsoft or GPU vendors, so stick to the more common
+    // D3D11-based renderer which is much more likely to behave.
+    //
+    // NB: The reason we only do this for WDDM 2.0 and later is because older
+    // AMD drivers (such as those for the HD 5570) render garbage when using
+    // the D3D11VA renderer.
+    if (m_DecoderSelectionPass == 0 &&
+            (m_DeviceQuirks & DXVA2_QUIRK_WDDM_20_PLUS)) {
+        if (!((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN)) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Defaulting to D3D11VA for non-FSE mode");
+            d3d9ex->Release();
+            return false;
+        }
+        else if (m_DeviceQuirks & DXVA2_QUIRK_MULTI_GPU) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Defaulting to D3D11VA for multi-GPU FSE mode");
+            d3d9ex->Release();
+            return false;
+        }
+    }
 
     D3DCAPS9 deviceCaps;
     d3d9ex->GetDeviceCaps(adapterIndex, D3DDEVTYPE_HAL, &deviceCaps);
@@ -768,43 +800,6 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 
     if (!initializeDevice(params->window, params->enableVsync)) {
         return false;
-    }
-
-    if (!initializeDeviceQuirks()) {
-        return false;
-    }
-
-    // If we have a WDDM 2.0 or later display driver and we're not running in
-    // full-screen exclusive mode (or we're on a multi-GPU system in FSE),
-    // prefer the D3D11VA renderer.
-    //
-    // D3D11VA is better in this case because it can enable tearing in non-FSE
-    // modes when the user has V-Sync disabled. In non-FSE V-Sync cases, D3D11VA
-    // provides lower display latency on systems that support Independent Flip
-    // in windowed mode. When using D3D9, DWM will not promote us to IFlip unless
-    // we're full-screen (exclusive or not).
-    //
-    // We prefer D3D11VA in FSE multi-GPU cases due to a plethora of issues with
-    // D3D9Ex PresentEx()/D3DPRESENT_DONOTWAIT on hybrid graphics systems (See
-    // issues #235, #240, #386, and #951 on GitHub). Clearly this codepath is not
-    // well tested by Microsoft or GPU vendors, so stick to the more common
-    // D3D11-based renderer which is much more likely to behave.
-    //
-    // NB: The reason we only do this for WDDM 2.0 and later is because older
-    // AMD drivers (such as those for the HD 5570) render garbage when using
-    // the D3D11VA renderer.
-    if (m_DecoderSelectionPass == 0 &&
-            (m_DeviceQuirks & DXVA2_QUIRK_WDDM_20_PLUS)) {
-        if (!((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN)) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Defaulting to D3D11VA for non-FSE mode");
-            return false;
-        }
-        else if (m_DeviceQuirks & DXVA2_QUIRK_MULTI_GPU) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Defaulting to D3D11VA for multi-GPU FSE mode");
-            return false;
-        }
     }
 
     if (!initializeDecoder()) {

@@ -27,7 +27,7 @@ private:
     bool initializeRenderer();
     bool initializeDevice(SDL_Window* window, bool enableVsync);
     bool isDecoderBlacklisted();
-    bool initializeDeviceQuirks();
+    bool initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapterIndex);
     void renderOverlay(Overlay::OverlayType type);
 
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 68, 0)
