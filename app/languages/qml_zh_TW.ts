@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>選取目標主機後立刻開啟此應用程式，略過應用程式選單。</translation>
+        <translation>選取目標主機後直接啟動此應用程式，略過應用程式選取方格。</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>從應用程式選單中隱藏此遊戲，要開啟隱藏的遊戲，請右鍵點選目標主機並選擇 %1。</translation>
+        <translation>從應用程式方格中隱藏此遊戲，要存取隱藏的遊戲，請右鍵點選目標主機並選擇 %1。</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>正在與目標主機建立連線…</translation>
+        <translation>正在與目標電腦建立連線…</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
@@ -74,7 +74,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>正在與目標主機建立連線...</translation>
+        <translation>正在與目標電腦建立連線…</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>正在與目標主機建立連線...</translation>
+        <translation>正在與目標電腦建立連線…</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
@@ -121,17 +121,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation>主機</translation>
+        <translation>電腦</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation>無法連線到目標主機。</translation>
+        <translation>無法連線到指定電腦。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>此主機的網路連線遭到封鎖。當連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
+        <translation>此電腦的網路連線遭到封鎖。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
@@ -145,7 +145,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation>已停用自動搜尋主機功能，需要手動新增。</translation>
+        <translation>已停用自動搜尋電腦功能，需要手動新增。</translation>
     </message>
     <message>
         <source>View Apps</source>
@@ -158,7 +158,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation>喚醒主機</translation>
+        <translation>喚醒電腦</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
@@ -168,12 +168,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation>重新命名主機</translation>
+        <translation>重新命名電腦</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation>刪除主機</translation>
+        <translation>刪除電腦</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
@@ -187,7 +187,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation>請在您的 GameStream PC 上輸入 %1。配對完成後，此對話框將關閉。</translation>
+        <translation>請在您的 GameStream 電腦上輸入 %1。配對完成後，此對話框將關閉。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="305"/>
@@ -212,7 +212,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="333"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>如果您嘗試通過網際網路進行流式傳輸，請在您的遊戲 PC 上安裝 Moonlight Internet Hosting Tool 並執行其中的 Internet Streaming Tester 以檢查您的遊戲主機的網際網路連線。</translation>
+        <translation>如果您嘗試透過網際網路進行串流，請在您的遊戲電腦上安裝 Moonlight Internet Hosting Tool 並執行其中的 Internet Streaming Tester 以檢查您的電腦的網際網路連線。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="337"/>
@@ -227,12 +227,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="329"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>無法執行網路測試，因為此 PC 無法連線 Moonlight 的任何連線測試伺服器。請檢查您的網際網路連線或稍後重試。</translation>
+        <translation>無法執行網路測試，因為此電腦無法連線 Moonlight 的任何連線測試伺服器。請檢查您的網際網路連線或稍後重試。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation>正在區域網路上搜尋開啟了 NVIDIA GameStream 的主機...</translation>
+        <translation>正在區域網路中搜尋已啟用 NVIDIA GameStream 的電腦…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -257,7 +257,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="349"/>
         <source>Enter the new name for this PC:</source>
-        <translation>輸入此 PC 的新名稱：</translation>
+        <translation>輸入此電腦的新名稱：</translation>
     </message>
 </context>
 <context>
@@ -270,7 +270,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>上一個工作階段仍在主機 PC 上執行時，您將無法配對。結束所有正在執行的遊戲或重新啟動主機，然後再次嘗試配對。</translation>
+        <translation>上一個工作階段仍在主機電腦上執行時，您將無法配對。結束所有正在執行的遊戲或重新啟動主機電腦，然後再次嘗試配對。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
@@ -293,7 +293,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="606"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>正在執行的遊戲不是由這台電腦啟動的。您必須手動結束主機上的遊戲或使用最初啟動遊戲的裝置。</translation>
+        <translation>正在執行的遊戲不是由這台電腦啟動的。您必須手動結束主機電腦上的遊戲或使用最初啟動遊戲的裝置。</translation>
     </message>
 </context>
 <context>
@@ -318,7 +318,7 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>主機 %1 尚未配對。串流前請打開 Moonlight 進行配對。</translation>
+        <translation>電腦 %1 尚未配對。串流前請開啟 Moonlight 進行配對。</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
@@ -397,12 +397,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="117"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>啟動串流時，您的主機出現問題。</translation>
+        <translation>啟動串流時，您的主機電腦出現問題。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="118"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>確認您的主機上沒有打開任何受 DRM 保護的內容。您也可以嘗試重新啟動主機。</translation>
+        <translation>確認您的主機電腦上沒有開啟任何受 DRM 保護的內容。您也可以嘗試重新啟動主機電腦。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="119"/>
@@ -452,7 +452,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="697"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>當以高於顯示器的畫面更新率進行串流傳輸時，垂直同步將被停用。</translation>
+        <translation>當以高於顯示器的影格速率進行串流傳輸時，垂直同步將被停用。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="724"/>
@@ -466,7 +466,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="707"/>
         <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation>您的主機 GPU 不支援 HEVC。HEVC 串流傳輸需要 GeForce GTX 900 系列 (Maxwell) 或更高階的 GPU。</translation>
+        <translation>您的主機電腦 GPU 不支援 HEVC。HEVC 串流傳輸需要 GeForce GTX 900 系列 (Maxwell) 或更高階的 GPU。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="738"/>
@@ -476,7 +476,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="748"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation>您的主機和用戶端不支援相同的視訊編解碼器。這可能會導致串流效能不佳。</translation>
+        <translation>您的主機電腦和用戶端電腦不支援相同的視訊編解碼器。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="751"/>
@@ -490,7 +490,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="762"/>
         <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation>您的主機 GPU 不支援 HDR。HDR 串流傳輸需要 GeForce GTX 1000 系列 (Pascal) 或更高階的 GPU。</translation>
+        <translation>您的主機電腦 GPU 不支援 HDR。HDR 串流傳輸需要 GeForce GTX 1000 系列 (Pascal) 或更高階的 GPU。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="771"/>
@@ -520,7 +520,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="824"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>您的主機 GPU 不支援 4K 視訊串流。</translation>
+        <translation>您的主機電腦 GPU 不支援 4K 視訊串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="828"/>
@@ -598,7 +598,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="323"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation>不受主機或客戶端支援的解析度可能會造成串流錯誤。</translation>
+        <translation>不受主機電腦或用戶端支援的解析度可能會造成串流錯誤。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="329"/>
@@ -682,7 +682,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="616"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>停用垂直同步可允許子影格渲染延遲，但會造成顯示畫面撕裂</translation>
+        <translation>停用垂直同步可允許子畫面轉譯延遲，但會造成顯示畫面撕裂</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="623"/>
@@ -717,7 +717,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="700"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation>串流時將主機的喇叭靜音</translation>
+        <translation>串流時將主機電腦的喇叭靜音</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="710"/>
@@ -777,7 +777,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1029"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>提醒：由於 GeForce Experience 的 Bug，如果您的主機有多部顯示器，此選項可能無法正常運作。</translation>
+        <translation>提醒：由於 GeForce Experience 的錯誤，如果您的主機電腦有多部顯示器，此選項可能無法正常運作。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1345"/>
@@ -797,12 +797,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1431"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation>串流將支援 HDR，但一些遊戲可能需要你主機 PC 上的 HDR 監視器來啟用 HDR 模式。</translation>
+        <translation>串流將支援 HDR，但一些遊戲可能需要你主機電腦上的 HDR 監視器以啟用 HDR 模式。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1433"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation>此 PC 不支援 HDR 串流。</translation>
+        <translation>此電腦不支援 HDR 串流。</translation>
     </message>
     <message>
         <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
@@ -1049,7 +1049,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>此主機的網路連線遭到封鎖。當連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
+        <translation>此電腦的網路連線遭到封鎖。當連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="165"/>

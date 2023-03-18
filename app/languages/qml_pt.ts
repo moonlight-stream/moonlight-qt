@@ -432,7 +432,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="680"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>Sua seleção para habilitar o modo mouse do desktop remoto deve causar problemas em jogos.</translation>
+        <translation>A sua seleção para ativar o modo rato da área de trabalho remoto deve causar problemas em jogos.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="685"/>
@@ -772,7 +772,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1027"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation>Isto habilita controle perfeito do mouse sem capturar o cursor do clente. É ideal para uso do Desktop Remoto mas não funcionará na maioria dos jogos.</translation>
+        <translation>Isto habilita controle perfeito do rato sem capturar o cursor do clente. É ideal para uso do Desktop Remoto mas não funcionará na maioria dos jogos.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1029"/>
@@ -825,12 +825,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1128"/>
         <source>Swap left and right mouse buttons</source>
-        <translation>Inverta os botões esquerdo e direito do mouse</translation>
+        <translation>Inverta os botões esquerdo e direito do rato</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1140"/>
         <source>Reverse mouse scrolling direction</source>
-        <translation>Inverta a diração da roda do mouse</translation>
+        <translation>Inverta a diração da roda do rato</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1154"/>
@@ -865,7 +865,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1206"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation>Habilite o controle do mouse com controles enquanto segurando o botão &apos;Start&apos;</translation>
+        <translation>Habilite o controle do rato com controles enquanto segurando o botão &apos;Start&apos;</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1217"/>
@@ -915,7 +915,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1017"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>Otimize o mouse para Desktop Remoto ao contrário de jogos</translation>
+        <translation>Otimize o rato para Desktop Remoto ao contrário de jogos</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="978"/>
@@ -950,7 +950,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1121"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation>Quando selecionado, o touchscreen age como um touchpad. Quando não-selecionado, o touchscreen diretamente controlará o ponteiro do mouse.</translation>
+        <translation>Quando selecionado, o touchscreen age como um touchpad. Quando não-selecionado, o touchscreen diretamente controlará o ponteiro do rato.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1247"/>
