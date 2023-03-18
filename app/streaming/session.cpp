@@ -115,8 +115,7 @@ void Session::clConnectionTerminated(int errorCode)
     case ML_ERROR_UNEXPECTED_EARLY_TERMINATION:
         s_ActiveSession->m_UnexpectedTermination = true;
         emit s_ActiveSession->displayLaunchError(tr("Something went wrong on your host PC when starting the stream.") + "\n\n" +
-                                                 tr("Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC.") + "\n\n" +
-                                                 tr("If the issue persists, try reinstalling your GPU drivers and GeForce Experience."));
+                                                 tr("Make sure you don't have any DRM-protected content open on your host PC. You can also try restarting your host PC."));
         break;
 
     case ML_ERROR_FRAME_CONVERSION:
@@ -700,8 +699,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 
         if (m_Computer->maxLumaPixelsHEVC == 0) {
             if (hevcForced) {
-                emitLaunchWarning(tr("Your host PC GPU doesn't support HEVC. "
-                                     "A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming."));
+                emitLaunchWarning(tr("Your host PC doesn't support encoding HEVC."));
             }
 
             // Moonlight-common-c will handle this case already, but we want
@@ -755,8 +753,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
 
         // Check that the server GPU supports HDR
         if (!(m_Computer->serverCodecModeSupport & 0x200)) {
-            emitLaunchWarning(tr("Your host PC GPU doesn't support HDR streaming. "
-                                 "A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming."));
+            emitLaunchWarning(tr("Your host PC doesn't support HDR streaming."));
         }
         else if (!isHardwareDecodeAvailable(testWindow,
                                             m_Preferences->videoDecoderSelection,
@@ -1181,7 +1178,7 @@ bool Session::startConnectionAsync()
                       !m_Preferences->multiController,
                       rtspSessionUrl);
     } catch (const GfeHttpResponseException& e) {
-        emit displayLaunchError(tr("GeForce Experience returned error: %1").arg(e.toQString()));
+        emit displayLaunchError(tr("Host returned error: %1").arg(e.toQString()));
         return false;
     } catch (const QtNetworkReplyException& e) {
         emit displayLaunchError(e.toQString());

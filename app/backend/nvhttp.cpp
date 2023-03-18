@@ -362,7 +362,7 @@ NvHTTP::verifyResponseStatus(QString xml)
         }
     }
 
-    throw GfeHttpResponseException(-1, "Malformed GFE XML (missing root element)");
+    throw GfeHttpResponseException(-1, "Malformed XML (missing root element)");
 }
 
 QImage

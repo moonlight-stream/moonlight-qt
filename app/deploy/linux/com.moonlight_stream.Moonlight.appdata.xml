@@ -4,10 +4,10 @@
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0+</project_license>
 	<name>Moonlight</name>
-	<summary>Play games remotely from your NVIDIA GameStream-enabled PC</summary>
+	<summary>Stream games and other applications from another PC running Sunshine or GeForce Experience</summary>
 
 	<description>
-		<p>Moonlight can stream games and other applications from a PC with an NVIDIA GeForce GTX/RTX or NVIDIA Quadro GPU and GeForce/Quadro Experience installed.</p>
+		<p>Moonlight can stream games and other applications from another PC with Sunshine or GeForce Experience software installed.</p>
 		<p>Features include:</p>
 		<ul>
 			<li>Streaming at up to 4K resolution</li>

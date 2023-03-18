@@ -5,7 +5,7 @@
 	<key>CFBundleExecutable</key>
 	<string>Moonlight</string>
 	<key>CFBundleGetInfoString</key>
-	<string>Stream games from your NVIDIA GameStream-enabled PC</string>
+	<string>Stream games and other applications from another PC</string>
 	<key>CFBundleIconFile</key>
 	<string>moonlight</string>
 	<key>CFBundleIdentifier</key>
