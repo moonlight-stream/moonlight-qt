@@ -145,7 +145,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>在你的本地网络中搜索兼容的主机...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
@@ -200,7 +200,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>请在你的主机上输入 %1 。配对完成后，此对话框将关闭。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="295"/>
