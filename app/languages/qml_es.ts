@@ -158,7 +158,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Buscando hosts compatibles en tu red local...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -259,17 +259,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Por favor, introduzca %1 en el host de tu PC. Este cuadro de diálogo se cerrará cuando finalice el emparejamiento.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="295"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si el host del PC está ejecutando Sunshine, navegue hasta la interfaz de usuario web de Sunshine para introducir el PIN.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="323"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight está probando tu conexión de red para determinar si algún puerto necesario está bloqueado.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="350"/>
@@ -473,7 +473,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="702"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>El host de tu PC no soporta la codificación HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="718"/>
@@ -483,12 +483,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>El host de tu PC no es compatible con HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1181"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>El host devuelve el error: %1</translation>
     </message>
     <message>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
@@ -695,7 +695,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="465"/>
         <source>%1 FPS (Custom)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS (Personalizado)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="556"/>
@@ -1193,7 +1193,7 @@
     <message>
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Introduzca la dirección IP del host de tu PC:</translation>
     </message>
     <message>
         <source>Enter the IP address of your GameStream PC:</source>
