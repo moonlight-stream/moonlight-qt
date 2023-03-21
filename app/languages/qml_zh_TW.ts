@@ -158,7 +158,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>正在您的區域網路中搜尋相容的主機…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -259,17 +259,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>請在您的主機電腦上輸入 %1，配對完成後，此對話方塊將會關閉。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="295"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>若您的主機正在執行 Sunshine，請導覽至 Sunshine 網頁 UI 並輸入 PIN 碼。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="323"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight 正在測試您的網路連線以判斷是否有需要的連接埠被封鎖。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="350"/>
@@ -473,7 +473,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="702"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機不支援 HEVC 編碼。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="718"/>
@@ -483,12 +483,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機電腦不支援 HDR 串流。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1181"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>主機返回錯誤：%1</translation>
     </message>
     <message>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
@@ -695,7 +695,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="465"/>
         <source>%1 FPS (Custom)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS (自訂)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="556"/>
@@ -1189,7 +1189,7 @@
     <message>
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入您的主機電腦 IP 位址：</translation>
     </message>
     <message>
         <source>Enter the IP address of your GameStream PC:</source>
