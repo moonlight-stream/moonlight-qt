@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>從應用程式方格中隱藏此遊戲，要存取隱藏的遊戲，請右鍵點選目標主機並選擇 %1。</translation>
+        <translation>從應用程式方格中隱藏此遊戲，要存取隱藏的遊戲，請在目標主機上按下滑鼠右鍵並選擇 %1。</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
@@ -97,7 +97,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>你確定要結束 %1 嗎? 所有未儲存的進度將會遺失。</translation>
+        <translation>你確定要結束 %1 嗎？所有未儲存的進度將會遺失。</translation>
     </message>
 </context>
 <context>
@@ -136,7 +136,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>點選說明按鈕取的可能的解決方法。</translation>
+        <translation>按下說明按鈕以取得可能的解決方法。</translation>
     </message>
     <message>
         <source>Searching for PCs with NVIDIA GameStream enabled...</source>
@@ -220,7 +220,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>您電腦的當前網路連線似乎封鎖了 Moonlight。連線到此網路時，可能無法透過網際網路進行流式傳輸。</translation>
+        <translation>您電腦目前的網路連線似乎封鎖了 Moonlight。連線到此網路時，可能無法透過網際網路進行流式傳輸。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
@@ -468,7 +468,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="692"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>當以高於顯示器的影格速率進行串流傳輸時，垂直同步將被停用。</translation>
+        <translation>在以高於顯示器的影格速率進行串流傳輸時，垂直同步將被停用。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="702"/>
@@ -756,12 +756,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="732"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation>當 Moonlight 不是活動視窗時，將音訊串流靜音</translation>
+        <translation>在 Moonlight 不是活動視窗時，將音訊串流靜音</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="743"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation>當你使用 Alt+Tab 切換離開串流視窗或點選其他視窗時，Moonlight 將靜音。</translation>
+        <translation>在你使用 Alt+Tab 切換離開串流視窗或按下其他視窗時，Moonlight 將靜音。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="752"/>
@@ -899,7 +899,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1233"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation>當 Moonlight 在背景工作時處理手把輸入</translation>
+        <translation>在 Moonlight 於背景工作時處理手把輸入</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1244"/>
@@ -944,7 +944,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1033"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation>為遠端桌面而不是遊戲最佳化滑鼠</translation>
+        <translation>為遠端桌面而非遊戲最佳化滑鼠</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="994"/>
@@ -994,7 +994,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1284"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>當你結束串流時，這將關閉正在執行的應用程式或遊戲。這會導致你失去所有未保存的遊戲進度！</translation>
+        <translation>在結束串流時，這將關閉正在執行的應用程式或遊戲。這會導致你失去所有未儲存的遊戲進度！</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1303"/>
@@ -1078,7 +1078,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>此電腦的網路連線遭到封鎖。當連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
+        <translation>此電腦的網路連線遭到封鎖。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="165"/>
@@ -1169,17 +1169,17 @@
     <message>
         <location filename="../gui/main.qml" line="427"/>
         <source>Click the Help button for more information on solving this problem.</source>
-        <translation>點選說明按鈕以瞭解更多如何解決此問題的資訊。</translation>
+        <translation>按下說明按鈕以瞭解更多如何解決此問題的資訊。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="435"/>
         <source>Click the Help button for more information.</source>
-        <translation>點選說明按鈕以瞭解詳情。</translation>
+        <translation>按下說明按鈕以瞭解更多資訊。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="453"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>點選說明按鈕以獲取有關如何對應手把的資訊。</translation>
+        <translation>按下說明按鈕以取得有關如何對應手把的資訊。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="461"/>
