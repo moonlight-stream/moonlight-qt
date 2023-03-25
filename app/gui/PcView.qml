@@ -211,7 +211,7 @@ CenteredGridView {
                     text: qsTr("Delete PC")
                     onTriggered: {
                         deletePcDialog.pcIndex = index
-                        // get confirmation first, actual closing is called from the dialog
+                        deletePcDialog.pcName = model.name
                         deletePcDialog.open()
                     }
                 }
@@ -271,6 +271,12 @@ CenteredGridView {
             // the ItemDelegate and not where the mouse cursor is
             pcContextMenu.open()
         }
+
+        Keys.onDeletePressed: {
+            deletePcDialog.pcIndex = index
+            deletePcDialog.pcName = model.name
+            deletePcDialog.open()
+        }
     }
 
     ErrorMessageDialog {
@@ -302,16 +308,14 @@ CenteredGridView {
     NavigableMessageDialog {
         id: deletePcDialog
         // don't allow edits to the rest of the window while open
-        property int pcIndex : -1;
-        text:qsTr("Are you sure you want to remove this PC?")
+        property int pcIndex : -1
+        property string pcName : ""
+        text: qsTr("Are you sure you want to remove '%1'?").arg(pcName)
         standardButtons: Dialog.Yes | Dialog.No
 
-        function deletePc() {
-            console.log("deleting PC pairing for PC at index: " + pcIndex)
-            computerModel.deleteComputer(pcIndex);
+        onAccepted: {
+            computerModel.deleteComputer(pcIndex)
         }
-
-        onAccepted: deletePc()
     }
 
     NavigableMessageDialog {
