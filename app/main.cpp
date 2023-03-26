@@ -371,6 +371,11 @@ int main(int argc, char *argv[])
                 qWarning() << "On the Raspberry Pi, you must enable the 'fake KMS' driver in raspi-config to use Moonlight outside of the GUI environment.";
             }
         }
+
+        // EGLFS uses OpenGLES 2.0, so we will too. Some embedded platforms may not
+        // even have working OpenGL implementations, so GLES is the only option.
+        // See https://github.com/moonlight-stream/moonlight-qt/issues/868
+        SDL_SetHint(SDL_HINT_RENDER_DRIVER, "opengles2");
 #endif
     }
 
