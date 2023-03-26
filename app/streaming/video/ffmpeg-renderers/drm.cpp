@@ -337,7 +337,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    // Find an overlay plane with the required format to render on
+    // Find a plane with the required format to render on
     //
     // FIXME: We should check the actual DRM format in a real AVFrame rather
     // than just assuming it will be a certain hardcoded type like NV12 based
@@ -378,7 +378,8 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     for (uint32_t j = 0; j < props->count_props; j++) {
                         drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
                         if (prop != nullptr) {
-                            if (!strcmp(prop->name, "type") && props->prop_values[j] == DRM_PLANE_TYPE_OVERLAY) {
+                            if (!strcmp(prop->name, "type") &&
+                                    (props->prop_values[j] == DRM_PLANE_TYPE_PRIMARY || props->prop_values[j] == DRM_PLANE_TYPE_OVERLAY)) {
                                 m_PlaneId = plane->plane_id;
                             }
 
