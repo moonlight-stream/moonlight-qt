@@ -212,12 +212,14 @@ ffmpeg {
     SOURCES += \
         streaming/video/ffmpeg.cpp \
         streaming/video/ffmpeg-renderers/sdlvid.cpp \
+        streaming/video/ffmpeg-renderers/swframemapper.cpp \
         streaming/video/ffmpeg-renderers/pacer/pacer.cpp
 
     HEADERS += \
         streaming/video/ffmpeg.h \
         streaming/video/ffmpeg-renderers/renderer.h \
         streaming/video/ffmpeg-renderers/sdlvid.h \
+        streaming/video/ffmpeg-renderers/swframemapper.h \
         streaming/video/ffmpeg-renderers/pacer/pacer.h
 }
 libva {

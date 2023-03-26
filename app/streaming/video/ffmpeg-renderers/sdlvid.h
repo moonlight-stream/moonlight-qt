@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer.h"
+#include "swframemapper.h"
 
 #ifdef HAVE_CUDA
 #include "cuda.h"
@@ -19,17 +20,15 @@ public:
 
 private:
     void renderOverlay(Overlay::OverlayType type);
-    bool initializeReadBackFormat(AVBufferRef* hwFrameCtxRef, AVFrame* testFrame);
-    AVFrame* getSwFrameFromHwFrame(AVFrame* hwFrame);
 
     int m_VideoFormat;
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
-    enum AVPixelFormat m_SwPixelFormat;
     int m_ColorSpace;
-    bool m_MapFrame;
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
+
+    SwFrameMapper m_SwFrameMapper;
 
 #ifdef HAVE_CUDA
     CUDAGLInteropHelper* m_CudaGLHelper;
