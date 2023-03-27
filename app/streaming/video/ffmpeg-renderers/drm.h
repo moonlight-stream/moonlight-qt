@@ -1,6 +1,7 @@
 #pragma once
 
 #include "renderer.h"
+#include "swframemapper.h"
 
 #include <xf86drm.h>
 #include <xf86drmMode.h>
@@ -43,7 +44,7 @@ namespace DrmDefs
 
 class DrmRenderer : public IFFmpegRenderer {
 public:
-    DrmRenderer(IFFmpegRenderer *backendRenderer = nullptr);
+    DrmRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~DrmRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
@@ -66,8 +67,12 @@ public:
 private:
     const char* getDrmColorEncodingValue(AVFrame* frame);
     const char* getDrmColorRangeValue(AVFrame* frame);
+    bool mapSoftwareFrame(AVFrame* frame, AVDRMFrameDescriptor* mappedFrame);
+    bool addFbForFrame(AVFrame* frame, uint32_t* newFbId);
 
     IFFmpegRenderer* m_BackendRenderer;
+    bool m_DrmPrimeBackend;
+    bool m_HwAccelBackend;
     AVBufferRef* m_HwContext;
     int m_DrmFd;
     bool m_SdlOwnsDrmFd;
@@ -85,6 +90,17 @@ private:
     drmModePropertyPtr m_HdrOutputMetadataProp;
     uint32_t m_HdrOutputMetadataBlobId;
     SDL_Rect m_OutputRect;
+
+    static constexpr int k_SwFrameCount = 2;
+    SwFrameMapper m_SwFrameMapper;
+    int m_CurrentSwFrameIdx;
+    struct {
+        uint32_t handle;
+        uint32_t pitch;
+        uint64_t size;
+        uint8_t* mapping;
+        int primeFd;
+    } m_SwFrame[k_SwFrameCount];
 
 #ifdef HAVE_EGL
     bool m_EGLExtDmaBuf;

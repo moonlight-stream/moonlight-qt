@@ -111,8 +111,8 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
         }
         else if (m_HwDecodeCfg == nullptr) {
             // We have a non-hwaccel hardware decoder. This will always
-            // be using SDLRenderer so we will pick decoder capabilities
-            // based on the decoder name.
+            // be using SDLRenderer/DrmRenderer so we will pick decoder
+            // capabilities based on the decoder name.
             for (int i = 0; i < SDL_arraysize(k_NonHwaccelCodecInfo); i++) {
                 if (strcmp(m_VideoDecoderCtx->codec->name, k_NonHwaccelCodecInfo[i].codec) == 0) {
                     capabilities = k_NonHwaccelCodecInfo[i].capabilities;
@@ -287,7 +287,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
         // not currently support this (and even if it did, Mesa and Wayland don't
         // currently have protocols to actually get that metadata to the display).
         if ((params->videoFormat & VIDEO_FORMAT_MASK_10BIT) && m_BackendRenderer->canExportDrmPrime()) {
-            m_FrontendRenderer = new DrmRenderer(m_BackendRenderer);
+            m_FrontendRenderer = new DrmRenderer(false, m_BackendRenderer);
             if (m_FrontendRenderer->initialize(params)) {
                 return true;
             }
@@ -316,7 +316,17 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
     }
     else {
         // The backend renderer cannot directly render to the display, so
-        // we will create an SDL renderer to draw the frames.
+        // we will create an SDL or DRM renderer to draw the frames.
+
+#if defined(HAVE_DRM) && defined(GL_IS_SLOW)
+        m_FrontendRenderer = new DrmRenderer(false, m_BackendRenderer);
+        if (m_FrontendRenderer->initialize(params)) {
+            return true;
+        }
+        delete m_FrontendRenderer;
+        m_FrontendRenderer = nullptr;
+#endif
+
         m_FrontendRenderer = new SdlRenderer();
         if (!m_FrontendRenderer->initialize(params)) {
             return false;
@@ -681,7 +691,7 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #endif
 #ifdef HAVE_DRM
         case AV_HWDEVICE_TYPE_DRM:
-            return new DrmRenderer();
+            return new DrmRenderer(true);
 #endif
         default:
             return nullptr;
@@ -829,9 +839,21 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
     }
 
     if (decoder->pix_fmts == NULL) {
-        // Supported output pixel formats are unknown. We'll just try SDL and hope it can cope.
-        return tryInitializeRenderer(decoder, params, nullptr,
-                                     []() -> IFFmpegRenderer* { return new SdlRenderer(); });
+        // Supported output pixel formats are unknown. We'll just try DRM/SDL and hope it can cope.
+
+#if defined(HAVE_DRM) && defined(GL_IS_SLOW)
+        if (tryInitializeRenderer(decoder, params, nullptr,
+                                  []() -> IFFmpegRenderer* { return new DrmRenderer(); })) {
+            return true;
+        }
+#endif
+
+        if (tryInitializeRenderer(decoder, params, nullptr,
+                                  []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
+            return true;
+        }
+
+        return false;
     }
 
 #ifdef HAVE_MMAL
@@ -856,7 +878,9 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
 #ifdef HAVE_DRM
         TRY_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
+#ifndef GL_IS_SLOW
         TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+#endif
     }
 
     // Nothing prefers any of them. Let's see if anyone will tolerate one.
@@ -864,8 +888,21 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
 #ifdef HAVE_DRM
         TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
+#ifndef GL_IS_SLOW
+        TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+#endif
+    }
+
+#ifdef GL_IS_SLOW
+    // If we got here with GL_IS_SLOW, DrmRenderer didn't work, so we have
+    // to resort to SdlRenderer.
+    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+        TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
+    }
+    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
         TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
     }
+#endif
 
     // If we made it here, we couldn't find anything
     return false;

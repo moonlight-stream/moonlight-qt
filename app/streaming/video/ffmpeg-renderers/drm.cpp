@@ -29,6 +29,8 @@ extern "C" {
 #include <unistd.h>
 #include <fcntl.h>
 
+#include <sys/mman.h>
+
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
 
@@ -43,8 +45,10 @@ extern "C" {
 
 #include <QDir>
 
-DrmRenderer::DrmRenderer(IFFmpegRenderer *backendRenderer)
+DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
     : m_BackendRenderer(backendRenderer),
+      m_DrmPrimeBackend(backendRenderer && backendRenderer->canExportDrmPrime()),
+      m_HwAccelBackend(hwaccel),
       m_HwContext(nullptr),
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
@@ -60,7 +64,9 @@ DrmRenderer::DrmRenderer(IFFmpegRenderer *backendRenderer)
       m_ColorEncodingProp(nullptr),
       m_ColorRangeProp(nullptr),
       m_HdrOutputMetadataProp(nullptr),
-      m_HdrOutputMetadataBlobId(0)
+      m_HdrOutputMetadataBlobId(0),
+      m_SwFrameMapper(this),
+      m_CurrentSwFrameIdx(0)
 {
 #ifdef HAVE_EGL
     m_EGLExtDmaBuf = false;
@@ -69,12 +75,30 @@ DrmRenderer::DrmRenderer(IFFmpegRenderer *backendRenderer)
     m_eglDestroyImage = nullptr;
     m_eglDestroyImageKHR = nullptr;
 #endif
+
+    SDL_zero(m_SwFrame);
 }
 
 DrmRenderer::~DrmRenderer()
 {
     // Ensure we're out of HDR mode
     setHdrMode(false);
+
+    for (int i = 0; i < k_SwFrameCount; i++) {
+        if (m_SwFrame[i].primeFd) {
+            close(m_SwFrame[i].primeFd);
+        }
+
+        if (m_SwFrame[i].mapping) {
+            munmap(m_SwFrame[i].mapping, m_SwFrame[i].size);
+        }
+
+        if (m_SwFrame[i].handle) {
+            struct drm_mode_destroy_dumb destroyBuf = {};
+            destroyBuf.handle = m_SwFrame[i].handle;
+            drmIoctl(m_DrmFd, DRM_IOCTL_MODE_DESTROY_DUMB, &destroyBuf);
+        }
+    }
 
     if (m_CurrentFbId != 0) {
         drmModeRmFB(m_DrmFd, m_CurrentFbId);
@@ -111,7 +135,9 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     // buffers that we get back. We only support NV12 buffers now.
     av_dict_set_int(options, "pixel_format", AV_PIX_FMT_NV12, 0);
 
-    context->hw_device_ctx = av_buffer_ref(m_HwContext);
+    if (m_HwAccelBackend) {
+        context->hw_device_ctx = av_buffer_ref(m_HwContext);
+    }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using DRM renderer");
@@ -124,6 +150,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     int i;
 
     m_Main10Hdr = (params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+    m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
 #if SDL_VERSION_ATLEAST(2, 0, 15)
     SDL_SysWMinfo info;
@@ -437,22 +464,39 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int videoFormat)
 {
     // DRM PRIME buffers, or whatever the backend renderer wants
-    if (m_BackendRenderer != nullptr) {
+    if (m_HwAccelBackend) {
+        return AV_PIX_FMT_DRM_PRIME;
+    }
+    else if (m_BackendRenderer != nullptr) {
+        // Unlike isPixelFormatSupported(), we always return the format
+        // requested by the backend renderer since it's used for setting
+        // up the AVCodecContext.
         return m_BackendRenderer->getPreferredPixelFormat(videoFormat);
     }
     else {
-        return AV_PIX_FMT_DRM_PRIME;
+        // If we're acting as a non-hwaccel renderer, we'll ask for NV12 or P010
+        return (videoFormat & VIDEO_FORMAT_MASK_10BIT) ? AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
     }
 }
 
 bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) {
-    // Pass through the backend renderer if we have one. Otherwise we use
-    // the default behavior which only supports the preferred format.
-    if (m_BackendRenderer != nullptr) {
+    if (m_HwAccelBackend) {
+        return pixelFormat == AV_PIX_FMT_DRM_PRIME;
+    }
+    else if (m_DrmPrimeBackend) {
         return m_BackendRenderer->isPixelFormatSupported(videoFormat, pixelFormat);
     }
     else {
-        return getPreferredPixelFormat(videoFormat);
+        // If we're going to need to map this as a software frame, check
+        // against the set of formats we support in mapSoftwareFrame().
+        switch (pixelFormat) {
+        case AV_PIX_FMT_NV12:
+        case AV_PIX_FMT_NV21:
+        case AV_PIX_FMT_P010:
+            return true;
+        default:
+            return false;
+        }
     }
 }
 
@@ -534,41 +578,212 @@ void DrmRenderer::setHdrMode(bool enabled)
     }
 }
 
-void DrmRenderer::renderFrame(AVFrame* frame)
+bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedFrame)
+{
+    bool ret = false;
+    bool freeFrame;
+    auto drmFrame = &m_SwFrame[m_CurrentSwFrameIdx];
+    uint32_t drmFormat;
+
+    SDL_assert(frame->format != AV_PIX_FMT_DRM_PRIME);
+    SDL_assert(!m_DrmPrimeBackend);
+
+    // If this is a non-DRM hwframe that cannot be exported to DRM format, we must
+    // use the SwFrameMapper to map it to a swframe before we can copy it to dumb buffers.
+    if (frame->hw_frames_ctx != nullptr) {
+        frame = m_SwFrameMapper.getSwFrameFromHwFrame(frame);
+        if (frame == nullptr) {
+            return false;
+        }
+
+        freeFrame = true;
+    }
+    else {
+        freeFrame = false;
+    }
+
+    int bpc;
+
+    // NB: Keep this list updated with isPixelFormatSupported()
+    switch (frame->format) {
+    case AV_PIX_FMT_NV12:
+        drmFormat = DRM_FORMAT_NV12;
+        bpc = 8;
+        break;
+    case AV_PIX_FMT_NV21:
+        drmFormat = DRM_FORMAT_NV21;
+        bpc = 8;
+        break;
+    case AV_PIX_FMT_P010:
+        drmFormat = DRM_FORMAT_P010;
+        bpc = 16;
+        break;
+    default:
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to map frame with unsupported format: %d",
+                     frame->format);
+        goto Exit;
+    }
+
+    // Create a new dumb buffer if needed
+    if (!drmFrame->handle) {
+        struct drm_mode_create_dumb createBuf = {};
+
+        createBuf.width = frame->width;
+        createBuf.height = frame->height * 2; // Y + CbCr at 2x2 subsampling
+        createBuf.bpp = bpc;
+
+        int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DRM_IOCTL_MODE_CREATE_DUMB failed: %d",
+                         errno);
+            goto Exit;
+        }
+
+        drmFrame->handle = createBuf.handle;
+        drmFrame->pitch = createBuf.pitch;
+        drmFrame->size = createBuf.size;
+    }
+
+    // Map the dumb buffer if needed
+    if (!drmFrame->mapping) {
+        struct drm_mode_map_dumb mapBuf = {};
+        mapBuf.handle = drmFrame->handle;
+
+        int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_MAP_DUMB, &mapBuf);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "DRM_IOCTL_MODE_MAP_DUMB failed: %d",
+                         errno);
+            goto Exit;
+        }
+
+        drmFrame->mapping = (uint8_t*)mmap(nullptr, drmFrame->size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+        if (drmFrame->mapping == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "mmap() failed for dumb buffer: %d",
+                         errno);
+            goto Exit;
+        }
+    }
+
+    // Convert this buffer handle to a FD if needed
+    if (!drmFrame->primeFd) {
+        int err = drmPrimeHandleToFD(m_DrmFd, drmFrame->handle, O_CLOEXEC, &drmFrame->primeFd);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "drmPrimeHandleToFD() failed: %d",
+                         errno);
+            goto Exit;
+        }
+    }
+
+    {
+        // Construct the AVDRMFrameDescriptor and copy our frame data into the dumb buffer
+        SDL_zerop(mappedFrame);
+
+        // We use a single dumb buffer for semi/fully planar formats because some DRM
+        // drivers (i915, at least) don't support multi-buffer FBs.
+        mappedFrame->nb_objects = 1;
+        mappedFrame->objects[0].fd = drmFrame->primeFd;
+        mappedFrame->objects[0].format_modifier = DRM_FORMAT_MOD_LINEAR;
+        mappedFrame->objects[0].size = drmFrame->size;
+
+        mappedFrame->nb_layers = 1;
+
+        auto &layer = mappedFrame->layers[0];
+        layer.format = drmFormat;
+
+        int lastPlaneSize = 0;
+        for (int i = 0; i < 4; i++) {
+            if (frame->data[i] != nullptr) {
+                auto &plane = layer.planes[layer.nb_planes];
+
+                plane.object_index = 0;
+                plane.pitch = drmFrame->pitch;
+                plane.offset = i == 0 ? 0 : (layer.planes[layer.nb_planes - 1].offset + lastPlaneSize);
+
+                int planeHeight;
+                if (i == 0) {
+                    // Y plane is not subsampled
+                    planeHeight = frame->height;
+                }
+                else {
+                    // UV/VU planes are 2x2 subsampled.
+                    //
+                    // NB: The pitch is the same between Y and UV/VU, becasuse the 2x subsampling
+                    // is cancelled out by the 2x plane size of UV/VU vs U/V alone.
+                    planeHeight = frame->height / 2;
+                }
+
+                // Copy the plane data into the dumb buffer
+                if (frame->linesize[i] == (int)drmFrame->pitch) {
+                    // We can do a single memcpy() if the pitch is compatible
+                    memcpy(drmFrame->mapping + plane.offset,
+                           frame->data[i],
+                           frame->linesize[i] * planeHeight);
+                }
+                else {
+                    // The pitch is incompatible, so we must copy line-by-line
+                    for (int j = 0; j < planeHeight; j++) {
+                        memcpy(drmFrame->mapping + (j * drmFrame->pitch) + plane.offset,
+                               frame->data[i] + (j * frame->linesize[i]),
+                               qMin(frame->linesize[i], (int)drmFrame->pitch));
+                    }
+                }
+
+                layer.nb_planes++;
+
+                lastPlaneSize = drmFrame->pitch * planeHeight;
+            }
+        }
+    }
+
+    ret = true;
+    m_CurrentSwFrameIdx = (m_CurrentSwFrameIdx + 1) % k_SwFrameCount;
+
+Exit:
+    if (freeFrame) {
+        av_frame_free(&frame);
+    }
+
+    return ret;
+}
+
+bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId)
 {
     AVDRMFrameDescriptor mappedFrame;
     AVDRMFrameDescriptor* drmFrame;
+    int err;
 
-    // If we are acting as the frontend renderer, we'll need to have the backend
-    // map this frame into a DRM PRIME descriptor that we can render.
-    if (m_BackendRenderer != nullptr) {
-        if (!m_BackendRenderer->mapDrmPrimeFrame(frame, &mappedFrame)) {
-            return;
+    // If we don't have a DRM PRIME frame here, we'll need to map into one
+    if (frame->format != AV_PIX_FMT_DRM_PRIME) {
+        if (m_DrmPrimeBackend) {
+            // If the backend supports DRM PRIME directly, use that.
+            if (!m_BackendRenderer->mapDrmPrimeFrame(frame, &mappedFrame)) {
+                return false;
+            }
+        }
+        else {
+            // Otherwise, we'll map it to a software format and use dumb buffers
+            if (!mapSoftwareFrame(frame, &mappedFrame)) {
+                return false;
+            }
         }
 
         drmFrame = &mappedFrame;
     }
     else {
-        // If we're the backend renderer, the frame should already have it.
         SDL_assert(frame->format == AV_PIX_FMT_DRM_PRIME);
         drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
     }
 
-    int err;
     uint32_t handles[4] = {};
     uint32_t pitches[4] = {};
     uint32_t offsets[4] = {};
     uint64_t modifiers[4] = {};
     uint32_t flags = 0;
-
-    SDL_Rect src, dst;
-
-    src.x = src.y = 0;
-    src.w = frame->width;
-    src.h = frame->height;
-    dst = m_OutputRect;
-
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
     // DRM requires composed layers rather than separate layers per plane
     SDL_assert(drmFrame->nb_layers == 1);
@@ -582,11 +797,11 @@ void DrmRenderer::renderFrame(AVFrame* frame)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "drmPrimeFDToHandle() failed: %d",
                          errno);
-            if (m_BackendRenderer != nullptr) {
+            if (m_DrmPrimeBackend) {
                 SDL_assert(drmFrame == &mappedFrame);
                 m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
             }
-            return;
+            return false;
         }
 
         pitches[i] = layer.planes[i].pitch;
@@ -599,19 +814,15 @@ void DrmRenderer::renderFrame(AVFrame* frame)
         }
     }
 
-    // Remember the last FB object we created so we can free it
-    // when we are finished rendering this one (if successful).
-    uint32_t lastFbId = m_CurrentFbId;
-
     // Create a frame buffer object from the PRIME buffer
     // NB: It is an error to pass modifiers without DRM_MODE_FB_MODIFIERS set.
     err = drmModeAddFB2WithModifiers(m_DrmFd, frame->width, frame->height,
                                      drmFrame->layers[0].format,
                                      handles, pitches, offsets,
                                      (flags & DRM_MODE_FB_MODIFIERS) ? modifiers : NULL,
-                                     &m_CurrentFbId, flags);
+                                     newFbId, flags);
 
-    if (m_BackendRenderer != nullptr) {
+    if (m_DrmPrimeBackend) {
         SDL_assert(drmFrame == &mappedFrame);
         m_BackendRenderer->unmapDrmPrimeFrame(drmFrame);
     }
@@ -620,6 +831,30 @@ void DrmRenderer::renderFrame(AVFrame* frame)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "drmModeAddFB2WithModifiers() failed: %d",
                      errno);
+        return false;
+    }
+
+    return true;
+}
+
+void DrmRenderer::renderFrame(AVFrame* frame)
+{
+    int err;
+    SDL_Rect src, dst;
+
+    src.x = src.y = 0;
+    src.w = frame->width;
+    src.h = frame->height;
+    dst = m_OutputRect;
+
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    // Remember the last FB object we created so we can free it
+    // when we are finished rendering this one (if successful).
+    uint32_t lastFbId = m_CurrentFbId;
+
+    // Register a frame buffer object for this frame
+    if (!addFbForFrame(frame, &m_CurrentFbId)) {
         m_CurrentFbId = lastFbId;
         return;
     }
@@ -739,24 +974,16 @@ bool DrmRenderer::needsTestFrame()
 }
 
 bool DrmRenderer::testRenderFrame(AVFrame* frame) {
-    // If we have a backend renderer, we must make sure it can
-    // successfully export DRM PRIME frames.
-    if (m_BackendRenderer != nullptr) {
-        AVDRMFrameDescriptor drmDescriptor;
+   uint32_t fbId;
 
-        // We shouldn't get here unless the backend at least claims
-        // it can export DRM PRIME frames.
-        SDL_assert(m_BackendRenderer->canExportDrmPrime());
+   // Ensure we can export DRM PRIME frames (if applicable) and
+   // add a FB object with the provided DRM format.
+   if (!addFbForFrame(frame, &fbId)) {
+       return false;
+   }
 
-        if (!m_BackendRenderer->mapDrmPrimeFrame(frame, &drmDescriptor)) {
-            // It can't, so we can't use this renderer.
-            return false;
-        }
-
-        m_BackendRenderer->unmapDrmPrimeFrame(&drmDescriptor);
-    }
-
-    return true;
+   drmModeRmFB(m_DrmFd, fbId);
+   return true;
 }
 
 bool DrmRenderer::isDirectRenderingSupported()
@@ -786,7 +1013,12 @@ const char* DrmRenderer::getDrmColorRangeValue(AVFrame* frame)
 #ifdef HAVE_EGL
 
 bool DrmRenderer::canExportEGL() {
-    if (qgetenv("DRM_FORCE_DIRECT") == "1") {
+    if (!m_HwAccelBackend) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using direct rendering due to non-hwaccel backend");
+        return false;
+    }
+    else if (qgetenv("DRM_FORCE_DIRECT") == "1") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using direct rendering due to environment variable");
         return false;
