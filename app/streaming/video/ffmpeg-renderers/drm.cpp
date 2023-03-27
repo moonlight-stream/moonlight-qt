@@ -464,18 +464,16 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int videoFormat)
 {
     // DRM PRIME buffers, or whatever the backend renderer wants
-    if (m_HwAccelBackend) {
-        return AV_PIX_FMT_DRM_PRIME;
-    }
-    else if (m_BackendRenderer != nullptr) {
-        // Unlike isPixelFormatSupported(), we always return the format
-        // requested by the backend renderer since it's used for setting
-        // up the AVCodecContext.
+    if (m_BackendRenderer != nullptr) {
         return m_BackendRenderer->getPreferredPixelFormat(videoFormat);
     }
     else {
-        // If we're acting as a non-hwaccel renderer, we'll ask for NV12 or P010
-        return (videoFormat & VIDEO_FORMAT_MASK_10BIT) ? AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
+        // We must return this pixel format to ensure it's used with
+        // v4l2m2m decoders that go through non-hwaccel format selection.
+        //
+        // For non-hwaccel decoders that don't support DRM PRIME, ffGetFormat()
+        // will call isPixelFormatSupported() and pick a supported swformat.
+        return AV_PIX_FMT_DRM_PRIME;
     }
 }
 
@@ -490,6 +488,7 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
         // If we're going to need to map this as a software frame, check
         // against the set of formats we support in mapSoftwareFrame().
         switch (pixelFormat) {
+        case AV_PIX_FMT_DRM_PRIME:
         case AV_PIX_FMT_NV12:
         case AV_PIX_FMT_NV21:
         case AV_PIX_FMT_P010:
