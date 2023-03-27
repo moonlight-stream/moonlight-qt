@@ -447,9 +447,15 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     m_HdrOutputMetadataProp = prop;
                 }
                 else if (!strcmp(prop->name, "max bpc") && m_Main10Hdr) {
-                    int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
-                                                       prop->prop_id, 10);
-                    if (err == 0) {
+                    if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Enabled 48-bit HDMI Deep Color");
+                    }
+                    else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Enabled 36-bit HDMI Deep Color");
+                    }
+                    else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
                         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                     "Enabled 30-bit HDMI Deep Color");
                     }
