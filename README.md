@@ -78,6 +78,7 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
     * To build from the command line for development use, run `qmake moonlight-qt.pro` then `make debug` or `make release`
     * To create an embedded build for a single-purpose device, use `qmake "CONFIG+=embedded" moonlight-qt.pro` and build normally.
         * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
+        * For platforms with poor GL performance, add `"CONFIG+=glslow"` to prefer direct KMSDRM rendering over EGL/GLES renderers. Direct KMSDRM rendering can use dedicated YUV/RGB conversion and scaling hardware rather than slower GPU shaders for these operations.
 
 ## Contribute
 1. Fork us

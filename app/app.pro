@@ -348,6 +348,11 @@ embedded {
 
     DEFINES += EMBEDDED_BUILD
 }
+glslow {
+    message(GL slow build)
+
+    DEFINES += GL_IS_SLOW
+}
 wayland {
     message(Wayland extensions enabled)
 

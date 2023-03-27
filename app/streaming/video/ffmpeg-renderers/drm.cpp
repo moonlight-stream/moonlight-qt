@@ -1012,12 +1012,7 @@ const char* DrmRenderer::getDrmColorRangeValue(AVFrame* frame)
 #ifdef HAVE_EGL
 
 bool DrmRenderer::canExportEGL() {
-    if (!m_HwAccelBackend) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using direct rendering due to non-hwaccel backend");
-        return false;
-    }
-    else if (qgetenv("DRM_FORCE_DIRECT") == "1") {
+    if (qgetenv("DRM_FORCE_DIRECT") == "1") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using direct rendering due to environment variable");
         return false;

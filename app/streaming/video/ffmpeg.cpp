@@ -296,7 +296,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
         }
 #endif
 
-#ifdef HAVE_EGL
+#if defined(HAVE_EGL) && !defined(GL_IS_SLOW)
         if (m_BackendRenderer->canExportEGL()) {
             m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
             if (m_FrontendRenderer->initialize(params)) {
@@ -318,13 +318,28 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
         // The backend renderer cannot directly render to the display, so
         // we will create an SDL or DRM renderer to draw the frames.
 
-#if defined(HAVE_DRM) && defined(GL_IS_SLOW)
+#ifdef GL_IS_SLOW
+#ifdef HAVE_DRM
         m_FrontendRenderer = new DrmRenderer(false, m_BackendRenderer);
         if (m_FrontendRenderer->initialize(params)) {
             return true;
         }
         delete m_FrontendRenderer;
         m_FrontendRenderer = nullptr;
+#endif
+
+#ifdef HAVE_EGL
+        // We explicitly skipped EGL in the GL_IS_SLOW case above.
+        // If DRM didn't work either, try EGL now.
+        if (m_BackendRenderer->canExportEGL()) {
+            m_FrontendRenderer = new EGLRenderer(m_BackendRenderer);
+            if (m_FrontendRenderer->initialize(params)) {
+                return true;
+            }
+            delete m_FrontendRenderer;
+            m_FrontendRenderer = nullptr;
+        }
+#endif
 #endif
 
         m_FrontendRenderer = new SdlRenderer();
