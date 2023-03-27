@@ -446,6 +446,23 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
                     m_HdrOutputMetadataProp = prop;
                 }
+                else if (!strcmp(prop->name, "max bpc") && m_Main10Hdr) {
+                    int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
+                                                       prop->prop_id, 10);
+                    if (err == 0) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Enabled 30-bit HDMI Deep Color");
+                    }
+                    else {
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                     "drmModeObjectSetProperty(%s) failed: %d",
+                                     prop->name,
+                                     errno);
+                        // Non-fatal
+                    }
+
+                    drmModeFreeProperty(prop);
+                }
                 else {
                     drmModeFreeProperty(prop);
                 }
@@ -516,7 +533,7 @@ int DrmRenderer::getRendererAttributes()
 }
 
 void DrmRenderer::setHdrMode(bool enabled)
-{    
+{
     if (m_HdrOutputMetadataProp != nullptr) {
         if (m_HdrOutputMetadataBlobId != 0) {
             drmModeDestroyPropertyBlob(m_DrmFd, m_HdrOutputMetadataBlobId);
