@@ -78,15 +78,8 @@ Item {
         SdlGamepadKeyNavigation.enable()
 
         if (quitAfter) {
-            if (streamSegueErrorDialog.text) {
-                // Quit when the error dialog is acknowledged
-                streamSegueErrorDialog.quitAfter = quitAfter
-                streamSegueErrorDialog.open()
-            }
-            else {
-                // Quit immediately
-                Qt.quit()
-            }
+            // Quit immediately
+            Qt.quit()
         } else {
             // Exit this view
             stackView.pop()
