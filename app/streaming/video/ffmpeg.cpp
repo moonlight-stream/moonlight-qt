@@ -47,17 +47,30 @@
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
-static const struct {
+typedef struct {
     const char* codec;
     int capabilities;
-} k_NonHwaccelCodecInfo[] = {
+} codec_info_t;
+
+static const QList<codec_info_t> k_NonHwaccelH264Codecs = {
+#ifdef HAVE_MMAL
     {"h264_mmal", 0},
+#endif
     {"h264_rkmpp", 0},
     {"h264_nvv4l2", 0},
     {"h264_nvmpi", 0},
+#ifndef HAVE_MMAL
+    // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
+    // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
+    // would rather show the missing hardware acceleration warning when the user
+    // is in Full KMS mode rather than try to use a poorly performing hwaccel.
+    // See discussion on https://github.com/jc-kynesim/rpi-ffmpeg/pull/25
     {"h264_v4l2m2m", 0},
+#endif
     {"h264_omx", 0},
+};
 
+static const QList<codec_info_t> k_NonHwaccelHEVCCodecs = {
     {"hevc_rkmpp", 0},
     {"hevc_nvv4l2", CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC},
     {"hevc_nvmpi", 0},
@@ -115,11 +128,21 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
             // We have a non-hwaccel hardware decoder. This will always
             // be using SDLRenderer/DrmRenderer so we will pick decoder
             // capabilities based on the decoder name.
-            for (int i = 0; i < SDL_arraysize(k_NonHwaccelCodecInfo); i++) {
-                if (strcmp(m_VideoDecoderCtx->codec->name, k_NonHwaccelCodecInfo[i].codec) == 0) {
-                    capabilities = k_NonHwaccelCodecInfo[i].capabilities;
+            for (const codec_info_t& codecInfo : k_NonHwaccelH264Codecs) {
+                if (strcmp(m_VideoDecoderCtx->codec->name, codecInfo.codec) == 0) {
+                    capabilities = codecInfo.capabilities;
                     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Found capabilities for non-hwaccel decoder: %s -> %d",
+                                "Found capabilities for non-hwaccel H.264 decoder: %s -> %d",
+                                m_VideoDecoderCtx->codec->name,
+                                capabilities);
+                    break;
+                }
+            }
+            for (const codec_info_t& codecInfo : k_NonHwaccelHEVCCodecs) {
+                if (strcmp(m_VideoDecoderCtx->codec->name, codecInfo.codec) == 0) {
+                    capabilities = codecInfo.capabilities;
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Found capabilities for non-hwaccel HEVC decoder: %s -> %d",
                                 m_VideoDecoderCtx->codec->name,
                                 capabilities);
                     break;
@@ -1013,32 +1036,15 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
         // Continue with special non-hwaccel hardware decoders
         if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
-            QList<const char *> knownAvcCodecs = {
-#ifdef HAVE_MMAL
-                "h264_mmal",
-#endif
-                "h264_rkmpp",
-                "h264_nvv4l2",
-                "h264_nvmpi",
-#ifndef HAVE_MMAL
-                // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
-                // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
-                // would rather show the missing hardware acceleration warning when the user
-                // is in Full KMS mode rather than try to use a poorly performing hwaccel.
-                // See discussion on https://github.com/jc-kynesim/rpi-ffmpeg/pull/25
-                "h264_v4l2m2m",
-#endif
-            };
-            for (const char* codec : knownAvcCodecs) {
-                if (tryInitializeRendererForDecoderByName(codec, params)) {
+            for (const codec_info_t& codecInfo : k_NonHwaccelH264Codecs) {
+                if (tryInitializeRendererForDecoderByName(codecInfo.codec, params)) {
                     return true;
                 }
             }
         }
         else {
-            QList<const char *> knownHevcCodecs = { "hevc_rkmpp", "hevc_nvv4l2", "hevc_nvmpi", "hevc_v4l2m2m" };
-            for (const char* codec : knownHevcCodecs) {
-                if (tryInitializeRendererForDecoderByName(codec, params)) {
+            for (const codec_info_t& codecInfo : k_NonHwaccelHEVCCodecs) {
+                if (tryInitializeRendererForDecoderByName(codecInfo.codec, params)) {
                     return true;
                 }
             }
