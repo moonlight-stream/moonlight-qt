@@ -135,6 +135,14 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     // buffers that we get back. We only support NV12 buffers now.
     av_dict_set_int(options, "pixel_format", AV_PIX_FMT_NV12, 0);
 
+    // This option controls the pixel format for the h264_omx and hevc_omx decoders
+    // used by the JH7110 multimedia stack. This decoder gives us software frames,
+    // so we need a format supported by our DRM dumb buffer code (NV12/NV21/P010).
+    //
+    // https://doc-en.rvspace.org/VisionFive2/DG_Multimedia/JH7110_SDK/h264_omx.html
+    // https://doc-en.rvspace.org/VisionFive2/DG_Multimedia/JH7110_SDK/hevc_omx.html
+    av_dict_set(options, "omx_pix_fmt", "nv12", 0);
+
     if (m_HwAccelBackend) {
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
     }

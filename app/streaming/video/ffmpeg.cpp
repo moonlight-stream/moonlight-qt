@@ -56,11 +56,13 @@ static const struct {
     {"h264_nvv4l2", 0},
     {"h264_nvmpi", 0},
     {"h264_v4l2m2m", 0},
+    {"h264_omx", 0},
 
     {"hevc_rkmpp", 0},
     {"hevc_nvv4l2", CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC},
     {"hevc_nvmpi", 0},
     {"hevc_v4l2m2m", 0},
+    {"hevc_omx", 0},
 };
 
 bool FFmpegVideoDecoder::isHardwareAccelerated()
