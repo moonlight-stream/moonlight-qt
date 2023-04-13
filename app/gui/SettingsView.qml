@@ -853,7 +853,7 @@ Flickable {
                             val: StreamingPreferences.LANG_UK
                         } */
                         ListElement {
-                            text: "繁体字" // Traditional Chinese
+                            text: "繁體中文" // Traditional Chinese
                             val: StreamingPreferences.LANG_ZH_TW
                         }
                         ListElement {
