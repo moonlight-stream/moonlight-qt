@@ -43,7 +43,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation>瀏覽所有應用程式</translation>
+        <translation>檢視所有應用程式</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
@@ -254,7 +254,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation>瀏覽所有應用程式</translation>
+        <translation>檢視所有應用程式</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
