@@ -15,6 +15,10 @@ typedef struct _VIDEO_STATS {
     uint32_t totalFrames;
     uint32_t networkDroppedFrames;
     uint32_t pacerDroppedFrames;
+    uint16_t minHostProcessingLatency;
+    uint16_t maxHostProcessingLatency;
+    uint32_t totalHostProcessingLatency;
+    uint32_t framesWithHostProcessingLatency;
     uint32_t totalReassemblyTime;
     uint32_t totalDecodeTime;
     uint32_t totalPacerTime;
