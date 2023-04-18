@@ -565,6 +565,16 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.totalPacerTime += src.totalPacerTime;
     dst.totalRenderTime += src.totalRenderTime;
 
+    if (dst.minHostProcessingLatency == 0) {
+        dst.minHostProcessingLatency = src.minHostProcessingLatency;
+    }
+    else if (src.minHostProcessingLatency != 0) {
+        dst.minHostProcessingLatency = qMin(dst.minHostProcessingLatency, src.minHostProcessingLatency);
+    }
+    dst.maxHostProcessingLatency = qMax(dst.maxHostProcessingLatency, src.maxHostProcessingLatency);
+    dst.totalHostProcessingLatency += src.totalHostProcessingLatency;
+    dst.framesWithHostProcessingLatency += src.framesWithHostProcessingLatency;
+
     if (!LiGetEstimatedRttInfo(&dst.lastRtt, &dst.lastRttVariance)) {
         dst.lastRtt = 0;
         dst.lastRttVariance = 0;
@@ -654,6 +664,14 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
                           stats.receivedFps,
                           stats.decodedFps,
                           stats.renderedFps);
+    }
+
+    if (stats.framesWithHostProcessingLatency > 0) {
+        offset += sprintf(&output[offset],
+                          "Host processing latency min/max/average: %.1f/%.1f/%.1f ms\n",
+                          (float)stats.minHostProcessingLatency / 10,
+                          (float)stats.maxHostProcessingLatency / 10,
+                          (float)stats.totalHostProcessingLatency / 10 / stats.framesWithHostProcessingLatency);
     }
 
     if (stats.renderedFrames != 0) {
@@ -1366,6 +1384,18 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         SDL_zero(m_ActiveWndVideoStats);
         m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
     }
+
+    if (du->frameHostProcessingLatency != 0) {
+        if (m_ActiveWndVideoStats.minHostProcessingLatency != 0) {
+            m_ActiveWndVideoStats.minHostProcessingLatency = qMin(m_ActiveWndVideoStats.minHostProcessingLatency, du->frameHostProcessingLatency);
+        }
+        else {
+            m_ActiveWndVideoStats.minHostProcessingLatency = du->frameHostProcessingLatency;
+        }
+        m_ActiveWndVideoStats.framesWithHostProcessingLatency += 1;
+    }
+    m_ActiveWndVideoStats.maxHostProcessingLatency = qMax(m_ActiveWndVideoStats.maxHostProcessingLatency, du->frameHostProcessingLatency);
+    m_ActiveWndVideoStats.totalHostProcessingLatency += du->frameHostProcessingLatency;
 
     m_ActiveWndVideoStats.receivedFrames++;
     m_ActiveWndVideoStats.totalFrames++;
