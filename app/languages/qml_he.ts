@@ -18,22 +18,22 @@
     <message>
         <location filename="../gui/AppView.qml" line="298"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>הפעלת משחק</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="311"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>הפעלה ישירה</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>הפעלת אפליקציה זו מיידית כאשר נבחר מחשב מארח זה, עוקף את עמוד בחירת אפליקציות.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>הסתר משחק</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
