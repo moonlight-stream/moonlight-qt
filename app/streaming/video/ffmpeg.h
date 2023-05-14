@@ -12,9 +12,14 @@ extern "C" {
 }
 
 class FFmpegVideoDecoder : public IVideoDecoder {
+    int m_streamId = 0;
 public:
     FFmpegVideoDecoder(bool testOnly);
     virtual ~FFmpegVideoDecoder() override;
+    virtual void SetStreamId(int streamId) override
+    {
+        m_streamId = streamId;
+    }
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool isHardwareAccelerated() override;
     virtual bool isAlwaysFullScreen() override;

@@ -209,6 +209,10 @@ void Session::clSetHdrMode(bool enabled)
         if (decoder != nullptr) {
             decoder->setHdrMode(enabled);
         }
+        IVideoDecoder* decoder2 = s_ActiveSession->m_VideoDecoder2;
+        if (decoder2 != nullptr) {
+            decoder2->setHdrMode(enabled);
+        }
         SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
     }
 }
@@ -304,15 +308,30 @@ int Session::drSubmitDecodeUnit(PDECODE_UNIT du)
     // the decoder reinitialization code.
 
     if (SDL_AtomicTryLock(&s_ActiveSession->m_DecoderLock)) {
+        int ret1 = 0;
+        int ret2 = 0;
         IVideoDecoder* decoder = s_ActiveSession->m_VideoDecoder;
-        if (decoder != nullptr) {
-            int ret = decoder->submitDecodeUnit(du);
-            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
-            return ret;
+        if (decoder != nullptr) 
+        {
+            ret1 = decoder->submitDecodeUnit(du);
         }
-        else {
-            SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+        IVideoDecoder* decoder2 = s_ActiveSession->m_VideoDecoder2;
+        if (decoder2 != nullptr) 
+        {
+            ret2 = decoder2->submitDecodeUnit(du);
+        }
+        SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
+        if (ret1 == 0 && ret2 == 0)
+        {
             return DR_OK;
+        }
+        else if(ret1 != 0)
+        {
+            return ret1;
+        }
+        else
+        {
+            return ret2;
         }
     }
     else {
@@ -448,13 +467,13 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     return true;
 }
 
-Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
+Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences* preferences)
     : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
-      m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
-      m_Computer(computer),
-      m_App(app),
-      m_Window(nullptr),
-      m_VideoDecoder(nullptr),
+    m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
+    m_Computer(computer),
+    m_App(app),
+    m_Window(nullptr), m_Window2(nullptr),
+      m_VideoDecoder(nullptr), m_VideoDecoder2(nullptr),
       m_DecoderLock(0),
       m_AudioDisabled(false),
       m_AudioMuted(false),
@@ -882,6 +901,7 @@ private:
         // try to interact with APIs that can only be called between
         // LiStartConnection() and LiStopConnection().
         SDL_assert(m_Session->m_VideoDecoder == nullptr);
+        SDL_assert(m_Session->m_VideoDecoder2 == nullptr);
 
         // Finish cleanup of the connection state
         LiStopConnection();
@@ -1079,6 +1099,8 @@ void Session::toggleFullscreen()
     SDL_AtomicLock(&m_DecoderLock);
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
+    delete m_VideoDecoder2;
+    m_VideoDecoder2 = nullptr;
     SDL_AtomicUnlock(&m_DecoderLock);
 #endif
 
@@ -1427,10 +1449,25 @@ void Session::execInternal()
                                     width,
                                     height,
                                     defaultWindowFlags);
-        if (!m_Window) {
+
+        m_Window2 = SDL_CreateWindow("Moonlight2",
+            x+100,//offset to first window
+            y+100,//offset to first window
+            width,
+            height,
+            defaultWindowFlags);
+        if (!m_Window || !m_Window2) {
+            if (m_Window)
+            {
+                SDL_DestroyWindow(m_Window);
+            }
+            if (m_Window2)
+            {
+                SDL_DestroyWindow(m_Window2);
+            }
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "SDL_CreateWindow() failed: %s",
-                         SDL_GetError());
+                "SDL_CreateWindow() failed: %s",
+                SDL_GetError());
 
             delete m_InputHandler;
             m_InputHandler = nullptr;
@@ -1630,6 +1667,9 @@ void Session::execInternal()
                 if (m_VideoDecoder != nullptr) {
                     m_VideoDecoder->renderFrameOnMainThread();
                 }
+                if (m_VideoDecoder2 != nullptr) {
+                    m_VideoDecoder2->renderFrameOnMainThread();
+                }
                 break;
             case SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER:
                 m_FlushingWindowEventsRef--;
@@ -1730,6 +1770,7 @@ void Session::execInternal()
 
             // Destroy the old decoder
             delete m_VideoDecoder;
+            delete m_VideoDecoder2;
 
             // Insert a barrier to discard any additional window events
             // that could cause the renderer to be and recreated again.
@@ -1771,14 +1812,22 @@ void Session::execInternal()
                                    enableVsync,
                                    enableVsync && m_Preferences->framePacing,
                                    false,
-                                   s_ActiveSession->m_VideoDecoder)) {
+                                   s_ActiveSession->m_VideoDecoder) ||
+                    !chooseDecoder(m_Preferences->videoDecoderSelection,
+                        m_Window2, m_ActiveVideoFormat, m_ActiveVideoWidth,
+                        m_ActiveVideoHeight, m_ActiveVideoFrameRate,
+                        enableVsync,
+                        enableVsync && m_Preferences->framePacing,
+                        false,
+                        s_ActiveSession->m_VideoDecoder2)) {
+                    s_ActiveSession->m_VideoDecoder->SetStreamId(1);
+                    s_ActiveSession->m_VideoDecoder2->SetStreamId(2);
                     SDL_AtomicUnlock(&m_DecoderLock);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                                  "Failed to recreate decoder after reset");
                     emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
                     goto DispatchDeferredCleanup;
                 }
-
                 // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
                 // or mouse hiding state to the new window. By capturing after the decoder
                 // is set up, this ensures the window re-creation is already done.
@@ -1794,6 +1843,7 @@ void Session::execInternal()
             // Set HDR mode. We may miss the callback if we're in the middle
             // of recreating our decoder at the time the HDR transition happens.
             m_VideoDecoder->setHdrMode(LiGetCurrentHostDisplayHdrMode());
+            m_VideoDecoder2->setHdrMode(LiGetCurrentHostDisplayHdrMode());
 
             // After a window resize, we need to reset the pointer lock region
             m_InputHandler->updatePointerRegionLock();
@@ -1864,12 +1914,15 @@ DispatchDeferredCleanup:
     // decoders.
     SDL_AtomicLock(&m_DecoderLock);
     delete m_VideoDecoder;
+    delete m_VideoDecoder2;
     m_VideoDecoder = nullptr;
+    m_VideoDecoder2 = nullptr;
     SDL_AtomicUnlock(&m_DecoderLock);
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
     SDL_DestroyWindow(m_Window);
+    SDL_DestroyWindow(m_Window2);
 
     if (iconSurface != nullptr) {
         SDL_FreeSurface(iconSurface);
