@@ -1433,7 +1433,21 @@ void Session::execInternal()
             }
         }
     }
-
+    int scr_w =1920;
+    int scr_h =1080;
+    {
+        RECT desktop;
+        const HWND hDesk = GetDesktopWindow();
+        GetWindowRect(hDesk,&desktop);
+        scr_w = desktop.right;
+        scr_h = desktop.bottom;
+    }
+    int margin_x = 20;
+    int margin_y = 200;
+    x = margin_x;
+    y = margin_y;
+    width = (scr_w-2*margin_x)/2;
+    height = scr_h -2*margin_y;
     m_Window = SDL_CreateWindow("Moonlight",
                                 x,
                                 y,
@@ -1452,9 +1466,12 @@ void Session::execInternal()
                                     height,
                                     defaultWindowFlags);
     }
+    x = margin_x+width;
+    y = margin_y;
+
     m_Window2 = SDL_CreateWindow("Moonlight2",
-            x+100,//offset to first window
-            y+100,//offset to first window
+            x,
+            y,
             width,
             height,
             defaultWindowFlags);
@@ -1464,8 +1481,8 @@ void Session::execInternal()
                     SDL_GetError());
 
         m_Window2 = SDL_CreateWindow("Moonlight2",
-                                    x+100,
-                                    y+100,
+                                    x,
+                                    y,
                                     width,
                                     height,
                                     defaultWindowFlags);
@@ -1627,6 +1644,7 @@ void Session::execInternal()
     SDL_SetHint(SDL_HINT_TIMER_RESOLUTION, "1");
 
     int currentDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+    int currentDisplayIndex2 = SDL_GetWindowDisplayIndex(m_Window2);
 
     // Now that we're about to stream, any SDL_QUIT event is expected
     // unless it comes from the connection termination callback where
@@ -1826,7 +1844,8 @@ void Session::execInternal()
 
                 // Choose a new decoder (hopefully the same one, but possibly
                 // not if a GPU was removed or something).
-                if (event.window.windowID == winID1) {
+                //if (event.window.windowID == winID1)
+                {
                     if(!chooseDecoder(m_Preferences->videoDecoderSelection,
                         m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
                         m_ActiveVideoHeight, m_ActiveVideoFrameRate,
@@ -1844,7 +1863,8 @@ void Session::execInternal()
                         s_ActiveSession->m_VideoDecoder->SetStreamId(1);
                     }
                 }
-                if (event.window.windowID == winID2) {
+                //if (event.window.windowID == winID2)
+                {
                     if (!chooseDecoder(m_Preferences->videoDecoderSelection,
                         m_Window2, m_ActiveVideoFormat, m_ActiveVideoWidth,
                         m_ActiveVideoHeight, m_ActiveVideoFrameRate,
