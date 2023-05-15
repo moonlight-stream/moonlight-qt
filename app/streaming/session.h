@@ -152,7 +152,9 @@ private:
     NvComputer* m_Computer;
     NvApp m_App;
     SDL_Window* m_Window;
+    SDL_Window* m_Window2;
     IVideoDecoder* m_VideoDecoder;
+    IVideoDecoder* m_VideoDecoder2;
     SDL_SpinLock m_DecoderLock;
     bool m_AudioDisabled;
     bool m_AudioMuted;

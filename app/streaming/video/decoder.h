@@ -44,6 +44,7 @@ typedef struct _DECODER_PARAMETERS {
 class IVideoDecoder {
 public:
     virtual ~IVideoDecoder() {}
+    virtual void SetStreamId(int streamId) {}
     virtual bool initialize(PDECODER_PARAMETERS params) = 0;
     virtual bool isHardwareAccelerated() = 0;
     virtual bool isAlwaysFullScreen() = 0;
