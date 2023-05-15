@@ -12,7 +12,7 @@ extern "C" {
 }
 
 class FFmpegVideoDecoder : public IVideoDecoder {
-    int m_streamId = 0;
+    int m_streamId = -1;
 public:
     FFmpegVideoDecoder(bool testOnly);
     virtual ~FFmpegVideoDecoder() override;

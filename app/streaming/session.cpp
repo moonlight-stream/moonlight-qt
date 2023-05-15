@@ -259,6 +259,8 @@ bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
 
 #ifdef HAVE_FFMPEG
     chosenDecoder = new FFmpegVideoDecoder(testOnly);
+    chosenDecoder->SetStreamId(-3);
+
     if (chosenDecoder->initialize(&params)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "FFmpeg-based video decoder chosen");
@@ -1449,33 +1451,47 @@ void Session::execInternal()
                                     width,
                                     height,
                                     defaultWindowFlags);
-
-        m_Window2 = SDL_CreateWindow("Moonlight2",
+    }
+    m_Window2 = SDL_CreateWindow("Moonlight2",
             x+100,//offset to first window
             y+100,//offset to first window
             width,
             height,
             defaultWindowFlags);
-        if (!m_Window || !m_Window2) {
-            if (m_Window)
-            {
-                SDL_DestroyWindow(m_Window);
-            }
-            if (m_Window2)
-            {
-                SDL_DestroyWindow(m_Window2);
-            }
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                "SDL_CreateWindow() failed: %s",
-                SDL_GetError());
+    if (!m_Window2) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "SDL_CreateWindow() failed with platform flags: %s",
+                    SDL_GetError());
 
-            delete m_InputHandler;
-            m_InputHandler = nullptr;
-            SDL_QuitSubSystem(SDL_INIT_VIDEO);
-            QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
-            return;
-        }
+        m_Window2 = SDL_CreateWindow("Moonlight2",
+                                    x+100,
+                                    y+100,
+                                    width,
+                                    height,
+                                    defaultWindowFlags);
     }
+    if (!m_Window || !m_Window2) {
+        if (m_Window)
+        {
+            SDL_DestroyWindow(m_Window);
+        }
+        if (m_Window2)
+        {
+            SDL_DestroyWindow(m_Window2);
+        }
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+            "SDL_CreateWindow() failed: %s",
+            SDL_GetError());
+
+        delete m_InputHandler;
+        m_InputHandler = nullptr;
+        SDL_QuitSubSystem(SDL_INIT_VIDEO);
+        QThreadPool::globalInstance()->start(new DeferredSessionCleanupTask(this));
+        return;
+    }
+    
+    auto winID1 = SDL_GetWindowID(m_Window);
+    auto winID2 = SDL_GetWindowID(m_Window2);
 
     // HACK: Remove once proper Dark Mode support lands in SDL
 #ifdef Q_OS_WIN32
@@ -1769,8 +1785,12 @@ void Session::execInternal()
             SDL_AtomicLock(&m_DecoderLock);
 
             // Destroy the old decoder
-            delete m_VideoDecoder;
-            delete m_VideoDecoder2;
+            if (event.window.windowID == winID1) {
+                delete m_VideoDecoder;
+            }
+            if (event.window.windowID == winID2) {
+                delete m_VideoDecoder2;
+            }
 
             // Insert a barrier to discard any additional window events
             // that could cause the renderer to be and recreated again.
@@ -1806,28 +1826,43 @@ void Session::execInternal()
 
                 // Choose a new decoder (hopefully the same one, but possibly
                 // not if a GPU was removed or something).
-                if (!chooseDecoder(m_Preferences->videoDecoderSelection,
-                                   m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
-                                   m_ActiveVideoHeight, m_ActiveVideoFrameRate,
-                                   enableVsync,
-                                   enableVsync && m_Preferences->framePacing,
-                                   false,
-                                   s_ActiveSession->m_VideoDecoder) ||
-                    !chooseDecoder(m_Preferences->videoDecoderSelection,
+                if (event.window.windowID == winID1) {
+                    if(!chooseDecoder(m_Preferences->videoDecoderSelection,
+                        m_Window, m_ActiveVideoFormat, m_ActiveVideoWidth,
+                        m_ActiveVideoHeight, m_ActiveVideoFrameRate,
+                        enableVsync,
+                        enableVsync && m_Preferences->framePacing,
+                        false,
+                        s_ActiveSession->m_VideoDecoder)) {
+                        SDL_AtomicUnlock(&m_DecoderLock);
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Failed to recreate decoder after reset");
+                        emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
+                        goto DispatchDeferredCleanup;
+                    }
+                    else {
+                        s_ActiveSession->m_VideoDecoder->SetStreamId(1);
+                    }
+                }
+                if (event.window.windowID == winID2) {
+                    if (!chooseDecoder(m_Preferences->videoDecoderSelection,
                         m_Window2, m_ActiveVideoFormat, m_ActiveVideoWidth,
                         m_ActiveVideoHeight, m_ActiveVideoFrameRate,
                         enableVsync,
                         enableVsync && m_Preferences->framePacing,
                         false,
-                        s_ActiveSession->m_VideoDecoder2)) {
-                    s_ActiveSession->m_VideoDecoder->SetStreamId(1);
-                    s_ActiveSession->m_VideoDecoder2->SetStreamId(2);
-                    SDL_AtomicUnlock(&m_DecoderLock);
-                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                 "Failed to recreate decoder after reset");
-                    emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
-                    goto DispatchDeferredCleanup;
+                        s_ActiveSession->m_VideoDecoder2)){
+                        SDL_AtomicUnlock(&m_DecoderLock);
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Failed to recreate decoder after reset");
+                        emit displayLaunchError(tr("Unable to initialize video decoder. Please check your streaming settings and try again."));
+                        goto DispatchDeferredCleanup;
+                    }
+                    else {
+                        s_ActiveSession->m_VideoDecoder2->SetStreamId(2);
+                    }
                 }
+
                 // As of SDL 2.0.12, SDL_RecreateWindow() doesn't carry over mouse capture
                 // or mouse hiding state to the new window. By capturing after the decoder
                 // is set up, this ensures the window re-creation is already done.
@@ -1842,8 +1877,12 @@ void Session::execInternal()
 
             // Set HDR mode. We may miss the callback if we're in the middle
             // of recreating our decoder at the time the HDR transition happens.
-            m_VideoDecoder->setHdrMode(LiGetCurrentHostDisplayHdrMode());
-            m_VideoDecoder2->setHdrMode(LiGetCurrentHostDisplayHdrMode());
+            if (event.window.windowID == winID1) {
+                m_VideoDecoder->setHdrMode(LiGetCurrentHostDisplayHdrMode());
+            }
+            if (event.window.windowID == winID2) {
+                m_VideoDecoder2->setHdrMode(LiGetCurrentHostDisplayHdrMode());
+            }
 
             // After a window resize, we need to reset the pointer lock region
             m_InputHandler->updatePointerRegionLock();
