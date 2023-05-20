@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -97,7 +97,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -158,7 +158,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Recherche d&apos;hôtes compatibles sur votre réseau local...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -239,7 +239,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC&#x202f;: %1</translation>
+        <translation>Statut du PC : %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -259,17 +259,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Veuillez saisir %1 sur votre PC hôte. Cette boîte de dialogue se ferme lorsque l&apos;appairage est terminé.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="295"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Si votre PC hôte utilise Sunshine, accédez à l&apos;interface web de Sunshine pour saisir le code PIN.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="323"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight teste votre connexion réseau pour déterminer si des ports nécessaires sont bloqués.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="350"/>
@@ -287,22 +287,22 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Vous ne pouvez pas effectuer de couplage alors qu&apos;une session précédente est encore en cours sur le PC hôte. Fermez les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d&apos;effectuer l&apos;appariement.</translation>
+        <translation>Vous ne pouvez pas effectuer de jumelage alors qu&apos;une session précédente est encore en cours sur le PC hôte. Fermez les jeux en cours ou redémarrez le PC hôte, puis essayez à nouveau d&apos;effectuer le jumelage.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le jumelage a échoué. Veuillez réessayer.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Une autre tentative de jumelage est déjà en cours.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience a renvoyé l&apos;erreur : %1</translation>
+        <translation>GeForce Experience a renvoyé l&apos;erreur : %1</translation>
     </message>
 </context>
 <context>
@@ -404,7 +404,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="106"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
@@ -428,12 +428,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="123"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le PC hôte a signalé une erreur fatale de l&apos;encodage vidéo.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Essayez de désactiver le mode HDR, de modifier la résolution du stream, ou de modifier la résolution d&apos;affichage de votre PC hôte.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
@@ -473,7 +473,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="702"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre PC hôte ne prend pas en charge l&apos;encodage HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="718"/>
@@ -483,12 +483,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Votre PC hôte ne prend pas en charge le streaming HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1181"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;hôte a renvoyé une erreur : %1</translation>
     </message>
     <message>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
@@ -649,7 +649,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="465"/>
         <source>%1 FPS (Custom)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS (Personnalisé)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="501"/>
@@ -1104,7 +1104,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s) : %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="74"/>
@@ -1189,7 +1189,7 @@
     <message>
         <location filename="../gui/main.qml" line="451"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration&#x202f;:</translation>
+        <translation>Moonlight a détecté des manettes sans configuration :</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="364"/>
@@ -1214,7 +1214,7 @@
     <message>
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Saisissez l&apos;adresse IP de votre PC hôte :</translation>
     </message>
     <message>
         <source>This PC is running a 64-bit version of Windows. Please download the x64 version of Moonlight for the best streaming performance.</source>
@@ -1228,7 +1228,7 @@
     <message>
         <location filename="../gui/main.qml" line="461"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Êtes-vous sûr de vouloir quitter&#x202f;?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
     </message>
     <message>
         <source>Enter the IP address of your GameStream PC:</source>
