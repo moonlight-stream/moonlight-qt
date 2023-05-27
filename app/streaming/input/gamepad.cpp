@@ -96,6 +96,17 @@ Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param
     return interval;
 }
 
+void SdlInputHandler::handleControllerSensorEvent(SDL_ControllerSensorEvent* event)
+{
+    // Currently unhandled
+    switch (event->sensor)
+    {
+        case SDL_SENSOR_ACCEL:
+            SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION,
+                        "CONTROLLER: Gyro motion %f %f %f", event->data[0], event->data[1], event->data[2]);
+        break;
+    }
+}
 void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
 {
     SDL_JoystickID gameControllerId = event->which;
@@ -313,6 +324,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         const char* mapping;
         char guidStr[33];
         uint32_t hapticCaps;
+        float motionDataRate = 0;
 
         controller = SDL_GameControllerOpen(event->which);
         if (controller == NULL) {
@@ -321,6 +333,24 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                          SDL_GetError());
             return;
         }
+
+        // Gyro support only started on SDL 2.0.14+
+        // https://github.com/libsdl-org/SDL/blob/4cd981609b50ed273d80c635c1ca4c1e5518fb21/WhatsNew.txt
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+        if (SDL_GameControllerHasSensor(controller, SDL_SensorType::SDL_SENSOR_ACCEL) == SDL_bool::SDL_TRUE) {
+
+            if (SDL_GameControllerIsSensorEnabled(controller, SDL_SensorType::SDL_SENSOR_ACCEL) != SDL_bool:: SDL_TRUE) {
+                if (SDL_GameControllerSetSensorEnabled(controller, SDL_SensorType::SDL_SENSOR_ACCEL, SDL_bool::SDL_TRUE) != 0) {
+                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to enable gamepad gyro: %s",
+                         SDL_GetError());
+                    return;
+                }
+            }
+            motionDataRate = SDL_GameControllerGetSensorDataRate(controller, SDL_SensorType::SDL_SENSOR_ACCEL);
+
+        }
+#endif
 
         // We used to use SDL_GameControllerGetPlayerIndex() here but that
         // can lead to strange issues due to bugs in Windows where an Xbox
@@ -405,11 +435,12 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         mapping = SDL_GameControllerMapping(state->controller);
         name = SDL_GameControllerName(state->controller);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Gamepad %d (player %d) is: %s (haptic capabilities: 0x%x) (mapping: %s -> %s)",
+                    "Gamepad %d (player %d) is: %s (haptic capabilities: 0x%x) (motion rate: %f) (mapping: %s -> %s)",
                     i,
                     state->index,
                     name != nullptr ? name : "<null>",
                     hapticCaps,
+                    motionDataRate,
                     guidStr,
                     mapping != nullptr ? mapping : "<null>");
         if (mapping != nullptr) {

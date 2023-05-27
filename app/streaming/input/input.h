@@ -52,6 +52,8 @@ public:
 
     void handleMouseWheelEvent(SDL_MouseWheelEvent* event);
 
+    void handleControllerSensorEvent(SDL_ControllerSensorEvent* event);
+
     void handleControllerAxisEvent(SDL_ControllerAxisEvent* event);
 
     void handleControllerButtonEvent(SDL_ControllerButtonEvent* event);

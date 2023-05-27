@@ -1820,6 +1820,9 @@ void Session::execInternal()
         case SDL_CONTROLLERAXISMOTION:
             m_InputHandler->handleControllerAxisEvent(&event.caxis);
             break;
+        case SDL_CONTROLLERSENSORUPDATE:
+            m_InputHandler->handleControllerSensorEvent(&event.csensor);
+            break;
         case SDL_CONTROLLERBUTTONDOWN:
         case SDL_CONTROLLERBUTTONUP:
             presence.runCallbacks();
