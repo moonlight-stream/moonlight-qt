@@ -65,51 +65,73 @@ unix:!macx {
     CONFIG += link_pkgconfig
     PKGCONFIG += openssl sdl2 SDL2_ttf opus
 
-    packagesExist(libavcodec) {
-        PKGCONFIG += libavcodec libavutil
-        CONFIG += ffmpeg
+    !disable-ffmpeg {
+        packagesExist(libavcodec) {
+            PKGCONFIG += libavcodec libavutil
+            CONFIG += ffmpeg
 
-        packagesExist(libva) {
-            packagesExist(libva-x11) {
-                CONFIG += libva-x11
+            !disable-libva {
+                packagesExist(libva) {
+                    !disable-x11 {
+                        packagesExist(libva-x11) {
+                            CONFIG += libva-x11
+                        }
+                    }
+                    !disable-wayland {
+                        packagesExist(libva-wayland) {
+                            CONFIG += libva-wayland
+                        }
+                    }
+                    !disable-libdrm {
+                        packagesExist(libva-drm) {
+                            CONFIG += libva-drm
+                        }
+                    }
+                    CONFIG += libva
+                }
             }
-            packagesExist(libva-wayland) {
-                CONFIG += libva-wayland
+
+            !disable-libvdpau {
+                packagesExist(vdpau) {
+                    CONFIG += libvdpau
+                }
             }
-            packagesExist(libva-drm) {
-                CONFIG += libva-drm
+
+            !disable-mmal {
+                packagesExist(mmal) {
+                    PKGCONFIG += mmal
+                    CONFIG += mmal
+                }
             }
-            CONFIG += libva
+
+            !disable-libdrm {
+                packagesExist(libdrm) {
+                    PKGCONFIG += libdrm
+                    CONFIG += libdrm
+                }
+            }
+
+            !disable-cuda {
+                packagesExist(ffnvcodec) {
+                    PKGCONFIG += ffnvcodec
+                    CONFIG += cuda
+                }
+            }
         }
 
-        packagesExist(vdpau) {
-            CONFIG += libvdpau
+        !disable-wayland {
+            packagesExist(wayland-client) {
+                CONFIG += wayland
+                PKGCONFIG += wayland-client
+            }
         }
 
-        packagesExist(mmal) {
-            PKGCONFIG += mmal
-            CONFIG += mmal
+        !disable-x11 {
+            packagesExist(x11) {
+                DEFINES += HAS_X11
+                PKGCONFIG += x11
+            }
         }
-
-        packagesExist(libdrm) {
-            PKGCONFIG += libdrm
-            CONFIG += libdrm
-        }
-
-        packagesExist(ffnvcodec) {
-            PKGCONFIG += ffnvcodec
-            CONFIG += cuda
-        }
-    }
-
-    packagesExist(wayland-client) {
-        CONFIG += wayland
-        PKGCONFIG += wayland-client
-    }
-
-    packagesExist(x11) {
-        DEFINES += HAS_X11
-        PKGCONFIG += x11
     }
 }
 win32 {
