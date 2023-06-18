@@ -29,6 +29,61 @@ Uint32 SdlInputHandler::longPressTimerCallback(Uint32, void*)
 
 void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 {
+    SDL_Rect src, dst;
+    int windowWidth, windowHeight;
+
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+
+    src.x = src.y = 0;
+    src.w = m_StreamWidth;
+    src.h = m_StreamHeight;
+
+    dst.x = dst.y = 0;
+    dst.w = windowWidth;
+    dst.h = windowHeight;
+
+    // Scale window-relative events to be video-relative and clamp to video region
+    float vidrelx = qMin(qMax((int)(event->x * windowWidth), dst.x), dst.x + dst.w) - dst.x;
+    float vidrely = qMin(qMax((int)(event->y * windowHeight), dst.y), dst.y + dst.h) - dst.y;
+
+    uint8_t eventType;
+    switch (event->type) {
+    case SDL_FINGERDOWN:
+        eventType = LI_TOUCH_EVENT_DOWN;
+        break;
+    case SDL_FINGERMOTION:
+        eventType = LI_TOUCH_EVENT_MOVE;
+        break;
+    case SDL_FINGERUP:
+        eventType = LI_TOUCH_EVENT_UP;
+        break;
+    default:
+        return;
+    }
+
+    uint32_t pointerId;
+
+    // If the pointer ID is larger than we can fit, just CRC it and use that as the ID.
+    if ((uint64_t)event->fingerId > UINT32_MAX) {
+#if QT_VERSION >= QT_VERSION_CHECK(6, 0, 0)
+        QByteArrayView bav((char*)&event->fingerId, sizeof(event->fingerId));
+        pointerId = qChecksum(bav);
+#else
+        pointerId = qChecksum((char*)&event->fingerId, sizeof(event->fingerId));
+#endif
+    }
+    else {
+        pointerId = (uint32_t)event->fingerId;
+    }
+
+    // Try to send it as a native touch event, otherwise fall back to our touch emulation
+    if (LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure) == LI_ERR_UNSUPPORTED) {
+        emulateAbsoluteFingerEvent(event);
+    }
+}
+
+void SdlInputHandler::emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
+{
     // Observations on Windows 10: x and y appear to be relative to 0,0 of the window client area.
     // Although SDL documentation states they are 0.0 - 1.0 float values, they can actually be higher
     // or lower than those values as touch events continue for touches started within the client area that

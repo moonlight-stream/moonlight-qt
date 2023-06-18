@@ -110,6 +110,8 @@ private:
 
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
 
+    void emulateAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
+
     void handleRelativeFingerEvent(SDL_TouchFingerEvent* event);
 
     void performSpecialKeyCombo(KeyCombo combo);
