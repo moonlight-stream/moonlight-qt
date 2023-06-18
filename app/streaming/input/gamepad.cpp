@@ -566,6 +566,20 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
 #endif
 }
 
+void SdlInputHandler::rumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger)
+{
+    // Make sure the controller number is within our supported count
+    if (controllerNumber >= MAX_GAMEPADS) {
+        return;
+    }
+
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        SDL_GameControllerRumbleTriggers(m_GamepadState[controllerNumber].controller, leftTrigger, rightTrigger, 30000);
+    }
+#endif
+}
+
 QString SdlInputHandler::getUnmappedGamepads()
 {
     QString ret;

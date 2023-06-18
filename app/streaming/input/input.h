@@ -62,7 +62,9 @@ public:
 
     void sendText(QString& string);
 
-    void rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor);
+    void rumble(uint16_t controllerNumber, uint16_t lowFreqMotor, uint16_t highFreqMotor);
+
+    void rumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 

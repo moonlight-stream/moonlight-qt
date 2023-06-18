@@ -37,6 +37,7 @@
 
 #define SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER 100
 #define SDL_CODE_GAMECONTROLLER_RUMBLE 101
+#define SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS 102
 
 #include <openssl/rand.h>
 
@@ -62,6 +63,7 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clRumble,
     Session::clConnectionStatusUpdate,
     Session::clSetHdrMode,
+    Session::clRumbleTriggers,
 };
 
 Session* Session::s_ActiveSession;
@@ -211,6 +213,19 @@ void Session::clSetHdrMode(bool enabled)
         }
         SDL_AtomicUnlock(&s_ActiveSession->m_DecoderLock);
     }
+}
+
+void Session::clRumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger)
+{
+    // We push an event for the main thread to handle in order to properly synchronize
+    // with the removal of game controllers that could result in our game controller
+    // going away during this callback.
+    SDL_Event rumbleEvent = {};
+    rumbleEvent.type = SDL_USEREVENT;
+    rumbleEvent.user.code = SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS;
+    rumbleEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
+    rumbleEvent.user.data2 = (void*)(uintptr_t)((leftTrigger << 16) | rightTrigger);
+    SDL_PushEvent(&rumbleEvent);
 }
 
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
@@ -1635,9 +1650,14 @@ void Session::execInternal()
                 m_FlushingWindowEventsRef--;
                 break;
             case SDL_CODE_GAMECONTROLLER_RUMBLE:
-                m_InputHandler->rumble((unsigned short)(uintptr_t)event.user.data1,
-                                       (unsigned short)((uintptr_t)event.user.data2 >> 16),
-                                       (unsigned short)((uintptr_t)event.user.data2 & 0xFFFF));
+                m_InputHandler->rumble((uint16_t)(uintptr_t)event.user.data1,
+                                       (uint16_t)((uintptr_t)event.user.data2 >> 16),
+                                       (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
+                break;
+            case SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS:
+                m_InputHandler->rumbleTriggers((uint16_t)(uintptr_t)event.user.data1,
+                                               (uint16_t)((uintptr_t)event.user.data2 >> 16),
+                                               (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
                 break;
             default:
                 SDL_assert(false);
