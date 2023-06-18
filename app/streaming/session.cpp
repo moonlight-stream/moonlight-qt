@@ -38,6 +38,7 @@
 #define SDL_CODE_FLUSH_WINDOW_EVENT_BARRIER 100
 #define SDL_CODE_GAMECONTROLLER_RUMBLE 101
 #define SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS 102
+#define SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE 103
 
 #include <openssl/rand.h>
 
@@ -64,6 +65,7 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clConnectionStatusUpdate,
     Session::clSetHdrMode,
     Session::clRumbleTriggers,
+    Session::clSetMotionEventState,
 };
 
 Session* Session::s_ActiveSession;
@@ -226,6 +228,19 @@ void Session::clRumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, 
     rumbleEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
     rumbleEvent.user.data2 = (void*)(uintptr_t)((leftTrigger << 16) | rightTrigger);
     SDL_PushEvent(&rumbleEvent);
+}
+
+void Session::clSetMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz)
+{
+    // We push an event for the main thread to handle in order to properly synchronize
+    // with the removal of game controllers that could result in our game controller
+    // going away during this callback.
+    SDL_Event setMotionEventStateEvent = {};
+    setMotionEventStateEvent.type = SDL_USEREVENT;
+    setMotionEventStateEvent.user.code = SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE;
+    setMotionEventStateEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
+    setMotionEventStateEvent.user.data2 = (void*)(uintptr_t)((motionType << 16) | reportRateHz);
+    SDL_PushEvent(&setMotionEventStateEvent);
 }
 
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
@@ -1659,6 +1674,11 @@ void Session::execInternal()
                                                (uint16_t)((uintptr_t)event.user.data2 >> 16),
                                                (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
                 break;
+            case SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE:
+                m_InputHandler->setMotionEventState((uint16_t)(uintptr_t)event.user.data1,
+                                                    (uint8_t)((uintptr_t)event.user.data2 >> 16),
+                                                    (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
+                break;
             default:
                 SDL_assert(false);
             }
@@ -1845,6 +1865,16 @@ void Session::execInternal()
             presence.runCallbacks();
             m_InputHandler->handleControllerButtonEvent(&event.cbutton);
             break;
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+        case SDL_CONTROLLERSENSORUPDATE:
+            m_InputHandler->handleControllerSensorEvent(&event.csensor);
+            break;
+        case SDL_CONTROLLERTOUCHPADDOWN:
+        case SDL_CONTROLLERTOUCHPADUP:
+        case SDL_CONTROLLERTOUCHPADMOTION:
+            m_InputHandler->handleControllerTouchpadEvent(&event.ctouchpad);
+            break;
+#endif
         case SDL_CONTROLLERDEVICEADDED:
         case SDL_CONTROLLERDEVICEREMOVED:
             m_InputHandler->handleControllerDeviceEvent(&event.cdevice);

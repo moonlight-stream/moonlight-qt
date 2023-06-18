@@ -19,6 +19,12 @@ struct GamepadState {
     SDL_TimerID mouseEmulationTimer;
     uint32_t lastStartDownTime;
 
+    uint8_t gyroReportPeriodMs;
+    uint32_t lastGyroEventTime;
+
+    uint8_t accelReportPeriodMs;
+    uint32_t lastAccelEventTime;
+
     int buttons;
     short lsX, lsY;
     short rsX, rsY;
@@ -58,6 +64,12 @@ public:
 
     void handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event);
 
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    void handleControllerSensorEvent(SDL_ControllerSensorEvent* event);
+
+    void handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent* event);
+#endif
+
     void handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event);
 
     void sendText(QString& string);
@@ -65,6 +77,8 @@ public:
     void rumble(uint16_t controllerNumber, uint16_t lowFreqMotor, uint16_t highFreqMotor);
 
     void rumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger);
+
+    void setMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 

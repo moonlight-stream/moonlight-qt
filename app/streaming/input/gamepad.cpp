@@ -312,6 +312,58 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
     }
 }
 
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+
+void SdlInputHandler::handleControllerSensorEvent(SDL_ControllerSensorEvent* event)
+{
+    GamepadState* state = findStateForGamepad(event->which);
+    if (state == NULL) {
+        return;
+    }
+
+    switch (event->sensor) {
+    case SDL_SENSOR_ACCEL:
+        if (state->accelReportPeriodMs && SDL_TICKS_PASSED(event->timestamp, state->lastAccelEventTime + state->accelReportPeriodMs)) {
+            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_ACCEL, event->data[0], event->data[1], event->data[2]);
+            state->lastAccelEventTime = event->timestamp;
+        }
+        break;
+    case SDL_SENSOR_GYRO:
+        if (state->gyroReportPeriodMs && SDL_TICKS_PASSED(event->timestamp, state->lastGyroEventTime + state->gyroReportPeriodMs)) {
+            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_GYRO, event->data[0], event->data[1], event->data[2]);
+            state->lastGyroEventTime = event->timestamp;
+        }
+        break;
+    }
+}
+
+void SdlInputHandler::handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent* event)
+{
+    GamepadState* state = findStateForGamepad(event->which);
+    if (state == NULL) {
+        return;
+    }
+
+    uint8_t eventType;
+    switch (event->type) {
+    case SDL_CONTROLLERTOUCHPADDOWN:
+        eventType = LI_TOUCH_EVENT_DOWN;
+        break;
+    case SDL_CONTROLLERTOUCHPADUP:
+        eventType = LI_TOUCH_EVENT_UP;
+        break;
+    case SDL_CONTROLLERTOUCHPADMOTION:
+        eventType = LI_TOUCH_EVENT_MOVE;
+        break;
+    default:
+        return;
+    }
+
+    LiSendControllerTouchEvent((uint8_t)state->index, eventType, event->finger, event->x, event->y, event->pressure);
+}
+
+#endif
+
 void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
 {
     GamepadState* state;
@@ -576,6 +628,32 @@ void SdlInputHandler::rumbleTriggers(uint16_t controllerNumber, uint16_t leftTri
 #if SDL_VERSION_ATLEAST(2, 0, 14)
     if (m_GamepadState[controllerNumber].controller != nullptr) {
         SDL_GameControllerRumbleTriggers(m_GamepadState[controllerNumber].controller, leftTrigger, rightTrigger, 30000);
+    }
+#endif
+}
+
+void SdlInputHandler::setMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz)
+{
+    // Make sure the controller number is within our supported count
+    if (controllerNumber >= MAX_GAMEPADS) {
+        return;
+    }
+
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        uint8_t reportPeriodMs = reportRateHz ? (1000 / reportRateHz) : 0;
+
+        switch (motionType) {
+        case LI_MOTION_TYPE_ACCEL:
+            m_GamepadState[controllerNumber].accelReportPeriodMs = reportPeriodMs;
+            SDL_GameControllerSetSensorEnabled(m_GamepadState[controllerNumber].controller, SDL_SENSOR_ACCEL, reportRateHz ? SDL_TRUE : SDL_FALSE);
+            break;
+
+        case LI_MOTION_TYPE_GYRO:
+            m_GamepadState[controllerNumber].gyroReportPeriodMs = reportPeriodMs;
+            SDL_GameControllerSetSensorEnabled(m_GamepadState[controllerNumber].controller, SDL_SENSOR_GYRO, reportRateHz ? SDL_TRUE : SDL_FALSE);
+            break;
+        }
     }
 #endif
 }
