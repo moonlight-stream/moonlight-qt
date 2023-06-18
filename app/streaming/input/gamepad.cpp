@@ -45,8 +45,8 @@ SdlInputHandler::findStateForGamepad(SDL_JoystickID id)
         }
     }
 
-    // This should only happen with > 4 gamepads
-    SDL_assert(SDL_NumJoysticks() > 4);
+    // This should only happen with too many gamepads
+    SDL_assert(SDL_NumJoysticks() > MAX_GAMEPADS);
     return nullptr;
 }
 

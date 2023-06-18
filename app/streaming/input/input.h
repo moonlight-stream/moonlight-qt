@@ -31,7 +31,9 @@ struct GamepadState {
     unsigned char lt, rt;
 };
 
-#define MAX_GAMEPADS 4
+// activeGamepadMask is a short, so we're bounded by the number of mask bits
+#define MAX_GAMEPADS 16
+
 #define MAX_FINGERS 2
 
 #define GAMEPAD_HAPTIC_METHOD_NONE 0
