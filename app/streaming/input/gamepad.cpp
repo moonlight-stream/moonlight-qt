@@ -27,7 +27,10 @@ const int SdlInputHandler::k_ButtonMap[] = {
     BACK_FLAG, SPECIAL_FLAG, PLAY_FLAG,
     LS_CLK_FLAG, RS_CLK_FLAG,
     LB_FLAG, RB_FLAG,
-    UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG
+    UP_FLAG, DOWN_FLAG, LEFT_FLAG, RIGHT_FLAG,
+    MISC_FLAG,
+    PADDLE1_FLAG, PADDLE2_FLAG, PADDLE3_FLAG, PADDLE4_FLAG,
+    TOUCHPAD_FLAG,
 };
 
 GamepadState*
@@ -162,6 +165,13 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
 
 void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* event)
 {
+    if (event->button >= SDL_arraysize(k_ButtonMap)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "No mapping for gamepad button: %u",
+                    event->button);
+        return;
+    }
+
     GamepadState* state = findStateForGamepad(event->which);
     if (state == NULL) {
         return;

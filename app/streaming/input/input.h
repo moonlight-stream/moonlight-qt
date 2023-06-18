@@ -19,7 +19,7 @@ struct GamepadState {
     SDL_TimerID mouseEmulationTimer;
     uint32_t lastStartDownTime;
 
-    short buttons;
+    int buttons;
     short lsX, lsY;
     short rsX, rsY;
     unsigned char lt, rt;
