@@ -489,8 +489,66 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             SDL_assert(m_GamepadMask == 0x1);
         }
 
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+        // On SDL 2.0.14 and later, we can provide enhanced controller information to the host PC
+        // for it to use as a hint for the type of controller to emulate.
+        uint32_t supportedButtonFlags = 0;
+        for (int i = 0; i < SDL_arraysize(k_ButtonMap); i++) {
+            if (SDL_GameControllerHasButton(state->controller, (SDL_GameControllerButton)i)) {
+                supportedButtonFlags |= k_ButtonMap[i];
+            }
+        }
+
+        uint32_t capabilities = 0;
+        if (SDL_GameControllerGetBindForAxis(state->controller, SDL_CONTROLLER_AXIS_TRIGGERLEFT).bindType == SDL_CONTROLLER_BINDTYPE_AXIS ||
+            SDL_GameControllerGetBindForAxis(state->controller, SDL_CONTROLLER_AXIS_TRIGGERRIGHT).bindType == SDL_CONTROLLER_BINDTYPE_AXIS) {
+            // We assume these are analog triggers if the binding is to an axis rather than a button
+            capabilities |= LI_CCAP_ANALOG_TRIGGERS;
+        }
+        if (SDL_GameControllerHasRumble(state->controller)) {
+            capabilities |= LI_CCAP_RUMBLE;
+        }
+        if (SDL_GameControllerHasRumbleTriggers(state->controller)) {
+            capabilities |= LI_CCAP_TRIGGER_RUMBLE;
+        }
+        if (SDL_GameControllerGetNumTouchpads(state->controller) > 0) {
+            capabilities |= LI_CCAP_TOUCHPAD;
+        }
+        if (SDL_GameControllerHasSensor(state->controller, SDL_SENSOR_ACCEL)) {
+            capabilities |= LI_CCAP_ACCEL;
+        }
+        if (SDL_GameControllerHasSensor(state->controller, SDL_SENSOR_GYRO)) {
+            capabilities |= LI_CCAP_GYRO;
+        }
+
+        uint8_t type;
+        switch (SDL_GameControllerGetType(state->controller)) {
+        case SDL_CONTROLLER_TYPE_XBOX360:
+        case SDL_CONTROLLER_TYPE_XBOXONE:
+            type = LI_CTYPE_XBOX;
+            break;
+        case SDL_CONTROLLER_TYPE_PS3:
+        case SDL_CONTROLLER_TYPE_PS4:
+        case SDL_CONTROLLER_TYPE_PS5:
+            type = LI_CTYPE_PS;
+            break;
+        case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO:
+        case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+        case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+        case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+            type = LI_CTYPE_NINTENDO;
+            break;
+        default:
+            type = LI_CTYPE_UNKNOWN;
+            break;
+        }
+
+        LiSendControllerArrivalEvent(state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
+#else
+
         // Send an empty event to tell the PC we've arrived
         sendGamepadState(state);
+#endif
     }
     else if (event->type == SDL_CONTROLLERDEVICEREMOVED) {
         state = findStateForGamepad(event->which);
