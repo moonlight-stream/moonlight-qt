@@ -42,11 +42,11 @@ class MdnsPendingComputer : public QObject
     Q_OBJECT
 
 public:
-    explicit MdnsPendingComputer(QMdnsEngine::Server* server,
+    explicit MdnsPendingComputer(const QSharedPointer<QMdnsEngine::Server> server,
                                  const QMdnsEngine::Service& service)
         : m_Hostname(service.hostname()),
           m_Port(service.port()),
-          m_Server(server),
+          m_ServerWeak(server),
           m_Resolver(nullptr)
     {
         // Start resolving
@@ -94,8 +94,21 @@ signals:
 private:
     void resolve()
     {
+        // Delete our resolver, so we're guaranteed that nothing is referencing m_Server.
         delete m_Resolver;
-        m_Resolver = new QMdnsEngine::Resolver(m_Server, m_Hostname);
+        m_Resolver = nullptr;
+
+        // Now delete our strong reference that we held on behalf of m_Resolver.
+        // The server may be destroyed after we make this call.
+        m_Server.reset();
+
+        // Re-acquire a strong reference if the server still exists.
+        m_Server = m_ServerWeak.toStrongRef();
+        if (!m_Server) {
+            return;
+        }
+
+        m_Resolver = new QMdnsEngine::Resolver(m_Server.get(), m_Hostname);
         connect(m_Resolver, &QMdnsEngine::Resolver::resolved,
                 this, &MdnsPendingComputer::handleResolvedAddress);
         QTimer::singleShot(2000, this, &MdnsPendingComputer::handleResolvedTimeout);
@@ -103,7 +116,8 @@ private:
 
     QByteArray m_Hostname;
     uint16_t m_Port;
-    QMdnsEngine::Server* m_Server;
+    QWeakPointer<QMdnsEngine::Server> m_ServerWeak;
+    QSharedPointer<QMdnsEngine::Server> m_Server;
     QMdnsEngine::Resolver* m_Resolver;
     QVector<QHostAddress> m_Addresses;
 };
@@ -245,9 +259,8 @@ private:
     QReadWriteLock m_Lock;
     QMap<QString, NvComputer*> m_KnownHosts;
     QMap<QString, ComputerPollingEntry*> m_PollEntries;
-    QMdnsEngine::Server m_MdnsServer;
+    QSharedPointer<QMdnsEngine::Server> m_MdnsServer;
     QMdnsEngine::Browser* m_MdnsBrowser;
-    QMdnsEngine::Cache m_MdnsCache;
     QVector<MdnsPendingComputer*> m_PendingResolution;
     CompatFetcher m_CompatFetcher;
     DelayedFlushThread* m_DelayedFlushThread;

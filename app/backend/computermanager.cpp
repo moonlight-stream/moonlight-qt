@@ -319,12 +319,13 @@ void ComputerManager::startPolling()
 
     if (prefs.enableMdns) {
         // Start an MDNS query for GameStream hosts
-        m_MdnsBrowser = new QMdnsEngine::Browser(&m_MdnsServer, "_nvstream._tcp.local.", &m_MdnsCache);
+        m_MdnsServer.reset(new QMdnsEngine::Server());
+        m_MdnsBrowser = new QMdnsEngine::Browser(m_MdnsServer.get(), "_nvstream._tcp.local.");
         connect(m_MdnsBrowser, &QMdnsEngine::Browser::serviceAdded,
                 this, [this](const QMdnsEngine::Service& service) {
             qInfo() << "Discovered mDNS host:" << service.hostname();
 
-            MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(&m_MdnsServer, service);
+            MdnsPendingComputer* pendingComputer = new MdnsPendingComputer(m_MdnsServer, service);
             connect(pendingComputer, &MdnsPendingComputer::resolvedHost,
                     this, &ComputerManager::handleMdnsServiceResolved);
             m_PendingResolution.append(pendingComputer);
@@ -646,9 +647,10 @@ void ComputerManager::stopPollingAsync()
         m_PendingResolution.removeFirst();
     }
 
-    // Delete the browser to stop discovery
+    // Delete the browser and server to stop discovery and refresh polling
     delete m_MdnsBrowser;
     m_MdnsBrowser = nullptr;
+    m_MdnsServer.reset();
 
     // Interrupt all threads, but don't wait for them to terminate
     for (ComputerPollingEntry* entry : m_PollEntries) {
