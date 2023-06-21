@@ -6,16 +6,17 @@
 #include <QJsonObject>
 
 AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
-    QObject(parent),
-    m_Nam(this)
+    QObject(parent)
 {
+    m_Nam = new QNetworkAccessManager(this);
+
     // Never communicate over HTTP
-    m_Nam.setStrictTransportSecurityEnabled(true);
+    m_Nam->setStrictTransportSecurityEnabled(true);
 
     // Allow HTTP redirects
-    m_Nam.setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
+    m_Nam->setRedirectPolicy(QNetworkRequest::NoLessSafeRedirectPolicy);
 
-    connect(&m_Nam, &QNetworkAccessManager::finished,
+    connect(m_Nam, &QNetworkAccessManager::finished,
             this, &AutoUpdateChecker::handleUpdateCheckRequestFinished);
 
     QString currentVersion(VERSION_STR);
@@ -28,12 +29,17 @@ AutoUpdateChecker::AutoUpdateChecker(QObject *parent) :
 
 void AutoUpdateChecker::start()
 {
+    if (!m_Nam) {
+        Q_ASSERT(m_Nam);
+        return;
+    }
+
 #if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN) || defined(STEAM_LINK) || defined(APP_IMAGE) // Only run update checker on platforms without auto-update
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0) && QT_VERSION < QT_VERSION_CHECK(5, 15, 1) && !defined(QT_NO_BEARERMANAGEMENT)
     // HACK: Set network accessibility to work around QTBUG-80947 (introduced in Qt 5.14.0 and fixed in Qt 5.15.1)
     QT_WARNING_PUSH
     QT_WARNING_DISABLE_DEPRECATED
-    m_Nam.setNetworkAccessible(QNetworkAccessManager::Accessible);
+    m_Nam->setNetworkAccessible(QNetworkAccessManager::Accessible);
     QT_WARNING_POP
 #endif
 
@@ -45,7 +51,7 @@ void AutoUpdateChecker::start()
 #else
     request.setAttribute(QNetworkRequest::HTTP2AllowedAttribute, true);
 #endif
-    m_Nam.get(request);
+    m_Nam->get(request);
 #endif
 }
 
@@ -101,6 +107,11 @@ int AutoUpdateChecker::compareVersion(QVector<int>& version1, QVector<int>& vers
 void AutoUpdateChecker::handleUpdateCheckRequestFinished(QNetworkReply* reply)
 {
     Q_ASSERT(reply->isFinished());
+
+    // Delete the QNetworkAccessManager to free resources and
+    // prevent the bearer plugin from polling in the background.
+    m_Nam->deleteLater();
+    m_Nam = nullptr;
 
     if (reply->error() == QNetworkReply::NoError) {
         QTextStream stream(reply);

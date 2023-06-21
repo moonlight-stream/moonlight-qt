@@ -25,5 +25,5 @@ private:
     QString getPlatform();
 
     QVector<int> m_CurrentVersionQuad;
-    QNetworkAccessManager m_Nam;
+    QNetworkAccessManager* m_Nam;
 };

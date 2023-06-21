@@ -18,5 +18,5 @@ private slots:
     void handleCompatInfoFetched(QNetworkReply* reply);
 
 private:
-    QNetworkAccessManager m_Nam;
+    QNetworkAccessManager* m_Nam;
 };

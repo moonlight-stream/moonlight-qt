@@ -16,5 +16,5 @@ private slots:
     void handleMappingListFetched(QNetworkReply* reply);
 
 private:
-    QNetworkAccessManager m_Nam;
+    QNetworkAccessManager* m_Nam;
 };
