@@ -72,6 +72,10 @@ public:
     void handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent* event);
 #endif
 
+#if SDL_VERSION_ATLEAST(2, 24, 0)
+    void handleJoystickBatteryEvent(SDL_JoyBatteryEvent* event);
+#endif
+
     void handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event);
 
     void sendText(QString& string);
@@ -81,6 +85,8 @@ public:
     void rumbleTriggers(uint16_t controllerNumber, uint16_t leftTrigger, uint16_t rightTrigger);
 
     void setMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz);
+
+    void setControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b);
 
     void handleTouchFingerEvent(SDL_TouchFingerEvent* event);
 
@@ -125,6 +131,8 @@ private:
     findStateForGamepad(SDL_JoystickID id);
 
     void sendGamepadState(GamepadState* state);
+
+    void sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level);
 
     void handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event);
 

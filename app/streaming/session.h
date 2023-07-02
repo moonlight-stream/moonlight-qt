@@ -131,6 +131,9 @@ private:
     void clSetMotionEventState(uint16_t controllerNumber, uint8_t motionType, uint16_t reportRateHz);
 
     static
+    void clSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b);
+
+    static
     int arInit(int audioConfiguration,
                const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                void* arContext, int arFlags);

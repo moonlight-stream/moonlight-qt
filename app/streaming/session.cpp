@@ -39,6 +39,7 @@
 #define SDL_CODE_GAMECONTROLLER_RUMBLE 101
 #define SDL_CODE_GAMECONTROLLER_RUMBLE_TRIGGERS 102
 #define SDL_CODE_GAMECONTROLLER_SET_MOTION_EVENT_STATE 103
+#define SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED 104
 
 #include <openssl/rand.h>
 
@@ -66,6 +67,7 @@ CONNECTION_LISTENER_CALLBACKS Session::k_ConnCallbacks = {
     Session::clSetHdrMode,
     Session::clRumbleTriggers,
     Session::clSetMotionEventState,
+    Session::clSetControllerLED,
 };
 
 Session* Session::s_ActiveSession;
@@ -241,6 +243,19 @@ void Session::clSetMotionEventState(uint16_t controllerNumber, uint8_t motionTyp
     setMotionEventStateEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
     setMotionEventStateEvent.user.data2 = (void*)(uintptr_t)((motionType << 16) | reportRateHz);
     SDL_PushEvent(&setMotionEventStateEvent);
+}
+
+void Session::clSetControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b)
+{
+    // We push an event for the main thread to handle in order to properly synchronize
+    // with the removal of game controllers that could result in our game controller
+    // going away during this callback.
+    SDL_Event setControllerLEDEvent = {};
+    setControllerLEDEvent.type = SDL_USEREVENT;
+    setControllerLEDEvent.user.code = SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED;
+    setControllerLEDEvent.user.data1 = (void*)(uintptr_t)controllerNumber;
+    setControllerLEDEvent.user.data2 = (void*)(uintptr_t)(r << 16 | g << 8 | b);
+    SDL_PushEvent(&setControllerLEDEvent);
 }
 
 bool Session::chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
@@ -1679,6 +1694,12 @@ void Session::execInternal()
                                                     (uint8_t)((uintptr_t)event.user.data2 >> 16),
                                                     (uint16_t)((uintptr_t)event.user.data2 & 0xFFFF));
                 break;
+            case SDL_CODE_GAMECONTROLLER_SET_CONTROLLER_LED:
+                m_InputHandler->setControllerLED((uint16_t)(uintptr_t)event.user.data1,
+                                                 (uint8_t)((uintptr_t)event.user.data2 >> 16),
+                                                 (uint8_t)((uintptr_t)event.user.data2 >> 8),
+                                                 (uint8_t)((uintptr_t)event.user.data2));
+                break;
             default:
                 SDL_assert(false);
             }
@@ -1873,6 +1894,11 @@ void Session::execInternal()
         case SDL_CONTROLLERTOUCHPADUP:
         case SDL_CONTROLLERTOUCHPADMOTION:
             m_InputHandler->handleControllerTouchpadEvent(&event.ctouchpad);
+            break;
+#endif
+#if SDL_VERSION_ATLEAST(2, 24, 0)
+        case SDL_JOYBATTERYUPDATED:
+            m_InputHandler->handleJoystickBatteryEvent(&event.jbattery);
             break;
 #endif
         case SDL_CONTROLLERDEVICEADDED:

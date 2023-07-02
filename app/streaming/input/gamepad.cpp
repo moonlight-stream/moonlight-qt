@@ -64,6 +64,47 @@ void SdlInputHandler::sendGamepadState(GamepadState* state)
                                state->rsY);
 }
 
+void SdlInputHandler::sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level)
+{
+    uint8_t batteryPercentage;
+    uint8_t batteryState;
+
+    // SDL's battery reporting capabilities are quite limited. Notably, we cannot
+    // tell the battery level while charging (or even if a battery is present).
+    // We also cannot tell the percentage of charge exactly in any case.
+    switch (level)
+    {
+    case SDL_JOYSTICK_POWER_UNKNOWN:
+        batteryState = LI_BATTERY_STATE_UNKNOWN;
+        batteryPercentage = LI_BATTERY_PERCENTAGE_UNKNOWN;
+        break;
+    case SDL_JOYSTICK_POWER_WIRED:
+        batteryState = LI_BATTERY_STATE_CHARGING;
+        batteryPercentage = LI_BATTERY_PERCENTAGE_UNKNOWN;
+        break;
+    case SDL_JOYSTICK_POWER_EMPTY:
+        batteryState = LI_BATTERY_STATE_DISCHARGING;
+        batteryPercentage = 5;
+        break;
+    case SDL_JOYSTICK_POWER_LOW:
+        batteryState = LI_BATTERY_STATE_DISCHARGING;
+        batteryPercentage = 20;
+        break;
+    case SDL_JOYSTICK_POWER_MEDIUM:
+        batteryState = LI_BATTERY_STATE_DISCHARGING;
+        batteryPercentage = 50;
+        break;
+    case SDL_JOYSTICK_POWER_FULL:
+        batteryState = LI_BATTERY_STATE_DISCHARGING;
+        batteryPercentage = 90;
+        break;
+    default:
+        return;
+    }
+
+    LiSendControllerBatteryEvent(state->index, batteryState, batteryPercentage);
+}
+
 Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param)
 {
     auto gamepad = reinterpret_cast<GamepadState*>(param);
@@ -364,6 +405,20 @@ void SdlInputHandler::handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent*
 
 #endif
 
+#if SDL_VERSION_ATLEAST(2, 24, 0)
+
+void SdlInputHandler::handleJoystickBatteryEvent(SDL_JoyBatteryEvent* event)
+{
+    GamepadState* state = findStateForGamepad(event->which);
+    if (state == NULL) {
+        return;
+    }
+
+    sendGamepadBatteryState(state, event->level);
+}
+
+#endif
+
 void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
 {
     GamepadState* state;
@@ -489,6 +544,8 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             SDL_assert(m_GamepadMask == 0x1);
         }
 
+        SDL_JoystickPowerLevel powerLevel = SDL_JoystickCurrentPowerLevel(SDL_GameControllerGetJoystick(state->controller));
+
 #if SDL_VERSION_ATLEAST(2, 0, 14)
         // On SDL 2.0.14 and later, we can provide enhanced controller information to the host PC
         // for it to use as a hint for the type of controller to emulate.
@@ -520,6 +577,12 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         if (SDL_GameControllerHasSensor(state->controller, SDL_SENSOR_GYRO)) {
             capabilities |= LI_CCAP_GYRO;
         }
+        if (powerLevel != SDL_JOYSTICK_POWER_UNKNOWN || SDL_VERSION_ATLEAST(2, 24, 0)) {
+            capabilities |= LI_CCAP_BATTERY_STATE;
+        }
+        if (SDL_GameControllerHasLED(state->controller)) {
+            capabilities |= LI_CCAP_RGB_LED;
+        }
 
         uint8_t type;
         switch (SDL_GameControllerGetType(state->controller)) {
@@ -549,6 +612,11 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         // Send an empty event to tell the PC we've arrived
         sendGamepadState(state);
 #endif
+
+        // Send a power level if it's known at this time
+        if (powerLevel != SDL_JOYSTICK_POWER_UNKNOWN) {
+            sendGamepadBatteryState(state, powerLevel);
+        }
     }
     else if (event->type == SDL_CONTROLLERDEVICEREMOVED) {
         state = findStateForGamepad(event->which);
@@ -712,6 +780,20 @@ void SdlInputHandler::setMotionEventState(uint16_t controllerNumber, uint8_t mot
             SDL_GameControllerSetSensorEnabled(m_GamepadState[controllerNumber].controller, SDL_SENSOR_GYRO, reportRateHz ? SDL_TRUE : SDL_FALSE);
             break;
         }
+    }
+#endif
+}
+
+void SdlInputHandler::setControllerLED(uint16_t controllerNumber, uint8_t r, uint8_t g, uint8_t b)
+{
+    // Make sure the controller number is within our supported count
+    if (controllerNumber >= MAX_GAMEPADS) {
+        return;
+    }
+
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        SDL_GameControllerSetLED(m_GamepadState[controllerNumber].controller, r, g, b);
     }
 #endif
 }
