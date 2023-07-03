@@ -19,6 +19,7 @@
 #include <Limelight.h>
 
 DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0xD2,0x5C,0x15,0xB3,0xD6);
+DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile0,0xb8be4ccb,0xcf53,0x46ba,0x8d,0x59,0xd6,0xb8,0xa6,0xda,0x5d,0x2a);
 
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
@@ -198,6 +199,12 @@ bool DXVA2Renderer::initializeDecoder()
         }
         else if (m_VideoFormat == VIDEO_FORMAT_H265_MAIN10) {
             if (IsEqualGUID(guids[i], DXVA2_ModeHEVC_VLD_Main10)) {
+                chosenDeviceGuid = guids[i];
+                break;
+            }
+        }
+        else if (m_VideoFormat == VIDEO_FORMAT_AV1_MAIN8 || m_VideoFormat == VIDEO_FORMAT_AV1_MAIN10) {
+            if (IsEqualGUID(guids[i], DXVA2_ModeAV1_VLD_Profile0)) {
                 chosenDeviceGuid = guids[i];
                 break;
             }
@@ -774,7 +781,7 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     // the screen in full-screen mode at 720p/1080p unless we use 32 pixel alignment.
     // This appears to work without issues on AMD and Nvidia GPUs too, so we will
     // do it unconditionally for now.
-    if (m_VideoFormat & VIDEO_FORMAT_MASK_H265) {
+    if (!(m_VideoFormat & VIDEO_FORMAT_MASK_H264)) {
         alignment = 32;
     }
     else {

@@ -78,6 +78,9 @@ static const QList<codec_info_t> k_NonHwaccelHEVCCodecs = {
     {"hevc_omx", 0},
 };
 
+static const QList<codec_info_t> k_NonHwaccelAV1Codecs = {
+};
+
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr ||
@@ -633,6 +636,19 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
         }
         break;
 
+    case VIDEO_FORMAT_AV1_MAIN8:
+        codecString = "AV1";
+        break;
+
+    case VIDEO_FORMAT_AV1_MAIN10:
+        if (LiGetCurrentHostDisplayHdrMode()) {
+            codecString = "AV1 10-bit HDR";
+        }
+        else {
+            codecString = "AV1 10-bit SDR";
+        }
+        break;
+
     default:
         SDL_assert(false);
         codecString = "UNKNOWN";
@@ -996,6 +1012,23 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             }
         }
     }
+    {
+        QString av1DecoderHint = qgetenv("AV1_DECODER_HINT");
+        if (!av1DecoderHint.isEmpty() && (params->videoFormat & VIDEO_FORMAT_MASK_AV1)) {
+            QByteArray decoderString = av1DecoderHint.toLocal8Bit();
+            if (tryInitializeRendererForDecoderByName(decoderString.constData(), params)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using custom AV1 decoder (AV1_DECODER_HINT): %s",
+                            decoderString.constData());
+                return true;
+            }
+            else {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Custom AV1 decoder (AV1_DECODER_HINT) failed to load: %s",
+                             decoderString.constData());
+            }
+        }
+    }
 
     const AVCodec* decoder;
 
@@ -1004,6 +1037,9 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
     }
     else if (params->videoFormat & VIDEO_FORMAT_MASK_H265) {
         decoder = avcodec_find_decoder(AV_CODEC_ID_HEVC);
+    }
+    else if (params->videoFormat & VIDEO_FORMAT_MASK_AV1) {
+        decoder = avcodec_find_decoder(AV_CODEC_ID_AV1);
     }
     else {
         Q_ASSERT(false);
@@ -1042,12 +1078,22 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 }
             }
         }
-        else {
+        else if (params->videoFormat & VIDEO_FORMAT_MASK_H265) {
             for (const codec_info_t& codecInfo : k_NonHwaccelHEVCCodecs) {
                 if (tryInitializeRendererForDecoderByName(codecInfo.codec, params)) {
                     return true;
                 }
             }
+        }
+        else if (params->videoFormat & VIDEO_FORMAT_MASK_AV1) {
+            for (const codec_info_t& codecInfo : k_NonHwaccelAV1Codecs) {
+                if (tryInitializeRendererForDecoderByName(codecInfo.codec, params)) {
+                    return true;
+                }
+            }
+        }
+        else {
+            Q_ASSERT(false);
         }
 
         // Look for the first matching hwaccel hardware decoder (pass 1)

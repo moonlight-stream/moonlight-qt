@@ -440,10 +440,20 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 {
     IVideoDecoder* decoder;
 
+    int videoFormat;
+    if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265_MAIN10) {
+        videoFormat = VIDEO_FORMAT_H265_MAIN10;
+    }
+    else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265) {
+        videoFormat = VIDEO_FORMAT_H265;
+    }
+    else {
+        videoFormat = VIDEO_FORMAT_H264;
+    }
+
     if (!chooseDecoder(m_Preferences->videoDecoderSelection,
                        window,
-                       m_StreamConfig.enableHdr ? VIDEO_FORMAT_H265_MAIN10 :
-                            (m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264),
+                       videoFormat,
                        m_StreamConfig.width,
                        m_StreamConfig.height,
                        m_StreamConfig.fps,
@@ -600,17 +610,22 @@ bool Session::initialize()
                 "Audio channel mask: %X",
                 CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
 
+    // H.264 is always supported
+    m_StreamConfig.supportedVideoFormats = VIDEO_FORMAT_H264;
+
     switch (m_Preferences->videoCodecConfig)
     {
     case StreamingPreferences::VCC_AUTO:
         // TODO: Determine if HEVC is better depending on the decoder
-        m_StreamConfig.supportsHevc =
-                isHardwareDecodeAvailable(testWindow,
-                                          m_Preferences->videoDecoderSelection,
-                                          VIDEO_FORMAT_H265,
-                                          m_StreamConfig.width,
-                                          m_StreamConfig.height,
-                                          m_StreamConfig.fps);
+        if (isHardwareDecodeAvailable(testWindow,
+                                      m_Preferences->videoDecoderSelection,
+                                      VIDEO_FORMAT_H265,
+                                      m_StreamConfig.width,
+                                      m_StreamConfig.height,
+                                      m_StreamConfig.fps)) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265;
+        }
+
 #ifdef Q_OS_DARWIN
         {
             // Prior to GFE 3.11, GFE did not allow us to constrain
@@ -623,23 +638,18 @@ bool Session::initialize()
                     (gfeVersion[0] == 3 && gfeVersion[1] < 11)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "Disabling HEVC on macOS due to old GFE version");
-                m_StreamConfig.supportsHevc = false;
+                m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_H265;
             }
         }
 #endif
-        m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_H264:
-        m_StreamConfig.supportsHevc = false;
-        m_StreamConfig.enableHdr = false;
         break;
     case StreamingPreferences::VCC_FORCE_HEVC:
-        m_StreamConfig.supportsHevc = true;
-        m_StreamConfig.enableHdr = false;
+        m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265;
         break;
     case StreamingPreferences::VCC_FORCE_HEVC_HDR:
-        m_StreamConfig.supportsHevc = true;
-        m_StreamConfig.enableHdr = true;
+        m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265 | VIDEO_FORMAT_H265_MAIN10;
         break;
     }
 
@@ -723,7 +733,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_SOFTWARE) {
         if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR) {
             emitLaunchWarning(tr("HDR is not supported with software decoding."));
-            m_StreamConfig.enableHdr = false;
+            m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_10BIT;
         }
         else {
             emitLaunchWarning(tr("Your settings selection to force software decoding may cause poor streaming performance."));
@@ -738,7 +748,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         }
     }
 
-    if (m_StreamConfig.supportsHevc) {
+    if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_H265) {
         bool hevcForced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC ||
                 m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC_HDR;
 
@@ -750,7 +760,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             // Moonlight-common-c will handle this case already, but we want
             // to set this explicitly here so we can do our hardware acceleration
             // check below.
-            m_StreamConfig.supportsHevc = false;
+            m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_H265;
         }
         else if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
                 hevcForced && // Auto VCC is already checked in initialize()
@@ -764,7 +774,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         }
     }
 
-    if (!m_StreamConfig.supportsHevc &&
+    if (!(m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_H265) &&
             m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO &&
             !isHardwareDecodeAvailable(testWindow,
                                        m_Preferences->videoDecoderSelection,
@@ -792,13 +802,11 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         }
     }
 
-    if (m_StreamConfig.enableHdr) {
-        // Turn HDR back off unless all criteria are met.
-        m_StreamConfig.enableHdr = false;
-
+    if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_10BIT) {
         // Check that the server GPU supports HDR
-        if (!(m_Computer->serverCodecModeSupport & 0x200)) {
+        if (!(m_Computer->serverCodecModeSupport & 0x2200)) {
             emitLaunchWarning(tr("Your host PC doesn't support HDR streaming."));
+            m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_10BIT;
         }
         else if (!isHardwareDecodeAvailable(testWindow,
                                             m_Preferences->videoDecoderSelection,
@@ -807,12 +815,10 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                                             m_StreamConfig.height,
                                             m_StreamConfig.fps)) {
             emitLaunchWarning(tr("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming."));
+            m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_10BIT;
         }
         else {
             // TODO: Also validate display capabilites
-
-            // Validation successful so HDR is good to go
-            m_StreamConfig.enableHdr = true;
         }
     }
 
@@ -862,17 +868,17 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             emit displayLaunchError(tr("Your host PC's GPU doesn't support streaming video resolutions over 4K."));
             return false;
         }
-        else if (!m_StreamConfig.supportsHevc) {
-            emit displayLaunchError(tr("Video resolutions over 4K are only supported by the HEVC codec."));
+        else if ((m_StreamConfig.supportedVideoFormats & ~VIDEO_FORMAT_MASK_H264) == 0) {
+            emit displayLaunchError(tr("Video resolutions over 4K are not supported by the H.264 codec."));
             return false;
         }
     }
 
     if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_FORCE_HARDWARE &&
-            !m_StreamConfig.enableHdr && // HEVC Main10 was already checked for hardware decode support above
+            !(m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_10BIT) && // HDR was already checked for hardware decode support above
             !isHardwareDecodeAvailable(testWindow,
                                        m_Preferences->videoDecoderSelection,
-                                       m_StreamConfig.supportsHevc ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
+                                       (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_H265) ? VIDEO_FORMAT_H265 : VIDEO_FORMAT_H264,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
                                        m_StreamConfig.fps)) {
@@ -1236,6 +1242,7 @@ bool Session::startConnectionAsync()
     SERVER_INFORMATION hostInfo;
     hostInfo.address = hostnameStr.data();
     hostInfo.serverInfoAppVersion = siAppVersion.data();
+    hostInfo.serverCodecModeSupport = m_Computer->serverCodecModeSupport;
 
     // Older GFE versions didn't have this field
     QByteArray siGfeVersion;
