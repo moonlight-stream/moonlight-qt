@@ -364,15 +364,27 @@ void SdlInputHandler::handleControllerSensorEvent(SDL_ControllerSensorEvent* eve
 
     switch (event->sensor) {
     case SDL_SENSOR_ACCEL:
-        if (state->accelReportPeriodMs && SDL_TICKS_PASSED(event->timestamp, state->lastAccelEventTime + state->accelReportPeriodMs)) {
-            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_ACCEL, event->data[0], event->data[1], event->data[2]);
+        if (state->accelReportPeriodMs &&
+                SDL_TICKS_PASSED(event->timestamp, state->lastAccelEventTime + state->accelReportPeriodMs) &&
+                memcmp(event->data, state->lastAccelEventData, sizeof(event->data)) != 0) {
+            memcpy(state->lastAccelEventData, event->data, sizeof(event->data));
             state->lastAccelEventTime = event->timestamp;
+
+            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_ACCEL, event->data[0], event->data[1], event->data[2]);
         }
         break;
     case SDL_SENSOR_GYRO:
-        if (state->gyroReportPeriodMs && SDL_TICKS_PASSED(event->timestamp, state->lastGyroEventTime + state->gyroReportPeriodMs)) {
-            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_GYRO, event->data[0], event->data[1], event->data[2]);
+        if (state->gyroReportPeriodMs &&
+                SDL_TICKS_PASSED(event->timestamp, state->lastGyroEventTime + state->gyroReportPeriodMs) &&
+                memcmp(event->data, state->lastGyroEventData, sizeof(event->data)) != 0) {
+            memcpy(state->lastGyroEventData, event->data, sizeof(event->data));
             state->lastGyroEventTime = event->timestamp;
+
+            // Convert rad/s to deg/s
+            LiSendControllerMotionEvent((uint8_t)state->index, LI_MOTION_TYPE_GYRO,
+                                        event->data[0] * 57.2957795f,
+                                        event->data[1] * 57.2957795f,
+                                        event->data[2] * 57.2957795f);
         }
         break;
     }
