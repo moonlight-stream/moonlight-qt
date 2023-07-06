@@ -91,4 +91,6 @@ private:
     static const uint8_t k_H264TestFrame[];
     static const uint8_t k_HEVCMainTestFrame[];
     static const uint8_t k_HEVCMain10TestFrame[];
+    static const uint8_t k_AV1Main8TestFrame[];
+    static const uint8_t k_AV1Main10TestFrame[];
 };

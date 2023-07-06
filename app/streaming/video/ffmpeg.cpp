@@ -482,6 +482,14 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, PDECODER
             m_Pkt->data = (uint8_t*)k_HEVCMain10TestFrame;
             m_Pkt->size = sizeof(k_HEVCMain10TestFrame);
             break;
+        case VIDEO_FORMAT_AV1_MAIN8:
+            m_Pkt->data = (uint8_t*)k_AV1Main8TestFrame;
+            m_Pkt->size = sizeof(k_AV1Main8TestFrame);
+            break;
+        case VIDEO_FORMAT_AV1_MAIN10:
+            m_Pkt->data = (uint8_t*)k_AV1Main10TestFrame;
+            m_Pkt->size = sizeof(k_AV1Main10TestFrame);
+            break;
         default:
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "No test frame for format: %x",
