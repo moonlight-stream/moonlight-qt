@@ -136,7 +136,8 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
         this->serverCodecModeSupport = codecSupport.toInt();
     }
     else {
-        this->serverCodecModeSupport = 0;
+        // Assume H.264 is always supported
+        this->serverCodecModeSupport = 0x3;
     }
 
     QString maxLumaPixelsHEVC = NvHTTP::getXmlString(serverInfo, "MaxLumaPixelsHEVC");
