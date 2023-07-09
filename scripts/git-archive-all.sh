@@ -74,7 +74,7 @@ function usage () {
     echo "    If '--prefix' is specified, the archive's superproject and all submodules"
     echo "    are created with the <path> prefix named. The default is to not use one."
     echo
-    echo "    If '--worktree-attributes' is specified, the invidual archive commands will"
+    echo "    If '--worktree-attributes' is specified, the individual archive commands will"
     echo "    look for attributes in .gitattributes in the working directory too."
     echo
     echo "    If '--separate' or '-s' is specified, individual archives will be created"

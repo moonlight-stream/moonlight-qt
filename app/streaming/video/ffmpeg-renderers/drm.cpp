@@ -742,7 +742,7 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 else {
                     // UV/VU planes are 2x2 subsampled.
                     //
-                    // NB: The pitch is the same between Y and UV/VU, becasuse the 2x subsampling
+                    // NB: The pitch is the same between Y and UV/VU, because the 2x subsampling
                     // is cancelled out by the 2x plane size of UV/VU vs U/V alone.
                     planeHeight = frame->height / 2;
                 }

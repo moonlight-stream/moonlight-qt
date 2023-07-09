@@ -249,7 +249,7 @@ public:
         return -1;
     }
 
-    // Free the ressources allocated during the last `exportEGLImages` call
+    // Free the resources allocated during the last `exportEGLImages` call
     virtual void freeEGLImages(EGLDisplay, EGLImage[EGL_MAX_PLANES]) {}
 #endif
 

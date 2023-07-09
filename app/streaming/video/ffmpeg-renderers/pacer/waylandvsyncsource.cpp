@@ -40,7 +40,7 @@ bool WaylandVsyncSource::initialize(SDL_Window* window, int)
         return false;
     }
 
-    // Pacer shoud not create us for non-Wayland windows
+    // Pacer should not create us for non-Wayland windows
     SDL_assert(info.subsystem == SDL_SYSWM_WAYLAND);
 
     m_Display = info.info.wl.display;

@@ -463,7 +463,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // This hint will ensure we use EGL to retreive our GL context,
+    // This hint will ensure we use EGL to retrieve our GL context,
     // even on X11 where that is not the default. EGL is required
     // to avoid a crash in Mesa.
     // https://gitlab.freedesktop.org/mesa/mesa/issues/1011

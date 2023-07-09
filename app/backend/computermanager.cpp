@@ -169,8 +169,8 @@ ComputerManager::ComputerManager(QObject *parent)
     m_DelayedFlushThread->start();
 
     // To quit in a timely manner, we must block additional requests
-    // after we receive the aboutToQuit() signal. This is neccessary
-    // because NvHTTP uses aboutToQuit() to abort requests in progres
+    // after we receive the aboutToQuit() signal. This is necessary
+    // because NvHTTP uses aboutToQuit() to abort requests in progress
     // while quitting, however this is a one time signal - additional
     // requests would not be aborted and block termination.
     connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, &ComputerManager::handleAboutToQuit);

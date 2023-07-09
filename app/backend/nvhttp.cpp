@@ -249,7 +249,7 @@ NvHTTP::quitApp()
     verifyResponseStatus(response);
 
     // Newer GFE versions will just return success even if quitting fails
-    // if we're not the original requestor.
+    // if we're not the original requester.
     if (getCurrentGame(getServerInfo(NvHTTP::NVLL_ERROR)) != 0) {
         // Generate a synthetic GfeResponseException letting the caller know
         // that they can't kill someone else's stream.
