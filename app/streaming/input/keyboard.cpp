@@ -354,6 +354,9 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 }
                 keyCode = 0x5C;
                 break;
+            case SDL_SCANCODE_APPLICATION:
+                keyCode = 0x5D;
+                break;
             case SDL_SCANCODE_AC_BACK:
                 keyCode = 0xA6;
                 break;
