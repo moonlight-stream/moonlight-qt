@@ -19,8 +19,9 @@
 #define MOUSE_EMULATION_DEADZONE 2
 
 // Haptic capabilities (in addition to those from SDL_HapticQuery())
-#define ML_HAPTIC_GC_RUMBLE      (1U << 16)
-#define ML_HAPTIC_SIMPLE_RUMBLE  (1U << 17)
+#define ML_HAPTIC_GC_RUMBLE         (1U << 16)
+#define ML_HAPTIC_SIMPLE_RUMBLE     (1U << 17)
+#define ML_HAPTIC_GC_TRIGGER_RUMBLE (1U << 18)
 
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
@@ -492,14 +493,18 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         state->controller = controller;
         state->jsId = SDL_JoystickInstanceID(SDL_GameControllerGetJoystick(state->controller));
 
+        hapticCaps = 0;
 #if SDL_VERSION_ATLEAST(2, 0, 18)
-        hapticCaps = SDL_GameControllerHasRumble(controller) ? ML_HAPTIC_GC_RUMBLE : 0;
+        hapticCaps |= SDL_GameControllerHasRumble(controller) ? ML_HAPTIC_GC_RUMBLE : 0;
+        hapticCaps |= SDL_GameControllerHasRumbleTriggers(controller) ? ML_HAPTIC_GC_TRIGGER_RUMBLE : 0;
 #elif SDL_VERSION_ATLEAST(2, 0, 9)
-        // Perform a tiny rumble to see if haptics are supported.
+        // Perform a tiny rumbles to see if haptics are supported.
         // NB: We cannot use zeros for rumble intensity or SDL will not actually call the JS driver
         // and we'll get a (potentially false) success value returned.
-        hapticCaps = SDL_GameControllerRumble(controller, 1, 1, 1) == 0 ?
-                        ML_HAPTIC_GC_RUMBLE : 0;
+        hapticCaps |= SDL_GameControllerRumble(controller, 1, 1, 1) == 0 ? ML_HAPTIC_GC_RUMBLE : 0;
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+        hapticCaps |= SDL_GameControllerRumbleTriggers(controller, 1, 1, 1) == 0 ? ML_HAPTIC_GC_TRIGGER_RUMBLE : 0;
+#endif
 #else
         state->haptic = SDL_HapticOpenFromJoystick(SDL_GameControllerGetJoystick(state->controller));
         state->hapticEffectId = -1;
@@ -574,10 +579,10 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             // We assume these are analog triggers if the binding is to an axis rather than a button
             capabilities |= LI_CCAP_ANALOG_TRIGGERS;
         }
-        if (SDL_GameControllerHasRumble(state->controller)) {
+        if (hapticCaps & ML_HAPTIC_GC_RUMBLE) {
             capabilities |= LI_CCAP_RUMBLE;
         }
-        if (SDL_GameControllerHasRumbleTriggers(state->controller)) {
+        if (hapticCaps & ML_HAPTIC_GC_TRIGGER_RUMBLE) {
             capabilities |= LI_CCAP_TRIGGER_RUMBLE;
         }
         if (SDL_GameControllerGetNumTouchpads(state->controller) > 0) {
@@ -608,9 +613,11 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             type = LI_CTYPE_PS;
             break;
         case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_PRO:
+#if SDL_VERSION_ATLEAST(2, 24, 0)
         case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
         case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
         case SDL_CONTROLLER_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+#endif
             type = LI_CTYPE_NINTENDO;
             break;
         default:
