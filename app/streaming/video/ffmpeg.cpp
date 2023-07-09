@@ -891,7 +891,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForDecoderByName(const char *decod
     for (int i = 0;; i++) {
         const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
         if (!config) {
-            // No remaing hwaccel options
+            // No remaining hwaccel options
             break;
         }
 
@@ -1067,7 +1067,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
         for (int i = 0;; i++) {
             const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
             if (!config) {
-                // No remaing hwaccel options
+                // No remaining hwaccel options
                 break;
             }
 
@@ -1109,7 +1109,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
         for (int i = 0;; i++) {
             const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
             if (!config) {
-                // No remaing hwaccel options
+                // No remaining hwaccel options
                 break;
             }
 

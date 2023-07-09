@@ -89,7 +89,7 @@ CenteredGridView {
 
             onSourceSizeChanged: {
                 // Nearly all of Nvidia's official box art does not match the dimensions of placeholder
-                // images, however the one known exeception is Overcooked. Therefore, we only execute
+                // images, however the one known exception is Overcooked. Therefore, we only execute
                 // the image size checks if this is not an app collector game. We know the officially
                 // supported games all have box art, so this check is not required.
                 if (!model.isAppCollectorGame &&

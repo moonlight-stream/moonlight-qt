@@ -818,7 +818,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_10BIT;
         }
         else {
-            // TODO: Also validate display capabilites
+            // TODO: Also validate display capabilities
         }
     }
 
