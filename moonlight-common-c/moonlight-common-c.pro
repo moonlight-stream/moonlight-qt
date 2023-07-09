@@ -30,6 +30,7 @@ win32 {
     }
 
     INCLUDEPATH += $$PWD/../libs/windows/include
+    DEFINES += HAS_QOS_FLOWID=1 HAS_PQOS_FLOWID=1
 }
 macx {
     INCLUDEPATH += $$PWD/../libs/mac/include
