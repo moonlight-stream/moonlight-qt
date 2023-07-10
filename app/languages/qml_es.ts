@@ -811,12 +811,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1361"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation>Activar HDR anula la selección manual de codecs.</translation>
+        <translation>Habilitar el HDR anula las selecciones manuales del decodificador.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1430"/>
         <source>Enabling HDR overrides manual codec selections.</source>
-        <translation>Activar HDR anula la selección manual de codecs.</translation>
+        <translation>Habilitar el HDR anula las selecciones de los códec manuales.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1436"/>
@@ -919,7 +919,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="669"/>
         <source>Audio configuration</source>
-        <translation>Configuración de audio</translation>
+        <translation>Configuración del sonido</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="966"/>
