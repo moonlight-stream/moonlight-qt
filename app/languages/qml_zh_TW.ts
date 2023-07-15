@@ -131,7 +131,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>此電腦的網路連線遭到封鎖。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
+        <translation>Moonlight 無法由這台電腦的網路連線進行連接。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
