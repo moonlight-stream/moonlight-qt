@@ -215,12 +215,6 @@ echo Building MSI
 msbuild -Restore %SOURCE_ROOT%\wix\Moonlight\Moonlight.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
 if !ERRORLEVEL! NEQ 0 goto Error
 
-if "%SIGN%"=="1" (
-    echo Signing MSI
-    signtool %SIGNTOOL_PARAMS% %BUILD_FOLDER%\Moonlight.msi
-    if !ERRORLEVEL! NEQ 0 goto Error
-)
-
 echo Copying application binary to deployment directory
 copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error

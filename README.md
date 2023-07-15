@@ -44,7 +44,6 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
 * [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
 * Select **MSVC 2019** option during Qt installation. MinGW is not supported.
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
-* Wix 4 .NET Tool (install using `dotnet tool install --global wix`)
 
 ### macOS Build Requirements
 * Qt 6.2 SDK or later

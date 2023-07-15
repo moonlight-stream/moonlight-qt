@@ -20,6 +20,12 @@
     </HarvestDirectory>
     <BindPath Include="$(DEPLOY_FOLDER)" />
   </ItemGroup>
+  <PropertyGroup Condition="$(SIGN)!=''">
+    <SignOutput>true</SignOutput>
+  </PropertyGroup>
+  <Target Name="SignMsi">
+    <Exec Command='signtool.exe $(SIGNTOOL_PARAMS) %(SignMsi.FullPath)' />
+  </Target>
   <ItemGroup>
     <PackageReference Include="WixToolset.Firewall.wixext" Version="4.*" />
     <PackageReference Include="WixToolset.Util.wixext" Version="4.*" />

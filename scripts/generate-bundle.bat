@@ -81,20 +81,8 @@ if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Building bundle
 rem Bundles are always x86 binaries
-msbuild %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86 /p:DefineConstants="INCLUDE_ARM64=%INCLUDE_ARM64%"
+msbuild -Restore %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86 /p:DefineConstants="INCLUDE_ARM64=%INCLUDE_ARM64%"
 if !ERRORLEVEL! NEQ 0 goto Error
-
-if "%SIGN%"=="1" (
-    echo Signing bundle
-    "%WIX%\bin\insignia" -ib %INSTALLER_FOLDER%\MoonlightSetup.exe -o %BUILD_FOLDER%\engine.exe
-    if !ERRORLEVEL! NEQ 0 goto Error
-    signtool %SIGNTOOL_PARAMS% %BUILD_FOLDER%\engine.exe
-    if !ERRORLEVEL! NEQ 0 goto Error
-    "%WIX%\bin\insignia" -ab %BUILD_FOLDER%\engine.exe %INSTALLER_FOLDER%\MoonlightSetup.exe -o %INSTALLER_FOLDER%\MoonlightSetup.exe
-    if !ERRORLEVEL! NEQ 0 goto Error
-    signtool %SIGNTOOL_PARAMS% %INSTALLER_FOLDER%\MoonlightSetup.exe
-    if !ERRORLEVEL! NEQ 0 goto Error
-)
 
 rem Rename the installer to match the publishing convention
 ren %INSTALLER_FOLDER%\MoonlightSetup.exe MoonlightSetup-%VERSION%.exe
