@@ -193,17 +193,9 @@ echo Deleting original QML files
 forfiles /p %DEPLOY_FOLDER% /m *.qml /s /c "cmd /c del @path"
 if !ERRORLEVEL! NEQ 0 goto Error
 
-echo Harvesting files for WiX
-"%WIX%\bin\heat" dir %DEPLOY_FOLDER% -srd -sfrag -ag -sw5150 -cg MoonlightDependencies -var var.SourceDir -dr INSTALLFOLDER -out %BUILD_FOLDER%\Dependencies.wxs
-if !ERRORLEVEL! NEQ 0 goto Error
-
-echo Copying application binary to deployment directory
-copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
-if !ERRORLEVEL! NEQ 0 goto Error
-
 if "%SIGN%"=="1" (
     echo Signing deployed binaries
-    set FILES_TO_SIGN=
+    set FILES_TO_SIGN=%BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
     for /r "%DEPLOY_FOLDER%" %%f in (*.dll *.exe) do (
         set FILES_TO_SIGN=!FILES_TO_SIGN! %%f
     )
@@ -226,6 +218,10 @@ if "%SIGN%"=="1" (
     signtool %SIGNTOOL_PARAMS% %BUILD_FOLDER%\Moonlight.msi
     if !ERRORLEVEL! NEQ 0 goto Error
 )
+
+echo Copying application binary to deployment directory
+copy %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe %DEPLOY_FOLDER%
+if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Building portable package
 rem This must be done after WiX harvesting and signing, since the VCRT dlls are MS signed

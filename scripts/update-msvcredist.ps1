@@ -18,11 +18,11 @@ function Print-WixForArch([string]$Arch) {
 
     $targetSize = (Get-Item $file).Length
     $targetVersion = (Get-Command $file).Version
-    $targetSha1 = (Get-FileHash -Path $file -Algorithm SHA1).Hash
+    $targetSha512 = (Get-FileHash -Path $file -Algorithm SHA512).Hash
 
     Write-Output "<?define VCREDIST_VER = `"$targetVersion`" ?>"
     Write-Output "<?define VCREDIST_$($Arch)_SIZE = `"$targetSize`" ?>"
-    Write-Output "<?define VCREDIST_$($Arch)_SHA1 = `"$targetSha1`" ?>"
+    Write-Output "<?define VCREDIST_$($Arch)_SHA512 = `"$targetSha512`" ?>"
     Write-Output "<?define VCREDIST_$($Arch)_URL = `"$targetUrl`" ?>"
     Write-Output "<?define VCREDIST_$($Arch)_UPGRADE_CODE = `"$($UpgradeCodes[$Arch])`" ?>"
 

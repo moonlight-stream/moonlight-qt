@@ -44,7 +44,7 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
 * [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
 * Select **MSVC 2019** option during Qt installation. MinGW is not supported.
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
-* [WiX Toolset](https://wixtoolset.org/releases/v3-14-0-5722/) v3.14.0.5722 or later (only if building installers for non-development PCs)
+* Wix 4 .NET Tool (install using `dotnet tool install --global wix`)
 
 ### macOS Build Requirements
 * Qt 6.2 SDK or later
@@ -72,10 +72,10 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
 3. Open the project in Qt Creator or build from qmake on the command line.
     * To build a binary for use on non-development machines, use the scripts in the `scripts` folder.
-        * For Windows builds, use `scripts\build-arch.bat` and `scripts\generate-bundle.bat`. Execute these scripts from the root of the repository within a Qt command prompt. Ensure WiX and 7-Zip binary directories are in your `%PATH%`.
+        * For Windows builds, use `scripts\build-arch.bat` and `scripts\generate-bundle.bat`. Execute these scripts from the root of the repository within a Qt command prompt. Ensure  7-Zip binary directory is on your `%PATH%`.
         * For macOS builds, use `scripts/generate-dmg.sh`. Execute this script from the root of the repository and ensure Qt's `bin` folder is in your `$PATH`.
         * For Steam Link builds, run `scripts/build-steamlink-app.sh` from the root of the repository.
-    * To build from the command line for development use, run `qmake moonlight-qt.pro` then `make debug` or `make release`
+    * To build from the command line for development use on macOS or Linux, run `qmake moonlight-qt.pro` then `make debug` or `make release`
     * To create an embedded build for a single-purpose device, use `qmake "CONFIG+=embedded" moonlight-qt.pro` and build normally.
         * This build will lack windowed mode, Discord/Help links, and other features that don't make sense on an embedded device.
         * For platforms with poor GL performance, add `"CONFIG+=glslow"` to prefer direct KMSDRM rendering over EGL/GLES renderers. Direct KMSDRM rendering can use dedicated YUV/RGB conversion and scaling hardware rather than slower GPU shaders for these operations.
