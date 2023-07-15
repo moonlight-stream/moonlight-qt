@@ -40,8 +40,9 @@ private:
 
     bool createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend);
 
-    bool tryInitializeRendererForDecoderByName(const char* decoderName,
-                                               PDECODER_PARAMETERS params);
+    bool tryInitializeRendererForUnknownDecoder(const AVCodec* decoder,
+                                                PDECODER_PARAMETERS params,
+                                                bool tryHwAccel);
 
     bool tryInitializeRenderer(const AVCodec* decoder,
                                PDECODER_PARAMETERS params,
