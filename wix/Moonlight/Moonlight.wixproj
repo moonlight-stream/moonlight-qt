@@ -23,6 +23,6 @@
   <ItemGroup>
     <PackageReference Include="WixToolset.Firewall.wixext" Version="4.*" />
     <PackageReference Include="WixToolset.Util.wixext" Version="4.*" />
-    <PackageReference Include="WixToolset.Heat" />
+    <PackageReference Include="WixToolset.Heat" Version="4.*" />
   </ItemGroup>
 </Project>
