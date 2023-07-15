@@ -72,15 +72,9 @@ else
   esac
 fi
 
-if [ "$NOTARY_USERNAME" != "" ] && [ "$NOTARY_PASSWORD" != "" ]; then
+if [ "$NOTARY_KEYCHAIN_PROFILE" != "" ]; then
   echo Uploading to App Notary service
-  xcrun altool -t osx -f $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg --primary-bundle-id com.moonlight-stream.Moonlight --notarize-app --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider "$SIGNING_PROVIDER_SHORTNAME" || fail "Notary submission failed"
-  
-  echo Waiting 5 minutes for notarization to complete
-  sleep 300
-
-  echo Getting notarization status
-  xcrun altool -t osx --notarization-history 0 --username "$NOTARY_USERNAME" --password "$NOTARY_PASSWORD" --asc-provider "$SIGNING_PROVIDER_SHORTNAME" || fail "Unable to fetch notarization history!"
+  xcrun notarytool submit --keychain-profile "$NOTARY_KEYCHAIN_PROFILE" --wait $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg || fail "Notary submission failed"
 
   echo Stapling notary ticket to DMG
   xcrun stapler staple -v $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg || fail "Notary ticket stapling failed!"
