@@ -47,22 +47,17 @@
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
+// Note: This is NOT an exhaustive list of all decoders
+// that Moonlight could pick. It will pick any working
+// decoder that matches the codec ID and outputs one of
+// the pixel formats that we have a renderer for.
 static const QMap<QString, int> k_NonHwaccelCodecInfo = {
     // H.264
-#ifdef HAVE_MMAL
     {"h264_mmal", 0},
-#endif
     {"h264_rkmpp", 0},
     {"h264_nvv4l2", 0},
     {"h264_nvmpi", 0},
-#ifndef HAVE_MMAL
-    // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
-    // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
-    // would rather show the missing hardware acceleration warning when the user
-    // is in Full KMS mode rather than try to use a poorly performing hwaccel.
-    // See discussion on https://github.com/jc-kynesim/rpi-ffmpeg/pull/25
     {"h264_v4l2m2m", 0},
-#endif
     {"h264_omx", 0},
 
     // HEVC
@@ -866,6 +861,17 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
         return false;
     }
 
+#ifdef HAVE_MMAL
+    // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
+    // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
+    // would rather show the missing hardware acceleration warning when the user
+    // is in Full KMS mode rather than try to use a poorly performing hwaccel.
+    // See discussion on https://github.com/jc-kynesim/rpi-ffmpeg/pull/25
+    if (strcmp(decoder->name, "h264_v4l2m2m") == 0) {
+        return false;
+    }
+#endif
+
     if (tryHwAccel) {
         // This might be a hwaccel decoder, so try any hw configs first
         for (int i = 0;; i++) {
@@ -901,10 +907,10 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
         return false;
     }
 
-#ifdef HAVE_MMAL
     // HACK: Avoid using YUV420P on h264_mmal. It can cause a deadlock inside the MMAL libraries.
     // Even if it didn't completely deadlock us, the performance would likely be atrocious.
     if (strcmp(decoder->name, "h264_mmal") == 0) {
+#ifdef HAVE_MMAL
         for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
             TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
         }
@@ -912,11 +918,11 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
         for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
             TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(MmalRenderer);
         }
+#endif
 
         // Give up if we can't use MmalRenderer for h264_mmal
         return false;
     }
-#endif
 
     // Check if any of our decoders prefer any of the pixel formats first
     for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
