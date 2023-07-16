@@ -108,7 +108,7 @@ private:
             return;
         }
 
-        m_Resolver = new QMdnsEngine::Resolver(m_Server.get(), m_Hostname);
+        m_Resolver = new QMdnsEngine::Resolver(m_Server.data(), m_Hostname);
         connect(m_Resolver, &QMdnsEngine::Resolver::resolved,
                 this, &MdnsPendingComputer::handleResolvedAddress);
         QTimer::singleShot(2000, this, &MdnsPendingComputer::handleResolvedTimeout);
