@@ -158,7 +158,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Procurando hosts compatíveis em sua rede local...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -201,27 +201,27 @@
     <message>
         <location filename="../gui/PcView.qml" line="323"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>Isso pode demorar alguns segundos…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="334"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Esta rede não parece estar bloqueando o Moonlight. Se você ainda tiver problemas para se conectar, verifique as configurações de firewall do seu PC.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="334"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Se você estiver tentando transmitir pela Internet, instale a Ferramenta de Hospedagem de Internet Moonlight no seu PC para jogos e execute o Internet Streaming Tester incluído para verificar a conexão com a Internet do seu PC para jogos.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>A conexão de rede atual do seu PC parece estar bloqueando o Moonlight. A transmissão pela Internet pode não funcionar enquanto estiver conectado a esta rede.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>The following network ports were blocked:</source>
-        <translation type="unfinished"></translation>
+        <translation>As seguintes portas de rede foram bloqueadas:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="330"/>

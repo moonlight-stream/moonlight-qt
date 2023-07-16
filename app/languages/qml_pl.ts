@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">Ustanawianie połączenia z komputerem...</translation>
+        <translation>Ustanawianie połączenia z komputerem...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Łączenie... Wprowadź &apos;%1&apos; na %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Parowanie zakończone pomyślnie</translation>
     </message>
 </context>
 <context>
@@ -158,7 +158,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Wyszukiwanie kompatybilnych hostów w sieci lokalnej...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -259,17 +259,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Wprowadź %1 na komputerze-hoście. To okno dialogowe zostanie zamknięte po zakończeniu łączenia.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="295"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jeśli na komputerze-hoście działa Sunshine, przejdź do interfejsu użytkownika Sunshine, aby wprowadzić kod PIN.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="323"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight testuje połączenie sieciowe w celu ustalenia, czy wymagane porty są zablokowane.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="350"/>
@@ -282,27 +282,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kod PIN z komputera nie pasuje. Spróbuj ponownie.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Nie można przeprowadzić parowania, gdy na komputerze-gospodarzu nadal trwa poprzednia sesja. Zakończ wszystkie uruchomione gry lub uruchom ponownie komputer-gospodarza, a następnie spróbuj ponownie przeprowadzić parowanie.</translation>
+        <translation>Nie można połączyć, gdy na komputerze-hoście nadal jest uruchomiona poprzednia sesja. Zamknij wszystkie uruchomione gry lub uruchom ponownie komputer hosta, a następnie spróbuj ponownie się połączyć.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Połączenie nie powiodło się. Spróbuj ponownie.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Już trwa próba połączenia.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experience zwrócił błąd: %1</translation>
+        <translation>GeForce Experience zwrócił błąd: %1</translation>
     </message>
 </context>
 <context>
@@ -318,7 +318,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 jest już połączony</translation>
     </message>
     <message>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
@@ -351,7 +351,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Brak połączenia z komputerem %1. Otwórz Moonlight, aby połączyć przed pobraniem listy gier.</translation>
     </message>
 </context>
 <context>
@@ -428,12 +428,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="123"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Komputer-host zgłosił krytyczny błąd kodowania obrazu.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Spróbuj wyłączyć tryb HDR, zmienić rozdzielczość przesyłania strumieniowego lub rozdzielczość wyświetlacza komputera-hosta.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
@@ -473,7 +473,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="702"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Komputer-host nie obsługuje kodowania HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="718"/>
@@ -483,12 +483,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="756"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Twój komputer-host nie obsługuje przesyłania strumieniowego HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1181"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Host zwrócił błąd: %1</translation>
     </message>
     <message>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
@@ -695,7 +695,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="465"/>
         <source>%1 FPS (Custom)</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 kl./s (niestandardowy)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="556"/>
@@ -1189,7 +1189,7 @@
     <message>
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Wprowadź adres IP komputera-hosta:</translation>
     </message>
     <message>
         <source>Enter the IP address of your GameStream PC:</source>

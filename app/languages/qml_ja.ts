@@ -61,12 +61,12 @@
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>ペアリング中... &apos;%1&apos; を %2 に入力してください。</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>ペアリング成功</translation>
     </message>
 </context>
 <context>
@@ -158,7 +158,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>接続できるホストをローカルネットワーク上探しています...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -259,17 +259,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="294"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>接続される側のコンピュータに %1 を入力してください。このダイアログはペアリング終了時に閉じます。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="295"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>コンピュータで Sunshine がはしっている場合、Sunshine のウエブUIにPINを入力してください。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="323"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight はブロックされているポートがないかを確かめるためネットワーク接続テストを実施しています。</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="350"/>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="535"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>コンピュータのPINが一致しませんでした。再度お試しください。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="539"/>
@@ -292,12 +292,12 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="542"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>ペアリングが失敗しました。再度お試しください。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="546"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>別のペアリング試行がすでに試行中です。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="556"/>
@@ -318,7 +318,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 は既にペアリングされています</translation>
     </message>
     <message>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
