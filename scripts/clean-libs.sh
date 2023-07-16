@@ -50,6 +50,10 @@ while [[ "$#" -gt 0 ]]; do
       rm $LIB_PATH/windows/lib/*/avcodec* $LIB_PATH/windows/lib/*/avutil*
       shift
       ;;
+    --dav1d_win)
+      rm $LIB_PATH/windows/lib/*/dav1d*
+      shift
+      ;;
     --ffmpeg_mac)
       rm -r $LIB_PATH/mac/include/libavcodec $LIB_PATH/mac/include/libavutil
       rm $LIB_PATH/mac/lib/libavcodec* $LIB_PATH/mac/lib/libavutil*
