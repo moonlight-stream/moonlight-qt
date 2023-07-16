@@ -417,6 +417,22 @@ public:
                 [device release];
             }
         }
+        else if (params->videoFormat & VIDEO_FORMAT_MASK_AV1) {
+        #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 130000
+            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_AV1)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "No HW accelerated AV1 decode via VT");
+                return false;
+            }
+
+            // 10-bit is part of the Main profile for AV1, so it will always
+            // be present on hardware that supports 8-bit.
+        #else
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "AV1 requires building with Xcode 14 or later");
+            return false;
+        #endif
+        }
 
         SDL_SysWMinfo info;
 

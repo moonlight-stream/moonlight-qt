@@ -20,6 +20,7 @@
 #define SER_MULTICONT "multicontroller"
 #define SER_AUDIOCFG "audiocfg"
 #define SER_VIDEOCFG "videocfg"
+#define SER_HDR "hdr"
 #define SER_VIDEODEC "videodec"
 #define SER_WINDOWMODE "windowmode"
 #define SER_UNSUPPORTEDFPS "unsupportedfps"
@@ -104,6 +105,7 @@ void StreamingPreferences::reload()
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
     swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
+    enableHdr = settings.value(SER_HDR, false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
                                                          static_cast<int>(CaptureSysKeysMode::CSK_OFF)).toInt());
     audioConfig = static_cast<AudioConfig>(settings.value(SER_AUDIOCFG,
@@ -136,6 +138,12 @@ void StreamingPreferences::reload()
         if (windowMode == WindowMode::WM_FULLSCREEN && WMUtils::isRunningWayland()) {
             windowMode = WindowMode::WM_FULLSCREEN_DESKTOP;
         }
+    }
+
+    // Fixup VCC value to the new settings format with codec and HDR separate
+    if (videoCodecConfig == VCC_FORCE_HEVC_HDR_DEPRECATED) {
+        videoCodecConfig = VCC_AUTO;
+        enableHdr = true;
     }
 }
 
@@ -273,6 +281,7 @@ void StreamingPreferences::save()
     settings.setValue(SER_PACKETSIZE, packetSize);
     settings.setValue(SER_DETECTNETBLOCKING, detectNetworkBlocking);
     settings.setValue(SER_AUDIOCFG, static_cast<int>(audioConfig));
+    settings.setValue(SER_HDR, enableHdr);
     settings.setValue(SER_VIDEOCFG, static_cast<int>(videoCodecConfig));
     settings.setValue(SER_VIDEODEC, static_cast<int>(videoDecoderSelection));
     settings.setValue(SER_WINDOWMODE, static_cast<int>(windowMode));

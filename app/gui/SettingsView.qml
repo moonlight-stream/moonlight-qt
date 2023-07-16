@@ -1391,7 +1391,6 @@ Flickable {
 
                     id: codecComboBox
                     textRole: "text"
-                    enabled: !enableHdr.checked
                     model: ListModel {
                         id: codecListModel
                         ListElement {
@@ -1406,6 +1405,10 @@ Flickable {
                             text: qsTr("HEVC (H.265)")
                             val: StreamingPreferences.VCC_FORCE_HEVC
                         }
+                        ListElement {
+                            text: qsTr("AV1 (Experimental)")
+                            val: StreamingPreferences.VCC_FORCE_AV1
+                        }
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
@@ -1413,21 +1416,6 @@ Flickable {
                             StreamingPreferences.videoCodecConfig = codecListModel.get(currentIndex).val
                         }
                     }
-
-                    // This handles the state of the enableHdr checkbox changing
-                    onEnabledChanged: {
-                        if (enabled) {
-                            StreamingPreferences.videoCodecConfig = codecListModel.get(currentIndex).val
-                        }
-                        else {
-                            StreamingPreferences.videoCodecConfig = StreamingPreferences.VCC_FORCE_HEVC_HDR
-                        }
-                    }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
-                    ToolTip.visible: hovered && !enabled
-                    ToolTip.text: qsTr("Enabling HDR overrides manual codec selections.")
                 }
 
                 CheckBox {
@@ -1435,8 +1423,12 @@ Flickable {
                     width: parent.width
                     text: qsTr("Enable HDR (Experimental)")
                     font.pointSize: 12
+
                     enabled: SystemProperties.supportsHdr
-                    checked: enabled && StreamingPreferences.videoCodecConfig == StreamingPreferences.VCC_FORCE_HEVC_HDR
+                    checked: enabled && StreamingPreferences.enableHdr
+                    onCheckedChanged: {
+                        StreamingPreferences.enableHdr = checked
+                    }
 
                     // Updating StreamingPreferences.videoCodecConfig is handled above
 

@@ -32,7 +32,8 @@ public:
         VCC_AUTO,
         VCC_FORCE_H264,
         VCC_FORCE_HEVC,
-        VCC_FORCE_HEVC_HDR
+        VCC_FORCE_HEVC_HDR_DEPRECATED, // Kept for backwards compatibility
+        VCC_FORCE_AV1
     };
     Q_ENUM(VideoCodecConfig)
 
@@ -118,9 +119,10 @@ public:
     Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)
     Q_PROPERTY(bool richPresence MEMBER richPresence NOTIFY richPresenceChanged)
     Q_PROPERTY(bool gamepadMouse MEMBER gamepadMouse NOTIFY gamepadMouseChanged)
-    Q_PROPERTY(bool detectNetworkBlocking MEMBER detectNetworkBlocking NOTIFY detectNetworkBlockingChanged);
+    Q_PROPERTY(bool detectNetworkBlocking MEMBER detectNetworkBlocking NOTIFY detectNetworkBlockingChanged)
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
+    Q_PROPERTY(bool enableHdr MEMBER enableHdr NOTIFY enableHdrChanged)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
@@ -164,6 +166,7 @@ public:
     int packetSize;
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
+    bool enableHdr;
     VideoDecoderSelection videoDecoderSelection;
     WindowMode windowMode;
     WindowMode recommendedFullScreenMode;
@@ -185,6 +188,7 @@ signals:
     void absoluteTouchModeChanged();
     void audioConfigChanged();
     void videoCodecConfigChanged();
+    void enableHdrChanged();
     void videoDecoderSelectionChanged();
     void uiDisplayModeChanged();
     void windowModeChanged();
