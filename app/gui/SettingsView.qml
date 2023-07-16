@@ -884,6 +884,10 @@ Flickable {
                             text: "Čeština" // Czech
                             val: StreamingPreferences.LANG_CS
                         }
+                        /* ListElement {
+                            text: "עִבְרִית" // Hebrew
+                            val: StreamingPreferences.LANG_HE
+                        } */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {

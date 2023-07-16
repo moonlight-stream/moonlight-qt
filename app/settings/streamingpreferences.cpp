@@ -251,6 +251,8 @@ QString StreamingPreferences::getSuffixFromLanguage(StreamingPreferences::Langua
         return "pl";
     case LANG_CS:
         return "cs";
+    case LANG_HE:
+        return "he";
     case LANG_AUTO:
     default:
         return QLocale::system().name();
