@@ -194,9 +194,10 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
             }
 
-            if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
+            if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0 || (m_VideoFormat & VIDEO_FORMAT_MASK_AV1))) {
                 // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
-                // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
+                // but we'd rather use CUDA for XWayland and VDPAU for regular X11 and H.264/HEVC.
+                // We will prefer VAAPI for AV1 because older libvdpau versions don't support it.
                 qputenv("LIBVA_DRIVER_NAME", "nvidia");
                 status = vaInitialize(vaDeviceContext->display, &major, &minor);
             }
