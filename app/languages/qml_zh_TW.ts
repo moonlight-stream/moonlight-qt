@@ -268,7 +268,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>您確定要移除「%1」嗎？</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
@@ -487,12 +487,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機軟體或GPU 不支援編碼 AV1。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="866"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>使用軟體</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="901"/>
