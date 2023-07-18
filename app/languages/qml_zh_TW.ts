@@ -487,12 +487,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation>您的主機軟體或GPU 不支援編碼 AV1。</translation>
+        <translation>您的主機軟體或 GPU 不支援編碼 AV1。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="866"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation>使用軟體</translation>
+        <translation>使用軟體解碼係依您的選取項目以強制啟用沒有 GPU 支援的 AV1，這可能導致較低的串流效能。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="901"/>
@@ -502,27 +502,27 @@
     <message>
         <location filename="../streaming/session.cpp" line="905"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>使用 H.264 轉碼器不支援 HDR。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="917"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>這個電腦的 GPU 不支援 AV1 Main10 HDR 串流解碼。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="934"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>這個電腦的 GPU 不支援 10-bit HEVC 或 AV1 HDR 串流解碼。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="941"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation type="unfinished"></translation>
+        <translation>您的主機電腦和用戶端電腦不支援相同的 HDR 視訊轉碼器。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="993"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>H.264 轉碼器不支援超過 4K 的視訊解析度。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1354"/>
@@ -854,7 +854,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1413"/>
         <source>AV1 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>AV (實驗性)</translation>
     </message>
     <message>
         <source>Enabling HDR overrides manual codec selections.</source>
