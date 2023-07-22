@@ -77,7 +77,8 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
     }
 
     // Try to send it as a native touch event, otherwise fall back to our touch emulation
-    if (LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure) == LI_ERR_UNSUPPORTED) {
+    if (LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
+                         0.0f, 0.0f, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED) {
         emulateAbsoluteFingerEvent(event);
     }
 }
