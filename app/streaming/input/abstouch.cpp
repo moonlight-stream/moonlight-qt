@@ -78,6 +78,7 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
     dst.h = windowHeight;
 
     // Scale window-relative events to be video-relative and clamp to video region
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
     float vidrelx = qMin(qMax((int)(event->x * windowWidth), dst.x), dst.x + dst.w) - dst.x;
     float vidrely = qMin(qMax((int)(event->y * windowHeight), dst.y), dst.y + dst.h) - dst.y;
 
