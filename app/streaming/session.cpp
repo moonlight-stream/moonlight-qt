@@ -1585,7 +1585,8 @@ void Session::execInternal()
         }
     }
 
-    m_Window = SDL_CreateWindow("Moonlight",
+    std::string windowName = QString(m_Computer->name + " - Moonlight").toStdString();
+    m_Window = SDL_CreateWindow(windowName.c_str(),
                                 x,
                                 y,
                                 width,
@@ -1596,7 +1597,7 @@ void Session::execInternal()
                     "SDL_CreateWindow() failed with platform flags: %s",
                     SDL_GetError());
 
-        m_Window = SDL_CreateWindow("Moonlight",
+        m_Window = SDL_CreateWindow(windowName.c_str(),
                                     x,
                                     y,
                                     width,
