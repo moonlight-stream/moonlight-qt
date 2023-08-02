@@ -130,6 +130,32 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
     return display;
 }
 
+VAStatus
+VAAPIRenderer::tryVaInitialize(AVVAAPIDeviceContext* vaDeviceContext, PDECODER_PARAMETERS params, int* major, int* minor)
+{
+    VAStatus status;
+
+    SDL_assert(vaDeviceContext->display == nullptr);
+
+    vaDeviceContext->display = openDisplay(params->window);
+    if (vaDeviceContext->display == nullptr) {
+        // openDisplay() logs the error
+        return VA_STATUS_ERROR_INVALID_DISPLAY;
+    }
+
+    status = vaInitialize(vaDeviceContext->display, major, minor);
+    if (status != VA_STATUS_SUCCESS) {
+        // vaInitialize() stores state into the VADisplay even on failure, so we must still
+        // call vaTerminate() even if vaInitialize() failed. Similarly, calling vaInitialize()
+        // more than once on the same VADisplay can cause resource leaks, even if it failed
+        // in the prior call. https://github.com/intel/libva/issues/741
+        vaTerminate(vaDeviceContext->display);
+        vaDeviceContext->display = nullptr;
+    }
+
+    return status;
+}
+
 bool
 VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 {
@@ -151,18 +177,12 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
 
-    vaDeviceContext->display = openDisplay(params->window);
-    if (vaDeviceContext->display == nullptr) {
-        // openDisplay() logs the error
-        return false;
-    }
-
     int major, minor;
     VAStatus status;
     bool setPathVar = false;
 
     for (;;) {
-        status = vaInitialize(vaDeviceContext->display, &major, &minor);
+        status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
         if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Trying fallback VAAPI driver names");
@@ -176,7 +196,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // It should be picked by default on those platforms, but that doesn't
                 // always seem to be the case for some reason.
                 qputenv("LIBVA_DRIVER_NAME", "iHD");
-                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
             }
 
             if (status != VA_STATUS_SUCCESS) {
@@ -184,14 +204,14 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // even though the correct driver is still i965. If we hit this path, we'll
                 // explicitly try i965 to handle this case.
                 qputenv("LIBVA_DRIVER_NAME", "i965");
-                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
             }
 
             if (status != VA_STATUS_SUCCESS) {
                 // The RadeonSI driver is compatible with XWayland but can't be detected by libva
                 // so try it too if all else fails.
                 qputenv("LIBVA_DRIVER_NAME", "radeonsi");
-                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
             }
 
             if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0 || (m_VideoFormat & VIDEO_FORMAT_MASK_AV1))) {
@@ -199,7 +219,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 // but we'd rather use CUDA for XWayland and VDPAU for regular X11 and H.264/HEVC.
                 // We will prefer VAAPI for AV1 because older libvdpau versions don't support it.
                 qputenv("LIBVA_DRIVER_NAME", "nvidia");
-                status = vaInitialize(vaDeviceContext->display, &major, &minor);
+                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
             }
 
             if (status != VA_STATUS_SUCCESS) {

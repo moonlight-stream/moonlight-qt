@@ -61,6 +61,7 @@ public:
 
 private:
     VADisplay openDisplay(SDL_Window* window);
+    VAStatus tryVaInitialize(AVVAAPIDeviceContext* vaDeviceContext, PDECODER_PARAMETERS params, int* major, int* minor);
     void renderOverlay(VADisplay display, VASurfaceID surface, Overlay::OverlayType type);
 
 #if defined(HAVE_EGL) || defined(HAVE_DRM)
