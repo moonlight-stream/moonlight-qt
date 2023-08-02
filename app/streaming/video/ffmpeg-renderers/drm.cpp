@@ -1,3 +1,8 @@
+// mmap64() for 32-bit off_t systems
+#ifndef _LARGEFILE64_SOURCE
+#define _LARGEFILE64_SOURCE 1
+#endif
+
 #include "drm.h"
 
 extern "C" {
@@ -689,8 +694,12 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
             goto Exit;
         }
 
-        drmFrame->mapping = (uint8_t*)mmap(nullptr, drmFrame->size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
-        if (drmFrame->mapping == nullptr) {
+        // Raspberry Pi on kernel 6.1 defaults to an aarch64 kernel with a 32-bit userspace (and off_t).
+        // This leads to issues when DRM_IOCTL_MODE_MAP_DUMB returns a > 4GB offset. The high bits are
+        // chopped off when passed via the normal mmap() call using 32-bit off_t. We avoid this issue
+        // by explicitly calling mmap64() to ensure the 64-bit offset is never truncated.
+        drmFrame->mapping = (uint8_t*)mmap64(nullptr, drmFrame->size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+        if (drmFrame->mapping == MAP_FAILED) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "mmap() failed for dumb buffer: %d",
                          errno);
