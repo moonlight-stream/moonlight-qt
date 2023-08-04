@@ -568,9 +568,11 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         return false;
     }
 
-    // If we have a WDDM 2.0 or later display driver and we're not running in
-    // full-screen exclusive mode (or we're on a multi-GPU system in FSE),
-    // prefer the D3D11VA renderer.
+    // If we have a WDDM 2.0 or later display driver, prefer the D3D11VA renderer
+    // in all of the following cases:
+    // - Multi-GPU systems
+    // - Windowed and borderless windowed modes
+    // - Full-screen exclusive with V-sync off
     //
     // D3D11VA is better in this case because it can enable tearing in non-FSE
     // modes when the user has V-Sync disabled. In non-FSE V-Sync cases, D3D11VA
@@ -598,6 +600,12 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         else if (m_DeviceQuirks & DXVA2_QUIRK_MULTI_GPU) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Defaulting to D3D11VA for multi-GPU FSE mode");
+            d3d9ex->Release();
+            return false;
+        }
+        else if (!enableVsync) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Defaulting to D3D11VA for FSE V-Sync Off mode");
             d3d9ex->Release();
             return false;
         }

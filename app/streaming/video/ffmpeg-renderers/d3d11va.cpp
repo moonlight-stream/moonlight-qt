@@ -367,6 +367,15 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
                          hr);
             // Non-fatal
         }
+
+        // DXVA2 may let us take over for FSE V-sync off cases. However, if we don't have DXGI_FEATURE_PRESENT_ALLOW_TEARING
+        // then we should not attempt to do this unless there's no other option (HDR, DXVA2 failed in pass 1, etc).
+        if (!m_AllowTearing && m_DecoderSelectionPass == 0 && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) &&
+                (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Defaulting to DXVA2 for FSE without DXGI_FEATURE_PRESENT_ALLOW_TEARING support");
+            return false;
+        }
     }
 
     SDL_SysWMinfo info;
