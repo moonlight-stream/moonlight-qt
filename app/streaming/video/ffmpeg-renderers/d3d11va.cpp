@@ -141,6 +141,12 @@ D3D11VARenderer::~D3D11VARenderer()
         av_buffer_unref(&m_HwFramesContext);
     }
 
+    // Force destruction of the swapchain immediately
+    if (m_DeviceContext != nullptr) {
+        m_DeviceContext->ClearState();
+        m_DeviceContext->Flush();
+    }
+
     if (m_HwDeviceContext != nullptr) {
         // This will release m_Device and m_DeviceContext too
         av_buffer_unref(&m_HwDeviceContext);
