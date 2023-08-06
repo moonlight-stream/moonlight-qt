@@ -820,10 +820,41 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         }
     }
 
+    if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_AV1) {
+        if (!(m_Computer->serverCodecModeSupport & SCM_MASK_AV1)) {
+            if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_AV1) {
+                emitLaunchWarning(tr("Your host software or GPU doesn't support encoding AV1."));
+            }
+
+            // We'll try to fall back to HEVC first if AV1 fails. We'd rather not fall back
+            // straight to H.264 if the user asked for AV1 and the host doesn't support it.
+            if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN8) {
+                m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265;
+            }
+            if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN10) {
+                m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+            }
+
+            // Moonlight-common-c will handle this case already, but we want
+            // to set this explicitly here so we can do our hardware acceleration
+            // check below.
+            m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_AV1;
+        }
+        else if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
+                 m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Auto VCC is already checked in initialize()
+                 !isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
+                                            VIDEO_FORMAT_AV1_MAIN8,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps)) {
+            emitLaunchWarning(tr("Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance."));
+        }
+    }
+
     if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_H265) {
-        bool hevcForced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC;
         if (m_Computer->maxLumaPixelsHEVC == 0) {
-            if (hevcForced) {
+            if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_HEVC) {
                 emitLaunchWarning(tr("Your host PC doesn't support encoding HEVC."));
             }
 
@@ -833,38 +864,14 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_H265;
         }
         else if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
-                hevcForced && // Auto VCC is already checked in initialize()
-                !isHardwareDecodeAvailable(testWindow,
-                                           m_Preferences->videoDecoderSelection,
-                                           VIDEO_FORMAT_H265,
-                                           m_StreamConfig.width,
-                                           m_StreamConfig.height,
-                                           m_StreamConfig.fps)) {
-            emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
-        }
-    }
-
-    if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_AV1) {
-        bool av1Forced = m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_AV1;
-        if (!(m_Computer->serverCodecModeSupport & SCM_MASK_AV1)) {
-            if (av1Forced) {
-                emitLaunchWarning(tr("Your host software or GPU doesn't support encoding AV1."));
-            }
-
-            // Moonlight-common-c will handle this case already, but we want
-            // to set this explicitly here so we can do our hardware acceleration
-            // check below.
-            m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_AV1;
-        }
-        else if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
-                 av1Forced && // Auto VCC is already checked in initialize()
+                 m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Auto VCC is already checked in initialize()
                  !isHardwareDecodeAvailable(testWindow,
                                             m_Preferences->videoDecoderSelection,
-                                            VIDEO_FORMAT_AV1_MAIN8,
+                                            VIDEO_FORMAT_H265,
                                             m_StreamConfig.width,
                                             m_StreamConfig.height,
                                             m_StreamConfig.fps)) {
-            emitLaunchWarning(tr("Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance."));
+            emitLaunchWarning(tr("Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance."));
         }
     }
 
