@@ -88,6 +88,7 @@ private:
     drmModePropertyPtr m_ColorEncodingProp;
     drmModePropertyPtr m_ColorRangeProp;
     drmModePropertyPtr m_HdrOutputMetadataProp;
+    drmModePropertyPtr m_ColorspaceProp;
     uint32_t m_HdrOutputMetadataBlobId;
     SDL_Rect m_OutputRect;
 

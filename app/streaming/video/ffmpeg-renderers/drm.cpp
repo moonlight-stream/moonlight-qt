@@ -31,6 +31,14 @@ extern "C" {
 #define DRM_FORMAT_P010	fourcc_code('P', '0', '1', '0')
 #endif
 
+// Values for "Colorspace" connector property
+#ifndef DRM_MODE_COLORIMETRY_DEFAULT
+#define DRM_MODE_COLORIMETRY_DEFAULT     0
+#endif
+#ifndef DRM_MODE_COLORIMETRY_BT2020_RGB
+#define DRM_MODE_COLORIMETRY_BT2020_RGB  9
+#endif
+
 #include <unistd.h>
 #include <fcntl.h>
 
@@ -69,6 +77,7 @@ DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
       m_ColorEncodingProp(nullptr),
       m_ColorRangeProp(nullptr),
       m_HdrOutputMetadataProp(nullptr),
+      m_ColorspaceProp(nullptr),
       m_HdrOutputMetadataBlobId(0),
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
@@ -123,6 +132,10 @@ DrmRenderer::~DrmRenderer()
 
     if (m_HdrOutputMetadataProp != nullptr) {
         drmModeFreeProperty(m_HdrOutputMetadataProp);
+    }
+
+    if (m_ColorspaceProp != nullptr) {
+        drmModeFreeProperty(m_ColorspaceProp);
     }
 
     if (m_HwContext != nullptr) {
@@ -459,6 +472,9 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
                     m_HdrOutputMetadataProp = prop;
                 }
+                else if (!strcmp(prop->name, "Colorspace")) {
+                    m_ColorspaceProp = prop;
+                }
                 else if (!strcmp(prop->name, "max bpc") && m_Main10Hdr) {
                     if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
                         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -553,6 +569,24 @@ int DrmRenderer::getRendererAttributes()
 
 void DrmRenderer::setHdrMode(bool enabled)
 {
+    if (m_ColorspaceProp != nullptr) {
+        int err = drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR,
+                                           m_ColorspaceProp->prop_id,
+                                           enabled ? DRM_MODE_COLORIMETRY_BT2020_RGB : DRM_MODE_COLORIMETRY_DEFAULT);
+        if (err == 0) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Set HDMI Colorspace: %s",
+                        enabled ? "BT.2020 RGB" : "Default");
+        }
+        else {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "drmModeObjectSetProperty(%s) failed: %d",
+                         m_ColorspaceProp->name,
+                         errno);
+            // Non-fatal
+        }
+    }
+
     if (m_HdrOutputMetadataProp != nullptr) {
         if (m_HdrOutputMetadataBlobId != 0) {
             drmModeDestroyPropertyBlob(m_DrmFd, m_HdrOutputMetadataBlobId);
