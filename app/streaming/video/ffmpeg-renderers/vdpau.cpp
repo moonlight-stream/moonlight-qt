@@ -439,7 +439,8 @@ int VDPAURenderer::getDecoderColorspace()
 
 int VDPAURenderer::getDecoderCapabilities()
 {
-    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |
+           CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
 }
 
 void VDPAURenderer::renderOverlay(VdpOutputSurface destination, Overlay::OverlayType type)

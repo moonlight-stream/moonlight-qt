@@ -503,7 +503,8 @@ int VAAPIRenderer::getDecoderCapabilities()
     int caps = 0;
 
     if (!m_HasRfiLatencyBug) {
-        caps |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+        caps |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |
+                CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
     }
 
     return caps;

@@ -1080,7 +1080,8 @@ int D3D11VARenderer::getRendererAttributes()
 
 int D3D11VARenderer::getDecoderCapabilities()
 {
-    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |
+           CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
 }
 
 bool D3D11VARenderer::needsTestFrame()

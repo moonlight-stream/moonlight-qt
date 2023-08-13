@@ -590,7 +590,8 @@ public:
 
     int getDecoderCapabilities() override
     {
-        return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+        return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |
+               CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
     }
 
     int getRendererAttributes() override

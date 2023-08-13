@@ -115,6 +115,9 @@ int FFmpegVideoDecoder::getDecoderCapabilities()
 
             // Enable HEVC RFI when using the FFmpeg software decoder
             capabilities |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+
+            // Enable AV1 RFI when using the libdav1d software decoder
+            capabilities |= CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
         }
         else if (m_HwDecodeCfg == nullptr) {
             // We have a non-hwaccel hardware decoder. This will always

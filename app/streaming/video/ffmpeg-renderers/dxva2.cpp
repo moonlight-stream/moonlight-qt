@@ -1037,7 +1037,8 @@ int DXVA2Renderer::getDecoderColorspace()
 
 int DXVA2Renderer::getDecoderCapabilities()
 {
-    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC;
+    return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |
+           CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
 }
 
 void DXVA2Renderer::renderFrame(AVFrame *frame)
