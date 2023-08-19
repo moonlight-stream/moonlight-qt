@@ -1109,14 +1109,17 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
     switch (frame->chroma_location) {
     case AVCHROMA_LOC_LEFT:
         m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
-                                                     DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes;
+                                                     DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes |
+                                                     DXVA2_VideoChromaSubsampling_ProgressiveChroma;
         break;
     case AVCHROMA_LOC_CENTER:
-        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes;
+        m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Vertically_AlignedChromaPlanes |
+                                                     DXVA2_VideoChromaSubsampling_ProgressiveChroma;
         break;
     case AVCHROMA_LOC_TOPLEFT:
         m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Horizontally_Cosited |
-                                                     DXVA2_VideoChromaSubsampling_Vertically_Cosited;
+                                                     DXVA2_VideoChromaSubsampling_Vertically_Cosited |
+                                                     DXVA2_VideoChromaSubsampling_ProgressiveChroma;
         break;
     default:
         m_Desc.SampleFormat.VideoChromaSubsampling = DXVA2_VideoChromaSubsampling_Unknown;
