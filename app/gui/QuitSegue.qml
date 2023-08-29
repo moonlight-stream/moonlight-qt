@@ -39,8 +39,10 @@ Item {
         // Connect the quit completion signal
         ComputerManager.quitAppCompleted.connect(quitAppCompleted)
 
-        // Start the quit operation
-        quitRunningAppFn()
+        // Start the quit operation if requested
+        if (quitRunningAppFn) {
+            quitRunningAppFn()
+        }
     }
 
     StackView.onDeactivating: {
