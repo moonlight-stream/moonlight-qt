@@ -6,6 +6,7 @@ import Session 1.0
 
 Item {
     property string appName
+    property var quitRunningAppFn
     property Session nextSession : null
     property string nextAppName : ""
 
@@ -37,6 +38,9 @@ Item {
 
         // Connect the quit completion signal
         ComputerManager.quitAppCompleted.connect(quitAppCompleted)
+
+        // Start the quit operation
+        quitRunningAppFn()
     }
 
     StackView.onDeactivating: {
