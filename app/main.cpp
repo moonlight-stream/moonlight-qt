@@ -326,6 +326,15 @@ int main(int argc, char *argv[])
     SetUnhandledExceptionFilter(UnhandledExceptionHandler);
 #endif
 
+#ifdef LOG_TO_FILE
+    // Prune the oldest existing logs if there are more than 10
+    QStringList existingLogNames = tempDir.entryList(QStringList("Moonlight-*.log"), QDir::NoFilter, QDir::SortFlag::Time);
+    for (int i = 10; i < existingLogNames.size(); i++) {
+        qInfo() << "Removing old log file:" << existingLogNames.at(i);
+        QFile(tempDir.filePath(existingLogNames.at(i))).remove();
+    }
+#endif
+
 #if defined(Q_OS_WIN32)
     // Force AntiHooking.dll to be statically imported and loaded
     // by ntdll on Win32 platforms by calling a dummy function.
