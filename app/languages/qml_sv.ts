@@ -252,7 +252,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Är du säker på att du vill ta bort &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
@@ -463,7 +463,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Din värdprogramvara eller GPU stöder inte kodning AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="866"/>
