@@ -474,6 +474,17 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             return;
         }
 
+        SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(SDL_GameControllerGetJoystick(controller)),
+                                  guidStr, sizeof(guidStr));
+        if (m_IgnoreDeviceGuids.contains(guidStr, Qt::CaseInsensitive))
+        {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Skipping ignored device with GUID: %s",
+                        guidStr);
+            SDL_GameControllerClose(controller);
+            return;
+        }
+
         state = &m_GamepadState[i];
         if (m_MultiController) {
             state->index = i;
@@ -534,15 +545,18 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         }
 #endif
 
-        SDL_JoystickGetGUIDString(SDL_JoystickGetGUID(SDL_GameControllerGetJoystick(state->controller)),
-                                  guidStr, sizeof(guidStr));
         mapping = SDL_GameControllerMapping(state->controller);
         name = SDL_GameControllerName(state->controller);
+
+        uint16_t vendorId = SDL_GameControllerGetVendor(state->controller);
+        uint16_t productId = SDL_GameControllerGetProduct(state->controller);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Gamepad %d (player %d) is: %s (haptic capabilities: 0x%x) (mapping: %s -> %s)",
+                    "Gamepad %d (player %d) is: %s (VID/PID: 0x%.4x/0x%.4x) (haptic capabilities: 0x%x) (mapping: %s -> %s)",
                     i,
                     state->index,
                     name != nullptr ? name : "<null>",
+                    vendorId,
+                    productId,
                     hapticCaps,
                     guidStr,
                     mapping != nullptr ? mapping : "<null>");
@@ -888,7 +902,14 @@ int SdlInputHandler::getAttachedGamepadMask()
     count = mask = 0;
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
-            mask |= (1 << count++);
+            char guidStr[33];
+            SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(i),
+                                      guidStr, sizeof(guidStr));
+
+            if (!m_IgnoreDeviceGuids.contains(guidStr, Qt::CaseInsensitive))
+            {
+                mask |= (1 << count++);
+            }
         }
     }
 
