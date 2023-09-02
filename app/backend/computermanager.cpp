@@ -13,6 +13,7 @@
 #include <random>
 
 #define SER_HOSTS "hosts"
+#define SER_HOSTS_BACKUP "hostsbackup"
 
 class PcMonitorThread : public QThread
 {
@@ -152,8 +153,16 @@ ComputerManager::ComputerManager(QObject *parent)
 {
     QSettings settings;
 
+    // If there's a hosts backup copy, we must have failed to commit
+    // a previous update before exiting. Restore the backup now.
+    int hosts = settings.beginReadArray(SER_HOSTS_BACKUP);
+    if (hosts == 0) {
+        // If there's no host backup, read from the primary location.
+        settings.endArray();
+        hosts = settings.beginReadArray(SER_HOSTS);
+    }
+
     // Inflate our hosts from QSettings
-    int hosts = settings.beginReadArray(SER_HOSTS);
     for (int i = 0; i < hosts; i++) {
         settings.setArrayIndex(i);
         NvComputer* computer = new NvComputer(settings);
@@ -245,17 +254,35 @@ void DelayedFlushThread::run() {
 
         // Perform the flush
         {
-            QReadLocker lock(&m_ComputerManager->m_Lock);
-
             QSettings settings;
-            settings.remove(SER_HOSTS);
-            settings.beginWriteArray(SER_HOSTS);
-            int i = 0;
-            for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
-                settings.setArrayIndex(i++);
-                computer->serialize(settings);
+
+            // First, write to the backup location
+            settings.beginWriteArray(SER_HOSTS_BACKUP);
+            {
+                QReadLocker lock(&m_ComputerManager->m_Lock);
+                int i = 0;
+                for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
+                    settings.setArrayIndex(i++);
+                    computer->serialize(settings);
+                }
             }
             settings.endArray();
+
+            // Next, write to the primary location
+            settings.remove(SER_HOSTS);
+            settings.beginWriteArray(SER_HOSTS);
+            {
+                QReadLocker lock(&m_ComputerManager->m_Lock);
+                int i = 0;
+                for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
+                    settings.setArrayIndex(i++);
+                    computer->serialize(settings);
+                }
+            }
+            settings.endArray();
+
+            // Finally, delete the backup copy
+            settings.remove(SER_HOSTS_BACKUP);
         }
     }
 }
