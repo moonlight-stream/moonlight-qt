@@ -641,6 +641,11 @@ Flickable {
                         bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
                         StreamingPreferences.bitrateKbps = value
                     }
+
+                    Component.onCompleted: {
+                        // Refresh the text after translations change
+                        languageChanged.connect(onValueChanged)
+                    }
                 }
 
                 Label {
