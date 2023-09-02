@@ -139,21 +139,9 @@
         <translation>Klicka på knappen Hjälp för att hitta möjliga lösningar.</translation>
     </message>
     <message>
-        <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>Automatisk PC-identifiering är inaktiverad. Lägg till datorn manuellt.</translation>
-    </message>
-    <message>
-        <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
-    </message>
-    <message>
-        <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -184,10 +172,6 @@
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Versionen av GeForce Experience på %1 stöds inte av den här versionen av Moonlight. Du måste uppdatera Moonlight för att kunna strömma från %1.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to remove this PC?</source>
-        <translation type="vanished">Är du säker på att du vill ta bort den här datorn?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
@@ -377,10 +361,6 @@
 <context>
     <name>Session</name>
     <message>
-        <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
         <translation>Ingen video mottagen från värd.</translation>
@@ -439,14 +419,6 @@
         <location filename="../streaming/session.cpp" line="811"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Om du väljer inställningar för att tvinga fram mjukvaruavkodning kan det leda till dålig strömningsprestanda.</translation>
-    </message>
-    <message>
-        <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="vanished">Om du använder FPS-alternativ som inte stöds kan det orsaka halt eller fördröjning.</translation>
-    </message>
-    <message>
-        <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="vanished">V-sync tas bort när du strömmar med en högre bildfrekvens än skärmen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
@@ -519,10 +491,6 @@
         <translation>Klientens GPU stöder inte H.264-avkodning. Detta kan leda till dålig strömingsprestanda.</translation>
     </message>
     <message>
-        <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="vanished">%1 stödjer inte HDR10.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="928"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>Den här datorns GPU stöder inte HEVC Main10-avkodning för HDR-strömning.</translation>
@@ -553,10 +521,6 @@
         <translation>Värddatorns grafikprocessor har inte stöd för strömmande videoupplösningar över 4K.</translation>
     </message>
     <message>
-        <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="vanished">Videoupplösningar över 4K stöds endast av HEVC-codec.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="1008"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Ditt val att tvinga fram hårdvaruavkodning kan inte uppfyllas på grund av att stöd för hårdvaruavkodning saknas på den här datorns GPU.</translation>
@@ -565,10 +529,6 @@
         <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Ditt val av codec och inställningen för maskinvaruavkodning är inte förenliga med varandra. Den här datorns GPU saknar stöd för avkodning av den valda codec.</translation>
-    </message>
-    <message>
-        <source>GeForce Experience returned error: %1</source>
-        <translation type="vanished">GeForce Experience returnerade fel: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1969"/>
@@ -639,10 +599,6 @@
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <source>%1 FPS (nicht unterstützt)</source>
-        <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="615"/>
         <source>Video bitrate:</source>
         <translation>Videobitrate:</translation>
@@ -682,14 +638,6 @@
         <location filename="../gui/SettingsView.qml" line="665"/>
         <source>Borderless windowed</source>
         <translation>Randlöst fönsterformat</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Unsupported)</source>
-        <translation type="vanished">%1 FPS (stöds inte)</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Custom)</source>
-        <translation type="vanished">%1 FPS (anpassad)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="670"/>
@@ -808,10 +756,6 @@
         <translation>Tillägg av HDR behärskar manuella val av avkodare.</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="vanished">Tilläggning av HDR behärskar manuella val av codec.</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Enable HDR (Experimental)</source>
         <translation>Sätt på HDR (prövning)</translation>
@@ -825,14 +769,6 @@
         <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>HDR-strömning stöds inte på den här datorn.</translation>
-    </message>
-    <message>
-        <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
-        <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
-    </message>
-    <message>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.</source>
-        <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
@@ -1057,10 +993,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Unlock unsupported FPS options</source>
-        <translation type="vanished">Lås upp alternativ för FPS som inte stöds</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Hitta automatiskt datorer i det lokala nätverket (Rekommenderat)</translation>
@@ -1136,10 +1068,6 @@
         <location filename="../gui/main.qml" line="281"/>
         <source>Join our community on Discord</source>
         <translation>Gå med i vår gemenskap på Discord</translation>
-    </message>
-    <message>
-        <source>Computers</source>
-        <translation type="vanished">Datorer</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="300"/>

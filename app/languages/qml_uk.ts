@@ -139,21 +139,9 @@
         <translation>Натисніть на кнопку Допомога для можливих рішень проблем.</translation>
     </message>
     <message>
-        <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>Автоматичне виявлення ПК вимкнено. Додайте свій ПК вручну.</translation>
-    </message>
-    <message>
-        <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
-    </message>
-    <message>
-        <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -186,22 +174,6 @@
         <translation>Ця версія GeForce Experience на %1 не підтримується цією збіркою MoonLight.Будь ласка оновіть Moonlight щоб транслювати з %1.</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">Ви не можете створити пару, доки попередній сеанс не закінчено на хост-ПК. Вийдіть із запущених ігор або перезавантажте хост-ПК, а потім спробуйте створити пару знову.</translation>
-    </message>
-    <message>
-        <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="vanished">Будь ласка, введіть %1 на вашому ПК з GameStream. Це діалогове вікно закриється після завершення створення пари.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to remove this PC?</source>
-        <translation type="vanished">Ви впевнені що бажаєте видалити цей ПК?</translation>
-    </message>
-    <message>
-        <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="vanished">Moonlight перевіряє вашу мережу, щоб визначити чи заблокований доступ до NVIDIA GameStream.</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
         <translation>Це може зайняти кілька секунд…</translation>
@@ -230,10 +202,6 @@
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>Не вдалося виконати тест мережі, оскільки жоден із серверів тестування під&apos;єднання Moonlight не був знайдений з цього ПК. Перевірте під&apos;єднання до Інтернету або спробуйте пізніше.</translation>
-    </message>
-    <message>
-        <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Пошук ПК з NVIDIA GameStream, на вашій локальній мережі увімкнено...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -325,10 +293,6 @@
         <translation>%1 вже з&apos;єднано</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="obsolete">Ви не можете створити пару, доки попередній сеанс не закінчено на хост-ПК. Вийдіть із запущених ігор або перезавантажте хост-ПК, а потім спробуйте створити пару знову.</translation>
-    </message>
-    <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
@@ -397,10 +361,6 @@
 <context>
     <name>Session</name>
     <message>
-        <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
         <translation>Відео трансляцію не було отримано від хост-ПК.</translation>
@@ -424,10 +384,6 @@
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Переконайтеся, що на вашому хост-ПК не відкрито вміст, захищений DRM. Ви також можете спробувати перезавантажити хост-ПК.</translation>
-    </message>
-    <message>
-        <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="vanished">Якщо проблема не зникає, спробуйте переінсталювати драйвери графічного процесора та GeForce Experience.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="135"/>
@@ -575,10 +531,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>GeForce Experience returned error: %1</source>
-        <translation type="obsolete">Помилка GeForce Experience: %1</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="1969"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation type="unfinished"></translation>
@@ -645,10 +597,6 @@
         <location filename="../gui/SettingsView.qml" line="548"/>
         <source>%1 FPS</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>%1 FPS (nicht unterstützt)</source>
-        <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="615"/>
@@ -821,14 +769,6 @@
         <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
-        <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
-    </message>
-    <message>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.</source>
-        <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>

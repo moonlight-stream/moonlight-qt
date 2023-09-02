@@ -139,21 +139,9 @@
         <translation>按下說明按鈕以取得可能的解決方法。</translation>
     </message>
     <message>
-        <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>已停用自動搜尋電腦功能，需要手動新增。</translation>
-    </message>
-    <message>
-        <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
-    </message>
-    <message>
-        <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -186,22 +174,6 @@
         <translation>此 Moonlight 版本不支援 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">當上一個工作階段仍在主機 PC 上執行時，您無法配對。結束所有正在執行的遊戲或重新啟動主機，然後再次嘗試配對。</translation>
-    </message>
-    <message>
-        <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="vanished">請在您的 GameStream 電腦上輸入 %1。配對完成後，此對話框將關閉。</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to remove this PC?</source>
-        <translation type="vanished">您確定要刪除這台電腦嗎？</translation>
-    </message>
-    <message>
-        <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="vanished">Moonlight 正在測試您的網路連線以確定 NVIDIA GameStream 是否被封鎖。</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
         <translation>這可能需要幾秒鐘……</translation>
@@ -230,10 +202,6 @@
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>無法執行網路測試，因為此電腦無法連線 Moonlight 的任何連線測試伺服器。請檢查您的網際網路連線或稍後重試。</translation>
-    </message>
-    <message>
-        <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">正在區域網路中搜尋已啟用 NVIDIA GameStream 的電腦…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -325,10 +293,6 @@
         <translation>%1 已配對</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">當上一個工作階段仍在主機 PC 上執行時，您無法配對。結束所有正在執行的遊戲或重新啟動主機，然後再次嘗試配對。</translation>
-    </message>
-    <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
@@ -397,10 +361,6 @@
 <context>
     <name>Session</name>
     <message>
-        <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
         <translation>沒有接收到來自主機的視訊。</translation>
@@ -424,10 +384,6 @@
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>確認您的主機電腦上沒有開啟任何受 DRM 保護的內容。您也可以嘗試重新啟動主機電腦。</translation>
-    </message>
-    <message>
-        <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="vanished">如果問題仍然存在，請嘗試重新安裝 GPU 驅動程式和 GeForce Experience。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
@@ -463,14 +419,6 @@
         <location filename="../streaming/session.cpp" line="811"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>您選取強制軟體解碼的設定可能會導致串流媒體效能不佳。</translation>
-    </message>
-    <message>
-        <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="vanished">使用不支援的 FPS 選項可能會導致卡頓或延遲。</translation>
-    </message>
-    <message>
-        <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="vanished">在以高於顯示器的影格速率進行串流傳輸時，垂直同步將被停用。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
@@ -528,14 +476,6 @@
         <translation>主機返回錯誤：%1</translation>
     </message>
     <message>
-        <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation type="vanished">此 PC 的 GPU 不支援 HEVC 解碼。</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="vanished">您的主機電腦 GPU 不支援 HEVC。HEVC 串流傳輸需要 GeForce GTX 900 系列 (Maxwell) 或更高階的 GPU。</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="880"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>由於你選取強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
@@ -549,14 +489,6 @@
         <location filename="../streaming/session.cpp" line="893"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>您的用戶端 GPU 不支援 H.264 解碼。這能會導致串流效能不佳。</translation>
-    </message>
-    <message>
-        <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="vanished">%1 不支援 HDR10。</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="vanished">您的主機電腦 GPU 不支援 HDR。HDR 串流傳輸需要 GeForce GTX 1000 系列 (Pascal) 或更高階的 GPU。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="928"/>
@@ -589,10 +521,6 @@
         <translation>您的主機電腦 GPU 不支援 4K 視訊串流。</translation>
     </message>
     <message>
-        <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="vanished">只有 HEVC 轉碼器支援 4K 以上的視訊解析度。</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="1008"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>由於此電腦的 GPU 缺乏硬體解碼支援，故無法強制使用硬體解碼。</translation>
@@ -601,10 +529,6 @@
         <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>你選取的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選取的解編碼器。</translation>
-    </message>
-    <message>
-        <source>GeForce Experience returned error: %1</source>
-        <translation type="vanished">GeForce Experience 回傳錯誤：%1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1969"/>
@@ -675,10 +599,6 @@
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <source>%1 FPS (nicht unterstützt)</source>
-        <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="615"/>
         <source>Video bitrate:</source>
         <translation>視訊位元速率：</translation>
@@ -718,14 +638,6 @@
         <location filename="../gui/SettingsView.qml" line="665"/>
         <source>Borderless windowed</source>
         <translation>無邊框視窗</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Unsupported)</source>
-        <translation type="vanished">%1 FPS (不支援)</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Custom)</source>
-        <translation type="vanished">%1 FPS (自訂)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="670"/>
@@ -849,10 +761,6 @@
         <translation>AV (實驗性)</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="vanished">啟用 HDR 將覆寫手動編解碼器的選取。</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Enable HDR (Experimental)</source>
         <translation>啟用 HDR (實驗性)</translation>
@@ -866,14 +774,6 @@
         <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>此電腦不支援 HDR 串流。</translation>
-    </message>
-    <message>
-        <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
-        <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
-    </message>
-    <message>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.</source>
-        <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
@@ -1093,14 +993,6 @@
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <source>HEVC HDR (Experimental)</source>
-        <translation type="vanished">HEVC HDR (實驗性)</translation>
-    </message>
-    <message>
-        <source>Unlock unsupported FPS options</source>
-        <translation type="vanished">解除鎖定不支援的 FPS 選項</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>自動尋找在區域網路中的電腦 (建議)</translation>
@@ -1178,10 +1070,6 @@
         <translation>加入我們的 Discord 社群</translation>
     </message>
     <message>
-        <source>Computers</source>
-        <translation type="vanished">電腦</translation>
-    </message>
-    <message>
         <location filename="../gui/main.qml" line="300"/>
         <source>Add PC manually</source>
         <translation>手動新增電腦</translation>
@@ -1195,10 +1083,6 @@
         <location filename="../gui/main.qml" line="387"/>
         <source>Gamepad Mapper</source>
         <translation>手把對應</translation>
-    </message>
-    <message>
-        <source>Gamepad Mapping</source>
-        <translation type="vanished">手把對應</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="433"/>
@@ -1249,10 +1133,6 @@
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
         <translation>輸入您的主機電腦 IP 位址：</translation>
-    </message>
-    <message>
-        <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="vanished">輸入目標電腦的 IP 位址：</translation>
     </message>
 </context>
 </TS>

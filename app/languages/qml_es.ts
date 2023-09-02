@@ -139,21 +139,9 @@
         <translation>Haga clic en el botón de ayuda para encontrar posibles soluciones.</translation>
     </message>
     <message>
-        <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>La detección automática de PCs está desactivada. Añada su PC manualmente.</translation>
-    </message>
-    <message>
-        <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
-    </message>
-    <message>
-        <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -186,22 +174,6 @@
         <translation>La versión de GeForce Experience en %1 no es compatible con esta versión de Moonlight. Debes actualizar Moonlight para transmitir desde %1.</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">No puedes emparejar mientras una sesión anterior esté en marcha en el PC anfitrión. Salga de cualquier juego que se esté ejecutando o reinicie el PC anfitrión, y luego intente emparejar de nuevo.</translation>
-    </message>
-    <message>
-        <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="vanished">Por favor, introduzca %1 en su PC GameStream . Este cuadro de diálogo se cerrará cuando se haya completado el emparejamiento.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to remove this PC?</source>
-        <translation type="vanished">¿Estás seguro de que quieres eliminar este PC?</translation>
-    </message>
-    <message>
-        <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="vanished">Moonlight está probando tu conexión de red para determinar si NVIDIA GameStream está bloqueado.</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
         <translation>Esto puede llevar unos segundos…</translation>
@@ -230,10 +202,6 @@
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>La prueba de red no pudo realizarse porque ninguno de los servidores de prueba de conexión de Moonlight era accesible desde este PC. Compruebe su conexión a Internet o inténtelo de nuevo más tarde.</translation>
-    </message>
-    <message>
-        <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Buscando PCs en tu red local con NVIDIA GameStream activado...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -325,10 +293,6 @@
         <translation>%1 ya estaba sincronizado</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="obsolete">No puedes emparejar mientras una sesión anterior esté en marcha en el PC anfitrión. Salga de cualquier juego que se esté ejecutando o reinicie el PC anfitrión, y luego intente emparejar de nuevo.</translation>
-    </message>
-    <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
@@ -397,10 +361,6 @@
 <context>
     <name>Session</name>
     <message>
-        <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
         <translation>No se ha recibido ningún vídeo del anfitrión.</translation>
@@ -424,10 +384,6 @@
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Asegúrate de que no tienes ningún contenido protegido por DRM abierto en tu PC anfitrión. También puedes probar a reiniciar el PC anfitrión.</translation>
-    </message>
-    <message>
-        <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="vanished">Si el problema persiste, prueba a reinstalar los controladores de la GPU y GeForce Experience.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
@@ -463,14 +419,6 @@
         <location filename="../streaming/session.cpp" line="811"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Su selección de ajustes para forzar la decodificación por software puede causar un rendimiento deficiente de la transmisión.</translation>
-    </message>
-    <message>
-        <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="vanished">El uso de opciones de FPS no compatibles puede causar tartamudeo o retraso.</translation>
-    </message>
-    <message>
-        <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="vanished">V-sync se desactivará cuando se transmita a una velocidad de fotogramas superior a la de la pantalla.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
@@ -528,14 +476,6 @@
         <translation>El host devuelve el error: %1</translation>
     </message>
     <message>
-        <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation type="vanished">La GPU de este PC no soporta la descodificación HEVC.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="vanished">La GPU de tu PC no es compatible con HEVC. Se necesita una GPU GeForce GTX serie 900 (Maxwell) o posterior para la transmisión de HEVC.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="880"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Usando decodificación de software debido a su selección para forzar H.264 sin soporte de GPU. Esto puede provocar un rendimiento de transmisión deficiente.</translation>
@@ -549,14 +489,6 @@
         <location filename="../streaming/session.cpp" line="893"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Su GPU cliente no soporta la decodificación H.264. Esto puede causar un bajo rendimiento de la transmisión.</translation>
-    </message>
-    <message>
-        <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="vanished">%1 no soporta HDR10.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="vanished">La GPU de tu PC no es compatible con la transmisión de HDR. Se necesita una GPU de la serie GeForce GTX 1000 (Pascal) o posterior para la transmisión de HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="928"/>
@@ -589,10 +521,6 @@
         <translation>La GPU de su PC anfitrión no admite la transmisión de resoluciones de vídeo superiores a 4K.</translation>
     </message>
     <message>
-        <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="vanished">Las resoluciones de vídeo superiores a 4K solo son compatibles con el códec HEVC.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="1008"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Su selección para forzar la decodificación por hardware no puede ser satisfecha debido a la falta de soporte de decodificación por hardware en la GPU de este PC.</translation>
@@ -601,10 +529,6 @@
         <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>La selección del códec y la configuración de la decodificación forzada por hardware no son compatibles. La GPU de este PC no es compatible con la descodificación del códec elegido.</translation>
-    </message>
-    <message>
-        <source>GeForce Experience returned error: %1</source>
-        <translation type="vanished">GeForce Experience ha devuelto el error: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1969"/>
@@ -675,10 +599,6 @@
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <source>%1 FPS (nicht unterstützt)</source>
-        <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="615"/>
         <source>Video bitrate:</source>
         <translation>Tasa de bits de vídeo:</translation>
@@ -718,14 +638,6 @@
         <location filename="../gui/SettingsView.qml" line="665"/>
         <source>Borderless windowed</source>
         <translation>Ventana sin bordes</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Unsupported)</source>
-        <translation type="vanished">%1 FPS (No compatible)</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Custom)</source>
-        <translation type="vanished">%1 FPS (Personalizado)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="670"/>
@@ -849,10 +761,6 @@
         <translation>AV1 (Experimental)</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="vanished">Habilitar el HDR anula las selecciones de los códec manuales.</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Enable HDR (Experimental)</source>
         <translation>Activar HDR (Experimental)</translation>
@@ -866,14 +774,6 @@
         <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>La transmisión HDR no esta soportada en este PC.</translation>
-    </message>
-    <message>
-        <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
-        <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
-    </message>
-    <message>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.</source>
-        <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
@@ -1093,14 +993,6 @@
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <source>HEVC HDR (Experimental)</source>
-        <translation type="vanished">HEVC HDR (Experimental)</translation>
-    </message>
-    <message>
-        <source>Unlock unsupported FPS options</source>
-        <translation type="vanished">Desbloquea las opciones de FPS no compatibles</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Encuentre automáticamente los ordenadores de la red local (recomendado)</translation>
@@ -1178,10 +1070,6 @@
         <translation>Únete a nuestra comunidad en Discord</translation>
     </message>
     <message>
-        <source>Computers</source>
-        <translation type="vanished">Ordenadores</translation>
-    </message>
-    <message>
         <location filename="../gui/main.qml" line="300"/>
         <source>Add PC manually</source>
         <translation>Agregar PC manualmente</translation>
@@ -1195,14 +1083,6 @@
         <location filename="../gui/main.qml" line="387"/>
         <source>Gamepad Mapper</source>
         <translation>Mapeador de mandos</translation>
-    </message>
-    <message>
-        <source>Gamepad Mapping</source>
-        <translation type="vanished">Mapeo del mando</translation>
-    </message>
-    <message>
-        <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="vanished">Moonlight no detectó ningún decodificador de vídeo H.264 acelerado por hardware en funcionamiento. Su rendimiento de transmisión puede verse gravemente degradado en esta configuración.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="433"/>
@@ -1253,10 +1133,6 @@
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
         <translation>Introduzca la dirección IP del host de tu PC:</translation>
-    </message>
-    <message>
-        <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="vanished">Ingrese la dirección IP de su PC GameStream:</translation>
     </message>
 </context>
 </TS>

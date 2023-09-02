@@ -139,21 +139,9 @@
         <translation>Click nút Trợ giúp để tìm các giải pháp có thể có.</translation>
     </message>
     <message>
-        <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>Tự động khám phá PC bị tắt. Hãy thêm PC của bạn theo cách thủ công.</translation>
-    </message>
-    <message>
-        <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
-    </message>
-    <message>
-        <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -186,22 +174,6 @@
         <translation>Phiên bản của GeForce Experience trên %1 không được bản dựng Moonlight này hỗ trợ. Bạn phải cập nhật Moonlight để stream từ %1.</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">Bạn không thể ghép đôi trong khi một phiên làm việc trước vẫn đang chạy trên PC chủ. Hãy thoát các trò chơi hoặc khởi động lại PC chủ, sau đó thử ghép đôi lại.</translation>
-    </message>
-    <message>
-        <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="vanished">Vui lòng nhập %1 trên PC GameStream của bạn. Hộp thoại này sẽ đóng khi ghép đôi hoàn tất.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to remove this PC?</source>
-        <translation type="vanished">Bạn có chắc bạn muốn xoá PC này không?</translation>
-    </message>
-    <message>
-        <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="vanished">Moonlight đang thử nghiệm kết nối mạng của bạn để xác định xem NVIDIA GameStream có bị chặn không.</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
         <translation>Việc này có thể sẽ mất một vài giây…</translation>
@@ -230,10 +202,6 @@
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>Việc thử nghiệm mạng không thể được thực hiện vì không có máy chủ thử nghiệm kết nối nào của Moonlight có thể được kết nối đến từ PC này. Hãy kiểm tra kết nối Internet của bạn hoặc thử lại sau.</translation>
-    </message>
-    <message>
-        <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Đang tìm các PC trên mạng cục bộ của bạn có NVIDIA GameStream được bật…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -325,10 +293,6 @@
         <translation>%1 đã được ghép đôi</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">Bạn không thể ghép đôi khi một phiên làm việc trước vẫn đang chạy trên PC chủ. Hãy thoát các trò chơi hoặc khởi động lại PC chủ, sau đó thử ghép đôi lại.</translation>
-    </message>
-    <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
@@ -397,10 +361,6 @@
 <context>
     <name>Session</name>
     <message>
-        <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
         <translation>Không nhận được video từ máy chủ.</translation>
@@ -424,10 +384,6 @@
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Hãy chắc chắn là bạn không mở bất kỳ nội dung được DRM bảo vệ nào trên PC chủ. Bạn cũng có thể thử khởi động lại PC chủ.</translation>
-    </message>
-    <message>
-        <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="vanished">Nếu vấn đề vẫn tiếp diễn, hãy thử cài đặt lại driver GPU và GeForce Experience.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
@@ -463,14 +419,6 @@
         <location filename="../streaming/session.cpp" line="811"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Lựa chọn cài đặt buộc giải mã phần mềm của bạn có thể sẽ gây ra hiệu năng stream kém.</translation>
-    </message>
-    <message>
-        <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="vanished">Việc sử dụng các tuỳ chọn FPS không được hỗ trợ có thể sẽ gây ra khựng hoặc lag.</translation>
-    </message>
-    <message>
-        <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="vanished">V-sync sẽ bị tắt khi stream tại tốc độ khung hình cao hơn màn hình.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
@@ -528,14 +476,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation type="vanished">GPU của PC này không hỗ trợ giải mã HEVC.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="vanished">GPU của PC chủ không hỗ trợ HEVC. Một GPU GeForce GTX 900-series (Maxwell) hoặc mới hơn được yêu cầu để stream HEVC.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="880"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Đang sử dụng giải mã phần mềm do lựa chọn buộc dùng H.264 mà GPU không hỗ trợ. Việc này có thể gây ra hiệu năng stream thấp.</translation>
@@ -549,14 +489,6 @@
         <location filename="../streaming/session.cpp" line="893"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>GPU khách không hỗ trợ giải mã H.264. Việc này có thể gây ra hiệu năng stream thấp.</translation>
-    </message>
-    <message>
-        <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="vanished">%1 không hỗ trợ HDR10.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="vanished">GPU của PC chủ không hỗ trợ stream HDR. Một GPU GTX 1000-series (Pascal) hoặc mới hơn được yêu cầu để stream HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="928"/>
@@ -589,10 +521,6 @@
         <translation>GPU của PC chủ không hỗ trợ stream độ phân giải video trên 4K.</translation>
     </message>
     <message>
-        <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="vanished">Các độ phân giải video trên 4K chỉ được codec HEVC hỗ trợ.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="1008"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Lựa chọn buộc giải mã phần cứng của bạn không thể được thoả mãn do thiếu sự hỗ trợ giải mã phần cứng trên GPU của PC này.</translation>
@@ -601,10 +529,6 @@
         <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Lựa chọn codec và cài đặt buộc giải mã phần cứng của bạn không tương thích. GPU của PC này thiếu sự hỗ trợ cho việc giải mã codec đã chọn.</translation>
-    </message>
-    <message>
-        <source>GeForce Experience returned error: %1</source>
-        <translation type="vanished">GeForce Experience đã trả lời bằng lỗi: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1969"/>
@@ -675,10 +599,6 @@
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <source>%1 FPS (nicht unterstützt)</source>
-        <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="615"/>
         <source>Video bitrate:</source>
         <translation>Tốc độ bit video:</translation>
@@ -718,10 +638,6 @@
         <location filename="../gui/SettingsView.qml" line="665"/>
         <source>Borderless windowed</source>
         <translation>Cửa sổ không viền</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Unsupported)</source>
-        <translation type="vanished">%1 FPS (Không được hỗ trợ)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="670"/>
@@ -845,10 +761,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="vanished">Việc bật HDR sẽ được ưu tiên trước lựa chọn codec thủ công.</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Enable HDR (Experimental)</source>
         <translation>Bật HDR (Thử nghiệm)</translation>
@@ -862,14 +774,6 @@
         <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>Việc stream HDR không được hỗ trợ trên PC này.</translation>
-    </message>
-    <message>
-        <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
-        <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
-    </message>
-    <message>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.</source>
-        <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
@@ -1089,14 +993,6 @@
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <source>HEVC HDR (Experimental)</source>
-        <translation type="vanished">HEVC HDR (Thử nghiệm)</translation>
-    </message>
-    <message>
-        <source>Unlock unsupported FPS options</source>
-        <translation type="vanished">Mở khoá các tuỳ chọn FPS không được hỗ trợ</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Tự động tìm các PC trên mạng cục bộ (Được khuyến nghị)</translation>
@@ -1174,10 +1070,6 @@
         <translation>Tham gia cộng đồng của chúng tôi trên Discord</translation>
     </message>
     <message>
-        <source>Computers</source>
-        <translation type="vanished">Máy tính</translation>
-    </message>
-    <message>
         <location filename="../gui/main.qml" line="300"/>
         <source>Add PC manually</source>
         <translation>Thêm PC thủ công</translation>
@@ -1191,14 +1083,6 @@
         <location filename="../gui/main.qml" line="387"/>
         <source>Gamepad Mapper</source>
         <translation>Trình chỉ định nút tay cầm điều khiển</translation>
-    </message>
-    <message>
-        <source>Gamepad Mapping</source>
-        <translation type="vanished">Chỉ định nút tay cầm điều khiển</translation>
-    </message>
-    <message>
-        <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="vanished">Không có trình giải mã video H.264 được tăng tốc phần cứng nào được Moonlight phát hiện. Hiệu năng stream của bạn có thể sẽ bị giảm nghiêm trọng trong thiết lập này.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="433"/>
@@ -1249,10 +1133,6 @@
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="vanished">Nhập địa chỉ IP của PC GameStream của bạn:</translation>
     </message>
 </context>
 </TS>

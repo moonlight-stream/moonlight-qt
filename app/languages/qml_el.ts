@@ -139,21 +139,9 @@
         <translation>Κάντε κλικ στο κουμπί Βοήθεια για πιθανές λύσεις.</translation>
     </message>
     <message>
-        <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>Η αυτόματη ανακάλυψη υπολογιστή είναι απενεργοποιημένη. Προσθέστε τον υπολογιστή σας χειροκίνητα.</translation>
-    </message>
-    <message>
-        <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
-    </message>
-    <message>
-        <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -186,22 +174,6 @@
         <translation>Η έκδοση του GeForce Experience στο %1 δεν υποστηρίζεται από αυτήν την έκδοση του Moonlight. Πρέπει να ενημερώσετε το Moonlight για ροή από το %1.</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">Δεν μπορείτε να πραγματοποιήσετε ζεύξη ενώ μια προηγούμενη συνεδρία εξακολουθεί να εκτελείται στον κεντρικό υπολογιστή. Τερματίστε τυχόν παιχνίδια που εκτελούνται ή επανεκκινήστε τον κεντρικό υπολογιστή και, στη συνέχεια, δοκιμάστε ξανά τη ζεύξη.</translation>
-    </message>
-    <message>
-        <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="vanished">Εισάγετε το %1 στον υπολογιστή GameStream. Αυτό το παράθυρο διαλόγου θα κλείσει όταν ολοκληρωθεί η αντιστοίχιση.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to remove this PC?</source>
-        <translation type="vanished">Είστε βέβαιοι ότι θέλετε να καταργήσετε αυτόν τον υπολογιστή;</translation>
-    </message>
-    <message>
-        <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="vanished">Το Moonlight δοκιμάζει τη σύνδεση δικτύου σας για να καθορίσει εάν το NVIDIA GameStream είναι αποκλεισμένο.</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
         <translation>Αυτό μπορεί να διαρκέσει μερικά δευτερόλεπτα…</translation>
@@ -230,10 +202,6 @@
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>Η δοκιμή δικτύου δεν μπορούσε να πραγματοποιηθεί επειδή κανένας από τους διακομιστές δοκιμής σύνδεσης της Moonlight δεν ήταν προσβάσιμος από αυτόν τον υπολογιστή. Ελέγξτε τη σύνδεσή σας στο Internet ή δοκιμάστε ξανά αργότερα.</translation>
-    </message>
-    <message>
-        <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Αναζήτηση υπολογιστών στο τοπικό σας δίκτυο με ενεργοποιημένο το NVIDIA GameStream...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -325,10 +293,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="obsolete">Δεν μπορείτε να πραγματοποιήσετε ζεύξη ενώ μια προηγούμενη συνεδρία εξακολουθεί να εκτελείται στον κεντρικό υπολογιστή. Τερματίστε τυχόν παιχνίδια που εκτελούνται ή επανεκκινήστε τον κεντρικό υπολογιστή και, στη συνέχεια, δοκιμάστε ξανά τη ζεύξη.</translation>
-    </message>
-    <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
@@ -397,10 +361,6 @@
 <context>
     <name>Session</name>
     <message>
-        <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
         <translation>Δεν ελήφθη βίντεο από τον κεντρικό υπολογιστή.</translation>
@@ -424,10 +384,6 @@
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>Βεβαιωθείτε ότι δεν έχετε ανοιχτό περιεχόμενο με προστασία DRM στον κεντρικό υπολογιστή σας. Μπορείτε επίσης να δοκιμάσετε να επανεκκινήσετε τον κεντρικό υπολογιστή σας.</translation>
-    </message>
-    <message>
-        <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="vanished">Αν το πρόβλημα παραμένει, δοκιμάστε να επανεγκαταστήσετε τα προγράμματα οδήγησης της κάρτας γραφικών και το GeForce Experience.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
@@ -463,14 +419,6 @@
         <location filename="../streaming/session.cpp" line="811"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Η επιλογή των ρυθμίσεών σας για αναγκαστική αποκωδικοποίηση λογισμικού μπορεί να προκαλέσει κακή απόδοση ροής.</translation>
-    </message>
-    <message>
-        <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="vanished">Η χρήση μη υποστηριζόμενων επιλογών FPS μπορεί να προκαλέσει stuttering ή καθυστέρηση.</translation>
-    </message>
-    <message>
-        <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="vanished">Το V-sync θα απενεργοποιηθεί όταν η ροή γίνεται με ρυθμό καρέ υψηλότερο από αυτόν της οθόνης.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
@@ -528,14 +476,6 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation type="vanished">Die Grafikkarte deines PC&apos;s unterstützt keine HEVC Dekodierung.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="vanished">Η κάρτα γραφικών του κεντρικού υπολογιστή σας δεν υποστηρίζει το HEVC. Για τη ροή HEVC απαιτείται μια κάρτα γραφικών GeForce GTX 900-series (Maxwell) ή μεταγενέστερη.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="880"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Χρήση αποκωδικοποίησης λογισμικού λόγω της επιλογής σας να επιβάλλετε την έκδοση H.264 χωρίς υποστήριξη από την κάρτα γραφικών. Αυτό μπορεί να προκαλέσει κακή απόδοση ροής.</translation>
@@ -549,14 +489,6 @@
         <location filename="../streaming/session.cpp" line="893"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Η κάρτα γραφικών του υπολογιστή πελάτη σας δεν υποστηρίζει την αποκωδικοποίηση H.264. Αυτό μπορεί να προκαλέσει κακή απόδοση ροής.</translation>
-    </message>
-    <message>
-        <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="vanished">Το %1 δεν υποστηρίζει HDR10.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="vanished">Η κάρτα γραφικών του κεντρικού υπολογιστή σας δεν υποστηρίζει ροή HDR. Για τη ροή HDR απαιτείται κάρτα γραφικών GeForce GTX 1000-series (Pascal) ή νεότερη έκδοση.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="928"/>
@@ -589,10 +521,6 @@
         <translation>Η κάρτα γραφικών του κεντρικού υπολογιστή σας δεν υποστηρίζει αναλύσεις βίντεο ροής πάνω από 4K.</translation>
     </message>
     <message>
-        <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="vanished">Οι αναλύσεις βίντεο άνω των 4K υποστηρίζονται μόνο από τον κωδικοποιητή HEVC.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="1008"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Η επιλογή σας για επιβολή αποκωδικοποίησης υλικού δεν μπορεί να ικανοποιηθεί λόγω έλλειψης υποστήριξης αποκωδικοποίησης υλικού στη κάρτα γραφικών αυτού του υπολογιστή.</translation>
@@ -601,10 +529,6 @@
         <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Η επιλογή κωδικοποιητή και η αναγκαστική αποκωδικοποίηση υλικού δεν είναι συμβατές. Η κάρτα γραφικών αυτού του υπολογιστή δεν υποστηρίζει την αποκωδικοποίηση του κωδικοποιητή που έχετε επιλέξει.</translation>
-    </message>
-    <message>
-        <source>GeForce Experience returned error: %1</source>
-        <translation type="vanished">Το GeForce Experience επέστρεψε σφάλμα: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1969"/>
@@ -675,10 +599,6 @@
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <source>%1 FPS (nicht unterstützt)</source>
-        <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="615"/>
         <source>Video bitrate:</source>
         <translation>Ρυθμός bit βίντεο:</translation>
@@ -718,10 +638,6 @@
         <location filename="../gui/SettingsView.qml" line="665"/>
         <source>Borderless windowed</source>
         <translation>Παράθυρο χωρίς περίγραμμα</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Unsupported)</source>
-        <translation type="vanished">%1 FPS (Δεν υποστηρίζεται)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="670"/>
@@ -858,14 +774,6 @@
         <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
-        <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
-    </message>
-    <message>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.</source>
-        <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
@@ -1085,14 +993,6 @@
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <source>HEVC HDR (Experimental)</source>
-        <translation type="vanished">HEVC HDR (πειραματικό)</translation>
-    </message>
-    <message>
-        <source>Unlock unsupported FPS options</source>
-        <translation type="vanished">Ξεκλείδωμα μη υποστηριζόμενων επιλογών FPS</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Αυτόματη εύρεση υπολογιστών στο τοπικό δίκτυο (Συνιστάται)</translation>
@@ -1170,10 +1070,6 @@
         <translation>Γίνετε μέλος της κοινότητάς μας στο Discord</translation>
     </message>
     <message>
-        <source>Computers</source>
-        <translation type="vanished">Υπολογιστές</translation>
-    </message>
-    <message>
         <location filename="../gui/main.qml" line="300"/>
         <source>Add PC manually</source>
         <translation>Προσθήκη υπολογιστή με μη αυτόματο τρόπο</translation>
@@ -1187,14 +1083,6 @@
         <location filename="../gui/main.qml" line="387"/>
         <source>Gamepad Mapper</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Gamepad Mapping</source>
-        <translation type="vanished">Χαρτογράφηση Gamepad</translation>
-    </message>
-    <message>
-        <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="vanished">Moonlight hat keinen funktionierenden hardwarebeschleunigten H.264-Videodecoder erkannt. Deine Streaming-Performance kann in dieser Konfiguration stark beeinträchtigt sein.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="433"/>
@@ -1245,10 +1133,6 @@
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
         <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="vanished">Εισαγάγετε τη διεύθυνση IP του υπολογιστή σας GameStream:</translation>
     </message>
 </context>
 </TS>

@@ -139,21 +139,9 @@
         <translation>가능한 해결 방법을 보려면 도움말 버튼을 클릭하십시오.</translation>
     </message>
     <message>
-        <source>Searching for PCs with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">Suche nach Hosts mit aktivierten NVIDIA GameStream</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>자동 PC 검색이 비활성화되었습니다. PC를 수동으로 추가하십시오.</translation>
-    </message>
-    <message>
-        <source>View Apps</source>
-        <translation type="vanished">Apps anzeigen</translation>
-    </message>
-    <message>
-        <source>View Hidden Apps</source>
-        <translation type="vanished">Ausgeblendete Apps anzeigen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
@@ -186,22 +174,6 @@
         <translation>%1의 GeForce Experience 버전은 현재 빌드의 Moonlight에서 지원되지 않습니다. %1에서 스트리밍하려면 Moonlight를 업데이트 해야 합니다.</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
-    </message>
-    <message>
-        <source>Please enter %1 on your GameStream PC. This dialog will close when pairing is completed.</source>
-        <translation type="vanished">GameStream PC에 %1을(를) 입력하십시오. 페어링이 완료되면 이 대화 상자가 닫힙니다.</translation>
-    </message>
-    <message>
-        <source>Are you sure you want to remove this PC?</source>
-        <translation type="vanished">이 PC를 제거 하시겠습니까?</translation>
-    </message>
-    <message>
-        <source>Moonlight is testing your network connection to determine if NVIDIA GameStream is blocked.</source>
-        <translation type="vanished">NVIDIA GameStream이 차단되었는지 확인하기 위해 네트워크 연결을 검사하고 있습니다.</translation>
-    </message>
-    <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
         <translation>몇 초 정도 걸릴 수 있습니다…</translation>
@@ -230,10 +202,6 @@
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>이 PC에서 Moonlight의 연결 테스트 서버에 연결할 수 없기 때문에 네트워크 검사를 수행할 수 없습니다. 인터넷 연결을 확인하거나 나중에 다시 시도하십시오.</translation>
-    </message>
-    <message>
-        <source>Searching for PCs on your local network with NVIDIA GameStream enabled...</source>
-        <translation type="vanished">로컬 네트워크에서 NVIDIA GameStream이 활성화 된 PC 검색 중...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -325,10 +293,6 @@
         <translation>%1은(는) 이미 페어링되었습니다</translation>
     </message>
     <message>
-        <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="vanished">이전 세션이 호스트 PC에서 실행 중인 동안에는 페어링 할 수 없습니다. 실행 중인 게임을 종료하거나 호스트 PC를 재부팅 한 다음 다시 페어링을 시도하십시오.</translation>
-    </message>
-    <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
@@ -397,10 +361,6 @@
 <context>
     <name>Session</name>
     <message>
-        <source>No video received from host. Check the host PC&apos;s firewall and port forwarding rules.</source>
-        <translation type="vanished">Kein Videosignal vom Host empfangen. Prüfe die Host Firewall und Portweiterleitungsregeln.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
         <translation>호스트로부터 받은 영상이 없습니다.</translation>
@@ -424,10 +384,6 @@
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>호스트 PC에 DRM으로 보호된 콘텐츠가 열려 있지 않은지 확인하십시오. 또한 호스트 PC를 다시 시작하는 것을 시도해 볼 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>If the issue persists, try reinstalling your GPU drivers and GeForce Experience.</source>
-        <translation type="vanished">문제가 지속되면 GPU 드라이버와 GeForce Experience를 다시 설치해보십시오.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
@@ -463,14 +419,6 @@
         <location filename="../streaming/session.cpp" line="811"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>소프트웨어 디코딩을 강제하도록 선택하면 스트리밍 성능이 저하 될 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation type="vanished">지원되지 않는 FPS 옵션을 사용하면 끊김 또는 지연이 발생할 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation type="vanished">수직동기화는 디스플레이보다 높은 프레임 레이트로 스트리밍 할 때 비활성화됩니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="850"/>
@@ -528,14 +476,6 @@
         <translation>호스트가 오류를 반환하였습니다: %1</translation>
     </message>
     <message>
-        <source>This PC&apos;s GPU doesn&apos;t support HEVC decoding.</source>
-        <translation type="vanished">이 PC의 GPU는 HEVC 디코딩을 지원하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HEVC. A GeForce GTX 900-series (Maxwell) or later GPU is required for HEVC streaming.</source>
-        <translation type="vanished">호스트 PC의 GPU가 HEVC를 지원하지 않습니다. HEVC 스트리밍에는 GeForce GTX 900 시리즈 (Maxwell) 이상의 GPU가 필요합니다.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="880"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>H.264 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
@@ -549,14 +489,6 @@
         <location filename="../streaming/session.cpp" line="893"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>클라이언트 GPU가 H.264 디코딩을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
-    </message>
-    <message>
-        <source>%1 doesn&apos;t support HDR10.</source>
-        <translation type="vanished">%1은(는) HDR10을 지원하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Your host PC GPU doesn&apos;t support HDR streaming. A GeForce GTX 1000-series (Pascal) or later GPU is required for HDR streaming.</source>
-        <translation type="vanished">호스트 PC의 GPU가 HDR 스트리밍을 지원하지 않습니다. HDR 스트리밍에는 GeForce GTX 1000 시리즈 (Pascal) 이상의 GPU가 필요합니다.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="928"/>
@@ -589,10 +521,6 @@
         <translation>호스트 PC의 GPU가 4K 이상의 비디오 해상도 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <source>Video resolutions over 4K are only supported by the HEVC codec.</source>
-        <translation type="vanished">4K 이상의 비디오 해상도는 HEVC 코덱에서만 지원됩니다.</translation>
-    </message>
-    <message>
         <location filename="../streaming/session.cpp" line="1008"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>이 PC의 GPU가 하드웨어 디코딩을 지원하지 않아 하드웨어 디코딩을 강제하도록 선택하였으나 지원되지 않습니다.</translation>
@@ -601,10 +529,6 @@
         <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>선택한 코덱과 하드웨어 디코딩을 강제하도록 선택한 설정이 호환되지 않습니다. 이 PC의 GPU는 선택한 코덱의 디코딩을 지원하지 않습니다.</translation>
-    </message>
-    <message>
-        <source>GeForce Experience returned error: %1</source>
-        <translation type="vanished">GeForce Experience에서 오류를 반환했습니다: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1969"/>
@@ -675,10 +599,6 @@
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <source>%1 FPS (nicht unterstützt)</source>
-        <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="615"/>
         <source>Video bitrate:</source>
         <translation>비디오 비트레이트:</translation>
@@ -718,14 +638,6 @@
         <location filename="../gui/SettingsView.qml" line="665"/>
         <source>Borderless windowed</source>
         <translation>테두리 없는 창</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Unsupported)</source>
-        <translation type="vanished">%1 FPS (지원되지 않음)</translation>
-    </message>
-    <message>
-        <source>%1 FPS (Custom)</source>
-        <translation type="vanished">%1 FPS (사용자 정의)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="670"/>
@@ -844,10 +756,6 @@
         <translation>HDR을 활성화하면 지정된 디코더 선택이 무시됩니다.</translation>
     </message>
     <message>
-        <source>Enabling HDR overrides manual codec selections.</source>
-        <translation type="vanished">HDR을 활성화하면 지정된 코덱 선택이 무시됩니다.</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Enable HDR (Experimental)</source>
         <translation>HDR 활성화 (실험용)</translation>
@@ -861,14 +769,6 @@
         <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>이 PC에서는 HDR 스트리밍이 지원되지 않습니다.</translation>
-    </message>
-    <message>
-        <source>Capture system keyboard shortcuts while streaming in fullscreen</source>
-        <translation type="vanished">Erfassen von System-Tastaturkürzeln beim Streaming im Vollbildmodus</translation>
-    </message>
-    <message>
-        <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming in fullscreen.</source>
-        <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
@@ -1093,10 +993,6 @@
         <translation>AV1 (실험용)</translation>
     </message>
     <message>
-        <source>Unlock unsupported FPS options</source>
-        <translation type="vanished">지원되지 않는 FPS 옵션 잠금 해제</translation>
-    </message>
-    <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>로컬 네트워크에서 자동으로 PC 찾기 (권장)</translation>
@@ -1174,10 +1070,6 @@
         <translation>Discord에서 커뮤니티에 가입하세요</translation>
     </message>
     <message>
-        <source>Computers</source>
-        <translation type="vanished">컴퓨터</translation>
-    </message>
-    <message>
         <location filename="../gui/main.qml" line="300"/>
         <source>Add PC manually</source>
         <translation>수동으로 PC 추가</translation>
@@ -1191,14 +1083,6 @@
         <location filename="../gui/main.qml" line="387"/>
         <source>Gamepad Mapper</source>
         <translation>게임패드 매퍼</translation>
-    </message>
-    <message>
-        <source>Gamepad Mapping</source>
-        <translation type="vanished">게임패드 매핑</translation>
-    </message>
-    <message>
-        <source>No functioning hardware accelerated H.264 video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="vanished">사용 가능한 하드웨어 가속 H.264 비디오 디코더가 감지되지 않았습니다. 이 구성에서는 스트리밍 성능이 심각하게 저하될 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="433"/>
@@ -1249,10 +1133,6 @@
         <location filename="../gui/main.qml" line="491"/>
         <source>Enter the IP address of your host PC:</source>
         <translation>호스트 PC의 IP 주소를 입력하십시오:</translation>
-    </message>
-    <message>
-        <source>Enter the IP address of your GameStream PC:</source>
-        <translation type="vanished">GameStream PC의 IP 주소를 입력하십시오:</translation>
     </message>
 </context>
 </TS>
