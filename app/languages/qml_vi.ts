@@ -284,27 +284,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="536"/>
+        <location filename="../backend/computermanager.cpp" line="563"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="540"/>
+        <location filename="../backend/computermanager.cpp" line="567"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="543"/>
+        <location filename="../backend/computermanager.cpp" line="570"/>
         <source>Pairing failed. Please try again.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="547"/>
+        <location filename="../backend/computermanager.cpp" line="574"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="557"/>
+        <location filename="../backend/computermanager.cpp" line="584"/>
         <source>GeForce Experience returned error: %1</source>
         <translation type="unfinished">GeForce Experience đã trả lời bằng lỗi: %1</translation>
     </message>
@@ -312,7 +312,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="607"/>
+        <location filename="../backend/computermanager.cpp" line="634"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>Trò chơi đang chạy đã không được PC này khởi động. Bạn phải thoát trò chơi trên PC chủ theo cách thủ công hoặc sử dụng thiết bị đã khởi động trò chơi lúc đầu.</translation>
     </message>
@@ -465,67 +465,65 @@
         <translation>Lựa chọn cài đặt buộc giải mã phần mềm của bạn có thể sẽ gây ra hiệu năng stream kém.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="816"/>
         <source>Using unsupported FPS options may cause stuttering or lag.</source>
-        <translation>Việc sử dụng các tuỳ chọn FPS không được hỗ trợ có thể sẽ gây ra khựng hoặc lag.</translation>
+        <translation type="vanished">Việc sử dụng các tuỳ chọn FPS không được hỗ trợ có thể sẽ gây ra khựng hoặc lag.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="819"/>
         <source>V-sync will be disabled when streaming at a higher frame rate than the display.</source>
-        <translation>V-sync sẽ bị tắt khi stream tại tốc độ khung hình cao hơn màn hình.</translation>
+        <translation type="vanished">V-sync sẽ bị tắt khi stream tại tốc độ khung hình cao hơn màn hình.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="858"/>
+        <location filename="../streaming/session.cpp" line="850"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="874"/>
+        <location filename="../streaming/session.cpp" line="866"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Đang sử dụng giải mã phần mềm do lựa chọn buộc HEVC của bạn mà không có sự hỗ trợ của GPU. Việc này có thể sẽ gây ra hiệu năng stream kém.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="826"/>
+        <location filename="../streaming/session.cpp" line="818"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="851"/>
+        <location filename="../streaming/session.cpp" line="843"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="909"/>
+        <location filename="../streaming/session.cpp" line="901"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="913"/>
+        <location filename="../streaming/session.cpp" line="905"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="925"/>
+        <location filename="../streaming/session.cpp" line="917"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="942"/>
+        <location filename="../streaming/session.cpp" line="934"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="949"/>
+        <location filename="../streaming/session.cpp" line="941"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1001"/>
+        <location filename="../streaming/session.cpp" line="993"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1362"/>
+        <location filename="../streaming/session.cpp" line="1354"/>
         <source>Host returned error: %1</source>
         <translation type="unfinished"></translation>
     </message>
@@ -538,17 +536,17 @@
         <translation type="vanished">GPU của PC chủ không hỗ trợ HEVC. Một GPU GeForce GTX 900-series (Maxwell) hoặc mới hơn được yêu cầu để stream HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="888"/>
+        <location filename="../streaming/session.cpp" line="880"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Đang sử dụng giải mã phần mềm do lựa chọn buộc dùng H.264 mà GPU không hỗ trợ. Việc này có thể gây ra hiệu năng stream thấp.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="898"/>
+        <location filename="../streaming/session.cpp" line="890"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>PC chủ và PC khách không hỗ trợ cùng codec video. Việc này có thể gây ra hiệu năng stream thấp.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="901"/>
+        <location filename="../streaming/session.cpp" line="893"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>GPU khách không hỗ trợ giải mã H.264. Việc này có thể gây ra hiệu năng stream thấp.</translation>
     </message>
@@ -561,32 +559,32 @@
         <translation type="vanished">GPU của PC chủ không hỗ trợ stream HDR. Một GPU GTX 1000-series (Pascal) hoặc mới hơn được yêu cầu để stream HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="936"/>
+        <location filename="../streaming/session.cpp" line="928"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>GPU của PC chủ không hỗ trợ giải mã HEVC Main10 để stream HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="957"/>
+        <location filename="../streaming/session.cpp" line="949"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>GeForce Experience 3.0 hoặc cao hơn được yêu cầu để stream 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="972"/>
+        <location filename="../streaming/session.cpp" line="964"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Cài đặt âm thanh bao quanh đã chọn của bạn không được thiết bị âm thanh hiện tại hỗ trợ.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="979"/>
+        <location filename="../streaming/session.cpp" line="971"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Mở thiết bị âm thanh thất bại. Âm thanh sẽ không có sẵn trong phiên làm việc này.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="984"/>
+        <location filename="../streaming/session.cpp" line="976"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Một tay cầm điều khiển không được chỉ định nút và sẽ không thể sử dụng được. Hãy đi đến trợ giúp của Moonlight để giải quyết điều này.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="997"/>
+        <location filename="../streaming/session.cpp" line="989"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>GPU của PC chủ không hỗ trợ stream độ phân giải video trên 4K.</translation>
     </message>
@@ -595,12 +593,12 @@
         <translation type="vanished">Các độ phân giải video trên 4K chỉ được codec HEVC hỗ trợ.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1016"/>
+        <location filename="../streaming/session.cpp" line="1008"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Lựa chọn buộc giải mã phần cứng của bạn không thể được thoả mãn do thiếu sự hỗ trợ giải mã phần cứng trên GPU của PC này.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1019"/>
+        <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Lựa chọn codec và cài đặt buộc giải mã phần cứng của bạn không tương thích. GPU của PC này thiếu sự hỗ trợ cho việc giải mã codec đã chọn.</translation>
     </message>
@@ -609,7 +607,7 @@
         <translation type="vanished">GeForce Experience đã trả lời bằng lỗi: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1977"/>
+        <location filename="../streaming/session.cpp" line="1969"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Không thể khởi tạo trình giải mã video. Vui lòng kiểm tra cài đặt stream của bạn và thử lại.</translation>
     </message>
@@ -672,9 +670,7 @@
         <translation>Nhập độ phân giải tuỳ chỉnh:</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="423"/>
-        <location filename="../gui/SettingsView.qml" line="424"/>
-        <location filename="../gui/SettingsView.qml" line="436"/>
+        <location filename="../gui/SettingsView.qml" line="548"/>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
     </message>
@@ -683,176 +679,168 @@
         <translation type="vanished">%1 FPS (nicht unterstützt)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="501"/>
+        <location filename="../gui/SettingsView.qml" line="615"/>
         <source>Video bitrate:</source>
         <translation>Tốc độ bit video:</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="509"/>
+        <location filename="../gui/SettingsView.qml" line="623"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
         <translation>Hạ thấp tốc độ bit trên các kết nối chậm hơn. Tăng tốc độ bit để tăng chất lượng hình ảnh.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="527"/>
+        <location filename="../gui/SettingsView.qml" line="641"/>
         <source>Video bitrate: %1 Mbps</source>
         <translation>Tốc độ bit video: %1 Mbps</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="535"/>
+        <location filename="../gui/SettingsView.qml" line="649"/>
         <source>Display mode</source>
         <translation>Chế độ hiển thị</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="565"/>
-        <source> (Recommended)</source>
-        <translatorcomment>Dont put the space in ransaltions</translatorcomment>
-        <translation> (Được khuyến nghị)</translation>
+        <location filename="../gui/SettingsView.qml" line="679"/>
+        <source>(Recommended)</source>
+        <translation>(Được khuyến nghị)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="546"/>
-        <location filename="../gui/SettingsView.qml" line="957"/>
+        <location filename="../gui/SettingsView.qml" line="660"/>
+        <location filename="../gui/SettingsView.qml" line="1071"/>
         <source>Fullscreen</source>
         <translation>Toàn màn hình</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="615"/>
+        <location filename="../gui/SettingsView.qml" line="729"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
         <translation>Toàn màn hình nói chung là cung cấp hiệu năng tốt nhất, nhưng cửa sổ không viền có thể sẽ hoạt động tốt hơn với các tính năng như macOS Spaces, Alt+Tab, các công cụ chụp màn hình, các lớp phủ trên màn hình, v.v.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="551"/>
+        <location filename="../gui/SettingsView.qml" line="665"/>
         <source>Borderless windowed</source>
         <translation>Cửa sổ không viền</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="441"/>
-        <location filename="../gui/SettingsView.qml" line="442"/>
         <source>%1 FPS (Unsupported)</source>
-        <translation>%1 FPS (Không được hỗ trợ)</translation>
+        <translation type="vanished">%1 FPS (Không được hỗ trợ)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="465"/>
-        <source>%1 FPS (Custom)</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="556"/>
-        <location filename="../gui/SettingsView.qml" line="949"/>
+        <location filename="../gui/SettingsView.qml" line="670"/>
+        <location filename="../gui/SettingsView.qml" line="1063"/>
         <source>Windowed</source>
         <translation>Cửa sổ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="622"/>
+        <location filename="../gui/SettingsView.qml" line="736"/>
         <source>V-Sync</source>
         <translation>V-Sync</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="632"/>
+        <location filename="../gui/SettingsView.qml" line="746"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
         <translation>Việc tắt V-Sync cho phép độ trễ kết xuất khung hình con, nhưng nó có thể hiển thị sự biến dạng hình ảnh có thể nhìn thấy được</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="639"/>
+        <location filename="../gui/SettingsView.qml" line="753"/>
         <source>Frame pacing</source>
         <translation>Nhịp độ khung hình</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="649"/>
+        <location filename="../gui/SettingsView.qml" line="763"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
         <translation>Nhịp độ khung hình làm giảm sự khựng nhỏ bằng cách trì hoãn các khung hình đi đến quá sớm</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="659"/>
+        <location filename="../gui/SettingsView.qml" line="773"/>
         <source>Audio Settings</source>
         <translation>Cài đặt âm thanh</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="694"/>
+        <location filename="../gui/SettingsView.qml" line="808"/>
         <source>Stereo</source>
         <translation>Stereo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="698"/>
+        <location filename="../gui/SettingsView.qml" line="812"/>
         <source>5.1 surround sound</source>
         <translation>Âm thanh bao quanh 5.1</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="702"/>
+        <location filename="../gui/SettingsView.qml" line="816"/>
         <source>7.1 surround sound</source>
         <translation>Âm thanh bao quanh 7.1</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="716"/>
+        <location filename="../gui/SettingsView.qml" line="830"/>
         <source>Mute host PC speakers while streaming</source>
         <translation>Làm im lặng loa của PC chủ trong khi stream</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="726"/>
+        <location filename="../gui/SettingsView.qml" line="840"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
         <translation>Bạn phải khởi động lại bất kỳ trò chơi hiện đang chơi nào để thay đổi này có hiệu lực</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="732"/>
+        <location filename="../gui/SettingsView.qml" line="846"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
         <translation>Làm im lặng stream âm thanh khi Moonlight không phải là cửa sổ đang hoạt động</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="743"/>
+        <location filename="../gui/SettingsView.qml" line="857"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
         <translation>Làm im lặng âm thanh của Moonlight khi bạn Alt+Tab ra khỏi stream hoặc click vào một cửa sổ khác.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="752"/>
+        <location filename="../gui/SettingsView.qml" line="866"/>
         <source>UI Settings</source>
         <translation>Cài đặt giao diện</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="762"/>
+        <location filename="../gui/SettingsView.qml" line="876"/>
         <source>Language</source>
         <translation>Ngôn ngữ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="788"/>
+        <location filename="../gui/SettingsView.qml" line="902"/>
         <source>Automatic</source>
         <translation>Tự động</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="899"/>
+        <location filename="../gui/SettingsView.qml" line="1013"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>Bạn phải khởi động lại Moonlight để thay đổi này có hiệu lực</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="916"/>
+        <location filename="../gui/SettingsView.qml" line="1030"/>
         <source>GUI display mode</source>
         <translation>Chế độ hiển thị giao diện đồ hoạ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="953"/>
+        <location filename="../gui/SettingsView.qml" line="1067"/>
         <source>Maximized</source>
         <translation>Phóng to</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1026"/>
+        <location filename="../gui/SettingsView.qml" line="1140"/>
         <source>Input Settings</source>
         <translation>Cài đặt đầu vào</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1047"/>
+        <location filename="../gui/SettingsView.qml" line="1161"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>Việc này bật điều khiển chuột liền mạch mà không bắt con trỏ chuột của máy khách. Nó là lý tưởng cho việc sử dụng máy tính từ xa nhưng sẽ không hoạt động trong đa số trò chơi.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1049"/>
+        <location filename="../gui/SettingsView.qml" line="1163"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>LƯU Ý: Vì một lỗi trong GeForce Experience, tuỳ chọn này có thể sẽ không hoạt động đúng nếu PC chủ của bạn có nhiều màn hình.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1365"/>
+        <location filename="../gui/SettingsView.qml" line="1479"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
         <translation>Việc bật HDR sẽ ghi đè lên lựa chọn trình giải mã.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1413"/>
+        <location filename="../gui/SettingsView.qml" line="1527"/>
         <source>AV1 (Experimental)</source>
         <translation type="unfinished"></translation>
     </message>
@@ -861,17 +849,17 @@
         <translation type="vanished">Việc bật HDR sẽ được ưu tiên trước lựa chọn codec thủ công.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1428"/>
+        <location filename="../gui/SettingsView.qml" line="1542"/>
         <source>Enable HDR (Experimental)</source>
         <translation>Bật HDR (Thử nghiệm)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1443"/>
+        <location filename="../gui/SettingsView.qml" line="1557"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
         <translation>Stream sẽ có khả năng là HDR, nhưng một số trò chơi có thể yêu cầu màn hình HDR trên PC chủ để bật chế độ HDR.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1445"/>
+        <location filename="../gui/SettingsView.qml" line="1559"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>Việc stream HDR không được hỗ trợ trên PC này.</translation>
     </message>
@@ -884,193 +872,219 @@
         <translation type="vanished">Dies ermöglicht die Erfassung von systemweiten Tastenkombinationen wie Alt+Tab, die normalerweise vom Client beim Streamen im Vollbildmodus ausgeführt werden würden.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1068"/>
+        <location filename="../gui/SettingsView.qml" line="1182"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>LƯU Ý: Một số lối tắt bàn phím cụ thể như Ctrl+Alt+Del trên Windows không thể được bất kỳ ứng dụng nào can thiệp, bao gồm cả Moonlight.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1131"/>
+        <location filename="../gui/SettingsView.qml" line="1245"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>Sử dụng màn hình cảm ứng như một trackpad ảo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1148"/>
+        <location filename="../gui/SettingsView.qml" line="1262"/>
         <source>Swap left and right mouse buttons</source>
         <translation>Đảo các nút chuột trái và phải</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1160"/>
+        <location filename="../gui/SettingsView.qml" line="1274"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>Đảo ngược hướng cuộn chuột</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1174"/>
+        <location filename="../gui/SettingsView.qml" line="1288"/>
         <source>Gamepad Settings</source>
         <translation>Cài đặt tay cầm điều khiển</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1184"/>
+        <location filename="../gui/SettingsView.qml" line="1298"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>Đảo các nút A/B và X/Y của tay cầm điều khiển</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1202"/>
+        <location filename="../gui/SettingsView.qml" line="1316"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>Việc này chuyển các tay cầm điều khiển sang một bố cục nút giống Nintendo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1208"/>
+        <location filename="../gui/SettingsView.qml" line="1322"/>
         <source>Force gamepad #1 always connected</source>
         <translation>Buộc tay cầm điều khiển #1 luôn được kết nối</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1218"/>
+        <location filename="../gui/SettingsView.qml" line="1332"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>Buộc một tay cầm điều khiển luôn giữ trạng thái đã kết nối đến máy chủ, kể cả nếu không có tay cầm điều khiển nào thực sự được kết nối đến PC.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1048"/>
+        <location filename="../gui/SettingsView.qml" line="1162"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>Bạn có thể bật/tắt việc này trong khi stream bằng Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1226"/>
+        <location filename="../gui/SettingsView.qml" line="1340"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>Bật điều khiển chuột bằng tay cầm điều khiển bằng cách giữ nút &apos;Start&apos;</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1237"/>
+        <location filename="../gui/SettingsView.qml" line="1351"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Xử lý đầu vào của tay cầm điều khiển khi Moonlight ở trong nền</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1248"/>
+        <location filename="../gui/SettingsView.qml" line="1362"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Cho phép Moonlight nắm bắt đầu vào của tay cầm điều khiển kể cả nếu nó không phải là cửa sổ hiện được tập trung</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1257"/>
+        <location filename="../gui/SettingsView.qml" line="1371"/>
         <source>Host Settings</source>
         <translation>Cài đặt máy chủ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1297"/>
+        <location filename="../gui/SettingsView.qml" line="1411"/>
         <source>Advanced Settings</source>
         <translation>Cài đặt nâng cao</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="669"/>
+        <location filename="../gui/SettingsView.qml" line="783"/>
         <source>Audio configuration</source>
         <translation>Thiết lập âm thanh</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="970"/>
+        <location filename="../gui/SettingsView.qml" line="1084"/>
         <source>Show connection quality warnings</source>
         <translation>Hiện cảnh báo chất lượng kết nối</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="982"/>
+        <location filename="../gui/SettingsView.qml" line="1096"/>
         <source>Discord Rich Presence integration</source>
         <translation>Tích hợp với Discord Rich Presence</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="992"/>
+        <location filename="../gui/SettingsView.qml" line="1106"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>Cập nhật trạng thái Discord của bạn để hiển thị tên trò chơi bạn đang stream.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1219"/>
+        <location filename="../gui/SettingsView.qml" line="1333"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>Chỉ bật tuỳ chọn này khi stream một trò chơi không hỗ trợ tay cầm điều khiển được kết nối sau khi khởi động.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1037"/>
+        <location filename="../gui/SettingsView.qml" line="1151"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>Tối ưu hoá chuột cho máy tính từ xa thay vì trò chơi</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="998"/>
+        <location filename="../gui/SettingsView.qml" line="456"/>
+        <location filename="../gui/SettingsView.qml" line="565"/>
+        <source>Custom (%1 FPS)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="471"/>
+        <source>Enter a custom frame rate:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="568"/>
+        <source>Custom</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="586"/>
+        <source>30 FPS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="591"/>
+        <source>60 FPS</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1112"/>
         <source>Keep the display awake while streaming</source>
         <translation>Giữ màn hình bật trong khi stream</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1008"/>
+        <location filename="../gui/SettingsView.qml" line="1122"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>Ngăn screensaver hoạt động hoặc màn hình tắt trong khi stream.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1059"/>
+        <location filename="../gui/SettingsView.qml" line="1173"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>Nắm bắt các lối tắt bàn phím hệ thống</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1067"/>
+        <location filename="../gui/SettingsView.qml" line="1181"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>Việc này bật việc nắm bắt các lối tắt bàn phím toàn hệ thống như Alt+Tab (bình thường sẽ được HĐH máy khách xử lý) trong khi stream.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1097"/>
+        <location filename="../gui/SettingsView.qml" line="1211"/>
         <source>in fullscreen</source>
         <translation>trong toàn màn hình</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1101"/>
+        <location filename="../gui/SettingsView.qml" line="1215"/>
         <source>always</source>
         <translation>luôn luôn</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1141"/>
+        <location filename="../gui/SettingsView.qml" line="1255"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>Khi được đánh dấu, màn hình cảm ứng hoạt động như một trackpad. Khi không được đánh dấu, màn hình cảm ứng sẽ trực tiếp điều khiển con trỏ chuột.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1267"/>
+        <location filename="../gui/SettingsView.qml" line="1381"/>
         <source>Optimize game settings for streaming</source>
         <translation>Tối ưu hoá cài đặt trò chơi cho việc stream</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1278"/>
+        <location filename="../gui/SettingsView.qml" line="1392"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>Thoát ứng dụng trên PC chủ sau khi kết thúc stream</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1288"/>
+        <location filename="../gui/SettingsView.qml" line="1402"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>Việc này sẽ đóng ứng dụng hoặc trò chơi bạn đang stream khi bạn kết thúc stream. Bạn sẽ mất công việc đang làm chưa được lưu!</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1307"/>
+        <location filename="../gui/SettingsView.qml" line="1421"/>
         <source>Video decoder</source>
         <translation>Trình giải mã video</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1333"/>
-        <location filename="../gui/SettingsView.qml" line="1401"/>
+        <location filename="../gui/SettingsView.qml" line="1447"/>
+        <location filename="../gui/SettingsView.qml" line="1515"/>
         <source>Automatic (Recommended)</source>
         <translation>Tự động (Được khuyến nghị)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1337"/>
+        <location filename="../gui/SettingsView.qml" line="1451"/>
         <source>Force software decoding</source>
         <translation>Buộc giải mã phần mềm</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1341"/>
+        <location filename="../gui/SettingsView.qml" line="1455"/>
         <source>Force hardware decoding</source>
         <translation>Buộc giải mã phần cứng</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1371"/>
+        <location filename="../gui/SettingsView.qml" line="1485"/>
         <source>Video codec</source>
         <translation>Codec video</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1405"/>
+        <location filename="../gui/SettingsView.qml" line="1519"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1409"/>
+        <location filename="../gui/SettingsView.qml" line="1523"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
@@ -1079,17 +1093,16 @@
         <translation type="vanished">HEVC HDR (Thử nghiệm)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1451"/>
         <source>Unlock unsupported FPS options</source>
-        <translation>Mở khoá các tuỳ chọn FPS không được hỗ trợ</translation>
+        <translation type="vanished">Mở khoá các tuỳ chọn FPS không được hỗ trợ</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1470"/>
+        <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Tự động tìm các PC trên mạng cục bộ (Được khuyến nghị)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1495"/>
+        <location filename="../gui/SettingsView.qml" line="1590"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Tự động phát hiện các kết nối bị chặn (Được khuyến nghị)</translation>
     </message>

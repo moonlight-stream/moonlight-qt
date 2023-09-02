@@ -676,7 +676,7 @@ Flickable {
                         for (var i = 0; i < model.count; i++) {
                             var thisWm = model.get(i).val;
                             if (thisWm === StreamingPreferences.recommendedFullScreenMode) {
-                                model.get(i).text += qsTr(" (Recommended)")
+                                model.get(i).text += " " + qsTr("(Recommended)")
                                 model.move(i, 0, 1)
                                 break
                             }
