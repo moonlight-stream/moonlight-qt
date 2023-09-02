@@ -298,28 +298,31 @@ void StreamingPreferences::save()
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
 {
+    // Don't scale bitrate further beyond 90 FPS. It's definitely not a linear
+    // bitrate increase for frame rate once we get to values that high.
+    float frameRateFactor = qMin(90, fps) / 30;
+
     // This table prefers 16:10 resolutions because they are
     // only slightly more pixels than the 16:9 equivalents, so
     // we don't want to bump those 16:10 resolutions up to the
     // next 16:9 slot.
-
     if (width * height <= 640 * 360) {
-        return static_cast<int>(1000 * (fps / 30.0));
+        return static_cast<int>(1000 * frameRateFactor);
     }
     else if (width * height <= 854 * 480) {
-        return static_cast<int>(1500 * (fps / 30.0));
+        return static_cast<int>(1500 * frameRateFactor);
     }
     // This covers 1280x720 and 1280x800 too
     else if (width * height <= 1366 * 768) {
-        return static_cast<int>(5000 * (fps / 30.0));
+        return static_cast<int>(5000 * frameRateFactor);
     }
     else if (width * height <= 1920 * 1200) {
-        return static_cast<int>(10000 * (fps / 30.0));
+        return static_cast<int>(10000 * frameRateFactor);
     }
     else if (width * height <= 2560 * 1600) {
-        return static_cast<int>(20000 * (fps / 30.0));
+        return static_cast<int>(20000 * frameRateFactor);
     }
     else /* if (width * height <= 3840 * 2160) */ {
-        return static_cast<int>(40000 * (fps / 30.0));
+        return static_cast<int>(40000 * frameRateFactor);
     }
 }
