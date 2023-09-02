@@ -130,6 +130,16 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     }
     streamIgnoreDevices += m_OldIgnoreDevices;
 
+    // STREAM_IGNORE_DEVICE_GUIDS allows to specify additional devices to be ignored when starting
+    // the stream in case the scope of STREAM_GAMECONTROLLER_IGNORE_DEVICES is too broad. One such
+    // case is "Steam Virtual Gamepad" where everything is under the same VID/PID, but different GUIDs.
+    // Multiple GUIDs can be provided, but need to be separated by commas:
+    //
+    //     <GUID>,<GUID>,<GUID>,...
+    //
+    QString streamIgnoreDeviceGuids = qgetenv("STREAM_IGNORE_DEVICE_GUIDS");
+    m_IgnoreDeviceGuids = streamIgnoreDeviceGuids.split(',', Qt::SkipEmptyParts);
+
     // For SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES, we use the union of SDL_GAMECONTROLLER_IGNORE_DEVICES
     // and STREAM_GAMECONTROLLER_IGNORE_DEVICES while streaming. STREAM_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT
     // overrides SDL_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT while streaming.
