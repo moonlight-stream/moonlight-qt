@@ -812,14 +812,6 @@ bool Session::validateLaunch(SDL_Window* testWindow)
         }
     }
 
-    if (m_Preferences->unsupportedFps && m_StreamConfig.fps > 60) {
-        emitLaunchWarning(tr("Using unsupported FPS options may cause stuttering or lag."));
-
-        if (m_Preferences->enableVsync) {
-            emitLaunchWarning(tr("V-sync will be disabled when streaming at a higher frame rate than the display."));
-        }
-    }
-
     if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_AV1) {
         if (!(m_Computer->serverCodecModeSupport & SCM_MASK_AV1)) {
             if (m_Preferences->videoCodecConfig == StreamingPreferences::VCC_FORCE_AV1) {
