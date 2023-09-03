@@ -186,20 +186,36 @@ void ComputerModel::handlePairingCompleted(NvComputer*, QString error)
 
 void ComputerModel::handleComputerStateChanged(NvComputer* computer)
 {
-    // If this is an existing computer, we can report the data changed
-    int index = m_Computers.indexOf(computer);
-    if (index >= 0) {
-        // Let the view know that this specific computer changed
-        emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+    QVector<NvComputer*> newComputerList = m_ComputerManager->getComputers();
+
+    // Check if this PC was added or moved
+    int newListIndex = newComputerList.indexOf(computer);
+    int oldListIndex = m_Computers.indexOf(computer);
+    if (newListIndex != oldListIndex) {
+        // We should never learn of a removal in this callback
+        Q_ASSERT(newListIndex != -1);
+
+        // If the PC was present in the old list, remove it to reinsert it.
+        if (oldListIndex != -1) {
+            beginRemoveRows(QModelIndex(), oldListIndex, oldListIndex);
+            m_Computers.remove(oldListIndex);
+            endRemoveRows();
+        }
+
+        // Insert the PC in the new location
+        beginInsertRows(QModelIndex(), newListIndex, newListIndex);
+        m_Computers.emplace(newListIndex, computer);
+        endInsertRows();
     }
     else {
-        // This is a new PC which may be inserted at an arbitrary point
-        // in our computer list (since it comes from CM's QMap). Reload
-        // the whole model state to ensure it stays consistent.
-        beginResetModel();
-        m_Computers = m_ComputerManager->getComputers();
-        endResetModel();
+        Q_ASSERT(oldListIndex != -1);
+
+        // Let the view know that this specific computer changed
+        emit dataChanged(createIndex(newListIndex, 0), createIndex(newListIndex, 0));
     }
+
+    // The old and new vectors should be equivalent
+    Q_ASSERT(newComputerList == m_Computers);
 }
 
 #include "computermodel.moc"
