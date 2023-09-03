@@ -130,12 +130,12 @@ CenteredGridView {
             id: stateIcon
             anchors.horizontalCenter: pcIcon.horizontalCenter
             anchors.verticalCenter: pcIcon.verticalCenter
-            anchors.verticalCenterOffset: -15
+            anchors.verticalCenterOffset: !model.online ? -18 : -16
             visible: !model.statusUnknown && (!model.online || !model.paired)
-            source: !model.online ? "qrc:/res/baseline-warning-24px.svg" : "qrc:/res/baseline-lock-24px.svg"
+            source: !model.online ? "qrc:/res/warning_FILL1_wght300_GRAD200_opsz24.svg" : "qrc:/res/baseline-lock-24px.svg"
             sourceSize {
-                width: 75
-                height: 75
+                width: !model.online ? 75 : 70
+                height: !model.online ? 75 : 70
             }
         }
 
