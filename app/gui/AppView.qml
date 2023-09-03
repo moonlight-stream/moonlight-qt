@@ -1,5 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
+import QtQuick.Controls.Material 2.2
 
 import AppModel 1.0
 import ComputerManager 1.0
@@ -121,15 +122,15 @@ CenteredGridView {
             anchors.fill: appIcon
 
             sourceComponent: Item {
-                ToolButton {
+                RoundButton {
                     anchors.horizontalCenterOffset: appIcon.isPlaceholder ? -47 : 0
                     anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : -60
                     anchors.centerIn: parent
-                    implicitWidth: 125
-                    implicitHeight: 125
+                    implicitWidth: 85
+                    implicitHeight: 85
 
                     Image {
-                        source: "qrc:/res/baseline-play_circle_filled_white-48px.svg"
+                        source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
                         anchors.centerIn: parent
                         sourceSize {
                             width: 75
@@ -145,17 +146,19 @@ CenteredGridView {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
+
+                    Material.background: "#D0808080"
                 }
 
-                ToolButton {
+                RoundButton {
                     anchors.horizontalCenterOffset: appIcon.isPlaceholder ? 47 : 0
                     anchors.verticalCenterOffset: appIcon.isPlaceholder ? -75 : 60
                     anchors.centerIn: parent
-                    implicitWidth: 125
-                    implicitHeight: 125
+                    implicitWidth: 85
+                    implicitHeight: 85
 
                     Image {
-                        source: "qrc:/res/baseline-cancel-24px.svg"
+                        source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
                         anchors.centerIn: parent
                         sourceSize {
                             width: 75
@@ -171,6 +174,8 @@ CenteredGridView {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 3000
                     ToolTip.visible: hovered
+
+                    Material.background: "#D0808080"
                 }
             }
         }
