@@ -1,6 +1,6 @@
 # Moonlight PC
 
-[Moonlight PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream, as used by the NVIDIA Shield.
+[Moonlight PC](https://moonlight-stream.org) is an open source PC client for NVIDIA GameStream and [Sunshine](https://github.com/LizardByte/Sunshine).
 
 Moonlight also has mobile versions for [Android](https://github.com/moonlight-stream/moonlight-android) and [iOS](https://github.com/moonlight-stream/moonlight-ios).
 
