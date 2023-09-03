@@ -306,23 +306,26 @@ int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
     // only slightly more pixels than the 16:9 equivalents, so
     // we don't want to bump those 16:10 resolutions up to the
     // next 16:9 slot.
+    int resolutionFactor;
     if (width * height <= 640 * 360) {
-        return static_cast<int>(1000 * frameRateFactor);
+        resolutionFactor = 10;
     }
     else if (width * height <= 854 * 480) {
-        return static_cast<int>(1500 * frameRateFactor);
+        resolutionFactor = 15;
     }
     // This covers 1280x720 and 1280x800 too
     else if (width * height <= 1366 * 768) {
-        return static_cast<int>(5000 * frameRateFactor);
+        resolutionFactor = 50;
     }
     else if (width * height <= 1920 * 1200) {
-        return static_cast<int>(10000 * frameRateFactor);
+        resolutionFactor = 100;
     }
     else if (width * height <= 2560 * 1600) {
-        return static_cast<int>(20000 * frameRateFactor);
+        resolutionFactor = 200;
     }
     else /* if (width * height <= 3840 * 2160) */ {
-        return static_cast<int>(40000 * frameRateFactor);
+        resolutionFactor = 400;
     }
+
+    return (int)(resolutionFactor * frameRateFactor) * 100;
 }
