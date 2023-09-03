@@ -300,7 +300,7 @@ int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
 {
     // Don't scale bitrate further beyond 90 FPS. It's definitely not a linear
     // bitrate increase for frame rate once we get to values that high.
-    float frameRateFactor = qMin(90, fps) / 30;
+    float frameRateFactor = qMin(90, fps) / 30.f;
 
     // This table prefers 16:10 resolutions because they are
     // only slightly more pixels than the 16:9 equivalents, so
