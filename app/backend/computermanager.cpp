@@ -450,7 +450,12 @@ QVector<NvComputer*> ComputerManager::getComputers()
 {
     QReadLocker lock(&m_Lock);
 
-    return QVector<NvComputer*>::fromList(m_KnownHosts.values());
+    // Return a sorted host list
+    auto hosts = QVector<NvComputer*>::fromList(m_KnownHosts.values());
+    std::stable_sort(hosts.begin(), hosts.end(), [](const NvComputer* host1, const NvComputer* host2) {
+        return host1->name.toLower() < host2->name.toLower();
+    });
+    return hosts;
 }
 
 class DeferredHostDeletionTask : public QRunnable
