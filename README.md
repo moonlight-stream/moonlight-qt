@@ -12,15 +12,13 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
- - Supports streaming at up to 120 FPS (high refresh rate monitor recommended)
- - Supports streaming at 720p, 1080p, 1440p, 4K, and the client PC's native screen resolution
+ - H.264, HEVC, and AV1 codec support (AV1 requires Sunshine and a supported host GPU)
  - HDR streaming support
  - 7.1 surround sound audio support
+ - 10-point multitouch support (Sunshine only)
+ - Gamepad support with force feedback and motion controls for up to 16 players
  - Support for both pointer capture (for games) and direct mouse control (for remote desktop)
  - Support for passing system-wide keyboard shortcuts like Alt+Tab to the host
- - Direct touchscreen mouse control
- - HEVC support for better image quality at reduced bandwidth
- - Gamepad support with force feedback for up to 4 players
  
 ## Downloads
 - [Windows, macOS, and Steam Link](https://github.com/moonlight-stream/moonlight-qt/releases)

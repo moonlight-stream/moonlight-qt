@@ -10,15 +10,13 @@
 		<p>Moonlight can stream games and other applications from another PC with Sunshine or GeForce Experience software installed.</p>
 		<p>Features include:</p>
 		<ul>
-			<li>Streaming at up to 4K resolution</li>
-			<li>Support for up to 120 FPS streaming (high refresh rate monitor recommended)</li>
 			<li>Hardware accelerated video decoding with VAAPI, VDPAU, and NVDEC support</li>
+			<li>H.264, HEVC, and AV1 codec support</li>
 			<li>7.1 surround sound audio support</li>
+			<li>10-point multitouch support</li>
+			<li>Gamepad support with force feedback for up to 16 players</li>
 			<li>Support for both pointer capture (for games) and direct mouse control (for remote desktop)</li>
 			<li>Support for passing system-wide keyboard shortcuts like Alt+Tab to the host</li>
-			<li>Direct touchscreen mouse control</li>
-			<li>HEVC support for better video compression efficiency</li>
-			<li>Gamepad support with force feedback for up to 4 players</li>
 		</ul>
 	</description>
 
