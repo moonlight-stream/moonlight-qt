@@ -204,7 +204,7 @@ void ComputerModel::handleComputerStateChanged(NvComputer* computer)
 
         // Insert the PC in the new location
         beginInsertRows(QModelIndex(), newListIndex, newListIndex);
-        m_Computers.emplace(newListIndex, computer);
+        m_Computers.insert(newListIndex, computer);
         endInsertRows();
     }
     else {
