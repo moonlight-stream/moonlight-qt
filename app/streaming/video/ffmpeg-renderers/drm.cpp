@@ -1147,8 +1147,8 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     // DRM requires composed layers rather than separate layers per plane
     SDL_assert(drmFrame->nb_layers == 1);
 
-    // Max 30 attributes (1 key + 1 value for each)
-    const int MAX_ATTRIB_COUNT = 30 * 2;
+    // Max 32 attributes (1 key + 1 value for each)
+    const int MAX_ATTRIB_COUNT = 32 * 2;
     EGLAttrib attribs[MAX_ATTRIB_COUNT] = {
         EGL_LINUX_DRM_FOURCC_EXT, (EGLAttrib)drmFrame->layers[0].format,
         EGL_WIDTH, frame->width,
@@ -1245,6 +1245,34 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     // Add color range metadata
     attribs[attribIndex++] = EGL_SAMPLE_RANGE_HINT_EXT;
     attribs[attribIndex++] = isFrameFullRange(frame) ? EGL_YUV_FULL_RANGE_EXT : EGL_YUV_NARROW_RANGE_EXT;
+
+    // Add chroma siting metadata
+    switch (frame->chroma_location) {
+    case AVCHROMA_LOC_LEFT:
+    case AVCHROMA_LOC_TOPLEFT:
+        attribs[attribIndex++] = EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT;
+        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_EXT;
+        break;
+
+    case AVCHROMA_LOC_CENTER:
+    case AVCHROMA_LOC_TOP:
+        attribs[attribIndex++] = EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT;
+        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_5_EXT;
+        break;
+    }
+    switch (frame->chroma_location) {
+    case AVCHROMA_LOC_TOPLEFT:
+    case AVCHROMA_LOC_TOP:
+        attribs[attribIndex++] = EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT;
+        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_EXT;
+        break;
+
+    case AVCHROMA_LOC_LEFT:
+    case AVCHROMA_LOC_CENTER:
+        attribs[attribIndex++] = EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT;
+        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_5_EXT;
+        break;
+    }
 
     // Terminate the attribute list
     attribs[attribIndex++] = EGL_NONE;
