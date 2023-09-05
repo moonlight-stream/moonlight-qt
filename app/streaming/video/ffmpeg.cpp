@@ -1066,6 +1066,11 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
+            // Skip non-hwaccel hardware decoders for now. We will try those in the next loop.
+            if (decoder->capabilities & AV_CODEC_CAP_HARDWARE) {
+                continue;
+            }
+
             // Look for the first matching hwaccel hardware decoder (pass 0)
             for (int i = 0;; i++) {
                 const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
@@ -1082,7 +1087,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             }
         }
 
-        // Iterate through non-hwaccel hardware decoders
+        // Iterate through non-hwaccel and non-standard hwaccel hardware decoders that have AV_CODEC_CAP_HARDWARE set
         codecIterator = NULL;
         while ((decoder = av_codec_iterate(&codecIterator))) {
             // Skip codecs that aren't decoders
@@ -1097,13 +1102,13 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
-            // Skip hwaccel and software/hybrid decoders
-            if (avcodec_get_hw_config(decoder, 0) || !(decoder->capabilities & AV_CODEC_CAP_HARDWARE)) {
+            // Skip software/hybrid decoders and normal hwaccel decoders (which were handled in the loop above)
+            if (!(decoder->capabilities & AV_CODEC_CAP_HARDWARE)) {
                 continue;
             }
 
-            // Try this decoder
-            if (tryInitializeRendererForUnknownDecoder(decoder, params, false)) {
+            // Try to initialize this decoder both as hwaccel and non-hwaccel
+            if (tryInitializeRendererForUnknownDecoder(decoder, params, true)) {
                 return true;
             }
         }
