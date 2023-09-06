@@ -1267,6 +1267,8 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         attribs[attribIndex++] = EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT;
         attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_5_EXT;
         break;
+    default:
+        break;
     }
     switch (frame->chroma_location) {
     case AVCHROMA_LOC_TOPLEFT:
@@ -1279,6 +1281,8 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     case AVCHROMA_LOC_CENTER:
         attribs[attribIndex++] = EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT;
         attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_5_EXT;
+        break;
+    default:
         break;
     }
 
