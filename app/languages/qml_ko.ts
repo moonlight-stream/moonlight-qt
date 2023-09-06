@@ -879,27 +879,27 @@
         <location filename="../gui/SettingsView.qml" line="456"/>
         <location filename="../gui/SettingsView.qml" line="565"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 정의 (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="471"/>
         <source>Enter a custom frame rate:</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 정의 프레임 레이트 입력:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="568"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>사용자 정의</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="586"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="591"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1112"/>
