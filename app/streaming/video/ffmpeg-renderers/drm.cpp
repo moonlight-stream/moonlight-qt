@@ -1064,6 +1064,14 @@ bool DrmRenderer::isDirectRenderingSupported()
     return m_SupportsDirectRendering;
 }
 
+int DrmRenderer::getDecoderColorspace()
+{
+    // Some DRM implementations (VisionFive) don't support BT.601 color encoding,
+    // so let's default to BT.709, which all drivers that support COLOR_ENCODING
+    // seem to support.
+    return COLORSPACE_REC_709;
+}
+
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
 {
     switch (getFrameColorspace(frame)) {

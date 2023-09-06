@@ -55,6 +55,7 @@ public:
     virtual bool needsTestFrame() override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual bool isDirectRenderingSupported() override;
+    virtual int getDecoderColorspace() override;
     virtual void setHdrMode(bool enabled) override;
 #ifdef HAVE_EGL
     virtual bool canExportEGL() override;
