@@ -217,6 +217,7 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
             if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
                 // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
                 // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
+                // NB: Remember to update the VA-API NVDEC condition below when modifying this!
                 qputenv("LIBVA_DRIVER_NAME", "nvidia");
                 status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
             }
@@ -291,22 +292,24 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                     "VAAPI driver is affected by RFI latency bug");
     }
 
-    // Older versions of the Gallium VAAPI driver have a nasty memory leak that
-    // causes memory to be leaked for each submitted frame. I believe this is
-    // resolved in the libva2 drivers (VAAPI 1.x). We will try to use VDPAU
-    // instead for old VAAPI versions or drivers affected by the RFI latency bug.
-    if (m_DecoderSelectionPass == 0 && (major == 0 || m_HasRfiLatencyBug) && qgetenv("FORCE_VAAPI") != "1" && vendorStr.contains("Gallium", Qt::CaseInsensitive)) {
-        // Fail and let VDPAU pick this up
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Deprioritizing VAAPI on Gallium driver. Set FORCE_VAAPI=1 to override.");
-        return false;
-    }
+    if (m_DecoderSelectionPass == 0 && qgetenv("FORCE_VAAPI") != "1") {
+        // Older versions of the Gallium VAAPI driver have a nasty memory leak that
+        // causes memory to be leaked for each submitted frame. I believe this is
+        // resolved in the libva2 drivers (VAAPI 1.x). We will try to use VDPAU
+        // instead for old VAAPI versions or drivers affected by the RFI latency bug.
+        if ((major == 0 || m_HasRfiLatencyBug) && vendorStr.contains("Gallium", Qt::CaseInsensitive)) {
+            // Fail and let VDPAU pick this up
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Deprioritizing VAAPI on Gallium driver. Set FORCE_VAAPI=1 to override.");
+            return false;
+        }
 
-    if (m_DecoderSelectionPass == 0 && qgetenv("FORCE_VAAPI") != "1" && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
         // Prefer CUDA for XWayland and VDPAU for regular X11.
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Deprioritizing VAAPI for NVIDIA driver on X11/XWayland. Set FORCE_VAAPI=1 to override.");
-        return false;
+        if (m_WindowSystem == SDL_SYSWM_X11 && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Deprioritizing VAAPI for NVIDIA driver on X11/XWayland. Set FORCE_VAAPI=1 to override.");
+            return false;
+        }
     }
 
     if (WMUtils::isRunningWayland()) {
