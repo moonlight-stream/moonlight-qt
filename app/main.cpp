@@ -635,28 +635,18 @@ int main(int argc, char *argv[])
     // Create the identity manager on the main thread
     IdentityManager::get();
 
-#ifndef Q_OS_WINRT
-    // Use the dense material dark theme by default
-    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
-        qputenv("QT_QUICK_CONTROLS_STYLE", "Material");
-    }
-#else
-    // Use universal dark on WinRT
-    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_STYLE")) {
-        qputenv("QT_QUICK_CONTROLS_STYLE", "Universal");
-    }
-#endif
-    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_THEME")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
-    }
+    // We require the Material theme
+    QQuickStyle::setStyle("Material");
+
+    // Our icons are styled for a dark theme, so we do not allow the user to override this
+    qputenv("QT_QUICK_CONTROLS_MATERIAL_THEME", "Dark");
+
+    // These are defaults that we allow the user to override
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_ACCENT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "Purple");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");
-    }
-    if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_UNIVERSAL_THEME")) {
-        qputenv("QT_QUICK_CONTROLS_UNIVERSAL_THEME", "Dark");
     }
 
     QQmlApplicationEngine engine;
