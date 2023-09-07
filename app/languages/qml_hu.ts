@@ -28,27 +28,27 @@
     <message>
         <location filename="../gui/AppView.qml" line="315"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Az alkalmazás azonnali elindítása a gép kiválasztásakor, az alkalmazásválasztó rács kihagyásával.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="324"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Játék elrejtése</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Rejtsd el ezt a játékot az alkalmazás rácsról. Az elrejtett játékok eléréséhez kattints a jobb gombbal a gép elemre, és válaszd a %1 lehetőséget.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="328"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Összes alkalmazás</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="343"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Biztos, hogy ki akarsz lépni %1? Minden el nem mentett haladás elveszik.</translation>
     </message>
 </context>
 <context>
@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>A PC-vel való kapcsolat létrehozása...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Párosítás... Kérlek, írd be a &apos;%1&apos;-et a %2-nél.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Sikeres párosítás</translation>
     </message>
 </context>
 <context>
@@ -74,12 +74,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>A PC-vel való kapcsolat létrehozása...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>Kilépés az alkalmazásból...</translation>
     </message>
 </context>
 <context>
@@ -87,17 +87,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>A PC-vel való kapcsolat létrehozása...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Alkalmazáslista betöltése...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Biztos, hogy ki akarsz lépni %1? Minden el nem mentett haladás elveszik.</translation>
     </message>
 </context>
 <context>
@@ -105,7 +105,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Gamepad leképezés</translation>
     </message>
 </context>
 <context>
@@ -113,7 +113,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="358"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Hiányzó hangrögzítő eszköz. A GeForce Experience újratelepítése megoldja ezt a hibát.</translation>
     </message>
 </context>
 <context>
@@ -121,132 +121,132 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Számítógépek</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nem sikerült csatlakozni a megadott számítógéphez.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ennek a számítógépnek az internetkapcsolata blokkolja a Moonlightot. Előfordulhat, hogy az interneten keresztüli streaming nem működik, amíg ehhez a hálózathoz csatlakozik.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kattints a Súgó gombra a lehetséges megoldásokért.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>Az automatikus PC-felfedezés le van tiltva. Add hozzá a számítógépet manuálisan.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Kompatibilis gépeket keres a helyi hálózaton...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation type="unfinished"></translation>
+        <translation>PC felébredése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Hálózat tesztelése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>PC átnevezése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>PC törlése</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>A GeForce Experience %1-en lévő verzióját a Moonlight ezen buildje nem támogatja. Frissítened kell a Moonlightot, hogy a %1-ről streamelni tudj.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>Ez eltarthat néhány másodpercig…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Úgy tűnik, hogy ez a hálózat nem blokkolja a Moonlightot Ha továbbra is gondot okoz a csatlakozás, ellenőrizze a számítógép tűzfalának beállításait.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ha interneten keresztül próbálsz streamelni, telepítsd a Moonlight Internet Hosting Toolt a játékgépedre, és futtasd a mellékelt Internet Streaming Tester programot, hogy ellenőrizd a játékgéped internetkapcsolatát.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Úgy tűnik, hogy a számítógép jelenlegi hálózati kapcsolata blokkolja a Moonlightot. Előfordulhat, hogy az interneten keresztüli streaming nem működik, amíg ehhez a hálózathoz csatlakozik.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
         <source>The following network ports were blocked:</source>
-        <translation type="unfinished"></translation>
+        <translation>A következő hálózati portok voltak blokkolva:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation type="unfinished"></translation>
+        <translation>A hálózati tesztet nem lehetett elvégezni, mert a Moonlight egyik kapcsolat tesztelő szervere sem volt elérhető erről a számítógépről. Ellenőrizze az internetkapcsolatot, vagy próbálja meg később újra.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>PC állapota: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>Elérhető</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Nem elérhető</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Összes alkalmazás</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kérlek, írd be a %1-et a központi számítógépen. Ez a párbeszédpanel bezárul, ha a párosítás befejeződött.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="301"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ha a host PC-n Sunshine fut, lépj a Sunshine webes felhasználói felületére a PIN-kód megadásához.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Biztos, hogy el akarod távolítani a &apos;%1&apos;-et?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>A Moonlight teszteli a hálózati kapcsolatot, hogy megállapítsa, nincs-e blokkolva valamelyik szükséges port.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="354"/>
         <source>Enter the new name for this PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Add meg a számítógép új nevét:</translation>
     </message>
 </context>
 <context>
@@ -254,27 +254,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="563"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>A számítógép PIN-kódja nem egyezett. Kérlek, próbáld meg újra.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="567"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nem lehet párosítani, amíg egy korábbi munkamenet még mindig fut a számítógépen. Zárd be a futó játékokat, vagy indítsd újra a számítógépet, majd próbáld meg újra a párosítást.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="570"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>A párosítás nem sikerült. Kérlek, próbáld újra.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="574"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Egy újabb párosítási kísérlet már folyamatban van.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="584"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>A GeForce Experience hibát adott vissza: %1</translation>
     </message>
 </context>
 <context>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="634"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation type="unfinished"></translation>
+        <translation>A futójátékot nem ez a PC indította el. A játékot a gazdaszámítógépen manuálisan kell befejeznie, vagy azt az eszközt kell használnia, amely eredetileg elindította a játékot.</translation>
     </message>
 </context>
 <context>
@@ -290,36 +290,36 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 már párosítva van</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nem sikerült csatlakozni %1-hez</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>A %1 számítógépet nem párosították. Kérjük, nyissa meg a Moonlightot a párosításhoz a streaming előtt.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Az alkalmazás kilépése sikertelen, ok: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nem sikerült megtalálni az alkalmazást %1</translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>A %1 számítógépet nem párosították. Kérjük, nyissa meg a Moonlightot a párosításhoz, mielőtt lekérné a játékok listáját.</translation>
     </message>
 </context>
 <context>
@@ -355,7 +355,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="13"/>
         <source>Quitting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Kilépés %1...</translation>
     </message>
 </context>
 <context>
@@ -363,42 +363,42 @@
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nem érkezett videó a házigazdától.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Ellenőrizze a tűzfalát és a porttovábbítási szabályokat a port(ok) tekintetében: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="117"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>A hálózati kapcsolat nem működik jól. Csökkentse a videó bitrátájának beállítását, vagy próbálkozzon gyorsabb kapcsolattal.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="123"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>Valami elromlott a host PC-n a stream indításakor.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Győződjön meg róla, hogy nincs DRM-védett tartalom megnyitva a fogadó számítógépen. Megpróbálhatja újraindítani a gazdaszámítógépet is.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="135"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>Kapcsolat megszakadt</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="797"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>A GeForce Experience %1-en lévő verzióját a Moonlight ezen buildje nem támogatja. Frissítenie kell a Moonlightot, hogy a %1-ről tudjon streamelni.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="802"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation type="unfinished"></translation>
+        <translation>A távoli asztali egér mód engedélyezése problémákat okozhat a játékokban.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="807"/>
@@ -1107,7 +1107,7 @@
     <message>
         <location filename="../gui/main.qml" line="364"/>
         <source>Help</source>
-        <translation type="unfinished">Súgó</translation>
+        <translation>Súgó</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="425"/>
