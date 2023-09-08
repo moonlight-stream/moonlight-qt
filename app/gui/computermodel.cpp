@@ -188,34 +188,17 @@ void ComputerModel::handleComputerStateChanged(NvComputer* computer)
 {
     QVector<NvComputer*> newComputerList = m_ComputerManager->getComputers();
 
-    // Check if this PC was added or moved
-    int newListIndex = newComputerList.indexOf(computer);
-    int oldListIndex = m_Computers.indexOf(computer);
-    if (newListIndex != oldListIndex) {
-        // We should never learn of a removal in this callback
-        Q_ASSERT(newListIndex != -1);
-
-        // If the PC was present in the old list, remove it to reinsert it.
-        if (oldListIndex != -1) {
-            beginRemoveRows(QModelIndex(), oldListIndex, oldListIndex);
-            m_Computers.remove(oldListIndex);
-            endRemoveRows();
-        }
-
-        // Insert the PC in the new location
-        beginInsertRows(QModelIndex(), newListIndex, newListIndex);
-        m_Computers.insert(newListIndex, computer);
-        endInsertRows();
+    // Reset the model if the structural layout of the list has changed
+    if (m_Computers != newComputerList) {
+        beginResetModel();
+        m_Computers = newComputerList;
+        endResetModel();
     }
     else {
-        Q_ASSERT(oldListIndex != -1);
-
         // Let the view know that this specific computer changed
-        emit dataChanged(createIndex(newListIndex, 0), createIndex(newListIndex, 0));
+        int index = m_Computers.indexOf(computer);
+        emit dataChanged(createIndex(index, 0), createIndex(index, 0));
     }
-
-    // The old and new vectors should be equivalent
-    Q_ASSERT(newComputerList == m_Computers);
 }
 
 #include "computermodel.moc"
