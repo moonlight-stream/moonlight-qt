@@ -5,6 +5,7 @@
 #include <QTranslator>
 #include <QCoreApplication>
 #include <QLocale>
+#include <QtMath>
 
 #include <QtDebug>
 
@@ -300,7 +301,7 @@ int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
 {
     // Don't scale bitrate linearly beyond 60 FPS. It's definitely not a linear
     // bitrate increase for frame rate once we get to values that high.
-    float frameRateFactor = (fps <= 60 ? fps : (sqrt(fps / 60.f) * 60.f)) / 30.f;
+    float frameRateFactor = (fps <= 60 ? fps : (qSqrt(fps / 60.f) * 60.f)) / 30.f;
 
     // This table prefers 16:10 resolutions because they are
     // only slightly more pixels than the 16:9 equivalents, so
