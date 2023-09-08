@@ -478,7 +478,7 @@ Flickable {
                                         maximumLength: 4
                                         inputMethodHints: Qt.ImhDigitsOnly
                                         placeholderText: fpsListModel.get(fpsComboBox.currentIndex).video_fps
-                                        validator: IntValidator{bottom:1; top:9999}
+                                        validator: IntValidator{bottom:10; top:9999}
                                         focus: true
 
                                         onTextChanged: {
