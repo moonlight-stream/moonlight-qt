@@ -434,72 +434,6 @@ public:
         #endif
         }
 
-        SDL_SysWMinfo info;
-
-        SDL_VERSION(&info.version);
-
-        if (!SDL_GetWindowWMInfo(params->window, &info)) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "SDL_GetWindowWMInfo() failed: %s",
-                        SDL_GetError());
-            return false;
-        }
-
-        SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
-
-        // SDL adds its own content view to listen for events.
-        // We need to add a subview for our display layer.
-        NSView* contentView = info.info.cocoa.window.contentView;
-        m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
-
-        m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
-        m_DisplayLayer.bounds = m_StreamView.bounds;
-        m_DisplayLayer.position = CGPointMake(CGRectGetMidX(m_StreamView.bounds), CGRectGetMidY(m_StreamView.bounds));
-        m_DisplayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
-        m_DisplayLayer.opaque = YES;
-
-        // This workaround prevents the image from going through processing that causes some
-        // color artifacts in some cases. HDR seems to be okay without this, so we'll exclude
-        // it out of caution. The artifacts seem to be far more significant on M1 Macs and
-        // the workaround can cause performance regressions on Intel Macs, so only use this
-        // on Apple silicon.
-        //
-        // https://github.com/moonlight-stream/moonlight-qt/issues/493
-        // https://github.com/moonlight-stream/moonlight-qt/issues/722
-        if (!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) && (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != SDL_WINDOW_FULLSCREEN) {
-            int err;
-            uint32_t cpuType;
-            size_t size = sizeof(cpuType);
-
-            // Apple Silicon Macs have CPU_ARCH_ABI64 set, so we need to mask that off.
-            // For some reason, 64-bit Intel Macs don't seem to have CPU_ARCH_ABI64 set.
-            err = sysctlbyname("hw.cputype", &cpuType, &size, NULL, 0);
-            if (err == 0 && (cpuType & ~CPU_ARCH_MASK) == CPU_TYPE_ARM) {
-                if (info.info.cocoa.window.screen != nullptr) {
-                    m_DisplayLayer.shouldRasterize = YES;
-                    m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
-                }
-                else {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unable to rasterize layer due to missing NSScreen");
-                    SDL_assert(false);
-                }
-            }
-            else if (err != 0) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "sysctlbyname(hw.cputype) failed: %d", err);
-            }
-        }
-
-        // Create a layer-hosted view by setting the layer before wantsLayer
-        // This avoids us having to add our AVSampleBufferDisplayLayer as a
-        // sublayer of a layer-backed view which leaves a useless layer in
-        // the middle.
-        m_StreamView.layer = m_DisplayLayer;
-        m_StreamView.wantsLayer = YES;
-
-        [contentView addSubview: m_StreamView];
-
         err = av_hwdevice_ctx_create(&m_HwContext,
                                      AV_HWDEVICE_TYPE_VIDEOTOOLBOX,
                                      nullptr,
@@ -512,9 +446,105 @@ public:
             return false;
         }
 
-        if (params->enableFramePacing) {
-            if (!initializeVsyncCallback(&info)) {
+        bool isAppleSilicon = false;
+        {
+            uint32_t cpuType;
+            size_t size = sizeof(cpuType);
+
+            err = sysctlbyname("hw.cputype", &cpuType, &size, NULL, 0);
+            if (err == 0) {
+                // Apple Silicon Macs have CPU_ARCH_ABI64 set, so we need to mask that off.
+                // For some reason, 64-bit Intel Macs don't seem to have CPU_ARCH_ABI64 set.
+                isAppleSilicon = (cpuType & ~CPU_ARCH_MASK) == CPU_TYPE_ARM;
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "sysctlbyname(hw.cputype) failed: %d", err);
+            }
+        }
+
+        if (qgetenv("VT_FORCE_INDIRECT") == "1") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using indirect rendering due to environment variable");
+            m_DirectRendering = false;
+        }
+        else if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using direct rendering for 10-bit content");
+            m_DirectRendering = true;
+        }
+        else if (isAppleSilicon) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using indirect rendering for 8-bit content on Apple Silicon");
+            m_DirectRendering = false;
+        }
+        else {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using direct rendering for 8-bit content on Intel");
+            m_DirectRendering = true;
+        }
+
+        // If we're using direct rendering, set up the AVSampleBufferDisplayLayer
+        if (m_DirectRendering) {
+            SDL_SysWMinfo info;
+
+            SDL_VERSION(&info.version);
+
+            if (!SDL_GetWindowWMInfo(params->window, &info)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "SDL_GetWindowWMInfo() failed: %s",
+                            SDL_GetError());
                 return false;
+            }
+
+            SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
+
+            // SDL adds its own content view to listen for events.
+            // We need to add a subview for our display layer.
+            NSView* contentView = info.info.cocoa.window.contentView;
+            m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
+
+            m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
+            m_DisplayLayer.bounds = m_StreamView.bounds;
+            m_DisplayLayer.position = CGPointMake(CGRectGetMidX(m_StreamView.bounds), CGRectGetMidY(m_StreamView.bounds));
+            m_DisplayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
+            m_DisplayLayer.opaque = YES;
+
+            // This workaround prevents the image from going through processing that causes some
+            // color artifacts in some cases. HDR seems to be okay without this, so we'll exclude
+            // it out of caution. The artifacts seem to be far more significant on M1 Macs and
+            // the workaround can cause performance regressions on Intel Macs, so only use this
+            // on Apple silicon.
+            //
+            // https://github.com/moonlight-stream/moonlight-qt/issues/493
+            // https://github.com/moonlight-stream/moonlight-qt/issues/722
+            if (isAppleSilicon && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using layer rasterization workaround");
+                if (info.info.cocoa.window.screen != nullptr) {
+                    m_DisplayLayer.shouldRasterize = YES;
+                    m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
+                }
+                else {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Unable to rasterize layer due to missing NSScreen");
+                    SDL_assert(false);
+                }
+            }
+
+            // Create a layer-hosted view by setting the layer before wantsLayer
+            // This avoids us having to add our AVSampleBufferDisplayLayer as a
+            // sublayer of a layer-backed view which leaves a useless layer in
+            // the middle.
+            m_StreamView.layer = m_DisplayLayer;
+            m_StreamView.wantsLayer = YES;
+
+            [contentView addSubview: m_StreamView];
+
+            if (params->enableFramePacing) {
+                if (!initializeVsyncCallback(&info)) {
+                    return false;
+                }
             }
         }
 
@@ -600,6 +630,11 @@ public:
         return RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 
+    bool isDirectRenderingSupported() override
+    {
+        return m_DirectRendering;
+    }
+
 private:
     AVBufferRef* m_HwContext;
     AVSampleBufferDisplayLayer* m_DisplayLayer;
@@ -614,6 +649,7 @@ private:
     CGColorSpaceRef m_ColorSpace;
     SDL_mutex* m_VsyncMutex;
     SDL_cond* m_VsyncPassed;
+    bool m_DirectRendering;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {
