@@ -46,7 +46,7 @@ build_script:
   - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt515/bin/qt515-env.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
-  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/Qt/6.2/macos/bin scripts/generate-dmg.sh Release'
+  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/Qt/6.4/macos/bin scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:
