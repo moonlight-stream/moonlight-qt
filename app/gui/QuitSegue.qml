@@ -18,6 +18,7 @@ Item {
         if (error !== undefined) {
             errorDialog.text = error
             errorDialog.open()
+            console.error(error)
         }
 
         // If we're supposed to launch another game after this, do so now

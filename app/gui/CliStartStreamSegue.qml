@@ -26,6 +26,7 @@ Item {
     function onLaunchFailed(message) {
         errorDialog.text = message
         errorDialog.open()
+        console.error(message)
     }
 
     function onAppQuitRequired(appName) {

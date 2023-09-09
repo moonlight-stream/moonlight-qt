@@ -45,6 +45,7 @@ Item {
     {
         // Display the error dialog after Session::exec() returns
         streamSegueErrorDialog.text = text
+        console.error(text)
     }
 
     function displayLaunchWarning(text)
@@ -56,6 +57,7 @@ Item {
         toast.text = text
         toast.timeout = 3000
         toast.visible = true
+        console.warn(text)
     }
 
     function quitStarting()
