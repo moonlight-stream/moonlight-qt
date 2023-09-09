@@ -466,7 +466,7 @@ public:
         //
         // https://github.com/moonlight-stream/moonlight-qt/issues/493
         // https://github.com/moonlight-stream/moonlight-qt/issues/722
-        if (!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
+        if (!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) && (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) != SDL_WINDOW_FULLSCREEN) {
             int err;
             uint32_t cpuType;
             size_t size = sizeof(cpuType);
