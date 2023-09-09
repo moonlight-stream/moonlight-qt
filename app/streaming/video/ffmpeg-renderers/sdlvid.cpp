@@ -98,10 +98,12 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
-        // In full-screen exclusive mode, we enable V-sync if requested. For other modes, Windows and Mac
-        // have compositors that make rendering tear-free. Linux compositor varies by distro and user
-        // configuration but doesn't seem feasible to detect here.
+#ifdef Q_OS_WIN32
+    // The Windows DWM has tear-free behavior even with V-Sync off, so we will only set SDL_RENDERER_PRESENTVSYNC
+    // when we're in full-screen exclusive mode if we're running on Windows.
+    if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN)
+#endif
+    {
         if (params->enableVsync) {
             rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
         }
