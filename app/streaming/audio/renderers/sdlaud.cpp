@@ -28,8 +28,10 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
 
     // On PulseAudio systems, setting a value too small can cause underruns for other
     // applications sharing this output device. We impose a floor of 480 samples (10 ms)
-    // to mitigate this issue.
-    want.samples = SDL_max(480, opusConfig->samplesPerFrame);
+    // to mitigate this issue. Otherwise, we will buffer up to 3 frames of audio which
+    // is 15 ms at regular 5 ms frames and 30 ms at 10 ms frames for slow connections.
+    // The buffering helps avoid audio underruns due to network jitter.
+    want.samples = SDL_max(480, opusConfig->samplesPerFrame * 3);
 
     m_FrameSize = opusConfig->samplesPerFrame * sizeof(short) * opusConfig->channelCount;
 
