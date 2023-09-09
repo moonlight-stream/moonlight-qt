@@ -58,6 +58,10 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                 have.samples,
                 have.size);
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "SDL audio driver: %s",
+                SDL_GetCurrentAudioDriver());
+
     // Start playback
     SDL_PauseAudioDevice(m_AudioDevice, 0);
 
