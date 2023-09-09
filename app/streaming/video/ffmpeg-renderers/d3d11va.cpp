@@ -421,8 +421,9 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // Surfaces must be 128 pixel aligned for HEVC and 16 pixel aligned for H.264
-    m_TextureAlignment = (params->videoFormat & VIDEO_FORMAT_MASK_H265) ? 128 : 16;
+    // Surfaces must be 16 pixel aligned for H.264 and 128 pixel aligned for everything else
+    // https://github.com/FFmpeg/FFmpeg/blob/a234e5cd80224c95a205c1f3e297d8c04a1374c3/libavcodec/dxva2.c#L609-L616
+    m_TextureAlignment = (params->videoFormat & VIDEO_FORMAT_MASK_H264) ? 16 : 128;
 
     if (!setupRenderingResources()) {
         return false;

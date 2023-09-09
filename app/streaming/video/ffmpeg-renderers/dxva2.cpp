@@ -784,16 +784,20 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
 
     int alignment;
 
-    // HEVC using DXVA requires 128 pixel alignment, however Intel GPUs decoding HEVC
-    // using StretchRect() to render draw a translucent green line at the top of
+    // HEVC and AV1 using DXVA requires 128 pixel alignment, however this causes Intel GPUs
+    // using StretchRect() and HEVC to render draw a translucent green line at the top of
     // the screen in full-screen mode at 720p/1080p unless we use 32 pixel alignment.
     // This appears to work without issues on AMD and Nvidia GPUs too, so we will
     // do it unconditionally for now.
-    if (!(m_VideoFormat & VIDEO_FORMAT_MASK_H264)) {
+    // https://github.com/FFmpeg/FFmpeg/blob/a234e5cd80224c95a205c1f3e297d8c04a1374c3/libavcodec/dxva2.c#L609-L616
+    if (m_VideoFormat & VIDEO_FORMAT_MASK_H265) {
         alignment = 32;
     }
-    else {
+    else if (m_VideoFormat & VIDEO_FORMAT_MASK_H264) {
         alignment = 16;
+    }
+    else {
+        alignment = 128;
     }
 
     m_Desc.SampleWidth = FFALIGN(m_VideoWidth, alignment);
