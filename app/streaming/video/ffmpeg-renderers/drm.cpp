@@ -10,6 +10,8 @@ extern "C" {
 }
 
 #include <libdrm/drm_fourcc.h>
+#include <linux/dma-buf.h>
+#include <sys/ioctl.h>
 
 // Special Rockchip type
 #ifndef DRM_FORMAT_NA12
@@ -768,6 +770,11 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         auto &layer = mappedFrame->layers[0];
         layer.format = drmFormat;
 
+        // Prepare to write to the dumb buffer from the CPU
+        struct dma_buf_sync sync;
+        sync.flags = DMA_BUF_SYNC_START | DMA_BUF_SYNC_WRITE;
+        ioctl(drmFrame->primeFd, DMA_BUF_IOCTL_SYNC, &sync);
+
         int lastPlaneSize = 0;
         for (int i = 0; i < 4; i++) {
             if (frame->data[i] != nullptr) {
@@ -811,6 +818,10 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 lastPlaneSize = drmFrame->pitch * planeHeight;
             }
         }
+
+        // End the CPU write to the dumb buffer
+        sync.flags = DMA_BUF_SYNC_END | DMA_BUF_SYNC_WRITE;
+        ioctl(drmFrame->primeFd, DMA_BUF_IOCTL_SYNC, &sync);
     }
 
     ret = true;
