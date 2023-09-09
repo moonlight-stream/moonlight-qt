@@ -61,7 +61,7 @@ bool SdlRenderer::isRenderThreadSupported()
                 "SDL renderer backend: %s",
                 info.name);
 
-    if (info.name != QString("direct3d")) {
+    if (info.name != QString("direct3d") && info.name != QString("metal")) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "SDL renderer backend requires main thread rendering");
         return false;
