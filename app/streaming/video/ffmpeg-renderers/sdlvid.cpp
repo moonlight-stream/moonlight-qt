@@ -5,6 +5,8 @@
 
 #include <Limelight.h>
 
+#include <SDL_syswm.h>
+
 SdlRenderer::SdlRenderer()
     : m_VideoFormat(0),
       m_Renderer(nullptr),
@@ -98,15 +100,36 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-#ifdef Q_OS_WIN32
-    // The Windows DWM has tear-free behavior even with V-Sync off, so we will only set SDL_RENDERER_PRESENTVSYNC
-    // when we're in full-screen exclusive mode if we're running on Windows.
-    if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN)
-#endif
-    {
+    SDL_SysWMinfo info;
+    SDL_VERSION(&info.version);
+    if (!SDL_GetWindowWMInfo(params->window, &info)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetWindowWMInfo() failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+
+    // Only set SDL_RENDERER_PRESENTVSYNC if we know we'll get tearing otherwise.
+    // Since we don't use V-Sync to pace our frame rate, we want non-blocking
+    // presents to reduce video latency.
+    switch (info.subsystem) {
+    case SDL_SYSWM_WINDOWS:
+        // DWM is always tear-free except in full-screen exclusive mode
+        if ((SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+            if (params->enableVsync) {
+                rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
+            }
+        }
+        break;
+    case SDL_SYSWM_WAYLAND:
+        // Wayland is always tear-free in all modes
+        break;
+    default:
+        // For other subsystems, just set SDL_RENDERER_PRESENTVSYNC if asked
         if (params->enableVsync) {
             rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
         }
+        break;
     }
 
 #ifdef Q_OS_WIN32
