@@ -301,6 +301,11 @@ int main(int argc, char *argv[])
         Path::initialize(false);
     }
 
+    // Override the default QML cache directory with the one we chose
+    if (qEnvironmentVariableIsEmpty("QML_DISK_CACHE_PATH")) {
+        qputenv("QML_DISK_CACHE_PATH", Path::getQmlCacheDir().toUtf8());
+    }
+
 #ifdef USE_CUSTOM_LOGGER
 #ifdef LOG_TO_FILE
     QDir tempDir(Path::getLogDir());

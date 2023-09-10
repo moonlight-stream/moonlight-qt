@@ -185,14 +185,6 @@ rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Fusion
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Universal
 
-echo Generating QML cache
-forfiles /p %DEPLOY_FOLDER% /m *.qml /s /c "cmd /c qmlcachegen.exe @path"
-if !ERRORLEVEL! NEQ 0 goto Error
-
-echo Deleting original QML files
-forfiles /p %DEPLOY_FOLDER% /m *.qml /s /c "cmd /c del @path"
-if !ERRORLEVEL! NEQ 0 goto Error
-
 if "%SIGN%"=="1" (
     echo Signing deployed binaries
     set FILES_TO_SIGN=%BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe

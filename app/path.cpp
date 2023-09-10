@@ -9,6 +9,7 @@
 QString Path::s_CacheDir;
 QString Path::s_LogDir;
 QString Path::s_BoxArtCacheDir;
+QString Path::s_QmlCacheDir;
 
 QString Path::getLogDir()
 {
@@ -20,6 +21,12 @@ QString Path::getBoxArtCacheDir()
 {
     Q_ASSERT(!s_BoxArtCacheDir.isEmpty());
     return s_BoxArtCacheDir;
+}
+
+QString Path::getQmlCacheDir()
+{
+    Q_ASSERT(!s_QmlCacheDir.isEmpty());
+    return s_QmlCacheDir;
 }
 
 QByteArray Path::readDataFile(QString fileName)
@@ -97,6 +104,7 @@ void Path::initialize(bool portable)
     if (portable) {
         s_LogDir = QDir::currentPath();
         s_BoxArtCacheDir = QDir::currentPath() + "/boxart";
+        s_QmlCacheDir = QDir::currentPath() + "/qmlcache";
 
         // In order for the If-Modified-Since logic to work in MappingFetcher,
         // the cache directory must be different than the current directory.
@@ -112,5 +120,6 @@ void Path::initialize(bool portable)
 #endif
         s_CacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation);
         s_BoxArtCacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/boxart";
+        s_QmlCacheDir = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/qmlcache";
     }
 }
