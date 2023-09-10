@@ -6,7 +6,7 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       QTDIR: C:\Qt\5.15
-      QTDIR_ARM64: C:\Qt\6.4.3
+      QTDIR_ARM64: C:\Qt\6.5
     - APPVEYOR_BUILD_WORKER_IMAGE: macOS-Monterey
       BUILD_TARGET: macos
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604

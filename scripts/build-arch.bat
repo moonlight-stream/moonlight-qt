@@ -192,8 +192,16 @@ echo Copying qt.conf
 copy %SOURCE_ROOT%\app\qt.conf %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
+if not x%QT_PATH:\5.=%==x%QT_PATH% (
+    rem Qt 5.15
+    set WINDEPLOYQT_ARGS=--no-qmltooling --no-virtualkeyboard
+) else (
+    rem Qt 6.5
+    set WINDEPLOYQT_ARGS=--no-system-d3d-compiler --skip-plugin-types qmltooling,generic
+)
+
 echo Deploying Qt dependencies
-%WINDEPLOYQT_CMD% --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-qmltooling --no-virtualkeyboard --no-sql %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
+%WINDEPLOYQT_CMD% --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-sql %WINDEPLOYQT_ARGS% %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Deleting unused styles
@@ -201,10 +209,12 @@ rem Qt 5.x directories
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Fusion
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Imagine
 rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls.2\Universal
-rem Qt 6.x directories
-rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Fusion
-rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Imagine
-rmdir /s /q %DEPLOY_FOLDER%\QtQuick\Controls\Universal
+rem Qt 6.5+ directories
+rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Fusion
+rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Imagine
+rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Universal
+rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\Controls\Windows
+rmdir /s /q %DEPLOY_FOLDER%\qml\QtQuick\NativeStyle
 
 if "%SIGN%"=="1" (
     echo Signing deployed binaries
