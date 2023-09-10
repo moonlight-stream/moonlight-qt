@@ -50,14 +50,35 @@ if !ERRORLEVEL! EQU 0 (
 
 rem Find Qt path to determine our architecture
 for /F %%i in ('where qmake') do set QT_PATH=%%i
+
+rem Strip the qmake filename off the end to get the Qt bin directory itself
+set QT_PATH=%QT_PATH:\qmake.exe=%
+set QT_PATH=%QT_PATH:\qmake.bat=%
+set QT_PATH=%QT_PATH:\qmake.cmd=%
+
+echo QT_PATH=%QT_PATH%
 if not x%QT_PATH:_arm64=%==x%QT_PATH% (
     set ARCH=arm64
+
+    rem Replace the _arm64 suffix with _64 to get the x64 bin path
+    set HOSTBIN_PATH=%QT_PATH:_arm64=_64%
+    echo HOSTBIN_PATH=!HOSTBIN_PATH!
+
+    if exist %QT_PATH%\windeployqt.exe (
+        echo Using windeployqt.exe from QT_PATH
+        set WINDEPLOYQT_CMD=windeployqt.exe
+    ) else (
+        echo Using windeployqt.exe from HOSTBIN_PATH
+        set WINDEPLOYQT_CMD=!HOSTBIN_PATH!\windeployqt.exe --qtpaths %QT_PATH%\qtpaths.bat
+    )
 ) else (
     if not x%QT_PATH:_64=%==x%QT_PATH% (
         set ARCH=x64
+        set WINDEPLOYQT_CMD=windeployqt.exe
     ) else (
         if not x%QT_PATH:msvc=%==x%QT_PATH% (
             set ARCH=x86
+            set WINDEPLOYQT_CMD=windeployqt.exe
         ) else (
             echo Unable to determine Qt architecture
             goto Error
@@ -172,7 +193,7 @@ copy %SOURCE_ROOT%\app\qt.conf %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Deploying Qt dependencies
-windeployqt.exe --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-qmltooling --no-virtualkeyboard --no-sql %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
+%WINDEPLOYQT_CMD% --dir %DEPLOY_FOLDER% --%BUILD_CONFIG% --qmldir %SOURCE_ROOT%\app\gui --no-opengl-sw --no-compiler-runtime --no-qmltooling --no-virtualkeyboard --no-sql %BUILD_FOLDER%\app\%BUILD_CONFIG%\Moonlight.exe
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Deleting unused styles
