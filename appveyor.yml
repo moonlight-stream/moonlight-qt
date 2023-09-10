@@ -6,6 +6,7 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       QTDIR: C:\Qt\5.15
+      QTDIR_ARM64: C:\Qt\6.4
     - APPVEYOR_BUILD_WORKER_IMAGE: macOS-Monterey
       BUILD_TARGET: macos
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
@@ -43,6 +44,8 @@ build_script:
   - cmd: 'scripts\build-arch.bat Release'
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019\bin'
   - cmd: 'scripts\build-arch.bat Release'
+  - cmd: 'set PATH=%OLDPATH%;%QTDIR_ARM64%\msvc2019_arm64\bin'
+  - cmd: 'scripts\build-arch.bat Release'
   - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt515/bin/qt515-env.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
@@ -54,6 +57,8 @@ after_build:
   - cmd: 'appveyor PushArtifact build\symbols-x86-Release\MoonlightDebuggingSymbols-x86-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x86-r%APPVEYOR_BUILD_NUMBER%.zip'
   - cmd: 'appveyor PushArtifact build\installer-x64-Release\MoonlightPortable-x64-%VERSION%.zip -FileName MoonlightPortable-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
   - cmd: 'appveyor PushArtifact build\symbols-x64-Release\MoonlightDebuggingSymbols-x64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
+  - cmd: 'appveyor PushArtifact build\installer-arm64-Release\MoonlightPortable-arm64-%VERSION%.zip -FileName MoonlightPortable-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
+  - cmd: 'appveyor PushArtifact build\symbols-arm64-Release\MoonlightDebuggingSymbols-arm64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$VERSION.zip -FileName Moonlight-SteamLink-r$APPVEYOR_BUILD_NUMBER.zip'
   - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/Moonlight-$VERSION.dmg -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER.dmg'
   - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/Moonlight-$VERSION-x86_64.AppImage -FileName Moonlight-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
