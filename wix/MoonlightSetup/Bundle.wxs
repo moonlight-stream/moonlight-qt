@@ -16,13 +16,13 @@
 <Wix xmlns="http://wixtoolset.org/schemas/v4/wxs" xmlns:bal="http://wixtoolset.org/schemas/v4/wxs/bal" xmlns:util="http://wixtoolset.org/schemas/v4/wxs/util">
 
   <Bundle Name="Moonlight Game Streaming Client"
-		  Version="!(bind.PackageVersion.Moonlight_x64)"
-		  Manufacturer="Moonlight Game Streaming Project"
-		  UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
-		  HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
-		  UpdateUrl="https://github.com/moonlight-stream/moonlight-qt/releases"
-		  DisableModify="yes"
-		  IconSourceFile="..\..\app\moonlight.ico">
+          Version="!(bind.PackageVersion.Moonlight_x64)"
+          Manufacturer="Moonlight Game Streaming Project"
+          UpgradeCode="466fa35d-4be4-40ef-9ce5-afadc3b63bc5"
+          HelpUrl="https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide"
+          UpdateUrl="https://github.com/moonlight-stream/moonlight-qt/releases"
+          DisableModify="yes"
+          IconSourceFile="..\..\app\moonlight.ico">
 
     <bal:Condition Message="Moonlight requires Windows 7 or later." Condition="VersionNT &gt;= v6.1" />
 
@@ -39,65 +39,65 @@
     <util:RegistrySearch Variable="AddDesktopShortcutCheckbox" Root="HKCU" Key="Software\Moonlight Game Streaming Project" Value="DesktopShortcutInstallState" Condition="HasDesktopShortcutInstallStateRegKey" />
 
     <util:ProductSearch Id="VCREDIST_14_x86"
-						UpgradeCode="$(var.VCREDIST_X86_UPGRADE_CODE)"
-						Result="version"
-						Variable="VCREDIST_14_x86" />
+                        UpgradeCode="$(var.VCREDIST_X86_UPGRADE_CODE)"
+                        Result="version"
+                        Variable="VCREDIST_14_x86" />
 
     <util:ProductSearch Id="VCREDIST_14_x64"
-						UpgradeCode="$(var.VCREDIST_X64_UPGRADE_CODE)"
-						Result="version"
-						Variable="VCREDIST_14_x64" />
+                        UpgradeCode="$(var.VCREDIST_X64_UPGRADE_CODE)"
+                        Result="version"
+                        Variable="VCREDIST_14_x64" />
 
     <util:ProductSearch Id="VCREDIST_14_ARM64"
-						UpgradeCode="$(var.VCREDIST_ARM64_UPGRADE_CODE)"
-						Result="version"
-						Variable="VCREDIST_14_ARM64" />
+                        UpgradeCode="$(var.VCREDIST_ARM64_UPGRADE_CODE)"
+                        Result="version"
+                        Variable="VCREDIST_14_ARM64" />
 
     <BootstrapperApplication>
       <bal:WixStandardBootstrapperApplication ShowVersion="yes"
-											  LicenseFile="license.rtf"
-											  LogoFile="..\..\app\moonlight_wix.png"
-											  LaunchTarget="[InstallFolder]\Moonlight.exe"
-											  ThemeFile="RtfTheme.xml"
-											  Theme="rtfLicense" />
+                                              LicenseFile="license.rtf"
+                                              LogoFile="..\..\app\moonlight_wix.png"
+                                              LaunchTarget="[InstallFolder]\Moonlight.exe"
+                                              ThemeFile="RtfTheme.xml"
+                                              Theme="rtfLicense" />
     </BootstrapperApplication>
 
     <Chain>
       <ExePackage Cache="remove"
-				  PerMachine="yes"
-				  Permanent="yes"
-				  Vital="yes"
-				  InstallCondition="(NOT VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 332)"
-				  DetectCondition="VCREDIST_14_x86 &gt;= v$(var.VCREDIST_VER)"
-				  InstallArguments="/install /quiet /norestart">
-        
+                  PerMachine="yes"
+                  Permanent="yes"
+                  Vital="yes"
+                  InstallCondition="(NOT VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 332)"
+                  DetectCondition="VCREDIST_14_x86 &gt;= v$(var.VCREDIST_VER)"
+                  InstallArguments="/install /quiet /norestart">
+
         <ExePackagePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - x86"
-						   ProductName="Microsoft Visual C++ 2015-2022 Redistributable - x86"
-						   Size="$(var.VCREDIST_X86_SIZE)"
-						   Version="$(var.VCREDIST_VER)"
-						   Hash="$(var.VCREDIST_X86_SHA512)"
-						   Name="VC_redist.x86.exe"
-						   DownloadUrl="$(var.VCREDIST_X86_URL)" />
+                           ProductName="Microsoft Visual C++ 2015-2022 Redistributable - x86"
+                           Size="$(var.VCREDIST_X86_SIZE)"
+                           Version="$(var.VCREDIST_VER)"
+                           Hash="$(var.VCREDIST_X86_SHA512)"
+                           Name="VC_redist.x86.exe"
+                           DownloadUrl="$(var.VCREDIST_X86_URL)" />
 
         <!-- Newer version installed is fine -->
         <ExitCode Value="1638" Behavior="success" />
       </ExePackage>
 
       <ExePackage Cache="remove"
-				  PerMachine="yes"
-				  Permanent="yes"
-				  Vital="yes"
+                  PerMachine="yes"
+                  Permanent="yes"
+                  Vital="yes"
                   InstallCondition="(VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 34404)"
-				  DetectCondition="VCREDIST_14_x64 &gt;= v$(var.VCREDIST_VER)"
-				  InstallArguments="/install /quiet /norestart">
-        
+                  DetectCondition="VCREDIST_14_x64 &gt;= v$(var.VCREDIST_VER)"
+                  InstallArguments="/install /quiet /norestart">
+
         <ExePackagePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - x64"
-						   ProductName="Microsoft Visual C++ 2015-2022 Redistributable - x64"
-						   Size="$(var.VCREDIST_X64_SIZE)"
-						   Version="$(var.VCREDIST_VER)"
-						   Hash="$(var.VCREDIST_X64_SHA512)"
-						   Name="VC_redist.x64.exe"
-						   DownloadUrl="$(var.VCREDIST_X64_URL)" />
+                           ProductName="Microsoft Visual C++ 2015-2022 Redistributable - x64"
+                           Size="$(var.VCREDIST_X64_SIZE)"
+                           Version="$(var.VCREDIST_VER)"
+                           Hash="$(var.VCREDIST_X64_SHA512)"
+                           Name="VC_redist.x64.exe"
+                           DownloadUrl="$(var.VCREDIST_X64_URL)" />
 
         <!-- Newer version installed is fine -->
         <ExitCode Value="1638" Behavior="success" />
@@ -105,20 +105,20 @@
 
       <?if $(var.INCLUDE_ARM64) != 0 ?>
         <ExePackage Cache="remove"
-					PerMachine="yes"
-					Permanent="yes"
-					Vital="yes"
+                    PerMachine="yes"
+                    Permanent="yes"
+                    Vital="yes"
                     InstallCondition="NativeMachine = 43620"
-					DetectCondition="VCREDIST_14_ARM64 &gt;= v$(var.VCREDIST_VER)"
-					InstallArguments="/install /quiet /norestart">
+                    DetectCondition="VCREDIST_14_ARM64 &gt;= v$(var.VCREDIST_VER)"
+                    InstallArguments="/install /quiet /norestart">
           
           <ExePackagePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
-							 ProductName="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
-							 Size="$(var.VCREDIST_ARM64_SIZE)"
-							 Version="$(var.VCREDIST_VER)"
-							 Hash="$(var.VCREDIST_ARM64_SHA512)"
-							 Name="VC_redist.arm64.exe"
-							 DownloadUrl="$(var.VCREDIST_ARM64_URL)" />
+                             ProductName="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
+                             Size="$(var.VCREDIST_ARM64_SIZE)"
+                             Version="$(var.VCREDIST_VER)"
+                             Hash="$(var.VCREDIST_ARM64_SHA512)"
+                             Name="VC_redist.arm64.exe"
+                             DownloadUrl="$(var.VCREDIST_ARM64_URL)" />
 
           <!-- Newer version installed is fine -->
           <ExitCode Value="1638" Behavior="success" />
@@ -126,29 +126,29 @@
       <?endif?>
 
       <MsiPackage Id="Moonlight_x86"
-				  SourceFile="$(env.BUILD_ROOT)\build-x86-$(env.BUILD_CONFIG)\Moonlight.msi"
-				  Name="Moonlight_x86.msi"
-				  InstallCondition="(NOT VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 332)"
-				  Vital="yes">
+                  SourceFile="$(env.BUILD_ROOT)\build-x86-$(env.BUILD_CONFIG)\Moonlight.msi"
+                  Name="Moonlight_x86.msi"
+                  InstallCondition="(NOT VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 332)"
+                  Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
       </MsiPackage>
 
       <MsiPackage Id="Moonlight_x64"
-				  SourceFile="$(env.BUILD_ROOT)\build-x64-$(env.BUILD_CONFIG)\Moonlight.msi"
-				  Name="Moonlight_x64.msi"
+                  SourceFile="$(env.BUILD_ROOT)\build-x64-$(env.BUILD_CONFIG)\Moonlight.msi"
+                  Name="Moonlight_x64.msi"
                   InstallCondition="(VersionNT64 AND NOT NativeMachine) OR (NativeMachine = 34404)"
-				  Vital="yes">
+                  Vital="yes">
         <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
         <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
       </MsiPackage>
 
       <?if $(var.INCLUDE_ARM64) != 0 ?>
         <MsiPackage Id="Moonlight_arm64"
-					SourceFile="$(env.BUILD_ROOT)\build-arm64-$(env.BUILD_CONFIG)\Moonlight.msi"
-					Name="Moonlight_arm64.msi"
+                    SourceFile="$(env.BUILD_ROOT)\build-arm64-$(env.BUILD_CONFIG)\Moonlight.msi"
+                    Name="Moonlight_arm64.msi"
                     InstallCondition="NativeMachine = 43620"
-					Vital="yes">
+                    Vital="yes">
           <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
           <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
         </MsiPackage>
