@@ -5,10 +5,6 @@ rem Run from Qt command prompt with working directory set to root of repo
 
 set BUILD_CONFIG=%1
 
-if "%INCLUDE_ARM64%" EQU "" (
-    set INCLUDE_ARM64=0
-)
-
 rem Convert to lower case for windeployqt
 if /I "%BUILD_CONFIG%"=="debug" (
     set BUILD_CONFIG=debug
@@ -22,9 +18,6 @@ if /I "%BUILD_CONFIG%"=="debug" (
             set BUILD_CONFIG=release
             set SIGN=1
             set MUST_DEPLOY_SYMBOLS=1
-
-            rem Release installers must have ARM64
-            set INCLUDE_ARM64=1
 
             rem Fail if there are unstaged changes
             git diff-index --quiet HEAD --
@@ -58,12 +51,10 @@ if not exist "%BUILD_ROOT%\build-x64-%BUILD_CONFIG%\Moonlight.msi" (
     echo You must run 'build-arch.bat %BUILD_CONFIG% x64' first
     exit /b 1
 )
-if %INCLUDE_ARM64% NEQ 0 (
-    if not exist "%BUILD_ROOT%\build-arm64-%BUILD_CONFIG%\Moonlight.msi" (
-        echo Unable to build bundle - missing binaries for %BUILD_CONFIG% arm64
-        echo You must run 'build-arch.bat %BUILD_CONFIG% arm64' first
-        exit /b 1
-    )
+if not exist "%BUILD_ROOT%\build-arm64-%BUILD_CONFIG%\Moonlight.msi" (
+    echo Unable to build bundle - missing binaries for %BUILD_CONFIG% arm64
+    echo You must run 'build-arch.bat %BUILD_CONFIG% arm64' first
+    exit /b 1
 )
 
 echo Cleaning output directories
@@ -81,21 +72,13 @@ if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Building bundle
 rem Bundles are always x86 binaries
-msbuild -Restore %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86 /p:DefineConstants="INCLUDE_ARM64=%INCLUDE_ARM64%"
+msbuild -Restore %SOURCE_ROOT%\wix\MoonlightSetup\MoonlightSetup.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=x86
 if !ERRORLEVEL! NEQ 0 goto Error
 
 rem Rename the installer to match the publishing convention
 ren %INSTALLER_FOLDER%\MoonlightSetup.exe MoonlightSetup-%VERSION%.exe
 
 echo Build successful for Moonlight v%VERSION% installer!
-echo.
-echo x86 included: YES
-echo x64 included: YES
-if %INCLUDE_ARM64% NEQ 0 (
-    echo ARM64 included: YES
-) else (
-    echo ARM64 included: NO
-)
 exit /b 0
 
 :Error

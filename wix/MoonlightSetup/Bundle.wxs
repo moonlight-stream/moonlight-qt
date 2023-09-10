@@ -103,27 +103,25 @@
         <ExitCode Value="1638" Behavior="success" />
       </ExePackage>
 
-      <?if $(var.INCLUDE_ARM64) != 0 ?>
-        <ExePackage Cache="remove"
-                    PerMachine="yes"
-                    Permanent="yes"
-                    Vital="yes"
-                    InstallCondition="NativeMachine = 43620"
-                    DetectCondition="VCREDIST_14_ARM64 &gt;= v$(var.VCREDIST_VER)"
-                    InstallArguments="/install /quiet /norestart">
-          
-          <ExePackagePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
-                             ProductName="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
-                             Size="$(var.VCREDIST_ARM64_SIZE)"
-                             Version="$(var.VCREDIST_VER)"
-                             Hash="$(var.VCREDIST_ARM64_SHA512)"
-                             Name="VC_redist.arm64.exe"
-                             DownloadUrl="$(var.VCREDIST_ARM64_URL)" />
+      <ExePackage Cache="remove"
+                  PerMachine="yes"
+                  Permanent="yes"
+                  Vital="yes"
+                  InstallCondition="NativeMachine = 43620"
+                  DetectCondition="VCREDIST_14_ARM64 &gt;= v$(var.VCREDIST_VER)"
+                  InstallArguments="/install /quiet /norestart">
 
-          <!-- Newer version installed is fine -->
-          <ExitCode Value="1638" Behavior="success" />
-        </ExePackage>
-      <?endif?>
+        <ExePackagePayload Description="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
+                           ProductName="Microsoft Visual C++ 2015-2022 Redistributable - ARM64"
+                           Size="$(var.VCREDIST_ARM64_SIZE)"
+                           Version="$(var.VCREDIST_VER)"
+                           Hash="$(var.VCREDIST_ARM64_SHA512)"
+                           Name="VC_redist.arm64.exe"
+                           DownloadUrl="$(var.VCREDIST_ARM64_URL)" />
+
+        <!-- Newer version installed is fine -->
+        <ExitCode Value="1638" Behavior="success" />
+      </ExePackage>
 
       <MsiPackage Id="Moonlight_x86"
                   SourceFile="$(env.BUILD_ROOT)\build-x86-$(env.BUILD_CONFIG)\Moonlight.msi"
@@ -143,16 +141,14 @@
         <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
       </MsiPackage>
 
-      <?if $(var.INCLUDE_ARM64) != 0 ?>
-        <MsiPackage Id="Moonlight_arm64"
-                    SourceFile="$(env.BUILD_ROOT)\build-arm64-$(env.BUILD_CONFIG)\Moonlight.msi"
-                    Name="Moonlight_arm64.msi"
-                    InstallCondition="NativeMachine = 43620"
-                    Vital="yes">
-          <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
-          <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
-        </MsiPackage>
-      <?endif?>
+      <MsiPackage Id="Moonlight_arm64"
+                  SourceFile="$(env.BUILD_ROOT)\build-arm64-$(env.BUILD_CONFIG)\Moonlight.msi"
+                  Name="Moonlight_arm64.msi"
+                  InstallCondition="NativeMachine = 43620"
+                  Vital="yes">
+        <MsiProperty Name="INSTALLFOLDER" Value="[InstallFolder]" />
+        <MsiProperty Name="ADDDESKTOPSHORTCUT" Value="[AddDesktopShortcutCheckbox]" />
+      </MsiPackage>
     </Chain>
 
   </Bundle>
