@@ -6,7 +6,7 @@ environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
       QTDIR: C:\Qt\5.15
-      QTDIR_ARM64: C:\Qt\6.4
+      QTDIR_ARM64: C:\Qt\6.4.3
     - APPVEYOR_BUILD_WORKER_IMAGE: macOS-Monterey
       BUILD_TARGET: macos
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
@@ -40,6 +40,9 @@ before_build:
   - sh: 'export VERSION=`cat app/version.txt`'
 
 build_script:
+  - cmd: 'copy /y scripts\appveyor\qmake.bat %QTDIR_ARM64%\msvc2019_arm64\bin\'
+  - cmd: 'copy /y scripts\appveyor\qtpaths.bat %QTDIR_ARM64%\msvc2019_arm64\bin\'
+  - cmd: 'copy /y scripts\appveyor\target_qt.conf %QTDIR_ARM64%\msvc2019_arm64\bin\'
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019_64\bin'
   - cmd: 'scripts\build-arch.bat Release'
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019\bin'
