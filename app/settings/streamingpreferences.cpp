@@ -303,29 +303,46 @@ int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
     // bitrate increase for frame rate once we get to values that high.
     float frameRateFactor = (fps <= 60 ? fps : (qSqrt(fps / 60.f) * 60.f)) / 30.f;
 
-    // This table prefers 16:10 resolutions because they are
-    // only slightly more pixels than the 16:9 equivalents, so
-    // we don't want to bump those 16:10 resolutions up to the
-    // next 16:9 slot.
+    // TODO: Collect some empirical data to see if these defaults make sense.
+    // We're just using the values that the Shield used, as we have for years.
+    static const struct resTable {
+        int pixels;
+        int factor;
+    } resTable[] {
+        { 640 * 360, 10 },
+        { 854 * 480, 20 },
+        { 1280 * 720, 50 },
+        { 1920 * 1080, 100 },
+        { 2560 * 1440, 200 },
+        { 3840 * 2160, 400 },
+        { -1, -1 },
+    };
+
+    // Calculate the resolution factor by linear interpolation of the resolution table
     int resolutionFactor;
-    if (width * height <= 640 * 360) {
-        resolutionFactor = 10;
-    }
-    else if (width * height <= 854 * 480) {
-        resolutionFactor = 15;
-    }
-    // This covers 1280x720 and 1280x800 too
-    else if (width * height <= 1366 * 768) {
-        resolutionFactor = 50;
-    }
-    else if (width * height <= 1920 * 1200) {
-        resolutionFactor = 100;
-    }
-    else if (width * height <= 2560 * 1600) {
-        resolutionFactor = 200;
-    }
-    else /* if (width * height <= 3840 * 2160) */ {
-        resolutionFactor = 400;
+    int pixels = width * height;
+    for (int i = 0;; i++) {
+        if (pixels == resTable[i].pixels) {
+            // We can bail immediately for exact matches
+            resolutionFactor = resTable[i].factor;
+            break;
+        }
+        else if (pixels < resTable[i].pixels) {
+            if (i == 0) {
+                // Never go below the lowest resolution entry
+                resolutionFactor = resTable[i].factor;
+            }
+            else {
+                // Interpolate between the entry greater than the chosen resolution (i) and the entry less than the chosen resolution (i-1)
+                resolutionFactor = ((float)(pixels - resTable[i-1].pixels) / (resTable[i].pixels - resTable[i-1].pixels)) * (resTable[i].factor - resTable[i-1].factor) + resTable[i-1].factor;
+            }
+            break;
+        }
+        else if (resTable[i].pixels == -1) {
+            // Never go above the highest resolution entry
+            resolutionFactor = resTable[i-1].factor;
+            break;
+        }
     }
 
     return (int)(resolutionFactor * frameRateFactor) * 100;
