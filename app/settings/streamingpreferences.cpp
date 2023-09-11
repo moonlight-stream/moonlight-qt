@@ -309,17 +309,17 @@ int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
         int pixels;
         int factor;
     } resTable[] {
-        { 640 * 360, 10 },
-        { 854 * 480, 20 },
-        { 1280 * 720, 50 },
-        { 1920 * 1080, 100 },
-        { 2560 * 1440, 200 },
-        { 3840 * 2160, 400 },
+        { 640 * 360, 1 },
+        { 854 * 480, 2 },
+        { 1280 * 720, 5 },
+        { 1920 * 1080, 10 },
+        { 2560 * 1440, 20 },
+        { 3840 * 2160, 40 },
         { -1, -1 },
     };
 
     // Calculate the resolution factor by linear interpolation of the resolution table
-    int resolutionFactor;
+    float resolutionFactor;
     int pixels = width * height;
     for (int i = 0;; i++) {
         if (pixels == resTable[i].pixels) {
@@ -345,5 +345,5 @@ int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)
         }
     }
 
-    return (int)(resolutionFactor * frameRateFactor) * 100;
+    return qRound(resolutionFactor * frameRateFactor) * 1000;
 }
