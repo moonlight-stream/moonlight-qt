@@ -239,31 +239,6 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
             sendKey(QEvent::Type::KeyRelease, Qt::Key_Right);
             m_LastAxisNavigationEventTime = SDL_GetTicks();
         }
-
-        // In UI navigation mode (settings page), use the right stick to scroll
-        if (m_UiNavMode) {
-            short rightX = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_RIGHTX);
-            short rightY = SDL_GameControllerGetAxis(gc, SDL_CONTROLLER_AXIS_RIGHTY);
-
-            QPoint wheelDelta;
-            if (rightX > 30000) {
-                wheelDelta.setX(30);
-            }
-            else if (rightX < -30000) {
-                wheelDelta.setX(-30);
-            }
-
-            if (rightY > 30000) {
-                wheelDelta.setY(-30);
-            }
-            else if (rightY < -30000) {
-                wheelDelta.setY(30);
-            }
-
-            if (!wheelDelta.isNull()) {
-                sendWheel(wheelDelta);
-            }
-        }
     }
 }
 
@@ -274,22 +249,6 @@ void SdlGamepadKeyNavigation::sendKey(QEvent::Type type, Qt::Key key, Qt::Keyboa
     if (focusWindow != nullptr) {
         QKeyEvent keyPressEvent(type, key, modifiers);
         app->sendEvent(focusWindow, &keyPressEvent);
-    }
-}
-
-void SdlGamepadKeyNavigation::sendWheel(QPoint& angleDelta)
-{
-    QGuiApplication* app = static_cast<QGuiApplication*>(QGuiApplication::instance());
-    QWindow* focusWindow = app->focusWindow();
-    if (focusWindow != nullptr) {
-        QPoint mousePos(focusWindow->width() / 2, focusWindow->height() / 2);
-        QPoint globalPos(focusWindow->mapToGlobal(mousePos));
-#if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
-        QWheelEvent wheelEvent(mousePos, globalPos, QPoint(), angleDelta, Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, false, Qt::MouseEventSynthesizedByApplication);
-#else
-        QWheelEvent wheelEvent(mousePos, globalPos, QPoint(), angleDelta, angleDelta.y(), Qt::Vertical, Qt::NoButton, Qt::NoModifier, Qt::NoScrollPhase, Qt::MouseEventSynthesizedByApplication, false);
-#endif
-        app->sendEvent(focusWindow, &wheelEvent);
     }
 }
 

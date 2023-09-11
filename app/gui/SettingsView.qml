@@ -1,6 +1,7 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.2
+import QtQuick.Window 2.2
 
 import StreamingPreferences 1.0
 import ComputerManager 1.0
@@ -22,6 +23,49 @@ Flickable {
         anchors {
             left: parent.right
             leftMargin: -10
+        }
+    }
+
+    function isChildOfFlickable(item) {
+        while (item) {
+            if (item.parent === contentItem) {
+                return true
+            }
+
+            item = item.parent
+        }
+        return false
+    }
+
+    NumberAnimation on contentY {
+        id: autoScrollAnimation
+        duration: 100
+    }
+
+    Window.onActiveFocusItemChanged: {
+        var item = Window.activeFocusItem
+        if (item) {
+            // Ignore non-child elements like the toolbar buttons
+            if (!isChildOfFlickable(item)) {
+                return
+            }
+
+            // Map the focus item's position into our content item's coordinate space
+            var pos = item.mapToItem(contentItem, 0, 0)
+
+            // Ensure some extra space is visible around the element we're scrolling to
+            var scrollMargin = height > 100 ? 50 : 0
+
+            if (pos.y - scrollMargin < contentY) {
+                autoScrollAnimation.from = contentY
+                autoScrollAnimation.to = Math.max(pos.y - scrollMargin, 0)
+                autoScrollAnimation.start()
+            }
+            else if (pos.y + item.height + scrollMargin > contentY + height) {
+                autoScrollAnimation.from = contentY
+                autoScrollAnimation.to = Math.min(pos.y + item.height + scrollMargin - height, contentHeight - height)
+                autoScrollAnimation.start()
+            }
         }
     }
 
