@@ -1244,11 +1244,15 @@ void Session::toggleFullscreen()
 {
     bool fullScreen = !(SDL_GetWindowFlags(m_Window) & m_FullScreenFlag);
 
-#ifdef Q_OS_WIN32
+#if defined(Q_OS_WIN32) || defined(Q_OS_DARWIN)
     // Destroy the video decoder before toggling full-screen because D3D9 can try
     // to put the window back into full-screen before we've managed to destroy
     // the renderer. This leads to excessive flickering and can cause the window
     // decorations to get messed up as SDL and D3D9 fight over the window style.
+    //
+    // On Apple Silicon Macs, the AVSampleBufferDisplayLayer may cause WindowServer
+    // to deadlock when transitioning out of fullscreen. Destroy the decoder before
+    // exiting fullscreen as a workaround. See issue #973.
     SDL_AtomicLock(&m_DecoderLock);
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;

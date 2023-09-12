@@ -112,6 +112,10 @@ public:
         if (m_DisplayLayer != nullptr) {
             [m_DisplayLayer release];
         }
+
+        // It appears to be necessary to run the event loop after destroying
+        // the AVSampleBufferDisplayLayer to avoid issue #973.
+        SDL_PumpEvents();
     }}
 
     static
