@@ -151,8 +151,8 @@ NvComputer::NvComputer(NvHTTP& http, QString serverInfo)
     this->displayModes = NvHTTP::getDisplayModeList(serverInfo);
     std::stable_sort(this->displayModes.begin(), this->displayModes.end(),
                      [](const NvDisplayMode& mode1, const NvDisplayMode& mode2) {
-        return mode1.width * mode1.height * mode1.refreshRate <
-                mode2.width * mode2.height * mode2.refreshRate;
+        return (uint64_t)mode1.width * mode1.height * mode1.refreshRate <
+                (uint64_t)mode2.width * mode2.height * mode2.refreshRate;
     });
 
     // We can get an IPv4 loopback address if we're using the GS IPv6 Forwarder
