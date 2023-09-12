@@ -56,7 +56,7 @@ public:
     }
 
     virtual ~VTRenderer() override
-    {
+    { @autoreleasepool {
         // We may have overlay update blocks enqueued for execution.
         // We must cancel those to avoid a UAF.
         for (int i = 0; i < Overlay::OverlayMax; i++) {
@@ -100,13 +100,19 @@ public:
         for (int i = 0; i < Overlay::OverlayMax; i++) {
             if (m_OverlayTextFields[i] != nullptr) {
                 [m_OverlayTextFields[i] removeFromSuperview];
+                [m_OverlayTextFields[i] release];
             }
         }
 
         if (m_StreamView != nullptr) {
             [m_StreamView removeFromSuperview];
+            [m_StreamView release];
         }
-    }
+
+        if (m_DisplayLayer != nullptr) {
+            [m_DisplayLayer release];
+        }
+    }}
 
     static
     CVReturn
@@ -252,7 +258,7 @@ public:
 
     // Caller frees frame after we return
     virtual void renderFrame(AVFrame* frame) override
-    {
+    { @autoreleasepool {
         OSStatus status;
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 
@@ -352,10 +358,10 @@ public:
         [m_DisplayLayer enqueueSampleBuffer:sampleBuffer];
 
         CFRelease(sampleBuffer);
-    }
+    }}
 
     virtual bool initialize(PDECODER_PARAMETERS params) override
-    {
+    { @autoreleasepool {
         int err;
 
         if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
@@ -549,10 +555,10 @@ public:
         }
 
         return true;
-    }
+    }}
 
     void updateOverlayOnMainThread(Overlay::OverlayType type)
-    {
+    { @autoreleasepool {
         // Lazy initialization for the overlay
         if (m_OverlayTextFields[type] == nullptr) {
             m_OverlayTextFields[type] = [[NSTextField alloc] initWithFrame:m_StreamView.bounds];
@@ -584,7 +590,7 @@ public:
 
         // Unhide if it's enabled
         [m_OverlayTextFields[type] setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(type)];
-    }
+    }}
 
     virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
     {
