@@ -19,6 +19,7 @@ struct GamepadState {
     SDL_TimerID mouseEmulationTimer;
     uint32_t lastStartDownTime;
 
+#if SDL_VERSION_ATLEAST(2, 0, 14)
     uint8_t gyroReportPeriodMs;
     float lastGyroEventData[SDL_arraysize(SDL_ControllerSensorEvent::data)];
     uint32_t lastGyroEventTime;
@@ -26,6 +27,7 @@ struct GamepadState {
     uint8_t accelReportPeriodMs;
     float lastAccelEventData[SDL_arraysize(SDL_ControllerSensorEvent::data)];
     uint32_t lastAccelEventTime;
+#endif
 
     int buttons;
     short lsX, lsY;
