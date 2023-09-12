@@ -39,14 +39,14 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
 ### Windows Build Requirements
 * Qt 5.15 SDK or later
 * Windows 7 or later
-* [Visual Studio 2019](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
-* Select **MSVC 2019** option during Qt installation. MinGW is not supported.
+* [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
+* Select **MSVC** option during Qt installation. MinGW is not supported.
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
 
 ### macOS Build Requirements
 * Qt 6.2 SDK or later
 * macOS Mojave (10.14) or later
-* Xcode 13
+* Xcode 13 or later
 * [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
 
 ### Linux/Unix Build Requirements
@@ -55,7 +55,7 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
 * Install the required packages:
   * Debian/Ubuntu: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libqt5svg5-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libva-dev libvdpau-dev libxkbcommon-dev qtwayland5 qt5-qmake qtbase5-dev qtdeclarative5-dev qtquickcontrols2-5-dev wayland-protocols qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2`
   * RedHat/Fedora: `openssl-devel SDL2-devel SDL2_ttf-devel ffmpeg-devel qt5-qtsvg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel`
-* FFmpeg 4.0+ is required to build. If your distro doesn't package FFmpeg 4.0 or later, you can build and install it from source on https://ffmpeg.org/
+* FFmpeg 4.0 or later is required to build. If your distro doesn't package FFmpeg 4.0 or later, you can build and install it from source on https://ffmpeg.org/
 
 ### Steam Link Build Requirements
 * [Steam Link SDK](https://github.com/ValveSoftware/steamlink-sdk) cloned on your build system
