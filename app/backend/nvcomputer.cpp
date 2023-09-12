@@ -220,7 +220,7 @@ bool NvComputer::wake() const
         for (int i = 0; i < 16; i++) {
             wolPayload.append(macAddress);
         }
-        Q_ASSERT(wolPayload.count() == 102);
+        Q_ASSERT(wolPayload.size() == 102);
     }
 
     // Ports used as-is
