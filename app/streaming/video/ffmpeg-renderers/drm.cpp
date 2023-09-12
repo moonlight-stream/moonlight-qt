@@ -546,6 +546,8 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
         case AV_PIX_FMT_NV12:
         case AV_PIX_FMT_NV21:
         case AV_PIX_FMT_P010:
+        case AV_PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUVJ420P:
             return true;
         default:
             return false;
@@ -654,7 +656,6 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
     bool ret = false;
     bool freeFrame;
     auto drmFrame = &m_SwFrame[m_CurrentSwFrameIdx];
-    uint32_t drmFormat;
 
     SDL_assert(frame->format != AV_PIX_FMT_DRM_PRIME);
     SDL_assert(!m_DrmPrimeBackend);
@@ -673,21 +674,32 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         freeFrame = false;
     }
 
+    uint32_t drmFormat;
+    bool fullyPlanar;
     int bpc;
 
     // NB: Keep this list updated with isPixelFormatSupported()
     switch (frame->format) {
     case AV_PIX_FMT_NV12:
         drmFormat = DRM_FORMAT_NV12;
+        fullyPlanar = false;
         bpc = 8;
         break;
     case AV_PIX_FMT_NV21:
         drmFormat = DRM_FORMAT_NV21;
+        fullyPlanar = false;
         bpc = 8;
         break;
     case AV_PIX_FMT_P010:
         drmFormat = DRM_FORMAT_P010;
+        fullyPlanar = false;
         bpc = 16;
+        break;
+    case AV_PIX_FMT_YUV420P:
+    case AV_PIX_FMT_YUVJ420P:
+        drmFormat = DRM_FORMAT_YUV420;
+        fullyPlanar = true;
+        bpc = 8;
         break;
     default:
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -781,13 +793,18 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 auto &plane = layer.planes[layer.nb_planes];
 
                 plane.object_index = 0;
-                plane.pitch = drmFrame->pitch;
                 plane.offset = i == 0 ? 0 : (layer.planes[layer.nb_planes - 1].offset + lastPlaneSize);
 
                 int planeHeight;
                 if (i == 0) {
                     // Y plane is not subsampled
                     planeHeight = frame->height;
+                    plane.pitch = drmFrame->pitch;
+                }
+                else if (fullyPlanar) {
+                    // U/V planes are 2x2 subsampled
+                    planeHeight = frame->height / 2;
+                    plane.pitch = drmFrame->pitch / 2;
                 }
                 else {
                     // UV/VU planes are 2x2 subsampled.
@@ -795,10 +812,11 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                     // NB: The pitch is the same between Y and UV/VU, because the 2x subsampling
                     // is cancelled out by the 2x plane size of UV/VU vs U/V alone.
                     planeHeight = frame->height / 2;
+                    plane.pitch = drmFrame->pitch;
                 }
 
                 // Copy the plane data into the dumb buffer
-                if (frame->linesize[i] == (int)drmFrame->pitch) {
+                if (frame->linesize[i] == (int)plane.pitch) {
                     // We can do a single memcpy() if the pitch is compatible
                     memcpy(drmFrame->mapping + plane.offset,
                            frame->data[i],
@@ -807,15 +825,15 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 else {
                     // The pitch is incompatible, so we must copy line-by-line
                     for (int j = 0; j < planeHeight; j++) {
-                        memcpy(drmFrame->mapping + (j * drmFrame->pitch) + plane.offset,
+                        memcpy(drmFrame->mapping + (j * plane.pitch) + plane.offset,
                                frame->data[i] + (j * frame->linesize[i]),
-                               qMin(frame->linesize[i], (int)drmFrame->pitch));
+                               qMin(frame->linesize[i], (int)plane.pitch));
                     }
                 }
 
                 layer.nb_planes++;
 
-                lastPlaneSize = drmFrame->pitch * planeHeight;
+                lastPlaneSize = plane.pitch * planeHeight;
             }
         }
 
