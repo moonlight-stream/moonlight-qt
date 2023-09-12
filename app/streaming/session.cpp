@@ -1327,19 +1327,27 @@ bool Session::startConnectionAsync()
     Q_ASSERT(m_Computer->currentGameId == 0 ||
              m_Computer->currentGameId == m_App.id);
 
-    // SOPS will set all settings to 720p60 if it doesn't recognize
-    // the chosen resolution. Avoid that by disabling SOPS when it
-    // is not streaming a supported resolution.
-    bool enableGameOptimizations = false;
-    for (const NvDisplayMode &mode : m_Computer->displayModes) {
-        if (mode.width == m_StreamConfig.width &&
-                mode.height == m_StreamConfig.height) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Found host supported resolution: %dx%d",
-                        mode.width, mode.height);
-            enableGameOptimizations = m_Preferences->gameOptimizations;
-            break;
+    bool enableGameOptimizations;
+    if (m_Computer->isNvidiaServerSoftware) {
+        // GFE will set all settings to 720p60 if it doesn't recognize
+        // the chosen resolution. Avoid that by disabling SOPS when it
+        // is not streaming a supported resolution.
+        enableGameOptimizations = false;
+        for (const NvDisplayMode &mode : m_Computer->displayModes) {
+            if (mode.width == m_StreamConfig.width &&
+                    mode.height == m_StreamConfig.height) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Found host supported resolution: %dx%d",
+                            mode.width, mode.height);
+                enableGameOptimizations = m_Preferences->gameOptimizations;
+                break;
+            }
         }
+    }
+    else {
+        // Always send SOPS to Sunshine because we may repurpose the
+        // option to control whether the display mode is adjusted
+        enableGameOptimizations = m_Preferences->gameOptimizations;
     }
 
     QString rtspSessionUrl;
