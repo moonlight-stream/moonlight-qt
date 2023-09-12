@@ -478,19 +478,7 @@ public:
                         "Using indirect rendering due to environment variable");
             m_DirectRendering = false;
         }
-        else if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using direct rendering for 10-bit content");
-            m_DirectRendering = true;
-        }
-        else if (isAppleSilicon) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using indirect rendering for 8-bit content on Apple Silicon");
-            m_DirectRendering = false;
-        }
         else {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using direct rendering for 8-bit content on Intel");
             m_DirectRendering = true;
         }
 
