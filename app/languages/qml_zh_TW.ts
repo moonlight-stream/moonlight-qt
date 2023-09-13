@@ -4,49 +4,49 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="144"/>
-        <location filename="../gui/AppView.qml" line="298"/>
+        <location filename="../gui/AppView.qml" line="145"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Resume Game</source>
         <translation>繼續遊戲</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="170"/>
-        <location filename="../gui/AppView.qml" line="303"/>
+        <location filename="../gui/AppView.qml" line="173"/>
+        <location filename="../gui/AppView.qml" line="308"/>
         <source>Quit Game</source>
         <translation>結束遊戲</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="298"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Launch Game</source>
         <translation>啟動遊戲</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="311"/>
+        <location filename="../gui/AppView.qml" line="316"/>
         <source>Direct Launch</source>
         <translation>直接啟動</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="315"/>
+        <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>選取目標主機後直接啟動此應用程式，略過應用程式選取方格。</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="324"/>
+        <location filename="../gui/AppView.qml" line="329"/>
         <source>Hide Game</source>
         <translation>隱藏遊戲</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="328"/>
+        <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>從應用程式方格中隱藏此遊戲，要存取隱藏的遊戲，請在目標主機上按下滑鼠右鍵並選擇 %1。</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="328"/>
+        <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
         <translation>檢視所有應用程式</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="343"/>
+        <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>你確定要結束 %1 嗎? 所有未儲存的進度將會遺失。</translation>
     </message>
@@ -95,7 +95,7 @@
         <translation>正在載入應用程式清單...</translation>
     </message>
     <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
+        <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>你確定要結束 %1 嗎？所有未儲存的進度將會遺失。</translation>
     </message>
@@ -252,27 +252,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="563"/>
+        <location filename="../backend/computermanager.cpp" line="568"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation>來自電腦的 PIN 碼不相符，請重試。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="567"/>
+        <location filename="../backend/computermanager.cpp" line="572"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation>上一個工作階段仍在主機電腦上執行時，您將無法配對。結束所有正在執行的遊戲或重新啟動主機電腦，然後再次嘗試配對。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="570"/>
+        <location filename="../backend/computermanager.cpp" line="575"/>
         <source>Pairing failed. Please try again.</source>
         <translation>配對失敗，請重試。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="574"/>
+        <location filename="../backend/computermanager.cpp" line="579"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation>另一個配對嘗試正在進行。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="584"/>
+        <location filename="../backend/computermanager.cpp" line="589"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience 傳回錯誤：%1</translation>
     </message>
@@ -280,7 +280,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="634"/>
+        <location filename="../backend/computermanager.cpp" line="639"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>正在執行的遊戲不是由這台電腦啟動的。您必須手動結束主機電腦上的遊戲或使用最初啟動遊戲的裝置。</translation>
     </message>
@@ -325,27 +325,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="549"/>
+        <location filename="../main.cpp" line="554"/>
         <source>&amp;Yes</source>
         <translation>是(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="550"/>
+        <location filename="../main.cpp" line="555"/>
         <source>&amp;No</source>
         <translation>否(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="551"/>
+        <location filename="../main.cpp" line="556"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="552"/>
+        <location filename="../main.cpp" line="557"/>
         <source>Help</source>
         <translation>說明</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="553"/>
+        <location filename="../main.cpp" line="558"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -471,7 +471,7 @@
         <translation>H.264 轉碼器不支援超過 4K 的視訊解析度。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1354"/>
+        <location filename="../streaming/session.cpp" line="1366"/>
         <source>Host returned error: %1</source>
         <translation>主機返回錯誤：%1</translation>
     </message>
@@ -531,7 +531,7 @@
         <translation>你選取的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選取的解編碼器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1969"/>
+        <location filename="../streaming/session.cpp" line="1981"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>無法初始化畫面解碼器。請檢查您的串流設定並再試一次。</translation>
     </message>
@@ -539,466 +539,466 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../gui/SettingsView.qml" line="12"/>
+        <location filename="../gui/SettingsView.qml" line="13"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="72"/>
+        <location filename="../gui/SettingsView.qml" line="116"/>
         <source>Resolution and FPS</source>
         <translation>解析度和 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="80"/>
+        <location filename="../gui/SettingsView.qml" line="124"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
         <translation>設定對您的電腦或網路連線過高的數值可能會導致延遲、卡頓、或是發生錯誤。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="62"/>
+        <location filename="../gui/SettingsView.qml" line="106"/>
         <source>Basic Settings</source>
         <translation>基本設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="200"/>
+        <location filename="../gui/SettingsView.qml" line="244"/>
         <source>720p</source>
         <translation>720p</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="206"/>
+        <location filename="../gui/SettingsView.qml" line="250"/>
         <source>1080p</source>
         <translation>1080p</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="212"/>
+        <location filename="../gui/SettingsView.qml" line="256"/>
         <source>1440p</source>
         <translation>1440p</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="218"/>
+        <location filename="../gui/SettingsView.qml" line="262"/>
         <source>4K</source>
         <translation>4K</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="322"/>
+        <location filename="../gui/SettingsView.qml" line="366"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
         <translation>自訂解析度不受 GeForce Experience 官方支援，因此不會設定目標主機的顯示解析度。您需要在遊戲內手動設定。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="323"/>
+        <location filename="../gui/SettingsView.qml" line="367"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
         <translation>不受主機電腦或用戶端支援的解析度可能會造成串流錯誤。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="329"/>
+        <location filename="../gui/SettingsView.qml" line="373"/>
         <source>Enter a custom resolution:</source>
         <translation>輸入自訂解析度：</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="548"/>
+        <location filename="../gui/SettingsView.qml" line="592"/>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="615"/>
+        <location filename="../gui/SettingsView.qml" line="659"/>
         <source>Video bitrate:</source>
         <translation>視訊位元速率：</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="623"/>
+        <location filename="../gui/SettingsView.qml" line="667"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
         <translation>若您的網路速度較慢，請將位元率調低。若要提升畫面品質，請將位元率調高。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="641"/>
+        <location filename="../gui/SettingsView.qml" line="685"/>
         <source>Video bitrate: %1 Mbps</source>
         <translation>視訊位元速率：%1 Mbps</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="649"/>
+        <location filename="../gui/SettingsView.qml" line="698"/>
         <source>Display mode</source>
         <translation>顯示模式</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="679"/>
+        <location filename="../gui/SettingsView.qml" line="728"/>
         <source>(Recommended)</source>
         <translation>(建議)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="660"/>
-        <location filename="../gui/SettingsView.qml" line="1071"/>
+        <location filename="../gui/SettingsView.qml" line="709"/>
+        <location filename="../gui/SettingsView.qml" line="1120"/>
         <source>Fullscreen</source>
         <translation>全螢幕</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="729"/>
+        <location filename="../gui/SettingsView.qml" line="778"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
         <translation>全螢幕通常能夠提供最佳效能，但無邊框視窗較能支援 macOS Spaces、Alt+Tab、截圖工具、遊戲嵌入介面等功能。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="665"/>
+        <location filename="../gui/SettingsView.qml" line="714"/>
         <source>Borderless windowed</source>
         <translation>無邊框視窗</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="670"/>
-        <location filename="../gui/SettingsView.qml" line="1063"/>
+        <location filename="../gui/SettingsView.qml" line="719"/>
+        <location filename="../gui/SettingsView.qml" line="1112"/>
         <source>Windowed</source>
         <translation>視窗化</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="736"/>
+        <location filename="../gui/SettingsView.qml" line="785"/>
         <source>V-Sync</source>
         <translation>垂直同步</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="746"/>
+        <location filename="../gui/SettingsView.qml" line="795"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
         <translation>停用垂直同步可允許子畫面轉譯延遲，但會造成顯示畫面撕裂</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="753"/>
+        <location filename="../gui/SettingsView.qml" line="802"/>
         <source>Frame pacing</source>
         <translation>影格調步</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="763"/>
+        <location filename="../gui/SettingsView.qml" line="812"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
         <translation>影格調步能夠延後顯示過早傳入的影格來減小延遲</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="773"/>
+        <location filename="../gui/SettingsView.qml" line="822"/>
         <source>Audio Settings</source>
         <translation>音效設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="808"/>
+        <location filename="../gui/SettingsView.qml" line="857"/>
         <source>Stereo</source>
         <translation>立體聲</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="812"/>
+        <location filename="../gui/SettingsView.qml" line="861"/>
         <source>5.1 surround sound</source>
         <translation>5.1 環場音效</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="816"/>
+        <location filename="../gui/SettingsView.qml" line="865"/>
         <source>7.1 surround sound</source>
         <translation>7.1 環場音效</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="830"/>
+        <location filename="../gui/SettingsView.qml" line="879"/>
         <source>Mute host PC speakers while streaming</source>
         <translation>串流時將主機電腦的喇叭靜音</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="840"/>
+        <location filename="../gui/SettingsView.qml" line="889"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
         <translation>您必須重新啟動目前正在遊玩的遊戲以套用此更動</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="846"/>
+        <location filename="../gui/SettingsView.qml" line="895"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
         <translation>在 Moonlight 不是活動視窗時，將音訊串流靜音</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="857"/>
+        <location filename="../gui/SettingsView.qml" line="906"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
         <translation>在你使用 Alt+Tab 切換離開串流視窗或按下其他視窗時，Moonlight 將靜音。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="866"/>
+        <location filename="../gui/SettingsView.qml" line="915"/>
         <source>UI Settings</source>
         <translation>介面設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="876"/>
+        <location filename="../gui/SettingsView.qml" line="925"/>
         <source>Language</source>
         <translation>語言</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="902"/>
+        <location filename="../gui/SettingsView.qml" line="951"/>
         <source>Automatic</source>
         <translation>自動</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1013"/>
+        <location filename="../gui/SettingsView.qml" line="1062"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>您必須重新啟動 Moonlight 以套用此更動</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1030"/>
+        <location filename="../gui/SettingsView.qml" line="1079"/>
         <source>GUI display mode</source>
         <translation>圖形使用者介面顯示模式</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1067"/>
+        <location filename="../gui/SettingsView.qml" line="1116"/>
         <source>Maximized</source>
         <translation>最大化</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1140"/>
+        <location filename="../gui/SettingsView.qml" line="1189"/>
         <source>Input Settings</source>
         <translation>輸入設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1161"/>
+        <location filename="../gui/SettingsView.qml" line="1210"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>這可以實現無縫滑鼠控制，而無須捕捉用戶端的滑鼠指標。這是理想的遠端桌面選擇，但在大多數遊戲中不起作用。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1163"/>
+        <location filename="../gui/SettingsView.qml" line="1212"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>提醒：由於 GeForce Experience 的錯誤，如果您的主機電腦有多部顯示器，此選項可能無法正常運作。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1479"/>
+        <location filename="../gui/SettingsView.qml" line="1528"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
         <translation>啟用 HDR 覆寫手動解碼器選取項目。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1527"/>
+        <location filename="../gui/SettingsView.qml" line="1576"/>
         <source>AV1 (Experimental)</source>
         <translation>AV (實驗性)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1542"/>
+        <location filename="../gui/SettingsView.qml" line="1591"/>
         <source>Enable HDR (Experimental)</source>
         <translation>啟用 HDR (實驗性)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1557"/>
+        <location filename="../gui/SettingsView.qml" line="1606"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
         <translation>串流將支援 HDR，但一些遊戲可能需要你主機電腦上的 HDR 監視器以啟用 HDR 模式。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1559"/>
+        <location filename="../gui/SettingsView.qml" line="1608"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>此電腦不支援 HDR 串流。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1182"/>
+        <location filename="../gui/SettingsView.qml" line="1231"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>提醒：某些鍵盤快速鍵，例如 Ctrl+Alt+Del，無法在 Windows 上被任何應用程式攔截，包括 Moonlight。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1245"/>
+        <location filename="../gui/SettingsView.qml" line="1294"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>將觸控式螢幕用作虛擬觸控板</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1262"/>
+        <location filename="../gui/SettingsView.qml" line="1311"/>
         <source>Swap left and right mouse buttons</source>
         <translation>交換滑鼠左右按鍵</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1274"/>
+        <location filename="../gui/SettingsView.qml" line="1323"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>反轉滑鼠滾輪滾動方向</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1288"/>
+        <location filename="../gui/SettingsView.qml" line="1337"/>
         <source>Gamepad Settings</source>
         <translation>手把設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1298"/>
+        <location filename="../gui/SettingsView.qml" line="1347"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>交換手把的 A/B 和 X/Y 按鈕</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1316"/>
+        <location filename="../gui/SettingsView.qml" line="1365"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>這將手把切換為任天堂風格的按鈕版面配置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1322"/>
+        <location filename="../gui/SettingsView.qml" line="1371"/>
         <source>Force gamepad #1 always connected</source>
         <translation>強制手把 #1 始終連線</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1332"/>
+        <location filename="../gui/SettingsView.qml" line="1381"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>強制使單個手把始終與主機保持連線，即使沒有任何手把實際連線到此電腦。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1162"/>
+        <location filename="../gui/SettingsView.qml" line="1211"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>您可以在串流時按下 Ctrl+Alt+Shift+M 以切換。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1340"/>
+        <location filename="../gui/SettingsView.qml" line="1389"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>透過按下手把的「開始」鍵啟用滑鼠控制</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1351"/>
+        <location filename="../gui/SettingsView.qml" line="1400"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>在 Moonlight 於背景工作時處理手把輸入</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1362"/>
+        <location filename="../gui/SettingsView.qml" line="1411"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>即使不是焦點視窗，也允許 Moonlight 擷取手把輸入</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1371"/>
+        <location filename="../gui/SettingsView.qml" line="1420"/>
         <source>Host Settings</source>
         <translation>主機設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1411"/>
+        <location filename="../gui/SettingsView.qml" line="1460"/>
         <source>Advanced Settings</source>
         <translation>進階設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="783"/>
+        <location filename="../gui/SettingsView.qml" line="832"/>
         <source>Audio configuration</source>
         <translation>音訊組態</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1084"/>
+        <location filename="../gui/SettingsView.qml" line="1133"/>
         <source>Show connection quality warnings</source>
         <translation>顯示連線品質警告</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1096"/>
+        <location filename="../gui/SettingsView.qml" line="1145"/>
         <source>Discord Rich Presence integration</source>
         <translation>Discord Rich Presence 整合</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1106"/>
+        <location filename="../gui/SettingsView.qml" line="1155"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>更新你的 Discord 狀態，以顯示正在執行的遊戲名稱。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1333"/>
+        <location filename="../gui/SettingsView.qml" line="1382"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>僅在遊戲啟動後不支援手把連線時才啟用此選項。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1151"/>
+        <location filename="../gui/SettingsView.qml" line="1200"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>為遠端桌面而非遊戲最佳化滑鼠</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="456"/>
-        <location filename="../gui/SettingsView.qml" line="565"/>
+        <location filename="../gui/SettingsView.qml" line="500"/>
+        <location filename="../gui/SettingsView.qml" line="609"/>
         <source>Custom (%1 FPS)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="471"/>
+        <location filename="../gui/SettingsView.qml" line="515"/>
         <source>Enter a custom frame rate:</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="568"/>
+        <location filename="../gui/SettingsView.qml" line="612"/>
         <source>Custom</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="586"/>
+        <location filename="../gui/SettingsView.qml" line="630"/>
         <source>30 FPS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="591"/>
+        <location filename="../gui/SettingsView.qml" line="635"/>
         <source>60 FPS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1112"/>
+        <location filename="../gui/SettingsView.qml" line="1161"/>
         <source>Keep the display awake while streaming</source>
         <translation>串流時保持螢幕始終亮起</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1122"/>
+        <location filename="../gui/SettingsView.qml" line="1171"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>防止螢幕保護程式啟動或是螢幕在串流時進入睡眠狀態。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1173"/>
+        <location filename="../gui/SettingsView.qml" line="1222"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>擷取系統鍵盤快速鍵</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1181"/>
+        <location filename="../gui/SettingsView.qml" line="1230"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>這可以擷取系統範圍的鍵盤快速鍵，例如 Alt + Tab，這些快速鍵通常在串流時由用戶端系統處理。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1211"/>
+        <location filename="../gui/SettingsView.qml" line="1260"/>
         <source>in fullscreen</source>
         <translation>全螢幕時</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1215"/>
+        <location filename="../gui/SettingsView.qml" line="1264"/>
         <source>always</source>
         <translation>總是</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1255"/>
+        <location filename="../gui/SettingsView.qml" line="1304"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>選中時，觸控式螢幕就像一個觸控板。取消選中時，觸控式螢幕將直接控制滑鼠指標。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1381"/>
+        <location filename="../gui/SettingsView.qml" line="1430"/>
         <source>Optimize game settings for streaming</source>
         <translation>最佳化遊戲設定以進行串流</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1392"/>
+        <location filename="../gui/SettingsView.qml" line="1441"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>串流結束後退出主機電腦上的應用程式</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1402"/>
+        <location filename="../gui/SettingsView.qml" line="1451"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>在結束串流時，這將關閉正在執行的應用程式或遊戲。這會導致你失去所有未儲存的遊戲進度！</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1421"/>
+        <location filename="../gui/SettingsView.qml" line="1470"/>
         <source>Video decoder</source>
         <translation>視訊解碼器</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1447"/>
-        <location filename="../gui/SettingsView.qml" line="1515"/>
+        <location filename="../gui/SettingsView.qml" line="1496"/>
+        <location filename="../gui/SettingsView.qml" line="1564"/>
         <source>Automatic (Recommended)</source>
         <translation>自動 (建議)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1451"/>
+        <location filename="../gui/SettingsView.qml" line="1500"/>
         <source>Force software decoding</source>
         <translation>強制使用軟體解碼</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1455"/>
+        <location filename="../gui/SettingsView.qml" line="1504"/>
         <source>Force hardware decoding</source>
         <translation>強制使用硬體解碼</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1485"/>
+        <location filename="../gui/SettingsView.qml" line="1534"/>
         <source>Video codec</source>
         <translation>視訊編解碼器</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1519"/>
+        <location filename="../gui/SettingsView.qml" line="1568"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1523"/>
+        <location filename="../gui/SettingsView.qml" line="1572"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1565"/>
+        <location filename="../gui/SettingsView.qml" line="1614"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>自動尋找在區域網路中的電腦 (建議)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1590"/>
+        <location filename="../gui/SettingsView.qml" line="1639"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>自動偵測被封鎖的連線 (建議)</translation>
     </message>
@@ -1027,27 +1027,27 @@
         <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="74"/>
+        <location filename="../gui/StreamSegue.qml" line="76"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>此電腦的網路連線遭到封鎖。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="165"/>
+        <location filename="../gui/StreamSegue.qml" line="167"/>
         <source>Tip:</source>
         <translation>提示：</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="165"/>
+        <location filename="../gui/StreamSegue.qml" line="167"/>
         <source>Press %1 to disconnect your session</source>
         <translation>按下 %1 以中斷您的工作階段</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="166"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Start+Select+L1+R1</source>
         <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="166"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>

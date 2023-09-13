@@ -4,49 +4,49 @@
 <context>
     <name>AppView</name>
     <message>
-        <location filename="../gui/AppView.qml" line="144"/>
-        <location filename="../gui/AppView.qml" line="298"/>
+        <location filename="../gui/AppView.qml" line="145"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Resume Game</source>
         <translation>Återuppta spel</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="170"/>
-        <location filename="../gui/AppView.qml" line="303"/>
+        <location filename="../gui/AppView.qml" line="173"/>
+        <location filename="../gui/AppView.qml" line="308"/>
         <source>Quit Game</source>
         <translation>Avsluta spel</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="298"/>
+        <location filename="../gui/AppView.qml" line="303"/>
         <source>Launch Game</source>
         <translation>Starta spel</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="311"/>
+        <location filename="../gui/AppView.qml" line="316"/>
         <source>Direct Launch</source>
         <translation>Direktstart</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="315"/>
+        <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
         <translation>Starta den här appen omedelbart när värddatorn väljs, utan att behöva använda rutnätet för val av app.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="324"/>
+        <location filename="../gui/AppView.qml" line="329"/>
         <source>Hide Game</source>
         <translation>Dölj Spel</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="328"/>
+        <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
         <translation>Dölj det här spelet från applistan. Om du vill komma åt dolda spel högerklickar du på värden och väljer %1.</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="328"/>
+        <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
         <translation>Visa alla appar</translation>
     </message>
     <message>
-        <location filename="../gui/AppView.qml" line="343"/>
+        <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>Är du säker på att du vill avsluta %1? Alla osparade framsteg kommer att gå förlorade.</translation>
     </message>
@@ -95,7 +95,7 @@
         <translation>Laddar programlista...</translation>
     </message>
     <message>
-        <location filename="../gui/CliStartStreamSegue.qml" line="81"/>
+        <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
         <translation>Är du säker på att du vill avsluta %1? Alla osparade framsteg kommer att gå förlorade.</translation>
     </message>
@@ -252,27 +252,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="563"/>
+        <location filename="../backend/computermanager.cpp" line="568"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation>PIN-koden från datorn stämde inte överens. Snälla pröva igen.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="567"/>
+        <location filename="../backend/computermanager.cpp" line="572"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation>Du kan inte para ihop dig medan en tidigare session fortfarande pågår på värddatorn. Avsluta alla spel som körs eller starta om värddatorn och försök sedan foga ihop igen.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="570"/>
+        <location filename="../backend/computermanager.cpp" line="575"/>
         <source>Pairing failed. Please try again.</source>
         <translation>Fogning misslyckad. Snälla pröva igen.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="574"/>
+        <location filename="../backend/computermanager.cpp" line="579"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation>Ett nytt fogningsförsök pågår redan.</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="584"/>
+        <location filename="../backend/computermanager.cpp" line="589"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience returnerade fel: %1</translation>
     </message>
@@ -280,7 +280,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="634"/>
+        <location filename="../backend/computermanager.cpp" line="639"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>Det är inte den här datorn som startade löpspelet. Du måste avsluta spelet manuellt på värddatorn eller använda den enhet som ursprungligen startade spelet.</translation>
     </message>
@@ -325,27 +325,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="549"/>
+        <location filename="../main.cpp" line="554"/>
         <source>&amp;Yes</source>
         <translation>&amp;Ja</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="550"/>
+        <location filename="../main.cpp" line="555"/>
         <source>&amp;No</source>
         <translation>&amp;Nej</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="551"/>
+        <location filename="../main.cpp" line="556"/>
         <source>OK</source>
         <translation>Okej</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="552"/>
+        <location filename="../main.cpp" line="557"/>
         <source>Help</source>
         <translation>Hjälp</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="553"/>
+        <location filename="../main.cpp" line="558"/>
         <source>Cancel</source>
         <translation>Avbryt</translation>
     </message>
@@ -471,7 +471,7 @@
         <translation>Videoupplösningar över 4K stöds inte av H.264-codec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1354"/>
+        <location filename="../streaming/session.cpp" line="1366"/>
         <source>Host returned error: %1</source>
         <translation>Värden returnerade fel: %1</translation>
     </message>
@@ -531,7 +531,7 @@
         <translation>Ditt val av codec och inställningen för maskinvaruavkodning är inte förenliga med varandra. Den här datorns GPU saknar stöd för avkodning av den valda codec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1969"/>
+        <location filename="../streaming/session.cpp" line="1981"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Det går inte att börja videoavkodningen. Kontrollera dina strömningsinställningar och försök igen.</translation>
     </message>
@@ -539,466 +539,466 @@
 <context>
     <name>SettingsView</name>
     <message>
-        <location filename="../gui/SettingsView.qml" line="12"/>
+        <location filename="../gui/SettingsView.qml" line="13"/>
         <source>Settings</source>
         <translation>Inställningar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="72"/>
+        <location filename="../gui/SettingsView.qml" line="116"/>
         <source>Resolution and FPS</source>
         <translation>Upplösning och FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="80"/>
+        <location filename="../gui/SettingsView.qml" line="124"/>
         <source>Setting values too high for your PC or network connection may cause lag, stuttering, or errors.</source>
         <translation>Om du ställer in värden som är för höga för din dator eller nätverksanslutning kan det leda till fördröjning, hackande eller fel.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="62"/>
+        <location filename="../gui/SettingsView.qml" line="106"/>
         <source>Basic Settings</source>
         <translation>Grundläggande inställningar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="200"/>
+        <location filename="../gui/SettingsView.qml" line="244"/>
         <source>720p</source>
         <translation>720p</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="206"/>
+        <location filename="../gui/SettingsView.qml" line="250"/>
         <source>1080p</source>
         <translation>1080p</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="212"/>
+        <location filename="../gui/SettingsView.qml" line="256"/>
         <source>1440p</source>
         <translation>1440p</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="218"/>
+        <location filename="../gui/SettingsView.qml" line="262"/>
         <source>4K</source>
         <translation>4K</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="322"/>
+        <location filename="../gui/SettingsView.qml" line="366"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
         <translation>Anpassade upplösningar stöds inte officiellt av GeForce Experience, så det kommer inte att ställa in upplösningen på din värdskärm. Du måste ställa in den manuellt i spelet.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="323"/>
+        <location filename="../gui/SettingsView.qml" line="367"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
         <translation>Upplösningar som inte stöds av klienten eller värddatorn kan orsaka strömningsfel.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="329"/>
+        <location filename="../gui/SettingsView.qml" line="373"/>
         <source>Enter a custom resolution:</source>
         <translation>Ange en anpassad upplösning:</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="548"/>
+        <location filename="../gui/SettingsView.qml" line="592"/>
         <source>%1 FPS</source>
         <translation>%1 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="615"/>
+        <location filename="../gui/SettingsView.qml" line="659"/>
         <source>Video bitrate:</source>
         <translation>Videobitrate:</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="623"/>
+        <location filename="../gui/SettingsView.qml" line="667"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
         <translation>Sänk bithastigheten på långsammare anslutningar. Öka bitraten för att öka bildkvaliteten.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="641"/>
+        <location filename="../gui/SettingsView.qml" line="685"/>
         <source>Video bitrate: %1 Mbps</source>
         <translation>Videobitrate: %1 Mbps</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="649"/>
+        <location filename="../gui/SettingsView.qml" line="698"/>
         <source>Display mode</source>
         <translation>Visningsläge</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="679"/>
+        <location filename="../gui/SettingsView.qml" line="728"/>
         <source>(Recommended)</source>
         <translation>(Rekommenderas)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="660"/>
-        <location filename="../gui/SettingsView.qml" line="1071"/>
+        <location filename="../gui/SettingsView.qml" line="709"/>
+        <location filename="../gui/SettingsView.qml" line="1120"/>
         <source>Fullscreen</source>
         <translation>Helskärm</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="729"/>
+        <location filename="../gui/SettingsView.qml" line="778"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
         <translation>Fullscreen ger i allmänhet den bästa prestandan, men gränslöst fönsterformat kan fungera bättre med funktioner som macOS Spaces, Alt+Tab, verktyg för skärmdumpning, överlagringar på skärmen osv.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="665"/>
+        <location filename="../gui/SettingsView.qml" line="714"/>
         <source>Borderless windowed</source>
         <translation>Randlöst fönsterformat</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="670"/>
-        <location filename="../gui/SettingsView.qml" line="1063"/>
+        <location filename="../gui/SettingsView.qml" line="719"/>
+        <location filename="../gui/SettingsView.qml" line="1112"/>
         <source>Windowed</source>
         <translation>Fönsterläge</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="736"/>
+        <location filename="../gui/SettingsView.qml" line="785"/>
         <source>V-Sync</source>
         <translation>V-Sync</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="746"/>
+        <location filename="../gui/SettingsView.qml" line="795"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
         <translation>Om du inaktiverar V-Sync kan du få en lägre renderingslatenstid än en ram, men det kan visa synlig rivning</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="753"/>
+        <location filename="../gui/SettingsView.qml" line="802"/>
         <source>Frame pacing</source>
         <translation>Ramtempo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="763"/>
+        <location filename="../gui/SettingsView.qml" line="812"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
         <translation>Rampappering minskar mikrostotter genom att fördröja ramar som kommer in för tidigt</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="773"/>
+        <location filename="../gui/SettingsView.qml" line="822"/>
         <source>Audio Settings</source>
         <translation>Ljudinställningar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="808"/>
+        <location filename="../gui/SettingsView.qml" line="857"/>
         <source>Stereo</source>
         <translation>Stereo</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="812"/>
+        <location filename="../gui/SettingsView.qml" line="861"/>
         <source>5.1 surround sound</source>
         <translation>5.1 surroundljud</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="816"/>
+        <location filename="../gui/SettingsView.qml" line="865"/>
         <source>7.1 surround sound</source>
         <translation>7.1 surroundljud</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="830"/>
+        <location filename="../gui/SettingsView.qml" line="879"/>
         <source>Mute host PC speakers while streaming</source>
         <translation>Stänga av värddatorns högtalare när du strömmar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="840"/>
+        <location filename="../gui/SettingsView.qml" line="889"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
         <translation>Du måste starta om ett pågående spel för att den här inställningen ska träda i kraft</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="846"/>
+        <location filename="../gui/SettingsView.qml" line="895"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
         <translation>Stänga av ljudströmmen när Moonlight inte är det aktiva fönstret</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="857"/>
+        <location filename="../gui/SettingsView.qml" line="906"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
         <translation>Stänger av Moonlights ljud när du Alt+Tabbar ut ur strömmen eller klickar på ett annat fönster.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="866"/>
+        <location filename="../gui/SettingsView.qml" line="915"/>
         <source>UI Settings</source>
         <translation>Inställningar för användargränssnittet</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="876"/>
+        <location filename="../gui/SettingsView.qml" line="925"/>
         <source>Language</source>
         <translation>Språk</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="902"/>
+        <location filename="../gui/SettingsView.qml" line="951"/>
         <source>Automatic</source>
         <translation>Automatisk</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1013"/>
+        <location filename="../gui/SettingsView.qml" line="1062"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>Du måste starta om Moonlight för att den här jämkningen ska träda i kraft</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1030"/>
+        <location filename="../gui/SettingsView.qml" line="1079"/>
         <source>GUI display mode</source>
         <translation>GUI-läge för visning</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1067"/>
+        <location filename="../gui/SettingsView.qml" line="1116"/>
         <source>Maximized</source>
         <translation>Maximerad</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1140"/>
+        <location filename="../gui/SettingsView.qml" line="1189"/>
         <source>Input Settings</source>
         <translation>Inställningar för inmatning</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1161"/>
+        <location filename="../gui/SettingsView.qml" line="1210"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>Detta gör det möjligt att styra musen utan att fånga klientens muspekare. Den är idealisk för fjärrskrivbord men fungerar inte i de flesta spel.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1163"/>
+        <location filename="../gui/SettingsView.qml" line="1212"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>OBS: På grund av ett fel i GeForce Experience kanske det här alternativet inte fungerar korrekt om värddatorn har flera bildskärmar.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1479"/>
+        <location filename="../gui/SettingsView.qml" line="1528"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
         <translation>Tillägg av HDR behärskar manuella val av avkodare.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1542"/>
+        <location filename="../gui/SettingsView.qml" line="1591"/>
         <source>Enable HDR (Experimental)</source>
         <translation>Sätt på HDR (prövning)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1557"/>
+        <location filename="../gui/SettingsView.qml" line="1606"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
         <translation>Strömmen kommer att vara HDR-förenlig, men vissa spel kan kräva en HDR-skärm på din värddator för att sätta på HDR-läget.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1559"/>
+        <location filename="../gui/SettingsView.qml" line="1608"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>HDR-strömning stöds inte på den här datorn.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1182"/>
+        <location filename="../gui/SettingsView.qml" line="1231"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>OBS: Vissa tangentbordsgenvägar som Ctrl+Alt+Del i Windows kan inte avlyssnas av något program, inklusive Moonlight.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1245"/>
+        <location filename="../gui/SettingsView.qml" line="1294"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>Använd pekskärmen som en synlig styrplatta</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1262"/>
+        <location filename="../gui/SettingsView.qml" line="1311"/>
         <source>Swap left and right mouse buttons</source>
         <translation>Byt vänster och höger musknapp</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1274"/>
+        <location filename="../gui/SettingsView.qml" line="1323"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>Omvända musens rullningsriktning</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1288"/>
+        <location filename="../gui/SettingsView.qml" line="1337"/>
         <source>Gamepad Settings</source>
         <translation>Inställningar för spelkontrollen</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1298"/>
+        <location filename="../gui/SettingsView.qml" line="1347"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>Byt A/B- och X/Y-spelplattaknappar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1316"/>
+        <location filename="../gui/SettingsView.qml" line="1365"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>Detta skiftar spelplattor till en Nintendo-liknande knapputformning</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1322"/>
+        <location filename="../gui/SettingsView.qml" line="1371"/>
         <source>Force gamepad #1 always connected</source>
         <translation>Tvingar spelkontroll #1 att alltid vara fogad</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1332"/>
+        <location filename="../gui/SettingsView.qml" line="1381"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>Tvingar en enda spelkontroll att alltid vara fogad till värden, även om inga spelkontroller är fogade till datorn.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1162"/>
+        <location filename="../gui/SettingsView.qml" line="1211"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>Du kan skifta detta under strömning genom att använda Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1340"/>
+        <location filename="../gui/SettingsView.qml" line="1389"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>Använd musstyrning med gamepads genom att hålla in Startknappen</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1351"/>
+        <location filename="../gui/SettingsView.qml" line="1400"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>Behandla spelkontrollsinmatning när Moonlight är i bakgrunden</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1362"/>
+        <location filename="../gui/SettingsView.qml" line="1411"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>Moonlight kan fånga gamepad-inmatningar även om det inte är det aktuella fönstret i fokus</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1371"/>
+        <location filename="../gui/SettingsView.qml" line="1420"/>
         <source>Host Settings</source>
         <translation>Värdinställningar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1411"/>
+        <location filename="../gui/SettingsView.qml" line="1460"/>
         <source>Advanced Settings</source>
         <translation>Avancerade inställningar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="783"/>
+        <location filename="../gui/SettingsView.qml" line="832"/>
         <source>Audio configuration</source>
         <translation>Ljudkonfiguration</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1084"/>
+        <location filename="../gui/SettingsView.qml" line="1133"/>
         <source>Show connection quality warnings</source>
         <translation>Visa varningar för fogningskvalitet</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1096"/>
+        <location filename="../gui/SettingsView.qml" line="1145"/>
         <source>Discord Rich Presence integration</source>
         <translation>Integrering av Discord Rich Presence</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1106"/>
+        <location filename="../gui/SettingsView.qml" line="1155"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>Uppdaterar din Discord-status för att visa namnet på spelet du strömmar.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1333"/>
+        <location filename="../gui/SettingsView.qml" line="1382"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>Använd det här alternativet endast när du strömmar ett spel som inte stöder att spelkontroller fogas efter början uppstart.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1151"/>
+        <location filename="../gui/SettingsView.qml" line="1200"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>Optimera musen för fjärrskrivbord istället för spel</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="456"/>
-        <location filename="../gui/SettingsView.qml" line="565"/>
+        <location filename="../gui/SettingsView.qml" line="500"/>
+        <location filename="../gui/SettingsView.qml" line="609"/>
         <source>Custom (%1 FPS)</source>
         <translation>Anpassad (%1 FPS)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="471"/>
+        <location filename="../gui/SettingsView.qml" line="515"/>
         <source>Enter a custom frame rate:</source>
         <translation>Ange en anpassad bildfrekvens:</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="568"/>
+        <location filename="../gui/SettingsView.qml" line="612"/>
         <source>Custom</source>
         <translation>Anpassad</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="586"/>
+        <location filename="../gui/SettingsView.qml" line="630"/>
         <source>30 FPS</source>
         <translation>30 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="591"/>
+        <location filename="../gui/SettingsView.qml" line="635"/>
         <source>60 FPS</source>
         <translation>60 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1112"/>
+        <location filename="../gui/SettingsView.qml" line="1161"/>
         <source>Keep the display awake while streaming</source>
         <translation>Håll skärmen vaken medan du strömmar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1122"/>
+        <location filename="../gui/SettingsView.qml" line="1171"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>Förhindrar att skärmsläckaren startar eller att skärmen går i vila under strömning.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1173"/>
+        <location filename="../gui/SettingsView.qml" line="1222"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>Fånga systemets tangentbordsgenvägar</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1181"/>
+        <location filename="../gui/SettingsView.qml" line="1230"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>Detta gör det möjligt att fånga upp tangentbordsgenvägar för hela systemet, t.ex. Alt+Tab, som normalt skulle hanteras av klientens operativsystem under strömning.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1211"/>
+        <location filename="../gui/SettingsView.qml" line="1260"/>
         <source>in fullscreen</source>
         <translation>i helskärm</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1215"/>
+        <location filename="../gui/SettingsView.qml" line="1264"/>
         <source>always</source>
         <translation>alltid</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1255"/>
+        <location filename="../gui/SettingsView.qml" line="1304"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>När den är markerad fungerar pekskärmen som en styrplatta. När den inte är markerad styr pekskärmen direkt muspekaren.</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1381"/>
+        <location filename="../gui/SettingsView.qml" line="1430"/>
         <source>Optimize game settings for streaming</source>
         <translation>Optimera spelinställningar för streaming</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1392"/>
+        <location filename="../gui/SettingsView.qml" line="1441"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>Avsluta appen på värddatorn efter avslutad strömning</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1402"/>
+        <location filename="../gui/SettingsView.qml" line="1451"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>Detta stänger appen eller spelet du strömar när du avslutar strömningen. Du förlorar alla framsteg som inte sparats!</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1421"/>
+        <location filename="../gui/SettingsView.qml" line="1470"/>
         <source>Video decoder</source>
         <translation>Videoavkodare</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1447"/>
-        <location filename="../gui/SettingsView.qml" line="1515"/>
+        <location filename="../gui/SettingsView.qml" line="1496"/>
+        <location filename="../gui/SettingsView.qml" line="1564"/>
         <source>Automatic (Recommended)</source>
         <translation>Automatisk (rekommenderas)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1451"/>
+        <location filename="../gui/SettingsView.qml" line="1500"/>
         <source>Force software decoding</source>
         <translation>Tvångsavkodning av programvara</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1455"/>
+        <location filename="../gui/SettingsView.qml" line="1504"/>
         <source>Force hardware decoding</source>
         <translation>Tvinga hårdvaruavkodning</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1485"/>
+        <location filename="../gui/SettingsView.qml" line="1534"/>
         <source>Video codec</source>
         <translation>Videokodec</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1519"/>
+        <location filename="../gui/SettingsView.qml" line="1568"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1523"/>
+        <location filename="../gui/SettingsView.qml" line="1572"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1527"/>
+        <location filename="../gui/SettingsView.qml" line="1576"/>
         <source>AV1 (Experimental)</source>
         <translation>AV1 (experimentell)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1565"/>
+        <location filename="../gui/SettingsView.qml" line="1614"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>Hitta automatiskt datorer i det lokala nätverket (Rekommenderat)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1590"/>
+        <location filename="../gui/SettingsView.qml" line="1639"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>Upptäcker automatiskt blockerade anslutningar (Rekommenderas)</translation>
     </message>
@@ -1027,27 +1027,27 @@
         <translation>Kontrollera din brandvägg och dina regler för portvidarebefordran för port(er): %1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="74"/>
+        <location filename="../gui/StreamSegue.qml" line="76"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>Den här datorns internetfogning blockerar Moonlight. Strömning genom Internet kanske inte fungerar när du är fogad till det här nätverket.</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="165"/>
+        <location filename="../gui/StreamSegue.qml" line="167"/>
         <source>Tip:</source>
         <translation>Tips:</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="165"/>
+        <location filename="../gui/StreamSegue.qml" line="167"/>
         <source>Press %1 to disconnect your session</source>
         <translation>Tryck på %1 för att avbryta sessionen</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="166"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Start+Select+L1+R1</source>
         <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
-        <location filename="../gui/StreamSegue.qml" line="166"/>
+        <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Ctrl+Alt+Shift+Q</source>
         <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
