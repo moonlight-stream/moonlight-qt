@@ -593,19 +593,20 @@ Flickable {
                             }
 
                             var saved_fps = StreamingPreferences.fps
-                            currentIndex = -1
+                            var found = false
                             for (var i = 0; i < model.count; i++) {
                                 var el_fps = parseInt(model.get(i).video_fps);
 
                                 // Look for a matching frame rate
                                 if (saved_fps === el_fps) {
                                     currentIndex = i
+                                    found = true
                                     break
                                 }
                             }
 
                             // If we didn't find one, add a custom frame rate for the current value
-                            if (currentIndex === -1) {
+                            if (!found) {
                                 currentIndex = addRefreshRateOrdered(model, saved_fps, qsTr("Custom (%1 FPS)").arg(saved_fps), true)
                             }
                             else {
