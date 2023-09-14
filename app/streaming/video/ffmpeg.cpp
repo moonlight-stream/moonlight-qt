@@ -820,8 +820,8 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
 #endif
         SDL_assert(m_BackendRenderer == nullptr);
         if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
-                m_BackendRenderer->initialize(m_BackendRenderer->needsTestFrame() ? &testFrameDecoderParams : params) &&
-                completeInitialization(decoder, m_BackendRenderer->needsTestFrame() ? &testFrameDecoderParams : params, m_TestOnly || m_BackendRenderer->needsTestFrame(), i == 0 /* EGL/DRM */)) {
+                m_BackendRenderer->initialize((m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params) &&
+                completeInitialization(decoder, (m_TestOnly || m_BackendRenderer->needsTestFrame()) ? &testFrameDecoderParams : params, m_TestOnly || m_BackendRenderer->needsTestFrame(), i == 0 /* EGL/DRM */)) {
             if (m_TestOnly) {
                 // This decoder is only for testing capabilities, so don't bother
                 // creating a usable renderer
