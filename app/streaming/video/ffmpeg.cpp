@@ -796,6 +796,19 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                                                const AVCodecHWConfig* hwConfig,
                                                std::function<IFFmpegRenderer*()> createRendererFunc)
 {
+    DECODER_PARAMETERS testFrameDecoderParams = *params;
+
+    // Setup the test decoder parameters using the dimensions for the test frame. These are
+    // used to populate the AVCodecContext fields of the same names.
+    //
+    // While most decoders don't care what dimensions we specify here, V4L2M2M seems to puke
+    // if we pass whatever the native stream resolution is then decode a 720p test frame.
+    //
+    // For qcom-venus, it seems to lead to failures allocating capture buffers (bug #1042).
+    // For wave5 (VisionFive), it leads to an invalid pitch error when calling drmModeAddFB2().
+    testFrameDecoderParams.width = 1280;
+    testFrameDecoderParams.height = 720;
+
     m_HwDecodeCfg = hwConfig;
 
     // i == 0 - Indirect via EGL or DRM frontend with zero-copy DMA-BUF passing
@@ -807,8 +820,8 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
 #endif
         SDL_assert(m_BackendRenderer == nullptr);
         if ((m_BackendRenderer = createRendererFunc()) != nullptr &&
-                m_BackendRenderer->initialize(params) &&
-                completeInitialization(decoder, params, m_TestOnly || m_BackendRenderer->needsTestFrame(), i == 0 /* EGL/DRM */)) {
+                m_BackendRenderer->initialize(m_BackendRenderer->needsTestFrame() ? &testFrameDecoderParams : params) &&
+                completeInitialization(decoder, m_BackendRenderer->needsTestFrame() ? &testFrameDecoderParams : params, m_TestOnly || m_BackendRenderer->needsTestFrame(), i == 0 /* EGL/DRM */)) {
             if (m_TestOnly) {
                 // This decoder is only for testing capabilities, so don't bother
                 // creating a usable renderer
