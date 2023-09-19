@@ -27,7 +27,7 @@
 #if SDL_VERSION_ATLEAST(2, 0, 15)
 
 extern int g_QtDrmMasterFd;
-extern struct stat64 g_DrmMasterStat;
+extern struct stat g_DrmMasterStat;
 extern int g_SdlDrmMasterFd;
 
 int openHook(const char *funcname, const char *pathname, int flags, va_list va)
@@ -50,9 +50,9 @@ int openHook(const char *funcname, const char *pathname, int flags, va_list va)
     if (fd >= 0 && g_QtDrmMasterFd != -1) {
         if (strncmp(pathname, "/dev/dri/card", 13) == 0) {
             // It's a DRM device, but is it _our_ DRM device?
-            struct stat64 fdstat;
+            struct stat fdstat;
 
-            fstat64(fd, &fdstat);
+            fstat(fd, &fdstat);
             if (g_DrmMasterStat.st_dev == fdstat.st_dev &&
                     g_DrmMasterStat.st_ino == fdstat.st_ino) {
                 // It is our device. Time to do the magic!

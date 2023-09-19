@@ -746,7 +746,11 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         // This leads to issues when DRM_IOCTL_MODE_MAP_DUMB returns a > 4GB offset. The high bits are
         // chopped off when passed via the normal mmap() call using 32-bit off_t. We avoid this issue
         // by explicitly calling mmap64() to ensure the 64-bit offset is never truncated.
+#if defined(__GLIBC__) && QT_POINTER_SIZE == 4
         drmFrame->mapping = (uint8_t*)mmap64(nullptr, drmFrame->size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+#else
+        drmFrame->mapping = (uint8_t*)mmap(nullptr, drmFrame->size, PROT_WRITE, MAP_SHARED, m_DrmFd, mapBuf.offset);
+#endif
         if (drmFrame->mapping == MAP_FAILED) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "mmap() failed for dumb buffer: %d",

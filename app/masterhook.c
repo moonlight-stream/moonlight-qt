@@ -34,7 +34,7 @@
 
 // Qt's DRM master FD grabbed by our hook
 int g_QtDrmMasterFd = -1;
-struct stat64 g_DrmMasterStat;
+struct stat g_DrmMasterStat;
 
 // The DRM master FD created for SDL
 int g_SdlDrmMasterFd = -1;
@@ -55,7 +55,7 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
     if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
         g_QtDrmMasterFd = fd;
-        fstat64(g_QtDrmMasterFd, &g_DrmMasterStat);
+        fstat(g_QtDrmMasterFd, &g_DrmMasterStat);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Captured Qt EGLFS DRM master fd (legacy): %d",
                     g_QtDrmMasterFd);
@@ -73,7 +73,7 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
     // EGLFS backend's DRM FD, on which we will call drmDropMaster() later.
     if (g_QtDrmMasterFd == -1 && drmIsMaster(fd)) {
         g_QtDrmMasterFd = fd;
-        fstat64(g_QtDrmMasterFd, &g_DrmMasterStat);
+        fstat(g_QtDrmMasterFd, &g_DrmMasterStat);
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Captured Qt EGLFS DRM master fd (atomic): %d",
                     g_QtDrmMasterFd);
