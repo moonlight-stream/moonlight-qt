@@ -58,6 +58,19 @@ char* OverlayManager::getOverlayText(OverlayType type)
     return m_Overlays[type].text;
 }
 
+void OverlayManager::updateOverlayText(OverlayType type, const char* text)
+{
+    strncpy(m_Overlays[type].text, text, sizeof(m_Overlays[0].text));
+    m_Overlays[type].text[getOverlayMaxTextLength() - 1] = '\0';
+
+    setOverlayTextUpdated(type);
+}
+
+int OverlayManager::getOverlayMaxTextLength()
+{
+    return sizeof(m_Overlays[0].text);
+}
+
 int OverlayManager::getOverlayFontSize(OverlayType type)
 {
     return m_Overlays[type].fontSize;

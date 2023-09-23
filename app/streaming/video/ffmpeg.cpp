@@ -604,10 +604,11 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
     dst.renderedFps = (float)dst.renderedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
 }
 
-void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
+void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, ssize_t length)
 {
     int offset = 0;
     const char* codecString;
+    int ret;
 
     // Start with an empty string
     output[offset] = 0;
@@ -652,54 +653,82 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output)
 
     if (stats.receivedFps > 0) {
         if (m_VideoDecoderCtx != nullptr) {
-            offset += sprintf(&output[offset],
-                              "Video stream: %dx%d %.2f FPS (Codec: %s)\n",
-                              m_VideoDecoderCtx->width,
-                              m_VideoDecoderCtx->height,
-                              stats.totalFps,
-                              codecString);
+            ret = snprintf(&output[offset],
+                           length - offset,
+                           "Video stream: %dx%d %.2f FPS (Codec: %s)\n",
+                           m_VideoDecoderCtx->width,
+                           m_VideoDecoderCtx->height,
+                           stats.totalFps,
+                           codecString);
+            if (ret < 0 || ret >= length - offset) {
+                SDL_assert(false);
+                return;
+            }
+
+            offset += ret;
         }
 
-        offset += sprintf(&output[offset],
-                          "Incoming frame rate from network: %.2f FPS\n"
-                          "Decoding frame rate: %.2f FPS\n"
-                          "Rendering frame rate: %.2f FPS\n",
-                          stats.receivedFps,
-                          stats.decodedFps,
-                          stats.renderedFps);
+        ret = snprintf(&output[offset],
+                       length - offset,
+                       "Incoming frame rate from network: %.2f FPS\n"
+                       "Decoding frame rate: %.2f FPS\n"
+                       "Rendering frame rate: %.2f FPS\n",
+                       stats.receivedFps,
+                       stats.decodedFps,
+                       stats.renderedFps);
+        if (ret < 0 || ret >= length - offset) {
+            SDL_assert(false);
+            return;
+        }
+
+        offset += ret;
     }
 
     if (stats.framesWithHostProcessingLatency > 0) {
-        offset += sprintf(&output[offset],
-                          "Host processing latency min/max/average: %.1f/%.1f/%.1f ms\n",
-                          (float)stats.minHostProcessingLatency / 10,
-                          (float)stats.maxHostProcessingLatency / 10,
-                          (float)stats.totalHostProcessingLatency / 10 / stats.framesWithHostProcessingLatency);
+        ret = snprintf(&output[offset],
+                       length - offset,
+                       "Host processing latency min/max/average: %.1f/%.1f/%.1f ms\n",
+                       (float)stats.minHostProcessingLatency / 10,
+                       (float)stats.maxHostProcessingLatency / 10,
+                       (float)stats.totalHostProcessingLatency / 10 / stats.framesWithHostProcessingLatency);
+        if (ret < 0 || ret >= length - offset) {
+            SDL_assert(false);
+            return;
+        }
+
+        offset += ret;
     }
 
     if (stats.renderedFrames != 0) {
         char rttString[32];
 
         if (stats.lastRtt != 0) {
-            sprintf(rttString, "%u ms (variance: %u ms)", stats.lastRtt, stats.lastRttVariance);
+            snprintf(rttString, sizeof(rttString), "%u ms (variance: %u ms)", stats.lastRtt, stats.lastRttVariance);
         }
         else {
-            sprintf(rttString, "N/A");
+            snprintf(rttString, sizeof(rttString), "N/A");
         }
 
-        offset += sprintf(&output[offset],
-                          "Frames dropped by your network connection: %.2f%%\n"
-                          "Frames dropped due to network jitter: %.2f%%\n"
-                          "Average network latency: %s\n"
-                          "Average decoding time: %.2f ms\n"
-                          "Average frame queue delay: %.2f ms\n"
-                          "Average rendering time (including monitor V-sync latency): %.2f ms\n",
-                          (float)stats.networkDroppedFrames / stats.totalFrames * 100,
-                          (float)stats.pacerDroppedFrames / stats.decodedFrames * 100,
-                          rttString,
-                          (float)stats.totalDecodeTime / stats.decodedFrames,
-                          (float)stats.totalPacerTime / stats.renderedFrames,
-                          (float)stats.totalRenderTime / stats.renderedFrames);
+        ret = snprintf(&output[offset],
+                       length - offset,
+                       "Frames dropped by your network connection: %.2f%%\n"
+                       "Frames dropped due to network jitter: %.2f%%\n"
+                       "Average network latency: %s\n"
+                       "Average decoding time: %.2f ms\n"
+                       "Average frame queue delay: %.2f ms\n"
+                       "Average rendering time (including monitor V-sync latency): %.2f ms\n",
+                       (float)stats.networkDroppedFrames / stats.totalFrames * 100,
+                       (float)stats.pacerDroppedFrames / stats.decodedFrames * 100,
+                       rttString,
+                       (float)stats.totalDecodeTime / stats.decodedFrames,
+                       (float)stats.totalPacerTime / stats.renderedFrames,
+                       (float)stats.totalRenderTime / stats.renderedFrames);
+        if (ret < 0 || ret >= length - offset) {
+            SDL_assert(false);
+            return;
+        }
+
+        offset += ret;
     }
 }
 
@@ -707,7 +736,7 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
 {
     if (stats.renderedFps > 0 || stats.renderedFrames != 0) {
         char videoStatsStr[512];
-        stringifyVideoStats(stats, videoStatsStr);
+        stringifyVideoStats(stats, videoStatsStr, sizeof(videoStatsStr));
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "%s", title);
@@ -1393,7 +1422,9 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
             addVideoStats(m_LastWndVideoStats, lastTwoWndStats);
             addVideoStats(m_ActiveWndVideoStats, lastTwoWndStats);
 
-            stringifyVideoStats(lastTwoWndStats, Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug));
+            stringifyVideoStats(lastTwoWndStats,
+                                Session::get()->getOverlayManager().getOverlayText(Overlay::OverlayDebug),
+                                Session::get()->getOverlayManager().getOverlayMaxTextLength());
             Session::get()->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayDebug);
         }
 

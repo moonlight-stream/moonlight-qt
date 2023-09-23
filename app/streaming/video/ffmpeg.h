@@ -32,7 +32,7 @@ public:
 private:
     bool completeInitialization(const AVCodec* decoder, PDECODER_PARAMETERS params, bool testFrame, bool useAlternateFrontend);
 
-    void stringifyVideoStats(VIDEO_STATS& stats, char* output);
+    void stringifyVideoStats(VIDEO_STATS& stats, char* output, ssize_t length);
 
     void logVideoStats(VIDEO_STATS& stats, const char* title);
 
