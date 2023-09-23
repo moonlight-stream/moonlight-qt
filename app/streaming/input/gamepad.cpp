@@ -581,7 +581,7 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         // On SDL 2.0.14 and later, we can provide enhanced controller information to the host PC
         // for it to use as a hint for the type of controller to emulate.
         uint32_t supportedButtonFlags = 0;
-        for (int i = 0; i < SDL_arraysize(k_ButtonMap); i++) {
+        for (int i = 0; i < (int)SDL_arraysize(k_ButtonMap); i++) {
             if (SDL_GameControllerHasButton(state->controller, (SDL_GameControllerButton)i)) {
                 supportedButtonFlags |= k_ButtonMap[i];
             }
