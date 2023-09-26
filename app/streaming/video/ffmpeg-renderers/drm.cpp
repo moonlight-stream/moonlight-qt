@@ -1188,14 +1188,15 @@ ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     // DRM requires composed layers rather than separate layers per plane
     SDL_assert(drmFrame->nb_layers == 1);
 
-    // Max 32 attributes (1 key + 1 value for each)
-    const int MAX_ATTRIB_COUNT = 32 * 2;
+    // Max 33 attributes (1 key + 1 value for each)
+    const int MAX_ATTRIB_COUNT = 33 * 2;
     EGLAttrib attribs[MAX_ATTRIB_COUNT] = {
         EGL_LINUX_DRM_FOURCC_EXT, (EGLAttrib)drmFrame->layers[0].format,
         EGL_WIDTH, frame->width,
         EGL_HEIGHT, frame->height,
+        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
     };
-    int attribIndex = 6;
+    int attribIndex = 8;
 
     for (int i = 0; i < drmFrame->layers[0].nb_planes; ++i) {
         const auto &plane = drmFrame->layers[0].planes[i];

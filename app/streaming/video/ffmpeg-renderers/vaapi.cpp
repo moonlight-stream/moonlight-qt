@@ -943,15 +943,16 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
     for (size_t i = 0; i < m_PrimeDescriptor.num_layers; ++i) {
         const auto &layer = m_PrimeDescriptor.layers[i];
 
-        // Max 30 attributes (1 key + 1 value for each)
-        const int EGL_ATTRIB_COUNT = 30 * 2;
+        // Max 31 attributes (1 key + 1 value for each)
+        const int EGL_ATTRIB_COUNT = 31 * 2;
         EGLAttrib attribs[EGL_ATTRIB_COUNT] = {
             EGL_LINUX_DRM_FOURCC_EXT, layer.drm_format,
             EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
             EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
+            EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
         };
 
-        int attribIndex = 6;
+        int attribIndex = 8;
         for (size_t j = 0; j < layer.num_planes; j++) {
             const auto &object = m_PrimeDescriptor.objects[layer.object_index[j]];
 
