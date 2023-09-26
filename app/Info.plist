@@ -22,6 +22,17 @@
 	<string>NSApplication</string>
 	<key>NSSupportsAutomaticGraphicsSwitching</key>
 	<true/>
+	<key>GCSupportedGameControllers</key>
+	<array>
+		<dict>
+			<key>ProfileName</key>
+			<string>ExtendedGamepad</string>
+		</dict>
+	</array>
+	<key>GCSupportsControllerUserInteraction</key>
+	<true/>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.games</string>
 	<key>CFBundleVersion</key>
 	<string>VERSION</string>
 	<key>CFBundleShortVersionString</key>
