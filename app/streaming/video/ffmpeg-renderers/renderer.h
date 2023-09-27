@@ -40,6 +40,10 @@ typedef EGLBoolean (EGLAPIENTRYP PFNEGLDESTROYIMAGEPROC) (EGLDisplay dpy, EGLIma
 typedef EGLDisplay (EGLAPIENTRYP PFNEGLGETPLATFORMDISPLAYPROC) (EGLenum platform, void *native_display, const EGLAttrib *attrib_list);
 #endif
 
+#ifndef EGL_KHR_stream
+typedef uint64_t EGLuint64KHR;
+#endif
+
 #if !defined(EGL_KHR_image) || !defined(EGL_EGLEXT_PROTOTYPES)
 // EGL_KHR_image technically uses EGLImageKHR instead of EGLImage, but they're compatible
 // so we swap them here to avoid mixing them all over the place
