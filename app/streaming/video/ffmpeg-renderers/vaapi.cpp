@@ -946,7 +946,7 @@ VAAPIRenderer::initializeEGL(EGLDisplay dpy,
             return false;
         }
 
-        for (int i = 0; i < descriptor.num_layers; i++) {
+        for (uint32_t i = 0; i < descriptor.num_layers; i++) {
             if (!m_EglImageFactory.supportsImportingFormat(dpy, descriptor.layers[i].drm_format)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                             "EGL implementation lacks support for importing format: %08x", descriptor.layers[0].drm_format);
