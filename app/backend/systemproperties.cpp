@@ -2,6 +2,7 @@
 #include "utils.h"
 
 #include <QGuiApplication>
+#include <QLibraryInfo>
 
 #include "streaming/session.h"
 #include "streaming/streamutils.h"
@@ -17,6 +18,7 @@ SystemProperties::SystemProperties()
     hasDesktopEnvironment = WMUtils::isRunningDesktopEnvironment();
     isRunningWayland = WMUtils::isRunningWayland();
     isRunningXWayland = isRunningWayland && QGuiApplication::platformName() == "xcb";
+    usesMaterial3Theme = QLibraryInfo::version() >= QVersionNumber(6, 5, 0);
     QString nativeArch = QSysInfo::currentCpuArchitecture();
 
 #ifdef Q_OS_WIN32

@@ -2,6 +2,7 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
+import QtQuick.Controls.Material 2.2
 
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
@@ -21,6 +22,15 @@ ApplicationWindow {
     visible: true
     width: 1280
     height: 600
+
+    // Override the background color to Material 2 colors for Qt 6.5+
+    // in order to improve contrast between GFE's placeholder box art
+    // and the background of the app grid.
+    Component.onCompleted: {
+        if (SystemProperties.usesMaterial3Theme) {
+            Material.background = "#303030"
+        }
+    }
 
     visibility: {
         if (SystemProperties.hasDesktopEnvironment) {
