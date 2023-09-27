@@ -443,6 +443,11 @@ bool EglImageFactory::supportsImportingFormat(EGLDisplay dpy, EGLint format)
                      "eglQueryDmaBufFormatsEXT() #1 failed: %d", eglGetError());
         return false;
     }
+    else if (numFormats == 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "eglQueryDmaBufFormatsEXT() returned no supported formats!");
+        return false;
+    }
 
     EGLint formats[numFormats];
     if (!m_eglQueryDmaBufFormatsEXT(dpy, numFormats, formats, &numFormats)) {
@@ -478,6 +483,11 @@ bool EglImageFactory::supportsImportingModifier(EGLDisplay dpy, EGLint format, E
     if (!m_eglQueryDmaBufModifiersEXT(dpy, format, 0, nullptr, nullptr, &numModifiers)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "eglQueryDmaBufModifiersEXT() #1 failed: %d", eglGetError());
+        return false;
+    }
+    else if (numModifiers == 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "eglQueryDmaBufModifiersEXT() returned no supported modifiers!");
         return false;
     }
 
