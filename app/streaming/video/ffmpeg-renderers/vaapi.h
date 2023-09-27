@@ -69,7 +69,7 @@ private:
     void renderOverlay(VADisplay display, VASurfaceID surface, Overlay::OverlayType type);
 
 #if defined(HAVE_EGL) || defined(HAVE_DRM)
-    bool canExportSurfaceHandle(int layerTypeFlag);
+    bool canExportSurfaceHandle(int layerTypeFlag, VADRMPRIMESurfaceDescriptor* descriptor);
 #endif
 
     int m_DecoderSelectionPass;
@@ -96,6 +96,11 @@ private:
     int m_DisplayHeight;
 
 #ifdef HAVE_EGL
+    enum class EglExportType {
+        Unknown,
+        Separate,
+        Composed
+    } m_EglExportType;
     VADRMPRIMESurfaceDescriptor m_PrimeDescriptor;
     EglImageFactory m_EglImageFactory;
 #endif

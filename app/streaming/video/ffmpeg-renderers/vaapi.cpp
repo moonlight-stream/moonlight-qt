@@ -18,12 +18,12 @@ VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
       m_BlacklistedForDirectRendering(false),
       m_OverlayMutex(nullptr)
 #ifdef HAVE_EGL
-    , m_EglImageFactory(this)
+    , m_EglExportType(EglExportType::Unknown),
+      m_EglImageFactory(this)
 #endif
 {
 #ifdef HAVE_EGL
-    m_PrimeDescriptor.num_layers = 0;
-    m_PrimeDescriptor.num_objects = 0;
+    SDL_zero(m_PrimeDescriptor);
 #endif
 
     SDL_zero(m_OverlayImage);
@@ -795,12 +795,11 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 
 // Ensure that vaExportSurfaceHandle() is supported by the VA-API driver
 bool
-VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
+VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag, VADRMPRIMESurfaceDescriptor* descriptor) {
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
     VASurfaceID surfaceId;
     VAStatus st;
-    VADRMPRIMESurfaceDescriptor descriptor;
     VASurfaceAttrib attrs[2];
     int attributeCount = 0;
 
@@ -848,7 +847,7 @@ VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
                                surfaceId,
                                VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
                                VA_EXPORT_SURFACE_READ_ONLY | layerTypeFlag,
-                               &descriptor);
+                               descriptor);
 
     vaDestroySurfaces(vaDeviceContext->display, &surfaceId, 1);
 
@@ -858,8 +857,9 @@ VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
         return false;
     }
 
-    for (size_t i = 0; i < descriptor.num_objects; ++i) {
-        close(descriptor.objects[i].fd);
+    for (size_t i = 0; i < descriptor->num_objects; ++i) {
+        close(descriptor->objects[i].fd);
+        descriptor->objects[i].fd = -1;
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -874,33 +874,122 @@ VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag) {
 
 bool
 VAAPIRenderer::canExportEGL() {
-    // Our EGL export logic requires exporting separate layers
-    return canExportSurfaceHandle(VA_EXPORT_SURFACE_SEPARATE_LAYERS);
+    VADRMPRIMESurfaceDescriptor descriptor;
+
+    return (qgetenv("VAAPI_EGL_SEPARATE_LAYERS") != "1" && canExportSurfaceHandle(VA_EXPORT_SURFACE_COMPOSED_LAYERS, &descriptor)) ||
+           canExportSurfaceHandle(VA_EXPORT_SURFACE_SEPARATE_LAYERS, &descriptor);
 }
 
 AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
-    return (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-                AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
+    switch (m_EglExportType) {
+    case EglExportType::Separate:
+        return (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
+                   AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
+
+    case EglExportType::Composed:
+        // This tells EGLRenderer to treat the EGLImage as a single opaque texture
+        return AV_PIX_FMT_DRM_PRIME;
+
+    case EglExportType::Unknown:
+        SDL_assert(m_EglExportType != EglExportType::Unknown);
+        break;
+    }
+
+    return AV_PIX_FMT_NONE;
 }
 
 bool
 VAAPIRenderer::initializeEGL(EGLDisplay dpy,
                              const EGLExtensions &ext) {
-    return m_EglImageFactory.initializeEGL(dpy, ext);
+    VADRMPRIMESurfaceDescriptor descriptor;
+
+    if (!m_EglImageFactory.initializeEGL(dpy, ext)) {
+        return false;
+    }
+
+    // Prefer exporting composed images absent a user override or lack of support for exporting or importing
+    if (qgetenv("VAAPI_EGL_SEPARATE_LAYERS") == "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Exporting separate layers due to environment variable override");
+        m_EglExportType = EglExportType::Separate;
+    }
+    else if (!canExportSurfaceHandle(VA_EXPORT_SURFACE_COMPOSED_LAYERS, &descriptor)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Exporting separate layers due to lack of support for VA_EXPORT_SURFACE_COMPOSED_LAYERS");
+        m_EglExportType = EglExportType::Separate;
+    }
+    else if (!m_EglImageFactory.supportsImportingFormat(dpy, descriptor.layers[0].drm_format)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Exporting separate layers due to lack of support for importing format: %08x", descriptor.layers[0].drm_format);
+        m_EglExportType = EglExportType::Separate;
+    }
+    else if (!m_EglImageFactory.supportsImportingModifier(dpy, descriptor.layers[0].drm_format, descriptor.objects[0].drm_format_modifier)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Exporting separate layers due to lack of support for importing format and modifier: %08x %016lx",
+                    descriptor.layers[0].drm_format,
+                    descriptor.objects[0].drm_format_modifier);
+        m_EglExportType = EglExportType::Separate;
+    }
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Exporting composed layers with format and modifier: %08x %016lx",
+                    descriptor.layers[0].drm_format,
+                    descriptor.objects[0].drm_format_modifier);
+        m_EglExportType = EglExportType::Composed;
+    }
+
+    // Let's probe for EGL import support on separate layers too, but only warn if it's not supported
+    if (m_EglExportType == EglExportType::Separate) {
+        if (!canExportSurfaceHandle(VA_EXPORT_SURFACE_SEPARATE_LAYERS, &descriptor)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Exporting separate layers is not supported by the VAAPI driver");
+            return false;
+        }
+
+        for (int i = 0; i < descriptor.num_layers; i++) {
+            if (!m_EglImageFactory.supportsImportingFormat(dpy, descriptor.layers[i].drm_format)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "EGL implementation lacks support for importing format: %08x", descriptor.layers[0].drm_format);
+            }
+            else if (!m_EglImageFactory.supportsImportingModifier(dpy, descriptor.layers[i].drm_format,
+                                                                  descriptor.objects[descriptor.layers[i].object_index[0]].drm_format_modifier)) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "EGL implementation lacks support for importing format and modifier: %08x %016lx",
+                            descriptor.layers[i].drm_format,
+                            descriptor.objects[descriptor.layers[i].object_index[0]].drm_format_modifier);
+            }
+        }
+    }
+
+    return true;
 }
 
 ssize_t
 VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
                                EGLImage images[EGL_MAX_PLANES]) {
     ssize_t count;
+    uint32_t exportFlags = VA_EXPORT_SURFACE_READ_ONLY;
+
+    switch (m_EglExportType) {
+    case EglExportType::Separate:
+        exportFlags |= VA_EXPORT_SURFACE_SEPARATE_LAYERS;
+        break;
+    case EglExportType::Composed:
+        exportFlags |= VA_EXPORT_SURFACE_COMPOSED_LAYERS;
+        break;
+    case EglExportType::Unknown:
+        SDL_assert(m_EglExportType != EglExportType::Unknown);
+        return -1;
+    }
+
     auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)hwFrameCtx->device_ctx->hwctx;
-
     VASurfaceID surface_id = (VASurfaceID)(uintptr_t)frame->data[3];
+
     VAStatus st = vaExportSurfaceHandle(vaDeviceContext->display,
                                         surface_id,
                                         VA_SURFACE_ATTRIB_MEM_TYPE_DRM_PRIME_2,
-                                        VA_EXPORT_SURFACE_READ_ONLY | VA_EXPORT_SURFACE_SEPARATE_LAYERS,
+                                        exportFlags,
                                         &m_PrimeDescriptor);
     if (st != VA_STATUS_SUCCESS) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -948,7 +1037,8 @@ VAAPIRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
 bool VAAPIRenderer::canExportDrmPrime()
 {
     // Our DRM renderer requires composed layers
-    return canExportSurfaceHandle(VA_EXPORT_SURFACE_COMPOSED_LAYERS);
+    VADRMPRIMESurfaceDescriptor descriptor;
+    return canExportSurfaceHandle(VA_EXPORT_SURFACE_COMPOSED_LAYERS, &descriptor);
 }
 
 bool VAAPIRenderer::mapDrmPrimeFrame(AVFrame* frame, AVDRMFrameDescriptor* drmDescriptor)
