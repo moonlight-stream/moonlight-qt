@@ -17,16 +17,13 @@ VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
       m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
       m_OverlayMutex(nullptr)
+#ifdef HAVE_EGL
+    , m_EglImageFactory(this)
+#endif
 {
 #ifdef HAVE_EGL
     m_PrimeDescriptor.num_layers = 0;
     m_PrimeDescriptor.num_objects = 0;
-    m_EGLExtDmaBuf = false;
-
-    m_eglCreateImage = nullptr;
-    m_eglCreateImageKHR = nullptr;
-    m_eglDestroyImage = nullptr;
-    m_eglDestroyImageKHR = nullptr;
 #endif
 
     SDL_zero(m_OverlayImage);
@@ -887,35 +884,15 @@ AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
 }
 
 bool
-VAAPIRenderer::initializeEGL(EGLDisplay,
+VAAPIRenderer::initializeEGL(EGLDisplay dpy,
                              const EGLExtensions &ext) {
-    if (!ext.isSupported("EGL_EXT_image_dma_buf_import")) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "VAAPI-EGL: DMABUF unsupported");
-        return false;
-    }
-    m_EGLExtDmaBuf = ext.isSupported("EGL_EXT_image_dma_buf_import_modifiers");
-
-    // NB: eglCreateImage() and eglCreateImageKHR() have slightly different definitions
-    m_eglCreateImage = (typeof(m_eglCreateImage))eglGetProcAddress("eglCreateImage");
-    m_eglCreateImageKHR = (typeof(m_eglCreateImageKHR))eglGetProcAddress("eglCreateImageKHR");
-    m_eglDestroyImage = (typeof(m_eglDestroyImage))eglGetProcAddress("eglDestroyImage");
-    m_eglDestroyImageKHR = (typeof(m_eglDestroyImageKHR))eglGetProcAddress("eglDestroyImageKHR");
-
-    if (!(m_eglCreateImage && m_eglDestroyImage) &&
-            !(m_eglCreateImageKHR && m_eglDestroyImageKHR)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Missing eglCreateImage()/eglDestroyImage() in EGL driver");
-        return false;
-    }
-
-    return true;
+    return m_EglImageFactory.initializeEGL(dpy, ext);
 }
 
 ssize_t
 VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
                                EGLImage images[EGL_MAX_PLANES]) {
-    ssize_t count = 0;
+    ssize_t count;
     auto hwFrameCtx = (AVHWFramesContext*)frame->hw_frames_ctx->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)hwFrameCtx->device_ctx->hwctx;
 
@@ -931,149 +908,32 @@ VAAPIRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
         return -1;
     }
 
-    SDL_assert(m_PrimeDescriptor.num_layers <= EGL_MAX_PLANES);
-
     st = vaSyncSurface(vaDeviceContext->display, surface_id);
     if (st != VA_STATUS_SUCCESS) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "vaSyncSurface failed: %d", st);
-        goto sync_fail;
+                     "vaSyncSurface() failed: %d", st);
+        goto fail;
     }
 
-    for (size_t i = 0; i < m_PrimeDescriptor.num_layers; ++i) {
-        const auto &layer = m_PrimeDescriptor.layers[i];
-
-        // Max 31 attributes (1 key + 1 value for each)
-        const int EGL_ATTRIB_COUNT = 31 * 2;
-        EGLAttrib attribs[EGL_ATTRIB_COUNT] = {
-            EGL_LINUX_DRM_FOURCC_EXT, layer.drm_format,
-            EGL_WIDTH, i == 0 ? frame->width : frame->width / 2,
-            EGL_HEIGHT, i == 0 ? frame->height : frame->height / 2,
-            EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-        };
-
-        int attribIndex = 8;
-        for (size_t j = 0; j < layer.num_planes; j++) {
-            const auto &object = m_PrimeDescriptor.objects[layer.object_index[j]];
-
-            switch (j) {
-            case 0:
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_FD_EXT;
-                attribs[attribIndex++] = object.fd;
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
-                attribs[attribIndex++] = layer.offset[0];
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-                attribs[attribIndex++] = layer.pitch[0];
-                if (m_EGLExtDmaBuf) {
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
-                }
-                break;
-
-            case 1:
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_FD_EXT;
-                attribs[attribIndex++] = object.fd;
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_OFFSET_EXT;
-                attribs[attribIndex++] = layer.offset[1];
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_PITCH_EXT;
-                attribs[attribIndex++] = layer.pitch[1];
-                if (m_EGLExtDmaBuf) {
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
-                }
-                break;
-
-            case 2:
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_FD_EXT;
-                attribs[attribIndex++] = object.fd;
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_OFFSET_EXT;
-                attribs[attribIndex++] = layer.offset[2];
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_PITCH_EXT;
-                attribs[attribIndex++] = layer.pitch[2];
-                if (m_EGLExtDmaBuf) {
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
-                }
-                break;
-
-            case 3:
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_FD_EXT;
-                attribs[attribIndex++] = object.fd;
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_OFFSET_EXT;
-                attribs[attribIndex++] = layer.offset[3];
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_PITCH_EXT;
-                attribs[attribIndex++] = layer.pitch[3];
-                if (m_EGLExtDmaBuf) {
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier & 0xFFFFFFFF);
-                    attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT;
-                    attribs[attribIndex++] = (EGLint)(object.drm_format_modifier >> 32);
-                }
-                break;
-
-            default:
-                Q_UNREACHABLE();
-            }
-        }
-
-        // Terminate the attribute list
-        attribs[attribIndex++] = EGL_NONE;
-        SDL_assert(attribIndex <= EGL_ATTRIB_COUNT);
-
-        if (m_eglCreateImage) {
-            images[i] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
-                                         EGL_LINUX_DMA_BUF_EXT,
-                                         nullptr, attribs);
-            if (!images[i]) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "eglCreateImage() Failed: %d", eglGetError());
-                goto create_image_fail;
-            }
-        }
-        else {
-            // Cast the EGLAttrib array elements to EGLint for the KHR extension
-            EGLint intAttribs[EGL_ATTRIB_COUNT];
-            for (int i = 0; i < attribIndex; i++) {
-                intAttribs[i] = (EGLint)attribs[i];
-            }
-
-            images[i] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
-                                            EGL_LINUX_DMA_BUF_EXT,
-                                            nullptr, intAttribs);
-            if (!images[i]) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "eglCreateImageKHR() Failed: %d", eglGetError());
-                goto create_image_fail;
-            }
-        }
-
-        ++count;
+    count = m_EglImageFactory.exportVAImages(frame, &m_PrimeDescriptor, dpy, images);
+    if (count < 0) {
+        goto fail;
     }
+
     return count;
 
-create_image_fail:
-    m_PrimeDescriptor.num_layers = count;
-sync_fail:
-    freeEGLImages(dpy, images);
+fail:
+    for (size_t i = 0; i < m_PrimeDescriptor.num_objects; ++i) {
+        close(m_PrimeDescriptor.objects[i].fd);
+    }
+    m_PrimeDescriptor.num_layers = 0;
+    m_PrimeDescriptor.num_objects = 0;
     return -1;
 }
 
 void
 VAAPIRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    for (size_t i = 0; i < m_PrimeDescriptor.num_layers; ++i) {
-        if (m_eglDestroyImage) {
-            m_eglDestroyImage(dpy, images[i]);
-        }
-        else {
-            m_eglDestroyImageKHR(dpy, images[i]);
-        }
-    }
+    m_EglImageFactory.freeEGLImages(dpy, images);
     for (size_t i = 0; i < m_PrimeDescriptor.num_objects; ++i) {
         close(m_PrimeDescriptor.objects[i].fd);
     }

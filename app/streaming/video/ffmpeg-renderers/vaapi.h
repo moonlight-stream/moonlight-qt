@@ -14,6 +14,10 @@
 #undef HAVE_LIBVA_WAYLAND
 #endif
 
+#ifdef HAVE_EGL
+#include "eglimagefactory.h"
+#endif
+
 extern "C" {
 #include <va/va.h>
 #ifdef HAVE_LIBVA_X11
@@ -93,10 +97,6 @@ private:
 
 #ifdef HAVE_EGL
     VADRMPRIMESurfaceDescriptor m_PrimeDescriptor;
-    bool m_EGLExtDmaBuf;
-    PFNEGLCREATEIMAGEPROC m_eglCreateImage;
-    PFNEGLDESTROYIMAGEPROC m_eglDestroyImage;
-    PFNEGLCREATEIMAGEKHRPROC m_eglCreateImageKHR;
-    PFNEGLDESTROYIMAGEKHRPROC m_eglDestroyImageKHR;
+    EglImageFactory m_EglImageFactory;
 #endif
 };

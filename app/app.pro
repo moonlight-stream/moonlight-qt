@@ -314,8 +314,11 @@ config_EGL {
     DEFINES += HAVE_EGL
     SOURCES += \
         streaming/video/ffmpeg-renderers/eglvid.cpp \
-        streaming/video/ffmpeg-renderers/egl_extensions.cpp
-    HEADERS += streaming/video/ffmpeg-renderers/eglvid.h
+        streaming/video/ffmpeg-renderers/egl_extensions.cpp \
+        streaming/video/ffmpeg-renderers/eglimagefactory.cpp
+    HEADERS += \
+        streaming/video/ffmpeg-renderers/eglvid.h \
+        streaming/video/ffmpeg-renderers/eglimagefactory.h
 }
 config_SL {
     message(Steam Link build configuration selected)

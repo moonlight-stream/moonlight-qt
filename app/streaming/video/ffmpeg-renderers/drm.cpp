@@ -83,15 +83,10 @@ DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
       m_HdrOutputMetadataBlobId(0),
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
-{
 #ifdef HAVE_EGL
-    m_EGLExtDmaBuf = false;
-    m_eglCreateImage = nullptr;
-    m_eglCreateImageKHR = nullptr;
-    m_eglDestroyImage = nullptr;
-    m_eglDestroyImageKHR = nullptr;
+    , m_EglImageFactory(this)
 #endif
-
+{
     SDL_zero(m_SwFrame);
 }
 
@@ -1153,223 +1148,20 @@ AVPixelFormat DrmRenderer::getEGLImagePixelFormat() {
     return AV_PIX_FMT_DRM_PRIME;
 }
 
-bool DrmRenderer::initializeEGL(EGLDisplay,
+bool DrmRenderer::initializeEGL(EGLDisplay display,
                                 const EGLExtensions &ext) {
-    if (!ext.isSupported("EGL_EXT_image_dma_buf_import")) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "DRM-EGL: DMABUF unsupported");
-        return false;
-    }
-
-    m_EGLExtDmaBuf = ext.isSupported("EGL_EXT_image_dma_buf_import_modifiers");
-
-    // NB: eglCreateImage() and eglCreateImageKHR() have slightly different definitions
-    m_eglCreateImage = (typeof(m_eglCreateImage))eglGetProcAddress("eglCreateImage");
-    m_eglCreateImageKHR = (typeof(m_eglCreateImageKHR))eglGetProcAddress("eglCreateImageKHR");
-    m_eglDestroyImage = (typeof(m_eglDestroyImage))eglGetProcAddress("eglDestroyImage");
-    m_eglDestroyImageKHR = (typeof(m_eglDestroyImageKHR))eglGetProcAddress("eglDestroyImageKHR");
-
-    if (!(m_eglCreateImage && m_eglDestroyImage) &&
-            !(m_eglCreateImageKHR && m_eglDestroyImageKHR)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Missing eglCreateImage()/eglDestroyImage() in EGL driver");
-        return false;
-    }
-
-    return true;
+    return m_EglImageFactory.initializeEGL(display, ext);
 }
 
 ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
                                      EGLImage images[EGL_MAX_PLANES]) {
     AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
 
-    memset(images, 0, sizeof(EGLImage) * EGL_MAX_PLANES);
-
-    // DRM requires composed layers rather than separate layers per plane
-    SDL_assert(drmFrame->nb_layers == 1);
-
-    // Max 33 attributes (1 key + 1 value for each)
-    const int MAX_ATTRIB_COUNT = 33 * 2;
-    EGLAttrib attribs[MAX_ATTRIB_COUNT] = {
-        EGL_LINUX_DRM_FOURCC_EXT, (EGLAttrib)drmFrame->layers[0].format,
-        EGL_WIDTH, frame->width,
-        EGL_HEIGHT, frame->height,
-        EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
-    };
-    int attribIndex = 8;
-
-    for (int i = 0; i < drmFrame->layers[0].nb_planes; ++i) {
-        const auto &plane = drmFrame->layers[0].planes[i];
-        const auto &object = drmFrame->objects[plane.object_index];
-
-        switch (i) {
-        case 0:
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_FD_EXT;
-            attribs[attribIndex++] = object.fd;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_OFFSET_EXT;
-            attribs[attribIndex++] = plane.offset;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_PITCH_EXT;
-            attribs[attribIndex++] = plane.pitch;
-            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_LO_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE0_MODIFIER_HI_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
-            }
-            break;
-
-        case 1:
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_FD_EXT;
-            attribs[attribIndex++] = object.fd;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_OFFSET_EXT;
-            attribs[attribIndex++] = plane.offset;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_PITCH_EXT;
-            attribs[attribIndex++] = plane.pitch;
-            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_LO_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE1_MODIFIER_HI_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
-            }
-            break;
-
-        case 2:
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_FD_EXT;
-            attribs[attribIndex++] = object.fd;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_OFFSET_EXT;
-            attribs[attribIndex++] = plane.offset;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_PITCH_EXT;
-            attribs[attribIndex++] = plane.pitch;
-            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_LO_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE2_MODIFIER_HI_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
-            }
-            break;
-
-        case 3:
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_FD_EXT;
-            attribs[attribIndex++] = object.fd;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_OFFSET_EXT;
-            attribs[attribIndex++] = plane.offset;
-            attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_PITCH_EXT;
-            attribs[attribIndex++] = plane.pitch;
-            if (m_EGLExtDmaBuf && object.format_modifier != DRM_FORMAT_MOD_INVALID) {
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_LO_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier & 0xFFFFFFFF);
-                attribs[attribIndex++] = EGL_DMA_BUF_PLANE3_MODIFIER_HI_EXT;
-                attribs[attribIndex++] = (EGLint)(object.format_modifier >> 32);
-            }
-            break;
-
-        default:
-            Q_UNREACHABLE();
-        }
-    }
-
-    // Add colorspace metadata
-    switch (getFrameColorspace(frame)) {
-    case COLORSPACE_REC_601:
-        attribs[attribIndex++] = EGL_YUV_COLOR_SPACE_HINT_EXT;
-        attribs[attribIndex++] = EGL_ITU_REC601_EXT;
-        break;
-    case COLORSPACE_REC_709:
-        attribs[attribIndex++] = EGL_YUV_COLOR_SPACE_HINT_EXT;
-        attribs[attribIndex++] = EGL_ITU_REC709_EXT;
-        break;
-    case COLORSPACE_REC_2020:
-        attribs[attribIndex++] = EGL_YUV_COLOR_SPACE_HINT_EXT;
-        attribs[attribIndex++] = EGL_ITU_REC2020_EXT;
-        break;
-    }
-
-    // Add color range metadata
-    attribs[attribIndex++] = EGL_SAMPLE_RANGE_HINT_EXT;
-    attribs[attribIndex++] = isFrameFullRange(frame) ? EGL_YUV_FULL_RANGE_EXT : EGL_YUV_NARROW_RANGE_EXT;
-
-    // Add chroma siting metadata
-    switch (frame->chroma_location) {
-    case AVCHROMA_LOC_LEFT:
-    case AVCHROMA_LOC_TOPLEFT:
-        attribs[attribIndex++] = EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT;
-        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_EXT;
-        break;
-
-    case AVCHROMA_LOC_CENTER:
-    case AVCHROMA_LOC_TOP:
-        attribs[attribIndex++] = EGL_YUV_CHROMA_HORIZONTAL_SITING_HINT_EXT;
-        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_5_EXT;
-        break;
-    default:
-        break;
-    }
-    switch (frame->chroma_location) {
-    case AVCHROMA_LOC_TOPLEFT:
-    case AVCHROMA_LOC_TOP:
-        attribs[attribIndex++] = EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT;
-        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_EXT;
-        break;
-
-    case AVCHROMA_LOC_LEFT:
-    case AVCHROMA_LOC_CENTER:
-        attribs[attribIndex++] = EGL_YUV_CHROMA_VERTICAL_SITING_HINT_EXT;
-        attribs[attribIndex++] = EGL_YUV_CHROMA_SITING_0_5_EXT;
-        break;
-    default:
-        break;
-    }
-
-    // Terminate the attribute list
-    attribs[attribIndex++] = EGL_NONE;
-    SDL_assert(attribIndex <= MAX_ATTRIB_COUNT);
-
-    // Our EGLImages are non-planar, so we only populate the first entry
-    if (m_eglCreateImage) {
-        images[0] = m_eglCreateImage(dpy, EGL_NO_CONTEXT,
-                                     EGL_LINUX_DMA_BUF_EXT,
-                                     nullptr, attribs);
-        if (!images[0]) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "eglCreateImage() Failed: %d", eglGetError());
-            goto fail;
-        }
-    }
-    else {
-        // Cast the EGLAttrib array elements to EGLint for the KHR extension
-        EGLint intAttribs[MAX_ATTRIB_COUNT];
-        for (int i = 0; i < MAX_ATTRIB_COUNT; i++) {
-            intAttribs[i] = (EGLint)attribs[i];
-        }
-
-        images[0] = m_eglCreateImageKHR(dpy, EGL_NO_CONTEXT,
-                                        EGL_LINUX_DMA_BUF_EXT,
-                                        nullptr, intAttribs);
-        if (!images[0]) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "eglCreateImageKHR() Failed: %d", eglGetError());
-            goto fail;
-        }
-    }
-
-    return 1;
-
-fail:
-    freeEGLImages(dpy, images);
-    return -1;
+    return m_EglImageFactory.exportDRMImages(frame, drmFrame, dpy, images);
 }
 
 void DrmRenderer::freeEGLImages(EGLDisplay dpy, EGLImage images[EGL_MAX_PLANES]) {
-    if (m_eglDestroyImage) {
-        m_eglDestroyImage(dpy, images[0]);
-    }
-    else {
-        m_eglDestroyImageKHR(dpy, images[0]);
-    }
-
-    // Our EGLImages are non-planar
-    SDL_assert(images[1] == 0);
-    SDL_assert(images[2] == 0);
+    m_EglImageFactory.freeEGLImages(dpy, images);
 }
 
 #endif

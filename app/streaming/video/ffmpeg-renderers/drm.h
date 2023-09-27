@@ -3,6 +3,10 @@
 #include "renderer.h"
 #include "swframemapper.h"
 
+#ifdef HAVE_EGL
+#include "eglimagefactory.h"
+#endif
+
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
@@ -105,11 +109,7 @@ private:
     } m_SwFrame[k_SwFrameCount];
 
 #ifdef HAVE_EGL
-    bool m_EGLExtDmaBuf;
-    PFNEGLCREATEIMAGEPROC m_eglCreateImage;
-    PFNEGLDESTROYIMAGEPROC m_eglDestroyImage;
-    PFNEGLCREATEIMAGEKHRPROC m_eglCreateImageKHR;
-    PFNEGLDESTROYIMAGEKHRPROC m_eglDestroyImageKHR;
+    EglImageFactory m_EglImageFactory;
 #endif
 };
 
