@@ -422,7 +422,10 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
-            if ((plane->possible_crtcs & (1 << crtcIndex)) && plane->crtc_id == 0) {
+            // We don't check plane->crtc_id here because we want to be able to reuse the primary plane
+            // that may owned by Qt and in use on a CRTC prior to us taking over DRM master. When we give
+            // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
+            if ((plane->possible_crtcs & (1 << crtcIndex))) {
                 drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
                 if (props != nullptr) {
                     for (uint32_t j = 0; j < props->count_props; j++) {
