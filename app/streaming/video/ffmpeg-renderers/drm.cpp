@@ -76,6 +76,7 @@ DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
       m_CurrentFbId(0),
       m_LastFullRange(false),
       m_LastColorSpace(-1),
+      m_Plane(nullptr),
       m_ColorEncodingProp(nullptr),
       m_ColorRangeProp(nullptr),
       m_HdrOutputMetadataProp(nullptr),
@@ -133,6 +134,10 @@ DrmRenderer::~DrmRenderer()
 
     if (m_ColorspaceProp != nullptr) {
         drmModeFreeProperty(m_ColorspaceProp);
+    }
+
+    if (m_Plane != nullptr) {
+        drmModeFreePlane(m_Plane);
     }
 
     if (m_HwContext != nullptr) {
@@ -452,7 +457,13 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 }
             }
 
-            drmModeFreePlane(plane);
+            // Store the plane details for use during render format testing
+            if (m_PlaneId != 0) {
+                m_Plane = plane;
+            }
+            else {
+                drmModeFreePlane(plane);
+            }
         }
     }
 
@@ -855,7 +866,7 @@ Exit:
     return ret;
 }
 
-bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId)
+bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode)
 {
     AVDRMFrameDescriptor mappedFrame;
     AVDRMFrameDescriptor* drmFrame;
@@ -933,12 +944,40 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId)
 
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmModeAddFB2WithModifiers() failed: %d",
+                     "drmModeAddFB2[WithModifiers]() failed: %d",
                      errno);
         return false;
     }
 
-    return true;
+    if (testMode) {
+        // Check if plane can actually be imported
+        for (uint32_t i = 0; i < m_Plane->count_formats; i++) {
+            if (drmFrame->layers[0].format == m_Plane->formats[i]) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Selected DRM plane supports chosen decoding format: %08x",
+                            drmFrame->layers[0].format);
+                return true;
+            }
+        }
+
+        // TODO: We can also check the modifier support using the IN_FORMATS property,
+        // but checking format alone is probably enough for real world cases since we're
+        // either getting linear buffers from software mapping or DMA-BUFs from the
+        // hardware decoder.
+        //
+        // Hopefully no actual hardware vendors are dumb enough to ship display hardware
+        // or drivers that lack support for the format modifiers required by their own
+        // video decoders.
+
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Selected DRM plane doesn't support chosen decoding format: %08x",
+                     drmFrame->layers[0].format);
+        drmModeRmFB(m_DrmFd, *newFbId);
+        return false;
+    }
+    else {
+        return true;
+    }
 }
 
 void DrmRenderer::renderFrame(AVFrame* frame)
@@ -958,7 +997,7 @@ void DrmRenderer::renderFrame(AVFrame* frame)
     uint32_t lastFbId = m_CurrentFbId;
 
     // Register a frame buffer object for this frame
-    if (!addFbForFrame(frame, &m_CurrentFbId)) {
+    if (!addFbForFrame(frame, &m_CurrentFbId, false)) {
         m_CurrentFbId = lastFbId;
         return;
     }
@@ -1078,16 +1117,23 @@ bool DrmRenderer::needsTestFrame()
 }
 
 bool DrmRenderer::testRenderFrame(AVFrame* frame) {
-   uint32_t fbId;
+    uint32_t fbId;
 
-   // Ensure we can export DRM PRIME frames (if applicable) and
-   // add a FB object with the provided DRM format.
-   if (!addFbForFrame(frame, &fbId)) {
-       return false;
-   }
+    // If we don't even have a plane, we certainly can't render
+    if (!m_Plane) {
+        return false;
+    }
 
-   drmModeRmFB(m_DrmFd, fbId);
-   return true;
+    // Ensure we can export DRM PRIME frames (if applicable) and
+    // add a FB object with the provided DRM format. Ask for the
+    // extended validation to ensure the chosen plane supports
+    // the format too.
+    if (!addFbForFrame(frame, &fbId, true)) {
+        return false;
+    }
+
+    drmModeRmFB(m_DrmFd, fbId);
+    return true;
 }
 
 bool DrmRenderer::isDirectRenderingSupported()

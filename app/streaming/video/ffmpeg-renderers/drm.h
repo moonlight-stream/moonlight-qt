@@ -73,7 +73,7 @@ private:
     const char* getDrmColorEncodingValue(AVFrame* frame);
     const char* getDrmColorRangeValue(AVFrame* frame);
     bool mapSoftwareFrame(AVFrame* frame, AVDRMFrameDescriptor* mappedFrame);
-    bool addFbForFrame(AVFrame* frame, uint32_t* newFbId);
+    bool addFbForFrame(AVFrame* frame, uint32_t* newFbId, bool testMode);
 
     IFFmpegRenderer* m_BackendRenderer;
     bool m_DrmPrimeBackend;
@@ -90,6 +90,7 @@ private:
     uint32_t m_CurrentFbId;
     bool m_LastFullRange;
     int m_LastColorSpace;
+    drmModePlanePtr m_Plane;
     drmModePropertyPtr m_ColorEncodingProp;
     drmModePropertyPtr m_ColorRangeProp;
     drmModePropertyPtr m_HdrOutputMetadataProp;
