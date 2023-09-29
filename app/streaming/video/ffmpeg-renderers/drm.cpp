@@ -1158,8 +1158,13 @@ bool DrmRenderer::initializeEGL(EGLDisplay display,
 
 ssize_t DrmRenderer::exportEGLImages(AVFrame *frame, EGLDisplay dpy,
                                      EGLImage images[EGL_MAX_PLANES]) {
-    AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
+    if (frame->format != AV_PIX_FMT_DRM_PRIME) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "EGLImage export requires hardware-backed frames");
+        return -1;
+    }
 
+    AVDRMFrameDescriptor* drmFrame = (AVDRMFrameDescriptor*)frame->data[0];
     return m_EglImageFactory.exportDRMImages(frame, drmFrame, dpy, images);
 }
 
