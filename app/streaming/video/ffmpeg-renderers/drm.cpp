@@ -1146,7 +1146,11 @@ int DrmRenderer::getDecoderColorspace()
     // Some DRM implementations (VisionFive) don't support BT.601 color encoding,
     // so let's default to BT.709, which all drivers that support COLOR_ENCODING
     // seem to support.
-    return COLORSPACE_REC_709;
+    //
+    // If COLOR_ENCODING is not supported, we'll use BT.601 which appears to be
+    // the default on drivers that don't support COLOR_ENCODING, such as Rockchip
+    // per https://github.com/torvalds/linux/commit/1c21aa8f2b687cebfeff9736d60303a14bf32768
+    return m_ColorEncodingProp ? COLORSPACE_REC_709 : COLORSPACE_REC_601;
 }
 
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
