@@ -28,7 +28,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Lancer cette application immédiatement lorsque l&apos;hôte est sélectionné, en ignorant la grille d&apos;applications.</translation>
+        <translation>Lancer cette application immédiatement lorsque l&apos;hôte est sélectionné, sans passer par la grille d&apos;applications.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
