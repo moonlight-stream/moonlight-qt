@@ -27,6 +27,9 @@ public:
     // Must be called before any QAbstractListModel functions
     Q_INVOKABLE void initialize(ComputerManager* computerManager, int computerIndex, bool showHiddenGames);
 
+    Q_INVOKABLE QString getComputerName();
+    Q_INVOKABLE QString getComputerUuid();
+
     Q_INVOKABLE Session* createSessionForApp(int appIndex);
 
     Q_INVOKABLE int getDirectLaunchAppIndex();

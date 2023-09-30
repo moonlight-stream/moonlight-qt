@@ -335,8 +335,26 @@ CenteredGridView {
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
                 }
+                NavigableMenuItem {
+                    parentMenu: appContextMenu
+                    text: qsTr("Add as Hotkey")
+                    onTriggered: {
+                        var computerUuid = appModel.getComputerUuid()
+                        var computerName = appModel.getComputerName()
+
+                        var appid = model.appid
+                        var appName = model.name
+
+                        debugDialog.text = "TODO: computerUuid=" + computerUuid + ", computerName=" + computerName + ", appid=" + appid + ", appName=" + appName
+                        debugDialog.open()
+                    }
+                }
             }
         }
+    }
+
+    ErrorMessageDialog {
+        id: debugDialog
     }
 
     NavigableMessageDialog {
