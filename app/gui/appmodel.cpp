@@ -21,6 +21,16 @@ void AppModel::initialize(ComputerManager* computerManager, int computerIndex, b
     updateAppList(m_Computer->appList);
 }
 
+QString AppModel::getComputerName()
+{
+    return m_Computer->name;
+}
+
+QString AppModel::getComputerUuid()
+{
+    return m_Computer->uuid;
+}
+
 int AppModel::getRunningAppId()
 {
     return m_CurrentGameId;
