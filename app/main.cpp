@@ -660,7 +660,7 @@ int main(int argc, char *argv[])
 
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::NormalStartRequested:
-        initialView = "qrc:/gui/PcView.qml";
+        initialView = QString("qrc:/gui/%1.qml").arg(prefs.initialView);
         break;
     case GlobalCommandLineParser::StreamRequested:
         {

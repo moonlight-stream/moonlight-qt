@@ -21,7 +21,7 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 600
+    height: 860
 
     // Override the background color to Material 2 colors for Qt 6.5+
     // in order to improve contrast between GFE's placeholder box art
@@ -363,6 +363,83 @@ ApplicationWindow {
             }
 
             NavigableToolButton {
+                id: hotkeysButton
+
+                visible: qmltypeof(stackView.currentItem, "PcView")
+
+                iconSource: "qrc:/res/keyboard.svg"
+
+                onClicked: {
+                    StreamingPreferences.initialView = "HotkeysView"
+                    StreamingPreferences.save()
+                    stackView.replace("qrc:/gui/HotkeysView.qml")
+                }
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+
+                Shortcut {
+                    id: hotkeysShortcut
+                    sequence: "Ctrl+Alt+Shift+H"
+                    onActivated: hotkeysButton.clicked()
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Hotkeys") + (hotkeysShortcut.nativeText ? (" ("+hotkeysShortcut.nativeText+")") : "")
+            }
+
+            NavigableToolButton {
+                id: pcsButton
+
+                visible: qmltypeof(stackView.currentItem, "HotkeysView")
+
+                iconSource: "qrc:/res/desktop_windows-48px.svg"
+
+                onClicked: {
+                    StreamingPreferences.initialView = "PcView"
+                    StreamingPreferences.save()
+                    stackView.replace("qrc:/gui/PcView.qml")
+                }
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+
+                Shortcut {
+                    id: pcsShortcut
+                    sequence: "Ctrl+Alt+Shift+P"
+                    onActivated: pcsButton.clicked()
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("PCs") + (pcsShortcut.nativeText ? (" ("+pcsShortcut.nativeText+")") : "")
+            }
+
+
+            NavigableToolButton {
+                // TODO: Implement gamepad mapping then unhide this button
+                visible: false
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Gamepad Mapper")
+
+                iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
+
+                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "GamepadMapper")
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+            }
+
+            NavigableToolButton {
                 id: helpButton
                 visible: SystemProperties.hasBrowser
 
@@ -381,24 +458,6 @@ ApplicationWindow {
 
                 // TODO need to make sure browser is brought to foreground.
                 onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
-            }
-
-            NavigableToolButton {
-                // TODO: Implement gamepad mapping then unhide this button
-                visible: false
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: qsTr("Gamepad Mapper")
-
-                iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
-
-                onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "GamepadMapper")
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
