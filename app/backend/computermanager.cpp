@@ -257,6 +257,7 @@ void DelayedFlushThread::run() {
             for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
                 // Copy the current state of the NvComputer to allow us to check later if we need
                 // to serialize it again when attribute updates occur.
+                QReadLocker computerLock(&computer->lock);
                 m_ComputerManager->m_LastSerializedHosts[computer->uuid] = *computer;
             }
         }
@@ -446,8 +447,10 @@ void ComputerManager::saveHost(NvComputer *computer)
 {
     // If no serializable properties changed, don't bother saving hosts
     QMutexLocker lock(&m_DelayedFlushMutex);
+    QReadLocker computerLock(&computer->lock);
     if (!m_LastSerializedHosts.value(computer->uuid).isEqualSerialized(*computer)) {
         // Queue a request for a delayed flush to QSettings outside of the lock
+        computerLock.unlock();
         lock.unlock();
         saveHosts();
     }

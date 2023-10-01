@@ -267,7 +267,7 @@ private:
     QVector<MdnsPendingComputer*> m_PendingResolution;
     CompatFetcher m_CompatFetcher;
     DelayedFlushThread* m_DelayedFlushThread;
-    QMutex m_DelayedFlushMutex;
+    QMutex m_DelayedFlushMutex; // Lock ordering: Must never be acquired while holding NvComputer lock
     QWaitCondition m_DelayedFlushCondition;
     bool m_NeedsDelayedFlush;
 };

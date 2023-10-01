@@ -34,8 +34,10 @@ private:
 public:
     NvComputer() = default;
 
-    NvComputer(const NvComputer& other) = default;
+    // Caller is responsible for synchronizing read access to the other host
+    NvComputer(const NvComputer&) = default;
 
+    // Caller is responsible for synchronizing read access to the other host
     NvComputer& operator=(const NvComputer &) = default;
 
     explicit NvComputer(NvHTTP& http, QString serverInfo);
@@ -67,6 +69,7 @@ public:
     void
     serialize(QSettings& settings, bool serializeApps) const;
 
+    // Caller is responsible for synchronizing read access to both hosts
     bool
     isEqualSerialized(const NvComputer& that) const;
 
