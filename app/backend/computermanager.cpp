@@ -273,7 +273,7 @@ void DelayedFlushThread::run() {
                 int i = 0;
                 for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
                     settings.setArrayIndex(i++);
-                    computer->serialize(settings);
+                    computer->serialize(settings, false);
                 }
             }
             settings.endArray();
@@ -286,7 +286,7 @@ void DelayedFlushThread::run() {
                 int i = 0;
                 for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
                     settings.setArrayIndex(i++);
-                    computer->serialize(settings);
+                    computer->serialize(settings, true);
                 }
             }
             settings.endArray();

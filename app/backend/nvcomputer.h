@@ -49,7 +49,7 @@ public:
     uniqueAddresses() const;
 
     void
-    serialize(QSettings& settings) const;
+    serialize(QSettings& settings, bool serializeApps) const;
 
     enum PairState
     {

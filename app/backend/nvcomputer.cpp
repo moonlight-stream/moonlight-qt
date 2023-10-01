@@ -74,7 +74,7 @@ void NvComputer::setRemoteAddress(QHostAddress address)
     this->remoteAddress = NvAddress(address, this->externalPort);
 }
 
-void NvComputer::serialize(QSettings& settings) const
+void NvComputer::serialize(QSettings& settings, bool serializeApps) const
 {
     QReadLocker lock(&this->lock);
 
