@@ -94,7 +94,7 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
     settings.setValue(SER_NVIDIASOFTWARE, isNvidiaServerSoftware);
 
     // Avoid deleting an existing applist if we couldn't get one
-    if (!appList.isEmpty()) {
+    if (!appList.isEmpty() && serializeApps) {
         settings.remove(SER_APPLIST);
         settings.beginWriteArray(SER_APPLIST);
         for (int i = 0; i < appList.count(); i++) {
@@ -103,6 +103,21 @@ void NvComputer::serialize(QSettings& settings, bool serializeApps) const
         }
         settings.endArray();
     }
+}
+
+bool NvComputer::isEqualSerialized(const NvComputer &that) const
+{
+    return this->name == that.name &&
+           this->hasCustomName == that.hasCustomName &&
+           this->uuid == that.uuid &&
+           this->macAddress == that.macAddress &&
+           this->localAddress == that.localAddress &&
+           this->remoteAddress == that.remoteAddress &&
+           this->ipv6Address == that.ipv6Address &&
+           this->manualAddress == that.manualAddress &&
+           this->serverCert == that.serverCert &&
+           this->isNvidiaServerSoftware == that.isNvidiaServerSoftware &&
+           this->appList == that.appList;
 }
 
 void NvComputer::sortAppList()

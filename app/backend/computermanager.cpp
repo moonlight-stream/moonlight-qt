@@ -167,6 +167,7 @@ ComputerManager::ComputerManager(QObject *parent)
         settings.setArrayIndex(i);
         NvComputer* computer = new NvComputer(settings);
         m_KnownHosts[computer->uuid] = computer;
+        m_LastSerializedHosts[computer->uuid] = *computer;
     }
     settings.endArray();
 
@@ -250,6 +251,14 @@ void DelayedFlushThread::run() {
 
             // Reset the delayed flush flag to ensure any racing saveHosts() call will set it again
             m_ComputerManager->m_NeedsDelayedFlush = false;
+
+            // Update the last serialized hosts map under the delayed flush mutex
+            m_ComputerManager->m_LastSerializedHosts.clear();
+            for (const NvComputer* computer : m_ComputerManager->m_KnownHosts) {
+                // Copy the current state of the NvComputer to allow us to check later if we need
+                // to serialize it again when attribute updates occur.
+                m_ComputerManager->m_LastSerializedHosts[computer->uuid] = *computer;
+            }
         }
 
         // Perform the flush
@@ -433,6 +442,17 @@ void ComputerManager::handleMdnsServiceResolved(MdnsPendingComputer* computer,
     computer->deleteLater();
 }
 
+void ComputerManager::saveHost(NvComputer *computer)
+{
+    // If no serializable properties changed, don't bother saving hosts
+    QMutexLocker lock(&m_DelayedFlushMutex);
+    if (!m_LastSerializedHosts.value(computer->uuid).isEqualSerialized(*computer)) {
+        // Queue a request for a delayed flush to QSettings outside of the lock
+        lock.unlock();
+        saveHosts();
+    }
+}
+
 void ComputerManager::handleComputerStateChanged(NvComputer* computer)
 {
     emit computerStateChanged(computer);
@@ -442,8 +462,8 @@ void ComputerManager::handleComputerStateChanged(NvComputer* computer)
         emit quitAppCompleted(QVariant());
     }
 
-    // Save updated hosts to QSettings
-    saveHosts();
+    // Save updates to this host
+    saveHost(computer);
 }
 
 QVector<NvComputer*> ComputerManager::getComputers()
@@ -479,7 +499,7 @@ public:
             m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
         }
 
-        // Persist the new host list
+        // Persist the new host list with this computer deleted
         m_ComputerManager->saveHosts();
 
         // Delete the polling entry first. This will stop all polling threads too.
@@ -520,9 +540,6 @@ void ComputerManager::renameHost(NvComputer* computer, QString name)
 
 void ComputerManager::clientSideAttributeUpdated(NvComputer* computer)
 {
-    // Persist the change
-    saveHosts();
-
     // Notify the UI of the state change
     handleComputerStateChanged(computer);
 }
@@ -580,7 +597,7 @@ private:
                break;
            case NvPairingManager::PairState::PAIRED:
                // Persist the newly pinned server certificate for this host
-               m_ComputerManager->saveHosts();
+               m_ComputerManager->saveHost(m_Computer);
 
                emit pairingCompleted(m_Computer, nullptr);
                break;

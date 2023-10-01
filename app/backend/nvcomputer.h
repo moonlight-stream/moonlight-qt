@@ -8,6 +8,16 @@
 #include <QSettings>
 #include <QRunnable>
 
+class CopySafeReadWriteLock : public QReadWriteLock
+{
+public:
+    CopySafeReadWriteLock() = default;
+
+    // Don't actually copy the QReadWriteLock
+    CopySafeReadWriteLock(const CopySafeReadWriteLock&) {}
+    CopySafeReadWriteLock& operator=(const CopySafeReadWriteLock &) { return *this; }
+};
+
 class NvComputer
 {
     friend class PcMonitorThread;
@@ -22,6 +32,12 @@ private:
     bool pendingQuit;
 
 public:
+    NvComputer() = default;
+
+    NvComputer(const NvComputer& other) = default;
+
+    NvComputer& operator=(const NvComputer &) = default;
+
     explicit NvComputer(NvHTTP& http, QString serverInfo);
 
     explicit NvComputer(QSettings& settings);
@@ -50,6 +66,9 @@ public:
 
     void
     serialize(QSettings& settings, bool serializeApps) const;
+
+    bool
+    isEqualSerialized(const NvComputer& that) const;
 
     enum PairState
     {
@@ -91,9 +110,10 @@ public:
     QSslCertificate serverCert;
     QVector<NvApp> appList;
     bool isNvidiaServerSoftware;
+    // Remember to update isEqualSerialized() when adding fields here!
 
     // Synchronization
-    mutable QReadWriteLock lock;
+    mutable CopySafeReadWriteLock lock;
 
 private:
     uint16_t externalPort;

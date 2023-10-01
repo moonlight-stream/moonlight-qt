@@ -251,6 +251,8 @@ private slots:
 private:
     void saveHosts();
 
+    void saveHost(NvComputer* computer);
+
     QHostAddress getBestGlobalAddressV6(QVector<QHostAddress>& addresses);
 
     void startPollingComputer(NvComputer* computer);
@@ -259,6 +261,7 @@ private:
     QReadWriteLock m_Lock;
     QMap<QString, NvComputer*> m_KnownHosts;
     QMap<QString, ComputerPollingEntry*> m_PollEntries;
+    QHash<QString, NvComputer> m_LastSerializedHosts; // Protected by m_DelayedFlushMutex
     QSharedPointer<QMdnsEngine::Server> m_MdnsServer;
     QMdnsEngine::Browser* m_MdnsBrowser;
     QVector<MdnsPendingComputer*> m_PendingResolution;
