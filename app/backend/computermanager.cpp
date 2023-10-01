@@ -15,9 +15,6 @@
 #define SER_HOSTS "hosts"
 #define SER_HOSTS_BACKUP "hostsbackup"
 
-// We will wait up to this length of time to batch delayed flushes
-#define DELAYED_FLUSH_TIMEOUT_MS 10000
-
 class PcMonitorThread : public QThread
 {
     Q_OBJECT
@@ -152,7 +149,7 @@ ComputerManager::ComputerManager(QObject *parent)
       m_PollingRef(0),
       m_MdnsBrowser(nullptr),
       m_CompatFetcher(nullptr),
-      m_NeedsFlush(FlushType::None)
+      m_NeedsDelayedFlush(false)
 {
     QSettings settings;
 
@@ -193,17 +190,16 @@ ComputerManager::~ComputerManager()
     // Stop the delayed flush thread before acquiring the lock in write mode
     // to avoid deadlocking with a flush that needs the lock in read mode.
     {
-        // Wake the delayed flush thread for an immediate flush
+        // Wake the delayed flush thread
         m_DelayedFlushThread->requestInterruption();
         m_DelayedFlushCondition.wakeOne();
-        m_ImmediateFlushCondition.wakeOne();
 
         // Wait for it to terminate (and finish any pending flush)
         m_DelayedFlushThread->wait();
         delete m_DelayedFlushThread;
 
         // Delayed flushes should have completed by now
-        Q_ASSERT(m_NeedsFlush == FlushType::None);
+        Q_ASSERT(!m_NeedsDelayedFlush);
     }
 
     QWriteLocker lock(&m_Lock);
@@ -241,25 +237,19 @@ void DelayedFlushThread::run() {
         {
             QMutexLocker locker(&m_ComputerManager->m_DelayedFlushMutex);
 
-            // Wait for any flush to be pending
-            while (!QThread::currentThread()->isInterruptionRequested() && m_ComputerManager->m_NeedsFlush == ComputerManager::FlushType::None) {
+            while (!QThread::currentThread()->isInterruptionRequested() && !m_ComputerManager->m_NeedsDelayedFlush) {
                 m_ComputerManager->m_DelayedFlushCondition.wait(&m_ComputerManager->m_DelayedFlushMutex);
             }
 
             // Bail without flushing if we woke up for an interruption alone.
             // If we have both an interruption and a flush request, do the flush.
-            if (m_ComputerManager->m_NeedsFlush == ComputerManager::FlushType::None) {
+            if (!m_ComputerManager->m_NeedsDelayedFlush) {
                 Q_ASSERT(QThread::currentThread()->isInterruptionRequested());
                 break;
             }
 
-            // If this is a delayed flush and we're not being interrupted, wait on the immediate flush condition (up to the delayed flush timeout).
-            while (!QThread::currentThread()->isInterruptionRequested() &&
-                   m_ComputerManager->m_NeedsFlush != ComputerManager::FlushType::Immediate &&
-                   m_ComputerManager->m_ImmediateFlushCondition.wait(&m_ComputerManager->m_DelayedFlushMutex, DELAYED_FLUSH_TIMEOUT_MS));
-
-            // Reset the flush condition
-            m_ComputerManager->m_NeedsFlush = ComputerManager::FlushType::None;
+            // Reset the delayed flush flag to ensure any racing saveHosts() call will set it again
+            m_ComputerManager->m_NeedsDelayedFlush = false;
         }
 
         // Perform the flush
@@ -297,24 +287,15 @@ void DelayedFlushThread::run() {
     }
 }
 
-void ComputerManager::saveHosts(bool immediate)
+void ComputerManager::saveHosts()
 {
     Q_ASSERT(m_DelayedFlushThread != nullptr && m_DelayedFlushThread->isRunning());
 
     // Punt to a worker thread because QSettings on macOS can take ages (> 500 ms)
     // to persist our host list to disk (especially when a host has a bunch of apps).
     QMutexLocker locker(&m_DelayedFlushMutex);
-    if (m_NeedsFlush == FlushType::None) {
-        m_NeedsFlush = immediate ? FlushType::Immediate : FlushType::Delayed;
-    }
-    else if (m_NeedsFlush == FlushType::Delayed && immediate) {
-        // Upgrade a delayed flush to an immediate flush if an immediate request comes in
-        m_NeedsFlush = FlushType::Immediate;
-    }
+    m_NeedsDelayedFlush = true;
     m_DelayedFlushCondition.wakeOne();
-    if (immediate) {
-        m_ImmediateFlushCondition.wakeOne();
-    }
 }
 
 QHostAddress ComputerManager::getBestGlobalAddressV6(QVector<QHostAddress> &addresses)
@@ -461,8 +442,8 @@ void ComputerManager::handleComputerStateChanged(NvComputer* computer)
         emit quitAppCompleted(QVariant());
     }
 
-    // Save updated hosts to QSettings (delayed and batchable)
-    saveHosts(false);
+    // Save updated hosts to QSettings
+    saveHosts();
 }
 
 QVector<NvComputer*> ComputerManager::getComputers()
@@ -498,8 +479,8 @@ public:
             m_ComputerManager->m_KnownHosts.remove(m_Computer->uuid);
         }
 
-        // Persist the new host list immediately
-        m_ComputerManager->saveHosts(true);
+        // Persist the new host list
+        m_ComputerManager->saveHosts();
 
         // Delete the polling entry first. This will stop all polling threads too.
         delete pollingEntry;
@@ -539,6 +520,9 @@ void ComputerManager::renameHost(NvComputer* computer, QString name)
 
 void ComputerManager::clientSideAttributeUpdated(NvComputer* computer)
 {
+    // Persist the change
+    saveHosts();
+
     // Notify the UI of the state change
     handleComputerStateChanged(computer);
 }
@@ -595,9 +579,8 @@ private:
                emit pairingCompleted(m_Computer, tr("Another pairing attempt is already in progress."));
                break;
            case NvPairingManager::PairState::PAIRED:
-               // Persist the newly pinned server certificate for this host. We do this immediately because
-               // loss of the pinned cert invalidates the pairing. This is also a very infrequent operation.
-               m_ComputerManager->saveHosts(true);
+               // Persist the newly pinned server certificate for this host
+               m_ComputerManager->saveHosts();
 
                emit pairingCompleted(m_Computer, nullptr);
                break;

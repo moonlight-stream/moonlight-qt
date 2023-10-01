@@ -249,7 +249,7 @@ private slots:
     void handleMdnsServiceResolved(MdnsPendingComputer* computer, QVector<QHostAddress>& addresses);
 
 private:
-    void saveHosts(bool immediate);
+    void saveHosts();
 
     QHostAddress getBestGlobalAddressV6(QVector<QHostAddress>& addresses);
 
@@ -266,10 +266,5 @@ private:
     DelayedFlushThread* m_DelayedFlushThread;
     QMutex m_DelayedFlushMutex;
     QWaitCondition m_DelayedFlushCondition;
-    QWaitCondition m_ImmediateFlushCondition;
-    enum class FlushType {
-        None,
-        Delayed,
-        Immediate
-    } m_NeedsFlush;
+    bool m_NeedsDelayedFlush;
 };
