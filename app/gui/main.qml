@@ -21,7 +21,7 @@ ApplicationWindow {
     id: window
     visible: true
     width: 1280
-    height: 860
+    height: 600
 
     // Override the background color to Material 2 colors for Qt 6.5+
     // in order to improve contrast between GFE's placeholder box art
@@ -363,6 +363,31 @@ ApplicationWindow {
             }
 
             NavigableToolButton {
+                id: helpButton
+                visible: SystemProperties.hasBrowser
+
+                iconSource: "qrc:/res/question_mark.svg"
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Help") + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
+
+                Shortcut {
+                    id: helpShortcut
+                    sequence: StandardKey.HelpContents
+                    onActivated: helpButton.clicked()
+                }
+
+                // TODO need to make sure browser is brought to foreground.
+                onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+            }
+
+            NavigableToolButton {
                 id: hotkeysButton
 
                 visible: qmltypeof(stackView.currentItem, "PcView")
@@ -372,7 +397,13 @@ ApplicationWindow {
                 onClicked: {
                     StreamingPreferences.initialView = "HotkeysView"
                     StreamingPreferences.save()
-                    stackView.replace("qrc:/gui/HotkeysView.qml")
+
+                    var component = Qt.createComponent("HotkeysView.qml")
+                    var hotkeysView = component.createObject(stackView)
+                    // Hmmm...this seems to log the following error:
+                    // qrc:/gui/HotkeysView.qml:12: Error: Qt.createQmlObject(): Missing parent object
+                    // qrc:/gui/CenteredGridView.qml:10: TypeError: Cannot read property 'width' of null
+                    stackView.replace(hotkeysView)
                 }
 
                 Keys.onDownPressed: {
@@ -401,7 +432,13 @@ ApplicationWindow {
                 onClicked: {
                     StreamingPreferences.initialView = "PcView"
                     StreamingPreferences.save()
-                    stackView.replace("qrc:/gui/PcView.qml")
+
+                    var component = Qt.createComponent("PcView.qml")
+                    var pcView = component.createObject(stackView)
+                    // Hmmm...this seems to log the following error:
+                    // qrc:/gui/PcView.qml:82: Error: Qt.createQmlObject(): Missing parent object
+                    // qrc:/gui/CenteredGridView.qml:10: TypeError: Cannot read property 'width' of null
+                    stackView.replace(pcView)
                 }
 
                 Keys.onDownPressed: {
@@ -420,7 +457,6 @@ ApplicationWindow {
                 ToolTip.text: qsTr("PCs") + (pcsShortcut.nativeText ? (" ("+pcsShortcut.nativeText+")") : "")
             }
 
-
             NavigableToolButton {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
@@ -433,31 +469,6 @@ ApplicationWindow {
                 iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
 
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "GamepadMapper")
-
-                Keys.onDownPressed: {
-                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
-                }
-            }
-
-            NavigableToolButton {
-                id: helpButton
-                visible: SystemProperties.hasBrowser
-
-                iconSource: "qrc:/res/question_mark.svg"
-
-                ToolTip.delay: 1000
-                ToolTip.timeout: 3000
-                ToolTip.visible: hovered
-                ToolTip.text: qsTr("Help") + (helpShortcut.nativeText ? (" ("+helpShortcut.nativeText+")") : "")
-
-                Shortcut {
-                    id: helpShortcut
-                    sequence: StandardKey.HelpContents
-                    onActivated: helpButton.clicked()
-                }
-
-                // TODO need to make sure browser is brought to foreground.
-                onClicked: Qt.openUrlExternally("https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide");
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
