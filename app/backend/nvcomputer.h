@@ -14,7 +14,7 @@ public:
     CopySafeReadWriteLock() = default;
 
     // Don't actually copy the QReadWriteLock
-    CopySafeReadWriteLock(const CopySafeReadWriteLock&) {}
+    CopySafeReadWriteLock(const CopySafeReadWriteLock&) : QReadWriteLock() {}
     CopySafeReadWriteLock& operator=(const CopySafeReadWriteLock &) { return *this; }
 };
 
