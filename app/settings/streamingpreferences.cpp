@@ -46,6 +46,7 @@
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
 #define SER_INITIALVIEW "initialView"
+#define SER_HOTKEYS "hotkeys"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -125,6 +126,7 @@ void StreamingPreferences::reload()
                                                     static_cast<int>(Language::LANG_AUTO)).toInt());
 
     initialView = settings.value(SER_INITIALVIEW, "PcView").toString();
+    hotkeys = settings.value(SER_HOTKEYS, "").value<QStringList>();
 
     // Perform default settings updates as required based on last default version
     if (defaultVer < 1) {
@@ -298,6 +300,11 @@ void StreamingPreferences::save()
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
     settings.setValue(SER_INITIALVIEW, initialView);
+    settings.setValue(SER_HOTKEYS, hotkeys);
+
+    settings.sync();
+
+    reload();
 }
 
 int StreamingPreferences::getDefaultBitrate(int width, int height, int fps)

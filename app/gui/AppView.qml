@@ -2,13 +2,17 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Controls.Material 2.2
 
+import StreamingPreferences 1.0
+
 import AppModel 1.0
+import HotkeyModel 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
     property int computerIndex
-    property AppModel appModel : createModel()
+    property AppModel appModel : createAppModel()
+    property HotkeyModel hotkeyModel : createHotkeyModel()
     property bool activated
     property bool showHiddenGames
     property bool showGames
@@ -61,7 +65,7 @@ CenteredGridView {
         activated = false
     }
 
-    function createModel()
+    function createAppModel()
     {
         var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, '')
         model.initialize(ComputerManager, computerIndex, showHiddenGames)
@@ -337,24 +341,48 @@ CenteredGridView {
                 }
                 NavigableMenuItem {
                     parentMenu: appContextMenu
-                    text: qsTr("Add as Hotkey")
+                    text: hotkeyText(appModel, model)
                     onTriggered: {
-                        var computerUuid = appModel.getComputerUuid()
-                        var computerName = appModel.getComputerName()
-
-                        var appid = model.appid
-                        var appName = model.name
-
-                        debugDialog.text = "TODO: computerUuid=" + computerUuid + ", computerName=" + computerName + ", appid=" + appid + ", appName=" + appName
-                        debugDialog.open()
+                        hotkeyTriggered(appModel, model)
+                        text = hotkeyText(appModel, model)
                     }
                 }
             }
         }
     }
 
-    ErrorMessageDialog {
-        id: debugDialog
+    function createHotkeyModel() {
+        var model = Qt.createQmlObject('import HotkeyModel 1.0; HotkeyModel {}', parent, '')
+        model.initialize(StreamingPreferences)
+        return model
+    }
+
+    function hotkeyExists(computerName, appName) {
+        return hotkeyModel.hotkeyIndexGet(computerName, appName) >= 0
+    }
+
+    function hotkeyText(appModel, model) {
+        var computerName = appModel.getComputerName()
+        var appName = model.name
+        return hotkeyExists(computerName, appName) ? qsTr("Remove Hotkey") : qsTr("Add Hotkey")
+    }
+
+    function hotkeyTriggered(appModel, model) {
+        var computerName = appModel.getComputerName()
+        var appName = model.name
+        if (hotkeyExists(computerName, appName)) {
+            hotkeyModel.hotkeyRemove(computerName, appName)
+            displayToast(qsTr("Hotkey removed"))
+        } else {
+            hotkeyModel.hotkeyAdd(computerName, appName)
+            displayToast(qsTr("Hotkey added"))
+        }
+    }
+
+    function displayToast(text) {
+        hintText.text = text
+        hintText.visible = true
+        hintTimer.restart()
     }
 
     NavigableMessageDialog {
@@ -387,4 +415,25 @@ CenteredGridView {
     }
 
     ScrollBar.vertical: ScrollBar {}
+
+    Label {
+        id: hintText
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 50
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.pointSize: 18
+        verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.Wrap
+
+        Timer {
+            id: hintTimer
+            // This toast appears for 3 seconds, just shorter than how long
+            // Session will wait for it to be displayed. This gives it time
+            // to transition to invisible before continuing.
+            interval: 3000
+            onTriggered: {
+                hintText.visible = false
+            }
+        }
+    }
 }
