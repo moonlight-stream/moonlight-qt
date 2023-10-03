@@ -7,22 +7,12 @@ import StreamingPreferences 1.0
 import HotkeyModel 1.0
 
 CenteredGridView {
-
-    function createHotkeyModel() {
-        var model = Qt.createQmlObject('import HotkeyModel 1.0; HotkeyModel {}', parent, '')
-        model.initialize(StreamingPreferences)
-        return model
-    }
-
-    property HotkeyModel hotkeyModel : createHotkeyModel()
-
     id: hotkeysGrid
     focus: true
     activeFocusOnTab: true
     topMargin: 20
     bottomMargin: 5
     cellWidth: 310; cellHeight: 330;
-
     objectName: qsTr("Hotkeys")
 
     model: hotkeyModel
@@ -57,15 +47,6 @@ CenteredGridView {
             elide: Text.ElideRight
         }
 
-        // TODO: Make this a global hotkey active even when HotkeysView is not visible...
-        Shortcut {
-            sequence: "Ctrl+Alt+Shift+" + model.hotkeyNumber
-            onActivated: {
-                errorDialog.text = "TODO: Ctrl+Alt+Shift+" + model.hotkeyNumber + " pressed; Launch APP " + model.name + " on " + model.pc
-                errorDialog.open()
-            }
-        }
-
         Label {
             id: appNameText
             text: model.name
@@ -79,6 +60,47 @@ CenteredGridView {
             elide: Text.ElideRight
         }
 
+        onClicked: {
+            launchApp(model.pc, model.name)
+        }
+
+        onPressAndHold: {
+            // popup() ensures the menu appears under the mouse cursor
+            if (hotkeyContextMenu.popup) {
+                hotkeyContextMenu.popup()
+            }
+            else {
+                // Qt 5.9 doesn't have popup()
+                hotkeyContextMenu.open()
+            }
+        }
+
+        MouseArea {
+            anchors.fill: parent
+            acceptedButtons: Qt.RightButton;
+            onClicked: {
+                parent.onPressAndHold()
+            }
+        }
+
+        Keys.onMenuPressed: {
+            // We must use open() here so the menu is positioned on
+            // the ItemDelegate and not where the mouse cursor is
+            hotkeyContextMenu.open()
+        }
+
+        Loader {
+            id: hotkeyContextMenuLoader
+            asynchronous: true
+            sourceComponent: NavigableMenu {
+                id: hotkeyContextMenu
+                NavigableMenuItem {
+                    parentMenu: hotkeyContextMenu
+                    text: qsTr("Launch Game")
+                    onTriggered: launchApp(model.pc, model.name)
+                }
+            }
+        }
     }
 
     ErrorMessageDialog {

@@ -7,6 +7,7 @@ import QtQuick.Controls.Material 2.2
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
+import HotkeyModel 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
@@ -17,6 +18,15 @@ ApplicationWindow {
     // pages except the initial view. This is required when doing
     // a retranslate() because AppView breaks for some reason.
     property bool clearOnBack: false
+
+    property HotkeyModel hotkeyModel : createHotkeyModel()
+
+    function createHotkeyModel() {
+        var model = Qt.createQmlObject('import HotkeyModel 1.0; HotkeyModel {}', window, '')
+        model.initialize(StreamingPreferences)
+        model.hotkeysChanged.connect(hotkeysChanged)
+        return model
+    }
 
     id: window
     visible: true
@@ -30,6 +40,62 @@ ApplicationWindow {
         if (SystemProperties.usesMaterial3Theme) {
             Material.background = "#303030"
         }
+        shortcutsRefresh()
+    }
+
+    property var shortcuts : []
+
+    function hotkeysChanged() {
+        console.log("hotkeysChanged()")
+        shortcutsRefresh()
+    }
+
+    function shortcutsPrint() {
+        var text = "["
+        shortcuts.forEach(function (shortcut, index) {
+            if (index > 0) {
+                text += ", "
+            }
+            text += `{ sequence="${shortcut.sequence}", enabled=${shortcut.enabled} }`
+        })
+        text += "]"
+        console.log(`shortcuts=${text}`)
+    }
+
+    function shortcutsRefresh() {
+        while (shortcuts.length > 0) {
+            var shortcut = shortcuts.pop()
+            // Must unset existing sequence before we can
+            // successfully create a usable replacement below
+            shortcut.sequence = null;
+        }
+        //shortcutsPrint()
+        StreamingPreferences.hotkeys.forEach(function (hotkey, index) {
+            var hotkeyNumber = (index < 9 ? index + 1 : index === 9 ? 0 : -1)
+            if (hotkeyNumber < 0) {
+                return
+            }
+
+            var shortcut = Qt.createQmlObject('import QtQuick 2.9; Shortcut {}', window, '')
+            shortcut.sequence = `Ctrl+Alt+Shift+${hotkeyNumber}`
+
+            shortcut.activated.connect(function () {
+                shortcutActivated(shortcut, hotkey)
+            })
+
+            shortcuts.push(shortcut)
+        })
+        shortcutsPrint()
+    }
+
+    function shortcutActivated(shortcut, hotkey) {
+        hotkey = JSON.parse(hotkey)
+        launchApp(hotkey.computerName, hotkey.appName)
+    }
+
+    function launchApp(computerName, appName) {
+        console.log(`launchApp("${computerName}", "${appName}")`)
+        displayToast(`TODO launch "${appName}" on "${computerName}"`)
     }
 
     visibility: {
@@ -390,7 +456,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: hotkeysButton
 
-                visible: qmltypeof(stackView.currentItem, "PcView")
+                visible: qmltypeof(stackView.currentItem, "PcView") || qmltypeof(stackView.currentItem, "AppView")
 
                 iconSource: "qrc:/res/keyboard.svg"
 
@@ -400,10 +466,7 @@ ApplicationWindow {
 
                     var component = Qt.createComponent("HotkeysView.qml")
                     var hotkeysView = component.createObject(stackView)
-                    // Hmmm...this seems to log the following error:
-                    // qrc:/gui/HotkeysView.qml:12: Error: Qt.createQmlObject(): Missing parent object
-                    // qrc:/gui/CenteredGridView.qml:10: TypeError: Cannot read property 'width' of null
-                    stackView.replace(hotkeysView)
+                    stackView.replace(null, hotkeysView)
                 }
 
                 Keys.onDownPressed: {
@@ -435,10 +498,7 @@ ApplicationWindow {
 
                     var component = Qt.createComponent("PcView.qml")
                     var pcView = component.createObject(stackView)
-                    // Hmmm...this seems to log the following error:
-                    // qrc:/gui/PcView.qml:82: Error: Qt.createQmlObject(): Missing parent object
-                    // qrc:/gui/CenteredGridView.qml:10: TypeError: Cannot read property 'width' of null
-                    stackView.replace(pcView)
+                    stackView.replace(null, pcView)
                 }
 
                 Keys.onDownPressed: {
@@ -605,6 +665,34 @@ ApplicationWindow {
                 Keys.onEnterPressed: {
                     addPcDialog.accept()
                 }
+            }
+        }
+    }
+
+    function displayToast(text) {
+        toastText.text = text
+        toastText.visible = true
+        toastTimer.restart()
+        console.log(text)
+    }
+
+    Label {
+        id: toastText
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 50
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.pointSize: 18
+        verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.Wrap
+
+        Timer {
+            id: toastTimer
+            // This toast appears for 3 seconds, just shorter than how long
+            // Session will wait for it to be displayed. This gives it time
+            // to transition to invisible before continuing.
+            interval: 3000
+            onTriggered: {
+                toastText.visible = false
             }
         }
     }

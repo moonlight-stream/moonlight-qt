@@ -18,6 +18,7 @@ void HotkeyModel::initialize(StreamingPreferences* prefs)
         qDebug() << "initialize: Reset hotkeys(" << m_pPrefs->hotkeys.count() << ")=" << m_pPrefs->hotkeys;
         m_pPrefs->hotkeys.clear();
         m_pPrefs->save();
+        emit hotkeysChanged();
     }
     qDebug() << "initialize: hotkeys(" << m_pPrefs->hotkeys.count() << ")=" << m_pPrefs->hotkeys;
 }
@@ -28,7 +29,6 @@ int HotkeyModel::rowCount(const QModelIndex &parent) const
     // other (valid) parents, rowCount() should return 0 so that it does not become a tree model.
     if (parent.isValid())
         return 0;
-
     return m_pPrefs->hotkeys.count();
 }
 
@@ -107,6 +107,7 @@ int HotkeyModel::hotkeyAdd(QString computerName, QString appName) {
     if (index < 0) {
         m_pPrefs->hotkeys += json;
         m_pPrefs->save();
+        emit hotkeysChanged();
         result = m_pPrefs->hotkeys.length() - 1;
     } else {
         result = -index - 1;
@@ -119,8 +120,9 @@ int HotkeyModel::hotkeyRemove(QString computerName, QString appName) {
     auto index = hotkeyIndexGet(json);
     int result = 0;
     if (index >= 0) {
-        m_pPrefs->hotkeys.remove(index);
+        m_pPrefs->hotkeys.removeAt(index);
         m_pPrefs->save();
+        emit hotkeysChanged();
         result = index;
     } else {
         result = -1;

@@ -52,6 +52,9 @@ public:
      */
     Q_INVOKABLE int hotkeyRemove(QString computerName, QString appName);
 
+signals:
+    void hotkeysChanged();
+
 private:
     int hotkeyIndexGet(QString json);
 
