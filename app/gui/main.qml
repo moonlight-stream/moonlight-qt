@@ -51,25 +51,24 @@ ApplicationWindow {
     }
 
     function shortcutsPrint() {
-        var text = "["
+        var text = "[ "
         shortcuts.forEach(function (shortcut, index) {
             if (index > 0) {
                 text += ", "
             }
-            text += `{ sequence="${shortcut.sequence}", enabled=${shortcut.enabled} }`
+            text += `shortcut.sequence="${shortcut.sequence}"`
         })
-        text += "]"
+        text += " ]"
         console.log(`shortcuts=${text}`)
     }
 
     function shortcutsRefresh() {
         while (shortcuts.length > 0) {
             var shortcut = shortcuts.pop()
-            // Must unset existing sequence before we can
+            // We must unset existing sequence before we can
             // successfully create a usable replacement below
             shortcut.sequence = null;
         }
-        //shortcutsPrint()
         StreamingPreferences.hotkeys.forEach(function (hotkey, index) {
             var hotkeyNumber = (index < 9 ? index + 1 : index === 9 ? 0 : -1)
             if (hotkeyNumber < 0) {
@@ -93,9 +92,47 @@ ApplicationWindow {
         launchApp(hotkey.computerName, hotkey.appName)
     }
 
-    function launchApp(computerName, appName) {
+    function launchApp(computerName, appName, quitExistingApp) {
         console.log(`launchApp("${computerName}", "${appName}")`)
-        displayToast(`TODO launch "${appName}" on "${computerName}"`)
+
+        // Temporarily very similar to launchOrResumeSelectedApp...
+
+        var computerIndex = ComputerManager.getComputerIndex(computerName)
+        console.log("computerIndex=" + computerIndex)
+        if (computerIndex < 0) {
+            return
+        }
+
+        var appModel = Qt.createQmlObject('import AppModel 1.0; AppModel {}', window, '')
+        appModel.initialize(ComputerManager, computerIndex, true)
+
+        var appIndex = appModel.getAppIndex(appName)
+        console.log("appIndex=" + appIndex)
+        if (appIndex < 0) {
+            return
+        }
+
+        var runningAppName = appModel.getRunningAppName()
+        console.log("runningAppName=" + runningAppName)
+        if (runningAppName.length > 0 && runningAppName !== appName) {
+            if (quitExistingApp) {
+                quitAppDialog.appName = runningAppName
+                quitAppDialog.segueToStream = true
+                quitAppDialog.nextAppName = appName
+                quitAppDialog.nextAppIndex = appIndex
+                quitAppDialog.open()
+            }
+
+            return
+        }
+
+        var component = Qt.createComponent("StreamSegue.qml")
+        var segue = component.createObject(stackView, {
+                                               "appName": appName,
+                                               "session": appModel.createSessionForApp(appIndex),
+                                               "isResume": runningAppName === appName
+                                           })
+        stackView.push(segue)
     }
 
     visibility: {
