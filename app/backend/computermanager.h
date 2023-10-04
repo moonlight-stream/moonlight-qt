@@ -225,6 +225,8 @@ public:
 
     QVector<NvComputer*> getComputers();
 
+    Q_INVOKABLE int getComputerIndex(QString name);
+
     // computer is deleted inside this call
     void deleteHost(NvComputer* computer);
 

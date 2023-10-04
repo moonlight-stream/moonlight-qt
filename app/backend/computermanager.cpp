@@ -481,6 +481,17 @@ QVector<NvComputer*> ComputerManager::getComputers()
     return hosts;
 }
 
+int ComputerManager::getComputerIndex(QString name)
+{
+    auto hosts = getComputers();
+    for (int i = 0; i < hosts.size(); i++) {
+        if (hosts[i]->name.toLower() == name.toLower()) {
+            return i;
+        }
+    }
+    return -1;
+}
+
 class DeferredHostDeletionTask : public QRunnable
 {
 public:
