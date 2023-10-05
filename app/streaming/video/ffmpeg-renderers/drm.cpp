@@ -81,6 +81,7 @@ DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
       m_ColorRangeProp(nullptr),
       m_HdrOutputMetadataProp(nullptr),
       m_ColorspaceProp(nullptr),
+      m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
@@ -138,6 +139,10 @@ DrmRenderer::~DrmRenderer()
 
     if (m_Plane != nullptr) {
         drmModeFreePlane(m_Plane);
+    }
+
+    if (m_Version != nullptr) {
+        drmFreeVersion(m_Version);
     }
 
     if (m_HwContext != nullptr) {
@@ -251,6 +256,18 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             return false;
         }
     }
+
+    // Fetch version details about the DRM driver to use later
+    m_Version = drmGetVersion(m_DrmFd);
+    if (m_Version == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmGetVersion() failed: %d",
+                     errno);
+        return false;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "GPU driver: %s", m_Version->name);
 
     // Create the device context first because it is needed whether we can
     // actually use direct rendering or not.
@@ -1143,14 +1160,16 @@ bool DrmRenderer::isDirectRenderingSupported()
 
 int DrmRenderer::getDecoderColorspace()
 {
-    // Some DRM implementations (VisionFive) don't support BT.601 color encoding,
-    // so let's default to BT.709, which all drivers that support COLOR_ENCODING
-    // seem to support.
-    //
-    // If COLOR_ENCODING is not supported, we'll use BT.601 which appears to be
-    // the default on drivers that don't support COLOR_ENCODING, such as Rockchip
-    // per https://github.com/torvalds/linux/commit/1c21aa8f2b687cebfeff9736d60303a14bf32768
-    return m_ColorEncodingProp ? COLORSPACE_REC_709 : COLORSPACE_REC_601;
+    // The starfive driver used on the VisionFive 2 doesn't support BT.601,
+    // so we will use BT.709 instead. Rockchip doesn't support BT.709, even
+    // in some cases where it exposes COLOR_ENCODING properties, so we stick
+    // to BT.601 which seems to be the default for YUV planes on Linux.
+    if (strcmp(m_Version->name, "starfive") == 0) {
+        return COLORSPACE_REC_709;
+    }
+    else {
+        return COLORSPACE_REC_601;
+    }
 }
 
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
