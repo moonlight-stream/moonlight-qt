@@ -21,6 +21,19 @@ ApplicationWindow {
 
     property HotkeyModel hotkeyModel : createHotkeyModel()
 
+    function createComputerModel()
+    {
+        var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', window, '')
+        model.initialize(ComputerManager)
+        return model
+    }
+
+    function createAppModel(computerIndex, showHiddenGames) {
+        var appModel = Qt.createQmlObject('import AppModel 1.0; AppModel {}', window, '')
+        appModel.initialize(ComputerManager, computerIndex, showHiddenGames)
+        return appModel
+    }
+
     function createHotkeyModel() {
         var model = Qt.createQmlObject('import HotkeyModel 1.0; HotkeyModel {}', window, '')
         model.initialize(StreamingPreferences)
@@ -77,19 +90,14 @@ ApplicationWindow {
 
             var shortcut = Qt.createQmlObject('import QtQuick 2.9; Shortcut {}', window, '')
             shortcut.sequence = `Ctrl+Alt+Shift+${hotkeyNumber}`
-
             shortcut.activated.connect(function () {
-                shortcutActivated(shortcut, hotkey)
+                hotkey = JSON.parse(hotkey)
+                launchApp(hotkey.computerName, hotkey.appName)
             })
 
             shortcuts.push(shortcut)
         })
         shortcutsPrint()
-    }
-
-    function shortcutActivated(shortcut, hotkey) {
-        hotkey = JSON.parse(hotkey)
-        launchApp(hotkey.computerName, hotkey.appName)
     }
 
     function launchApp(computerName, appName, quitExistingApp) {
@@ -103,8 +111,7 @@ ApplicationWindow {
             return
         }
 
-        var appModel = Qt.createQmlObject('import AppModel 1.0; AppModel {}', window, '')
-        appModel.initialize(ComputerManager, computerIndex, true)
+        var appModel = createAppModel(computerIndex, true)
 
         var appIndex = appModel.getAppIndex(appName)
         console.log("appIndex=" + appIndex)
@@ -122,15 +129,20 @@ ApplicationWindow {
                 quitAppDialog.nextAppIndex = appIndex
                 quitAppDialog.open()
             }
-
             return
         }
 
+        var session = appModel.createSessionForApp(appIndex)
+        var isResume = runningAppName === appName
+        startStream(appModel, appName, session, isResume)
+    }
+
+    function startStream(appModel, appName, session, isResume) {
         var component = Qt.createComponent("StreamSegue.qml")
         var segue = component.createObject(stackView, {
                                                "appName": appName,
-                                               "session": appModel.createSessionForApp(appIndex),
-                                               "isResume": runningAppName === appName
+                                               "session": session,
+                                               "isResume": isResume
                                            })
         stackView.push(segue)
     }

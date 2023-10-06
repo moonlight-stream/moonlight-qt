@@ -11,8 +11,8 @@ class HotkeyModel : public QAbstractListModel
 
     enum Roles
     {
-        NameRole = Qt::UserRole,
-        PcRole,
+        AppNameRole = Qt::UserRole,
+        ComputerNameRole,
         HotkeyNumberRole,
     };
 
