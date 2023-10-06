@@ -481,11 +481,12 @@ QVector<NvComputer*> ComputerManager::getComputers()
     return hosts;
 }
 
-int ComputerManager::getComputerIndex(QString name)
+int ComputerManager::getComputerIndex(QString computerName)
 {
+    QReadLocker lock(&m_Lock);
     auto hosts = getComputers();
     for (int i = 0; i < hosts.size(); i++) {
-        if (hosts[i]->name.toLower() == name.toLower()) {
+        if (hosts[i]->name.toLower() == computerName.toLower()) {
             return i;
         }
     }
@@ -539,12 +540,12 @@ void ComputerManager::deleteHost(NvComputer* computer)
     QThreadPool::globalInstance()->start(new DeferredHostDeletionTask(this, computer));
 }
 
-void ComputerManager::renameHost(NvComputer* computer, QString name)
+void ComputerManager::renameHost(NvComputer* computer, QString computerName)
 {
     {
         QWriteLocker lock(&computer->lock);
 
-        computer->name = name;
+        computer->name = computerName;
         computer->hasCustomName = true;
     }
 

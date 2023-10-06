@@ -63,9 +63,9 @@ QVariant HotkeyModel::data(const QModelIndex &index, int role) const
 
     switch (role)
     {
-    case NameRole:
+    case AppNameRole:
         return hotkey["appName"].toString();
-    case PcRole:
+    case ComputerNameRole:
         return hotkey["computerName"].toString();
     case HotkeyNumberRole:
         return row < 9 ? row + 1 : row == 9 ? 0 : -1;
@@ -77,8 +77,8 @@ QVariant HotkeyModel::data(const QModelIndex &index, int role) const
 QHash<int, QByteArray> HotkeyModel::roleNames() const
 {
     QHash<int, QByteArray> names;
-    names[NameRole] = "name";
-    names[PcRole] = "pc";
+    names[AppNameRole] = "appName";
+    names[ComputerNameRole] = "computerName";
     names[HotkeyNumberRole] = "hotkeyNumber";
     return names;
 }

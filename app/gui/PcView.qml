@@ -9,7 +9,12 @@ import StreamingPreferences 1.0
 import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
-    property ComputerModel computerModel : createModel()
+    property ComputerModel computerModel : {
+        var model = createComputerModel()
+        model.pairingCompleted.connect(pairingComplete)
+        model.connectionTestCompleted.connect(testConnectionDialog.connectionTestComplete)
+        return model
+    }
 
     id: pcGrid
     focus: true
@@ -75,15 +80,6 @@ CenteredGridView {
 
             errorDialog.open()
         }
-    }
-
-    function createModel()
-    {
-        var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', parent ? parent : window, '')
-        model.initialize(ComputerManager)
-        model.pairingCompleted.connect(pairingComplete)
-        model.connectionTestCompleted.connect(testConnectionDialog.connectionTestComplete)
-        return model
     }
 
     Row {
@@ -196,7 +192,6 @@ CenteredGridView {
                         testConnectionDialog.open()
                     }
                 }
-
                 NavigableMenuItem {
                     parentMenu: pcContextMenu
                     text: qsTr("Rename PC")

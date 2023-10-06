@@ -22,8 +22,8 @@ CenteredGridView {
         grid: hotkeysGrid
 
         Label {
-            id: pcNameText
-            text: model.pc
+            id: computerNameText
+            text: model.computerName
 
             width: parent.width
             anchors.top: parent.top
@@ -49,7 +49,7 @@ CenteredGridView {
 
         Label {
             id: appNameText
-            text: model.name
+            text: model.appName
 
             width: parent.width
             bottomPadding: 4
@@ -61,7 +61,7 @@ CenteredGridView {
         }
 
         onClicked: {
-            launchApp(model.pc, model.name)
+            launchApp(model.computerName, model.appName)
         }
 
         onPressAndHold: {
@@ -97,7 +97,7 @@ CenteredGridView {
                 NavigableMenuItem {
                     parentMenu: hotkeyContextMenu
                     text: qsTr("Launch Game")
-                    onTriggered: launchApp(model.pc, model.name)
+                    onTriggered: launchApp(model.computerName, model.appName)
                 }
             }
         }

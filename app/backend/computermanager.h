@@ -225,12 +225,12 @@ public:
 
     QVector<NvComputer*> getComputers();
 
-    Q_INVOKABLE int getComputerIndex(QString name);
+    Q_INVOKABLE int getComputerIndex(QString computerName);
 
     // computer is deleted inside this call
     void deleteHost(NvComputer* computer);
 
-    void renameHost(NvComputer* computer, QString name);
+    void renameHost(NvComputer* computer, QString computerName);
 
     void clientSideAttributeUpdated(NvComputer* computer);
 

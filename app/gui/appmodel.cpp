@@ -331,6 +331,6 @@ void AppModel::handleBoxArtLoaded(NvComputer* computer, NvApp app, QUrl /* image
                          QVector<int>() << BoxArtRole);
     }
     else {
-        qWarning() << "App not found for box art callback:" << app.name;
+        qWarning() << "Visible app not found for" << app.name;
     }
 }

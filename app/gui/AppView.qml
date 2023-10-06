@@ -10,9 +10,9 @@ import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
     property int computerIndex
-    property AppModel appModel : createAppModel()
-    property bool activated
     property bool showHiddenGames
+    property AppModel appModel : createAppModel(computerIndex, showHiddenGames)
+    property bool activated
     property bool showGames
 
     id: appGrid
@@ -61,13 +61,6 @@ CenteredGridView {
     StackView.onDeactivating: {
         appModel.computerLost.disconnect(computerLost)
         activated = false
-    }
-
-    function createAppModel()
-    {
-        var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, '')
-        model.initialize(ComputerManager, computerIndex, showHiddenGames)
-        return model
     }
 
     model: appModel
@@ -224,13 +217,10 @@ CenteredGridView {
                 return
             }
 
-            var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView, {
-                                                   "appName": model.name,
-                                                   "session": appModel.createSessionForApp(index),
-                                                   "isResume": runningId === model.appid
-                                               })
-            stackView.push(segue)
+            var appName = model.name
+            var session = appModel.createSessionForApp(index)
+            var isResume = runningId === model.appid
+            startStream(appModel, appName, session, isResume)
         }
 
         onClicked: {
