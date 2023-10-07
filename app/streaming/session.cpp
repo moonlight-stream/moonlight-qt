@@ -787,6 +787,11 @@ void Session::emitLaunchWarning(QString text)
     }
 }
 
+void Session::emitHotkeyPressed(int hotkeyNumber)
+{
+    emit hotkeyPressed(hotkeyNumber);
+}
+
 bool Session::validateLaunch(SDL_Window* testWindow)
 {
     if (!m_Computer->isSupportedServerVersion) {

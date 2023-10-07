@@ -128,6 +128,16 @@ private:
         KeyComboToggleMinimize,
         KeyComboPasteText,
         KeyComboTogglePointerRegionLock,
+        KeyComboHotkey0,
+        KeyComboHotkey1,
+        KeyComboHotkey2,
+        KeyComboHotkey3,
+        KeyComboHotkey4,
+        KeyComboHotkey5,
+        KeyComboHotkey6,
+        KeyComboHotkey7,
+        KeyComboHotkey8,
+        KeyComboHotkey9,
         KeyComboMax
     };
 
