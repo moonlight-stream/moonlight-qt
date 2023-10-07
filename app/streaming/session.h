@@ -63,6 +63,8 @@ signals:
     // Emitted after sessionFinished() when the session is ready to be destroyed
     void readyForDeletion();
 
+    void hotkeyPressed(int hotkeyNumber);
+
 private:
     void execInternal();
 
@@ -73,6 +75,8 @@ private:
     bool validateLaunch(SDL_Window* testWindow);
 
     void emitLaunchWarning(QString text);
+
+    void emitHotkeyPressed(int hotkeyNumber);
 
     bool populateDecoderProperties(SDL_Window* window);
 

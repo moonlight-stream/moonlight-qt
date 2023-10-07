@@ -119,6 +119,14 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].scanCode = SDL_SCANCODE_L;
     m_SpecialKeyCombos[KeyComboTogglePointerRegionLock].enabled = true;
 
+    for (int i = KeyComboHotkey0; i <= KeyComboHotkey9; ++i) {
+        auto offset = i - KeyComboHotkey0;
+        m_SpecialKeyCombos[i].keyCombo = static_cast<KeyCombo>(i);
+        m_SpecialKeyCombos[i].keyCode = static_cast<SDL_Keycode>(SDLK_0 + offset);;
+        m_SpecialKeyCombos[i].scanCode = static_cast<SDL_Scancode>(SDL_SCANCODE_0 + offset);;
+        m_SpecialKeyCombos[i].enabled = true;
+    }
+
     m_OldIgnoreDevices = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES);
     m_OldIgnoreDevicesExcept = SDL_GetHint(SDL_HINT_GAMECONTROLLER_IGNORE_DEVICES_EXCEPT);
 

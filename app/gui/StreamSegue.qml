@@ -115,12 +115,19 @@ Item {
         gc()
     }
 
+    function sessionHotkeyPressed(hotkeyNumber)
+    {
+        console.log(`sessionHotkeyPressed(${hotkeyNumber})`)
+    }
+
     StackView.onDeactivating: {
         // Show the toolbar again when popped off the stack
         toolBar.visible = true
 
         // Enable GUI gamepad usage now
         SdlGamepadKeyNavigation.enable()
+
+        session.hotkeyPressed.disconnect(sessionHotkeyPressed)
     }
 
     StackView.onActivated: {
@@ -136,6 +143,7 @@ Item {
         session.quitStarting.connect(quitStarting)
         session.sessionFinished.connect(sessionFinished)
         session.readyForDeletion.connect(sessionReadyForDeletion)
+        session.hotkeyPressed.connect(sessionHotkeyPressed)
 
         // Kick off the stream
         spinnerTimer.start()
