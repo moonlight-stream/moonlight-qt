@@ -1210,6 +1210,40 @@ bool DrmRenderer::canExportEGL() {
         return false;
     }
 
+    // EGL rendering is so slow on the Raspberry Pi 4 that we should basically
+    // never use it. It is suitable for 1080p 30 FPS on a good day, and much
+    // much less than that if you decide to do something crazy like stream
+    // in full-screen. It's nice that it at least works now on Bullseye, but
+    // it's so slow that we actually wish it didn't.
+    if (!strcmp(m_Version->name, "vc4") && qgetenv("RPI_ALLOW_EGL_RENDER") != "1") {
+        drmDevicePtr device;
+        bool matchedBadDevice = false;
+
+        if (drmGetDevice(m_DrmFd, &device) == 0) {
+            if (device->bustype == DRM_BUS_PLATFORM) {
+                for (int i = 0; device->deviceinfo.platform->compatible[i]; i++) {
+                    QString compatibleId(device->deviceinfo.platform->compatible[i]);
+                    if (compatibleId == "brcm,bcm2835-vc4" || compatibleId == "brcm,bcm2711-vc5") {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Disabling EGL rendering due to low performance on %s",
+                                    device->deviceinfo.platform->compatible[i]);
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Set RPI_ALLOW_EGL_RENDER=1 to override");
+
+                        matchedBadDevice = true;
+                        break;
+                    }
+                }
+            }
+
+            drmFreeDevice(&device);
+        }
+
+        if (matchedBadDevice) {
+            return false;
+        }
+    }
+
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "DRM backend supports exporting EGLImage");
     return true;

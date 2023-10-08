@@ -990,17 +990,6 @@ bool EGLRenderer::testRenderFrame(AVFrame* frame)
 {
     EGLImage imgs[EGL_MAX_PLANES];
 
-#ifdef HAVE_MMAL
-    // EGL rendering is so slow on the Raspberry Pi that we should basically
-    // never use it. It is suitable for 1080p 30 FPS on a good day, and much
-    // much less than that if you decide to do something crazy like stream
-    // in full-screen. It's nice that it at least works now on Bullseye, but
-    // it's so slow that we actually wish it didn't.
-    if (qgetenv("RPI_ALLOW_EGL_RENDER") != "1") {
-        return false;
-    }
-#endif
-
     // Make sure we can get working EGLImages from the backend renderer.
     // Some devices (Raspberry Pi) will happily decode into DRM formats that
     // its own GL implementation won't accept in eglCreateImage().
