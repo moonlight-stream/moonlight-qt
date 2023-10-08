@@ -1215,7 +1215,7 @@ bool DrmRenderer::canExportEGL() {
     // much less than that if you decide to do something crazy like stream
     // in full-screen. It's nice that it at least works now on Bullseye, but
     // it's so slow that we actually wish it didn't.
-    if (!strcmp(m_Version->name, "vc4") && qgetenv("RPI_ALLOW_EGL_RENDER") != "1") {
+    if ((strcmp(m_Version->name, "vc4") == 0 || strcmp(m_Version->name, "v3d") == 0) && qgetenv("RPI_ALLOW_EGL_RENDER") != "1") {
         drmDevicePtr device;
         bool matchedBadDevice = false;
 
@@ -1223,7 +1223,7 @@ bool DrmRenderer::canExportEGL() {
             if (device->bustype == DRM_BUS_PLATFORM) {
                 for (int i = 0; device->deviceinfo.platform->compatible[i]; i++) {
                     QString compatibleId(device->deviceinfo.platform->compatible[i]);
-                    if (compatibleId == "brcm,bcm2835-vc4" || compatibleId == "brcm,bcm2711-vc5") {
+                    if (compatibleId == "brcm,bcm2835-vc4" || compatibleId == "brcm,bcm2711-vc5" || compatibleId == "brcm,2711-v3d") {
                         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                     "Disabling EGL rendering due to low performance on %s",
                                     device->deviceinfo.platform->compatible[i]);
