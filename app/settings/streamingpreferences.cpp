@@ -126,7 +126,9 @@ void StreamingPreferences::reload()
                                                     static_cast<int>(Language::LANG_AUTO)).toInt());
 
     initialView = settings.value(SER_INITIALVIEW, "PcView").toString();
-    hotkeys = settings.value(SER_HOTKEYS, "").value<QStringList>();
+
+    hotkeys = MapIntString2HotkeyInfo();
+    HotkeyInfo::load(&settings, SER_HOTKEYS, &hotkeys);
 
     // Perform default settings updates as required based on last default version
     if (defaultVer < 1) {
@@ -300,7 +302,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
     settings.setValue(SER_INITIALVIEW, initialView);
-    settings.setValue(SER_HOTKEYS, hotkeys);
+
+    HotkeyInfo::save(&hotkeys, &settings, SER_HOTKEYS);
 
     settings.sync();
 
