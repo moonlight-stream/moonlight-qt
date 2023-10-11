@@ -200,6 +200,7 @@ HEADERS += \
     backend/nvapp.h \
     cli/pair.h \
     settings/compatfetcher.h \
+    settings/hotkeyitem.h \
     settings/mappingfetcher.h \
     utils.h \
     backend/computerseeker.h \

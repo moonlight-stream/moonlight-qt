@@ -340,7 +340,7 @@ CenteredGridView {
     }
 
     function hotkeyExists(computerName, appName) {
-        return hotkeyModel.hotkeyIndexGet(computerName, appName) >= 0
+        return hotkeyModel.hotkeyNumber(computerName, appName) >= 0
     }
 
     function hotkeyText(appModel, model) {
@@ -352,11 +352,17 @@ CenteredGridView {
     function hotkeyTriggered(appModel, model) {
         var computerName = appModel.getComputerName()
         var appName = model.name
-        if (hotkeyExists(computerName, appName)) {
-            hotkeyModel.hotkeyRemove(computerName, appName)
+        var hotkeyNumber = hotkeyModel.hotkeyNumber(computerName, appName)
+        if (hotkeyNumber >= 0) {
+            hotkeyModel.hotkeyRemove(hotkeyNumber)
             displayToast(qsTr("Hotkey \"%1\" \"%2\" removed").arg(computerName).arg(appName))
         } else {
-            hotkeyModel.hotkeyAdd(computerName, appName)
+            // Limit hotkeyNumber key from 1 to 0...
+            hotkeyNumber = hotkeyModel.rowCount() + 1
+            if (hotkeyNumber > 9) {
+                hotkeyNumber = 0
+            }
+            hotkeyModel.hotkeyPut(hotkeyNumber, computerName, appName)
             displayToast(qsTr("Hotkey \"%1\" \"%2\" added").arg(computerName).arg(appName))
         }
     }

@@ -4,6 +4,8 @@
 #include <QRect>
 #include <QQmlEngine>
 
+#include "settings/hotkeyitem.h"
+
 class StreamingPreferences : public QObject
 {
     Q_OBJECT
@@ -136,7 +138,7 @@ public:
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
     Q_PROPERTY(QString initialView MEMBER initialView NOTIFY initialViewChanged)
-    Q_PROPERTY(QStringList hotkeys MEMBER hotkeys NOTIFY hotkeysChanged)
+    Q_PROPERTY(MapIntString2HotkeyInfo hotkeys MEMBER hotkeys NOTIFY hotkeysChanged)
 
     Q_INVOKABLE bool retranslate();
 
@@ -175,7 +177,7 @@ public:
     Language language;
     CaptureSysKeysMode captureSysKeysMode;
     QString initialView;
-    QStringList hotkeys;
+    MapIntString2HotkeyInfo hotkeys;
 
 signals:
     void displayModeChanged();

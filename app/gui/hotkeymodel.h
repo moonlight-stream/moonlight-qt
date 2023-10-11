@@ -29,34 +29,19 @@ public:
     virtual QHash<int, QByteArray> roleNames() const override;
 
     /**
-     * @brief hotkeyIndexGet
+     * @brief hotkeyNumber
      * @param computerName
      * @param appName
      * @return index found, or -1
      */
-    Q_INVOKABLE int hotkeyIndexGet(QString computerName, QString appName);
+    Q_INVOKABLE int hotkeyNumber(QString computerName, QString appName);
 
-    /**
-     * @brief addHotkey
-     * @param computerName
-     * @param appName
-     * @return index added if value >= 0, otherwise index found = -(value + 1)
-     */
-    Q_INVOKABLE int hotkeyAdd(QString computerName, QString appName);
+    Q_INVOKABLE void hotkeyPut(int hotkeyNumber, QString computerName, QString appName);
 
-    /**
-     * @brief hotkeyRemove
-     * @param computerName
-     * @param appName
-     * @return index removed, or -1
-     */
-    Q_INVOKABLE int hotkeyRemove(QString computerName, QString appName);
+    Q_INVOKABLE void hotkeyRemove(int hotkeyNumber);
 
 signals:
     void hotkeysChanged();
-
-private:
-    int hotkeyIndexGet(QString json);
 
 private:
     StreamingPreferences* m_pPrefs;

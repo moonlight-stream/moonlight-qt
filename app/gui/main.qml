@@ -82,21 +82,14 @@ ApplicationWindow {
             // successfully create a usable replacement below
             shortcut.sequence = null;
         }
-        StreamingPreferences.hotkeys.forEach(function (hotkey, index) {
-            var hotkeyNumber = (index < 9 ? index + 1 : index === 9 ? 0 : -1)
-            if (hotkeyNumber < 0) {
-                return
-            }
-
+        for (const [hotkeyNumber, hotkeyInfo] of Object.entries(StreamingPreferences.hotkeys)) {
             var shortcut = Qt.createQmlObject('import QtQuick 2.9; Shortcut {}', window, '')
             shortcut.sequence = `Ctrl+Alt+Shift+${hotkeyNumber}`
             shortcut.activated.connect(function () {
-                hotkey = JSON.parse(hotkey)
-                launchApp(hotkey.computerName, hotkey.appName)
+                launchApp(hotkeyInfo.computerName, hotkeyInfo.appName)
             })
-
             shortcuts.push(shortcut)
-        })
+        }
         shortcutsPrint()
     }
 
