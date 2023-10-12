@@ -594,6 +594,35 @@ int DrmRenderer::getRendererAttributes()
     // This renderer does not buffer any frames in the graphics pipeline
     attributes |= RENDERER_ATTRIBUTE_NO_BUFFERING;
 
+#ifdef GL_IS_SLOW
+    // Restrict streaming resolution to 1080p on the Pi 4 while in the desktop environment.
+    // EGL performance is extremely poor and just barely hits 1080p60 on Bookworm. This also
+    // covers the MMAL H.264 case which maxes out at 1080p60 too.
+    if (!m_SupportsDirectRendering &&
+            (strcmp(m_Version->name, "vc4") == 0 || strcmp(m_Version->name, "v3d") == 0) &&
+            qgetenv("RPI_ALLOW_EGL_4K") != "1") {
+        drmDevicePtr device;
+
+        if (drmGetDevice(m_DrmFd, &device) == 0) {
+            if (device->bustype == DRM_BUS_PLATFORM) {
+                for (int i = 0; device->deviceinfo.platform->compatible[i]; i++) {
+                    QString compatibleId(device->deviceinfo.platform->compatible[i]);
+                    if (compatibleId == "brcm,bcm2835-vc4" || compatibleId == "brcm,bcm2711-vc5" || compatibleId == "brcm,2711-v3d") {
+                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Streaming resolution is limited to 1080p on the Pi 4 inside the desktop environment!");
+                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Run Moonlight directly from the console to stream above 1080p resolution!");
+                        attributes |= RENDERER_ATTRIBUTE_1080P_MAX;
+                        break;
+                    }
+                }
+            }
+
+            drmFreeDevice(&device);
+        }
+    }
+#endif
+
     return attributes;
 }
 
@@ -1210,39 +1239,22 @@ bool DrmRenderer::canExportEGL() {
         return false;
     }
 
+#ifdef HAVE_MMAL
     // EGL rendering is so slow on the Raspberry Pi 4 that we should basically
     // never use it. It is suitable for 1080p 30 FPS on a good day, and much
     // much less than that if you decide to do something crazy like stream
-    // in full-screen. It's nice that it at least works now on Bullseye, but
-    // it's so slow that we actually wish it didn't.
-    if ((strcmp(m_Version->name, "vc4") == 0 || strcmp(m_Version->name, "v3d") == 0) && qgetenv("RPI_ALLOW_EGL_RENDER") != "1") {
-        drmDevicePtr device;
-        bool matchedBadDevice = false;
-
-        if (drmGetDevice(m_DrmFd, &device) == 0) {
-            if (device->bustype == DRM_BUS_PLATFORM) {
-                for (int i = 0; device->deviceinfo.platform->compatible[i]; i++) {
-                    QString compatibleId(device->deviceinfo.platform->compatible[i]);
-                    if (compatibleId == "brcm,bcm2835-vc4" || compatibleId == "brcm,bcm2711-vc5" || compatibleId == "brcm,2711-v3d") {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Disabling EGL rendering due to low performance on %s",
-                                    device->deviceinfo.platform->compatible[i]);
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Set RPI_ALLOW_EGL_RENDER=1 to override");
-
-                        matchedBadDevice = true;
-                        break;
-                    }
-                }
-            }
-
-            drmFreeDevice(&device);
-        }
-
-        if (matchedBadDevice) {
-            return false;
-        }
+    // in full-screen. MMAL is the ideal rendering API for Buster and Bullseye,
+    // but it's gone in Bookworm. Fortunately, Bookworm has a more efficient
+    // rendering pipeline that makes EGL mostly usable as long as we stick
+    // to a 1080p 60 FPS maximum.
+    if (qgetenv("RPI_ALLOW_EGL_RENDER") != "1") {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Disabling EGL rendering due to low performance on Raspberry Pi 4");
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Set RPI_ALLOW_EGL_RENDER=1 to override");
+        return false;
     }
+#endif
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "DRM backend supports exporting EGLImage");
