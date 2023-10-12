@@ -4,6 +4,7 @@ import QtQuick.Window 2.2
 
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
+import HotkeyManager 1.0
 
 Item {
     property Session session
@@ -118,6 +119,9 @@ Item {
     function sessionHotkeyPressed(hotkeyNumber)
     {
         console.log(`sessionHotkeyPressed(${hotkeyNumber})`)
+
+        // TODO:(pv) disconnect any current stream and start a new one...
+
     }
 
     StackView.onDeactivating: {

@@ -46,7 +46,6 @@
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
 #define SER_INITIALVIEW "initialView"
-#define SER_HOTKEYS "hotkeys"
 
 #define CURRENT_DEFAULT_VER 2
 
@@ -124,11 +123,7 @@ void StreamingPreferences::reload()
                                                                                                                  : UIDisplayMode::UI_MAXIMIZED)).toInt());
     language = static_cast<Language>(settings.value(SER_LANGUAGE,
                                                     static_cast<int>(Language::LANG_AUTO)).toInt());
-
     initialView = settings.value(SER_INITIALVIEW, "PcView").toString();
-
-    hotkeys = MapIntString2HotkeyInfo();
-    HotkeyInfo::load(&settings, SER_HOTKEYS, &hotkeys);
 
     // Perform default settings updates as required based on last default version
     if (defaultVer < 1) {
@@ -302,8 +297,6 @@ void StreamingPreferences::save()
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
     settings.setValue(SER_INITIALVIEW, initialView);
-
-    HotkeyInfo::save(&hotkeys, &settings, SER_HOTKEYS);
 
     settings.sync();
 

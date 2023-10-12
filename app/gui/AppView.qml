@@ -2,11 +2,10 @@ import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Controls.Material 2.2
 
-import StreamingPreferences 1.0
-
 import AppModel 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
+import HotkeyManager 1.0
 
 CenteredGridView {
     property int computerIndex
@@ -340,7 +339,7 @@ CenteredGridView {
     }
 
     function hotkeyExists(computerName, appName) {
-        return hotkeyModel.hotkeyNumber(computerName, appName) >= 0
+        return HotkeyManager.hotkeyNumber(computerName, appName) >= 0
     }
 
     function hotkeyText(appModel, model) {
@@ -352,17 +351,21 @@ CenteredGridView {
     function hotkeyTriggered(appModel, model) {
         var computerName = appModel.getComputerName()
         var appName = model.name
-        var hotkeyNumber = hotkeyModel.hotkeyNumber(computerName, appName)
+        var hotkeyNumber = HotkeyManager.hotkeyNumber(computerName, appName)
         if (hotkeyNumber >= 0) {
-            hotkeyModel.hotkeyRemove(hotkeyNumber)
+            HotkeyManager.remove(hotkeyNumber)
             displayToast(qsTr("Hotkey \"%1\" \"%2\" removed").arg(computerName).arg(appName))
         } else {
-            // Limit hotkeyNumber key from 1 to 0...
-            hotkeyNumber = hotkeyModel.rowCount() + 1
-            if (hotkeyNumber > 9) {
-                hotkeyNumber = 0
+            // presented index 0,1,2,3,4,5,6,7,8,9
+            // keyboard number 1,2,3,4,5,6,7,8,9,0
+            var hotkeyCount = HotkeyManager.count()
+            if (hotkeyCount >= 10) {
+                displayToast(qsTr("Maximum number of hotkeys reached"))
+                return
             }
-            hotkeyModel.hotkeyPut(hotkeyNumber, computerName, appName)
+            // Add the next hotkeyNumber
+            hotkeyNumber = hotkeyCount === 9 ? 0 : hotkeyCount + 1
+            HotkeyManager.put(hotkeyNumber, computerName, appName)
             displayToast(qsTr("Hotkey \"%1\" \"%2\" added").arg(computerName).arg(appName))
         }
     }
