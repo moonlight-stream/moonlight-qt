@@ -172,6 +172,7 @@ SOURCES += \
     cli/quitstream.cpp \
     cli/startstream.cpp \
     settings/compatfetcher.cpp \
+    settings/hotkeymanager.cpp \
     settings/mappingfetcher.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
@@ -200,7 +201,7 @@ HEADERS += \
     backend/nvapp.h \
     cli/pair.h \
     settings/compatfetcher.h \
-    settings/hotkeyitem.h \
+    settings/hotkeymanager.h \
     settings/mappingfetcher.h \
     utils.h \
     backend/computerseeker.h \

@@ -5,6 +5,7 @@ import QtQuick.Controls 2.2
 import StreamingPreferences 1.0
 
 import HotkeyModel 1.0
+import HotkeyManager 1.0
 
 CenteredGridView {
     id: hotkeysGrid

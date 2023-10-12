@@ -1,8 +1,10 @@
 #pragma once
 
+#include "backend/computermanager.h"
+
 #include <QAbstractListModel>
 
-#include "settings/streamingpreferences.h"
+#include "settings/hotkeymanager.h"
 
 
 class HotkeyModel : public QAbstractListModel
@@ -20,7 +22,7 @@ public:
     explicit HotkeyModel(QObject *parent = nullptr);
 
     // Must be called before any QAbstractListModel functions
-    Q_INVOKABLE void initialize(StreamingPreferences* prefs);
+    Q_INVOKABLE void initialize(ComputerManager* computerManager, HotkeyManager* hotkeyManager);
 
     QVariant data(const QModelIndex &index, int role) const override;
 
@@ -28,21 +30,7 @@ public:
 
     virtual QHash<int, QByteArray> roleNames() const override;
 
-    /**
-     * @brief hotkeyNumber
-     * @param computerName
-     * @param appName
-     * @return index found, or -1
-     */
-    Q_INVOKABLE int hotkeyNumber(QString computerName, QString appName);
-
-    Q_INVOKABLE void hotkeyPut(int hotkeyNumber, QString computerName, QString appName);
-
-    Q_INVOKABLE void hotkeyRemove(int hotkeyNumber);
-
-signals:
-    void hotkeysChanged();
-
 private:
-    StreamingPreferences* m_pPrefs;
+    ComputerManager* m_ComputerManager;
+    HotkeyManager* m_HotkeyManager;
 };

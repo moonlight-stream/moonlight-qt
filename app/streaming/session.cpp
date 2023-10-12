@@ -535,7 +535,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     return true;
 }
 
-Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
+Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences, HotkeyManager* hotkeyManager)
     : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
@@ -556,7 +556,8 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_OpusDecoder(nullptr),
       m_AudioRenderer(nullptr),
       m_AudioSampleCount(0),
-      m_DropAudioEndTime(0)
+      m_DropAudioEndTime(0),
+      m_HotkeyManager(hotkeyManager ? hotkeyManager : new HotkeyManager(this))
 {
 }
 

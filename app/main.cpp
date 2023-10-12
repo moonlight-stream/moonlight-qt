@@ -638,6 +638,11 @@ int main(int argc, char *argv[])
                                                    [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
                                                        return new StreamingPreferences(qmlEngine);
                                                    });
+    qmlRegisterSingletonType<HotkeyManager>("HotkeyManager", 1, 0,
+                                            "HotkeyManager",
+                                            [&app](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                return new HotkeyManager(&app);
+                                            });
 
     // Create the identity manager on the main thread
     IdentityManager::get();
@@ -662,17 +667,20 @@ int main(int argc, char *argv[])
 
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::NormalStartRequested:
-        initialView = QString("qrc:/gui/%1.qml").arg(prefs.initialView);
-        break;
+        {
+            initialView = QString("qrc:/gui/%1.qml").arg(prefs.initialView);
+            break;
+        }
     case GlobalCommandLineParser::StreamRequested:
         {
             initialView = "qrc:/gui/CliStartStreamSegue.qml";
             StreamingPreferences* preferences = new StreamingPreferences(&app);
+            HotkeyManager* hotkeyManager = new HotkeyManager(&app);
             StreamCommandLineParser streamParser;
             streamParser.parse(app.arguments(), preferences);
             QString host    = streamParser.getHost();
             QString appName = streamParser.getAppName();
-            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
+            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, hotkeyManager, &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }

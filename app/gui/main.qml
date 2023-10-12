@@ -10,6 +10,7 @@ import StreamingPreferences 1.0
 import HotkeyModel 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
+import HotkeyManager 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
@@ -36,8 +37,7 @@ ApplicationWindow {
 
     function createHotkeyModel() {
         var model = Qt.createQmlObject('import HotkeyModel 1.0; HotkeyModel {}', window, '')
-        model.initialize(StreamingPreferences)
-        model.hotkeysChanged.connect(hotkeysChanged)
+        model.initialize(ComputerManager, HotkeyManager)
         return model
     }
 
@@ -53,7 +53,12 @@ ApplicationWindow {
         if (SystemProperties.usesMaterial3Theme) {
             Material.background = "#303030"
         }
+        HotkeyManager.hotkeysChanged.connect(hotkeysChanged)
         shortcutsRefresh()
+    }
+
+    Component.onDestruction: {
+        HotkeyManager.hotkeysChanged.disconnect(hotkeysChanged)
     }
 
     property var shortcuts : []
@@ -82,14 +87,15 @@ ApplicationWindow {
             // successfully create a usable replacement below
             shortcut.sequence = null;
         }
-        for (const [hotkeyNumber, hotkeyInfo] of Object.entries(StreamingPreferences.hotkeys)) {
+        HotkeyManager.hotkeyNumbers().forEach(function (hotkeyNumber) {
+            var hotkeyInfo = HotkeyManager.get(hotkeyNumber)
             var shortcut = Qt.createQmlObject('import QtQuick 2.9; Shortcut {}', window, '')
             shortcut.sequence = `Ctrl+Alt+Shift+${hotkeyNumber}`
             shortcut.activated.connect(function () {
                 launchApp(hotkeyInfo.computerName, hotkeyInfo.appName)
             })
             shortcuts.push(shortcut)
-        }
+        })
         shortcutsPrint()
     }
 
