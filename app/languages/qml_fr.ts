@@ -754,7 +754,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1079"/>
         <source>GUI display mode</source>
-        <translation>Mode d&apos;affichage de l&apos;interface graphique</translation>
+        <translation>Mode d&apos;affichage de l&apos;interface utilisateur</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1116"/>
