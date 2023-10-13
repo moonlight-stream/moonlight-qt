@@ -65,6 +65,12 @@ StreamingPreferences::StreamingPreferences(QQmlEngine *qmlEngine, QObject *paren
 
 void StreamingPreferences::reload()
 {
+    // NOTE:(pv) Is it normal for this method to be called a few times a second?
+    //  It looks like a new StreamingPreferences instance is being created that often.
+    //  I find this a bit odd, but I'm not sure if it's a problem or not.
+    //  I confirmed that this behavior has nothing to do with my adding a reload() call in the save() method.
+    //qDebug() << "StreamingPreferences::reload()";
+
     QSettings settings;
 
     int defaultVer = settings.value(SER_DEFAULTVER, 0).toInt();
