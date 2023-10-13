@@ -7,6 +7,8 @@ import Session 1.0
 import HotkeyManager 1.0
 
 Item {
+    property string tag: "StreamSegue"
+
     property Session session
     property string appName
     property string stageText : isResume ? qsTr("Resuming %1...").arg(appName) :
@@ -63,6 +65,8 @@ Item {
 
     function quitStarting()
     {
+        log(tag, `quitStarting()`)
+
         // Avoid the push transition animation
         var component = Qt.createComponent("QuitSegue.qml")
         stackView.replace(stackView.currentItem, component.createObject(stackView, {"appName": appName}), StackView.Immediate)
@@ -73,6 +77,8 @@ Item {
 
     function sessionFinished(portTestResult)
     {
+        log(tag, `sessionFinished(${portTestResult})`)
+
         if (portTestResult !== 0 && portTestResult !== -1 && streamSegueErrorDialog.text) {
             streamSegueErrorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
         }
@@ -110,6 +116,7 @@ Item {
 
     function sessionReadyForDeletion()
     {
+        log(tag, `sessionReadyForDeletion()`)
         // Garbage collect the Session object since it's pretty heavyweight
         // and keeps other libraries (like SDL_TTF) around until it is deleted.
         session = null
@@ -118,7 +125,7 @@ Item {
 
     function sessionHotkeyPressed(hotkeyNumber)
     {
-        console.log(`sessionHotkeyPressed(${hotkeyNumber})`)
+        log(tag, `sessionHotkeyPressed(${hotkeyNumber})`)
 
         // TODO:(pv) disconnect any current stream and start a new one...
 

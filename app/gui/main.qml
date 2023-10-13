@@ -13,6 +13,8 @@ import SdlGamepadKeyNavigation 1.0
 import HotkeyManager 1.0
 
 ApplicationWindow {
+    property string tag: "main"
+
     property bool pollingActive: false
 
     // Set by SettingsView to force the back operation to pop all
@@ -64,7 +66,7 @@ ApplicationWindow {
     property var shortcuts : []
 
     function hotkeysChanged() {
-        console.log("hotkeysChanged()")
+        log(tag, "hotkeysChanged()")
         shortcutsRefresh()
     }
 
@@ -77,7 +79,7 @@ ApplicationWindow {
             text += `shortcut.sequence="${shortcut.sequence}"`
         })
         text += " ]"
-        console.log(`shortcuts=${text}`)
+        log(tag, `shortcuts=${text}`)
     }
 
     function shortcutsRefresh() {
@@ -100,12 +102,12 @@ ApplicationWindow {
     }
 
     function launchApp(computerName, appName, quitExistingApp) {
-        console.log(`launchApp("${computerName}", "${appName}")`)
+        log(tag, `launchApp("${computerName}", "${appName}")`)
 
         // Temporarily very similar to launchOrResumeSelectedApp...
 
         var computerIndex = ComputerManager.getComputerIndex(computerName)
-        console.log("computerIndex=" + computerIndex)
+        log(tag, "computerIndex=" + computerIndex)
         if (computerIndex < 0) {
             return
         }
@@ -113,13 +115,13 @@ ApplicationWindow {
         var appModel = createAppModel(computerIndex, true)
 
         var appIndex = appModel.getAppIndex(appName)
-        console.log("appIndex=" + appIndex)
+        log(tag, "appIndex=" + appIndex)
         if (appIndex < 0) {
             return
         }
 
         var runningAppName = appModel.getRunningAppName()
-        console.log("runningAppName=" + runningAppName)
+        log(tag, "runningAppName=" + runningAppName)
         if (runningAppName.length > 0 && runningAppName !== appName) {
             if (quitExistingApp) {
                 quitAppDialog.appName = runningAppName
@@ -178,6 +180,8 @@ ApplicationWindow {
         focus: true
 
         onCurrentItemChanged: {
+            log(tag, "onCurrentItemChanged: stackView.currentItem=" + currentItem)
+
             // Ensure focus travels to the next view when going back
             if (currentItem) {
                 currentItem.forceActiveFocus()
@@ -253,6 +257,7 @@ ApplicationWindow {
     }
 
     onActiveChanged: {
+        log(tag, "onActiveChanged: active=" + active)
         if (active) {
             // Stop the inactivity timer
             inactivityTimer.stop()
@@ -721,7 +726,7 @@ ApplicationWindow {
         toastText.text = text
         toastText.visible = true
         toastTimer.restart()
-        console.log(text)
+        log(tag, text)
     }
 
     Label {
@@ -742,6 +747,16 @@ ApplicationWindow {
             onTriggered: {
                 toastText.visible = false
             }
+        }
+    }
+
+    function log() {
+        var heavy = true
+        if (heavy) {
+            var dateString = new Date().toISOString()
+            console.log(`${dateString}: ${Array.prototype.slice.call(arguments).join(" ")}`)
+        } else {
+            console.log(Array.prototype.slice.call(arguments).join(" "))
         }
     }
 }
