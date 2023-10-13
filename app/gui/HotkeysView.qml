@@ -8,6 +8,8 @@ import HotkeyModel 1.0
 import HotkeyManager 1.0
 
 CenteredGridView {
+    property string tag: "HotkeysView"
+
     id: hotkeysGrid
     focus: true
     activeFocusOnTab: true
