@@ -973,14 +973,14 @@ VAAPIRenderer::initializeEGL(EGLDisplay dpy,
     }
     else if (!m_EglImageFactory.supportsImportingModifier(dpy, descriptor.layers[0].drm_format, descriptor.objects[0].drm_format_modifier)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Exporting separate layers due to lack of support for importing format and modifier: %08x %016lx",
+                    "Exporting separate layers due to lack of support for importing format and modifier: %08x %016" PRIx64,
                     descriptor.layers[0].drm_format,
                     descriptor.objects[0].drm_format_modifier);
         m_EglExportType = EglExportType::Separate;
     }
     else {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Exporting composed layers with format and modifier: %08x %016lx",
+                    "Exporting composed layers with format and modifier: %08x %016" PRIx64,
                     descriptor.layers[0].drm_format,
                     descriptor.objects[0].drm_format_modifier);
         m_EglExportType = EglExportType::Composed;
@@ -1002,7 +1002,7 @@ VAAPIRenderer::initializeEGL(EGLDisplay dpy,
             else if (!m_EglImageFactory.supportsImportingModifier(dpy, descriptor.layers[i].drm_format,
                                                                   descriptor.objects[descriptor.layers[i].object_index[0]].drm_format_modifier)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "EGL implementation lacks support for importing format and modifier: %08x %016lx",
+                            "EGL implementation lacks support for importing format and modifier: %08x %016" PRIx64,
                             descriptor.layers[i].drm_format,
                             descriptor.objects[descriptor.layers[i].object_index[0]].drm_format_modifier);
             }
