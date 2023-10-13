@@ -6,11 +6,7 @@
 //
 //
 
-HotkeyInfo::HotkeyInfo(QObject *parent) : HotkeyInfo(parent, QString(), QString()) {
-}
-
-HotkeyInfo::HotkeyInfo(QObject *parent, QString computerName, QString appName) :
-    QObject(parent),
+HotkeyInfo::HotkeyInfo(QString computerName, QString appName) :
     m_computerName(computerName),
     m_appName(appName) {
 }
@@ -84,7 +80,20 @@ HotkeyInfo* HotkeyManager::get(const int hotkeyNumber) {
         auto computerName = settings.value("computerName").toString();
         auto appName = settings.value("appName").toString();
         settings.endGroup();
-        hotkeyInfo = new HotkeyInfo(this, computerName, appName);
+        //
+        // Per https://doc.qt.io/qt-6/qtqml-cppintegration-data.html#data-ownership
+        // "When data is transferred from C++ to QML, the ownership of the data always remains with C++.
+        // **The exception to this rule is when a QObject is returned from an explicit C++ method call:
+        // in this case, the QML engine assumes ownership of the object**, unless the ownership of the
+        // object has explicitly been set to remain with C++ by invoking QQmlEngine::setObjectOwnership()
+        // with QQmlEngine::CppOwnership specified.
+        //
+        // Additionally, **the QML engine respects the normal QObject parent ownership semantics of Qt
+        // C++ objects, and will never delete a QObject instance which has a parent."
+        //
+        // In summary, don't set a parent for the HotkeyInfo object, and the QML engine will assume ownership and delete it.
+        //
+        hotkeyInfo = new HotkeyInfo(computerName, appName);
     }
     settings.endGroup();
 
@@ -125,7 +134,12 @@ void HotkeyManager::remove(const int hotkeyNumber) {
 void HotkeyManager::clear() {
     QSettings settings;
     settings.beginGroup(SER_HOTKEYS);
-    settings.remove(""); // testing confirms that this **also deletes all groups**
+    // QSettings is not documented to say that it can remove groups recursively...
+    // for (auto childGroup : settings.childGroups()) {
+    // settings.beginGroup(childGroup);
+    settings.remove(""); // ...but testing confirms that this does appear to delete **all groups* recursively
+    // settings.endGroup();
+    // }
     settings.endGroup();
     emit hotkeysChanged();
 }

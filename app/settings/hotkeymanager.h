@@ -8,8 +8,7 @@ class HotkeyInfo : public QObject
 {
     Q_OBJECT
 public:
-    HotkeyInfo(QObject *parent);
-    HotkeyInfo(QObject *parent, QString computerName, QString appName);
+    HotkeyInfo(QString computerName, QString appName);
 
     Q_PROPERTY(QString computerName MEMBER m_computerName)
     Q_PROPERTY(QString appName MEMBER m_appName)
