@@ -54,9 +54,23 @@ SdlInputHandler::findStateForGamepad(SDL_JoystickID id)
 void SdlInputHandler::sendGamepadState(GamepadState* state)
 {
     SDL_assert(m_GamepadMask == 0x1 || m_MultiController);
+
+    // Handle Select+PS as the clickpad button on PS4/5 controllers without a clickpad mapping
+    int buttons = state->buttons;
+    if (state->clickpadButtonEmulationEnabled) {
+        if (state->buttons == (BACK_FLAG | SPECIAL_FLAG)) {
+            buttons = MISC_FLAG;
+            state->emulatedClickpadButtonDown = true;
+        }
+        else if (state->emulatedClickpadButtonDown) {
+            buttons &= ~MISC_FLAG;
+            state->emulatedClickpadButtonDown = false;
+        }
+    }
+
     LiSendMultiControllerEvent(state->index,
                                m_GamepadMask,
-                               state->buttons,
+                               buttons,
                                state->lt,
                                state->rt,
                                state->lsX,
@@ -638,6 +652,14 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
             type = LI_CTYPE_UNKNOWN;
             break;
         }
+
+        // If this is a PlayStation controller that doesn't have a touchpad button mapped,
+        // we'll allow the Select+PS button combo to act as the touchpad.
+        state->clickpadButtonEmulationEnabled =
+#if SDL_VERSION_ATLEAST(2, 0, 14)
+            SDL_GameControllerGetBindForButton(state->controller, SDL_CONTROLLER_BUTTON_TOUCHPAD).bindType == SDL_CONTROLLER_BINDTYPE_NONE &&
+#endif
+            type == LI_CTYPE_PS;
 
         LiSendControllerArrivalEvent(state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
 #else

@@ -19,6 +19,9 @@ struct GamepadState {
     SDL_TimerID mouseEmulationTimer;
     uint32_t lastStartDownTime;
 
+    bool clickpadButtonEmulationEnabled;
+    bool emulatedClickpadButtonDown;
+
 #if SDL_VERSION_ATLEAST(2, 0, 14)
     uint8_t gyroReportPeriodMs;
     float lastGyroEventData[SDL_arraysize(SDL_ControllerSensorEvent::data)];
