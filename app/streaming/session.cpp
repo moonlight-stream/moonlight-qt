@@ -599,7 +599,7 @@ bool Session::initialize()
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
     m_StreamConfig.hevcBitratePercentageMultiplier = 75;
-    m_StreamConfig.av1BitratePercentageMultiplier = 65;
+    m_StreamConfig.av1BitratePercentageMultiplier = 75;
 
 #ifndef STEAM_LINK
     // Enable audio encryption as long as we're not on Steam Link.
