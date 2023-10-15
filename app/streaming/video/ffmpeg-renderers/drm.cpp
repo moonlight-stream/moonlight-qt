@@ -1239,7 +1239,7 @@ bool DrmRenderer::canExportEGL() {
         return false;
     }
 
-#ifdef HAVE_MMAL
+#if defined(HAVE_MMAL) && !defined(ALLOW_EGL_WITH_MMAL)
     // EGL rendering is so slow on the Raspberry Pi 4 that we should basically
     // never use it. It is suitable for 1080p 30 FPS on a good day, and much
     // much less than that if you decide to do something crazy like stream

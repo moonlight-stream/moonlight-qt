@@ -286,6 +286,18 @@ mmal {
     DEFINES += HAVE_MMAL
     SOURCES += streaming/video/ffmpeg-renderers/mmal.cpp
     HEADERS += streaming/video/ffmpeg-renderers/mmal.h
+
+    # We suppress EGL usage when MMAL is available because MMAL has
+    # significantly better performance than EGL on the Pi. Setting
+    # this option allows EGL usage even if built with MMAL support.
+    #
+    # It is highly recommended to also build with 'glslow' to avoid
+    # EGL being preferred if direct DRM rendering is available.
+    allow-egl-with-mmal {
+        message(Allowing EGL usage with MMAL enabled)
+
+        DEFINES += ALLOW_EGL_WITH_MMAL
+    }
 }
 libdrm {
     message(DRM renderer selected)

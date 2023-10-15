@@ -1032,7 +1032,7 @@ bool FFmpegVideoDecoder::isDecoderIgnored(const AVCodec *decoder)
 {
     Q_UNUSED(decoder);
 
-#ifdef HAVE_MMAL
+#if defined(HAVE_MMAL) && !defined(ALLOW_EGL_WITH_MMAL)
     // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
     // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
     // would rather show the missing hardware acceleration warning when the user
