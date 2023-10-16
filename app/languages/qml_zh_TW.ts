@@ -884,27 +884,27 @@
         <location filename="../gui/SettingsView.qml" line="500"/>
         <location filename="../gui/SettingsView.qml" line="609"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>自訂 (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="515"/>
         <source>Enter a custom frame rate:</source>
-        <translation type="unfinished"></translation>
+        <translation>輸入自訂影格速率：</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="612"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>自訂</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="630"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="635"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1161"/>
