@@ -514,12 +514,12 @@ ApplicationWindow {
                 iconSource: "qrc:/res/keyboard.svg"
 
                 onClicked: {
-                    StreamingPreferences.initialView = "HotkeysView"
+                    StreamingPreferences.initialView = "HotkeyView"
                     StreamingPreferences.save()
 
-                    var component = Qt.createComponent("HotkeysView.qml")
-                    var hotkeysView = component.createObject(stackView)
-                    stackView.replace(null, hotkeysView)
+                    var component = Qt.createComponent("HotkeyView.qml")
+                    var hotkeyView = component.createObject(stackView)
+                    stackView.replace(null, hotkeyView)
                 }
 
                 Keys.onDownPressed: {
@@ -541,7 +541,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: pcsButton
 
-                visible: qmltypeof(stackView.currentItem, "HotkeysView")
+                visible: qmltypeof(stackView.currentItem, "HotkeyView")
 
                 iconSource: "qrc:/res/desktop_windows-48px.svg"
 

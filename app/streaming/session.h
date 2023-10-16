@@ -66,7 +66,7 @@ signals:
     // Emitted after sessionFinished() when the session is ready to be destroyed
     void readyForDeletion();
 
-    void hotkeyPressed(int hotkeyNumber);
+    void hotkeyPressed(Session* session, int hotkeyNumber, HotkeyInfo* hotkeyInfo);
 
 private:
     void execInternal();
@@ -79,7 +79,12 @@ private:
 
     void emitLaunchWarning(QString text);
 
-    void emitHotkeyPressed(int hotkeyNumber);
+    /**
+     * @brief onHotkeyPressed if hotkeyNumber is configured then 1) emit hotkeyPressed signal, 2) end session
+     * @param hotkeyNumber
+     * @return true if hotkeyNumber is configured and is not for the current session, otherwise false
+     */
+    bool onHotkeyPressed(int hotkeyNumber);
 
     bool populateDecoderProperties(SDL_Window* window);
 

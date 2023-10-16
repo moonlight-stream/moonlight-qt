@@ -6,6 +6,13 @@
 //
 //
 
+QDebug operator<<(QDebug debug, const HotkeyInfo &hotkeyInfo) {
+    return debug << (QString)hotkeyInfo;
+}
+
+HotkeyInfo::HotkeyInfo() : HotkeyInfo(QString(), QString()) {
+}
+
 HotkeyInfo::HotkeyInfo(QString computerName, QString appName) :
     m_computerName(computerName),
     m_appName(appName) {
@@ -18,6 +25,10 @@ HotkeyInfo::operator QString() const {
 //
 //
 //
+
+QDebug operator<<(QDebug debug, const HotkeyManager &hotkeyManager) {
+    return debug << (QString)hotkeyManager;
+}
 
 HotkeyManager::HotkeyManager(QObject *parent) : QObject(parent) {
     if (false) {
@@ -68,7 +79,7 @@ int HotkeyManager::hotkeyNumber(QString computerName, QString appName) {
     return hotkeyNumber;
 }
 
-HotkeyInfo* HotkeyManager::get(const int hotkeyNumber) {
+HotkeyInfo* HotkeyManager::get(const int hotkeyNumber) const {
     HotkeyInfo* hotkeyInfo = nullptr;
 
     auto hotkeyGroupName = QString::number(hotkeyNumber);
@@ -101,6 +112,7 @@ HotkeyInfo* HotkeyManager::get(const int hotkeyNumber) {
 }
 
 void HotkeyManager::put(const int hotkeyNumber, QString computerName, QString appName) {
+    remove(computerName, appName);
     auto hotkeyGroupName = QString::number(hotkeyNumber);
     QSettings settings;
     settings.beginGroup(SER_HOTKEYS);
@@ -144,7 +156,7 @@ void HotkeyManager::clear() {
     emit hotkeysChanged();
 }
 
-HotkeyManager::operator QString() {
+HotkeyManager::operator QString() const {
     QString s;
     s += "{ ";
     auto hotkeyNumbers = this->hotkeyNumbers();

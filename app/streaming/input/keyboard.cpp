@@ -151,7 +151,9 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
     case KeyComboHotkey9:
     {
         auto hotkeyNumber = combo - KeyComboHotkey0;
-        Session::get()->emitHotkeyPressed(hotkeyNumber);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "performSpecialKeyCombo: Ctrl+Alt+Shift+%d pressed in stream", hotkeyNumber);
+        Session::get()->onHotkeyPressed(hotkeyNumber);
         break;
     }
 

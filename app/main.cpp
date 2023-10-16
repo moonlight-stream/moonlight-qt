@@ -612,6 +612,7 @@ int main(int argc, char *argv[])
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
     qmlRegisterType<HotkeyModel>("HotkeyModel", 1, 0, "HotkeyModel");
+    qmlRegisterType<HotkeyInfo>("HotkeyInfo", 1, 0, "HotkeyInfo");
     qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
                                               "ComputerManager",

@@ -5,6 +5,8 @@ import QtQuick.Window 2.2
 import SdlGamepadKeyNavigation 1.0
 import Session 1.0
 import HotkeyManager 1.0
+import HotkeyInfo 1.0
+import ComputerManager 1.0
 
 Item {
     property string tag: "StreamSegue"
@@ -15,21 +17,76 @@ Item {
                                            qsTr("Starting %1...").arg(appName)
     property bool isResume : false
     property bool quitAfter : false
+    property HotkeyInfo connectAfter : null
 
     function stageStarting(stage)
     {
+        log(tag, `stageStarting(${stage})`)
+
         // Update the spinner text
         stageText = qsTr("Starting %1...").arg(stage)
     }
 
     function stageFailed(stage, errorCode, failingPorts)
     {
+        log(tag, `stageFailed(${stage}, ${errorCode}, ${failingPorts})`)
+
         // Display the error dialog after Session::exec() returns
         streamSegueErrorDialog.text = qsTr("Starting %1 failed: Error %2").arg(stage).arg(errorCode)
 
         if (failingPorts) {
             streamSegueErrorDialog.text += "\n\n" + qsTr("Check your firewall and port forwarding rules for port(s): %1").arg(failingPorts)
         }
+    }
+
+    function startSession()
+    {
+        // Set the hint text. We do this here rather than
+        // in the hintText control itself to synchronize
+        // with Session.exec() which requires no concurrent
+        // gamepad usage.
+        hintText.text = qsTr("Tip:") + " " + qsTr("Press %1 to disconnect your session").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
+                                              qsTr("Start+Select+L1+R1") : qsTr("Ctrl+Alt+Shift+Q"))
+
+        // Stop GUI gamepad usage now
+        SdlGamepadKeyNavigation.disable()
+
+        // Garbage collect QML stuff before we start streaming,
+        // since we'll probably be streaming for a while and we
+        // won't be able to GC during the stream.
+        gc()
+
+        // Hook up our signals
+        session.stageStarting.connect(stageStarting)
+        session.stageFailed.connect(stageFailed)
+        session.connectionStarted.connect(connectionStarted)
+        session.displayLaunchError.connect(displayLaunchError)
+        session.displayLaunchWarning.connect(displayLaunchWarning)
+        session.quitStarting.connect(quitStarting)
+        session.sessionFinished.connect(sessionFinished)
+        session.readyForDeletion.connect(sessionReadyForDeletion)
+        session.hotkeyPressed.connect(sessionHotkeyPressed)
+
+        // Run the streaming session to completion
+        session.exec(Screen.virtualX, Screen.virtualY)
+    }
+
+    function disconnectSession()
+    {
+        session.stageStarting.disconnect(stageStarting)
+        session.stageFailed.disconnect(stageFailed)
+        session.connectionStarted.disconnect(connectionStarted)
+        session.displayLaunchError.disconnect(displayLaunchError)
+        session.displayLaunchWarning.disconnect(displayLaunchWarning)
+        session.quitStarting.disconnect(quitStarting)
+        session.sessionFinished.disconnect(sessionFinished)
+        session.readyForDeletion.disconnect(sessionReadyForDeletion)
+        session.hotkeyPressed.disconnect(sessionHotkeyPressed)
+
+        // Garbage collect the Session object since it's pretty heavyweight
+        // and keeps other libraries (like SDL_TTF) around until it is deleted.
+        session = null
+        gc()
     }
 
     function connectionStarted()
@@ -77,14 +134,18 @@ Item {
 
     function sessionFinished(portTestResult)
     {
-        log(tag, `sessionFinished(${portTestResult})`)
+        log(tag, `sessionFinished(portTestResult=${portTestResult})`)
+
+        // Enable GUI gamepad usage now
+        SdlGamepadKeyNavigation.enable()
+
+        if (connectAfter) {
+            return
+        }
 
         if (portTestResult !== 0 && portTestResult !== -1 && streamSegueErrorDialog.text) {
             streamSegueErrorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
         }
-
-        // Enable GUI gamepad usage now
-        SdlGamepadKeyNavigation.enable()
 
         if (quitAfter) {
             if (streamSegueErrorDialog.text) {
@@ -97,6 +158,7 @@ Item {
                 Qt.quit()
             }
         } else {
+
             // Exit this view
             stackView.pop()
 
@@ -117,18 +179,44 @@ Item {
     function sessionReadyForDeletion()
     {
         log(tag, `sessionReadyForDeletion()`)
-        // Garbage collect the Session object since it's pretty heavyweight
-        // and keeps other libraries (like SDL_TTF) around until it is deleted.
-        session = null
-        gc()
+
+        disconnectSession()
+
+        if (connectAfter) {
+
+            var computerName = connectAfter.computerName
+            var appName = connectAfter.appName
+
+            connectAfter = null
+
+            //
+            // Try to quickly connect to a new session here
+            // **without popping the stack or returning to the app Window**
+            //
+            var computerIndex = ComputerManager.getComputerIndex(computerName)
+            if (computerIndex < 0) {
+                return
+            }
+
+            var appModel = createAppModel(computerIndex, true)
+
+            var appIndex = appModel.getAppIndex(appName)
+            if (appIndex < 0) {
+                return
+            }
+
+            session = appModel.createSessionForApp(appIndex)
+
+            startSession()
+        }
     }
 
-    function sessionHotkeyPressed(hotkeyNumber)
+    function sessionHotkeyPressed(session, hotkeyNumber, hotkeyInfo)
     {
-        log(tag, `sessionHotkeyPressed(${hotkeyNumber})`)
-
-        // TODO:(pv) disconnect any current stream and start a new one...
-
+        log(tag, `sessionHotkeyPressed(${session}, ${hotkeyNumber}, ${hotkeyInfo})`)
+        if (connectAfter == null) {
+            connectAfter = hotkeyInfo
+        }
     }
 
     StackView.onDeactivating: {
@@ -137,24 +225,11 @@ Item {
 
         // Enable GUI gamepad usage now
         SdlGamepadKeyNavigation.enable()
-
-        session.hotkeyPressed.disconnect(sessionHotkeyPressed)
     }
 
     StackView.onActivated: {
         // Hide the toolbar before we start loading
         toolBar.visible = false
-
-        // Hook up our signals
-        session.stageStarting.connect(stageStarting)
-        session.stageFailed.connect(stageFailed)
-        session.connectionStarted.connect(connectionStarted)
-        session.displayLaunchError.connect(displayLaunchError)
-        session.displayLaunchWarning.connect(displayLaunchWarning)
-        session.quitStarting.connect(quitStarting)
-        session.sessionFinished.connect(sessionFinished)
-        session.readyForDeletion.connect(sessionReadyForDeletion)
-        session.hotkeyPressed.connect(sessionHotkeyPressed)
 
         // Kick off the stream
         spinnerTimer.start()
@@ -179,23 +254,7 @@ Item {
         asynchronous: true
 
         onLoaded: {
-            // Set the hint text. We do this here rather than
-            // in the hintText control itself to synchronize
-            // with Session.exec() which requires no concurrent
-            // gamepad usage.
-            hintText.text = qsTr("Tip:") + " " + qsTr("Press %1 to disconnect your session").arg(SdlGamepadKeyNavigation.getConnectedGamepads() > 0 ?
-                                                  qsTr("Start+Select+L1+R1") : qsTr("Ctrl+Alt+Shift+Q"))
-
-            // Stop GUI gamepad usage now
-            SdlGamepadKeyNavigation.disable()
-
-            // Garbage collect QML stuff before we start streaming,
-            // since we'll probably be streaming for a while and we
-            // won't be able to GC during the stream.
-            gc()
-
-            // Run the streaming session to completion
-            session.exec(Screen.virtualX, Screen.virtualY)
+            startSession()
         }
 
         sourceComponent: Item {}

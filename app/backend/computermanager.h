@@ -227,6 +227,13 @@ public:
 
     Q_INVOKABLE int getComputerIndex(QString computerName);
 
+    // Used by hotkeymodel to show the computer state
+    NvComputer* getComputer(QString computerName);
+
+    // Used by hotkeymodel to show the app state
+    bool getApp(QString computerName, QString appName, NvApp& app);
+    bool getApp(NvComputer* computer, QString appName, NvApp& app);
+
     // computer is deleted inside this call
     void deleteHost(NvComputer* computer);
 

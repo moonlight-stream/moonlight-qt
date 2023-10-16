@@ -788,9 +788,37 @@ void Session::emitLaunchWarning(QString text)
     }
 }
 
-void Session::emitHotkeyPressed(int hotkeyNumber)
+bool Session::onHotkeyPressed(int hotkeyNumber)
 {
-    emit hotkeyPressed(hotkeyNumber);
+    auto hotkeyInfo = m_HotkeyManager->get(hotkeyNumber);
+    if (hotkeyInfo == nullptr) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "onHotkeyPressed: Hotkey %d is not configured", hotkeyNumber);
+        return false;
+    }
+
+    auto hotkeyComputerName = hotkeyInfo->property("computerName");
+    auto hotkeyAppName = hotkeyInfo->property("appName");
+    auto sessionComputerName = m_Computer->name;
+    auto sessionAppName = m_App.name;
+    if (hotkeyComputerName == sessionComputerName && hotkeyAppName == sessionAppName) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "onHotkeyPressed: Hotkey %d is configured for the current session; ignoring", hotkeyNumber);
+        return false;
+    }
+
+    emit hotkeyPressed(this, hotkeyNumber, hotkeyInfo);
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "onHotkeyPressed: Configured Hotkey %d emitted; Terminating connection", hotkeyNumber);
+
+    // Push a quit event to the main loop
+    SDL_Event event;
+    event.type = SDL_QUIT;
+    event.quit.timestamp = SDL_GetTicks();
+    SDL_PushEvent(&event);
+
+    return true;
 }
 
 bool Session::validateLaunch(SDL_Window* testWindow)
@@ -1772,7 +1800,7 @@ void Session::execInternal()
 
     // Now that we're about to stream, any SDL_QUIT event is expected
     // unless it comes from the connection termination callback where
-    // (m_UnexpectedTermination is set back to true).
+    // m_UnexpectedTermination is set back to true.
     m_UnexpectedTermination = false;
 
     // Start rich presence to indicate we're in game

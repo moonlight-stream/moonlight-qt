@@ -7,7 +7,7 @@ GridView {
     property bool hasBrokenMargins: this.synchronousDrag === undefined
 
     property int minMargin: 10
-    property real availableWidth: (parent.width - 2 * minMargin)
+    property real availableWidth: parent ? (parent.width - 2 * minMargin) : minMargin
     property int itemsPerRow: availableWidth / cellWidth
     property real horizontalMargin: itemsPerRow < count && availableWidth >= cellWidth ?
                                         (availableWidth % cellWidth) / 2 : minMargin

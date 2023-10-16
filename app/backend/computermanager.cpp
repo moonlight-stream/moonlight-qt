@@ -493,6 +493,45 @@ int ComputerManager::getComputerIndex(QString computerName)
     return -1;
 }
 
+NvComputer* ComputerManager::getComputer(QString computerName)
+{
+    QReadLocker lock(&m_Lock);
+    // NOTE: Does **not** need to be sorted...
+    auto hosts = m_KnownHosts.values();
+    for (int i = 0; i < hosts.size(); i++) {
+        auto host = hosts[i];
+        if (host->name.toLower() == computerName.toLower()) {
+            return host;
+        }
+    }
+    return nullptr;
+}
+
+bool ComputerManager::getApp(QString computerName, QString appName, NvApp& app)
+{
+    QReadLocker lock(&m_Lock);
+    auto computer = getComputer(computerName);
+    if (!computer) {
+        qDebug() << "getApp: Computer not found: computerName=" << computerName;
+        return false;
+    }
+    return getApp(computer, appName, app);
+}
+
+bool ComputerManager::getApp(NvComputer* computer, QString appName, NvApp& app)
+{
+    QReadLocker lock(&m_Lock);
+    auto appList = computer->appList;
+    for (int i = 0; i < appList.size(); i++) {
+        auto& it = appList[i];
+        if (it.name.toLower() == appName.toLower()) {
+            app = it;
+            return true;
+        }
+    }
+    return false;
+}
+
 class DeferredHostDeletionTask : public QRunnable
 {
 public:
