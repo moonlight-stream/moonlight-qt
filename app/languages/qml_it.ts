@@ -146,7 +146,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ricerca di host compatibili sulla tua rete in corso...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -226,22 +226,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserisci %1 sul tuo PC host. Questa finestra si chiuderà al termine dell&apos;accoppiamento.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="301"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Se il tuo PC host sta eseguendo Sunshine, vai nella interfaccia web di Sunshine ed inserisci il PIN.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Sei sicuro di voler rimuovere &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight sta testando la connessione di rete per determinare se le porte richieste sono bloccate.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="354"/>
@@ -423,7 +423,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="846"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il tuo PC host non supporta la codifica HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="862"/>
@@ -433,47 +433,47 @@
     <message>
         <location filename="../streaming/session.cpp" line="814"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il software host o GPU non supporta la codifica AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="839"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Decodifica software in uso a causa della selezione dell&apos;uso forzato dell&apos;AV1 senza il supporto GPU. Questo può causare prestazioni di streaming scarse.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="897"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il PC host non supporta lo streaming HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="901"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR non è supportato utilizzando il codec H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="913"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>La GPU di questo PC non supporta la decodifica AV1 Main10 per lo streaming HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="930"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>La GPU di questo PC non supporta la decodifica HEVC a 10 bit o AV1 per lo streaming HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="937"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il PC host e il PC client non supportano gli stessi codec video HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="989"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Le risoluzioni video oltre il 4K non sono supportate dal codec H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1361"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>L&apos;host ha restituito un errore: %</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="876"/>
@@ -758,7 +758,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1577"/>
         <source>AV1 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>AV1 (Sperimentale)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1592"/>
@@ -884,27 +884,27 @@
         <location filename="../gui/SettingsView.qml" line="500"/>
         <location filename="../gui/SettingsView.qml" line="610"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>Personalizzato (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="515"/>
         <source>Enter a custom frame rate:</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserisci un frame rate personalizzato:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="613"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>Personalizzato</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="631"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="636"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1162"/>
@@ -1132,7 +1132,7 @@
     <message>
         <location filename="../gui/main.qml" line="501"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Inserisci l&apos;indirizzo IP del tuo PC host:</translation>
     </message>
 </context>
 </TS>
