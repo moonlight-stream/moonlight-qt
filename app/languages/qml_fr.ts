@@ -38,7 +38,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>Cacher ce jeu de la grille d&apos;applications. Pour le retrouver plus tard, faites un clic droit sur l&apos;ordinateur et choisissez %1.</translation>
+        <translation>Cacher ce jeu de la grille d&apos;applications. Pour le retrouver plus tard, faites un clic droit sur l&apos;ordinateur et choisissez « %1 ».</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -97,7 +97,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -186,7 +186,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Si vous essayez d&apos;utiliser la diffusion en continu sur Internet, installez l&apos;outil d&apos;hébergement Internet Moonlight sur votre PC de jeu et exécutez le testeur de diffusion en continu sur Internet inclus pour vérifier la connexion Internet de votre PC de jeu.</translation>
+        <translation>Si vous essayez de streamer via Internet, installez l&apos;outil « Moonlight Internet Hosting Tool » sur votre ordinateur de jeu et lancez l&apos;outil « Internet Streaming Tester » inclut avec pour vérifier la connexion Internet de cet ordinateur.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
@@ -206,7 +206,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC&#x202f;: %1</translation>
+        <translation>Statut du PC : %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -368,7 +368,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu et vos règles de redirection de port pour le(s) port(s) : %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="117"/>
@@ -418,7 +418,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="807"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>Vos réglages pour forcer le décodage logiciel peut causer de mauvaises performances.</translation>
+        <translation>Vos réglages pour forcer le décodage logiciel peuvent causer de mauvaises performances.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="846"/>
@@ -453,7 +453,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="913"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation>Le GPU de ce PC ne prend pas en charge le décodage AV1 Main10 pour le streaming HDR.</translation>
+        <translation>Le GPU de ce PC ne prend pas en charge le décodage AV1 Main 10 pour le streaming HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="930"/>
@@ -1024,7 +1024,7 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Vérifiez votre pare-feu ainsi que les règles de redirection pour le(s) port(s) suivant(s)&#x202f;: %1</translation>
+        <translation>Vérifiez votre pare-feu et vos règles de redirection de port pour le(s) port(s) : %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="76"/>
@@ -1097,7 +1097,7 @@
     <message>
         <location filename="../gui/main.qml" line="461"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration&#x202f;:</translation>
+        <translation>Moonlight a détecté des manettes sans configuration :</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="374"/>
@@ -1132,7 +1132,7 @@
     <message>
         <location filename="../gui/main.qml" line="471"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Êtes-vous sûr de vouloir quitter&#x202f;?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
     </message>
 </context>
 </TS>
