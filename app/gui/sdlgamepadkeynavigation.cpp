@@ -191,7 +191,17 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
         case SDL_CONTROLLERDEVICEADDED:
             SDL_GameController* gc = SDL_GameControllerOpen(event.cdevice.which);
             if (gc != nullptr) {
-                m_Gamepads.append(gc);
+                // SDL_CONTROLLERDEVICEADDED can be reported multiple times for the same
+                // gamepad in rare cases, because SDL doesn't fixup the device index in
+                // the SDL_CONTROLLERDEVICEADDED event if an unopened gamepad disappears
+                // before we've processed the add event.
+                if (!m_Gamepads.contains(gc)) {
+                    m_Gamepads.append(gc);
+                }
+                else {
+                    // We already have this game controller open
+                    SDL_GameControllerClose(gc);
+                }
             }
             break;
         }

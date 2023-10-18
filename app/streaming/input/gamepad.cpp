@@ -46,8 +46,8 @@ SdlInputHandler::findStateForGamepad(SDL_JoystickID id)
         }
     }
 
-    // This should only happen with too many gamepads
-    SDL_assert(SDL_NumJoysticks() > MAX_GAMEPADS);
+    // We can get a spurious removal event if the device is removed
+    // before or during SDL_GameControllerOpen(). This is fine to ignore.
     return nullptr;
 }
 
@@ -464,6 +464,20 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
                          "Failed to open gamepad: %s",
                          SDL_GetError());
             return;
+        }
+
+        // SDL_CONTROLLERDEVICEADDED can be reported multiple times for the same
+        // gamepad in rare cases, because SDL doesn't fixup the device index in
+        // the SDL_CONTROLLERDEVICEADDED event if an unopened gamepad disappears
+        // before we've processed the add event.
+        for (int i = 0; i < MAX_GAMEPADS; i++) {
+            if (m_GamepadState[i].controller == controller) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Received duplicate add event for controller index: %d",
+                            event->which);
+                SDL_GameControllerClose(controller);
+                return;
+            }
         }
 
         // We used to use SDL_GameControllerGetPlayerIndex() here but that
