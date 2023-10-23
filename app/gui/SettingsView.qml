@@ -683,7 +683,7 @@ Flickable {
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
 
                     onValueChanged: {
-                        bitrateTitle.text = qsTr("Video bitrate: %1 Mbps").arg(value / 1000.0)
+                        bitrateTitle.text = qsTr("Video bitrate: %1 Mbps (%2 MB/s)").arg(value / 1000.0).arg((value / 1000.0)*0.125)
                         StreamingPreferences.bitrateKbps = value
                     }
 
