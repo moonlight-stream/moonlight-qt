@@ -267,7 +267,7 @@ libva-wayland {
     PKGCONFIG += libva-wayland
     DEFINES += HAVE_LIBVA_WAYLAND
 }
-libva-wayland {
+libva-drm {
     message(VAAPI DRM support enabled)
 
     PKGCONFIG += libva-drm
