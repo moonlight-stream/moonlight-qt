@@ -188,11 +188,11 @@ echo Copying GC mapping list
 copy %SOURCE_ROOT%\app\SDL_GameControllerDB\gamecontrollerdb.txt %DEPLOY_FOLDER%
 if !ERRORLEVEL! NEQ 0 goto Error
 
-echo Copying qt.conf
-copy %SOURCE_ROOT%\app\qt.conf %DEPLOY_FOLDER%
-if !ERRORLEVEL! NEQ 0 goto Error
-
 if not x%QT_PATH:\5.=%==x%QT_PATH% (
+    echo Copying qt.conf for Qt 5
+    copy %SOURCE_ROOT%\app\qt_qt5.conf %DEPLOY_FOLDER%\qt.conf
+    if !ERRORLEVEL! NEQ 0 goto Error
+
     rem Qt 5.15
     set WINDEPLOYQT_ARGS=--no-qmltooling --no-virtualkeyboard
 ) else (
