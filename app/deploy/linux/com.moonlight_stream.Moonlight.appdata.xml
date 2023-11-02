@@ -34,6 +34,15 @@
 	</screenshots>
 
 	<releases>
+		<release version="5.0.1" date="2023-11-02">
+			<description>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed connection issue streaming from some hosts running GeForce Experience or Sunshine v0.20 and earlier</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="5.0.0" date="2023-10-18">
 			<description>
 				<p>New features:</p>
