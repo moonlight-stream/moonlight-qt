@@ -318,6 +318,9 @@ cuda {
     DEFINES += HAVE_CUDA
     SOURCES += streaming/video/ffmpeg-renderers/cuda.cpp
     HEADERS += streaming/video/ffmpeg-renderers/cuda.h
+
+    # ffnvcodec uses libdl in cuda_load_functions()/cuda_free_functions()
+    LIBS += -ldl
 }
 config_EGL {
     message(EGL renderer selected)
