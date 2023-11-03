@@ -829,7 +829,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1366"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>Ceci commute les manettes en un agencement de boutons de style Nintendo</translation>
+        <translation>Cela transforme les manettes en une disposition de boutons de style Nintendo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1372"/>
