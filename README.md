@@ -26,31 +26,31 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 - [Flatpak (for other Linux distros)](https://flathub.org/apps/details/com.moonlight_stream.Moonlight)
 - [AppImage](https://github.com/moonlight-stream/moonlight-qt/releases)
 - [Raspberry Pi 4](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-Raspberry-Pi-4)
+- [Generic ARM SBC packages for Debian](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-ARM%E2%80%90based-Single-Board-Computers) (not for Raspberry Pi)
+- [Experimental RISC-V SBC packages for Debian](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-RISC%E2%80%90V-Single-Board-Computers)
 - [NVIDIA Jetson and Nintendo Switch (Ubuntu L4T)](https://github.com/moonlight-stream/moonlight-docs/wiki/Installing-Moonlight-Qt-on-Linux4Tegra-(L4T)-Ubuntu)
 
 #### Special Thanks
 
 [![Hosted By: Cloudsmith](https://img.shields.io/badge/OSS%20hosting%20by-cloudsmith-blue?logo=cloudsmith&style=flat-square)](https://cloudsmith.com)
 
-Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously provided for free by [Cloudsmith](https://cloudsmith.com).
+Hosting for Moonlight's Debian and L4T package repositories is graciously provided for free by [Cloudsmith](https://cloudsmith.com).
 
 ## Building
 
 ### Windows Build Requirements
-* Qt 5.15 SDK or later
-* Windows 7 or later
+* Qt 5.15 SDK or later. Qt 6 is also supported for x64 and ARM64 builds.
 * [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
 * Select **MSVC** option during Qt installation. MinGW is not supported.
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
 
 ### macOS Build Requirements
-* Qt 6.2 SDK or later
-* macOS Mojave (10.14) or later
+* Qt 6.4 SDK or later
 * Xcode 13 or later
 * [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
 
 ### Linux/Unix Build Requirements
-* Qt 5.9 SDK or later
+* Qt 5.9 SDK or later. Qt 6 is also supported.
 * GCC or Clang
 * Install the required packages:
   * Debian/Ubuntu: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libqt5svg5-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libva-dev libvdpau-dev libxkbcommon-dev qtwayland5 qt5-qmake qtbase5-dev qtdeclarative5-dev qtquickcontrols2-5-dev wayland-protocols qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2`
@@ -65,7 +65,7 @@ Hosting for Moonlight's Raspberry Pi and L4T package repositories is graciously 
 1. Install the latest Qt SDK (and optionally, the Qt Creator IDE) from https://www.qt.io/download
     * You can install Qt via Homebrew on macOS, but you will need to use `brew install qt --with-debug` to be able to create debug builds of Moonlight.
     * You may also use your Linux distro's package manager for the Qt SDK as long as the packages are Qt 5.9 or later.
-    * This step is not required for building on Steam Link, because the Steam Link SDK includes Qt 5.9.
+    * This step is not required for building on Steam Link, because the Steam Link SDK includes Qt 5.14.
 2. Run `git submodule update --init --recursive` from within `moonlight-qt/`
 3. Open the project in Qt Creator or build from qmake on the command line.
     * To build a binary for use on non-development machines, use the scripts in the `scripts` folder.
