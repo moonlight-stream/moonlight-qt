@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -97,7 +97,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -206,7 +206,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC&#x202f;: %1</translation>
+        <translation>Statut du PC : %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -679,7 +679,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="796"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation>La désactivation de V-Sync permet une latence de rendu des sous-images plus faible, mais elle peut afficher des déchirures visibles</translation>
+        <translation>Désactiver V-Sync permet une latence inférieure à une image, mais peut afficher des déchirures</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="803"/>
@@ -689,7 +689,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="813"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>Le Frame pacing réduit les micro-saccades en retardant les images qui arrivent trop tôt</translation>
+        <translation>Le frame pacing réduit les micro-saccades en retardant les images qui arrivent trop tôt</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="823"/>
@@ -784,7 +784,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1213"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>REMARQUE : En raison d&apos;un bogue dans GeForce Experience, cette option peut ne pas fonctionner correctement si votre PC hôte a plusieurs moniteurs.</translation>
+        <translation>REMARQUE : En raison d&apos;un bug dans GeForce Experience, cette option peut ne pas fonctionner correctement si votre PC hôte a plusieurs moniteurs.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1232"/>
@@ -929,7 +929,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1383"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
-        <translation>N&apos;activez cette option que lorsque vous diffusez en continu un jeu qui ne prend pas en charge la connexion des manettes de jeu après le démarrage.</translation>
+        <translation>N&apos;activez cette option que lorsque vous streamez un jeu qui ne prend pas en charge la connexion de manettes en cours de jeu.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1201"/>
@@ -954,7 +954,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1452"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>Ceci fermera l&apos;application ou le jeu que vous êtes en train de diffuser lorsque vous aurez terminé votre flux. Vous perdrez tout progrès non sauvegardé !</translation>
+        <translation>Ferme l&apos;application ou le jeu quand vous terminez le stream. Tout progrès non sauvegardé sera perdu !</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1471"/>
@@ -1097,7 +1097,7 @@
     <message>
         <location filename="../gui/main.qml" line="461"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration&#x202f;:</translation>
+        <translation>Moonlight a détecté des manettes sans configuration :</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="374"/>
@@ -1132,7 +1132,7 @@
     <message>
         <location filename="../gui/main.qml" line="471"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Êtes-vous sûr de vouloir quitter&#x202f;?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
     </message>
 </context>
 </TS>
