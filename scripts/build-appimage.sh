@@ -32,9 +32,7 @@ pushd $BUILD_FOLDER
 # to missing symbols from the host's version of libwayland-client.so that aren't present in the older
 # version of libwayland-client.so from our AppImage build environment. When this happens, EGL fails to
 # work even in X11. To avoid this, we will disable Wayland support for the AppImage.
-#
-# We disable DRM support because linuxdeployqt doesn't bundle the appropriate libraries for Qt EGLFS.
-qmake $SOURCE_ROOT/moonlight-qt.pro CONFIG+=disable-wayland CONFIG+=disable-libdrm PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
+qmake $SOURCE_ROOT/moonlight-qt.pro CONFIG+=disable-wayland PREFIX=$DEPLOY_FOLDER/usr DEFINES+=APP_IMAGE || fail "Qmake failed!"
 popd
 
 echo Compiling Moonlight in $BUILD_CONFIG configuration
@@ -49,7 +47,7 @@ popd
 
 echo Creating AppImage
 pushd $INSTALLER_FOLDER
-VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop -qmldir=$SOURCE_ROOT/app/gui -appimage || fail "linuxdeployqt failed!"
+VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlight_stream.Moonlight.desktop -qmldir=$SOURCE_ROOT/app/gui -extra-plugins=platforms/libqeglfs.so,egldeviceintegrations,generic -appimage || fail "linuxdeployqt failed!"
 popd
 
 echo Build successful
