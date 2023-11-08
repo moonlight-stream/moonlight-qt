@@ -370,6 +370,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("background-gamepad", "background gamepad input");
     parser.addToggleOption("reverse-scroll-direction", "inverted scroll direction");
     parser.addToggleOption("swap-gamepad-buttons", "swap A/B and X/Y gamepad buttons (Nintendo-style)");
+    parser.addToggleOption("ignore-guide-button", "ignores the input from the gamepad's 'Guide' button");
     parser.addToggleOption("keep-awake", "prevent display sleep while streaming");
     parser.addChoiceOption("capture-system-keys", "capture system key combos", m_CaptureSysKeysModeMap.keys());
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
@@ -481,6 +482,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
 
     // Resolve --swap-gamepad-buttons and --no-swap-gamepad-buttons options
     preferences->swapFaceButtons = parser.getToggleOptionValue("swap-gamepad-buttons", preferences->swapFaceButtons);
+
+    // Resolve --ignore-guide-button and --no-ignore-guide-button options
+    preferences->ignoreGuideButton = parser.getToggleOptionValue("ignore-guide-button", preferences->ignoreGuideButton);
 
     // Resolve --keep-awake and --no-keep-awake options
     preferences->keepAwake = parser.getToggleOptionValue("keep-awake", preferences->keepAwake);

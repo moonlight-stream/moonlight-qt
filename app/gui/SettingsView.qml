@@ -1411,6 +1411,23 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Allows Moonlight to capture gamepad inputs even if it's not the current window in focus")
                 }
+
+                CheckBox {
+                    id: ignoreGuideButtonCheck
+                    width: parent.width
+                    text: qsTr("Ignore input from the 'Guide' button")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.ignoreGuideButton
+                    onCheckedChanged: {
+                        StreamingPreferences.ignoreGuideButton = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Useful when both host and client react on the 'Guide' button press (like SteamDeck).")  + " " +
+                                  qsTr("This disables the 'Guide' button passthrough to the host where it can be emulated by other means.")
+                }
             }
         }
 

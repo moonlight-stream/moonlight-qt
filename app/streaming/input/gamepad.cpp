@@ -233,6 +233,10 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         return;
     }
 
+    if (m_IgnoreGuideButton && event->button == SDL_CONTROLLER_BUTTON_GUIDE) {
+        return;
+    }
+
     if (m_SwapFaceButtons) {
         switch (event->button) {
         case SDL_CONTROLLER_BUTTON_A:
