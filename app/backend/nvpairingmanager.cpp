@@ -298,8 +298,8 @@ NvPairingManager::pair(QString appVersion, QString pin, QSslCertificate& serverC
     }
 
     QByteArray pairingSecret = NvHTTP::getXmlStringFromHex(respXml, "pairingsecret");
-    QByteArray serverSecret = QByteArray(pairingSecret.data(), 16);
-    QByteArray serverSignature = QByteArray(&pairingSecret.data()[16], 256);
+    QByteArray serverSecret = pairingSecret.left(16);
+    QByteArray serverSignature = pairingSecret.mid(16);
 
     if (!verifySignature(serverSecret,
                          serverSignature,
