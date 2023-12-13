@@ -96,17 +96,19 @@ PlVkRenderer::PlVkRenderer(IFFmpegRenderer* backendRenderer) :
 
 PlVkRenderer::~PlVkRenderer()
 {
-    for (int i = 0; i < (int)SDL_arraysize(m_Overlays); i++) {
-        if (m_Overlays[i].hasOverlay) {
-            pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
+    if (m_Vulkan != nullptr) {
+        for (int i = 0; i < (int)SDL_arraysize(m_Overlays); i++) {
+            if (m_Overlays[i].hasOverlay) {
+                pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
+            }
+            if (m_Overlays[i].hasStagingOverlay) {
+                pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
+            }
         }
-        if (m_Overlays[i].hasStagingOverlay) {
-            pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
-        }
-    }
 
-    for (int i = 0; i < (int)SDL_arraysize(m_Textures); i++) {
-        pl_tex_destroy(m_Vulkan->gpu, &m_Textures[i]);
+        for (int i = 0; i < (int)SDL_arraysize(m_Textures); i++) {
+            pl_tex_destroy(m_Vulkan->gpu, &m_Textures[i]);
+        }
     }
 
     pl_renderer_destroy(&m_Renderer);
