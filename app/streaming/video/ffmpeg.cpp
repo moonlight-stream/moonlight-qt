@@ -332,6 +332,21 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
             }
 #endif
         }
+        else
+        {
+#ifdef HAVE_LIBPLACEBO_VULKAN
+            if (qgetenv("PREFER_VULKAN") == "1") {
+                if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
+                    m_FrontendRenderer = new PlVkRenderer(m_BackendRenderer);
+                    if (m_FrontendRenderer->initialize(params)) {
+                        return true;
+                    }
+                    delete m_FrontendRenderer;
+                    m_FrontendRenderer = nullptr;
+                }
+            }
+#endif
+        }
 
 #if defined(HAVE_EGL) && !defined(GL_IS_SLOW)
         if (m_BackendRenderer->canExportEGL()) {
