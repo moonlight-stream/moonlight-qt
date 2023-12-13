@@ -88,9 +88,19 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
 PlVkRenderer::PlVkRenderer(IFFmpegRenderer* backendRenderer) :
     m_Backend(backendRenderer)
 {
+    bool ok;
+
     pl_log_params logParams = pl_log_default_params;
     logParams.log_cb = pl_log_cb;
-    logParams.log_level = PL_LOG_DEBUG;
+    logParams.log_level = (pl_log_level)qEnvironmentVariableIntValue("PLVK_LOG_LEVEL", &ok);
+    if (!ok) {
+#ifdef QT_DEBUG
+        logParams.log_level = PL_LOG_DEBUG;
+#else
+        logParams.log_level = PL_LOG_WARN;
+#endif
+    }
+
     m_Log = pl_log_create(PL_API_VER, &logParams);
 }
 
@@ -157,9 +167,15 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     pl_vk_inst_params vkInstParams = pl_vk_inst_default_params;
+    {
+        bool ok;
+        vkInstParams.debug = !!qEnvironmentVariableIntValue("PLVK_DEBUG", &ok);
 #ifdef QT_DEBUG
-    vkInstParams.debug = true;
+        if (!ok) {
+            vkInstParams.debug = true;
+        }
 #endif
+    }
     vkInstParams.get_proc_addr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
     vkInstParams.extensions = instanceExtensions.data();
     vkInstParams.num_extensions = instanceExtensions.size();
@@ -307,13 +323,16 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "libplacebo Vulkan renderer initialized");
+
     return true;
 }
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
 {
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using libplacebo Vulkan renderer");
+                "Using Vulkan video decoding");
 
     if (m_Backend) {
         context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
