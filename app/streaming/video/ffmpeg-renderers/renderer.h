@@ -233,6 +233,15 @@ public:
         return true;
     }
 
+    // Allow renderers to expose their type
+    enum class RendererType {
+        Unknown,
+        Vulkan
+    };
+    virtual RendererType getRendererType() {
+        return RendererType::Unknown;
+    }
+
     // IOverlayRenderer
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override {
         // Nothing

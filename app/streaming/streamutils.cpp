@@ -8,8 +8,11 @@
 
 Uint32 StreamUtils::getPlatformWindowFlags()
 {
-#ifdef Q_OS_DARWIN
+#if defined(Q_OS_DARWIN)
     return SDL_WINDOW_METAL;
+#elif defined(HAVE_LIBPLACEBO_VULKAN)
+    // We'll fall back to GL if Vulkan fails
+    return SDL_WINDOW_VULKAN;
 #else
     return 0;
 #endif

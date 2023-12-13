@@ -120,6 +120,13 @@ unix:!macx {
                     CONFIG += cuda
                 }
             }
+
+            !disable-libplacebo {
+                packagesExist(libplacebo) {
+                    PKGCONFIG += libplacebo
+                    CONFIG += libplacebo
+                }
+            }
         }
 
         !disable-wayland {
@@ -291,7 +298,7 @@ mmal {
     # significantly better performance than EGL on the Pi. Setting
     # this option allows EGL usage even if built with MMAL support.
     #
-    # It is highly recommended to also build with 'glslow' to avoid
+    # It is highly recommended to also build with 'gpuslow' to avoid
     # EGL being preferred if direct DRM rendering is available.
     allow-egl-with-mmal {
         message(Allowing EGL usage with MMAL enabled)
@@ -321,6 +328,16 @@ cuda {
 
     # ffnvcodec uses libdl in cuda_load_functions()/cuda_free_functions()
     LIBS += -ldl
+}
+libplacebo {
+    message(Vulkan support enabled via libplacebo)
+
+    DEFINES += HAVE_LIBPLACEBO_VULKAN
+    SOURCES += \
+        streaming/video/ffmpeg-renderers/plvk.cpp \
+        streaming/video/ffmpeg-renderers/plvk_c.c
+    HEADERS += \
+        streaming/video/ffmpeg-renderers/plvk.h
 }
 config_EGL {
     message(EGL renderer selected)
@@ -395,6 +412,16 @@ glslow {
     message(GL slow build)
 
     DEFINES += GL_IS_SLOW
+}
+vkslow {
+    message(Vulkan slow build)
+
+    DEFINES += VULKAN_IS_SLOW
+}
+gpuslow {
+    message(GPU slow build)
+
+    DEFINES += GL_IS_SLOW VULKAN_IS_SLOW
 }
 wayland {
     message(Wayland extensions enabled)

@@ -452,13 +452,19 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+    // This renderer doesn't support HDR, so pick a different one.
+    // HACK: This avoids a deadlock in SDL_CreateRenderer() if
+    // Vulkan was used before and SDL is trying to load EGL.
+    if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+        EGL_LOG(Info, "EGL doesn't support HDR rendering");
+        return false;
+    }
+
     // HACK: Work around bug where renderer will repeatedly fail with:
     // SDL_CreateRenderer() failed: Could not create GLES window surface
     // Don't retry if we've already failed to create a renderer for this
     // window *unless* the format has changed from 10-bit to 8-bit.
-    if (m_Window == s_LastFailedWindow &&
-            !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) ==
-                !!(s_LastFailedVideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
+    if (m_Window == s_LastFailedWindow) {
         EGL_LOG(Error, "SDL_CreateRenderer() already failed on this window!");
         return false;
     }

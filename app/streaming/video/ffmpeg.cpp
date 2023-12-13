@@ -40,6 +40,10 @@
 #include "ffmpeg-renderers/cuda.h"
 #endif
 
+#ifdef HAVE_LIBPLACEBO_VULKAN
+#include "ffmpeg-renderers/plvk.h"
+#endif
+
 // This is gross but it allows us to use sizeof()
 #include "ffmpeg_videosamples.cpp"
 
@@ -288,20 +292,46 @@ void FFmpegVideoDecoder::reset()
 bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend)
 {
     if (useAlternateFrontend) {
-#ifdef HAVE_DRM
-        // If we're trying to stream HDR, we need to use the DRM renderer in direct
-        // rendering mode so it can set the HDR metadata on the display. EGL does
-        // not currently support this (and even if it did, Mesa and Wayland don't
-        // currently have protocols to actually get that metadata to the display).
-        if ((params->videoFormat & VIDEO_FORMAT_MASK_10BIT) && m_BackendRenderer->canExportDrmPrime()) {
-            m_FrontendRenderer = new DrmRenderer(false, m_BackendRenderer);
-            if (m_FrontendRenderer->initialize(params)) {
-                return true;
+        if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+#if defined(HAVE_LIBPLACEBO_VULKAN) && !defined(VULKAN_IS_SLOW)
+            // The Vulkan renderer can also handle HDR with a supported compositor. We prefer
+            // rendering HDR with Vulkan if possible since it's more fully featured than DRM.
+            if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
+                m_FrontendRenderer = new PlVkRenderer(m_BackendRenderer);
+                if (m_FrontendRenderer->initialize(params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                    return true;
+                }
+                delete m_FrontendRenderer;
+                m_FrontendRenderer = nullptr;
             }
-            delete m_FrontendRenderer;
-            m_FrontendRenderer = nullptr;
-        }
 #endif
+
+#ifdef HAVE_DRM
+            // If we're trying to stream HDR, we need to use the DRM renderer in direct
+            // rendering mode so it can set the HDR metadata on the display. EGL does
+            // not currently support this (and even if it did, Mesa and Wayland don't
+            // currently have protocols to actually get that metadata to the display).
+            if (m_BackendRenderer->canExportDrmPrime()) {
+                m_FrontendRenderer = new DrmRenderer(false, m_BackendRenderer);
+                if (m_FrontendRenderer->initialize(params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                    return true;
+                }
+                delete m_FrontendRenderer;
+                m_FrontendRenderer = nullptr;
+            }
+#endif
+
+#if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
+            if (m_BackendRenderer->getRendererType() != IFFmpegRenderer::RendererType::Vulkan) {
+                m_FrontendRenderer = new PlVkRenderer(m_BackendRenderer);
+                if (m_FrontendRenderer->initialize(params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
+                    return true;
+                }
+                delete m_FrontendRenderer;
+                m_FrontendRenderer = nullptr;
+            }
+#endif
+        }
 
 #if defined(HAVE_EGL) && !defined(GL_IS_SLOW)
         if (m_BackendRenderer->canExportEGL()) {
@@ -313,6 +343,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
             m_FrontendRenderer = nullptr;
         }
 #endif
+
         // If we made it here, we failed to create the EGLRenderer
         return false;
     }
@@ -783,6 +814,10 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #ifdef HAVE_DRM
         case AV_HWDEVICE_TYPE_DRM:
             return new DrmRenderer(true);
+#endif
+#ifdef HAVE_LIBPLACEBO_VULKAN
+        case AV_HWDEVICE_TYPE_VULKAN:
+            return new PlVkRenderer(nullptr);
 #endif
         default:
             return nullptr;
