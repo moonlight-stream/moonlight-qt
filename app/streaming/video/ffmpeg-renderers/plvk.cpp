@@ -108,12 +108,8 @@ PlVkRenderer::~PlVkRenderer()
 {
     if (m_Vulkan != nullptr) {
         for (int i = 0; i < (int)SDL_arraysize(m_Overlays); i++) {
-            if (m_Overlays[i].hasOverlay) {
-                pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
-            }
-            if (m_Overlays[i].hasStagingOverlay) {
-                pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
-            }
+            pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
+            pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
         }
 
         for (int i = 0; i < (int)SDL_arraysize(m_Textures); i++) {
@@ -559,51 +555,73 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    // If there's a staging texture already, free it
     SDL_AtomicLock(&m_OverlayLock);
-    if (m_Overlays[type].hasStagingOverlay) {
-        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
-        SDL_zero(m_Overlays[type].stagingOverlay);
-        m_Overlays[type].hasStagingOverlay = false;
-    }
+    // We want to clear the staging overlay flag even if a staging overlay is still present,
+    // since this ensures the render thread will not read from a partially initialized pl_tex
+    // as we modify or recreate the staging overlay texture outside the overlay lock.
+    m_Overlays[type].hasStagingOverlay = false;
     SDL_AtomicUnlock(&m_OverlayLock);
 
-    // If there's no new surface, we're done now
+    // If there's no new staging overlay, free the old staging overlay texture.
+    // NB: This is safe to do outside the overlay lock because we're guaranteed
+    // to not have racing readers/writers if hasStagingOverlay is false.
     if (newSurface == nullptr) {
+        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
+        SDL_zero(m_Overlays[type].stagingOverlay);
         return;
     }
 
-    SDL_assert(!SDL_ISPIXELFORMAT_INDEXED(newSurface->format->format));
-    pl_plane_data planeData = {};
-    planeData.type = PL_FMT_UNORM;
-    planeData.width = newSurface->w;
-    planeData.height = newSurface->h;
-    planeData.pixel_stride = newSurface->format->BytesPerPixel;
-    planeData.row_stride = (size_t)newSurface->pitch;
-    planeData.pixels = newSurface->pixels;
-    uint64_t formatMasks[4] = { newSurface->format->Rmask, newSurface->format->Gmask, newSurface->format->Bmask, newSurface->format->Amask };
-    pl_plane_data_from_mask(&planeData, formatMasks);
+    // Find a compatible texture format
+    SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
+    pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
+    if (!texFormat) {
+        SDL_FreeSurface(newSurface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_find_named_fmt(bgra8) failed");
+        return;
+    }
 
-    // This callback frees the surface after the upload completes
-    planeData.callback = overlayUploadComplete;
-    planeData.priv = newSurface;
+    // Create a new texture for this overlay if necessary, otherwise reuse the existing texture.
+    // NB: We're guaranteed that the render thread won't be reading this concurrently because
+    // we set hasStagingOverlay to false above.
+    pl_tex_params texParams = {};
+    texParams.w = newSurface->w;
+    texParams.h = newSurface->h;
+    texParams.format = texFormat;
+    texParams.sampleable = true;
+    texParams.host_writable = true;
+    texParams.blit_src = !!(texFormat->caps & PL_FMT_CAP_BLITTABLE);
+    texParams.debug_tag = PL_DEBUG_TAG;
+    if (!pl_tex_recreate(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex, &texParams)) {
+        SDL_FreeSurface(newSurface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_recreate() failed");
+        return;
+    }
 
+    // Upload the surface data to the new texture
+    SDL_assert(!SDL_MUSTLOCK(newSurface));
+    pl_tex_transfer_params xferParams = {};
+    xferParams.tex = m_Overlays[type].stagingOverlay.tex;
+    xferParams.row_pitch = (size_t)newSurface->pitch;
+    xferParams.ptr = newSurface->pixels;
+    xferParams.callback = overlayUploadComplete;
+    xferParams.priv = newSurface;
+    if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
+        SDL_FreeSurface(newSurface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_upload() failed");
+        return;
+    }
+
+    // newSurface is now owned by the texture upload process. It will be freed in overlayUploadComplete()
+    newSurface = nullptr;
+
+    // Initialize the rest of the overlay params
     m_Overlays[type].stagingOverlay.mode = PL_OVERLAY_NORMAL;
     m_Overlays[type].stagingOverlay.coords = PL_OVERLAY_COORDS_DST_FRAME;
     m_Overlays[type].stagingOverlay.repr = pl_color_repr_rgb;
     m_Overlays[type].stagingOverlay.color = pl_color_space_srgb;
-
-    // Upload the surface to a new texture
-    bool success = pl_upload_plane(m_Vulkan->gpu, nullptr, &m_Overlays[type].stagingOverlay.tex, &planeData);
-    if (!success) {
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_upload_plane() failed");
-        return;
-    }
-
-    // newSurface is now owned by the plane upload process. It will be freed in overlayUploadComplete()
-    newSurface = nullptr;
 
     // Make this staging overlay visible to the render thread
     SDL_AtomicLock(&m_OverlayLock);
