@@ -684,6 +684,12 @@ int PlVkRenderer::getDecoderCapabilities()
            CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
 }
 
+bool PlVkRenderer::needsTestFrame()
+{
+    // We need a test frame to verify that Vulkan video decoding is working
+    return true;
+}
+
 bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
     if (m_Backend) {

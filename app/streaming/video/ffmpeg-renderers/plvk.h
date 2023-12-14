@@ -18,6 +18,7 @@ public:
     virtual void setHdrMode(bool enabled) override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
+    virtual bool needsTestFrame() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual RendererType getRendererType() override;
