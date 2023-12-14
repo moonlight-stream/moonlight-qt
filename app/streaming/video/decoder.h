@@ -43,6 +43,7 @@ typedef struct _DECODER_PARAMETERS {
     bool enableVsync;
     bool enableFramePacing;
     bool testOnly;
+    int minimumLatency;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 
 class IVideoDecoder {

@@ -31,11 +31,14 @@
 Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
     m_RenderThread(nullptr),
     m_VsyncThread(nullptr),
+    m_LatencyThread(nullptr),
     m_Stopping(false),
     m_VsyncSource(nullptr),
     m_VsyncRenderer(renderer),
     m_MaxVideoFps(0),
     m_DisplayFps(0),
+    m_MinimumLatency(0),
+    m_MaxLatencyQueuedFrames(0),
     m_VideoStats(videoStats)
 {
 
@@ -44,6 +47,12 @@ Pacer::Pacer(IFFmpegRenderer* renderer, PVIDEO_STATS videoStats) :
 Pacer::~Pacer()
 {
     m_Stopping = true;
+
+    // Stop the latency thread
+    if (m_LatencyThread != nullptr) {
+        m_LatencyQueueNotEmpty.wakeAll();
+        SDL_WaitThread(m_LatencyThread, nullptr);
+    }
 
     // Stop the V-sync thread
     if (m_VsyncThread != nullptr) {
@@ -173,9 +182,125 @@ int Pacer::renderThread(void* context)
     return 0;
 }
 
+
+int Pacer::latencyThread(void* context)
+{
+    Pacer* me = reinterpret_cast<Pacer*>(context);
+
+#if SDL_VERSION_ATLEAST(2, 0, 9)
+    int threadPriorityResult = SDL_SetThreadPriority(SDL_THREAD_PRIORITY_TIME_CRITICAL);
+#else
+    int threadPriorityResult = SDL_SetThreadPriority(SDL_THREAD_PRIORITY_HIGH);
+#endif
+    if (threadPriorityResult < 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Unable to increase latency thread to higher priority: %s",
+                    SDL_GetError());
+    }
+
+    // Make sure initialize() has been called
+    SDL_assert(m_MaxVideoFps != 0);
+
+    Uint32 startTime = SDL_GetTicks();
+    double releasePeriod = 1000.0 / me->m_MaxVideoFps;
+    double scheduleShift = 0;
+
+    int baseFrameBufferAllowance = 1 + me->m_MinimumLatency * me->m_MaxVideoFps / 1000;
+
+    int iteration = 0;
+    while (!me->m_Stopping) {
+        iteration++;
+
+        // Wait for the next frame release target
+        double nextReleaseTime = startTime + scheduleShift + releasePeriod * iteration;
+        double timeToNextRelease = nextReleaseTime - SDL_GetTicks();
+        if (timeToNextRelease < -releasePeriod * 0.5) {
+            // We somehow fell far behind our release target (maybe due to thread scheduling or
+            // a super late frame). Just skip to the next iteration.
+            continue;
+        }
+        if (timeToNextRelease >= 1.0) {
+            SDL_Delay((Uint32) timeToNextRelease);
+        }
+
+        if (me->m_Stopping) {
+            break;
+        }
+
+        // Acquire the latency queue lock to protect the queue and
+        // the not empty condition
+        me->m_LatencyQueueLock.lock();
+
+        // If the queue length history entries are large, be strict
+        // about dropping excess frames.
+        int frameDropTarget = baseFrameBufferAllowance;
+
+        // If we may get more frames per second than we can display, use
+        // frame history to drop frames only if consistently above the
+        // our frame buffer allowance.
+        for (int queueHistoryEntry : me->m_LatencyQueueHistory) {
+            if (queueHistoryEntry <= baseFrameBufferAllowance) {
+                // Be lenient as long as the queue length
+                // resolves before the end of frame history
+                frameDropTarget = baseFrameBufferAllowance + 2;
+                break;
+            }
+        }
+
+        // Keep a rolling 500 ms window of latency queue history
+        if (me->m_LatencyQueueHistory.count() == me->m_DisplayFps / 2) {
+            me->m_LatencyQueueHistory.dequeue();
+        }
+
+        me->m_LatencyQueueHistory.enqueue(me->m_LatencyQueue.count());
+
+        // Drop excess frames if we're above our drop target
+        while (me->m_LatencyQueue.count() > frameDropTarget) {
+            AVFrame* frame = me->m_LatencyQueue.dequeue();
+
+            // Drop the lock while we call av_frame_free()
+            me->m_LatencyQueueLock.unlock();
+            me->m_VideoStats->pacerDroppedFrames++;
+            av_frame_free(&frame);
+            me->m_LatencyQueueLock.lock();
+        }
+
+        // Wait for a frame. Ideally a frame is already ready, but that may not be the case
+        while (!me->m_Stopping && me->m_LatencyQueue.empty()) {
+            me->m_LatencyQueueNotEmpty.wait(&me->m_LatencyQueueLock);
+        }
+
+        if (me->m_Stopping) {
+            me->m_LatencyQueueLock.unlock();
+            break;
+        }
+
+        AVFrame* frame = me->m_LatencyQueue.dequeue();
+        me->m_LatencyQueueLock.unlock();
+
+        // Adjust our frame release schedule to target our minimum latency.
+        int frameLatency = (int) (SDL_GetTicks() - frame->pkt_dts);
+        scheduleShift += (me->m_MinimumLatency - frameLatency) * 0.1;
+
+        // Enqueue the frame in the next queue
+        me->m_FrameQueueLock.lock();
+        if (me->m_VsyncSource == nullptr) {
+            me->enqueueFrameForRenderingAndUnlock(frame);
+        }
+        else {
+            me->dropFrameForEnqueue(me->m_PacingQueue, MAX_QUEUED_FRAMES);
+            me->m_PacingQueue.enqueue(frame);
+            me->m_FrameQueueLock.unlock();
+            me->m_PacingQueueNotEmpty.wakeOne();
+        }
+    }
+
+    return 0;
+}
+
 void Pacer::enqueueFrameForRenderingAndUnlock(AVFrame *frame)
 {
-    dropFrameForEnqueue(m_RenderQueue);
+    dropFrameForEnqueue(m_RenderQueue, MAX_QUEUED_FRAMES);
     m_RenderQueue.enqueue(frame);
 
     m_FrameQueueLock.unlock();
@@ -256,11 +381,12 @@ void Pacer::handleVsync(int timeUntilNextVsyncMillis)
     enqueueFrameForRenderingAndUnlock(m_PacingQueue.dequeue());
 }
 
-bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
+bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing, int minimumLatency)
 {
     m_MaxVideoFps = maxVideoFps;
     m_DisplayFps = StreamUtils::getDisplayRefreshRate(window);
     m_RendererAttributes = m_VsyncRenderer->getRendererAttributes();
+    m_MinimumLatency = minimumLatency;
 
     if (enablePacing) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -312,6 +438,11 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Frame pacing disabled: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
+    }
+
+    if (m_MinimumLatency > 0) {
+        m_MaxLatencyQueuedFrames = 3 + m_MinimumLatency * m_MaxVideoFps / 1000;
+        m_LatencyThread = SDL_CreateThread(Pacer::latencyThread, "PacerLatency", this);
     }
 
     if (m_VsyncSource != nullptr) {
@@ -387,10 +518,10 @@ void Pacer::renderFrame(AVFrame* frame)
     m_FrameQueueLock.unlock();
 }
 
-void Pacer::dropFrameForEnqueue(QQueue<AVFrame*>& queue)
+void Pacer::dropFrameForEnqueue(QQueue<AVFrame*>& queue, int maxQueuedFrames)
 {
-    SDL_assert(queue.size() <= MAX_QUEUED_FRAMES);
-    if (queue.size() == MAX_QUEUED_FRAMES) {
+    SDL_assert(queue.size() <= maxQueuedFrames);
+    if (queue.size() == maxQueuedFrames) {
         AVFrame* frame = queue.dequeue();
         av_frame_free(&frame);
     }
@@ -402,14 +533,23 @@ void Pacer::submitFrame(AVFrame* frame)
     SDL_assert(m_MaxVideoFps != 0);
 
     // Queue the frame and possibly wake up the render thread
-    m_FrameQueueLock.lock();
-    if (m_VsyncSource != nullptr) {
-        dropFrameForEnqueue(m_PacingQueue);
-        m_PacingQueue.enqueue(frame);
-        m_FrameQueueLock.unlock();
-        m_PacingQueueNotEmpty.wakeOne();
+    if (m_LatencyThread != nullptr) {
+        m_LatencyQueueLock.lock();
+        dropFrameForEnqueue(m_LatencyQueue, m_MaxLatencyQueuedFrames);
+        m_LatencyQueue.enqueue(frame);
+        m_LatencyQueueLock.unlock();
+        m_LatencyQueueNotEmpty.wakeOne();
     }
     else {
-        enqueueFrameForRenderingAndUnlock(frame);
+        m_FrameQueueLock.lock();
+        if (m_VsyncSource != nullptr) {
+            dropFrameForEnqueue(m_PacingQueue, MAX_QUEUED_FRAMES);
+            m_PacingQueue.enqueue(frame);
+            m_FrameQueueLock.unlock();
+            m_PacingQueueNotEmpty.wakeOne();
+        }
+        else {
+            enqueueFrameForRenderingAndUnlock(frame);
+        }
     }
 }
