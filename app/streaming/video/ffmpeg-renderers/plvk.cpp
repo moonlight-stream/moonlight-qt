@@ -251,6 +251,9 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     vkSwapchainParams.surface = m_VkSurface;
     vkSwapchainParams.present_mode = presentMode;
     vkSwapchainParams.swapchain_depth = 1; // No queued frames
+#if PL_API_VER >= 338
+    vkSwapchainParams.disable_10bit_sdr = true; // Some drivers don't dither 10-bit SDR output correctly
+#endif
     m_Swapchain = pl_vulkan_create_swapchain(m_Vulkan, &vkSwapchainParams);
     if (m_Swapchain == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -511,6 +514,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
+        // NB: We must fallthrough to call pl_swapchain_submit_frame()
     }
 
     // Submit the frame for display and swap buffers
