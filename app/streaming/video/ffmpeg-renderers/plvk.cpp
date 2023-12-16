@@ -137,7 +137,7 @@ PlVkRenderer::~PlVkRenderer()
 }
 
 #define POPULATE_FUNCTION(name) \
-    fn_##name = (PFN_##name)vkInstParams.get_proc_addr(m_PlVkInstance->instance, #name); \
+    fn_##name = (PFN_##name)m_PlVkInstance->get_proc_addr(m_PlVkInstance->instance, #name); \
     if (fn_##name == nullptr) { \
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, \
                      "Missing required Vulkan function: " #name); \
@@ -218,8 +218,8 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     else {
         // We want immediate mode for V-Sync disabled if possible
         if (isPresentModeSupported(VK_PRESENT_MODE_IMMEDIATE_KHR)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Using Immediate present mode with V-Sync disabled");
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using Immediate present mode with V-Sync disabled");
             presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
         }
         else {
@@ -470,7 +470,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
             if (i == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
                 overlayParts[i].dst.x0 = 0;
-                overlayParts[i].dst.y0 = SDL_min(0, targetFrame.crop.y1 - overlayParts[i].src.y1);
+                overlayParts[i].dst.y0 = SDL_max(0, targetFrame.crop.y1 - overlayParts[i].src.y1);
             }
             else if (i == Overlay::OverlayDebug) {
                 // Top left
@@ -597,6 +597,8 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     texParams.blit_src = !!(texFormat->caps & PL_FMT_CAP_BLITTABLE);
     texParams.debug_tag = PL_DEBUG_TAG;
     if (!pl_tex_recreate(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex, &texParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
+        SDL_zero(m_Overlays[type].stagingOverlay);
         SDL_FreeSurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_tex_recreate() failed");
@@ -612,6 +614,8 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     xferParams.callback = overlayUploadComplete;
     xferParams.priv = newSurface;
     if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
+        SDL_zero(m_Overlays[type].stagingOverlay);
         SDL_FreeSurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_tex_upload() failed");
