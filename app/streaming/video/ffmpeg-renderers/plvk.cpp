@@ -351,6 +351,16 @@ bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFra
         return false;
     }
 
+    // libplacebo assumes a minimum luminance value of 0 means the actual value was unknown.
+    // Since we assume the host values are correct, we use the PL_COLOR_HDR_BLACK constant to
+    // indicate infinite contrast.
+    //
+    // NB: We also have to check that the AVFrame actually had metadata in the first place,
+    // because libplacebo may infer metadata if the frame didn't have any.
+    if (av_frame_get_side_data(frame, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA) && !mappedFrame->color.hdr.min_luma) {
+        mappedFrame->color.hdr.min_luma = PL_COLOR_HDR_BLACK;
+    }
+
     return true;
 }
 
