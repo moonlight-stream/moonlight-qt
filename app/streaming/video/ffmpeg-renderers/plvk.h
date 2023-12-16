@@ -15,7 +15,6 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
-    virtual void setHdrMode(bool enabled) override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
@@ -44,6 +43,7 @@ private:
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
     pl_tex m_Textures[PL_MAX_PLANES] = {};
+    pl_color_space m_LastColorspace = {};
 
     // Overlay state
     SDL_SpinLock m_OverlayLock = 0;

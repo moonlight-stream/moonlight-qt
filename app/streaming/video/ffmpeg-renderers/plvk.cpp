@@ -427,6 +427,13 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         return;
     }
 
+    // Adjust the swapchain if the colorspace of incoming frames has changed
+    if (!pl_color_space_equal(&mappedFrame.color, &m_LastColorspace)) {
+        m_LastColorspace = mappedFrame.color;
+        SDL_assert(pl_color_space_equal(&mappedFrame.color, &m_LastColorspace));
+        pl_swapchain_colorspace_hint(m_Swapchain, &mappedFrame.color);
+    }
+
     // Reserve enough space to avoid allocating under the overlay lock
     pl_overlay_part overlayParts[Overlay::OverlayMax] = {};
     std::vector<pl_tex> texturesToDestroy;
@@ -647,43 +654,6 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     SDL_assert(!m_Overlays[type].hasStagingOverlay);
     m_Overlays[type].hasStagingOverlay = true;
     SDL_AtomicUnlock(&m_OverlayLock);
-}
-
-void PlVkRenderer::setHdrMode(bool enabled)
-{
-    pl_color_space csp = {};
-
-    if (enabled) {
-        csp.primaries = PL_COLOR_PRIM_BT_2020;
-        csp.transfer = PL_COLOR_TRC_PQ;
-
-        // Use the host's provided HDR metadata if present
-        SS_HDR_METADATA hdrMetadata;
-        if (LiGetHdrMetadata(&hdrMetadata)) {
-            csp.hdr.prim.red.x = hdrMetadata.displayPrimaries[0].x / 50000.f;
-            csp.hdr.prim.red.y = hdrMetadata.displayPrimaries[0].y / 50000.f;
-            csp.hdr.prim.green.x = hdrMetadata.displayPrimaries[1].x / 50000.f;
-            csp.hdr.prim.green.y = hdrMetadata.displayPrimaries[1].y / 50000.f;
-            csp.hdr.prim.blue.x = hdrMetadata.displayPrimaries[2].x / 50000.f;
-            csp.hdr.prim.blue.y = hdrMetadata.displayPrimaries[2].y / 50000.f;
-            csp.hdr.prim.white.x = hdrMetadata.whitePoint.x / 50000.f;
-            csp.hdr.prim.white.y = hdrMetadata.whitePoint.y / 50000.f;
-            csp.hdr.min_luma = hdrMetadata.minDisplayLuminance / 10000.f;
-            csp.hdr.max_luma = hdrMetadata.maxDisplayLuminance;
-            csp.hdr.max_cll = hdrMetadata.maxContentLightLevel;
-            csp.hdr.max_fall = hdrMetadata.maxFrameAverageLightLevel;
-        }
-        else {
-            // Use the generic HDR10 metadata if the host doesn't provide HDR metadata
-            csp.hdr = pl_hdr_metadata_hdr10;
-        }
-    }
-    else {
-        csp.primaries = PL_COLOR_PRIM_UNKNOWN;
-        csp.transfer = PL_COLOR_TRC_UNKNOWN;
-    }
-
-    pl_swapchain_colorspace_hint(m_Swapchain, &csp);
 }
 
 int PlVkRenderer::getRendererAttributes()
