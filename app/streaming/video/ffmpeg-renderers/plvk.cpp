@@ -333,9 +333,10 @@ bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary *
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using Vulkan video decoding");
 
-    if (m_Backend) {
-        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
-    }
+    // This should only be called when we're acting as the decoder backend
+    SDL_assert(m_Backend == nullptr);
+
+    context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
     return true;
 }
 
