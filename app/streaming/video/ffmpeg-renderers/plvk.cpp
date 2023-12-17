@@ -108,12 +108,8 @@ PlVkRenderer::~PlVkRenderer()
 {
     if (m_Vulkan != nullptr) {
         for (int i = 0; i < (int)SDL_arraysize(m_Overlays); i++) {
-            if (m_Overlays[i].hasOverlay) {
-                pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
-            }
-            if (m_Overlays[i].hasStagingOverlay) {
-                pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
-            }
+            pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
+            pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].stagingOverlay.tex);
         }
 
         for (int i = 0; i < (int)SDL_arraysize(m_Textures); i++) {
@@ -141,7 +137,7 @@ PlVkRenderer::~PlVkRenderer()
 }
 
 #define POPULATE_FUNCTION(name) \
-    fn_##name = (PFN_##name)vkInstParams.get_proc_addr(m_PlVkInstance->instance, #name); \
+    fn_##name = (PFN_##name)m_PlVkInstance->get_proc_addr(m_PlVkInstance->instance, #name); \
     if (fn_##name == nullptr) { \
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, \
                      "Missing required Vulkan function: " #name); \
@@ -222,8 +218,8 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     else {
         // We want immediate mode for V-Sync disabled if possible
         if (isPresentModeSupported(VK_PRESENT_MODE_IMMEDIATE_KHR)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Using Immediate present mode with V-Sync disabled");
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using Immediate present mode with V-Sync disabled");
             presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
         }
         else {
@@ -255,6 +251,9 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     vkSwapchainParams.surface = m_VkSurface;
     vkSwapchainParams.present_mode = presentMode;
     vkSwapchainParams.swapchain_depth = 1; // No queued frames
+#if PL_API_VER >= 338
+    vkSwapchainParams.disable_10bit_sdr = true; // Some drivers don't dither 10-bit SDR output correctly
+#endif
     m_Swapchain = pl_vulkan_create_swapchain(m_Vulkan, &vkSwapchainParams);
     if (m_Swapchain == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -334,9 +333,10 @@ bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary *
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using Vulkan video decoding");
 
-    if (m_Backend) {
-        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
-    }
+    // This should only be called when we're acting as the decoder backend
+    SDL_assert(m_Backend == nullptr);
+
+    context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
     return true;
 }
 
@@ -349,6 +349,16 @@ bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFra
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_map_avframe_ex() failed");
         return false;
+    }
+
+    // libplacebo assumes a minimum luminance value of 0 means the actual value was unknown.
+    // Since we assume the host values are correct, we use the PL_COLOR_HDR_BLACK constant to
+    // indicate infinite contrast.
+    //
+    // NB: We also have to check that the AVFrame actually had metadata in the first place,
+    // because libplacebo may infer metadata if the frame didn't have any.
+    if (av_frame_get_side_data(frame, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA) && !mappedFrame->color.hdr.min_luma) {
+        mappedFrame->color.hdr.min_luma = PL_COLOR_HDR_BLACK;
     }
 
     return true;
@@ -417,6 +427,13 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         return;
     }
 
+    // Adjust the swapchain if the colorspace of incoming frames has changed
+    if (!pl_color_space_equal(&mappedFrame.color, &m_LastColorspace)) {
+        m_LastColorspace = mappedFrame.color;
+        SDL_assert(pl_color_space_equal(&mappedFrame.color, &m_LastColorspace));
+        pl_swapchain_colorspace_hint(m_Swapchain, &mappedFrame.color);
+    }
+
     // Reserve enough space to avoid allocating under the overlay lock
     pl_overlay_part overlayParts[Overlay::OverlayMax] = {};
     std::vector<pl_tex> texturesToDestroy;
@@ -471,7 +488,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
             if (i == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
                 overlayParts[i].dst.x0 = 0;
-                overlayParts[i].dst.y0 = SDL_min(0, targetFrame.crop.y1 - overlayParts[i].src.y1);
+                overlayParts[i].dst.y0 = SDL_max(0, targetFrame.crop.y1 - overlayParts[i].src.y1);
             }
             else if (i == Overlay::OverlayDebug) {
                 // Top left
@@ -515,6 +532,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_render_image() failed");
+        // NB: We must fallthrough to call pl_swapchain_submit_frame()
     }
 
     // Submit the frame for display and swap buffers
@@ -559,94 +577,83 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    // If there's a staging texture already, free it
     SDL_AtomicLock(&m_OverlayLock);
-    if (m_Overlays[type].hasStagingOverlay) {
-        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
-        SDL_zero(m_Overlays[type].stagingOverlay);
-        m_Overlays[type].hasStagingOverlay = false;
-    }
+    // We want to clear the staging overlay flag even if a staging overlay is still present,
+    // since this ensures the render thread will not read from a partially initialized pl_tex
+    // as we modify or recreate the staging overlay texture outside the overlay lock.
+    m_Overlays[type].hasStagingOverlay = false;
     SDL_AtomicUnlock(&m_OverlayLock);
 
-    // If there's no new surface, we're done now
+    // If there's no new staging overlay, free the old staging overlay texture.
+    // NB: This is safe to do outside the overlay lock because we're guaranteed
+    // to not have racing readers/writers if hasStagingOverlay is false.
     if (newSurface == nullptr) {
+        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
+        SDL_zero(m_Overlays[type].stagingOverlay);
         return;
     }
 
-    SDL_assert(!SDL_ISPIXELFORMAT_INDEXED(newSurface->format->format));
-    pl_plane_data planeData = {};
-    planeData.type = PL_FMT_UNORM;
-    planeData.width = newSurface->w;
-    planeData.height = newSurface->h;
-    planeData.pixel_stride = newSurface->format->BytesPerPixel;
-    planeData.row_stride = (size_t)newSurface->pitch;
-    planeData.pixels = newSurface->pixels;
-    uint64_t formatMasks[4] = { newSurface->format->Rmask, newSurface->format->Gmask, newSurface->format->Bmask, newSurface->format->Amask };
-    pl_plane_data_from_mask(&planeData, formatMasks);
+    // Find a compatible texture format
+    SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
+    pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
+    if (!texFormat) {
+        SDL_FreeSurface(newSurface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_find_named_fmt(bgra8) failed");
+        return;
+    }
 
-    // This callback frees the surface after the upload completes
-    planeData.callback = overlayUploadComplete;
-    planeData.priv = newSurface;
+    // Create a new texture for this overlay if necessary, otherwise reuse the existing texture.
+    // NB: We're guaranteed that the render thread won't be reading this concurrently because
+    // we set hasStagingOverlay to false above.
+    pl_tex_params texParams = {};
+    texParams.w = newSurface->w;
+    texParams.h = newSurface->h;
+    texParams.format = texFormat;
+    texParams.sampleable = true;
+    texParams.host_writable = true;
+    texParams.blit_src = !!(texFormat->caps & PL_FMT_CAP_BLITTABLE);
+    texParams.debug_tag = PL_DEBUG_TAG;
+    if (!pl_tex_recreate(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex, &texParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
+        SDL_zero(m_Overlays[type].stagingOverlay);
+        SDL_FreeSurface(newSurface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_recreate() failed");
+        return;
+    }
 
+    // Upload the surface data to the new texture
+    SDL_assert(!SDL_MUSTLOCK(newSurface));
+    pl_tex_transfer_params xferParams = {};
+    xferParams.tex = m_Overlays[type].stagingOverlay.tex;
+    xferParams.row_pitch = (size_t)newSurface->pitch;
+    xferParams.ptr = newSurface->pixels;
+    xferParams.callback = overlayUploadComplete;
+    xferParams.priv = newSurface;
+    if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
+        pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
+        SDL_zero(m_Overlays[type].stagingOverlay);
+        SDL_FreeSurface(newSurface);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_tex_upload() failed");
+        return;
+    }
+
+    // newSurface is now owned by the texture upload process. It will be freed in overlayUploadComplete()
+    newSurface = nullptr;
+
+    // Initialize the rest of the overlay params
     m_Overlays[type].stagingOverlay.mode = PL_OVERLAY_NORMAL;
     m_Overlays[type].stagingOverlay.coords = PL_OVERLAY_COORDS_DST_FRAME;
     m_Overlays[type].stagingOverlay.repr = pl_color_repr_rgb;
     m_Overlays[type].stagingOverlay.color = pl_color_space_srgb;
-
-    // Upload the surface to a new texture
-    bool success = pl_upload_plane(m_Vulkan->gpu, nullptr, &m_Overlays[type].stagingOverlay.tex, &planeData);
-    if (!success) {
-        SDL_FreeSurface(newSurface);
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_upload_plane() failed");
-        return;
-    }
-
-    // newSurface is now owned by the plane upload process. It will be freed in overlayUploadComplete()
-    newSurface = nullptr;
 
     // Make this staging overlay visible to the render thread
     SDL_AtomicLock(&m_OverlayLock);
     SDL_assert(!m_Overlays[type].hasStagingOverlay);
     m_Overlays[type].hasStagingOverlay = true;
     SDL_AtomicUnlock(&m_OverlayLock);
-}
-
-void PlVkRenderer::setHdrMode(bool enabled)
-{
-    pl_color_space csp = {};
-
-    if (enabled) {
-        csp.primaries = PL_COLOR_PRIM_BT_2020;
-        csp.transfer = PL_COLOR_TRC_PQ;
-
-        // Use the host's provided HDR metadata if present
-        SS_HDR_METADATA hdrMetadata;
-        if (LiGetHdrMetadata(&hdrMetadata)) {
-            csp.hdr.prim.red.x = hdrMetadata.displayPrimaries[0].x / 50000.f;
-            csp.hdr.prim.red.y = hdrMetadata.displayPrimaries[0].y / 50000.f;
-            csp.hdr.prim.green.x = hdrMetadata.displayPrimaries[1].x / 50000.f;
-            csp.hdr.prim.green.y = hdrMetadata.displayPrimaries[1].y / 50000.f;
-            csp.hdr.prim.blue.x = hdrMetadata.displayPrimaries[2].x / 50000.f;
-            csp.hdr.prim.blue.y = hdrMetadata.displayPrimaries[2].y / 50000.f;
-            csp.hdr.prim.white.x = hdrMetadata.whitePoint.x / 50000.f;
-            csp.hdr.prim.white.y = hdrMetadata.whitePoint.y / 50000.f;
-            csp.hdr.min_luma = hdrMetadata.minDisplayLuminance / 10000.f;
-            csp.hdr.max_luma = hdrMetadata.maxDisplayLuminance;
-            csp.hdr.max_cll = hdrMetadata.maxContentLightLevel;
-            csp.hdr.max_fall = hdrMetadata.maxFrameAverageLightLevel;
-        }
-        else {
-            // Use the generic HDR10 metadata if the host doesn't provide HDR metadata
-            csp.hdr = pl_hdr_metadata_hdr10;
-        }
-    }
-    else {
-        csp.primaries = PL_COLOR_PRIM_UNKNOWN;
-        csp.transfer = PL_COLOR_TRC_UNKNOWN;
-    }
-
-    pl_swapchain_colorspace_hint(m_Swapchain, &csp);
 }
 
 int PlVkRenderer::getRendererAttributes()
@@ -664,6 +671,12 @@ int PlVkRenderer::getDecoderCapabilities()
 {
     return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |
            CAPABILITY_REFERENCE_FRAME_INVALIDATION_AV1;
+}
+
+bool PlVkRenderer::needsTestFrame()
+{
+    // We need a test frame to verify that Vulkan video decoding is working
+    return true;
 }
 
 bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)

@@ -15,9 +15,9 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
-    virtual void setHdrMode(bool enabled) override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
+    virtual bool needsTestFrame() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual RendererType getRendererType() override;
@@ -42,16 +42,28 @@ private:
     pl_vulkan m_Vulkan = nullptr;
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
-    pl_tex m_Textures[4] = {};
+    pl_tex m_Textures[PL_MAX_PLANES] = {};
+    pl_color_space m_LastColorspace = {};
 
     // Overlay state
     SDL_SpinLock m_OverlayLock = 0;
     struct {
-        // The staging overlay state is copied here under the overlay lock in the render thread
+        // The staging overlay state is copied here under the overlay lock in the render thread.
+        //
+        // These values can be safely read by the render thread outside of the overlay lock,
+        // but the copy from stagingOverlay to overlay must only happen under the overlay
+        // lock when hasStagingOverlay is true.
         bool hasOverlay;
         pl_overlay overlay;
 
         // This state is written by the overlay update thread
+        //
+        // NB: hasStagingOverlay may be false even if there is a staging overlay texture present,
+        // because this is how the overlay update path indicates that the overlay is not currently
+        // safe for the render thread to read.
+        //
+        // It is safe for the overlay update thread to write to stagingOverlay outside of the lock,
+        // as long as hasStagingOverlay is false.
         bool hasStagingOverlay;
         pl_overlay stagingOverlay;
     } m_Overlays[Overlay::OverlayMax] = {};

@@ -5,6 +5,10 @@
 
 #include <h264_stream.h>
 
+extern "C" {
+#include <libavutil/mastering_display_metadata.h>
+}
+
 #include "ffmpeg-renderers/sdlvid.h"
 
 #ifdef Q_OS_WIN32
@@ -1406,6 +1410,40 @@ void FFmpegVideoDecoder::decoderThreadProc()
                 if (err == 0) {
                     SDL_assert(m_FrameInfoQueue.size() == m_FramesIn - m_FramesOut);
                     m_FramesOut++;
+
+                    // Attach HDR metadata to the frame if it's not already present. We will defer to
+                    // any metadata contained in the bitstream itself since that is guaranteed to be
+                    // correctly synchronized to each frame, unlike our async HDR metadata message.
+                    SS_HDR_METADATA hdrMetadata;
+                    if (LiGetHdrMetadata(&hdrMetadata)) {
+                        if (av_frame_get_side_data(frame, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA) == nullptr) {
+                            auto mdm = av_mastering_display_metadata_create_side_data(frame);
+
+                            mdm->display_primaries[0][0] = av_make_q(hdrMetadata.displayPrimaries[0].x, 50000);
+                            mdm->display_primaries[0][1] = av_make_q(hdrMetadata.displayPrimaries[0].y, 50000);
+                            mdm->display_primaries[1][0] = av_make_q(hdrMetadata.displayPrimaries[1].x, 50000);
+                            mdm->display_primaries[1][1] = av_make_q(hdrMetadata.displayPrimaries[1].y, 50000);
+                            mdm->display_primaries[2][0] = av_make_q(hdrMetadata.displayPrimaries[2].x, 50000);
+                            mdm->display_primaries[2][1] = av_make_q(hdrMetadata.displayPrimaries[2].y, 50000);
+
+                            mdm->white_point[0] = av_make_q(hdrMetadata.whitePoint.x, 50000);
+                            mdm->white_point[1] = av_make_q(hdrMetadata.whitePoint.y, 50000);
+
+                            mdm->min_luminance = av_make_q(hdrMetadata.minDisplayLuminance, 10000);
+                            mdm->max_luminance = av_make_q(hdrMetadata.maxDisplayLuminance, 1);
+
+                            mdm->has_luminance = hdrMetadata.maxDisplayLuminance != 0 ? 1 : 0;
+                            mdm->has_primaries = hdrMetadata.displayPrimaries[0].x != 0 ? 1 : 0;
+                        }
+
+                        if ((hdrMetadata.maxContentLightLevel != 0 || hdrMetadata.maxFrameAverageLightLevel != 0) &&
+                                av_frame_get_side_data(frame, AV_FRAME_DATA_CONTENT_LIGHT_LEVEL) == nullptr) {
+                            auto clm = av_content_light_metadata_create_side_data(frame);
+
+                            clm->MaxCLL = hdrMetadata.maxContentLightLevel;
+                            clm->MaxFALL = hdrMetadata.maxFrameAverageLightLevel;
+                        }
+                    }
 
                     // Reset failed decodes count if we reached this far
                     m_ConsecutiveFailedDecodes = 0;
