@@ -107,6 +107,9 @@ PlVkRenderer::PlVkRenderer(IFFmpegRenderer* backendRenderer) :
 
 PlVkRenderer::~PlVkRenderer()
 {
+    // The render context must have been cleaned up by now
+    SDL_assert(!m_HasPendingSwapchainFrame);
+
     if (m_Vulkan != nullptr) {
         for (int i = 0; i < (int)SDL_arraysize(m_Overlays); i++) {
             pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[i].overlay.tex);
@@ -594,10 +597,32 @@ bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevi
     return false;
 }
 
+void PlVkRenderer::waitToRender()
+{
+    // Get the next swapchain buffer for rendering. If this fails, renderFrame()
+    // will try again.
+    //
+    // NB: After calling this successfully, we *MUST* call pl_swapchain_submit_frame(),
+    // hence the implementation of cleanupRenderContext() which does just this in case
+    // renderFrame() wasn't called after waitToRender().
+    if (pl_swapchain_start_frame(m_Swapchain, &m_SwapchainFrame)) {
+        m_HasPendingSwapchainFrame = true;
+    }
+}
+
+void PlVkRenderer::cleanupRenderContext()
+{
+    // We have to submit a pending swapchain frame before shutting down
+    // in order to release a mutex that pl_swapchain_start_frame() acquires.
+    if (m_HasPendingSwapchainFrame) {
+        pl_swapchain_submit_frame(m_Swapchain);
+        m_HasPendingSwapchainFrame = false;
+    }
+}
+
 void PlVkRenderer::renderFrame(AVFrame *frame)
 {
     pl_frame mappedFrame, targetFrame;
-    pl_swapchain_frame swapchainFrame;
 
     if (!mapAvFrameToPlacebo(frame, &mappedFrame)) {
         // This function logs internally
@@ -618,21 +643,28 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     texturesToDestroy.reserve(Overlay::OverlayMax);
     overlays.reserve(Overlay::OverlayMax);
 
-    // Get the next swapchain buffer for rendering
-    //
-    // NB: After calling this successfully, we *MUST* call pl_swapchain_submit_frame()!
-    if (!pl_swapchain_start_frame(m_Swapchain, &swapchainFrame)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_swapchain_start_frame() failed");
+    // Normally waitToRender() would already have this populated for us, but in case
+    // it failed, we will try again here before resetting the renderer.
+    if (!m_HasPendingSwapchainFrame) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Retrying after pl_swapchain_start_frame() failed in waitToRender()");
 
-        // Recreate the renderer
-        SDL_Event event;
-        event.type = SDL_RENDER_TARGETS_RESET;
-        SDL_PushEvent(&event);
-        goto UnmapExit;
+        if (!pl_swapchain_start_frame(m_Swapchain, &m_SwapchainFrame)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "pl_swapchain_start_frame() failed");
+
+            // Recreate the renderer
+            SDL_Event event;
+            event.type = SDL_RENDER_TARGETS_RESET;
+            SDL_PushEvent(&event);
+            goto UnmapExit;
+        }
+
+        // After calling this successfully, we *MUST* call pl_swapchain_submit_frame()!
+        m_HasPendingSwapchainFrame = true;
     }
 
-    pl_frame_from_swapchain(&targetFrame, &swapchainFrame);
+    pl_frame_from_swapchain(&targetFrame, &m_SwapchainFrame);
 
     // We perform minimal processing under the overlay lock to avoid blocking threads updating the overlay
     SDL_AtomicLock(&m_OverlayLock);
@@ -713,6 +745,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     }
 
     // Submit the frame for display and swap buffers
+    m_HasPendingSwapchainFrame = false;
     if (!pl_swapchain_submit_frame(m_Swapchain)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_swapchain_submit_frame() failed");

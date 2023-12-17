@@ -14,6 +14,8 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
+    virtual void waitToRender() override;
+    virtual void cleanupRenderContext() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
@@ -48,6 +50,10 @@ private:
     pl_renderer m_Renderer = nullptr;
     pl_tex m_Textures[PL_MAX_PLANES] = {};
     pl_color_space m_LastColorspace = {};
+
+    // Pending swapchain state shared between waitToRender(), renderFrame(), and cleanupRenderContext()
+    pl_swapchain_frame m_SwapchainFrame = {};
+    bool m_HasPendingSwapchainFrame = false;
 
     // Overlay state
     SDL_SpinLock m_OverlayLock = 0;
