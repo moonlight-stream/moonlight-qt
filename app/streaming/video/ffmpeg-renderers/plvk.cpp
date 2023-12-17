@@ -12,6 +12,7 @@
 #include <libavutil/hwcontext_vulkan.h>
 
 #include <vector>
+#include <set>
 
 // Keep these in sync with hwcontext_vulkan.c
 static const char *k_OptionalDeviceExtensions[] = {
@@ -136,6 +137,176 @@ PlVkRenderer::~PlVkRenderer()
     pl_log_destroy(&m_Log);
 }
 
+bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
+{
+    uint32_t physicalDeviceCount = 0;
+    fn_vkEnumeratePhysicalDevices(m_PlVkInstance->instance, &physicalDeviceCount, nullptr);
+    std::vector<VkPhysicalDevice> physicalDevices(physicalDeviceCount);
+    fn_vkEnumeratePhysicalDevices(m_PlVkInstance->instance, &physicalDeviceCount, physicalDevices.data());
+
+    std::set<uint32_t> devicesTried;
+    VkPhysicalDeviceProperties deviceProps;
+
+    // First, try the first device in the list to support device selection layers
+    // that put the user's preferred GPU in the first slot.
+    fn_vkGetPhysicalDeviceProperties(physicalDevices[0], &deviceProps);
+    if (tryInitializeDevice(physicalDevices[0], &deviceProps, params)) {
+        return true;
+    }
+    devicesTried.emplace(0);
+
+    // Next, we'll try to match an integrated GPU, since we want to minimize
+    // power consumption and inter-GPU copies.
+    for (uint32_t i = 0; i < physicalDeviceCount; i++) {
+        // Skip devices we've already tried
+        if (devicesTried.find(i) != devicesTried.end()) {
+            continue;
+        }
+
+        VkPhysicalDeviceProperties deviceProps;
+        fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
+        if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
+            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+                return true;
+            }
+            devicesTried.emplace(i);
+        }
+    }
+
+    // Next, we'll try to match a discrete GPU.
+    for (uint32_t i = 0; i < physicalDeviceCount; i++) {
+        // Skip devices we've already tried
+        if (devicesTried.find(i) != devicesTried.end()) {
+            continue;
+        }
+
+        VkPhysicalDeviceProperties deviceProps;
+        fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
+        if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
+            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+                return true;
+            }
+            devicesTried.emplace(i);
+        }
+    }
+
+    // Finally, we'll try matching any non-software device.
+    for (uint32_t i = 0; i < physicalDeviceCount; i++) {
+        // Skip devices we've already tried
+        if (devicesTried.find(i) != devicesTried.end()) {
+            continue;
+        }
+
+        VkPhysicalDeviceProperties deviceProps;
+        fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
+        if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+            return true;
+        }
+        devicesTried.emplace(i);
+    }
+
+    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                 "No suitable Vulkan devices found!");
+    return false;
+}
+
+bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps, PDECODER_PARAMETERS decoderParams)
+{
+    // Check the Vulkan API version first to ensure it meets libplacebo's minimum
+    if (deviceProps->apiVersion < PL_VK_MIN_VERSION) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Vulkan device '%s' does not meet minimum Vulkan version",
+                    deviceProps->deviceName);
+        return false;
+    }
+
+    // If we're acting as the decoder backend, we need a physical device with Vulkan video support
+    if (m_Backend == nullptr) {
+        const char* videoDecodeExtension;
+
+        if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_H264) {
+            videoDecodeExtension = VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME;
+        }
+        else if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_H265) {
+            videoDecodeExtension = VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME;
+        }
+        else if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_AV1) {
+            videoDecodeExtension = "VK_MESA_video_decode_av1";
+        }
+        else {
+            SDL_assert(false);
+            return false;
+        }
+
+        if (!isExtensionSupportedByPhysicalDevice(device, videoDecodeExtension)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Vulkan device '%s' does not support %s",
+                        deviceProps->deviceName,
+                        videoDecodeExtension);
+            return false;
+        }
+    }
+
+    if (!isSurfacePresentationSupportedByPhysicalDevice(device)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Vulkan device '%s' does not support presenting on window surface",
+                    deviceProps->deviceName);
+        return false;
+    }
+
+    if ((decoderParams->videoFormat & VIDEO_FORMAT_MASK_10BIT) && !isColorSpaceSupportedByPhysicalDevice(device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Vulkan device '%s' does not support HDR10 (ST.2084 PQ)",
+                    deviceProps->deviceName);
+        return false;
+    }
+
+    // Avoid software GPUs
+    if (deviceProps->deviceType == VK_PHYSICAL_DEVICE_TYPE_CPU && qgetenv("PLVK_ALLOW_SOFTWARE") != "1") {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Vulkan device '%s' is a (probably slow) software renderer. Set PLVK_ALLOW_SOFTWARE=1 to allow using this device.",
+                    deviceProps->deviceName);
+        return false;
+    }
+
+    pl_vulkan_params vkParams = pl_vulkan_default_params;
+    vkParams.instance = m_PlVkInstance->instance;
+    vkParams.get_proc_addr = m_PlVkInstance->get_proc_addr;
+    vkParams.surface = m_VkSurface;
+    vkParams.device = device;
+    vkParams.opt_extensions = k_OptionalDeviceExtensions;
+    vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
+    vkParams.extra_queues = VK_QUEUE_VIDEO_DECODE_BIT_KHR;
+    m_Vulkan = pl_vulkan_create(m_Log, &vkParams);
+    if (m_Vulkan == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "pl_vulkan_create() failed for '%s'",
+                     deviceProps->deviceName);
+        return false;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Vulkan rendering device chosen: %s",
+                deviceProps->deviceName);
+    return true;
+}
+
+bool PlVkRenderer::isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device, const char *extensionName)
+{
+    uint32_t extensionCount = 0;
+    fn_vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
+    std::vector<VkExtensionProperties> extensions(extensionCount);
+    fn_vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, extensions.data());
+
+    for (const VkExtensionProperties& extension : extensions) {
+        if (strcmp(extension.extensionName, extensionName) == 0) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 #define POPULATE_FUNCTION(name) \
     fn_##name = (PFN_##name)m_PlVkInstance->get_proc_addr(m_PlVkInstance->instance, #name); \
     if (fn_##name == nullptr) { \
@@ -187,6 +358,10 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     POPULATE_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties);
     POPULATE_FUNCTION(vkGetPhysicalDeviceSurfacePresentModesKHR);
     POPULATE_FUNCTION(vkGetPhysicalDeviceSurfaceFormatsKHR);
+    POPULATE_FUNCTION(vkEnumeratePhysicalDevices);
+    POPULATE_FUNCTION(vkGetPhysicalDeviceProperties);
+    POPULATE_FUNCTION(vkGetPhysicalDeviceSurfaceSupportKHR);
+    POPULATE_FUNCTION(vkEnumerateDeviceExtensionProperties);
 
     if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, &m_VkSurface)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -195,18 +370,8 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    pl_vulkan_params vkParams = pl_vulkan_default_params;
-    vkParams.instance = m_PlVkInstance->instance;
-    vkParams.get_proc_addr = m_PlVkInstance->get_proc_addr;
-    vkParams.surface = m_VkSurface;
-    vkParams.allow_software = false;
-    vkParams.opt_extensions = k_OptionalDeviceExtensions;
-    vkParams.num_opt_extensions = SDL_arraysize(k_OptionalDeviceExtensions);
-    vkParams.extra_queues = VK_QUEUE_VIDEO_DECODE_BIT_KHR;
-    m_Vulkan = pl_vulkan_create(m_Log, &vkParams);
-    if (m_Vulkan == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "pl_vulkan_create() failed");
+    // Enumerate physical devices and choose one that is suitable for our needs
+    if (!chooseVulkanDevice(params)) {
         return false;
     }
 
@@ -217,7 +382,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
     else {
         // We want immediate mode for V-Sync disabled if possible
-        if (isPresentModeSupported(VK_PRESENT_MODE_IMMEDIATE_KHR)) {
+        if (isPresentModeSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_PRESENT_MODE_IMMEDIATE_KHR)) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Using Immediate present mode with V-Sync disabled");
             presentMode = VK_PRESENT_MODE_IMMEDIATE_KHR;
@@ -227,13 +392,13 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
                         "Immediate present mode is not supported by the Vulkan driver. Latency may be higher than normal with V-Sync disabled.");
 
             // FIFO Relaxed can tear if the frame is running late
-            if (isPresentModeSupported(VK_PRESENT_MODE_FIFO_RELAXED_KHR)) {
+            if (isPresentModeSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_PRESENT_MODE_FIFO_RELAXED_KHR)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using FIFO Relaxed present mode with V-Sync disabled");
                 presentMode = VK_PRESENT_MODE_FIFO_RELAXED_KHR;
             }
             // Mailbox at least provides non-blocking behavior
-            else if (isPresentModeSupported(VK_PRESENT_MODE_MAILBOX_KHR)) {
+            else if (isPresentModeSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_PRESENT_MODE_MAILBOX_KHR)) {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using Mailbox present mode with V-Sync disabled");
                 presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
@@ -322,9 +487,6 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "libplacebo Vulkan renderer initialized");
-
     return true;
 }
 
@@ -383,13 +545,13 @@ bool PlVkRenderer::getQueue(VkQueueFlags requiredFlags, uint32_t *queueIndex, ui
     return false;
 }
 
-bool PlVkRenderer::isPresentModeSupported(VkPresentModeKHR presentMode)
+bool PlVkRenderer::isPresentModeSupportedByPhysicalDevice(VkPhysicalDevice device, VkPresentModeKHR presentMode)
 {
     uint32_t presentModeCount = 0;
-    fn_vkGetPhysicalDeviceSurfacePresentModesKHR(m_Vulkan->phys_device, m_VkSurface, &presentModeCount, nullptr);
+    fn_vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_VkSurface, &presentModeCount, nullptr);
 
     std::vector<VkPresentModeKHR> presentModes(presentModeCount);
-    fn_vkGetPhysicalDeviceSurfacePresentModesKHR(m_Vulkan->phys_device, m_VkSurface, &presentModeCount, presentModes.data());
+    fn_vkGetPhysicalDeviceSurfacePresentModesKHR(device, m_VkSurface, &presentModeCount, presentModes.data());
 
     for (uint32_t i = 0; i < presentModeCount; i++) {
         if (presentModes[i] == presentMode) {
@@ -400,16 +562,31 @@ bool PlVkRenderer::isPresentModeSupported(VkPresentModeKHR presentMode)
     return false;
 }
 
-bool PlVkRenderer::isColorSpaceSupported(VkColorSpaceKHR colorSpace)
+bool PlVkRenderer::isColorSpaceSupportedByPhysicalDevice(VkPhysicalDevice device, VkColorSpaceKHR colorSpace)
 {
     uint32_t formatCount = 0;
-    fn_vkGetPhysicalDeviceSurfaceFormatsKHR(m_Vulkan->phys_device, m_VkSurface, &formatCount, nullptr);
+    fn_vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_VkSurface, &formatCount, nullptr);
 
     std::vector<VkSurfaceFormatKHR> formats(formatCount);
-    fn_vkGetPhysicalDeviceSurfaceFormatsKHR(m_Vulkan->phys_device, m_VkSurface, &formatCount, formats.data());
+    fn_vkGetPhysicalDeviceSurfaceFormatsKHR(device, m_VkSurface, &formatCount, formats.data());
 
     for (uint32_t i = 0; i < formatCount; i++) {
         if (formats[i].colorSpace == colorSpace) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevice device)
+{
+    uint32_t queueFamilyCount = 0;
+    fn_vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+
+    for (uint32_t i = 0; i < queueFamilyCount; i++) {
+        VkBool32 supported = VK_FALSE;
+        if (fn_vkGetPhysicalDeviceSurfaceSupportKHR(device, i, m_VkSurface, &supported) == VK_SUCCESS && supported == VK_TRUE) {
             return true;
         }
     }
@@ -660,7 +837,7 @@ int PlVkRenderer::getRendererAttributes()
 {
     int attributes = 0;
 
-    if (isColorSpaceSupported(VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
+    if (isColorSpaceSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
         attributes |= RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 

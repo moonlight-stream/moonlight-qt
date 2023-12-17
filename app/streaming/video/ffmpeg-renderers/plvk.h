@@ -29,8 +29,12 @@ private:
 
     bool mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFrame);
     bool getQueue(VkQueueFlags requiredFlags, uint32_t* queueIndex, uint32_t* queueCount);
-    bool isPresentModeSupported(VkPresentModeKHR presentMode);
-    bool isColorSpaceSupported(VkColorSpaceKHR colorSpace);
+    bool chooseVulkanDevice(PDECODER_PARAMETERS params);
+    bool tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps, PDECODER_PARAMETERS decoderParams);
+    bool isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device, const char* extensionName);
+    bool isPresentModeSupportedByPhysicalDevice(VkPhysicalDevice device, VkPresentModeKHR presentMode);
+    bool isColorSpaceSupportedByPhysicalDevice(VkPhysicalDevice device, VkColorSpaceKHR colorSpace);
+    bool isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevice device);
 
     // The backend renderer if we're frontend-only
     IFFmpegRenderer* m_Backend;
@@ -76,4 +80,8 @@ private:
     PFN_vkGetPhysicalDeviceQueueFamilyProperties fn_vkGetPhysicalDeviceQueueFamilyProperties = nullptr;
     PFN_vkGetPhysicalDeviceSurfacePresentModesKHR fn_vkGetPhysicalDeviceSurfacePresentModesKHR = nullptr;
     PFN_vkGetPhysicalDeviceSurfaceFormatsKHR fn_vkGetPhysicalDeviceSurfaceFormatsKHR = nullptr;
+    PFN_vkEnumeratePhysicalDevices fn_vkEnumeratePhysicalDevices = nullptr;
+    PFN_vkGetPhysicalDeviceProperties fn_vkGetPhysicalDeviceProperties = nullptr;
+    PFN_vkGetPhysicalDeviceSurfaceSupportKHR fn_vkGetPhysicalDeviceSurfaceSupportKHR = nullptr;
+    PFN_vkEnumerateDeviceExtensionProperties fn_vkEnumerateDeviceExtensionProperties = nullptr;
 };
