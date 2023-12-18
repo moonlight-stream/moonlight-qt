@@ -17,6 +17,7 @@ public:
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+    virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
 

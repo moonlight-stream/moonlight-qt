@@ -17,6 +17,7 @@ public:
     virtual void waitToRender() override;
     virtual void cleanupRenderContext() override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
+    virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
@@ -40,6 +41,9 @@ private:
 
     // The backend renderer if we're frontend-only
     IFFmpegRenderer* m_Backend;
+
+    // SDL state
+    SDL_Window* m_Window = nullptr;
 
     // The libplacebo rendering state
     pl_log m_Log = nullptr;

@@ -45,6 +45,21 @@ typedef struct _DECODER_PARAMETERS {
     bool testOnly;
 } DECODER_PARAMETERS, *PDECODER_PARAMETERS;
 
+#define WINDOW_STATE_CHANGE_SIZE 0x01
+#define WINDOW_STATE_CHANGE_DISPLAY 0x02
+
+typedef struct _WINDOW_STATE_CHANGE_INFO {
+    SDL_Window* window;
+    uint32_t stateChangeFlags;
+
+    // Populated if WINDOW_STATE_CHANGE_SIZE is set
+    int width;
+    int height;
+
+    // Populated if WINDOW_STATE_CHANGE_DISPLAY is set
+    int displayIndex;
+} WINDOW_STATE_CHANGE_INFO, *PWINDOW_STATE_CHANGE_INFO;
+
 class IVideoDecoder {
 public:
     virtual ~IVideoDecoder() {}
@@ -59,4 +74,5 @@ public:
     virtual int submitDecodeUnit(PDECODE_UNIT du) = 0;
     virtual void renderFrameOnMainThread() = 0;
     virtual void setHdrMode(bool enabled) = 0;
+    virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) = 0;
 };

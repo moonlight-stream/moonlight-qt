@@ -1915,6 +1915,52 @@ void Session::execInternal()
                 break;
             }
 
+            // Allow the renderer to handle the state change without being recreated
+            if (m_VideoDecoder) {
+                bool forceRecreation = false;
+
+                WINDOW_STATE_CHANGE_INFO windowChangeInfo = {};
+                windowChangeInfo.window = m_Window;
+
+                if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED) {
+                    windowChangeInfo.stateChangeFlags |= WINDOW_STATE_CHANGE_SIZE;
+
+                    windowChangeInfo.width = event.window.data1;
+                    windowChangeInfo.height = event.window.data2;
+                }
+
+                int newDisplayIndex = SDL_GetWindowDisplayIndex(m_Window);
+                if (newDisplayIndex != currentDisplayIndex) {
+                    windowChangeInfo.stateChangeFlags |= WINDOW_STATE_CHANGE_DISPLAY;
+
+                    windowChangeInfo.displayIndex = newDisplayIndex;
+
+                    // If the refresh rates have changed, we will need to go through the full
+                    // decoder recreation path to ensure Pacer is switched to the new display
+                    // and that we apply any V-Sync disablement rules that may be needed for
+                    // this display.
+                    SDL_DisplayMode oldMode, newMode;
+                    if (SDL_GetCurrentDisplayMode(currentDisplayIndex, &oldMode) < 0 ||
+                            SDL_GetCurrentDisplayMode(newDisplayIndex, &newMode) < 0 ||
+                            oldMode.refresh_rate != newMode.refresh_rate) {
+                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Forcing renderer recreation due to refresh rate change between displays");
+                        forceRecreation = true;
+                    }
+                }
+
+                if (!forceRecreation && m_VideoDecoder->notifyWindowChanged(&windowChangeInfo)) {
+                    // Update the window display mode based on our current monitor
+                    // NB: Avoid a useless modeset by only doing this if it changed.
+                    if (newDisplayIndex != currentDisplayIndex) {
+                        currentDisplayIndex = newDisplayIndex;
+                        updateOptimalWindowDisplayMode();
+                    }
+
+                    break;
+                }
+            }
+
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Recreating renderer for window event: %d (%d %d)",
                         event.window.event,

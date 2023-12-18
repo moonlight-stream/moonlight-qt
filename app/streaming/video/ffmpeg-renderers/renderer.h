@@ -233,6 +233,11 @@ public:
         return true;
     }
 
+    virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) {
+        // Assume the renderer cannot handle window state changes
+        return false;
+    }
+
     // Allow renderers to expose their type
     enum class RendererType {
         Unknown,

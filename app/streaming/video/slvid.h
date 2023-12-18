@@ -29,6 +29,11 @@ public:
         return false;
     }
 
+    // Window state changes are not supported by SLVideo
+    virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) {
+        return false;
+    }
+
 private:
     static void slLogCallback(void* context, ESLVideoLog logLevel, const char* message);
 

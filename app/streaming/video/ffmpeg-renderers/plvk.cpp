@@ -320,6 +320,8 @@ bool PlVkRenderer::isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device,
 
 bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 {
+    m_Window = params->window;
+
     unsigned int instanceExtensionCount = 0;
     if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, nullptr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -428,10 +430,6 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
                      "pl_vulkan_create_swapchain() failed");
         return false;
     }
-
-    int vkDrawableW, vkDrawableH;
-    SDL_Vulkan_GetDrawableSize(params->window, &vkDrawableW, &vkDrawableH);
-    pl_swapchain_resize(m_Swapchain, &vkDrawableW, &vkDrawableH);
 
     m_Renderer = pl_renderer_create(m_Log, m_Vulkan->gpu);
     if (m_Renderer == nullptr) {
@@ -599,6 +597,11 @@ bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevi
 
 void PlVkRenderer::waitToRender()
 {
+    // Handle the swapchain being resized
+    int vkDrawableW, vkDrawableH;
+    SDL_Vulkan_GetDrawableSize(m_Window, &vkDrawableW, &vkDrawableH);
+    pl_swapchain_resize(m_Swapchain, &vkDrawableW, &vkDrawableH);
+
     // Get the next swapchain buffer for rendering. If this fails, renderFrame()
     // will try again.
     //
@@ -864,6 +867,12 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     SDL_assert(!m_Overlays[type].hasStagingOverlay);
     m_Overlays[type].hasStagingOverlay = true;
     SDL_AtomicUnlock(&m_OverlayLock);
+}
+
+bool PlVkRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
+{
+    // We can transparently handle size and display changes
+    return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
 }
 
 int PlVkRenderer::getRendererAttributes()

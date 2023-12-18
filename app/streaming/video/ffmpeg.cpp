@@ -99,6 +99,11 @@ void FFmpegVideoDecoder::setHdrMode(bool enabled)
     m_FrontendRenderer->setHdrMode(enabled);
 }
 
+bool FFmpegVideoDecoder::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
+{
+    return m_FrontendRenderer->notifyWindowChanged(info);
+}
+
 int FFmpegVideoDecoder::getDecoderCapabilities()
 {
     bool ok;

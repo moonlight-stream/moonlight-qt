@@ -492,3 +492,9 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
     return true;
 }
+
+bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
+{
+    // We can transparently handle size and display changes
+    return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
+}
