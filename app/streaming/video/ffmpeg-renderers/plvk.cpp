@@ -716,10 +716,10 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     SDL_AtomicUnlock(&m_OverlayLock);
 
     SDL_Rect src;
-    src.x = 0;
-    src.y = 0;
-    src.w = frame->width;
-    src.h = frame->height;
+    src.x = mappedFrame.crop.x0;
+    src.y = mappedFrame.crop.y0;
+    src.w = mappedFrame.crop.x1 - mappedFrame.crop.x0;
+    src.h = mappedFrame.crop.y1 - mappedFrame.crop.y0;
 
     SDL_Rect dst;
     dst.x = targetFrame.crop.x0;
