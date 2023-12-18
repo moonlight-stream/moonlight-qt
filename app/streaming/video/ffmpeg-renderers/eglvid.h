@@ -22,7 +22,7 @@ public:
 
 private:
 
-    void renderOverlay(Overlay::OverlayType type);
+    void renderOverlay(Overlay::OverlayType type, int viewportWidth, int viewportHeight);
     unsigned compileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc);
     bool compileShaders();
     bool specialize();
@@ -30,9 +30,6 @@ private:
     const float *getColorMatrix(const AVFrame* frame);
     static int loadAndBuildShader(int shaderType, const char *filename);
     bool openDisplay(unsigned int platform, void* nativeDisplay);
-
-    int m_ViewportWidth;
-    int m_ViewportHeight;
 
     AVPixelFormat m_EGLImagePixelFormat;
     void *m_EGLDisplay;

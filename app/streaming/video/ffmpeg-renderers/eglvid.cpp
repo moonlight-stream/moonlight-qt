@@ -180,7 +180,7 @@ AVPixelFormat EGLRenderer::getPreferredPixelFormat(int videoFormat)
     return m_Backend->getPreferredPixelFormat(videoFormat);
 }
 
-void EGLRenderer::renderOverlay(Overlay::OverlayType type)
+void EGLRenderer::renderOverlay(Overlay::OverlayType type, int viewportWidth, int viewportHeight)
 {
     // Do nothing if this overlay is disabled
     if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
@@ -234,7 +234,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
         else if (type == Overlay::OverlayDebug) {
             // Top left
             overlayRect.x = 0;
-            overlayRect.y = m_ViewportHeight - newSurface->h;
+            overlayRect.y = viewportHeight - newSurface->h;
         } else {
             SDL_assert(false);
         }
@@ -245,7 +245,7 @@ void EGLRenderer::renderOverlay(Overlay::OverlayType type)
         SDL_FreeSurface(newSurface);
 
         // Convert screen space to normalized device coordinates
-        StreamUtils::screenSpaceToNormalizedDeviceCoords(&overlayRect, m_ViewportWidth, m_ViewportHeight);
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&overlayRect, viewportWidth, viewportHeight);
 
         OVERLAY_VERTEX verts[] =
         {
@@ -653,21 +653,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         m_eglClientWaitSync = nullptr;
     }
 
-    /* Compute the video region size in order to keep the aspect ratio of the
-     * video stream.
-     */
-    SDL_Rect src, dst;
-    src.x = src.y = dst.x = dst.y = 0;
-    src.w = params->width;
-    src.h = params->height;
-    SDL_GL_GetDrawableSize(m_Window, &dst.w, &dst.h);
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-    glViewport(dst.x, dst.y, dst.w, dst.h);
-
-    m_ViewportWidth = dst.w;
-    m_ViewportHeight = dst.h;
-
     // SDL always uses swap interval 0 under the hood on Wayland systems,
     // because the compositor guarantees tear-free rendering. In this
     // situation, swap interval > 0 behaves as a frame pacing option
@@ -931,6 +916,20 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     }
 
     glClear(GL_COLOR_BUFFER_BIT);
+
+    int drawableWidth, drawableHeight;
+    SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+
+    // Set the viewport to the size of the aspect-ratio-scaled video
+    SDL_Rect src, dst;
+    src.x = src.y = dst.x = dst.y = 0;
+    src.w = frame->width;
+    src.h = frame->height;
+    dst.w = drawableWidth;
+    dst.h = drawableHeight;
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+    glViewport(dst.x, dst.y, dst.w, dst.h);
+
     glUseProgram(m_ShaderProgram);
     m_glBindVertexArrayOES(m_VAO);
 
@@ -949,8 +948,10 @@ void EGLRenderer::renderFrame(AVFrame* frame)
 
     m_glBindVertexArrayOES(0);
 
+    // Adjust the viewport to the whole window before rendering the overlays
+    glViewport(0, 0, drawableWidth, drawableHeight);
     for (int i = 0; i < Overlay::OverlayMax; i++) {
-        renderOverlay((Overlay::OverlayType)i);
+        renderOverlay((Overlay::OverlayType)i, drawableWidth, drawableHeight);
     }
 
     SDL_GL_SwapWindow(m_Window);

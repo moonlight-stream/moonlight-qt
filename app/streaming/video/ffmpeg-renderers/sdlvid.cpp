@@ -165,19 +165,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_FlushEvent(SDL_WINDOWEVENT);
     }
 
-    // Calculate the video region size, scaling to fill the output size while
-    // preserving the aspect ratio of the video stream.
-    SDL_Rect src, dst;
-    src.x = src.y = 0;
-    src.w = params->width;
-    src.h = params->height;
-    dst.x = dst.y = 0;
-    SDL_GetRendererOutputSize(m_Renderer, &dst.w, &dst.h);
-    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
-    // Ensure the viewport is set to the desired video region
-    SDL_RenderSetViewport(m_Renderer, &dst);
-
     if (!params->testOnly) {
         // Draw a black frame until the video stream starts rendering
         SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
@@ -274,6 +261,15 @@ ReadbackRetry:
         }
 
         m_ColorSpace = colorspace;
+    }
+
+    // Recreate the texture if the frame changed in size
+    if (m_Texture != nullptr) {
+        int width, height;
+        if (SDL_QueryTexture(m_Texture, nullptr, nullptr, &width, &height) == 0 && (frame->width != width || frame->height != height)) {
+            SDL_DestroyTexture(m_Texture);
+            m_Texture = nullptr;
+        }
     }
 
     if (m_Texture == nullptr) {
@@ -427,8 +423,24 @@ ReadbackRetry:
 
     SDL_RenderClear(m_Renderer);
 
+    // Calculate the video region size, scaling to fill the output size while
+    // preserving the aspect ratio of the video stream.
+    SDL_Rect src, dst;
+    src.x = src.y = 0;
+    src.w = frame->width;
+    src.h = frame->height;
+    dst.x = dst.y = 0;
+    SDL_GetRendererOutputSize(m_Renderer, &dst.w, &dst.h);
+    StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
+
+    // Ensure the viewport is set to the desired video region
+    SDL_RenderSetViewport(m_Renderer, &dst);
+
     // Draw the video content itself
     SDL_RenderCopy(m_Renderer, m_Texture, nullptr, nullptr);
+
+    // Reset the viewport to the full window for overlay rendering
+    SDL_RenderSetViewport(m_Renderer, nullptr);
 
     // Draw the overlays
     for (int i = 0; i < Overlay::OverlayMax; i++) {

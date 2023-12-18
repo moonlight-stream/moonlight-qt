@@ -206,11 +206,8 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
 
+    m_Window = params->window;
     m_VideoFormat = params->videoFormat;
-    m_VideoWidth = params->width;
-    m_VideoHeight = params->height;
-
-    SDL_GetWindowSize(params->window, &m_DisplayWidth, &m_DisplayHeight);
 
     m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VAAPI);
     if (!m_HwContext) {
@@ -652,7 +649,7 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         if (type == Overlay::OverlayStatusUpdate) {
             // Bottom Left
             overlayRect.x = 0;
-            overlayRect.y = m_DisplayHeight - newSurface->h;
+            overlayRect.y = -newSurface->h;
         }
         else if (type == Overlay::OverlayDebug) {
             // Top left
@@ -691,13 +688,16 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
 
+    int windowWidth, windowHeight;
+    SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
+
     SDL_Rect src, dst;
     src.x = src.y = 0;
-    src.w = m_VideoWidth;
-    src.h = m_VideoHeight;
+    src.w = frame->width;
+    src.h = frame->height;
     dst.x = dst.y = 0;
-    dst.w = m_DisplayWidth;
-    dst.h = m_DisplayHeight;
+    dst.w = windowWidth;
+    dst.h = windowHeight;
 
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
@@ -733,6 +733,16 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
                 continue;
             }
 
+            SDL_Rect overlayRect = m_OverlayRect[type];
+
+            // Negative values are relative to the other side of the window
+            if (overlayRect.x < 0) {
+                overlayRect.x += windowWidth;
+            }
+            if (overlayRect.y < 0) {
+                overlayRect.y += windowHeight;
+            }
+
             status = vaAssociateSubpicture(vaDeviceContext->display,
                                            m_OverlaySubpicture[type],
                                            &surface,
@@ -741,10 +751,10 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
                                            0,
                                            m_OverlayImage[type].width,
                                            m_OverlayImage[type].height,
-                                           m_OverlayRect[type].x,
-                                           m_OverlayRect[type].y,
-                                           m_OverlayRect[type].w,
-                                           m_OverlayRect[type].h,
+                                           overlayRect.x,
+                                           overlayRect.y,
+                                           overlayRect.w,
+                                           overlayRect.h,
                                            0);
             if (status == VA_STATUS_SUCCESS) {
                 // Take temporary ownership of the overlay to prevent notifyOverlayUpdated()
@@ -771,7 +781,7 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
                      surface,
                      m_XWindow,
                      0, 0,
-                     m_VideoWidth, m_VideoHeight,
+                     frame->width, frame->height,
                      dst.x, dst.y,
                      dst.w, dst.h,
                      NULL, 0, flags);
