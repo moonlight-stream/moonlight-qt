@@ -716,6 +716,15 @@ bool Session::initialize()
         if (m_Preferences->enableHdr) {
             m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_AV1_MAIN10;
         }
+
+        // We'll try to fall back to HEVC first if AV1 fails. We'd rather not fall back
+        // straight to H.264 if the user asked for AV1 and the host doesn't support it.
+        if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN8) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265;
+        }
+        if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN10) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+        }
         break;
     }
 
@@ -812,21 +821,13 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                 emitLaunchWarning(tr("Your host software or GPU doesn't support encoding AV1."));
             }
 
-            // We'll try to fall back to HEVC first if AV1 fails. We'd rather not fall back
-            // straight to H.264 if the user asked for AV1 and the host doesn't support it.
-            if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN8) {
-                m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265;
-            }
-            if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN10) {
-                m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
-            }
-
             // Moonlight-common-c will handle this case already, but we want
             // to set this explicitly here so we can do our hardware acceleration
             // check below.
             m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_AV1;
         }
-        else if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
+        else if (!m_Preferences->enableHdr && // HDR is checked below
+                 m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
                  m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Auto VCC is already checked in initialize()
                  !isHardwareDecodeAvailable(testWindow,
                                             m_Preferences->videoDecoderSelection,
@@ -849,7 +850,8 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             // check below.
             m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_H265;
         }
-        else if (m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
+        else if (!m_Preferences->enableHdr && // HDR is checked below
+                 m_Preferences->videoDecoderSelection == StreamingPreferences::VDS_AUTO && // Force hardware decoding checked below
                  m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO && // Auto VCC is already checked in initialize()
                  !isHardwareDecodeAvailable(testWindow,
                                             m_Preferences->videoDecoderSelection,
