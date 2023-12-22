@@ -31,7 +31,7 @@ static const char *k_OptionalDeviceExtensions[] = {
     VK_EXT_IMAGE_DRM_FORMAT_MODIFIER_EXTENSION_NAME,
     VK_KHR_EXTERNAL_SEMAPHORE_FD_EXTENSION_NAME,
     VK_EXT_EXTERNAL_MEMORY_HOST_EXTENSION_NAME,
-#ifdef _WIN32
+#ifdef Q_OS_WIN32
     VK_KHR_EXTERNAL_MEMORY_WIN32_EXTENSION_NAME,
     VK_KHR_EXTERNAL_SEMAPHORE_WIN32_EXTENSION_NAME,
 #endif
@@ -350,7 +350,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
     vkInstParams.get_proc_addr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
     vkInstParams.extensions = instanceExtensions.data();
-    vkInstParams.num_extensions = instanceExtensions.size();
+    vkInstParams.num_extensions = (int)instanceExtensions.size();
     m_PlVkInstance = pl_vk_inst_create(m_Log, &vkInstParams);
     if (m_PlVkInstance == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -735,7 +735,7 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     targetFrame.crop.y1 = dst.y + dst.h;
 
     // Render the video image and overlays into the swapchain buffer
-    targetFrame.num_overlays = overlays.size();
+    targetFrame.num_overlays = (int)overlays.size();
     targetFrame.overlays = overlays.data();
     if (!pl_render_image(m_Renderer, &mappedFrame, &targetFrame, &pl_render_fast_params)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

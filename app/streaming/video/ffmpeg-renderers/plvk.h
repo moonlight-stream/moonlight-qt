@@ -2,6 +2,10 @@
 
 #include "renderer.h"
 
+#ifdef Q_OS_WIN32
+#define VK_USE_PLATFORM_WIN32_KHR
+#endif
+
 #include <libplacebo/log.h>
 #include <libplacebo/renderer.h>
 #include <libplacebo/vulkan.h>
