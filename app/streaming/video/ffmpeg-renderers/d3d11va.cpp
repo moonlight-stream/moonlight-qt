@@ -90,8 +90,7 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_VideoTexture(nullptr),
       m_OverlayLock(0),
       m_OverlayPixelShader(nullptr),
-      m_HwDeviceContext(nullptr),
-      m_HwFramesContext(nullptr)
+      m_HwDeviceContext(nullptr)
 {
     RtlZeroMemory(m_OverlayVertexBuffers, sizeof(m_OverlayVertexBuffers));
     RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
@@ -136,10 +135,6 @@ D3D11VARenderer::~D3D11VARenderer()
 
     SAFE_COM_RELEASE(m_RenderTargetView);
     SAFE_COM_RELEASE(m_SwapChain);
-
-    if (m_HwFramesContext != nullptr) {
-        av_buffer_unref(&m_HwFramesContext);
-    }
 
     // Force destruction of the swapchain immediately
     if (m_DeviceContext != nullptr) {
@@ -421,10 +416,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // Surfaces must be 16 pixel aligned for H.264 and 128 pixel aligned for everything else
-    // https://github.com/FFmpeg/FFmpeg/blob/a234e5cd80224c95a205c1f3e297d8c04a1374c3/libavcodec/dxva2.c#L609-L616
-    m_TextureAlignment = (params->videoFormat & VIDEO_FORMAT_MASK_H264) ? 16 : 128;
-
     if (!setupRenderingResources()) {
         return false;
     }
@@ -458,43 +449,9 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    {
-        m_HwFramesContext = av_hwframe_ctx_alloc(m_HwDeviceContext);
-        if (!m_HwFramesContext) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                        "Failed to allocate D3D11VA frame context");
-            return false;
-        }
-
-        AVHWFramesContext* framesContext = (AVHWFramesContext*)m_HwFramesContext->data;
-
-        // We require NV12 or P010 textures for our shader
-        framesContext->format = AV_PIX_FMT_D3D11;
-        framesContext->sw_format = (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-                    AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
-
-        framesContext->width = FFALIGN(params->width, m_TextureAlignment);
-        framesContext->height = FFALIGN(params->height, m_TextureAlignment);
-
-        // We can have up to 16 reference frames plus a working surface
-        framesContext->initial_pool_size = 17;
-
-        AVD3D11VAFramesContext* d3d11vaFramesContext = (AVD3D11VAFramesContext*)framesContext->hwctx;
-
-        d3d11vaFramesContext->BindFlags = D3D11_BIND_DECODER;
-
-        int err = av_hwframe_ctx_init(m_HwFramesContext);
-        if (err < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to initialize D3D11VA frame context: %d",
-                         err);
-            return false;
-        }
-
-        // Create our video texture and SRVs
-        if (!setupVideoTexture()) {
-            return false;
-        }
+    // Create our video texture and SRVs
+    if (!setupVideoTexture()) {
+        return false;
     }
 
     return true;
@@ -506,14 +463,6 @@ bool D3D11VARenderer::prepareDecoderContext(AVCodecContext* context, AVDictionar
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Using D3D11VA accelerated renderer");
-
-    return true;
-}
-
-bool D3D11VARenderer::prepareDecoderContextInGetFormat(AVCodecContext *context, AVPixelFormat)
-{
-    // hw_frames_ctx must be initialized in ffGetFormat().
-    context->hw_frames_ctx = av_buffer_ref(m_HwFramesContext);
 
     return true;
 }
