@@ -132,7 +132,11 @@ void Session::clConnectionTerminated(int errorCode)
 
     default:
         s_ActiveSession->m_UnexpectedTermination = true;
-        emit s_ActiveSession->displayLaunchError(tr("Connection terminated"));
+
+        // We'll assume large errors are hex values
+        bool hexError = qAbs(errorCode) > 1000;
+        emit s_ActiveSession->displayLaunchError(tr("Connection terminated") + "\n\n" +
+                                                 tr("Error code: %1").arg(errorCode, hexError ? 8 : 0, hexError ? 16 : 10, QChar('0')));
         break;
     }
 
