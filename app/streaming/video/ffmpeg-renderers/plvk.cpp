@@ -514,11 +514,15 @@ bool PlVkRenderer::mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFra
         return false;
     }
 
-    // The HDR metadata from Windows on host PCs seems to have a floor at 0.01 nits,
-    // which may still be too bright for OLED displays. Let's override it to avoid
-    // libplacebo increasing the brightness of black areas of the image.
-    // https://github.com/haasn/libplacebo/commit/b40d7bec8111dd602a0784274a3561323c86b27f
-    mappedFrame->color.hdr.min_luma = PL_COLOR_HDR_BLACK;
+    // libplacebo assumes a minimum luminance value of 0 means the actual value was unknown.
+    // Since we assume the host values are correct, we use the PL_COLOR_HDR_BLACK constant to
+    // indicate infinite contrast.
+    //
+    // NB: We also have to check that the AVFrame actually had metadata in the first place,
+    // because libplacebo may infer metadata if the frame didn't have any.
+    if (av_frame_get_side_data(frame, AV_FRAME_DATA_MASTERING_DISPLAY_METADATA) && !mappedFrame->color.hdr.min_luma) {
+        mappedFrame->color.hdr.min_luma = PL_COLOR_HDR_BLACK;
+    }
 
     return true;
 }
