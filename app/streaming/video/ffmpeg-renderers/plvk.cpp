@@ -593,6 +593,12 @@ bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevi
 
 void PlVkRenderer::waitToRender()
 {
+    // With libplacebo's Vulkan backend, all swap_buffers does is wait for queued
+    // presents to finish. This happens to be exactly what we want to do here, since
+    // it lets us wait to select a queued frame for rendering until we know that we
+    // can present without blocking in renderFrame().
+    pl_swapchain_swap_buffers(m_Swapchain);
+
     // Handle the swapchain being resized
     int vkDrawableW, vkDrawableH;
     SDL_Vulkan_GetDrawableSize(m_Window, &vkDrawableW, &vkDrawableH);
@@ -755,7 +761,6 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         SDL_PushEvent(&event);
         goto UnmapExit;
     }
-    pl_swapchain_swap_buffers(m_Swapchain);
 
 UnmapExit:
     // Delete any textures that need to be destroyed
