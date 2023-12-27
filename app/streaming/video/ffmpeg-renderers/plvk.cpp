@@ -341,7 +341,8 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     pl_vk_inst_params vkInstParams = pl_vk_inst_default_params;
     {
         bool ok;
-        vkInstParams.debug = !!qEnvironmentVariableIntValue("PLVK_DEBUG", &ok);
+        vkInstParams.debug_extra = !!qEnvironmentVariableIntValue("PLVK_DEBUG_EXTRA", &ok);
+        vkInstParams.debug = vkInstParams.debug_extra || !!qEnvironmentVariableIntValue("PLVK_DEBUG", &ok);
 #ifdef QT_DEBUG
         if (!ok) {
             vkInstParams.debug = true;
