@@ -597,6 +597,16 @@ bool PlVkRenderer::isSurfacePresentationSupportedByPhysicalDevice(VkPhysicalDevi
 
 void PlVkRenderer::waitToRender()
 {
+    // Check if the GPU has failed before doing anything else
+    if (pl_gpu_is_failed(m_Vulkan->gpu)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "GPU is in failed state. Recreating renderer.");
+        SDL_Event event;
+        event.type = SDL_RENDER_DEVICE_RESET;
+        SDL_PushEvent(&event);
+        return;
+    }
+
     // With libplacebo's Vulkan backend, all swap_buffers does is wait for queued
     // presents to finish. This happens to be exactly what we want to do here, since
     // it lets us wait to select a queued frame for rendering until we know that we
@@ -606,7 +616,10 @@ void PlVkRenderer::waitToRender()
     // Handle the swapchain being resized
     int vkDrawableW, vkDrawableH;
     SDL_Vulkan_GetDrawableSize(m_Window, &vkDrawableW, &vkDrawableH);
-    pl_swapchain_resize(m_Swapchain, &vkDrawableW, &vkDrawableH);
+    if (!pl_swapchain_resize(m_Swapchain, &vkDrawableW, &vkDrawableH)) {
+        // Swapchain (re)creation can fail if the window is occluded
+        return;
+    }
 
     // Get the next swapchain buffer for rendering. If this fails, renderFrame()
     // will try again.
@@ -633,6 +646,12 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
 {
     pl_frame mappedFrame, targetFrame;
 
+    // If waitToRender() failed to get the next swapchain frame, skip
+    // rendering this frame. It probably means the window is occluded.
+    if (!m_HasPendingSwapchainFrame) {
+        return;
+    }
+
     if (!mapAvFrameToPlacebo(frame, &mappedFrame)) {
         // This function logs internally
         return;
@@ -651,27 +670,6 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     std::vector<pl_overlay> overlays;
     texturesToDestroy.reserve(Overlay::OverlayMax);
     overlays.reserve(Overlay::OverlayMax);
-
-    // Normally waitToRender() would already have this populated for us, but in case
-    // it failed, we will try again here before resetting the renderer.
-    if (!m_HasPendingSwapchainFrame) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Retrying after pl_swapchain_start_frame() failed in waitToRender()");
-
-        if (!pl_swapchain_start_frame(m_Swapchain, &m_SwapchainFrame)) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "pl_swapchain_start_frame() failed");
-
-            // Recreate the renderer
-            SDL_Event event;
-            event.type = SDL_RENDER_TARGETS_RESET;
-            SDL_PushEvent(&event);
-            goto UnmapExit;
-        }
-
-        // After calling this successfully, we *MUST* call pl_swapchain_submit_frame()!
-        m_HasPendingSwapchainFrame = true;
-    }
 
     pl_frame_from_swapchain(&targetFrame, &m_SwapchainFrame);
 
