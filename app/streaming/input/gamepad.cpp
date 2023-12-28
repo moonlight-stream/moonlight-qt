@@ -68,15 +68,45 @@ void SdlInputHandler::sendGamepadState(GamepadState* state)
         }
     }
 
+    unsigned char lt = state->lt;
+    unsigned char rt = state->rt;
+    short lsX = state->lsX;
+    short lsY = state->lsY;
+    short rsX = state->rsX;
+    short rsY = state->rsY;
+
+    // When in single controller mode, merge all gamepad state together
+    if (!m_MultiController) {
+        for (int i = 0; i < MAX_GAMEPADS; i++) {
+            if (m_GamepadState[i].index == state->index) {
+                buttons |= m_GamepadState[i].buttons;
+                if (lt < m_GamepadState[i].lt) {
+                    lt = m_GamepadState[i].lt;
+                }
+                if (rt < m_GamepadState[i].rt) {
+                    rt = m_GamepadState[i].rt;
+                }
+                if (qAbs(lsX) < qAbs(m_GamepadState[i].lsX) || qAbs(lsY) < qAbs(m_GamepadState[i].lsY)) {
+                    lsX = m_GamepadState[i].lsX;
+                    lsY = m_GamepadState[i].lsY;
+                }
+                if (qAbs(rsX) < qAbs(m_GamepadState[i].rsX) || qAbs(rsY) < qAbs(m_GamepadState[i].rsY)) {
+                    rsX = m_GamepadState[i].rsX;
+                    rsY = m_GamepadState[i].rsY;
+                }
+            }
+        }
+    }
+
     LiSendMultiControllerEvent(state->index,
                                m_GamepadMask,
                                buttons,
-                               state->lt,
-                               state->rt,
-                               state->lsX,
-                               state->lsY,
-                               state->rsX,
-                               state->rsY);
+                               lt,
+                               rt,
+                               lsX,
+                               lsY,
+                               rsX,
+                               rsY);
 }
 
 void SdlInputHandler::sendGamepadBatteryState(GamepadState* state, SDL_JoystickPowerLevel level)
