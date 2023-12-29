@@ -86,11 +86,14 @@ void SdlInputHandler::sendGamepadState(GamepadState* state)
                 if (rt < m_GamepadState[i].rt) {
                     rt = m_GamepadState[i].rt;
                 }
-                if (qAbs(lsX) < qAbs(m_GamepadState[i].lsX) || qAbs(lsY) < qAbs(m_GamepadState[i].lsY)) {
+
+                // We use abs() here instead of qAbs() for get proper integer promotion to
+                // correctly handle abs(-32768), which is not representable in a short.
+                if (abs(lsX) < abs(m_GamepadState[i].lsX) || abs(lsY) < abs(m_GamepadState[i].lsY)) {
                     lsX = m_GamepadState[i].lsX;
                     lsY = m_GamepadState[i].lsY;
                 }
-                if (qAbs(rsX) < qAbs(m_GamepadState[i].rsX) || qAbs(rsY) < qAbs(m_GamepadState[i].rsY)) {
+                if (abs(rsX) < abs(m_GamepadState[i].rsX) || abs(rsY) < abs(m_GamepadState[i].rsY)) {
                     rsX = m_GamepadState[i].rsX;
                     rsY = m_GamepadState[i].rsY;
                 }
@@ -154,11 +157,11 @@ Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param
 {
     auto gamepad = reinterpret_cast<GamepadState*>(param);
 
-    short rawX;
-    short rawY;
+    int rawX;
+    int rawY;
 
     // Determine which analog stick is currently receiving the strongest input
-    if ((uint32_t)qAbs(gamepad->lsX) + qAbs(gamepad->lsY) > (uint32_t)qAbs(gamepad->rsX) + qAbs(gamepad->rsY)) {
+    if (abs(gamepad->lsX) + abs(gamepad->lsY) > abs(gamepad->rsX) + abs(gamepad->rsY)) {
         rawX = gamepad->lsX;
         rawY = -gamepad->lsY;
     }
