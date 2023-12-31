@@ -715,7 +715,8 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     HRESULT hr;
 
     SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
-    if (newSurface == nullptr && Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+    if (newSurface == nullptr && overlayEnabled) {
         // The overlay is enabled and there is no new surface. Leave the old texture alone.
         return;
     }
@@ -736,7 +737,7 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     SAFE_COM_RELEASE(oldVertexBuffer);
 
     // If the overlay is disabled, we're done
-    if (!Session::get()->getOverlayManager().isOverlayEnabled(type)) {
+    if (!overlayEnabled) {
         SDL_FreeSurface(newSurface);
         return;
     }
