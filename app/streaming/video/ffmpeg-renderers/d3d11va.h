@@ -1,7 +1,6 @@
 #pragma once
 
 #include "renderer.h"
-#include "pacer/pacer.h"
 
 #include <d3d11_1.h>
 #include <dxgi1_5.h>
@@ -19,7 +18,6 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
-    virtual void setHdrMode(bool enabled) override;
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
@@ -50,6 +48,7 @@ private:
     int m_DisplayHeight;
     int m_LastColorSpace;
     bool m_LastFullRange;
+    AVColorTransferCharacteristic m_LastColorTrc;
 
     bool m_AllowTearing;
 
