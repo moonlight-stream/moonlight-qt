@@ -112,15 +112,39 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
         pointerId = (uint32_t)event->fingerId;
     }
 
-    // Try to send it as a native touch event, otherwise fall back to our touch emulation
-    if (LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
-                         0.0f, 0.0f, LI_ROT_UNKNOWN) == LI_ERR_UNSUPPORTED) {
-        emulateAbsoluteFingerEvent(event);
+    // Try to send it as a native pen/touch event, otherwise fall back to our touch emulation
+    if (LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS) {
+        bool isPen = false;
+
+        int numTouchDevices = SDL_GetNumTouchDevices();
+        for (int i = 0; i < numTouchDevices; i++) {
+            if (event->touchId == SDL_GetTouchDevice(i)) {
+                const char* touchName = SDL_GetTouchName(i);
+
+                // SDL will report "pen" as the name of pen input devices on Windows.
+                // https://github.com/libsdl-org/SDL/pull/5926
+                isPen = touchName && SDL_strcmp(touchName, "pen") == 0;
+                break;
+            }
+        }
+
+        if (isPen) {
+            LiSendPenEvent(eventType, LI_TOOL_TYPE_PEN, 0, vidrelx / dst.w, vidrely / dst.h, event->pressure,
+                           0.0f, 0.0f, LI_ROT_UNKNOWN, LI_TILT_UNKNOWN);
+        }
+        else {
+            LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
+                             0.0f, 0.0f, LI_ROT_UNKNOWN);
+        }
+
+        if (!m_DisabledTouchFeedback) {
+            // Disable touch feedback when passing touch natively
+            disableTouchFeedback();
+            m_DisabledTouchFeedback = true;
+        }
     }
-    else if (!m_DisabledTouchFeedback) {
-        // Disable touch feedback when passing touch natively
-        disableTouchFeedback();
-        m_DisabledTouchFeedback = true;
+    else {
+        emulateAbsoluteFingerEvent(event);
     }
 }
 
