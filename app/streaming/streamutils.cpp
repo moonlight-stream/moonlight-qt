@@ -6,6 +6,10 @@
 #include <ApplicationServices/ApplicationServices.h>
 #endif
 
+#ifdef Q_OS_WINDOWS
+#include <Windows.h>
+#endif
+
 Uint32 StreamUtils::getPlatformWindowFlags()
 {
 #if defined(Q_OS_DARWIN)
@@ -93,6 +97,31 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
     }
 
     return mode.refresh_rate;
+}
+
+bool StreamUtils::hasFastAes()
+{
+#ifndef __has_builtin
+#define __has_builtin(x) 0
+#endif
+
+#if __has_builtin(__builtin_cpu_supports) && defined(Q_PROCESSOR_X86)
+    return __builtin_cpu_supports("aes");
+#elif defined(__BUILTIN_CPU_SUPPORTS__) && defined(Q_PROCESSOR_POWER)
+    return __builtin_cpu_supports("vcrypto");
+#elif defined(Q_OS_WINDOWS) && defined(Q_PROCESSOR_ARM)
+    return IsProcessorFeaturePresent(PF_ARM_V8_CRYPTO_INSTRUCTIONS_AVAILABLE);
+#elif defined(_MSC_VER) && defined(Q_PROCESSOR_X86)
+    int regs[4];
+    __cpuid(regs, 1);
+    return regs[2] & (1 << 25); // AES-NI
+#elif defined(Q_OS_DARWIN)
+    // Everything that runs Catalina and later has AES-NI or ARMv8 crypto instructions
+    return true;
+#else
+    // Assume AES is fast if we don't recognize the OS or processor
+    return true;
+#endif
 }
 
 bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)

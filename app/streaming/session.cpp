@@ -604,9 +604,16 @@ bool Session::initialize()
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
 
 #ifndef STEAM_LINK
-    // Enable audio encryption as long as we're not on Steam Link.
-    // That hardware can hardly handle Opus decoding at all.
-    m_StreamConfig.encryptionFlags = ENCFLG_AUDIO;
+    // Opt-in to all encryption features if we detect that the platform
+    // has AES cryptography acceleration instructions.
+    if (StreamUtils::hasFastAes()) {
+        m_StreamConfig.encryptionFlags = ENCFLG_ALL;
+    }
+    else {
+        // Enable audio encryption as long as we're not on Steam Link.
+        // That hardware can hardly handle Opus decoding at all.
+        m_StreamConfig.encryptionFlags = ENCFLG_AUDIO;
+    }
 #endif
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
