@@ -10,6 +10,10 @@
 #include <Windows.h>
 #endif
 
+#ifdef Q_OS_LINUX
+#include <sys/auxv.h>
+#endif
+
 Uint32 StreamUtils::getPlatformWindowFlags()
 {
 #if defined(Q_OS_DARWIN)
@@ -118,8 +122,15 @@ bool StreamUtils::hasFastAes()
 #elif defined(Q_OS_DARWIN)
     // Everything that runs Catalina and later has AES-NI or ARMv8 crypto instructions
     return true;
+#elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 4
+    return getauxval(AT_HWCAP2) & HWCAP2_AES;
+#elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 8
+    return getauxval(AT_HWCAP) & HWCAP_AES;
+#elif QT_POINTER_SIZE == 4
+    #warning Unknown 32-bit platform. Assuming AES is slow on this CPU.
+    return false;
 #else
-    // Assume AES is fast if we don't recognize the OS or processor
+    #warning Unknown 64-bit platform. Assuming AES is fast on this CPU.
     return true;
 #endif
 }

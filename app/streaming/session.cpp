@@ -605,8 +605,8 @@ bool Session::initialize()
 
 #ifndef STEAM_LINK
     // Opt-in to all encryption features if we detect that the platform
-    // has AES cryptography acceleration instructions.
-    if (StreamUtils::hasFastAes()) {
+    // has AES cryptography acceleration instructions and more than 2 cores.
+    if (StreamUtils::hasFastAes() && SDL_GetCPUCount() > 2) {
         m_StreamConfig.encryptionFlags = ENCFLG_ALL;
     }
     else {
