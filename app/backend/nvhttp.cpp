@@ -223,7 +223,8 @@ NvHTTP::startApp(QString verb,
                                    "&surroundAudioInfo="+QString::number(SURROUNDAUDIOINFO_FROM_AUDIO_CONFIGURATION(streamConfig->audioConfiguration))+
                                    "&remoteControllersBitmap="+QString::number(gamepadMask)+
                                    "&gcmap="+QString::number(gamepadMask)+
-                                   "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0),
+                                   "&gcpersist="+QString::number(persistGameControllersOnDisconnect ? 1 : 0)+
+                                   LiGetLaunchUrlQueryParameters(),
                                    LAUNCH_TIMEOUT_MS);
 
     qInfo() << "Launch response:" << response;
