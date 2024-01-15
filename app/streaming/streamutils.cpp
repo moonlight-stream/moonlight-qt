@@ -12,6 +12,10 @@
 
 #ifdef Q_OS_LINUX
 #include <sys/auxv.h>
+
+#ifndef HWCAP2_AES
+#define HWCAP2_AES (1 << 0)
+#endif
 #endif
 
 Uint32 StreamUtils::getPlatformWindowFlags()
@@ -126,6 +130,10 @@ bool StreamUtils::hasFastAes()
     return getauxval(AT_HWCAP2) & HWCAP2_AES;
 #elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 8
     return getauxval(AT_HWCAP) & HWCAP_AES;
+#elif defined(Q_PROCESSOR_RISCV)
+    // TODO: Implement detection of RISC-V vector crypto extension when possible.
+    // At the time of writing, no RISC-V hardware has it, so hardcode it off.
+    return false;
 #elif QT_POINTER_SIZE == 4
     #warning Unknown 32-bit platform. Assuming AES is slow on this CPU.
     return false;
