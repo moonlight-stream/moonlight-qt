@@ -1,4 +1,4 @@
-#include "ThemeManager.h"
+#include "themeManager.h"
 
 // Constants for default image sizes
 const float APP_IMAGE_DEFAULT_WIDTH = 200;

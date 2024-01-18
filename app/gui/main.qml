@@ -4,7 +4,6 @@ import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 import QtQuick.Controls.Material 2.2
 import QtQuick.Particles 2.0
-import Qt5Compat.GraphicalEffects
 
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
@@ -43,6 +42,36 @@ ApplicationWindow {
                 anchors.fill: window
                 property string primaryColor: ThemeManager.primaryColor
                 property string secondaryColor: ThemeManager.secondaryColor
+
+                // compatibily to Qt 5.15 and Qt 6
+                Component.onCompleted: {
+                    var importByQtVersion = qtVersion.substring(0, 1) === "6" ? "Qt5Compat.GraphicalEffects" : "QtGraphicalEffects";
+                    console.log(importByQtVersion)
+                    var shadowEffect = Qt.createQmlObject(
+                        'import '+importByQtVersion+';
+                        ParticleSystem {
+                            id: particleSystem
+                            running: true
+                        }
+
+                        ImageParticle {
+                            source: "qrc:/res/bubble.png"
+                            system: particleSystem
+                            alpha: 0.7
+                        }
+
+                        Emitter {
+                            size:40
+                            system: particleSystem
+                            width: parent.width
+                            height: parent.height
+                            emitRate: 8
+                            lifeSpan: 3000
+                            velocity: AngleDirection { angle: 360; angleVariation: 360; magnitude: 50; magnitudeVariation: 50 }
+                        }',
+                        gameModeRectangle
+                    );
+                }
 
                 ParticleSystem {
                     id: particleSystem
