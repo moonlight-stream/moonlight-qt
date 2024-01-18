@@ -1,7 +1,6 @@
 import QtQuick 2.9
 import QtQuick.Controls 2.2
 import QtQuick.Controls.Material 2.2
-import Qt5Compat.GraphicalEffects
 
 import AppModel 1.0
 import ComputerManager 1.0
@@ -178,15 +177,13 @@ ListView {
             // ToolTip.visible: (!parent.hovered || parent.highlighted) && (!appNameText || appNameText.truncated)
         }
 
-        // Shadow effect
-        DropShadow {
-            id: shadowEffect
-            anchors.fill: appIcon
-            radius: 12
-            horizontalOffset: 0
-            verticalOffset: 0
-            color: "#80000000"
-            source: appIcon
+        // compatibily to Qt 5.15 and Qt 6
+        Component.onCompleted: {
+            var importByQtVersion = qtVersion.substring(0, 1) === "6" ? "Qt5Compat.GraphicalEffects" : "QtGraphicalEffects";
+            var shadowEffect = Qt.createQmlObject(
+                'import '+importByQtVersion+'; DropShadow { anchors.fill: appIcon; radius: 12; horizontalOffset: 0; verticalOffset: 0; color: "#80000000"; source: appIcon }',
+                item
+            );
         }
 
         Loader {

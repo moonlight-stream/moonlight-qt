@@ -713,6 +713,7 @@ int main(int argc, char *argv[])
         engine.rootContext()->setContextProperty("initialView", initialView);
 
         // Load the main.qml file
+        engine.rootContext()->setContextProperty("qtVersion", QString(qVersion()));
         engine.load(QUrl(QStringLiteral("qrc:/gui/main.qml")));
         if (engine.rootObjects().isEmpty())
             return -1;
