@@ -42,6 +42,7 @@
 #include "backend/systemproperties.h"
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
+#include "settings/themeManager.h"
 #include "gui/sdlgamepadkeynavigation.h"
 
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
@@ -635,6 +636,11 @@ int main(int argc, char *argv[])
                                                    "StreamingPreferences",
                                                    [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
                                                        return new StreamingPreferences(qmlEngine);
+                                                   });
+    qmlRegisterSingletonType<ThemeManager>("ThemeManager", 1, 0,
+                                                   "ThemeManager",
+                                                   [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
+                                                       return new ThemeManager(qmlEngine);
                                                    });
 
     // Create the identity manager on the main thread

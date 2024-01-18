@@ -2,15 +2,23 @@ import QtQuick 2.0
 import QtQuick.Controls 2.2
 
 ItemDelegate {
-    property GridView grid
+    property Flickable grid
 
     highlighted: grid.activeFocus && grid.currentItem === this
 
     Keys.onLeftPressed: {
-        grid.moveCurrentIndexLeft()
+        if (grid instanceof GridView) {
+            grid.moveCurrentIndexLeft()
+        }else if(grid instanceof ListView){
+            grid.decrementCurrentIndex()
+        }
     }
     Keys.onRightPressed: {
-        grid.moveCurrentIndexRight()
+        if (grid instanceof GridView) {
+            grid.moveCurrentIndexRight()
+        }else if(grid instanceof ListView){
+            grid.incrementCurrentIndex()
+        }
     }
     Keys.onDownPressed: {
         grid.moveCurrentIndexDown()
