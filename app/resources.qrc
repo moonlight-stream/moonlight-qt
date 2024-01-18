@@ -67,7 +67,6 @@
         <file>res/game_mode.svg</file>
         <file>res/theme_edit.svg</file>
         <file>res/bubble.png</file>
-        <file>res/main_background.jpg</file>
     </qresource>
     <qresource prefix="/data">
         <file alias="gamecontrollerdb.txt">SDL_GameControllerDB/gamecontrollerdb.txt</file>
