@@ -3,12 +3,16 @@ import QtQuick.Controls 2.2
 import QtQuick.Layouts 1.3
 import QtQuick.Window 2.2
 import QtQuick.Controls.Material 2.2
+import QtQuick.Particles 2.0
+import Qt5Compat.GraphicalEffects
 
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
+
+import ThemeManager 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
@@ -23,6 +27,203 @@ ApplicationWindow {
     width: 1280
     height: 600
 
+    Rectangle {
+        anchors.fill: parent
+
+        Loader {
+            id: backgroundLoader
+            anchors.fill: parent
+            sourceComponent: ThemeManager.gameModeEnabled ? gameModeBackground : solidBackground
+        }
+
+        Component {
+            id: gameModeBackground
+            Rectangle {
+                id: gameModeRectangle
+                anchors.fill: window
+                property string primaryColor: ThemeManager.primaryColor
+                property string secondaryColor: ThemeManager.secondaryColor
+
+                ParticleSystem {
+                    id: particleSystem
+                    running: true
+                }
+
+                ImageParticle {
+                    source: "qrc:/res/bubble.png"
+                    system: particleSystem
+                    alpha: 0.7
+                }
+
+                Emitter {
+                    size:40
+                    system: particleSystem
+                    width: parent.width
+                    height: parent.height
+                    emitRate: 8
+                    lifeSpan: 3000
+                    velocity: AngleDirection { angle: 360; angleVariation: 360; magnitude: 50; magnitudeVariation: 50 }
+                }
+
+                gradient: Gradient {
+                    GradientStop { position: 0; color: gameModeRectangle.primaryColor }
+                    GradientStop { position: 1; color: gameModeRectangle.secondaryColor }
+                }
+
+                Connections {
+                    target: ThemeManager
+                    onPrimaryColorChanged: {
+                        gameModeRectangle.primaryColor = ThemeManager.primaryColor;
+                        gameModeRectangle.gradient = gameModeRectangle.gradient;
+                        toolbarBackground.color = ThemeManager.primaryColor;
+                    }
+                    onSecondaryColorChanged: {
+                        gameModeRectangle.secondaryColor = ThemeManager.secondaryColor;
+                        gameModeRectangle.gradient = gameModeRectangle.gradient;
+                    }
+                }
+            }
+        }
+
+        Component {
+            id: solidBackground
+            Rectangle {
+                anchors.fill: parent
+                color: "#303030"
+            }
+        }
+    }
+
+    Popup {
+        id: settingsPopup
+        modal: true
+        padding: 50
+        anchors.centerIn: parent
+
+        contentItem: Column {
+            anchors.fill: parent
+            spacing: 20
+            anchors.margins: 50
+
+            RowLayout {
+                Layout.alignment: Qt.AlignCenter
+                spacing: 10
+                Label {
+                    text: qsTr("Theme settings")
+                    font.bold: true
+                    font.pointSize: 22
+                }
+            }
+
+            RowLayout {
+                spacing: 10
+                Label {
+                    text: qsTr("Choose application cover size")
+                }
+
+                Slider {
+                    id: sizeSlider
+                    from: 0.5
+                    to: 2.0
+                    stepSize: 0.1
+                    value: ThemeManager.appImageSize
+                }
+
+                Label {
+                    text: sizeSlider.value.toFixed(1)
+                }
+            }
+
+            RowLayout {
+                spacing: 10
+                Label {
+                    text: qsTr("Select primary color")
+                }
+
+                TextField {
+                    id: primaryColorField
+                    text: ThemeManager.getPrimaryColor()
+                }
+            }
+
+            RowLayout {
+                spacing: 10
+                Label {
+                    text: qsTr("Select secondary color")
+                }
+
+                TextField {
+                    id: secondaryColorField
+                    text: ThemeManager.getSecondaryColor()
+                }
+            }
+
+            RowLayout {
+                spacing: 10
+                Label {
+                    text: qsTr("Choose spacing")
+                }
+
+                Slider {
+                    id: spacingSlider
+                    from: 0
+                    to: 120
+                    stepSize: 2
+                    value: ThemeManager.spacing
+                }
+
+                Label {
+                    text: spacingSlider.value
+                }
+            }
+
+            RowLayout {
+                spacing: 10
+                Label {
+                    text: qsTr("Application name font size")
+                }
+
+                Slider {
+                    id: fontSizeSlider
+                    from: 15
+                    to: 60
+                    stepSize: 1
+                    value: ThemeManager.appNameFontSize
+                }
+
+                Label {
+                    text: fontSizeSlider.value
+                }
+            }
+
+            RowLayout {
+                Layout.alignment: Qt.AlignRight
+                spacing: 10
+
+                Button {
+                    text: qsTr("Cancel")
+                    onClicked: settingsPopup.close()
+                }
+
+                Button {
+                    text: qsTr("Save")
+                    onClicked: {
+                        var primaryColorText = primaryColorField.text
+                        var secondaryColorText = secondaryColorField.text
+
+                        ThemeManager.setSpacing(spacingSlider.value)
+                        ThemeManager.setPrimaryColor(primaryColorText)
+                        ThemeManager.setSecondaryColor(secondaryColorText)
+                        ThemeManager.setAppImageSize(sizeSlider.value)
+                        ThemeManager.setAppNameFontSize(fontSizeSlider.value)
+                        settingsPopup.close()
+                    }
+                }
+            }
+        }
+    }
+
+
     // Override the background color to Material 2 colors for Qt 6.5+
     // in order to improve contrast between GFE's placeholder box art
     // and the background of the app grid.
@@ -34,9 +235,13 @@ ApplicationWindow {
 
     visibility: {
         if (SystemProperties.hasDesktopEnvironment) {
-            if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return "Windowed"
-            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) return "Maximized"
-            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
+            if(ThemeManager.gameModeEnabled){
+                return "FullScreen"
+            }else{
+                if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return "Windowed"
+                else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) return "Maximized"
+                else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
+            }
         } else {
             return "FullScreen"
         }
@@ -45,6 +250,9 @@ ApplicationWindow {
     // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
     // it will never insert a line break and just extend on forever.
     ToolTip.toolTip.contentWidth: ToolTip.toolTip.implicitContentWidth < 400 ? ToolTip.toolTip.implicitContentWidth : 400
+    GridView {
+        id: myStackView
+    }
 
     function goBack() {
         if (clearOnBack) {
@@ -219,25 +427,32 @@ ApplicationWindow {
 
     header: ToolBar {
         id: toolBar
-        height: 60
+        height: ThemeManager.gameModeEnabled ? 220 : 60
         anchors.topMargin: 5
         anchors.bottomMargin: 5
+        topPadding: ThemeManager.gameModeEnabled ? 60 : 0
+        bottomPadding: ThemeManager.gameModeEnabled ? 60 : 0
+        background: Rectangle {
+            id: toolbarBackground
+            color: ThemeManager.gameModeEnabled ? ThemeManager.getPrimaryColor() : "#3F51B5"
+        }
 
         Label {
             id: titleLabel
             visible: toolBar.width > 700
             anchors.fill: parent
             text: stackView.currentItem.objectName
-            font.pointSize: 20
+            font.pointSize: ThemeManager.gameModeEnabled ? 28 : 20
             elide: Label.ElideRight
-            horizontalAlignment: Qt.AlignHCenter
+            anchors.leftMargin: ThemeManager.gameModeEnabled ? 170 : 0
+            horizontalAlignment: ThemeManager.gameModeEnabled ? Qt.AlignHLeft : Qt.AlignHCenter
             verticalAlignment: Qt.AlignVCenter
         }
 
         RowLayout {
-            spacing: 10
-            anchors.leftMargin: 10
-            anchors.rightMargin: 10
+            spacing: ThemeManager.gameModeEnabled ? 50 : 10
+            anchors.leftMargin: ThemeManager.gameModeEnabled ? 100 : 0
+            anchors.rightMargin: ThemeManager.gameModeEnabled ? 100 : 0
             anchors.fill: parent
 
             NavigableToolButton {
@@ -284,7 +499,6 @@ ApplicationWindow {
                          qmltypeof(stackView.currentItem, "SettingsView")
 
                 iconSource: "qrc:/res/Discord-Logo-White.svg"
-
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
                 ToolTip.visible: hovered
@@ -427,6 +641,46 @@ ApplicationWindow {
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Settings") + (settingsShortcut.nativeText ? (" ("+settingsShortcut.nativeText+")") : "")
             }
+
+            NavigableToolButton {
+                id: themeSettings
+                icon.source: "qrc:/res/theme_edit.svg"
+                icon.height: 48
+                icon.width: 48
+
+                onClicked: {
+                    settingsPopup.open()
+                }
+                visible: ThemeManager.gameModeEnabled
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Edit theme settings")
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+            }
+
+            Button {
+                id: gamepadToggleButtonn
+                flat: true
+                icon.source: "qrc:/res/game_mode.svg"
+                icon.height: ThemeManager.gameModeEnabled ? 48 : 24
+                icon.width: ThemeManager.gameModeEnabled ? 74 : 37
+                icon.color: ThemeManager.gameModeEnabled ? "#040687" : "#FFF"
+
+                onClicked: {
+                    ThemeManager.setGameModeEnabled(!ThemeManager.gameModeEnabled)
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 5000
+                ToolTip.visible: hovered
+                ToolTip.text: ThemeManager.gameModeEnabled ? qsTr("Disable game mode") : qsTr("Enable game mode")
+            }
+
         }
     }
 
