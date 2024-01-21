@@ -146,7 +146,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Пошук сумісних хостів у вашій локальній мережі...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -226,22 +226,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Будь ласка, введіть %1 на своєму головному ПК. Це діалогове вікно закриється, коли створення пари буде завершено.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="301"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Якщо на вашому комп’ютері встановлено Sunshine, перейдіть до веб-інтерфейсу користувача Sunshine, щоб ввести PIN-код.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Ви впевнені, що хочете видалити «%1»?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight перевіряє ваше мережеве з’єднання, щоб визначити, чи заблоковані необхідні порти.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="354"/>
@@ -388,12 +388,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="135"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>З&apos;єднання розірване</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="793"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished">Ця версія GeForce Experience на %1 не підтримується цією збіркою MoonLight.Будь ласка оновіть Moonlight щоб транслювати з %1.</translation>
+        <translation>Версія GeForce Experience на %1 не підтримується цією збіркою Moonlight. Ви повинні оновити Moonlight для потокової передачі з %1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="798"/>
@@ -793,7 +793,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1338"/>
         <source>Gamepad Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Налаштування геймпада</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1348"/>
@@ -1024,12 +1024,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished">Перевірте ваш брандмауер та правила відкриття наступних портів: %1</translation>
+        <translation>Перевірте ваш брандмауер та правила переадресації для наступних портів: %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="76"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished">З&apos;єднання вашого ПК до інтернету, блокує Moonlight. Транслювання через інтернет може не працювати доки ви під&apos;єднані до цієї мережі.</translation>
+        <translation>Moonlight блокується підключенням до Інтернету цього ПК. Потокова трансляція через Інтернет може не працювати під час підключення до цієї мережі.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="167"/>
@@ -1107,7 +1107,7 @@
     <message>
         <location filename="../gui/main.qml" line="374"/>
         <source>Help</source>
-        <translation type="unfinished">Довідка</translation>
+        <translation>Довідка</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="435"/>
