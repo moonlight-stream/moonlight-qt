@@ -13,8 +13,50 @@
 #ifdef Q_OS_LINUX
 #include <sys/auxv.h>
 
+#if defined(Q_PROCESSOR_ARM)
+
 #ifndef HWCAP2_AES
 #define HWCAP2_AES (1 << 0)
+#endif
+
+#elif defined(Q_PROCESSOR_RISCV)
+
+#if __has_include(<sys/hwprobe.h>)
+#include <sys/hwprobe.h>
+#else
+#include <unistd.h>
+
+#if __has_include(<asm/hwprobe.h>)
+#include <asm/hwprobe.h>
+#include <sys/syscall.h>
+#else
+#define __NR_riscv_hwprobe 258
+struct riscv_hwprobe {
+    int64_t key;
+    uint64_t value;
+};
+#define RISCV_HWPROBE_KEY_IMA_EXT_0 4
+#endif
+
+// RISC-V Scalar AES [E]ncryption and [D]ecryption
+#ifndef RISCV_HWPROBE_EXT_ZKND
+#define RISCV_HWPROBE_EXT_ZKND (1 << 11)
+#define RISCV_HWPROBE_EXT_ZKNE (1 << 12)
+#endif
+
+// RISC-V Vector AES
+#ifndef RISCV_HWPROBE_EXT_ZVKNED
+#define RISCV_HWPROBE_EXT_ZVKNED (1 << 21)
+#endif
+
+static int __riscv_hwprobe(struct riscv_hwprobe *pairs, size_t pair_count,
+                           size_t cpu_count, unsigned long *cpus,
+                           unsigned int flags)
+{
+    return syscall(__NR_riscv_hwprobe, pairs, pair_count, cpu_count, cpus, flags);
+}
+
+#endif
 #endif
 #endif
 
@@ -131,9 +173,17 @@ bool StreamUtils::hasFastAes()
 #elif defined(Q_OS_LINUX) && defined(Q_PROCESSOR_ARM) && QT_POINTER_SIZE == 8
     return getauxval(AT_HWCAP) & HWCAP_AES;
 #elif defined(Q_PROCESSOR_RISCV)
-    // TODO: Implement detection of RISC-V vector crypto extension when possible.
-    // At the time of writing, no RISC-V hardware has it, so hardcode it off.
-    return false;
+    riscv_hwprobe pairs[1] = {
+        { RISCV_HWPROBE_KEY_IMA_EXT_0, 0 },
+    };
+
+    // If this syscall is not implemented, we'll get -ENOSYS
+    // and the value field will remain zero.
+    __riscv_hwprobe(pairs, SDL_arraysize(pairs), 0, nullptr, 0);
+
+    return (pairs[0].value & (RISCV_HWPROBE_EXT_ZKNE | RISCV_HWPROBE_EXT_ZKND)) ==
+               (RISCV_HWPROBE_EXT_ZKNE | RISCV_HWPROBE_EXT_ZKND) ||
+           (pairs[0].value & RISCV_HWPROBE_EXT_ZVKNED);
 #elif QT_POINTER_SIZE == 4
     #warning Unknown 32-bit platform. Assuming AES is slow on this CPU.
     return false;
