@@ -4,6 +4,7 @@
 #endif
 
 #include "drm.h"
+#include "string.h"
 
 extern "C" {
     #include <libavutil/hwcontext_drm.h>
@@ -157,7 +158,8 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
 {
     // The out-of-tree LibreELEC patches use this option to control the type of the V4L2
     // buffers that we get back. We only support NV12 buffers now.
-    av_dict_set_int(options, "pixel_format", AV_PIX_FMT_NV12, 0);
+    if(strstr(context->codec->name, "_v4l2") != NULL)
+        av_dict_set_int(options, "pixel_format", AV_PIX_FMT_NV12, 0);
 
     // This option controls the pixel format for the h264_omx and hevc_omx decoders
     // used by the JH7110 multimedia stack. This decoder gives us software frames,
