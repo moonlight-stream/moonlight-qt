@@ -221,7 +221,8 @@ FFmpegVideoDecoder::FFmpegVideoDecoder(bool testOnly)
       m_VideoFormat(0),
       m_NeedsSpsFixup(false),
       m_TestOnly(testOnly),
-      m_DecoderThread(nullptr)
+      m_DecoderThread(nullptr),
+      m_VideoEnhancement(&VideoEnhancement::getInstance())
 {
     SDL_zero(m_ActiveWndVideoStats);
     SDL_zero(m_LastWndVideoStats);
@@ -709,15 +710,22 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
         break;
     }
 
+    // Display if AI-Enhancement is enabled
+    const char* aiEnhanced = "";
+    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        aiEnhanced = "AI-Enhanced";
+    }
+
     if (stats.receivedFps > 0) {
         if (m_VideoDecoderCtx != nullptr) {
             ret = snprintf(&output[offset],
                            length - offset,
-                           "Video stream: %dx%d %.2f FPS (Codec: %s)\n",
+                           "Video stream: %dx%d %.2f FPS (Codec: %s) %s\n",
                            m_VideoDecoderCtx->width,
                            m_VideoDecoderCtx->height,
                            stats.totalFps,
-                           codecString);
+                           codecString,
+                           aiEnhanced);
             if (ret < 0 || ret >= length - offset) {
                 SDL_assert(false);
                 return;

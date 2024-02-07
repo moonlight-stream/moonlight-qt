@@ -43,6 +43,7 @@
 #include "streaming/session.h"
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
+#include "streaming/video/videoenhancement.h"
 
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
 // Log to file for release Windows builds
@@ -642,6 +643,15 @@ int main(int argc, char *argv[])
                                                    [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
                                                        return new StreamingPreferences(qmlEngine);
                                                    });
+    qmlRegisterSingletonType<VideoEnhancement>("VideoEnhancement", 1, 0, "VideoEnhancement",
+                                               [](QQmlEngine *engine, QJSEngine *scriptEngine) -> QObject* {
+                                                   Q_UNUSED(engine)
+                                                   Q_UNUSED(scriptEngine)
+                                                   VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
+                                                   // Set the ownership to CppOwnership to avoid an error when QLM engine tries to delete the object
+                                                   QQmlEngine::setObjectOwnership(videoEnhancement, QQmlEngine::CppOwnership);
+                                                   return videoEnhancement;
+                                               });
 
     // Create the identity manager on the main thread
     IdentityManager::get();
