@@ -7,16 +7,95 @@
 
 #include <SDL_syswm.h>
 #include <Limelight.h>
-#include <streaming/session.h>
+#include "streaming/session.h"
+#include "streaming/streamutils.h"
+#include "path.h"
 
-#include <mach/mach_time.h>
-#include <mach/machine.h>
-#include <sys/sysctl.h>
 #import <Cocoa/Cocoa.h>
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import <dispatch/dispatch.h>
 #import <Metal/Metal.h>
+#import <MetalKit/MetalKit.h>
+
+struct CscParams
+{
+    vector_float3 matrix[3];
+    vector_float3 offsets;
+};
+
+static const CscParams k_CscParams_Bt601Lim = {
+    // CSC Matrix
+    {
+        { 1.1644f, 0.0f, 1.5960f },
+        { 1.1644f, -0.3917f, -0.8129f },
+        { 1.1644f, 2.0172f, 0.0f }
+    },
+
+    // Offsets
+    { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+};
+static const CscParams k_CscParams_Bt601Full = {
+    // CSC Matrix
+    {
+        { 1.0f, 0.0f, 1.4020f },
+        { 1.0f, -0.3441f, -0.7141f },
+        { 1.0f, 1.7720f, 0.0f },
+    },
+
+    // Offsets
+    { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+};
+static const CscParams k_CscParams_Bt709Lim = {
+    // CSC Matrix
+    {
+        { 1.1644f, 0.0f, 1.7927f },
+        { 1.1644f, -0.2132f, -0.5329f },
+        { 1.1644f, 2.1124f, 0.0f },
+    },
+
+    // Offsets
+    { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+};
+static const CscParams k_CscParams_Bt709Full = {
+    // CSC Matrix
+    {
+        { 1.0f, 0.0f, 1.5748f },
+        { 1.0f, -0.1873f, -0.4681f },
+        { 1.0f, 1.8556f, 0.0f },
+    },
+
+    // Offsets
+    { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+};
+static const CscParams k_CscParams_Bt2020Lim = {
+    // CSC Matrix
+    {
+        { 1.1644f, 0.0f, 1.6781f },
+        { 1.1644f, -0.1874f, -0.6505f },
+        { 1.1644f, 2.1418f, 0.0f },
+    },
+
+    // Offsets
+    { 16.0f / 255.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+};
+static const CscParams k_CscParams_Bt2020Full = {
+    // CSC Matrix
+    {
+        { 1.0f, 0.0f, 1.4746f },
+        { 1.0f, -0.1646f, -0.5714f },
+        { 1.0f, 1.8814f, 0.0f },
+    },
+
+    // Offsets
+    { 0.0f, 128.0f / 255.0f, 128.0f / 255.0f },
+};
+
+struct Vertex
+{
+    vector_float4 position;
+    vector_float2 texCoord;
+};
 
 @interface VTView : NSView
 - (NSView *)hitTest:(NSPoint)point;
@@ -35,15 +114,19 @@ class VTRenderer : public IFFmpegRenderer
 {
 public:
     VTRenderer()
-        : m_HwContext(nullptr),
-          m_DisplayLayer(nullptr),
-          m_FormatDesc(nullptr),
-          m_ContentLightLevelInfo(nullptr),
-          m_MasteringDisplayColorVolume(nullptr),
+        : m_Window(nullptr),
+          m_HwContext(nullptr),
+          m_MetalLayer(nullptr),
+          m_TextureCache(nullptr),
+          m_CscParamsBuffer(nullptr),
+          m_VideoVertexBuffer(nullptr),
+          m_PipelineState(nullptr),
+          m_ShaderLibrary(nullptr),
+          m_CommandQueue(nullptr),
           m_StreamView(nullptr),
           m_DisplayLink(nullptr),
           m_LastColorSpace(-1),
-          m_ColorSpace(nullptr),
+          m_LastFullRange(false),
           m_VsyncMutex(nullptr),
           m_VsyncPassed(nullptr)
     {
@@ -81,22 +164,6 @@ public:
             av_buffer_unref(&m_HwContext);
         }
 
-        if (m_FormatDesc != nullptr) {
-            CFRelease(m_FormatDesc);
-        }
-
-        if (m_ColorSpace != nullptr) {
-            CGColorSpaceRelease(m_ColorSpace);
-        }
-
-        if (m_MasteringDisplayColorVolume != nullptr) {
-            CFRelease(m_MasteringDisplayColorVolume);
-        }
-
-        if (m_ContentLightLevelInfo != nullptr) {
-            CFRelease(m_ContentLightLevelInfo);
-        }
-
         for (int i = 0; i < Overlay::OverlayMax; i++) {
             if (m_OverlayTextFields[i] != nullptr) {
                 [m_OverlayTextFields[i] removeFromSuperview];
@@ -109,8 +176,28 @@ public:
             [m_StreamView release];
         }
 
-        if (m_DisplayLayer != nullptr) {
-            [m_DisplayLayer release];
+        if (m_CscParamsBuffer != nullptr) {
+            [m_CscParamsBuffer release];
+        }
+
+        if (m_VideoVertexBuffer != nullptr) {
+            [m_VideoVertexBuffer release];
+        }
+
+        if (m_PipelineState != nullptr) {
+            [m_PipelineState release];
+        }
+
+        if (m_ShaderLibrary != nullptr) {
+            [m_ShaderLibrary release];
+        }
+
+        if (m_CommandQueue != nullptr) {
+            [m_CommandQueue release];
+        }
+
+        if (m_TextureCache != nullptr) {
+            CFRelease(m_TextureCache);
         }
 
         // It appears to be necessary to run the event loop after destroying
@@ -203,182 +290,221 @@ public:
         }
     }
 
-    virtual void setHdrMode(bool enabled) override
+    bool updateVideoRegionSizeForFrame(AVFrame* frame)
     {
-        // Free existing HDR metadata
-        if (m_MasteringDisplayColorVolume != nullptr) {
-            CFRelease(m_MasteringDisplayColorVolume);
-            m_MasteringDisplayColorVolume = nullptr;
-        }
-        if (m_ContentLightLevelInfo != nullptr) {
-            CFRelease(m_ContentLightLevelInfo);
-            m_ContentLightLevelInfo = nullptr;
+        // TODO: When we support seamless resizing, implement this properly!
+        if (m_VideoVertexBuffer) {
+            return true;
         }
 
-        // Store new HDR metadata if available
-        SS_HDR_METADATA hdrMetadata;
-        if (enabled && LiGetHdrMetadata(&hdrMetadata)) {
-            if (hdrMetadata.displayPrimaries[0].x != 0 && hdrMetadata.maxDisplayLuminance != 0) {
-                // This data is all in big-endian
-                struct {
-                  vector_ushort2 primaries[3];
-                  vector_ushort2 white_point;
-                  uint32_t luminance_max;
-                  uint32_t luminance_min;
-                } __attribute__((packed, aligned(4))) mdcv;
+        int drawableWidth, drawableHeight;
+        SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
 
-                // mdcv is in GBR order while SS_HDR_METADATA is in RGB order
-                mdcv.primaries[0].x = __builtin_bswap16(hdrMetadata.displayPrimaries[1].x);
-                mdcv.primaries[0].y = __builtin_bswap16(hdrMetadata.displayPrimaries[1].y);
-                mdcv.primaries[1].x = __builtin_bswap16(hdrMetadata.displayPrimaries[2].x);
-                mdcv.primaries[1].y = __builtin_bswap16(hdrMetadata.displayPrimaries[2].y);
-                mdcv.primaries[2].x = __builtin_bswap16(hdrMetadata.displayPrimaries[0].x);
-                mdcv.primaries[2].y = __builtin_bswap16(hdrMetadata.displayPrimaries[0].y);
+        // Determine the correct scaled size for the video region
+        SDL_Rect src, dst;
+        src.x = src.y = 0;
+        src.w = frame->width;
+        src.h = frame->height;
+        dst.x = dst.y = 0;
+        dst.w = drawableWidth;
+        dst.h = drawableHeight;
+        StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-                mdcv.white_point.x = __builtin_bswap16(hdrMetadata.whitePoint.x);
-                mdcv.white_point.y = __builtin_bswap16(hdrMetadata.whitePoint.y);
+        // Convert screen space to normalized device coordinates
+        SDL_FRect renderRect;
+        StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, drawableWidth, drawableHeight);
 
-                // These luminance values are in 10000ths of a nit
-                mdcv.luminance_max = __builtin_bswap32((uint32_t)hdrMetadata.maxDisplayLuminance * 10000);
-                mdcv.luminance_min = __builtin_bswap32(hdrMetadata.minDisplayLuminance);
+        Vertex verts[] =
+        {
+            { { renderRect.x, renderRect.y, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+            { { renderRect.x, renderRect.y+renderRect.h, 0.0f, 1.0f }, { 0.0f, 0} },
+            { { renderRect.x+renderRect.w, renderRect.y, 0.0f, 1.0f }, { 1.0f, 1.0f} },
+            { { renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0.0f, 1.0f }, { 1.0f, 0} },
+        };
 
-                m_MasteringDisplayColorVolume = CFDataCreate(nullptr, (const UInt8*)&mdcv, sizeof(mdcv));
+        [m_VideoVertexBuffer release];
+        m_VideoVertexBuffer = [m_MetalLayer.device newBufferWithBytes:verts length:sizeof(verts) options:MTLResourceStorageModePrivate];
+        if (!m_VideoVertexBuffer) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to create video vertex buffer");
+            return false;
+        }
+
+        return true;
+    }
+
+    bool updateColorSpaceForFrame(AVFrame* frame)
+    {
+        int colorspace = getFrameColorspace(frame);
+        bool fullRange = isFrameFullRange(frame);
+        if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange) {
+            CGColorSpaceRef newColorSpace;
+            void* paramBuffer;
+
+            switch (colorspace) {
+            case COLORSPACE_REC_709:
+                m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
+                m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+                paramBuffer = (void*)(fullRange ? &k_CscParams_Bt709Full : &k_CscParams_Bt709Lim);
+                break;
+            case COLORSPACE_REC_2020:
+                // https://developer.apple.com/documentation/metal/hdr_content/using_color_spaces_to_display_hdr_content
+                if (frame->color_trc == AVCOL_TRC_SMPTE2084) {
+                    if (@available(macOS 11.0, *)) {
+                        m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2100_PQ);
+                    }
+                    else {
+                        m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
+                    }
+                    m_MetalLayer.pixelFormat = MTLPixelFormatBGR10A2Unorm;
+                }
+                else {
+                    m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
+                    m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+                }
+                paramBuffer = (void*)(fullRange ? &k_CscParams_Bt2020Full : &k_CscParams_Bt2020Lim);
+                break;
+            default:
+            case COLORSPACE_REC_601:
+                m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
+                m_MetalLayer.pixelFormat = MTLPixelFormatBGRA8Unorm;
+                paramBuffer = (void*)(fullRange ? &k_CscParams_Bt601Full : &k_CscParams_Bt601Lim);
+                break;
             }
 
-            if (hdrMetadata.maxContentLightLevel != 0 && hdrMetadata.maxFrameAverageLightLevel != 0) {
-                // This data is all in big-endian
-                struct {
-                    uint16_t max_content_light_level;
-                    uint16_t max_frame_average_light_level;
-                } __attribute__((packed, aligned(2))) cll;
+            // The CAMetalLayer retains the CGColorSpace
+            CGColorSpaceRelease(newColorSpace);
 
-                cll.max_content_light_level = __builtin_bswap16(hdrMetadata.maxContentLightLevel);
-                cll.max_frame_average_light_level = __builtin_bswap16(hdrMetadata.maxFrameAverageLightLevel);
-
-                m_ContentLightLevelInfo = CFDataCreate(nullptr, (const UInt8*)&cll, sizeof(cll));
+            // Create the new colorspace parameter buffer for our fragment shader
+            [m_CscParamsBuffer release];
+            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:MTLResourceStorageModePrivate];
+            if (!m_CscParamsBuffer) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to create CSC parameters buffer");
+                return false;
             }
+
+            MTLRenderPipelineDescriptor *pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
+            pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
+            pipelineDesc.fragmentFunction = [[m_ShaderLibrary newFunctionWithName:@"ps_draw_biplanar"] autorelease];
+            pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+            m_PipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
+            if (!m_PipelineState) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to create render pipeline state");
+                return false;
+            }
+
+            m_LastColorSpace = colorspace;
+            m_LastFullRange = fullRange;
         }
+
+        return true;
     }
 
     // Caller frees frame after we return
     virtual void renderFrame(AVFrame* frame) override
     { @autoreleasepool {
-        OSStatus status;
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 
-        if (m_DisplayLayer.status == AVQueuedSampleBufferRenderingStatusFailed) {
+        if (m_MetalLayer.preferredDevice != nullptr && m_MetalLayer.preferredDevice != m_MetalLayer.device) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Resetting failed AVSampleBufferDisplay layer");
+                        "Resetting renderer after preferred device changed");
 
             // Trigger the main thread to recreate the decoder
             SDL_Event event;
-            event.type = SDL_RENDER_TARGETS_RESET;
+            event.type = SDL_RENDER_DEVICE_RESET;
             SDL_PushEvent(&event);
             return;
         }
 
-        // FFmpeg 5.0+ sets the CVPixelBuffer attachments properly now, so we don't have to
-        // fix them up ourselves (except CGColorSpace and PAR attachments).
+        // Handle changes to the frame's colorspace from last time we rendered
+        if (!updateColorSpaceForFrame(frame)) {
+            // Trigger the main thread to recreate the decoder
+            SDL_Event event;
+            event.type = SDL_RENDER_DEVICE_RESET;
+            SDL_PushEvent(&event);
+            return;
+        }
 
-        // The VideoToolbox decoder attaches pixel aspect ratio information to the CVPixelBuffer
-        // which will rescale the video stream in accordance with the host display resolution
-        // to preserve the original aspect ratio of the host desktop. This behavior currently
-        // differs from the behavior of all other Moonlight Qt renderers, so we will strip
-        // these attachments for consistent behavior.
-        CVBufferRemoveAttachment(pixBuf, kCVImageBufferPixelAspectRatioKey);
+        // Handle changes to the video size or drawable size
+        if (!updateVideoRegionSizeForFrame(frame)) {
+            // Trigger the main thread to recreate the decoder
+            SDL_Event event;
+            event.type = SDL_RENDER_DEVICE_RESET;
+            SDL_PushEvent(&event);
+            return;
+        }
 
-        // Reset m_ColorSpace if the colorspace changes. This can happen when
-        // a game enters HDR mode (Rec 601 -> Rec 2020).
-        int colorspace = getFrameColorspace(frame);
-        if (colorspace != m_LastColorSpace) {
-            if (m_ColorSpace != nullptr) {
-                CGColorSpaceRelease(m_ColorSpace);
-                m_ColorSpace = nullptr;
-            }
+        auto nextDrawable = [m_MetalLayer nextDrawable];
 
-            switch (colorspace) {
-            case COLORSPACE_REC_709:
-                m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_709);
+        // Create Metal textures for the planes of the CVPixelBuffer
+        std::array<CVMetalTextureRef, 2> textures;
+        for (size_t i = 0; i < textures.size(); i++) {
+            MTLPixelFormat fmt;
+
+            switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
+            case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+            case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+                fmt = (i == 0) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
                 break;
-            case COLORSPACE_REC_2020:
-                // This is necessary to ensure HDR works properly with external displays on macOS Sonoma.
-                if (frame->color_trc == AVCOL_TRC_SMPTE2084) {
-                    if (@available(macOS 11.0, *)) {
-                        m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2100_PQ);
-                    }
-                    else {
-                        m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
-                    }
-                }
-                else {
-                    m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
-                }
+
+            case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+            case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+                fmt = (i == 0) ? MTLPixelFormatR16Unorm : MTLPixelFormatRG16Unorm;
                 break;
-            case COLORSPACE_REC_601:
-                m_ColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceSRGB);
-                break;
-            }
 
-            m_LastColorSpace = colorspace;
-        }
-
-        if (m_ColorSpace != nullptr) {
-            CVBufferSetAttachment(pixBuf, kCVImageBufferCGColorSpaceKey, m_ColorSpace, kCVAttachmentMode_ShouldPropagate);
-        }
-
-        // Attach HDR metadata if it has been provided by the host
-        if (m_MasteringDisplayColorVolume != nullptr) {
-            CVBufferSetAttachment(pixBuf, kCVImageBufferMasteringDisplayColorVolumeKey, m_MasteringDisplayColorVolume, kCVAttachmentMode_ShouldPropagate);
-        }
-        if (m_ContentLightLevelInfo != nullptr) {
-            CVBufferSetAttachment(pixBuf, kCVImageBufferContentLightLevelInfoKey, m_ContentLightLevelInfo, kCVAttachmentMode_ShouldPropagate);
-        }
-
-        // If the format has changed or doesn't exist yet, construct it with the
-        // pixel buffer data
-        if (!m_FormatDesc || !CMVideoFormatDescriptionMatchesImageBuffer(m_FormatDesc, pixBuf)) {
-            if (m_FormatDesc != nullptr) {
-                CFRelease(m_FormatDesc);
-            }
-            status = CMVideoFormatDescriptionCreateForImageBuffer(kCFAllocatorDefault,
-                                                                  pixBuf, &m_FormatDesc);
-            if (status != noErr) {
+            default:
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "CMVideoFormatDescriptionCreateForImageBuffer() failed: %d",
-                             status);
+                             "Unknown pixel format: %x",
+                             CVPixelBufferGetPixelFormatType(pixBuf));
+                return;
+            }
+
+            CVReturn err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, m_TextureCache, pixBuf, nullptr, fmt,
+                                                                     CVPixelBufferGetWidthOfPlane(pixBuf, i),
+                                                                     CVPixelBufferGetHeightOfPlane(pixBuf, i),
+                                                                     i,
+                                                                     &textures[i]);
+            if (err != kCVReturnSuccess) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                             err);
                 return;
             }
         }
 
-        // Queue this sample for the next v-sync
-        CMSampleTimingInfo timingInfo = {
-            .duration = kCMTimeInvalid,
-            .presentationTimeStamp = CMClockMakeHostTimeFromSystemUnits(mach_absolute_time()),
-            .decodeTimeStamp = kCMTimeInvalid,
-        };
+        // Prepare a render pass to render into the next drawable
+        auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        renderPassDescriptor.colorAttachments[0].texture = nextDrawable.texture;
+        renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
+        renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
+        renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
 
-        CMSampleBufferRef sampleBuffer;
-        status = CMSampleBufferCreateReadyWithImageBuffer(kCFAllocatorDefault,
-                                                          pixBuf,
-                                                          m_FormatDesc,
-                                                          &timingInfo,
-                                                          &sampleBuffer);
-        if (status != noErr) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CMSampleBufferCreateReadyWithImageBuffer() failed: %d",
-                         status);
-            return;
+        // Bind textures and buffers then draw the video region
+        auto commandBuffer = [m_CommandQueue commandBuffer];
+        auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+        [renderEncoder setRenderPipelineState:m_PipelineState];
+        for (size_t i = 0; i < textures.size(); i++) {
+            [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(textures[i]) atIndex:i];
         }
+        [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
+          // Free textures after completion of rendering per CVMetalTextureCache requirements
+          for (const CVMetalTextureRef &tex : textures) {
+              CFRelease(tex);
+          }
+        }];
+        [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
+        [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
+        [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
+        [renderEncoder endEncoding];
 
-        [m_DisplayLayer enqueueSampleBuffer:sampleBuffer];
-
-        CFRelease(sampleBuffer);
+        // Flip to the newly rendered buffer
+        [commandBuffer presentDrawable: nextDrawable];
+        [commandBuffer commit];
     }}
 
-    virtual bool initialize(PDECODER_PARAMETERS params) override
-    { @autoreleasepool {
-        int err;
-
+    bool checkDecoderCapabilities(PDECODER_PARAMETERS params) {
         if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
             if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_H264)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -455,6 +581,19 @@ public:
         #endif
         }
 
+        return true;
+    }
+
+    virtual bool initialize(PDECODER_PARAMETERS params) override
+    { @autoreleasepool {
+        int err;
+
+        m_Window = params->window;
+
+        if (!checkDecoderCapabilities(params)) {
+            return false;
+        }
+
         err = av_hwdevice_ctx_create(&m_HwContext,
                                      AV_HWDEVICE_TYPE_VIDEOTOOLBOX,
                                      nullptr,
@@ -467,93 +606,75 @@ public:
             return false;
         }
 
-        bool isAppleSilicon = false;
-        {
-            uint32_t cpuType;
-            size_t size = sizeof(cpuType);
+        SDL_SysWMinfo info;
 
-            err = sysctlbyname("hw.cputype", &cpuType, &size, NULL, 0);
-            if (err == 0) {
-                // Apple Silicon Macs have CPU_ARCH_ABI64 set, so we need to mask that off.
-                // For some reason, 64-bit Intel Macs don't seem to have CPU_ARCH_ABI64 set.
-                isAppleSilicon = (cpuType & ~CPU_ARCH_MASK) == CPU_TYPE_ARM;
-            }
-            else {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "sysctlbyname(hw.cputype) failed: %d", err);
-            }
+        SDL_VERSION(&info.version);
+
+        if (!SDL_GetWindowWMInfo(params->window, &info)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDL_GetWindowWMInfo() failed: %s",
+                        SDL_GetError());
+            return false;
         }
 
-        if (qgetenv("VT_FORCE_INDIRECT") == "1") {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Using indirect rendering due to environment variable");
-            m_DirectRendering = false;
-        }
-        else {
-            m_DirectRendering = true;
-        }
+        SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
 
-        // If we're using direct rendering, set up the AVSampleBufferDisplayLayer
-        if (m_DirectRendering) {
-            SDL_SysWMinfo info;
+        // SDL adds its own content view to listen for events.
+        // We need to add a subview for our display layer.
+        NSView* contentView = info.info.cocoa.window.contentView;
+        m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
 
-            SDL_VERSION(&info.version);
+        // Associate a CAMetalLayer to our view
+        m_StreamView.layer = m_MetalLayer = [CAMetalLayer layer];
+        m_StreamView.wantsLayer = YES;
 
-            if (!SDL_GetWindowWMInfo(params->window, &info)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "SDL_GetWindowWMInfo() failed: %s",
-                            SDL_GetError());
+        // Choose a device
+        m_MetalLayer.device = m_MetalLayer.preferredDevice;
+        if (!m_MetalLayer.device) {
+            m_MetalLayer.device = [MTLCreateSystemDefaultDevice() autorelease];
+            if (!m_MetalLayer.device) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "No Metal device found!");
                 return false;
             }
+        }
 
-            SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
+        // Configure the Metal layer for rendering
+        m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+        m_MetalLayer.displaySyncEnabled = params->enableVsync;
+        m_MetalLayer.maximumDrawableCount = 2; // Double buffering
 
-            // SDL adds its own content view to listen for events.
-            // We need to add a subview for our display layer.
-            NSView* contentView = info.info.cocoa.window.contentView;
-            m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
+        [contentView addSubview: m_StreamView];
 
-            m_DisplayLayer = [[AVSampleBufferDisplayLayer alloc] init];
-            m_DisplayLayer.bounds = m_StreamView.bounds;
-            m_DisplayLayer.position = CGPointMake(CGRectGetMidX(m_StreamView.bounds), CGRectGetMidY(m_StreamView.bounds));
-            m_DisplayLayer.videoGravity = AVLayerVideoGravityResizeAspect;
-            m_DisplayLayer.opaque = YES;
+        // Create the Metal texture cache for our CVPixelBuffers
+        CFStringRef keys[1] = { kCVMetalTextureUsage };
+        NSUInteger values[1] = { MTLTextureUsageShaderRead };
+        auto cacheAttributes = CFDictionaryCreate(kCFAllocatorDefault, (const void**)keys, (const void**)values, 1, nullptr, nullptr);
+        err = CVMetalTextureCacheCreate(kCFAllocatorDefault, cacheAttributes, m_MetalLayer.device, nullptr, &m_TextureCache);
+        CFRelease(cacheAttributes);
 
-            // This workaround prevents the image from going through processing that causes some
-            // color artifacts in some cases. HDR seems to be okay without this, so we'll exclude
-            // it out of caution. The artifacts seem to be far more significant on M1 Macs and
-            // the workaround can cause performance regressions on Intel Macs, so only use this
-            // on Apple silicon.
-            //
-            // https://github.com/moonlight-stream/moonlight-qt/issues/493
-            // https://github.com/moonlight-stream/moonlight-qt/issues/722
-            if (isAppleSilicon && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT)) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Using layer rasterization workaround");
-                if (info.info.cocoa.window.screen != nullptr) {
-                    m_DisplayLayer.shouldRasterize = YES;
-                    m_DisplayLayer.rasterizationScale = info.info.cocoa.window.screen.backingScaleFactor;
-                }
-                else {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unable to rasterize layer due to missing NSScreen");
-                    SDL_assert(false);
-                }
-            }
+        if (err != kCVReturnSuccess) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CVMetalTextureCacheCreate() failed: %d",
+                         err);
+            return false;
+        }
 
-            // Create a layer-hosted view by setting the layer before wantsLayer
-            // This avoids us having to add our AVSampleBufferDisplayLayer as a
-            // sublayer of a layer-backed view which leaves a useless layer in
-            // the middle.
-            m_StreamView.layer = m_DisplayLayer;
-            m_StreamView.wantsLayer = YES;
+        // Compile our shaders
+        QString shaderSource = QString::fromUtf8(Path::readDataFile("vt_renderer.metal"));
+        m_ShaderLibrary = [m_MetalLayer.device newLibraryWithSource:shaderSource.toNSString() options:nullptr error:nullptr];
+        if (!m_ShaderLibrary) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to compile shaders");
+            return false;
+        }
 
-            [contentView addSubview: m_StreamView];
+        // Create a command queue for submission
+        m_CommandQueue = [m_MetalLayer.device newCommandQueue];
 
-            if (params->enableFramePacing) {
-                if (!initializeVsyncCallback(&info)) {
-                    return false;
-                }
+        if (params->enableFramePacing) {
+            if (!initializeVsyncCallback(&info)) {
+                return false;
             }
         }
 
@@ -607,7 +728,7 @@ public:
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using VideoToolbox accelerated renderer");
+                    "Using VideoToolbox Metal renderer");
 
         return true;
     }
@@ -639,26 +760,24 @@ public:
         return RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 
-    bool isDirectRenderingSupported() override
-    {
-        return m_DirectRendering;
-    }
-
 private:
+    SDL_Window* m_Window;
     AVBufferRef* m_HwContext;
-    AVSampleBufferDisplayLayer* m_DisplayLayer;
-    CMVideoFormatDescriptionRef m_FormatDesc;
-    CFDataRef m_ContentLightLevelInfo;
-    CFDataRef m_MasteringDisplayColorVolume;
-    NSView* m_StreamView;
+    CAMetalLayer* m_MetalLayer;
+    CVMetalTextureCacheRef m_TextureCache;
+    id<MTLBuffer> m_CscParamsBuffer;
+    id<MTLBuffer> m_VideoVertexBuffer;
+    id<MTLRenderPipelineState> m_PipelineState;
+    id<MTLLibrary> m_ShaderLibrary;
+    id<MTLCommandQueue> m_CommandQueue;
+    VTView* m_StreamView;
     dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
     CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
-    CGColorSpaceRef m_ColorSpace;
+    bool m_LastFullRange;
     SDL_mutex* m_VsyncMutex;
     SDL_cond* m_VsyncPassed;
-    bool m_DirectRendering;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {
