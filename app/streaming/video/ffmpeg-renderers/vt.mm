@@ -97,19 +97,6 @@ struct Vertex
     vector_float2 texCoord;
 };
 
-@interface VTView : NSView
-- (NSView *)hitTest:(NSPoint)point;
-@end
-
-@implementation VTView
-
-- (NSView *)hitTest:(NSPoint)point {
-    Q_UNUSED(point);
-    return nil;
-}
-
-@end
-
 class VTRenderer : public IFFmpegRenderer
 {
 public:
@@ -123,7 +110,7 @@ public:
           m_PipelineState(nullptr),
           m_ShaderLibrary(nullptr),
           m_CommandQueue(nullptr),
-          m_StreamView(nullptr),
+          m_MetalView(nullptr),
           m_DisplayLink(nullptr),
           m_LastColorSpace(-1),
           m_LastFullRange(false),
@@ -171,11 +158,6 @@ public:
             }
         }
 
-        if (m_StreamView != nullptr) {
-            [m_StreamView removeFromSuperview];
-            [m_StreamView release];
-        }
-
         if (m_CscParamsBuffer != nullptr) {
             [m_CscParamsBuffer release];
         }
@@ -198,6 +180,10 @@ public:
 
         if (m_TextureCache != nullptr) {
             CFRelease(m_TextureCache);
+        }
+
+        if (m_MetalView != nullptr) {
+            SDL_Metal_DestroyView(m_MetalView);
         }
 
         // It appears to be necessary to run the event loop after destroying
@@ -226,9 +212,20 @@ public:
         return kCVReturnSuccess;
     }
 
-    bool initializeVsyncCallback(SDL_SysWMinfo* info)
+    bool initializeVsyncCallback()
     {
-        NSScreen* screen = [info->info.cocoa.window screen];
+        SDL_SysWMinfo info;
+        SDL_VERSION(&info.version);
+        if (!SDL_GetWindowWMInfo(m_Window, &info)) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDL_GetWindowWMInfo() failed: %s",
+                        SDL_GetError());
+            return false;
+        }
+
+        SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
+
+        NSScreen* screen = [info.info.cocoa.window screen];
         CVReturn status;
         if (screen == nullptr) {
             // Window not visible on any display, so use a
@@ -606,27 +603,15 @@ public:
             return false;
         }
 
-        SDL_SysWMinfo info;
-
-        SDL_VERSION(&info.version);
-
-        if (!SDL_GetWindowWMInfo(params->window, &info)) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "SDL_GetWindowWMInfo() failed: %s",
-                        SDL_GetError());
+        m_MetalView = SDL_Metal_CreateView(m_Window);
+        if (!m_MetalView) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_Metal_CreateView() failed: %s",
+                         SDL_GetError());
             return false;
         }
 
-        SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
-
-        // SDL adds its own content view to listen for events.
-        // We need to add a subview for our display layer.
-        NSView* contentView = info.info.cocoa.window.contentView;
-        m_StreamView = [[VTView alloc] initWithFrame:contentView.bounds];
-
-        // Associate a CAMetalLayer to our view
-        m_StreamView.layer = m_MetalLayer = [CAMetalLayer layer];
-        m_StreamView.wantsLayer = YES;
+        m_MetalLayer = (CAMetalLayer*)SDL_Metal_GetLayer(m_MetalView);
 
         // Choose a device
         m_MetalLayer.device = m_MetalLayer.preferredDevice;
@@ -643,8 +628,6 @@ public:
         m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
         m_MetalLayer.displaySyncEnabled = params->enableVsync;
         m_MetalLayer.maximumDrawableCount = 2; // Double buffering
-
-        [contentView addSubview: m_StreamView];
 
         // Create the Metal texture cache for our CVPixelBuffers
         CFStringRef keys[1] = { kCVMetalTextureUsage };
@@ -673,7 +656,7 @@ public:
         m_CommandQueue = [m_MetalLayer.device newCommandQueue];
 
         if (params->enableFramePacing) {
-            if (!initializeVsyncCallback(&info)) {
+            if (!initializeVsyncCallback()) {
                 return false;
             }
         }
@@ -685,7 +668,7 @@ public:
     { @autoreleasepool {
         // Lazy initialization for the overlay
         if (m_OverlayTextFields[type] == nullptr) {
-            m_OverlayTextFields[type] = [[NSTextField alloc] initWithFrame:m_StreamView.bounds];
+            m_OverlayTextFields[type] = [[NSTextField alloc] initWithFrame:((NSView*)m_MetalView).bounds];
             [m_OverlayTextFields[type] setBezeled:NO];
             [m_OverlayTextFields[type] setDrawsBackground:NO];
             [m_OverlayTextFields[type] setEditable:NO];
@@ -706,7 +689,7 @@ public:
             [m_OverlayTextFields[type] setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
             [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(type)]];
 
-            [m_StreamView addSubview: m_OverlayTextFields[type]];
+            [(NSView*)m_MetalView addSubview: m_OverlayTextFields[type]];
         }
 
         // Update text contents
@@ -770,7 +753,7 @@ private:
     id<MTLRenderPipelineState> m_PipelineState;
     id<MTLLibrary> m_ShaderLibrary;
     id<MTLCommandQueue> m_CommandQueue;
-    VTView* m_StreamView;
+    SDL_MetalView m_MetalView;
     dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
     CVDisplayLinkRef m_DisplayLink;
