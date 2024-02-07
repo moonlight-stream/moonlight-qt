@@ -146,7 +146,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Đang tìm kiếm máy chủ tương thích trên mạng cục bộ của bạn...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -226,22 +226,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vui lòng nhập %1 trên PC chủ của bạn. Hộp thoại này sẽ đóng khi ghép nối được hoàn tất.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="301"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nếu máy chủ của bạn đang chạy Sunshine, hãy mở trang Sunshine trên trang web để nhập mã PIN vào.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Bạn có chắc chắn muốn xoá &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight đang kiểm tra kết nối mạng của bạn để chắc chắn rằng có port nào đang bị chặn hay không.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="354"/>
@@ -254,22 +254,22 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="588"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Mã PIN từ PC không trùng khớp. Vui lòng thử lại.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="592"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bạn không thể kết nối nếu phiên làm việc trước đó vẫn đang được mở trên PC của bạn. Hãy thoát tất cả game hoặc khởi động lại máy tính của bạn, rồi thử kết nối lại lần nữa.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="595"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kết nối không thành công. Vui lòng thử lại.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="599"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Đang có một ghép nối khác đang trong quá trình thực hiện.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="609"/>
@@ -327,17 +327,17 @@
     <message>
         <location filename="../main.cpp" line="554"/>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Có</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="555"/>
         <source>&amp;No</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Không</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="556"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>OK</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="557"/>
@@ -347,7 +347,7 @@
     <message>
         <location filename="../main.cpp" line="558"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Huỷ bỏ</translation>
     </message>
 </context>
 <context>
