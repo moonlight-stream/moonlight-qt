@@ -83,7 +83,7 @@ bool VideoEnhancement::setGPUinformation()
                 // Set GPU information
                 m_VendorId = adapterIdentifier.VendorId;
                 m_GPUname = description;
-                m_DriverVersion = GetVideoDriverInfo();
+                m_DriverVersion = getVideoDriverInfo();
 
                 qInfo() << "Active GPU: " << m_GPUname;
                 qInfo() << "Video Driver: " << m_DriverVersion;
@@ -108,7 +108,7 @@ bool VideoEnhancement::setGPUinformation()
  *
  * \return int Returns the Video driver version as an integer
  */
-int VideoEnhancement::GetVideoDriverInfo()
+int VideoEnhancement::getVideoDriverInfo()
 {
 
     HKEY hKey = nullptr;
