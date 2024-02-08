@@ -19,7 +19,7 @@ private:
 
     bool m_Initialized = false;
     bool m_Enabled = false;
-    bool m_UIvisible = true; // [Bruno] It should be false, and turn true by dxva2.cpp
+    bool m_UIvisible = false;
 
     // Vendors' name (PCI Special Interest Group)
     const int VENDOR_ID_AMD = 4098;
@@ -49,7 +49,7 @@ private:
     VideoEnhancement& operator=(const VideoEnhancement&);
 
     bool setGPUinformation();
-    int GetVideoDriverInfo();
+    int getVideoDriverInfo();
 
 public:
     static VideoEnhancement& getInstance();
