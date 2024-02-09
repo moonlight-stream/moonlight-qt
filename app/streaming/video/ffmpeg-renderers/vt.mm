@@ -114,6 +114,10 @@ public:
           m_DisplayLink(nullptr),
           m_LastColorSpace(-1),
           m_LastFullRange(false),
+          m_LastFrameWidth(-1),
+          m_LastFrameHeight(-1),
+          m_LastDrawableWidth(-1),
+          m_LastDrawableHeight(-1),
           m_VsyncMutex(nullptr),
           m_VsyncPassed(nullptr)
     {
@@ -289,13 +293,16 @@ public:
 
     bool updateVideoRegionSizeForFrame(AVFrame* frame)
     {
-        // TODO: When we support seamless resizing, implement this properly!
-        if (m_VideoVertexBuffer) {
-            return true;
-        }
-
         int drawableWidth, drawableHeight;
         SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+
+        // Check if anything has changed since the last vertex buffer upload
+        if (m_VideoVertexBuffer &&
+                frame->width == m_LastFrameWidth && frame->height == m_LastFrameHeight &&
+                drawableWidth == m_LastDrawableWidth && drawableHeight == m_LastDrawableHeight) {
+            // Nothing to do
+            return true;
+        }
 
         // Determine the correct scaled size for the video region
         SDL_Rect src, dst;
@@ -326,6 +333,11 @@ public:
                          "Failed to create video vertex buffer");
             return false;
         }
+
+        m_LastFrameWidth = frame->width;
+        m_LastFrameHeight = frame->height;
+        m_LastDrawableWidth = drawableWidth;
+        m_LastDrawableHeight = drawableHeight;
 
         return true;
     }
@@ -677,9 +689,11 @@ public:
             switch (type) {
             case Overlay::OverlayDebug:
                 [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
+                [m_OverlayTextFields[type] setAutoresizingMask:NSViewMaxXMargin | NSViewMinYMargin];
                 break;
             case Overlay::OverlayStatusUpdate:
                 [m_OverlayTextFields[type] setAlignment:NSTextAlignmentRight];
+                [m_OverlayTextFields[type] setAutoresizingMask:NSViewMinXMargin | NSViewMinYMargin];
                 break;
             default:
                 break;
@@ -691,6 +705,9 @@ public:
 
             [(NSView*)m_MetalView addSubview: m_OverlayTextFields[type]];
         }
+
+        // Update the text field size
+        [m_OverlayTextFields[type] setFrame:((NSView*)m_MetalView).bounds];
 
         // Update text contents
         [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(type)]];
@@ -743,6 +760,22 @@ public:
         return RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 
+    bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) override
+    {
+        auto unhandledStateFlags = info->stateChangeFlags;
+
+        // We can always handle size changes
+        unhandledStateFlags &= ~WINDOW_STATE_CHANGE_SIZE;
+
+        // We can handle monitor changes as long as we are not pacing with a CVDisplayLink
+        if (m_DisplayLink == nullptr) {
+            unhandledStateFlags &= ~WINDOW_STATE_CHANGE_DISPLAY;
+        }
+
+        // If nothing is left, we handled everything
+        return unhandledStateFlags == 0;
+    }
+
 private:
     SDL_Window* m_Window;
     AVBufferRef* m_HwContext;
@@ -759,6 +792,10 @@ private:
     CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
     bool m_LastFullRange;
+    int m_LastFrameWidth;
+    int m_LastFrameHeight;
+    int m_LastDrawableWidth;
+    int m_LastDrawableHeight;
     SDL_mutex* m_VsyncMutex;
     SDL_cond* m_VsyncPassed;
 };
