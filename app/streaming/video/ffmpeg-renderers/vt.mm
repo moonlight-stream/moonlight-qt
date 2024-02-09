@@ -327,7 +327,8 @@ public:
         };
 
         [m_VideoVertexBuffer release];
-        m_VideoVertexBuffer = [m_MetalLayer.device newBufferWithBytes:verts length:sizeof(verts) options:MTLResourceStorageModePrivate];
+        auto bufferOptions = MTLCPUCacheModeWriteCombined | MTLResourceStorageModeManaged;
+        m_VideoVertexBuffer = [m_MetalLayer.device newBufferWithBytes:verts length:sizeof(verts) options:bufferOptions];
         if (!m_VideoVertexBuffer) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create video vertex buffer");
@@ -386,7 +387,8 @@ public:
 
             // Create the new colorspace parameter buffer for our fragment shader
             [m_CscParamsBuffer release];
-            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:MTLResourceStorageModePrivate];
+            auto bufferOptions = MTLCPUCacheModeWriteCombined | MTLResourceStorageModeManaged;
+            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:bufferOptions];
             if (!m_CscParamsBuffer) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Failed to create CSC parameters buffer");
