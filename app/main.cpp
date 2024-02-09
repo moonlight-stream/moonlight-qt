@@ -418,6 +418,12 @@ int main(int argc, char *argv[])
     qputenv("QSG_RENDER_LOOP", "basic");
 #endif
 
+#if defined(Q_OS_DARWIN) && defined(QT_DEBUG)
+    // Enable Metal valiation for debug builds
+    qputenv("MTL_DEBUG_LAYER", "1");
+    qputenv("MTL_SHADER_VALIDATION", "1");
+#endif
+
     // We don't want system proxies to apply to us
     QNetworkProxyFactory::setUseSystemConfiguration(false);
 
