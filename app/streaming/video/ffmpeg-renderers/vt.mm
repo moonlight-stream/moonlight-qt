@@ -638,10 +638,20 @@ public:
             }
         }
 
-        // Configure the Metal layer for rendering
+        // Allow EDR content if we're streaming in a 10-bit format
         m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+
+        // Ideally, we don't actually want triple buffering due to increased
+        // latency since our render time is very short. However, we *need* 3
+        // drawables in order to hit the offloaded "direct" display path.
+        //
+        // If we only use 2 drawables, we'll be stuck in the composited path
+        // (particularly for windowed mode) and our latency will actually be
+        // higher than opting for triple buffering.
+        m_MetalLayer.maximumDrawableCount = 3;
+
+        // Allow tearing if V-Sync is off (also requires direct display path)
         m_MetalLayer.displaySyncEnabled = params->enableVsync;
-        m_MetalLayer.maximumDrawableCount = 2; // Double buffering
 
         // Create the Metal texture cache for our CVPixelBuffers
         CFStringRef keys[1] = { kCVMetalTextureUsage };
