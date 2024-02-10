@@ -126,6 +126,7 @@ private:
     int m_DisplayHeight;
     int m_LastColorSpace;
     bool m_LastFullRange;
+    bool m_LastServerHDR;
     AVColorTransferCharacteristic m_LastColorTrc;
 
     bool m_AllowTearing;

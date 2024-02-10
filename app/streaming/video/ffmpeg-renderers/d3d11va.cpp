@@ -101,6 +101,7 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_VideoProcessorEnumerator(nullptr),
       m_LastColorSpace(-1),
       m_LastFullRange(false),
+      m_LastServerHDR(LiGetCurrentHostDisplayHdrMode()),
       m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
       m_AllowTearing(false),
       m_VideoGenericPixelShader(nullptr),
@@ -736,14 +737,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     }
 
-    // [TODO] With NVIDIA RTX, while renderering using VideoProcessor with HDR activated in Moonlight,
-    // DXGI_FORMAT_R10G10B10A2_UNORM gives worse result than DXGI_FORMAT_R8G8B8A8_UNORM.
-    // Without this fix, HDR off on server renders gray screen and VSR is inactive (DXGI_COLOR_SPACE_TYPE type 8).
-    // For user perspective, it is better to not see such a bug, so for the moment I choose  to force DXGI_FORMAT_R8G8B8A8_UNORM
-    if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_VideoEnhancement->isVendorNVIDIA()){
-        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    }
-
     // Use DXGI_SWAP_CHAIN_FLAG_ALLOW_TEARING with flip mode for non-vsync case, if possible.
     // NOTE: This is only possible in windowed or borderless windowed mode.
     if (!params->enableVsync) {
@@ -1139,8 +1132,19 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
  */
 void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
 {
-    //Do Nothing when Moolight's HDR is disabled
+    //Do Nothing when Moolight's HDR is disabled as there is no space color issue for SDR, and in all cases HDR on server cannot work.
     if(!m_IsHDRenabled){
+        return;
+    }
+
+    // We reload the renderer if the server HDR mode is changed
+    // This HDR auto set feature helps to have a SDR with VSR enabled, and a HDR without color space issue (strong banding issue)
+    // and with VSR disabled automatically to not have the white border color issue.
+    if(m_LastServerHDR != LiGetCurrentHostDisplayHdrMode()){
+        m_LastServerHDR = LiGetCurrentHostDisplayHdrMode();
+        SDL_Event event;
+        event.type = SDL_RENDER_TARGETS_RESET;
+        SDL_PushEvent(&event);
         return;
     }
 
@@ -1193,7 +1197,7 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // [TODO] Remove this line if NVIDIA fix the issue of having VSR not working (add a gray filter)
             // while HDR is activated for Stream content (swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;)
-            enableNvidiaVideoSuperResolution(); // Turn it "false" if we prefer to not see the white border around elements when VSR is active.
+            enableNvidiaVideoSuperResolution(false); // Turn it "false" if we prefer to not see the white border around elements when VSR is active.
         }
         // Reset the fix HDR Stream
         setStreamColorSpace = true;
