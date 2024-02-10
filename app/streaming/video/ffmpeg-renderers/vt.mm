@@ -114,6 +114,10 @@ public:
           m_DisplayLink(nullptr),
           m_LastColorSpace(-1),
           m_LastFullRange(false),
+          m_LastFrameWidth(-1),
+          m_LastFrameHeight(-1),
+          m_LastDrawableWidth(-1),
+          m_LastDrawableHeight(-1),
           m_VsyncMutex(nullptr),
           m_VsyncPassed(nullptr)
     {
@@ -289,13 +293,16 @@ public:
 
     bool updateVideoRegionSizeForFrame(AVFrame* frame)
     {
-        // TODO: When we support seamless resizing, implement this properly!
-        if (m_VideoVertexBuffer) {
-            return true;
-        }
-
         int drawableWidth, drawableHeight;
         SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+
+        // Check if anything has changed since the last vertex buffer upload
+        if (m_VideoVertexBuffer &&
+                frame->width == m_LastFrameWidth && frame->height == m_LastFrameHeight &&
+                drawableWidth == m_LastDrawableWidth && drawableHeight == m_LastDrawableHeight) {
+            // Nothing to do
+            return true;
+        }
 
         // Determine the correct scaled size for the video region
         SDL_Rect src, dst;
@@ -320,12 +327,18 @@ public:
         };
 
         [m_VideoVertexBuffer release];
-        m_VideoVertexBuffer = [m_MetalLayer.device newBufferWithBytes:verts length:sizeof(verts) options:MTLResourceStorageModePrivate];
+        auto bufferOptions = MTLCPUCacheModeWriteCombined | MTLResourceStorageModeManaged;
+        m_VideoVertexBuffer = [m_MetalLayer.device newBufferWithBytes:verts length:sizeof(verts) options:bufferOptions];
         if (!m_VideoVertexBuffer) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create video vertex buffer");
             return false;
         }
+
+        m_LastFrameWidth = frame->width;
+        m_LastFrameHeight = frame->height;
+        m_LastDrawableWidth = drawableWidth;
+        m_LastDrawableHeight = drawableHeight;
 
         return true;
     }
@@ -374,7 +387,8 @@ public:
 
             // Create the new colorspace parameter buffer for our fragment shader
             [m_CscParamsBuffer release];
-            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:MTLResourceStorageModePrivate];
+            auto bufferOptions = MTLCPUCacheModeWriteCombined | MTLResourceStorageModeManaged;
+            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:bufferOptions];
             if (!m_CscParamsBuffer) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Failed to create CSC parameters buffer");
@@ -624,10 +638,20 @@ public:
             }
         }
 
-        // Configure the Metal layer for rendering
+        // Allow EDR content if we're streaming in a 10-bit format
         m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+
+        // Ideally, we don't actually want triple buffering due to increased
+        // latency since our render time is very short. However, we *need* 3
+        // drawables in order to hit the offloaded "direct" display path.
+        //
+        // If we only use 2 drawables, we'll be stuck in the composited path
+        // (particularly for windowed mode) and our latency will actually be
+        // higher than opting for triple buffering.
+        m_MetalLayer.maximumDrawableCount = 3;
+
+        // Allow tearing if V-Sync is off (also requires direct display path)
         m_MetalLayer.displaySyncEnabled = params->enableVsync;
-        m_MetalLayer.maximumDrawableCount = 2; // Double buffering
 
         // Create the Metal texture cache for our CVPixelBuffers
         CFStringRef keys[1] = { kCVMetalTextureUsage };
@@ -677,9 +701,11 @@ public:
             switch (type) {
             case Overlay::OverlayDebug:
                 [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
+                [m_OverlayTextFields[type] setAutoresizingMask:NSViewMaxXMargin | NSViewMinYMargin];
                 break;
             case Overlay::OverlayStatusUpdate:
                 [m_OverlayTextFields[type] setAlignment:NSTextAlignmentRight];
+                [m_OverlayTextFields[type] setAutoresizingMask:NSViewMinXMargin | NSViewMinYMargin];
                 break;
             default:
                 break;
@@ -691,6 +717,9 @@ public:
 
             [(NSView*)m_MetalView addSubview: m_OverlayTextFields[type]];
         }
+
+        // Update the text field size
+        [m_OverlayTextFields[type] setFrame:((NSView*)m_MetalView).bounds];
 
         // Update text contents
         [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(type)]];
@@ -743,6 +772,22 @@ public:
         return RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 
+    bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) override
+    {
+        auto unhandledStateFlags = info->stateChangeFlags;
+
+        // We can always handle size changes
+        unhandledStateFlags &= ~WINDOW_STATE_CHANGE_SIZE;
+
+        // We can handle monitor changes as long as we are not pacing with a CVDisplayLink
+        if (m_DisplayLink == nullptr) {
+            unhandledStateFlags &= ~WINDOW_STATE_CHANGE_DISPLAY;
+        }
+
+        // If nothing is left, we handled everything
+        return unhandledStateFlags == 0;
+    }
+
 private:
     SDL_Window* m_Window;
     AVBufferRef* m_HwContext;
@@ -759,6 +804,10 @@ private:
     CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
     bool m_LastFullRange;
+    int m_LastFrameWidth;
+    int m_LastFrameHeight;
+    int m_LastDrawableWidth;
+    int m_LastDrawableHeight;
     SDL_mutex* m_VsyncMutex;
     SDL_cond* m_VsyncPassed;
 };
