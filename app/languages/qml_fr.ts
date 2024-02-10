@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -66,7 +66,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation>Jumelage terminé avec succès</translation>
+        <translation>Appairage terminé avec succès</translation>
     </message>
 </context>
 <context>
@@ -79,7 +79,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation>Fermeture de l&apos;app...</translation>
+        <translation>Fermeture de l&apos;application...</translation>
     </message>
 </context>
 <context>
@@ -97,7 +97,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Êtes-vous sûr de vouloir arrêter %1 ? Tout progrès non enregistré sera perdu.</translation>
+        <translation>Êtes-vous sûr de vouloir arrêter %1&#x202f;? Tout progrès non enregistré sera perdu.</translation>
     </message>
 </context>
 <context>
@@ -105,7 +105,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>Configuration de la manette</translation>
+        <translation>Mappage de la manette</translation>
     </message>
 </context>
 <context>
@@ -113,7 +113,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="358"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>Dispositif de capture audio manquant. La réinstallation de GeForce Experience devrait résoudre cette erreur.</translation>
+        <translation>Dispositif de capture audio manquant. Réinstaller GeForce Experience devrait résoudre cette erreur.</translation>
     </message>
 </context>
 <context>
@@ -136,7 +136,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>Cliquez sur le bouton Aide pour connaître les solutions possibles.</translation>
+        <translation>Cliquez sur le bouton Aide pour les solutions possibles.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
@@ -191,7 +191,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>La connexion réseau actuelle de votre PC semble bloquer Moonlight. Il se peut que le stream depuis Internet ne fonctionne pas lorsque vous êtes connecté à ce réseau.</translation>
+        <translation>La connexion réseau actuelle de votre PC semble bloquer Moonlight. Le streaming sur Internet peut ne pas fonctionner lorsque vous êtes connecté à ce réseau.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
@@ -201,12 +201,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>Le test de réseau n&apos;a pas pu être effectué car aucun des serveurs de test de connexion de Moonlight n&apos;était accessible depuis ce PC. Vérifiez votre connexion Internet ou réessayez plus tard.</translation>
+        <translation>Le test réseau n&apos;a pas pu être effectué car aucun des serveurs de test de connexion de Moonlight n&apos;était accessible depuis ce PC. Vérifiez votre connexion Internet ou réessayez plus tard.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Statut du PC : %1</translation>
+        <translation>Statut du PC&#x202f;: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
@@ -241,7 +241,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation>Moonlight teste votre connexion réseau pour déterminer si des ports nécessaires sont bloqués.</translation>
+        <translation>Moonlight teste votre connexion réseau pour déterminer si les ports requis sont bloqués.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="354"/>
@@ -254,7 +254,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="588"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation>Le code PIN du PC hôte ne correspond pas. Merci de réessayer.</translation>
+        <translation>Le code PIN du PC hôte ne correspond pas. Veuillez réessayer.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="592"/>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="659"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>Le jeu en cours d’exécution n&apos;a pas été démarré par ce PC. Vous devez le fermer manuellement sur le PC hôte ou le fermer depuis l&apos;appareil qui a démarré ce jeu.</translation>
+        <translation>Le jeu en cours d’exécution n&apos;a pas été démarré par ce PC. Vous devez le fermer manuellement sur le PC hôte ou depuis l&apos;appareil qui l&apos;a démarré.</translation>
     </message>
 </context>
 <context>
@@ -303,7 +303,7 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>L&apos;&apos;ordinateur %1 n&apos;a pas été jumelé. Veuillez ouvrir Moonlight pour jumeler avant le streaming.</translation>
+        <translation>L&apos;ordinateur %1 n&apos;a pas été couplé. Veuillez ouvrir Moonlight pour le coupler avant de streamer.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
@@ -398,7 +398,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="135"/>
         <source>Connection terminated</source>
-        <translation>Connexion terminée</translation>
+        <translation>Connexion interrompue</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="793"/>
@@ -433,7 +433,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="814"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation>Votre logiciel hôte ou GPU ne supporte pas l&apos;encodage du AV1.</translation>
+        <translation>Votre logiciel hôte ou GPU ne prend pas en charge l&apos;encodage du AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="839"/>
@@ -493,17 +493,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="924"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
-        <translation>Le GPU de ce PC ne prend pas en charge le décodage HEVC pour le streaming HDR.</translation>
+        <translation>Le GPU de ce PC ne prend pas en charge le décodage du HEVC Main10 pour le streaming HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="945"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
-        <translation>GeForce Experience 3.0 ou supérieur est requis pour le streaming 4K.</translation>
+        <translation>GeForce Experience 3.0 ou ultérieur est requis pour le streaming 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="960"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
-        <translation>Le réglage du son surround que vous avez sélectionné n&apos;est pas pris en charge par l&apos;appareil audio actuel.</translation>
+        <translation>Le réglage du son surround que vous avez sélectionné n&apos;est pas pris en charge par le périphérique audio actuel.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="967"/>
@@ -523,7 +523,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1004"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation>Impossible d&apos;utiliser le décodage matériel car le GPU de cet ordinateur ne supporte pas le décodage matériel.</translation>
+        <translation>Impossible de forcer l&apos;utilisation du décodage matériel car le GPU de cet ordinateur ne supporte pas le décodage matériel.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1007"/>
@@ -533,7 +533,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1983"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation>Impossible d&apos;initialiser le décodeur vidéo. Veuillez vérifier vos paramètres de diffusion en continu et réessayez.</translation>
+        <translation>Impossible d&apos;initialiser le décodeur vidéo. Veuillez vérifier vos paramètres de streaming et réessayez.</translation>
     </message>
 </context>
 <context>
@@ -694,7 +694,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="823"/>
         <source>Audio Settings</source>
-        <translation>Réglages audio</translation>
+        <translation>Paramètres audio</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="858"/>
@@ -734,7 +734,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="916"/>
         <source>UI Settings</source>
-        <translation>Réglages de l&apos;interface utilisateur</translation>
+        <translation>Paramètres de l&apos;interface utilisateur</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="926"/>
@@ -764,7 +764,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1162"/>
         <source>Keep the display awake while streaming</source>
-        <translation>Garder l&apos;écran allumé lors du streaming</translation>
+        <translation>Garder l&apos;écran allumé pendant le streaming</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1172"/>
@@ -1082,12 +1082,12 @@
     <message>
         <location filename="../gui/main.qml" line="397"/>
         <source>Gamepad Mapper</source>
-        <translation>Configuration du contrôleur</translation>
+        <translation>Mappeur de manette</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="443"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation>L&apos;accélération matérielle ne fonctionne pas sur XWayland. Continuer sur XWayland peut entraîner de mauvaises performances de streaming. Essayez de fonctionner avec QT_QPA_PLATFORM=wayland ou passez à X11.</translation>
+        <translation>L&apos;accélération matérielle ne fonctionne pas sur XWayland. Continuer sur XWayland peut entraîner de mauvaises performances de streaming. Essayez de lancer Moonlight avec QT_QPA_PLATFORM=wayland ou passez à X11.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="452"/>
@@ -1097,7 +1097,7 @@
     <message>
         <location filename="../gui/main.qml" line="461"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonlight a détecté des manettes sans configuration :</translation>
+        <translation>Moonlight a détecté des manettes sans mapping&#x202f;:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="374"/>
@@ -1112,7 +1112,7 @@
     <message>
         <location filename="../gui/main.qml" line="437"/>
         <source>Click the Help button for more information on solving this problem.</source>
-        <translation>Cliquez sur le bouton Aide pour obtenir plus d&apos;informations sur la manière de résoudre ce problème.</translation>
+        <translation>Cliquez sur le bouton Aide pour obtenir plus d&apos;informations sur la résolution de ce problème.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="445"/>
@@ -1127,12 +1127,12 @@
     <message>
         <location filename="../gui/main.qml" line="463"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation>Cliquez sur le bouton Aide pour obtenir des informations sur la configuration de vos manettes de jeu.</translation>
+        <translation>Cliquez sur le bouton Aide pour obtenir des informations sur le mappage des manettes.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="471"/>
         <source>Are you sure you want to quit?</source>
-        <translation>Êtes-vous sûr de vouloir quitter ?</translation>
+        <translation>Êtes-vous sûr de vouloir quitter&#x202f;?</translation>
     </message>
 </context>
 </TS>
