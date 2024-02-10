@@ -6,8 +6,11 @@
 #include <QObject>
 #include <QQmlEngine>
 #include <string>
+
+#ifdef Q_OS_WIN
 #include <d3d11.h>
 #include <wrl/client.h>
+#endif
 
 class VideoEnhancement : public QObject
 {

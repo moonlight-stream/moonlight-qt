@@ -1,13 +1,14 @@
 #include "videoenhancement.h"
 #include <QtDebug>
+#include <regex>
+
+#ifdef Q_OS_WIN
 #include <windows.h>
 #include <dxgi.h>
 #include <d3d11.h>
-#include <regex>
-
 #include <wrl/client.h>
-
 #pragma comment(lib, "Advapi32.lib")
+#endif
 
 /**
  * \brief Constructor (Singleton)
@@ -98,7 +99,7 @@ bool VideoEnhancement::setGPUinformation()
     if (pDXGIDevice) pDXGIDevice->Release();
     if (pAdapter) pAdapter->Release();
 
- #endif
+#endif
 
     return success;
 }
@@ -110,6 +111,8 @@ bool VideoEnhancement::setGPUinformation()
  */
 int VideoEnhancement::getVideoDriverInfo()
 {
+
+#ifdef Q_OS_WIN
 
     HKEY hKey = nullptr;
     const wchar_t* SUBKEY = L"SYSTEM\\CurrentControlSet\\Control\\Video";
@@ -169,6 +172,8 @@ int VideoEnhancement::getVideoDriverInfo()
         }
     } while (sta == ERROR_SUCCESS);
     RegCloseKey(hKey);
+
+#endif
 
     return m_DriverVersion;
 }
