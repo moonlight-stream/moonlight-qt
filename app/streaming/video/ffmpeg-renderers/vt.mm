@@ -523,6 +523,9 @@ public:
         [commandBuffer presentDrawable:m_NextDrawable];
         [commandBuffer commit];
 
+        // Wait for the command buffer to complete and free our CVMetalTextureCache references
+        [commandBuffer waitUntilCompleted];
+
         [m_NextDrawable release];
         m_NextDrawable = nullptr;
     }}
