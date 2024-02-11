@@ -179,6 +179,7 @@ SOURCES += \
     cli/quitstream.cpp \
     cli/startstream.cpp \
     settings/compatfetcher.cpp \
+    settings/hotkeymanager.cpp \
     settings/mappingfetcher.cpp \
     settings/streamingpreferences.cpp \
     streaming/input/abstouch.cpp \
@@ -192,6 +193,7 @@ SOURCES += \
     streaming/audio/renderers/sdlaud.cpp \
     gui/computermodel.cpp \
     gui/appmodel.cpp \
+    gui/hotkeymodel.cpp \
     streaming/streamutils.cpp \
     backend/autoupdatechecker.cpp \
     path.cpp \
@@ -206,6 +208,7 @@ HEADERS += \
     backend/nvapp.h \
     cli/pair.h \
     settings/compatfetcher.h \
+    settings/hotkeymanager.h \
     settings/mappingfetcher.h \
     utils.h \
     backend/computerseeker.h \
@@ -227,6 +230,7 @@ HEADERS += \
     streaming/audio/renderers/sdl.h \
     gui/computermodel.h \
     gui/appmodel.h \
+    gui/hotkeymodel.h \
     streaming/video/decoder.h \
     streaming/streamutils.h \
     backend/autoupdatechecker.h \

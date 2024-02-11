@@ -21,6 +21,22 @@ void AppModel::initialize(ComputerManager* computerManager, int computerIndex, b
     updateAppList(m_Computer->appList);
 }
 
+int AppModel::getAppIndex(QString appName)
+{
+    // Similar to startstream.cpp LauncherPrivate getAppIndex()
+    for (int i = 0; i < m_AllApps.length(); i++) {
+        if (m_AllApps[i].name.toLower() == appName.toLower()) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+QString AppModel::getComputerName()
+{
+    return m_Computer->name;
+}
+
 int AppModel::getRunningAppId()
 {
     return m_CurrentGameId;
@@ -315,6 +331,6 @@ void AppModel::handleBoxArtLoaded(NvComputer* computer, NvApp app, QUrl /* image
                          QVector<int>() << BoxArtRole);
     }
     else {
-        qWarning() << "App not found for box art callback:" << app.name;
+        qWarning() << "Visible app not found for box art callback:" << app.name;
     }
 }

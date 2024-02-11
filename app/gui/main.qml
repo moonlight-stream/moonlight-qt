@@ -7,16 +7,41 @@ import QtQuick.Controls.Material 2.2
 import ComputerManager 1.0
 import AutoUpdateChecker 1.0
 import StreamingPreferences 1.0
+import HotkeyModel 1.0
 import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
+import HotkeyManager 1.0
 
 ApplicationWindow {
+    property string tag: "main"
+
     property bool pollingActive: false
 
     // Set by SettingsView to force the back operation to pop all
     // pages except the initial view. This is required when doing
     // a retranslate() because AppView breaks for some reason.
     property bool clearOnBack: false
+
+    property HotkeyModel hotkeyModel : createHotkeyModel()
+
+    function createComputerModel()
+    {
+        var model = Qt.createQmlObject('import ComputerModel 1.0; ComputerModel {}', window, '')
+        model.initialize(ComputerManager)
+        return model
+    }
+
+    function createAppModel(computerIndex, showHiddenGames) {
+        var appModel = Qt.createQmlObject('import AppModel 1.0; AppModel {}', window, '')
+        appModel.initialize(ComputerManager, computerIndex, showHiddenGames)
+        return appModel
+    }
+
+    function createHotkeyModel() {
+        var model = Qt.createQmlObject('import HotkeyModel 1.0; HotkeyModel {}', window, '')
+        model.initialize(ComputerManager, HotkeyManager)
+        return model
+    }
 
     id: window
     visible: true
@@ -30,6 +55,97 @@ ApplicationWindow {
         if (SystemProperties.usesMaterial3Theme) {
             Material.background = "#303030"
         }
+        HotkeyManager.hotkeysChanged.connect(hotkeysChanged)
+        shortcutsRefresh()
+    }
+
+    Component.onDestruction: {
+        HotkeyManager.hotkeysChanged.disconnect(hotkeysChanged)
+    }
+
+    property var shortcuts : []
+
+    function hotkeysChanged() {
+        log(tag, "hotkeysChanged()")
+        shortcutsRefresh()
+    }
+
+    function shortcutsPrint() {
+        var text = "[ "
+        shortcuts.forEach(function (shortcut, index) {
+            if (index > 0) {
+                text += ", "
+            }
+            text += `shortcut.sequence="${shortcut.sequence}"`
+        })
+        text += " ]"
+        log(tag, `shortcuts=${text}`)
+    }
+
+    function shortcutsRefresh() {
+        while (shortcuts.length > 0) {
+            var shortcut = shortcuts.pop()
+            // We must unset existing sequence before we can
+            // successfully create a usable replacement below
+            shortcut.sequence = null;
+        }
+        HotkeyManager.hotkeyNumbers().forEach(function (hotkeyNumber) {
+            var hotkeyInfo = HotkeyManager.get(hotkeyNumber)
+            var shortcut = Qt.createQmlObject('import QtQuick 2.9; Shortcut {}', window, '')
+            shortcut.sequence = `Ctrl+Alt+Shift+${hotkeyNumber}`
+            shortcut.activated.connect(function () {
+                launchApp(hotkeyInfo.computerName, hotkeyInfo.appName)
+            })
+            shortcuts.push(shortcut)
+        })
+        shortcutsPrint()
+    }
+
+    function launchApp(computerName, appName, quitExistingApp) {
+        log(tag, `launchApp("${computerName}", "${appName}")`)
+
+        // Temporarily very similar to launchOrResumeSelectedApp...
+
+        var computerIndex = ComputerManager.getComputerIndex(computerName)
+        log(tag, "computerIndex=" + computerIndex)
+        if (computerIndex < 0) {
+            return
+        }
+
+        var appModel = createAppModel(computerIndex, true)
+
+        var appIndex = appModel.getAppIndex(appName)
+        log(tag, "appIndex=" + appIndex)
+        if (appIndex < 0) {
+            return
+        }
+
+        var runningAppName = appModel.getRunningAppName()
+        log(tag, "runningAppName=" + runningAppName)
+        if (runningAppName.length > 0 && runningAppName !== appName) {
+            if (quitExistingApp) {
+                quitAppDialog.appName = runningAppName
+                quitAppDialog.segueToStream = true
+                quitAppDialog.nextAppName = appName
+                quitAppDialog.nextAppIndex = appIndex
+                quitAppDialog.open()
+            }
+            return
+        }
+
+        var session = appModel.createSessionForApp(appIndex)
+        var isResume = runningAppName === appName
+        startStream(appModel, appName, session, isResume)
+    }
+
+    function startStream(appModel, appName, session, isResume) {
+        var component = Qt.createComponent("StreamSegue.qml")
+        var segue = component.createObject(stackView, {
+                                               "appName": appName,
+                                               "session": session,
+                                               "isResume": isResume
+                                           })
+        stackView.push(segue)
     }
 
     visibility: {
@@ -64,6 +180,8 @@ ApplicationWindow {
         focus: true
 
         onCurrentItemChanged: {
+            log(tag, "onCurrentItemChanged: stackView.currentItem=" + currentItem)
+
             // Ensure focus travels to the next view when going back
             if (currentItem) {
                 currentItem.forceActiveFocus()
@@ -139,6 +257,7 @@ ApplicationWindow {
     }
 
     onActiveChanged: {
+        log(tag, "onActiveChanged: active=" + active)
         if (active) {
             // Stop the inactivity timer
             inactivityTimer.stop()
@@ -388,6 +507,70 @@ ApplicationWindow {
             }
 
             NavigableToolButton {
+                id: hotkeysButton
+
+                visible: qmltypeof(stackView.currentItem, "PcView") || qmltypeof(stackView.currentItem, "AppView")
+
+                iconSource: "qrc:/res/keyboard.svg"
+
+                onClicked: {
+                    StreamingPreferences.initialView = "HotkeyView"
+                    StreamingPreferences.save()
+
+                    var component = Qt.createComponent("HotkeyView.qml")
+                    var hotkeyView = component.createObject(stackView)
+                    stackView.replace(null, hotkeyView)
+                }
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+
+                Shortcut {
+                    id: hotkeysShortcut
+                    sequence: "Ctrl+Alt+Shift+H"
+                    onActivated: hotkeysButton.clicked()
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("Hotkeys") + (hotkeysShortcut.nativeText ? (" ("+hotkeysShortcut.nativeText+")") : "")
+            }
+
+            NavigableToolButton {
+                id: pcsButton
+
+                visible: qmltypeof(stackView.currentItem, "HotkeyView")
+
+                iconSource: "qrc:/res/desktop_windows-48px.svg"
+
+                onClicked: {
+                    StreamingPreferences.initialView = "PcView"
+                    StreamingPreferences.save()
+
+                    var component = Qt.createComponent("PcView.qml")
+                    var pcView = component.createObject(stackView)
+                    stackView.replace(null, pcView)
+                }
+
+                Keys.onDownPressed: {
+                    stackView.currentItem.forceActiveFocus(Qt.TabFocus)
+                }
+
+                Shortcut {
+                    id: pcsShortcut
+                    sequence: "Ctrl+Alt+Shift+P"
+                    onActivated: pcsButton.clicked()
+                }
+
+                ToolTip.delay: 1000
+                ToolTip.timeout: 3000
+                ToolTip.visible: hovered
+                ToolTip.text: qsTr("PCs") + (pcsShortcut.nativeText ? (" ("+pcsShortcut.nativeText+")") : "")
+            }
+
+            NavigableToolButton {
                 // TODO: Implement gamepad mapping then unhide this button
                 visible: false
 
@@ -536,6 +719,44 @@ ApplicationWindow {
                     addPcDialog.accept()
                 }
             }
+        }
+    }
+
+    function displayToast(text) {
+        toastText.text = text
+        toastText.visible = true
+        toastTimer.restart()
+        log(tag, text)
+    }
+
+    Label {
+        id: toastText
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: 50
+        anchors.horizontalCenter: parent.horizontalCenter
+        font.pointSize: 18
+        verticalAlignment: Text.AlignVCenter
+        wrapMode: Text.Wrap
+
+        Timer {
+            id: toastTimer
+            // This toast appears for 3 seconds, just shorter than how long
+            // Session will wait for it to be displayed. This gives it time
+            // to transition to invisible before continuing.
+            interval: 3000
+            onTriggered: {
+                toastText.visible = false
+            }
+        }
+    }
+
+    function log() {
+        var heavy = true
+        if (heavy) {
+            var dateString = new Date().toISOString()
+            console.log(`${dateString}: ${Array.prototype.slice.call(arguments).join(" ")}`)
+        } else {
+            console.log(Array.prototype.slice.call(arguments).join(" "))
         }
     }
 }

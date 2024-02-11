@@ -37,6 +37,7 @@
 #include "utils.h"
 #include "gui/computermodel.h"
 #include "gui/appmodel.h"
+#include "gui/hotkeymodel.h"
 #include "backend/autoupdatechecker.h"
 #include "backend/computermanager.h"
 #include "backend/systemproperties.h"
@@ -616,6 +617,8 @@ int main(int argc, char *argv[])
     // Register our C++ types for QML
     qmlRegisterType<ComputerModel>("ComputerModel", 1, 0, "ComputerModel");
     qmlRegisterType<AppModel>("AppModel", 1, 0, "AppModel");
+    qmlRegisterType<HotkeyModel>("HotkeyModel", 1, 0, "HotkeyModel");
+    qmlRegisterType<HotkeyInfo>("HotkeyInfo", 1, 0, "HotkeyInfo");
     qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
                                               "ComputerManager",
@@ -642,6 +645,11 @@ int main(int argc, char *argv[])
                                                    [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
                                                        return new StreamingPreferences(qmlEngine);
                                                    });
+    qmlRegisterSingletonType<HotkeyManager>("HotkeyManager", 1, 0,
+                                            "HotkeyManager",
+                                            [&app](QQmlEngine*, QJSEngine*) -> QObject* {
+                                                return new HotkeyManager(&app);
+                                            });
 
     // Create the identity manager on the main thread
     IdentityManager::get();
@@ -666,17 +674,20 @@ int main(int argc, char *argv[])
 
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::NormalStartRequested:
-        initialView = "qrc:/gui/PcView.qml";
-        break;
+        {
+            initialView = QString("qrc:/gui/%1.qml").arg(prefs.initialView);
+            break;
+        }
     case GlobalCommandLineParser::StreamRequested:
         {
             initialView = "qrc:/gui/CliStartStreamSegue.qml";
             StreamingPreferences* preferences = new StreamingPreferences(&app);
+            HotkeyManager* hotkeyManager = new HotkeyManager(&app);
             StreamCommandLineParser streamParser;
             streamParser.parse(app.arguments(), preferences);
             QString host    = streamParser.getHost();
             QString appName = streamParser.getAppName();
-            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, &app);
+            auto launcher   = new CliStartStream::Launcher(host, appName, preferences, hotkeyManager, &app);
             engine.rootContext()->setContextProperty("launcher", launcher);
             break;
         }

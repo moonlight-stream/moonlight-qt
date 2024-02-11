@@ -42,7 +42,7 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
     case KeyComboToggleFullScreen:
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Detected full-screen toggle combo");
-        Session::s_ActiveSession->toggleFullscreen();
+        Session::get()->toggleFullscreen();
 
         // Force raise all keys just be safe across this full-screen/windowed
         // transition just in case key events get lost.
@@ -138,6 +138,24 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
         // Apply the new region lock
         updatePointerRegionLock();
         break;
+
+    case KeyComboHotkey0:
+    case KeyComboHotkey1:
+    case KeyComboHotkey2:
+    case KeyComboHotkey3:
+    case KeyComboHotkey4:
+    case KeyComboHotkey5:
+    case KeyComboHotkey6:
+    case KeyComboHotkey7:
+    case KeyComboHotkey8:
+    case KeyComboHotkey9:
+    {
+        auto hotkeyNumber = combo - KeyComboHotkey0;
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "performSpecialKeyCombo: Ctrl+Alt+Shift+%d pressed in stream", hotkeyNumber);
+        Session::get()->onHotkeyPressed(hotkeyNumber);
+        break;
+    }
 
     default:
         Q_UNREACHABLE();

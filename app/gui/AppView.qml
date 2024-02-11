@@ -5,12 +5,13 @@ import QtQuick.Controls.Material 2.2
 import AppModel 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
+import HotkeyManager 1.0
 
 CenteredGridView {
     property int computerIndex
-    property AppModel appModel : createModel()
-    property bool activated
     property bool showHiddenGames
+    property AppModel appModel : createAppModel(computerIndex, showHiddenGames)
+    property bool activated
     property bool showGames
 
     id: appGrid
@@ -59,13 +60,6 @@ CenteredGridView {
     StackView.onDeactivating: {
         appModel.computerLost.disconnect(computerLost)
         activated = false
-    }
-
-    function createModel()
-    {
-        var model = Qt.createQmlObject('import AppModel 1.0; AppModel {}', parent, '')
-        model.initialize(ComputerManager, computerIndex, showHiddenGames)
-        return model
     }
 
     model: appModel
@@ -222,13 +216,10 @@ CenteredGridView {
                 return
             }
 
-            var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView, {
-                                                   "appName": model.name,
-                                                   "session": appModel.createSessionForApp(index),
-                                                   "isResume": runningId === model.appid
-                                               })
-            stackView.push(segue)
+            var appName = model.name
+            var session = appModel.createSessionForApp(index)
+            var isResume = runningId === model.appid
+            startStream(appModel, appName, session, isResume)
         }
 
         onClicked: {
@@ -335,7 +326,47 @@ CenteredGridView {
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
                 }
+                NavigableMenuItem {
+                    parentMenu: appContextMenu
+                    text: hotkeyText(appModel, model)
+                    onTriggered: {
+                        hotkeyTriggered(appModel, model)
+                        text = hotkeyText(appModel, model)
+                    }
+                }
             }
+        }
+    }
+
+    function hotkeyExists(computerName, appName) {
+        return HotkeyManager.hotkeyNumber(computerName, appName) >= 0
+    }
+
+    function hotkeyText(appModel, model) {
+        var computerName = appModel.getComputerName()
+        var appName = model.name
+        return hotkeyExists(computerName, appName) ? qsTr("Remove Hotkey") : qsTr("Add Hotkey")
+    }
+
+    function hotkeyTriggered(appModel, model) {
+        var computerName = appModel.getComputerName()
+        var appName = model.name
+        var hotkeyNumber = HotkeyManager.hotkeyNumber(computerName, appName)
+        if (hotkeyNumber >= 0) {
+            HotkeyManager.remove(hotkeyNumber)
+            displayToast(qsTr("Hotkey \"%1\" \"%2\" removed").arg(computerName).arg(appName))
+        } else {
+            // presented index 0,1,2,3,4,5,6,7,8,9
+            // keyboard number 1,2,3,4,5,6,7,8,9,0
+            var hotkeyCount = HotkeyManager.count()
+            if (hotkeyCount >= 10) {
+                displayToast(qsTr("Maximum number of hotkeys reached"))
+                return
+            }
+            // Add the next hotkeyNumber
+            hotkeyNumber = hotkeyCount === 9 ? 0 : hotkeyCount + 1
+            HotkeyManager.put(hotkeyNumber, computerName, appName)
+            displayToast(qsTr("Hotkey \"%1\" \"%2\" added").arg(computerName).arg(appName))
         }
     }
 

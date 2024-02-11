@@ -5,6 +5,7 @@
 #include <Limelight.h>
 #include <opus_multistream.h>
 #include "settings/streamingpreferences.h"
+#include "settings/hotkeymanager.h"
 #include "input/input.h"
 #include "video/decoder.h"
 #include "audio/renderers/renderer.h"
@@ -20,7 +21,9 @@ class Session : public QObject
     friend class ExecThread;
 
 public:
-    explicit Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences = nullptr);
+    explicit Session(NvComputer* computer, NvApp& app,
+                     StreamingPreferences *preferences = nullptr,
+                     HotkeyManager* hotkeyManager = nullptr);
 
     // NB: This may not get destroyed for a long time! Don't put any cleanup here.
     // Use Session::exec() or DeferredSessionCleanupTask instead.
@@ -63,6 +66,8 @@ signals:
     // Emitted after sessionFinished() when the session is ready to be destroyed
     void readyForDeletion();
 
+    void hotkeyPressed(Session* session, int hotkeyNumber, HotkeyInfo* hotkeyInfo);
+
 private:
     void execInternal();
 
@@ -73,6 +78,13 @@ private:
     bool validateLaunch(SDL_Window* testWindow);
 
     void emitLaunchWarning(QString text);
+
+    /**
+     * @brief onHotkeyPressed if hotkeyNumber is configured then 1) emit hotkeyPressed signal, 2) end session
+     * @param hotkeyNumber
+     * @return true if hotkeyNumber is configured and is not for the current session, otherwise false
+     */
+    bool onHotkeyPressed(int hotkeyNumber);
 
     bool populateDecoderProperties(SDL_Window* window);
 
@@ -189,6 +201,8 @@ private:
     Uint32 m_DropAudioEndTime;
 
     Overlay::OverlayManager m_OverlayManager;
+
+    HotkeyManager* m_HotkeyManager;
 
     static CONNECTION_LISTENER_CALLBACKS k_ConnCallbacks;
     static Session* s_ActiveSession;
