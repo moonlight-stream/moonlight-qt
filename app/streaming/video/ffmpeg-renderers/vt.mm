@@ -110,16 +110,17 @@ public:
           m_PipelineState(nullptr),
           m_ShaderLibrary(nullptr),
           m_CommandQueue(nullptr),
+          m_NextDrawable(nullptr),
           m_MetalView(nullptr),
-          m_DisplayLink(nullptr),
           m_LastColorSpace(-1),
           m_LastFullRange(false),
           m_LastFrameWidth(-1),
           m_LastFrameHeight(-1),
           m_LastDrawableWidth(-1),
           m_LastDrawableHeight(-1),
-          m_VsyncMutex(nullptr),
-          m_VsyncPassed(nullptr)
+          m_PresentationMutex(SDL_CreateMutex()),
+          m_PresentationCond(SDL_CreateCond()),
+          m_PendingPresentationCount(0)
     {
         SDL_zero(m_OverlayTextFields);
         for (int i = 0; i < Overlay::OverlayMax; i++) {
@@ -138,17 +139,12 @@ public:
             Block_release(m_OverlayUpdateBlocks[i]);
         }
 
-        if (m_DisplayLink != nullptr) {
-            CVDisplayLinkStop(m_DisplayLink);
-            CVDisplayLinkRelease(m_DisplayLink);
+        if (m_PresentationCond != nullptr) {
+            SDL_DestroyCond(m_PresentationCond);
         }
 
-        if (m_VsyncPassed != nullptr) {
-            SDL_DestroyCond(m_VsyncPassed);
-        }
-
-        if (m_VsyncMutex != nullptr) {
-            SDL_DestroyMutex(m_VsyncMutex);
+        if (m_PresentationMutex != nullptr) {
+            SDL_DestroyMutex(m_PresentationMutex);
         }
 
         if (m_HwContext != nullptr) {
@@ -189,106 +185,43 @@ public:
         if (m_MetalView != nullptr) {
             SDL_Metal_DestroyView(m_MetalView);
         }
-
-        // It appears to be necessary to run the event loop after destroying
-        // the AVSampleBufferDisplayLayer to avoid issue #973.
-        SDL_PumpEvents();
     }}
 
-    static
-    CVReturn
-    displayLinkOutputCallback(
-        CVDisplayLinkRef displayLink,
-        const CVTimeStamp* /* now */,
-        const CVTimeStamp* /* vsyncTime */,
-        CVOptionFlags,
-        CVOptionFlags*,
-        void *displayLinkContext)
-    {
-        auto me = reinterpret_cast<VTRenderer*>(displayLinkContext);
-
-        SDL_assert(displayLink == me->m_DisplayLink);
-
-        SDL_LockMutex(me->m_VsyncMutex);
-        SDL_CondSignal(me->m_VsyncPassed);
-        SDL_UnlockMutex(me->m_VsyncMutex);
-
-        return kCVReturnSuccess;
-    }
-
-    bool initializeVsyncCallback()
-    {
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
-        if (!SDL_GetWindowWMInfo(m_Window, &info)) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "SDL_GetWindowWMInfo() failed: %s",
-                        SDL_GetError());
-            return false;
+    void discardNextDrawable()
+    { @autoreleasepool {
+        if (!m_NextDrawable) {
+            return;
         }
 
-        SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
-
-        NSScreen* screen = [info.info.cocoa.window screen];
-        CVReturn status;
-        if (screen == nullptr) {
-            // Window not visible on any display, so use a
-            // CVDisplayLink that can work with all active displays.
-            // When we become visible, we'll recreate ourselves
-            // and associate with the new screen.
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "NSWindow is not visible on any display");
-            status = CVDisplayLinkCreateWithActiveCGDisplays(&m_DisplayLink);
-        }
-        else {
-            CGDirectDisplayID displayId = [[screen deviceDescription][@"NSScreenNumber"] unsignedIntValue];
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "NSWindow on display: %x",
-                        displayId);
-            status = CVDisplayLinkCreateWithCGDisplay(displayId, &m_DisplayLink);
-        }
-        if (status != kCVReturnSuccess) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to create CVDisplayLink: %d",
-                         status);
-            return false;
-        }
-
-        status = CVDisplayLinkSetOutputCallback(m_DisplayLink, displayLinkOutputCallback, this);
-        if (status != kCVReturnSuccess) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CVDisplayLinkSetOutputCallback() failed: %d",
-                         status);
-            return false;
-        }
-
-        // The CVDisplayLink callback uses these, so we must initialize them before
-        // starting the callbacks.
-        m_VsyncMutex = SDL_CreateMutex();
-        m_VsyncPassed = SDL_CreateCond();
-
-        status = CVDisplayLinkStart(m_DisplayLink);
-        if (status != kCVReturnSuccess) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CVDisplayLinkStart() failed: %d",
-                         status);
-            return false;
-        }
-
-        return true;
-    }
+        [m_NextDrawable release];
+        m_NextDrawable = nullptr;
+    }}
 
     virtual void waitToRender() override
-    {
-        if (m_DisplayLink != nullptr) {
-            // Vsync is enabled, so wait for a swap before returning
-            SDL_LockMutex(m_VsyncMutex);
-            if (SDL_CondWaitTimeout(m_VsyncPassed, m_VsyncMutex, 100) == SDL_MUTEX_TIMEDOUT) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "V-sync wait timed out after 100 ms");
+    { @autoreleasepool {
+        if (!m_NextDrawable) {
+            // Wait for the next available drawable before latching the frame to render
+            m_NextDrawable = [[m_MetalLayer nextDrawable] retain];
+            if (m_NextDrawable == nullptr) {
+                return;
             }
-            SDL_UnlockMutex(m_VsyncMutex);
+
+            // Pace ourselves by waiting if too many frames are pending presentation
+            SDL_LockMutex(m_PresentationMutex);
+            if (m_PendingPresentationCount > 2) {
+                if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Presentation wait timed out after 100 ms");
+                }
+            }
+            SDL_UnlockMutex(m_PresentationMutex);
         }
+    }}
+
+    virtual void cleanupRenderContext() override
+    {
+        // Free any unused drawable
+        discardNextDrawable();
     }
 
     bool updateVideoRegionSizeForFrame(AVFrame* frame)
@@ -350,6 +283,9 @@ public:
         if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange) {
             CGColorSpaceRef newColorSpace;
             void* paramBuffer;
+
+            // Free any unpresented drawable since we're changing pixel formats
+            discardNextDrawable();
 
             switch (colorspace) {
             case COLORSPACE_REC_709:
@@ -447,7 +383,10 @@ public:
             return;
         }
 
-        auto nextDrawable = [m_MetalLayer nextDrawable];
+        // Don't proceed with rendering if we don't have a drawable
+        if (m_NextDrawable == nullptr) {
+            return;
+        }
 
         // Create Metal textures for the planes of the CVPixelBuffer
         std::array<CVMetalTextureRef, 2> textures;
@@ -487,7 +426,7 @@ public:
 
         // Prepare a render pass to render into the next drawable
         auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        renderPassDescriptor.colorAttachments[0].texture = nextDrawable.texture;
+        renderPassDescriptor.colorAttachments[0].texture = m_NextDrawable.texture;
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
@@ -500,19 +439,33 @@ public:
             [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(textures[i]) atIndex:i];
         }
         [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
-          // Free textures after completion of rendering per CVMetalTextureCache requirements
-          for (const CVMetalTextureRef &tex : textures) {
-              CFRelease(tex);
-          }
+            // Free textures after completion of rendering per CVMetalTextureCache requirements
+            for (const CVMetalTextureRef &tex : textures) {
+                CFRelease(tex);
+            }
         }];
         [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
         [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
         [renderEncoder endEncoding];
 
+        // Queue a completion callback on the drawable to pace our rendering
+        SDL_LockMutex(m_PresentationMutex);
+        m_PendingPresentationCount++;
+        SDL_UnlockMutex(m_PresentationMutex);
+        [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
+            SDL_LockMutex(m_PresentationMutex);
+            m_PendingPresentationCount--;
+            SDL_CondSignal(m_PresentationCond);
+            SDL_UnlockMutex(m_PresentationMutex);
+        }];
+
         // Flip to the newly rendered buffer
-        [commandBuffer presentDrawable: nextDrawable];
+        [commandBuffer presentDrawable:m_NextDrawable];
         [commandBuffer commit];
+
+        [m_NextDrawable release];
+        m_NextDrawable = nullptr;
     }}
 
     bool checkDecoderCapabilities(PDECODER_PARAMETERS params) {
@@ -642,8 +595,9 @@ public:
         m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
 
         // Ideally, we don't actually want triple buffering due to increased
-        // latency since our render time is very short. However, we *need* 3
-        // drawables in order to hit the offloaded "direct" display path.
+        // display latency, since our render time is very short. However, we
+        // *need* 3 drawables in order to hit the offloaded "direct" display
+        // path for our Metal layer.
         //
         // If we only use 2 drawables, we'll be stuck in the composited path
         // (particularly for windowed mode) and our latency will actually be
@@ -678,13 +632,6 @@ public:
 
         // Create a command queue for submission
         m_CommandQueue = [m_MetalLayer.device newCommandQueue];
-
-        if (params->enableFramePacing) {
-            if (!initializeVsyncCallback()) {
-                return false;
-            }
-        }
-
         return true;
     }}
 
@@ -779,10 +726,8 @@ public:
         // We can always handle size changes
         unhandledStateFlags &= ~WINDOW_STATE_CHANGE_SIZE;
 
-        // We can handle monitor changes as long as we are not pacing with a CVDisplayLink
-        if (m_DisplayLink == nullptr) {
-            unhandledStateFlags &= ~WINDOW_STATE_CHANGE_DISPLAY;
-        }
+        // We can handle monitor changes
+        unhandledStateFlags &= ~WINDOW_STATE_CHANGE_DISPLAY;
 
         // If nothing is left, we handled everything
         return unhandledStateFlags == 0;
@@ -798,18 +743,19 @@ private:
     id<MTLRenderPipelineState> m_PipelineState;
     id<MTLLibrary> m_ShaderLibrary;
     id<MTLCommandQueue> m_CommandQueue;
+    id<CAMetalDrawable> m_NextDrawable;
     SDL_MetalView m_MetalView;
     dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
     NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
-    CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
     bool m_LastFullRange;
     int m_LastFrameWidth;
     int m_LastFrameHeight;
     int m_LastDrawableWidth;
     int m_LastDrawableHeight;
-    SDL_mutex* m_VsyncMutex;
-    SDL_cond* m_VsyncPassed;
+    SDL_mutex* m_PresentationMutex;
+    SDL_cond* m_PresentationCond;
+    int m_PendingPresentationCount;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {
