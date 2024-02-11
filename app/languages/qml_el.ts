@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Έναρξη σύνδεσης στον υπολογιστή...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Σύζευξη...Παρακαλώ εισάγετε &apos;%1&apos; στο %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Η σύζευξη ολοκληρώθηκε επιτυχώς</translation>
     </message>
 </context>
 <context>
@@ -146,7 +146,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Γίνεται αναζήτηση για συμβατούς οικοδεσπότες στο τοπικό σας δίκτυο...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
@@ -226,17 +226,17 @@
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Παρακαλώ εισάγετε το %1 στον υπολογιστή φιλοξενίας. Το παράθυρο θα κλείσει όταν ολοκληρωθεί η σύζευξη.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="301"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Εάν ο υπολογιστής φιλοξενίας χρησιμοποιεί το Sunshine, πλοηγηθείτε στη διαδικτυακή διεπαφή χρήστη του Sunshine για να εισάγετε το PIN.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Είστε σίγουρος ότι θέλετε να αφαιρέσετε το &apos;%1&apos; ;</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
