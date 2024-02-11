@@ -107,7 +107,10 @@ public:
           m_TextureCache(nullptr),
           m_CscParamsBuffer(nullptr),
           m_VideoVertexBuffer(nullptr),
-          m_PipelineState(nullptr),
+          m_OverlayTextures{},
+          m_OverlayLock(0),
+          m_VideoPipelineState(nullptr),
+          m_OverlayPipelineState(nullptr),
           m_ShaderLibrary(nullptr),
           m_CommandQueue(nullptr),
           m_NextDrawable(nullptr),
@@ -122,23 +125,10 @@ public:
           m_PresentationCond(SDL_CreateCond()),
           m_PendingPresentationCount(0)
     {
-        SDL_zero(m_OverlayTextFields);
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            m_OverlayUpdateBlocks[i] = dispatch_block_create(DISPATCH_BLOCK_DETACHED, ^{
-                updateOverlayOnMainThread((Overlay::OverlayType)i);
-            });
-        }
     }
 
     virtual ~VTRenderer() override
     { @autoreleasepool {
-        // We may have overlay update blocks enqueued for execution.
-        // We must cancel those to avoid a UAF.
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            dispatch_block_cancel(m_OverlayUpdateBlocks[i]);
-            Block_release(m_OverlayUpdateBlocks[i]);
-        }
-
         if (m_PresentationCond != nullptr) {
             SDL_DestroyCond(m_PresentationCond);
         }
@@ -151,13 +141,6 @@ public:
             av_buffer_unref(&m_HwContext);
         }
 
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            if (m_OverlayTextFields[i] != nullptr) {
-                [m_OverlayTextFields[i] removeFromSuperview];
-                [m_OverlayTextFields[i] release];
-            }
-        }
-
         if (m_CscParamsBuffer != nullptr) {
             [m_CscParamsBuffer release];
         }
@@ -166,8 +149,18 @@ public:
             [m_VideoVertexBuffer release];
         }
 
-        if (m_PipelineState != nullptr) {
-            [m_PipelineState release];
+        if (m_VideoPipelineState != nullptr) {
+            [m_VideoPipelineState release];
+        }
+
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            if (m_OverlayTextures[i] != nullptr) {
+                [m_OverlayTextures[i] release];
+            }
+        }
+
+        if (m_OverlayPipelineState != nullptr) {
+            [m_OverlayPipelineState release];
         }
 
         if (m_ShaderLibrary != nullptr) {
@@ -335,10 +328,30 @@ public:
             pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
             pipelineDesc.fragmentFunction = [[m_ShaderLibrary newFunctionWithName:@"ps_draw_biplanar"] autorelease];
             pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
-            m_PipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
-            if (!m_PipelineState) {
+            [m_VideoPipelineState release];
+            m_VideoPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
+            if (!m_VideoPipelineState) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to create render pipeline state");
+                             "Failed to create video pipeline state");
+                return false;
+            }
+
+            pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
+            pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
+            pipelineDesc.fragmentFunction = [[m_ShaderLibrary newFunctionWithName:@"ps_draw_rgb"] autorelease];
+            pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+            pipelineDesc.colorAttachments[0].blendingEnabled = YES;
+            pipelineDesc.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+            pipelineDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+            pipelineDesc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+            pipelineDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+            pipelineDesc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+            pipelineDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+            [m_OverlayPipelineState release];
+            m_OverlayPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
+            if (!m_VideoPipelineState) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to create overlay pipeline state");
                 return false;
             }
 
@@ -430,11 +443,11 @@ public:
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-
-        // Bind textures and buffers then draw the video region
         auto commandBuffer = [m_CommandQueue commandBuffer];
         auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-        [renderEncoder setRenderPipelineState:m_PipelineState];
+
+        // Bind textures and buffers then draw the video region
+        [renderEncoder setRenderPipelineState:m_VideoPipelineState];
         for (size_t i = 0; i < textures.size(); i++) {
             [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(textures[i]) atIndex:i];
         }
@@ -447,6 +460,52 @@ public:
         [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
         [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
+
+        // Now draw any overlays that are enabled
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            id<MTLTexture> overlayTexture = nullptr;
+
+            // Try to acquire a reference on the overlay texture
+            SDL_AtomicLock(&m_OverlayLock);
+            overlayTexture = [m_OverlayTextures[i] retain];
+            SDL_AtomicUnlock(&m_OverlayLock);
+
+            if (overlayTexture) {
+                SDL_FRect renderRect = {};
+                if (i == Overlay::OverlayStatusUpdate) {
+                    // Bottom Left
+                    renderRect.x = 0;
+                    renderRect.y = 0;
+                }
+                else if (i == Overlay::OverlayDebug) {
+                    // Top left
+                    renderRect.x = 0;
+                    renderRect.y = m_LastDrawableHeight - overlayTexture.height;
+                }
+
+                renderRect.w = overlayTexture.width;
+                renderRect.h = overlayTexture.height;
+
+                // Convert screen space to normalized device coordinates
+                StreamUtils::screenSpaceToNormalizedDeviceCoords(&renderRect, m_LastDrawableWidth, m_LastDrawableHeight);
+
+                Vertex verts[] =
+                {
+                    { { renderRect.x, renderRect.y, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+                    { { renderRect.x, renderRect.y+renderRect.h, 0.0f, 1.0f }, { 0.0f, 0} },
+                    { { renderRect.x+renderRect.w, renderRect.y, 0.0f, 1.0f }, { 1.0f, 1.0f} },
+                    { { renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0.0f, 1.0f }, { 1.0f, 0} },
+                };
+
+                [renderEncoder setRenderPipelineState:m_OverlayPipelineState];
+                [renderEncoder setFragmentTexture:overlayTexture atIndex:0];
+                [renderEncoder setVertexBytes:verts length:sizeof(verts) atIndex:0];
+                [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:SDL_arraysize(verts)];
+
+                [overlayTexture release];
+            }
+        }
+
         [renderEncoder endEncoding];
 
         // Queue a completion callback on the drawable to pace our rendering
@@ -635,52 +694,54 @@ public:
         return true;
     }}
 
-    void updateOverlayOnMainThread(Overlay::OverlayType type)
+    virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
     { @autoreleasepool {
-        // Lazy initialization for the overlay
-        if (m_OverlayTextFields[type] == nullptr) {
-            m_OverlayTextFields[type] = [[NSTextField alloc] initWithFrame:((NSView*)m_MetalView).bounds];
-            [m_OverlayTextFields[type] setBezeled:NO];
-            [m_OverlayTextFields[type] setDrawsBackground:NO];
-            [m_OverlayTextFields[type] setEditable:NO];
-            [m_OverlayTextFields[type] setSelectable:NO];
-
-            switch (type) {
-            case Overlay::OverlayDebug:
-                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
-                [m_OverlayTextFields[type] setAutoresizingMask:NSViewMaxXMargin | NSViewMinYMargin];
-                break;
-            case Overlay::OverlayStatusUpdate:
-                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentRight];
-                [m_OverlayTextFields[type] setAutoresizingMask:NSViewMinXMargin | NSViewMinYMargin];
-                break;
-            default:
-                break;
-            }
-
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(type);
-            [m_OverlayTextFields[type] setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
-            [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(type)]];
-
-            [(NSView*)m_MetalView addSubview: m_OverlayTextFields[type]];
+        SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+        bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+        if (newSurface == nullptr && overlayEnabled) {
+            // The overlay is enabled and there is no new surface. Leave the old texture alone.
+            return;
         }
 
-        // Update the text field size
-        [m_OverlayTextFields[type] setFrame:((NSView*)m_MetalView).bounds];
+        SDL_AtomicLock(&m_OverlayLock);
+        auto oldTexture = m_OverlayTextures[type];
+        m_OverlayTextures[type] = nullptr;
+        SDL_AtomicUnlock(&m_OverlayLock);
 
-        // Update text contents
-        [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(type)]];
+        [oldTexture release];
 
-        // Unhide if it's enabled
-        [m_OverlayTextFields[type] setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(type)];
+        // If the overlay is disabled, we're done
+        if (!overlayEnabled) {
+            SDL_FreeSurface(newSurface);
+            return;
+        }
+
+        // Create a texture to hold our pixel data
+        SDL_assert(!SDL_MUSTLOCK(newSurface));
+        SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
+        auto texDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                          width:newSurface->w
+                                                                         height:newSurface->h
+                                                                      mipmapped:NO];
+        texDesc.cpuCacheMode = MTLCPUCacheModeWriteCombined;
+        texDesc.storageMode = MTLStorageModeManaged;
+        texDesc.usage = MTLTextureUsageShaderRead;
+        auto newTexture = [m_MetalLayer.device newTextureWithDescriptor:texDesc];
+
+        // Load the pixel data into the new texture
+        [newTexture replaceRegion:MTLRegionMake2D(0, 0, newSurface->w, newSurface->h)
+                      mipmapLevel:0
+                        withBytes:newSurface->pixels
+                      bytesPerRow:newSurface->pitch];
+
+        // The surface is no longer required
+        SDL_FreeSurface(newSurface);
+        newSurface = nullptr;
+
+        SDL_AtomicLock(&m_OverlayLock);
+        m_OverlayTextures[type] = newTexture;
+        SDL_AtomicUnlock(&m_OverlayLock);
     }}
-
-    virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
-    {
-        // We must do the actual UI updates on the main thread, so queue an
-        // async callback on the main thread via GCD to do the UI update.
-        dispatch_async(dispatch_get_main_queue(), m_OverlayUpdateBlocks[type]);
-    }
 
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override
     {
@@ -740,13 +801,14 @@ private:
     CVMetalTextureCacheRef m_TextureCache;
     id<MTLBuffer> m_CscParamsBuffer;
     id<MTLBuffer> m_VideoVertexBuffer;
-    id<MTLRenderPipelineState> m_PipelineState;
+    id<MTLTexture> m_OverlayTextures[Overlay::OverlayMax];
+    SDL_SpinLock m_OverlayLock;
+    id<MTLRenderPipelineState> m_VideoPipelineState;
+    id<MTLRenderPipelineState> m_OverlayPipelineState;
     id<MTLLibrary> m_ShaderLibrary;
     id<MTLCommandQueue> m_CommandQueue;
     id<CAMetalDrawable> m_NextDrawable;
     SDL_MetalView m_MetalView;
-    dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
-    NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
     int m_LastColorSpace;
     bool m_LastFullRange;
     int m_LastFrameWidth;
