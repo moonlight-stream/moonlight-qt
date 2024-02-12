@@ -3,7 +3,9 @@
 #include <streaming/streamutils.h>
 #include <utils.h>
 
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
 #include <SDL_syswm.h>
+#endif
 
 #define BAIL_ON_FAIL(status, something) if ((status) != VDP_STATUS_OK) { \
                                             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, \
@@ -77,7 +79,6 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 {
     int err;
     VdpStatus status;
-    SDL_SysWMinfo info;
     static const char* driverPathsToTry[] = {
     #if Q_PROCESSOR_WORDSIZE == 8
         "/usr/lib64",
@@ -93,7 +94,30 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         "/usr/lib/i386-linux-gnu/vdpau", // Ubuntu/Debian i386
     #endif
     };
-
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    const char *videoDriver = SDL_GetCurrentVideoDriver();
+    if (SDL_strcmp(videoDriver, "wayland") == 0) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "VDPAU is not supported on Wayland");
+        return false;
+    }
+    else if (SDL_strcmp(videoDriver, "x11") != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "VDPAU is not supported on the current subsystem: %s",
+                     videoDriver);
+        return false;
+    }
+    else if (qgetenv("VDPAU_XWAYLAND") != "1" && WMUtils::isRunningWayland()) {
+        // VDPAU initialization causes Moonlight to crash when using XWayland in a Flatpak
+        // on a system with the Nvidia 495.44 driver. VDPAU won't work under XWayland anyway,
+        // so let's not risk trying it (unless the user wants to roll the dice).
+        // https://gitlab.freedesktop.org/vdpau/libvdpau/-/issues/2
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "VDPAU is disabled on XWayland. Set VDPAU_XWAYLAND=1 to try your luck.");
+        return false;
+    }
+#else
+    SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
 
     if (!SDL_GetWindowWMInfo(params->window, &info)) {
@@ -123,6 +147,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
                     "VDPAU is disabled on XWayland. Set VDPAU_XWAYLAND=1 to try your luck.");
         return false;
     }
+#endif
 
     m_VideoWidth = params->width;
     m_VideoHeight = params->height;
@@ -189,12 +214,21 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
 
     SDL_GetWindowSize(params->window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_assert(SDL_strcmp(videoDriver, "x11") == 0);
+    Window xwindow = (Window)SDL_GetNumberProperty(SDL_GetWindowProperties(params->window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+#else
     SDL_assert(info.subsystem == SDL_SYSWM_X11);
+#endif
 
     GET_PROC_ADDRESS(VDP_FUNC_ID_PRESENTATION_QUEUE_TARGET_CREATE_X11,
                      &m_VdpPresentationQueueTargetCreateX11);
     status = m_VdpPresentationQueueTargetCreateX11(m_Device,
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+                                                   xwindow,
+#else
                                                    info.info.x11.window,
+#endif
                                                    &m_PresentationQueueTarget);
     if (status != VDP_STATUS_OK) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -360,7 +394,11 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     if (!overlayEnabled) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(newSurface);
+#else
         SDL_FreeSurface(newSurface);
+#endif
         return;
     }
 
@@ -379,7 +417,11 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VdpBitmapSurfaceCreate() failed: %s",
                          m_VdpGetErrorString(status));
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_DestroySurface(newSurface);
+#else
             SDL_FreeSurface(newSurface);
+#endif
             return;
         }
 
@@ -392,7 +434,11 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
                          "VdpBitmapSurfacePutBitsNative() failed: %s",
                          m_VdpGetErrorString(status));
             m_VdpBitmapSurfaceDestroy(newBitmapSurface);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_DestroySurface(newSurface);
+#else
             SDL_FreeSurface(newSurface);
+#endif
             return;
         }
 
@@ -413,7 +459,11 @@ void VDPAURenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         overlayRect.y1 = overlayRect.y0 + newSurface->h;
 
         // Surface data is no longer needed
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(newSurface);
+#else
         SDL_FreeSurface(newSurface);
+#endif
 
         SDL_LockMutex(m_OverlayMutex);
         m_OverlaySurface[type] = newBitmapSurface;

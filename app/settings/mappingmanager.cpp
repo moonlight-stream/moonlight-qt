@@ -3,7 +3,11 @@
 
 #include <QDir>
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 #define SER_GAMEPADMAPPING "gcmapping"
 
@@ -70,7 +74,11 @@ void MappingManager::applyMappings()
 {
     QByteArray mappingData = Path::readDataFile("gamecontrollerdb.txt");
     if (!mappingData.isEmpty()) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        int newMappings = SDL_AddGamepadMappingsFromRW(
+#else
         int newMappings = SDL_GameControllerAddMappingsFromRW(
+#endif
                     SDL_RWFromConstMem(mappingData.constData(), mappingData.size()), 1);
 
         if (newMappings > 0) {
@@ -101,7 +109,11 @@ void MappingManager::applyMappings()
     QList<SdlGamepadMapping> mappings = m_Mappings.values();
     for (const SdlGamepadMapping& mapping : mappings) {
         QString sdlMappingString = mapping.getSdlMappingString();
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        int ret = SDL_AddGamepadMapping(qPrintable(sdlMappingString));
+#else
         int ret = SDL_GameControllerAddMapping(qPrintable(sdlMappingString));
+#endif
         if (ret < 0) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Unable to add mapping: %s",

@@ -2,7 +2,11 @@
 
 #include "pacer.h"
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL_syswm.h>
+#endif
 
 // from <D3dkmthk.h>
 typedef LONG NTSTATUS;

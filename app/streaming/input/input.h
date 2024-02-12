@@ -3,10 +3,18 @@
 #include "settings/streamingpreferences.h"
 #include "backend/computermanager.h"
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 struct GamepadState {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_Gamepad* controller;
+#else
     SDL_GameController* controller;
+#endif
     SDL_JoystickID jsId;
     short index;
 
@@ -24,11 +32,19 @@ struct GamepadState {
 
 #if SDL_VERSION_ATLEAST(2, 0, 14)
     uint8_t gyroReportPeriodMs;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    float lastGyroEventData[SDL_arraysize(SDL_GamepadSensorEvent::data)];
+#else
     float lastGyroEventData[SDL_arraysize(SDL_ControllerSensorEvent::data)];
+#endif
     uint32_t lastGyroEventTime;
 
     uint8_t accelReportPeriodMs;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    float lastAccelEventData[SDL_arraysize(SDL_GamepadSensorEvent::data)];
+#else
     float lastAccelEventData[SDL_arraysize(SDL_ControllerSensorEvent::data)];
+#endif
     uint32_t lastAccelEventTime;
 #endif
 
@@ -67,6 +83,17 @@ public:
 
     void handleMouseWheelEvent(SDL_MouseWheelEvent* event);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    void handleControllerAxisEvent(SDL_GamepadAxisEvent* event);
+
+    void handleControllerButtonEvent(SDL_GamepadButtonEvent* event);
+
+    void handleControllerDeviceEvent(SDL_GamepadDeviceEvent* event);
+
+    void handleControllerSensorEvent(SDL_GamepadSensorEvent* event);
+
+    void handleControllerTouchpadEvent(SDL_GamepadTouchpadEvent* event);
+#else
     void handleControllerAxisEvent(SDL_ControllerAxisEvent* event);
 
     void handleControllerButtonEvent(SDL_ControllerButtonEvent* event);
@@ -77,6 +104,8 @@ public:
     void handleControllerSensorEvent(SDL_ControllerSensorEvent* event);
 
     void handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent* event);
+#endif
+
 #endif
 
 #if SDL_VERSION_ATLEAST(2, 24, 0)

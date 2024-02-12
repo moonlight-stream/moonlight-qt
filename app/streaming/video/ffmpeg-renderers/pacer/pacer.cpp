@@ -12,7 +12,9 @@
 #include "waylandvsyncsource.h"
 #endif
 
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
 #include <SDL_syswm.h>
+#endif
 
 // Limit the number of queued frames to prevent excessive memory consumption
 // if the V-Sync source or renderer is blocked for a while. It's important
@@ -187,7 +189,11 @@ void Pacer::enqueueFrameForRenderingAndUnlock(AVFrame *frame)
         SDL_Event event;
 
         // For main thread rendering, we'll push an event to trigger a callback
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        event.type = SDL_EVENT_USER;
+#else
         event.type = SDL_USEREVENT;
+#endif
         event.user.code = SDL_CODE_FRAME_READY;
         SDL_PushEvent(&event);
     }
@@ -267,6 +273,20 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
                     "Frame pacing: target %d Hz with %d FPS stream",
                     m_DisplayFps, m_MaxVideoFps);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    #ifdef Q_OS_WIN32
+        if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "win32") == 0) {
+            if (IsWindows8OrGreater()) {
+                m_VsyncSource = new DxVsyncSource(this);
+            }
+        }
+    #endif
+    #ifdef HAS_WAYLAND
+        if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+            m_VsyncSource = new WaylandVsyncSource(this);
+        }
+    #endif
+#else
         SDL_SysWMinfo info;
         SDL_VERSION(&info.version);
         if (!SDL_GetWindowWMInfo(window, &info)) {
@@ -298,6 +318,7 @@ bool Pacer::initialize(SDL_Window* window, int maxVideoFps, bool enablePacing)
             // immediately like they used to.
             break;
         }
+#endif
 
         SDL_assert(m_VsyncSource != nullptr || !(m_RendererAttributes & RENDERER_ATTRIBUTE_FORCE_PACING));
 

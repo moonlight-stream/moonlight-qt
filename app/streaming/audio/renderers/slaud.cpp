@@ -1,6 +1,10 @@
 #include "slaud.h"
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 SLAudioRenderer::SLAudioRenderer()
     : m_AudioContext(nullptr),

@@ -1,7 +1,11 @@
 #include "streaming/session.h"
 
 #include <Limelight.h>
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include "settings/mappingmanager.h"
 
 #include <QtMath>
@@ -22,6 +26,11 @@
 #define ML_HAPTIC_GC_RUMBLE         (1U << 16)
 #define ML_HAPTIC_SIMPLE_RUMBLE     (1U << 17)
 #define ML_HAPTIC_GC_TRIGGER_RUMBLE (1U << 18)
+
+// SDL_TICKS_PASSED is removed in SDL3
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+#define SDL_TICKS_PASSED(A, B)  ((Sint32)((B) - (A)) <= 0)
+#endif
 
 const int SdlInputHandler::k_ButtonMap[] = {
     A_FLAG, B_FLAG, X_FLAG, Y_FLAG,
@@ -188,6 +197,71 @@ Uint32 SdlInputHandler::mouseEmulationTimerCallback(Uint32 interval, void *param
     return interval;
 }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+void SdlInputHandler::handleControllerAxisEvent(SDL_GamepadAxisEvent* event)
+{
+    SDL_JoystickID gameControllerId = event->which;
+    GamepadState* state = findStateForGamepad(gameControllerId);
+    if (state == NULL) {
+        return;
+    }
+
+    // Batch all pending axis motion events for this gamepad to save CPU time
+    SDL_Event nextEvent;
+    for (;;) {
+        switch (event->axis)
+        {
+            case SDL_GAMEPAD_AXIS_LEFTX:
+                state->lsX = event->value;
+                break;
+            case SDL_GAMEPAD_AXIS_LEFTY:
+                // Signed values have one more negative value than
+                // positive value, so inverting the sign on -32768
+                // could actually cause the value to overflow and
+                // wrap around to be negative again. Avoid that by
+                // capping the value at 32767.
+                state->lsY = -qMax(event->value, (short)-32767);
+                break;
+            case SDL_GAMEPAD_AXIS_RIGHTX:
+                state->rsX = event->value;
+                break;
+            case SDL_GAMEPAD_AXIS_RIGHTY:
+                state->rsY = -qMax(event->value, (short)-32767);
+                break;
+            case SDL_GAMEPAD_AXIS_LEFT_TRIGGER:
+                state->lt = (unsigned char)(event->value * 255UL / 32767);
+                break;
+            case SDL_GAMEPAD_AXIS_RIGHT_TRIGGER:
+                state->rt = (unsigned char)(event->value * 255UL / 32767);
+                break;
+            default:
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Unhandled controller axis: %d",
+                            event->axis);
+                return;
+        }
+
+        // Check for another event to batch with
+        if (SDL_PeepEvents(&nextEvent, 1, SDL_PEEKEVENT, SDL_EVENT_GAMEPAD_AXIS_MOTION, SDL_EVENT_GAMEPAD_AXIS_MOTION) <= 0) {
+            break;
+        }
+
+        event = &nextEvent.gaxis;
+        if (event->which != gameControllerId) {
+            // Stop batching if a different gamepad interrupts us
+            break;
+        }
+
+        // Remove the next event to batch
+        SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_EVENT_GAMEPAD_AXIS_MOTION, SDL_EVENT_GAMEPAD_AXIS_MOTION);
+    }
+
+    // Only send the gamepad state to the host if it's not in mouse emulation mode
+    if (state->mouseEmulationTimer == 0) {
+        sendGamepadState(state);
+    }
+}
+#else
 void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
 {
     SDL_JoystickID gameControllerId = event->which;
@@ -251,8 +325,13 @@ void SdlInputHandler::handleControllerAxisEvent(SDL_ControllerAxisEvent* event)
         sendGamepadState(state);
     }
 }
+#endif
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+void SdlInputHandler::handleControllerButtonEvent(SDL_GamepadButtonEvent* event)
+#else
 void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* event)
+#endif
 {
     if (event->button >= SDL_arraysize(k_ButtonMap)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -266,6 +345,104 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
         return;
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (m_SwapFaceButtons) {
+        switch (event->button) {
+        case SDL_GAMEPAD_BUTTON_SOUTH:
+            event->button = SDL_GAMEPAD_BUTTON_EAST;
+            break;
+        case SDL_GAMEPAD_BUTTON_EAST:
+            event->button = SDL_GAMEPAD_BUTTON_SOUTH;
+            break;
+        case SDL_GAMEPAD_BUTTON_WEST:
+            event->button = SDL_GAMEPAD_BUTTON_NORTH;
+            break;
+        case SDL_GAMEPAD_BUTTON_NORTH:
+            event->button = SDL_GAMEPAD_BUTTON_WEST;
+            break;
+        }
+    }
+
+    if (event->state == SDL_PRESSED) {
+        state->buttons |= k_ButtonMap[event->button];
+
+        if (event->button == SDL_GAMEPAD_BUTTON_START) {
+            state->lastStartDownTime = SDL_GetTicks();
+        }
+        else if (state->mouseEmulationTimer != 0) {
+            if (event->button == SDL_GAMEPAD_BUTTON_SOUTH) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_LEFT);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_EAST) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_RIGHT);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_WEST) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_MIDDLE);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_X1);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_PRESS, BUTTON_X2);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_DPAD_UP) {
+                LiSendScrollEvent(1);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_DPAD_DOWN) {
+                LiSendScrollEvent(-1);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_DPAD_RIGHT) {
+                LiSendHScrollEvent(1);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_DPAD_LEFT) {
+                LiSendHScrollEvent(-1);
+            }
+        }
+    }
+    else {
+        state->buttons &= ~k_ButtonMap[event->button];
+
+        if (event->button == SDL_GAMEPAD_BUTTON_START) {
+            if (SDL_GetTicks() - state->lastStartDownTime > MOUSE_EMULATION_LONG_PRESS_TIME) {
+                if (state->mouseEmulationTimer != 0) {
+                    SDL_RemoveTimer(state->mouseEmulationTimer);
+                    state->mouseEmulationTimer = 0;
+
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Mouse emulation deactivated");
+                    Session::get()->notifyMouseEmulationMode(false);
+                }
+                else if (m_GamepadMouse) {
+                    // Send the start button up event to the host, since we won't do it below
+                    sendGamepadState(state);
+
+                    state->mouseEmulationTimer = SDL_AddTimer(MOUSE_EMULATION_POLLING_INTERVAL, SdlInputHandler::mouseEmulationTimerCallback, state);
+
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Mouse emulation active");
+                    Session::get()->notifyMouseEmulationMode(true);
+                }
+            }
+        }
+        else if (state->mouseEmulationTimer != 0) {
+            if (event->button == SDL_GAMEPAD_BUTTON_SOUTH) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_LEFT);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_EAST) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_RIGHT);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_WEST) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_MIDDLE);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_LEFT_SHOULDER) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_X1);
+            }
+            else if (event->button == SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER) {
+                LiSendMouseButtonEvent(BUTTON_ACTION_RELEASE, BUTTON_X2);
+            }
+        }
+    }
+#else
     if (m_SwapFaceButtons) {
         switch (event->button) {
         case SDL_CONTROLLER_BUTTON_A:
@@ -362,6 +539,7 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
             }
         }
     }
+#endif
 
     // Handle Start+Select+L1+R1 as a gamepad quit combo
     if (state->buttons == (PLAY_FLAG | BACK_FLAG | LB_FLAG | RB_FLAG) && qgetenv("NO_GAMEPAD_QUIT") != "1") {
@@ -370,7 +548,11 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
 
         // Push a quit event to the main loop
         SDL_Event event;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        event.type = SDL_EVENT_QUIT;
+#else
         event.type = SDL_QUIT;
+#endif
         event.quit.timestamp = SDL_GetTicks();
         SDL_PushEvent(&event);
 
@@ -403,7 +585,11 @@ void SdlInputHandler::handleControllerButtonEvent(SDL_ControllerButtonEvent* eve
 
 #if SDL_VERSION_ATLEAST(2, 0, 14)
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+void SdlInputHandler::handleControllerSensorEvent(SDL_GamepadSensorEvent* event)
+#else
 void SdlInputHandler::handleControllerSensorEvent(SDL_ControllerSensorEvent* event)
+#endif
 {
     GamepadState* state = findStateForGamepad(event->which);
     if (state == NULL) {
@@ -438,6 +624,32 @@ void SdlInputHandler::handleControllerSensorEvent(SDL_ControllerSensorEvent* eve
     }
 }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+void SdlInputHandler::handleControllerTouchpadEvent(SDL_GamepadTouchpadEvent* event)
+{
+    GamepadState* state = findStateForGamepad(event->which);
+    if (state == NULL) {
+        return;
+    }
+
+    uint8_t eventType;
+    switch (event->type) {
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_DOWN:
+        eventType = LI_TOUCH_EVENT_DOWN;
+        break;
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_UP:
+        eventType = LI_TOUCH_EVENT_UP;
+        break;
+    case SDL_EVENT_GAMEPAD_TOUCHPAD_MOTION:
+        eventType = LI_TOUCH_EVENT_MOVE;
+        break;
+    default:
+        return;
+    }
+
+    LiSendControllerTouchEvent((uint8_t)state->index, eventType, event->finger, event->x, event->y, event->pressure);
+}
+#else
 void SdlInputHandler::handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent* event)
 {
     GamepadState* state = findStateForGamepad(event->which);
@@ -462,6 +674,7 @@ void SdlInputHandler::handleControllerTouchpadEvent(SDL_ControllerTouchpadEvent*
 
     LiSendControllerTouchEvent((uint8_t)state->index, eventType, event->finger, event->x, event->y, event->pressure);
 }
+#endif
 
 #endif
 
@@ -479,6 +692,254 @@ void SdlInputHandler::handleJoystickBatteryEvent(SDL_JoyBatteryEvent* event)
 
 #endif
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+void SdlInputHandler::handleControllerDeviceEvent(SDL_GamepadDeviceEvent* event)
+{
+    GamepadState* state;
+
+    if (event->type == SDL_EVENT_GAMEPAD_ADDED) {
+        int i;
+        const char* name;
+        SDL_Gamepad* controller;
+        const char* mapping;
+        char guidStr[33];
+        uint32_t hapticCaps;
+
+        controller = SDL_OpenGamepad(event->which);
+        if (controller == NULL) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to open gamepad: %s",
+                         SDL_GetError());
+            return;
+        }
+
+        // SDL_EVENT_GAMEPAD_ADDED can be reported multiple times for the same
+        // gamepad in rare cases, because SDL doesn't fixup the device index in
+        // the SDL_EVENT_GAMEPAD_ADDED event if an unopened gamepad disappears
+        // before we've processed the add event.
+        for (int i = 0; i < MAX_GAMEPADS; i++) {
+            if (m_GamepadState[i].controller == controller) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Received duplicate add event for controller index: %d",
+                            event->which);
+                SDL_CloseGamepad(controller);
+                return;
+            }
+        }
+
+        // We used to use SDL_GetGamepadPlayerIndex() here but that
+        // can lead to strange issues due to bugs in Windows where an Xbox
+        // controller will join as player 2, even though no player 1 controller
+        // is connected at all. This pretty much screws any attempt to use
+        // the gamepad in single player games, so just assign them in order from 0.
+        i = 0;
+
+        for (; i < MAX_GAMEPADS; i++) {
+            SDL_assert(m_GamepadState[i].controller != controller);
+            if (m_GamepadState[i].controller == NULL) {
+                // Found an empty slot
+                break;
+            }
+        }
+
+        if (i == MAX_GAMEPADS) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "No open gamepad slots found!");
+            SDL_CloseGamepad(controller);
+            return;
+        }
+
+        SDL_GetJoystickGUIDString(SDL_GetJoystickGUID(SDL_GetGamepadJoystick(controller)),
+                                  guidStr, sizeof(guidStr));
+        if (m_IgnoreDeviceGuids.contains(guidStr, Qt::CaseInsensitive))
+        {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Skipping ignored device with GUID: %s",
+                        guidStr);
+            SDL_CloseGamepad(controller);
+            return;
+        }
+
+        state = &m_GamepadState[i];
+        if (m_MultiController) {
+            state->index = i;
+
+            // This will change indicators on the controller to show the assigned
+            // player index. For Xbox 360 controllers, that means updating the LED
+            // ring to light up the corresponding quadrant for this player.
+            SDL_SetGamepadPlayerIndex(controller, state->index);
+        }
+        else {
+            // Always player 1 in single controller mode
+            state->index = 0;
+        }
+
+        state->controller = controller;
+        state->jsId = SDL_GetJoystickInstanceID(SDL_GetGamepadJoystick(state->controller));
+
+        SDL_PropertiesID propertiesId = SDL_GetGamepadProperties(state->controller);
+        hapticCaps = 0;
+        hapticCaps |= SDL_GetBooleanProperty(propertiesId, SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN, false) ? ML_HAPTIC_GC_RUMBLE : 0;
+        hapticCaps |= SDL_GetBooleanProperty(propertiesId, SDL_PROP_GAMEPAD_CAP_TRIGGER_RUMBLE_BOOLEAN, false) ? ML_HAPTIC_GC_TRIGGER_RUMBLE : 0;
+
+        mapping = SDL_GetGamepadMapping(state->controller);
+        name = SDL_GetGamepadName(state->controller);
+
+        uint16_t vendorId = SDL_GetGamepadVendor(state->controller);
+        uint16_t productId = SDL_GetGamepadProduct(state->controller);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Gamepad %d (player %d) is: %s (VID/PID: 0x%.4x/0x%.4x) (haptic capabilities: 0x%x) (mapping: %s -> %s)",
+                    i,
+                    state->index,
+                    name != nullptr ? name : "<null>",
+                    vendorId,
+                    productId,
+                    hapticCaps,
+                    guidStr,
+                    mapping != nullptr ? mapping : "<null>");
+        if (mapping != nullptr) {
+            SDL_free((void*)mapping);
+        }
+
+        // Add this gamepad to the gamepad mask
+        if (m_MultiController) {
+            // NB: Don't assert that it's unset here because we will already
+            // have the mask set for initially attached gamepads to avoid confusing
+            // apps running on the host.
+            m_GamepadMask |= (1 << state->index);
+        }
+        else {
+            SDL_assert(m_GamepadMask == 0x1);
+        }
+
+        SDL_JoystickPowerLevel powerLevel = SDL_GetJoystickPowerLevel(SDL_GetGamepadJoystick(state->controller));
+
+        // On SDL 2.0.14 and later, we can provide enhanced controller information to the host PC
+        // for it to use as a hint for the type of controller to emulate.
+        uint32_t supportedButtonFlags = 0;
+        for (int i = 0; i < (int)SDL_arraysize(k_ButtonMap); i++) {
+            if (SDL_GamepadHasButton(state->controller, (SDL_GamepadButton)i)) {
+                supportedButtonFlags |= k_ButtonMap[i];
+            }
+        }
+
+        int numBindings = 0;
+        SDL_GamepadBinding **bindings = SDL_GetGamepadBindings(state->controller, &numBindings);
+        bool analogTriggers = false;
+        bool touchpadUnmapped = false;
+        for (int i = 0; i < numBindings; i++) {
+            // We assume these are analog triggers if the binding is to an axis rather than a button
+            if (!analogTriggers) {
+                if (bindings[i]->outputType == SDL_GAMEPAD_BINDTYPE_AXIS && bindings[i]->output.axis.axis == SDL_GAMEPAD_AXIS_LEFT_TRIGGER) {
+                    analogTriggers = true;
+                    continue;
+                }
+                else if (bindings[i]->outputType == SDL_GAMEPAD_BINDTYPE_AXIS && bindings[i]->output.axis.axis == SDL_GAMEPAD_AXIS_RIGHT_TRIGGER) {
+                    analogTriggers = true;
+                    continue;
+                }
+            }
+            // Get a touchpad that is unmapped
+            if (bindings[i]->outputType == SDL_GAMEPAD_BINDTYPE_NONE && bindings[i]->output.button == SDL_GAMEPAD_BUTTON_TOUCHPAD) {
+                touchpadUnmapped = true;
+            }
+        }
+        if (bindings != nullptr) {
+            SDL_free((void*)bindings);
+        }
+
+        uint32_t capabilities = 0;
+
+        capabilities |= analogTriggers ? LI_CCAP_ANALOG_TRIGGERS : 0;
+
+        if (hapticCaps & ML_HAPTIC_GC_RUMBLE) {
+            capabilities |= LI_CCAP_RUMBLE;
+        }
+        if (hapticCaps & ML_HAPTIC_GC_TRIGGER_RUMBLE) {
+            capabilities |= LI_CCAP_TRIGGER_RUMBLE;
+        }
+        if (SDL_GetNumGamepadTouchpads(state->controller) > 0) {
+            capabilities |= LI_CCAP_TOUCHPAD;
+        }
+        if (SDL_GamepadHasSensor(state->controller, SDL_SENSOR_ACCEL)) {
+            capabilities |= LI_CCAP_ACCEL;
+        }
+        if (SDL_GamepadHasSensor(state->controller, SDL_SENSOR_GYRO)) {
+            capabilities |= LI_CCAP_GYRO;
+        }
+        if (powerLevel != SDL_JOYSTICK_POWER_UNKNOWN) {
+            capabilities |= LI_CCAP_BATTERY_STATE;
+        }
+        if (SDL_GetBooleanProperty(propertiesId, SDL_PROP_GAMEPAD_CAP_RGB_LED_BOOLEAN, false)) {
+            capabilities |= LI_CCAP_RGB_LED;
+        }
+
+        uint8_t type;
+        switch (SDL_GetGamepadType(state->controller)) {
+        case SDL_GAMEPAD_TYPE_XBOX360:
+        case SDL_GAMEPAD_TYPE_XBOXONE:
+            type = LI_CTYPE_XBOX;
+            break;
+        case SDL_GAMEPAD_TYPE_PS3:
+        case SDL_GAMEPAD_TYPE_PS4:
+        case SDL_GAMEPAD_TYPE_PS5:
+            type = LI_CTYPE_PS;
+            break;
+        case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_PRO:
+        case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_LEFT:
+        case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_RIGHT:
+        case SDL_GAMEPAD_TYPE_NINTENDO_SWITCH_JOYCON_PAIR:
+            type = LI_CTYPE_NINTENDO;
+            break;
+        default:
+            type = LI_CTYPE_UNKNOWN;
+            break;
+        }
+
+        // If this is a PlayStation controller that doesn't have a touchpad button mapped,
+        // we'll allow the Select+PS button combo to act as the touchpad.
+        state->clickpadButtonEmulationEnabled = touchpadUnmapped && type == LI_CTYPE_PS;
+
+        LiSendControllerArrivalEvent(state->index, m_GamepadMask, type, supportedButtonFlags, capabilities);
+
+        // Send a power level if it's known at this time
+        if (powerLevel != SDL_JOYSTICK_POWER_UNKNOWN) {
+            sendGamepadBatteryState(state, powerLevel);
+        }
+    }
+    else if (event->type == SDL_EVENT_GAMEPAD_REMOVED) {
+        state = findStateForGamepad(event->which);
+        if (state != NULL) {
+            if (state->mouseEmulationTimer != 0) {
+                Session::get()->notifyMouseEmulationMode(false);
+                SDL_RemoveTimer(state->mouseEmulationTimer);
+            }
+
+            SDL_CloseGamepad(state->controller);
+
+            // Remove this from the gamepad mask in MC-mode
+            if (m_MultiController) {
+                SDL_assert(m_GamepadMask & (1 << state->index));
+                m_GamepadMask &= ~(1 << state->index);
+            }
+            else {
+                SDL_assert(m_GamepadMask == 0x1);
+            }
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Gamepad %d is gone",
+                        state->index);
+
+            // Send a final event to let the PC know this gamepad is gone
+            LiSendMultiControllerEvent(state->index, m_GamepadMask,
+                                       0, 0, 0, 0, 0, 0, 0);
+
+            // Clear all remaining state from this slot
+            SDL_memset(state, 0, sizeof(*state));
+        }
+    }
+}
+#else
 void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* event)
 {
     GamepadState* state;
@@ -758,9 +1219,37 @@ void SdlInputHandler::handleControllerDeviceEvent(SDL_ControllerDeviceEvent* eve
         }
     }
 }
+#endif
 
 void SdlInputHandler::handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event)
 {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_assert(event->type == SDL_EVENT_JOYSTICK_ADDED);
+
+    if (!SDL_IsGamepad(event->which)) {
+        char guidStr[33];
+        SDL_GetJoystickGUIDString(SDL_GetJoystickInstanceGUID(event->which),
+                                  guidStr, sizeof(guidStr));
+        const char* name = SDL_GetJoystickInstanceName(event->which);
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Joystick discovered with no mapping: %s %s",
+                    name ? name : "<UNKNOWN>",
+                    guidStr);
+        SDL_Joystick* joy = SDL_OpenJoystick(event->which);
+        if (joy != nullptr) {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Number of axes: %d | Number of buttons: %d | Number of hats: %d",
+                        SDL_GetNumJoystickAxes(joy), SDL_GetNumJoystickButtons(joy),
+                        SDL_GetNumJoystickHats(joy));
+            SDL_CloseJoystick(joy);
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unable to open joystick for query: %s",
+                        SDL_GetError());
+        }
+    }
+#else
     SDL_assert(event->type == SDL_JOYDEVICEADDED);
 
     if (!SDL_IsGameController(event->which)) {
@@ -786,6 +1275,7 @@ void SdlInputHandler::handleJoystickArrivalEvent(SDL_JoyDeviceEvent* event)
                         SDL_GetError());
         }
     }
+#endif
 }
 
 void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short lowFreqMotor, unsigned short highFreqMotor)
@@ -795,7 +1285,11 @@ void SdlInputHandler::rumble(unsigned short controllerNumber, unsigned short low
         return;
     }
 
-#if SDL_VERSION_ATLEAST(2, 0, 9)
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        SDL_RumbleGamepad(m_GamepadState[controllerNumber].controller, lowFreqMotor, highFreqMotor, 30000);
+    }
+#elif SDL_VERSION_ATLEAST(2, 0, 9)
     if (m_GamepadState[controllerNumber].controller != nullptr) {
         SDL_GameControllerRumble(m_GamepadState[controllerNumber].controller, lowFreqMotor, highFreqMotor, 30000);
     }
@@ -853,7 +1347,11 @@ void SdlInputHandler::rumbleTriggers(uint16_t controllerNumber, uint16_t leftTri
         return;
     }
 
-#if SDL_VERSION_ATLEAST(2, 0, 14)
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        SDL_RumbleGamepadTriggers(m_GamepadState[controllerNumber].controller, leftTrigger, rightTrigger, 30000);
+    }
+#elif SDL_VERSION_ATLEAST(2, 0, 14)
     if (m_GamepadState[controllerNumber].controller != nullptr) {
         SDL_GameControllerRumbleTriggers(m_GamepadState[controllerNumber].controller, leftTrigger, rightTrigger, 30000);
     }
@@ -867,7 +1365,23 @@ void SdlInputHandler::setMotionEventState(uint16_t controllerNumber, uint8_t mot
         return;
     }
 
-#if SDL_VERSION_ATLEAST(2, 0, 14)
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        uint8_t reportPeriodMs = reportRateHz ? (1000 / reportRateHz) : 0;
+
+        switch (motionType) {
+        case LI_MOTION_TYPE_ACCEL:
+            m_GamepadState[controllerNumber].accelReportPeriodMs = reportPeriodMs;
+            SDL_SetGamepadSensorEnabled(m_GamepadState[controllerNumber].controller, SDL_SENSOR_ACCEL, reportRateHz ? SDL_TRUE : SDL_FALSE);
+            break;
+
+        case LI_MOTION_TYPE_GYRO:
+            m_GamepadState[controllerNumber].gyroReportPeriodMs = reportPeriodMs;
+            SDL_SetGamepadSensorEnabled(m_GamepadState[controllerNumber].controller, SDL_SENSOR_GYRO, reportRateHz ? SDL_TRUE : SDL_FALSE);
+            break;
+        }
+    }
+#elif SDL_VERSION_ATLEAST(2, 0, 14)
     if (m_GamepadState[controllerNumber].controller != nullptr) {
         uint8_t reportPeriodMs = reportRateHz ? (1000 / reportRateHz) : 0;
 
@@ -893,7 +1407,11 @@ void SdlInputHandler::setControllerLED(uint16_t controllerNumber, uint8_t r, uin
         return;
     }
 
-#if SDL_VERSION_ATLEAST(2, 0, 14)
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (m_GamepadState[controllerNumber].controller != nullptr) {
+        SDL_SetGamepadLED(m_GamepadState[controllerNumber].controller, r, g, b);
+    }
+#elif SDL_VERSION_ATLEAST(2, 0, 14)
     if (m_GamepadState[controllerNumber].controller != nullptr) {
         SDL_GameControllerSetLED(m_GamepadState[controllerNumber].controller, r, g, b);
     }
@@ -904,6 +1422,63 @@ QString SdlInputHandler::getUnmappedGamepads()
 {
     QString ret;
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (SDL_InitSubSystem(SDL_INIT_GAMEPAD) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_GAMEPAD) failed: %s",
+                     SDL_GetError());
+    }
+
+    MappingManager mappingManager;
+    mappingManager.applyMappings();
+
+    int numJoysticks = 0;
+    SDL_JoystickID *joysticks = SDL_GetJoysticks(&numJoysticks);
+    for (int i = 0; i < numJoysticks; i++) {
+        if (!SDL_IsGamepad(i)) {
+            char guidStr[33];
+            SDL_GetJoystickGUIDString(SDL_GetJoystickInstanceGUID(i),
+                                      guidStr, sizeof(guidStr));
+            const char* name = SDL_GetJoystickInstanceName(i);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Unmapped joystick: %s %s",
+                        name ? name : "<UNKNOWN>",
+                        guidStr);
+            SDL_Joystick* joy = SDL_OpenJoystick(i);
+            if (joy != nullptr) {
+                int numButtons = SDL_GetNumJoystickButtons(joy);
+                int numHats = SDL_GetNumJoystickHats(joy);
+                int numAxes = SDL_GetNumJoystickAxes(joy);
+
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Number of axes: %d | Number of buttons: %d | Number of hats: %d",
+                            numAxes, numButtons, numHats);
+
+                if ((numAxes >= 4 && numAxes <= 8) && numButtons >= 8 && numHats <= 1) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Joystick likely to be an unmapped gamepad");
+                    if (!ret.isEmpty()) {
+                        ret += ", ";
+                    }
+
+                    ret += name;
+                }
+
+                SDL_CloseJoystick(joy);
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Unable to open joystick for query: %s",
+                            SDL_GetError());
+            }
+        }
+    }
+
+    if (joysticks) {
+        SDL_free((void*)joysticks);
+    }
+    SDL_QuitSubSystem(SDL_INIT_GAMEPAD);
+#else
     if (SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
@@ -954,6 +1529,7 @@ QString SdlInputHandler::getUnmappedGamepads()
     }
 
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+#endif
 
     return ret;
 }
@@ -968,6 +1544,26 @@ int SdlInputHandler::getAttachedGamepadMask()
         return 0x1;
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    count = mask = 0;
+    int numJoysticks = 0;
+    SDL_JoystickID *joysticks = SDL_GetJoysticks(&numJoysticks);
+    for (int i = 0; i < numJoysticks; i++) {
+        if (SDL_IsGamepad(i)) {
+            char guidStr[33];
+            SDL_GetJoystickGUIDString(SDL_GetJoystickInstanceGUID(i),
+                                      guidStr, sizeof(guidStr));
+
+            if (!m_IgnoreDeviceGuids.contains(guidStr, Qt::CaseInsensitive))
+            {
+                mask |= (1 << count++);
+            }
+        }
+    }
+    if (joysticks) {
+        SDL_free((void*)joysticks);
+    }
+#else
     count = mask = 0;
     for (int i = 0; i < SDL_NumJoysticks(); i++) {
         if (SDL_IsGameController(i)) {
@@ -981,6 +1577,7 @@ int SdlInputHandler::getAttachedGamepadMask()
             }
         }
     }
+#endif
 
     return mask;
 }

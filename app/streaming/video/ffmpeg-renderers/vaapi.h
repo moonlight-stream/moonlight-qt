@@ -2,6 +2,8 @@
 
 #include "renderer.h"
 
+#ifndef HAVE_SDL3
+
 // Avoid X11 if SDL was built without it
 #if !defined(SDL_VIDEO_DRIVER_X11) && defined(HAVE_LIBVA_X11)
 #warning Unable to use libva-x11 without SDL X11 backend
@@ -30,6 +32,8 @@
 #if defined(HAVE_LIBVA_DRM) && !defined(HAVE_DRM)
 #warning Unable to use libva-drm without libdrm available
 #undef HAVE_LIBVA_DRM
+#endif
+
 #endif
 
 #ifdef HAVE_EGL
@@ -92,12 +96,18 @@ private:
 #endif
 
     int m_DecoderSelectionPass;
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
     int m_WindowSystem;
+#endif
     AVBufferRef* m_HwContext;
     bool m_BlacklistedForDirectRendering;
     bool m_HasRfiLatencyBug;
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_Mutex* m_OverlayMutex;
+#else
     SDL_mutex* m_OverlayMutex;
+#endif
     VAImageFormat m_OverlayFormat;
     Uint32 m_OverlaySdlPixelFormat;
     VAImage m_OverlayImage[Overlay::OverlayMax];

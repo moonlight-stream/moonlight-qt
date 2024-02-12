@@ -15,7 +15,11 @@
 // redirection that happens when _FILE_OFFSET_BITS=64!
 // See masterhook_internal.c for details.
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include <dlfcn.h>
 #include <unistd.h>
 #include <errno.h>

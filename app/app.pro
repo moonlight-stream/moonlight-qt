@@ -1,6 +1,8 @@
 QT += core quick network quickcontrols2 svg
 CONFIG += c++11
 
+INCLUDEPATH += /usr/local/include/
+
 unix:!macx {
     TARGET = moonlight
 } else {
@@ -66,7 +68,14 @@ macx {
 
 unix:!macx {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl sdl2 SDL2_ttf opus
+    PKGCONFIG += openssl opus
+    packagesExist(sdl3) {
+        DEFINES += HAVE_SDL3
+        PKGCONFIG += sdl3 sdl3-ttf
+    }
+    else {
+        PKGCONFIG += sdl2 SDL2_ttf
+    }
 
     !disable-ffmpeg {
         packagesExist(libavcodec) {

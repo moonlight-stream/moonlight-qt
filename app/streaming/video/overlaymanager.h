@@ -2,8 +2,13 @@
 
 #include <QString>
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#include <SDL3_ttf/SDL_ttf.h>
+#else
 #include <SDL.h>
 #include <SDL_ttf.h>
+#endif
 
 namespace Overlay {
 

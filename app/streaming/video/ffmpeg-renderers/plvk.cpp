@@ -7,12 +7,21 @@
 #define PL_LIBAV_IMPLEMENTATION 0
 #include <libplacebo/utils/libav.h>
 
+#if HAVE_SDL3
+#include <SDL3/SDL_vulkan.h>
+#else
 #include <SDL_vulkan.h>
+#endif
 
 #include <libavutil/hwcontext_vulkan.h>
 
 #include <vector>
 #include <set>
+
+// Rocky 9.3 Vulkan is a bit out of date
+#ifndef VK_KHR_COOPERATIVE_MATRIX_EXTENSION_NAME
+#define VK_KHR_COOPERATIVE_MATRIX_EXTENSION_NAME "VK_KHR_cooperative_matrix"
+#endif
 
 // Keep these in sync with hwcontext_vulkan.c
 static const char *k_OptionalDeviceExtensions[] = {
@@ -83,7 +92,11 @@ void PlVkRenderer::unlockQueue(struct AVHWDeviceContext *dev_ctx, uint32_t queue
 
 void PlVkRenderer::overlayUploadComplete(void* opaque)
 {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_DestroySurface((SDL_Surface*)opaque);
+#else
     SDL_FreeSurface((SDL_Surface*)opaque);
+#endif
 }
 
 PlVkRenderer::PlVkRenderer(IFFmpegRenderer* backendRenderer) :
@@ -323,6 +336,16 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     m_Window = params->window;
 
     unsigned int instanceExtensionCount = 0;
+
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    char const* const* extensions = SDL_Vulkan_GetInstanceExtensions(&instanceExtensionCount);
+    if (!extensions) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_Vulkan_GetInstanceExtensions() failed: %s",
+                     SDL_GetError());
+        return false;
+    }
+#else
     if (!SDL_Vulkan_GetInstanceExtensions(params->window, &instanceExtensionCount, nullptr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Vulkan_GetInstanceExtensions() #1 failed: %s",
@@ -337,6 +360,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
                      SDL_GetError());
         return false;
     }
+#endif
 
     pl_vk_inst_params vkInstParams = pl_vk_inst_default_params;
     {
@@ -350,8 +374,13 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 #endif
     }
     vkInstParams.get_proc_addr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    vkInstParams.extensions = extensions;
+    vkInstParams.num_extensions = instanceExtensionCount;
+#else
     vkInstParams.extensions = instanceExtensions.data();
     vkInstParams.num_extensions = (int)instanceExtensions.size();
+#endif
     m_PlVkInstance = pl_vk_inst_create(m_Log, &vkInstParams);
     if (m_PlVkInstance == nullptr) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -369,7 +398,11 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     POPULATE_FUNCTION(vkGetPhysicalDeviceSurfaceSupportKHR);
     POPULATE_FUNCTION(vkEnumerateDeviceExtensionProperties);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, NULL, &m_VkSurface)) {
+#else
     if (!SDL_Vulkan_CreateSurface(params->window, m_PlVkInstance->instance, &m_VkSurface)) {
+#endif
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_Vulkan_CreateSurface() failed: %s",
                      SDL_GetError());
@@ -603,7 +636,11 @@ void PlVkRenderer::waitToRender()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "GPU is in failed state. Recreating renderer.");
         SDL_Event event;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
+#else
         event.type = SDL_RENDER_DEVICE_RESET;
+#endif
         SDL_PushEvent(&event);
         return;
     }
@@ -616,7 +653,11 @@ void PlVkRenderer::waitToRender()
 
     // Handle the swapchain being resized
     int vkDrawableW, vkDrawableH;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_GetWindowSizeInPixels(m_Window, &vkDrawableW, &vkDrawableH);
+#else
     SDL_Vulkan_GetDrawableSize(m_Window, &vkDrawableW, &vkDrawableH);
+#endif
     if (!pl_swapchain_resize(m_Swapchain, &vkDrawableW, &vkDrawableH)) {
         // Swapchain (re)creation can fail if the window is occluded
         return;
@@ -675,7 +716,11 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
     pl_frame_from_swapchain(&targetFrame, &m_SwapchainFrame);
 
     // We perform minimal processing under the overlay lock to avoid blocking threads updating the overlay
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_LockSpinlock(&m_OverlayLock);
+#else
     SDL_AtomicLock(&m_OverlayLock);
+#endif
     for (int i = 0; i < Overlay::OverlayMax; i++) {
         // If we have a staging overlay, we need to transfer ownership to us
         if (m_Overlays[i].hasStagingOverlay) {
@@ -721,7 +766,11 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
             overlays.push_back(m_Overlays[i].overlay);
         }
     }
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_UnlockSpinlock(&m_OverlayLock);
+#else
     SDL_AtomicUnlock(&m_OverlayLock);
+#endif
 
     SDL_Rect src;
     src.x = mappedFrame.crop.x0;
@@ -760,7 +809,11 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
 
         // Recreate the renderer
         SDL_Event event;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        event.type = SDL_EVENT_RENDER_TARGETS_RESET;
+#else
         event.type = SDL_RENDER_TARGETS_RESET;
+#endif
         SDL_PushEvent(&event);
         goto UnmapExit;
     }
@@ -794,12 +847,20 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_LockSpinlock(&m_OverlayLock);
+#else
     SDL_AtomicLock(&m_OverlayLock);
+#endif
     // We want to clear the staging overlay flag even if a staging overlay is still present,
     // since this ensures the render thread will not read from a partially initialized pl_tex
     // as we modify or recreate the staging overlay texture outside the overlay lock.
     m_Overlays[type].hasStagingOverlay = false;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_UnlockSpinlock(&m_OverlayLock);
+#else
     SDL_AtomicUnlock(&m_OverlayLock);
+#endif
 
     // If there's no new staging overlay, free the old staging overlay texture.
     // NB: This is safe to do outside the overlay lock because we're guaranteed
@@ -814,7 +875,11 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
     pl_fmt texFormat = pl_find_named_fmt(m_Vulkan->gpu, "bgra8");
     if (!texFormat) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(newSurface);
+#else
         SDL_FreeSurface(newSurface);
+#endif
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_find_named_fmt(bgra8) failed");
         return;
@@ -834,7 +899,11 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     if (!pl_tex_recreate(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex, &texParams)) {
         pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
         SDL_zero(m_Overlays[type].stagingOverlay);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(newSurface);
+#else
         SDL_FreeSurface(newSurface);
+#endif
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_tex_recreate() failed");
         return;
@@ -851,7 +920,11 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     if (!pl_tex_upload(m_Vulkan->gpu, &xferParams)) {
         pl_tex_destroy(m_Vulkan->gpu, &m_Overlays[type].stagingOverlay.tex);
         SDL_zero(m_Overlays[type].stagingOverlay);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(newSurface);
+#else
         SDL_FreeSurface(newSurface);
+#endif
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "pl_tex_upload() failed");
         return;
@@ -867,10 +940,18 @@ void PlVkRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     m_Overlays[type].stagingOverlay.color = pl_color_space_srgb;
 
     // Make this staging overlay visible to the render thread
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_LockSpinlock(&m_OverlayLock);
+#else
     SDL_AtomicLock(&m_OverlayLock);
+#endif
     SDL_assert(!m_Overlays[type].hasStagingOverlay);
     m_Overlays[type].hasStagingOverlay = true;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_UnlockSpinlock(&m_OverlayLock);
+#else
     SDL_AtomicUnlock(&m_OverlayLock);
+#endif
 }
 
 bool PlVkRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)

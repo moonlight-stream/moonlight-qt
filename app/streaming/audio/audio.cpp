@@ -11,6 +11,11 @@
 
 #include "renderers/sdl.h"
 
+// SDL_TICKS_PASSED is removed in SDL3
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+#define SDL_TICKS_PASSED(A, B)  ((Sint32)((B) - (A)) <= 0)
+#endif
+
 #include <Limelight.h>
 
 #define TRY_INIT_RENDERER(renderer, opusConfig)        \

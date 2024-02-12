@@ -10,8 +10,12 @@
 #include <Limelight.h>
 #include <unistd.h>
 
+#if HAVE_SDL3
+#include <SDL3/SDL_render.h>
+#else
 #include <SDL_render.h>
 #include <SDL_syswm.h>
+#endif
 
 // These are extensions, so some platform headers may not provide them
 #ifndef EGL_PLATFORM_WAYLAND_KHR
@@ -484,6 +488,18 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    // TODO: Untested
+    m_DummyRenderer = SDL_CreateRenderer(m_Window, "opengles2", SDL_RENDERER_ACCELERATED);
+    if (m_DummyRenderer) {
+        // Not sure if this is needed, it'll probably fail creating
+        // anyways if the renderer is not accelerated.
+        SDL_RendererInfo info;
+        if (SDL_GetRendererInfo(m_DummyRenderer, &info)) {
+            SDL_assert(renderInfo.flags & SDL_RENDERER_ACCELERATED);
+        }
+    }
+#else
     int renderIndex;
     int maxRenderers = SDL_GetNumRenderDrivers();
     SDL_assert(maxRenderers >= 0);
@@ -503,6 +519,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     m_DummyRenderer = SDL_CreateRenderer(m_Window, renderIndex, SDL_RENDERER_ACCELERATED);
+#endif
     if (!m_DummyRenderer) {
         // Print the error here (before it gets clobbered), but ensure that we flush window
         // events just in case SDL re-created the window before eventually failing.
@@ -523,7 +540,11 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     else {
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_FlushEvents(SDL_EVENT_WINDOW_FIRST, SDL_EVENT_WINDOW_LAST);
+#else
         SDL_FlushEvent(SDL_WINDOWEVENT);
+#endif
     }
 
     // Now we finally bail if we failed during SDL_CreateRenderer() above.
@@ -533,6 +554,35 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    bool displayOpened = false;
+    if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+        void *wldisplay = SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
+        if (!openDisplay(EGL_PLATFORM_WAYLAND_KHR, wldisplay)) {
+            return false;
+        }
+        displayOpened = true;
+    }
+    else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) {
+        void *xdisplay = SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
+        if (!openDisplay(EGL_PLATFORM_X11_KHR, xdisplay)) {
+            return false;
+        }
+        displayOpened = true;
+    }
+    else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "kmsdrm") == 0) {
+        void *gbmdevice = SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_KMSDRM_GBM_DEVICE_POINTER, NULL);
+        if (!openDisplay(EGL_PLATFORM_GBM_KHR, gbmdevice)) {
+            return false;
+        }
+        displayOpened = true;
+    }
+
+    if (!displayOpened) {
+        EGL_LOG(Error, "not compatible with SYSWM");
+        return false;
+    }
+#else
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
     if (!SDL_GetWindowWMInfo(params->window, &info)) {
@@ -565,6 +615,7 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         EGL_LOG(Error, "not compatible with SYSWM");
         return false;
     }
+#endif
 
     if (m_EGLDisplay == EGL_NO_DISPLAY) {
         EGL_LOG(Error, "Cannot get EGL display: %d", eglGetError());
@@ -671,18 +722,26 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // to resize the window. This seems to happen significantly more often
     // with vsync enabled, so this also mitigates that problem too.
     if (params->enableVsync
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            && (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") != 0)
+#else
 #ifdef SDL_VIDEO_DRIVER_WAYLAND
             && info.subsystem != SDL_SYSWM_WAYLAND
+#endif
 #endif
             ) {
         SDL_GL_SetSwapInterval(1);
 
-#if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
         // The SDL KMSDRM backend already enforces double buffering (due to
         // SDL_HINT_VIDEO_DOUBLE_BUFFER=1), so calling glFinish() after
         // SDL_GL_SwapWindow() will block an extra frame and lock rendering
         // at 1/2 the display refresh rate.
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "kmsdrm") != 0)
+#else
+#if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
         if (info.subsystem != SDL_SYSWM_KMSDRM)
+#endif
 #endif
         {
             m_BlockingSwapBuffers = true;
@@ -905,7 +964,11 @@ void EGLRenderer::renderFrame(AVFrame* frame)
             // XWayland. Other strategies like calling glGetError() don't seem
             // to be able to detect this situation for some reason.
             SDL_Event event;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            event.type = SDL_EVENT_RENDER_TARGETS_RESET;
+#else
             event.type = SDL_RENDER_TARGETS_RESET;
+#endif
             SDL_PushEvent(&event);
 
             return;
@@ -924,7 +987,11 @@ void EGLRenderer::renderFrame(AVFrame* frame)
     glClear(GL_COLOR_BUFFER_BIT);
 
     int drawableWidth, drawableHeight;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_GetWindowSizeInPixels(m_Window, &drawableWidth, &drawableHeight);
+#else
     SDL_GL_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+#endif
 
     // Set the viewport to the size of the aspect-ratio-scaled video
     SDL_Rect src, dst;

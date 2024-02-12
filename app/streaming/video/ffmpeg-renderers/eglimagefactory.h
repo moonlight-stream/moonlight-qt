@@ -3,7 +3,11 @@
 #include "renderer.h"
 
 #define SDL_USE_BUILTIN_OPENGL_DEFINITIONS 1
+#if HAVE_SDL3
+#include <SDL3/SDL_egl.h>
+#else
 #include <SDL_egl.h>
+#endif
 
 #ifdef HAVE_LIBVA
 #include <va/va_drmcommon.h>

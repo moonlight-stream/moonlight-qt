@@ -1,7 +1,11 @@
 #include "streaming/session.h"
 
 #include <Limelight.h>
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 #define VK_0 0x30
 #define VK_A 0x41
@@ -22,7 +26,11 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 
         // Push a quit event to the main loop
         SDL_Event event;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        event.type = SDL_EVENT_QUIT;
+#else
         event.type = SDL_QUIT;
+#endif
         event.quit.timestamp = SDL_GetTicks();
         SDL_PushEvent(&event);
         break;
@@ -78,7 +86,11 @@ void SdlInputHandler::performSpecialKeyCombo(KeyCombo combo)
 
         if (!SDL_GetRelativeMouseMode()) {
             m_MouseCursorCapturedVisibilityState = !m_MouseCursorCapturedVisibilityState;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            m_MouseCursorCapturedVisibilityState ? SDL_ShowCursor() : SDL_HideCursor();
+#else
             SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);
+#endif
         }
         else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -157,9 +169,15 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 
     // Check for our special key combos
     if ((event->state == SDL_PRESSED) &&
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            (event->keysym.mod & SDL_KMOD_CTRL) &&
+            (event->keysym.mod & SDL_KMOD_ALT) &&
+            (event->keysym.mod & SDL_KMOD_SHIFT)) {
+#else
             (event->keysym.mod & KMOD_CTRL) &&
             (event->keysym.mod & KMOD_ALT) &&
             (event->keysym.mod & KMOD_SHIFT)) {
+#endif
         // First we test the SDLK combos for matches,
         // that way we ensure that latin keyboard users
         // can match to the key they see on their keyboards.
@@ -188,6 +206,22 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
 
     // Set modifier flags
     modifiers = 0;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (event->keysym.mod & SDL_KMOD_CTRL) {
+        modifiers |= MODIFIER_CTRL;
+    }
+    if (event->keysym.mod & SDL_KMOD_ALT) {
+        modifiers |= MODIFIER_ALT;
+    }
+    if (event->keysym.mod & SDL_KMOD_SHIFT) {
+        modifiers |= MODIFIER_SHIFT;
+    }
+    if (event->keysym.mod & SDL_KMOD_GUI) {
+        if (isSystemKeyCaptureActive()) {
+            modifiers |= MODIFIER_META;
+        }
+    }
+#else
     if (event->keysym.mod & KMOD_CTRL) {
         modifiers |= MODIFIER_CTRL;
     }
@@ -202,6 +236,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
             modifiers |= MODIFIER_META;
         }
     }
+#endif
 
     // Set keycode. We explicitly use scancode here because GFE will try to correct
     // for AZERTY layouts on the host but it depends on receiving VK_ values matching

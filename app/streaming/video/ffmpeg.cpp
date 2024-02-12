@@ -55,6 +55,11 @@ extern "C" {
 
 #define FAILED_DECODES_RESET_THRESHOLD 20
 
+// SDL_TICKS_PASSED is removed in SDL3
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+#define SDL_TICKS_PASSED(A, B)  ((Sint32)((B) - (A)) <= 0)
+#endif
+
 // Note: This is NOT an exhaustive list of all decoders
 // that Moonlight could pick. It will pick any working
 // decoder that matches the codec ID and outputs one of
@@ -1507,7 +1512,11 @@ void FFmpegVideoDecoder::decoderThreadProc()
                                      "Resetting decoder due to consistent failure");
 
                         SDL_Event event;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+                        event.type = SDL_EVENT_RENDER_DEVICE_RESET;
+#else
                         event.type = SDL_RENDER_DEVICE_RESET;
+#endif
                         SDL_PushEvent(&event);
 
                         // Don't consume any additional data
@@ -1633,7 +1642,11 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
                          "Resetting decoder due to consistent failure");
 
             SDL_Event event;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            event.type = SDL_EVENT_RENDER_DEVICE_RESET;
+#else
             event.type = SDL_RENDER_DEVICE_RESET;
+#endif
             SDL_PushEvent(&event);
 
             // Don't consume any additional data

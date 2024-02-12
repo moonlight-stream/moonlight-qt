@@ -132,14 +132,22 @@ void SystemProperties::querySdlVideoInfoInternal()
     // We call the internal variant because we're already in a safe thread context.
     refreshDisplaysInternal();
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_Window* testWindow = SDL_CreateWindow("", 1280, 720,
+#else
     SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+#endif
                                               SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
     if (!testWindow) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Failed to create test window with platform flags: %s",
                     SDL_GetError());
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        testWindow = SDL_CreateWindow("", 1280, 720, SDL_WINDOW_HIDDEN);
+#else
         testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+#endif
         if (!testWindow) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create window for hardware decode test: %s",
@@ -197,7 +205,13 @@ void SystemProperties::refreshDisplaysInternal()
     monitorNativeResolutions.clear();
 
     SDL_DisplayMode bestMode;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    int numDisplays = 0;
+    SDL_DisplayID *displays = SDL_GetDisplays(&numDisplays);
+    for (int displayIndex = 0; displayIndex < numDisplays; displayIndex++) {
+#else
     for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
+#endif
         SDL_DisplayMode desktopMode;
 
         if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode)) {
@@ -212,6 +226,20 @@ void SystemProperties::refreshDisplaysInternal()
 
             // Start at desktop mode and work our way up
             bestMode = desktopMode;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            int numModes = 0;
+            const SDL_DisplayMode **modes = SDL_GetFullscreenDisplayModes(displayIndex, &numModes);
+            for (int i = 0; i < numModes; i++) {
+                if (modes[i]->w == desktopMode.w && modes[i]->h == desktopMode.h) {
+                    if (modes[i]->refresh_rate > bestMode.refresh_rate) {
+                        bestMode = *modes[i];
+                    }
+                }
+            }
+            if (modes) {
+                SDL_free(modes);
+            }
+#else
             for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
                 SDL_DisplayMode mode;
                 if (SDL_GetDisplayMode(displayIndex, i, &mode) == 0) {
@@ -222,6 +250,7 @@ void SystemProperties::refreshDisplaysInternal()
                     }
                 }
             }
+#endif
 
             // Try to normalize values around our our standard refresh rates.
             // Some displays/OSes report values that are slightly off.
@@ -236,6 +265,11 @@ void SystemProperties::refreshDisplaysInternal()
             }
         }
     }
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (displays) {
+        SDL_free((void*)displays);
+    }
+#endif
 
     SDL_QuitSubSystem(SDL_INIT_VIDEO);
 }

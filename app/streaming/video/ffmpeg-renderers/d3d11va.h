@@ -41,7 +41,11 @@ private:
     IDXGISwapChain4* m_SwapChain;
     ID3D11DeviceContext* m_DeviceContext;
     ID3D11RenderTargetView* m_RenderTargetView;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_Mutex* m_ContextLock;
+#else
     SDL_mutex* m_ContextLock;
+#endif
 
     DECODER_PARAMETERS m_DecoderParams;
     int m_DisplayWidth;
