@@ -283,7 +283,7 @@ ApplicationWindow {
                 visible: SystemProperties.hasBrowser &&
                          qmltypeof(stackView.currentItem, "SettingsView")
 
-                iconSource: "qrc:/res/Discord-Logo-White.svg"
+                iconSource: "qrc:/res/discord.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
