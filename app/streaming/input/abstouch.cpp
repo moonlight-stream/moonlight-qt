@@ -114,6 +114,7 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
 
     // Try to send it as a native pen/touch event, otherwise fall back to our touch emulation
     if (LiGetHostFeatureFlags() & LI_FF_PEN_TOUCH_EVENTS) {
+#if SDL_VERSION_ATLEAST(2, 0, 22)
         bool isPen = false;
 
         int numTouchDevices = SDL_GetNumTouchDevices();
@@ -132,7 +133,9 @@ void SdlInputHandler::handleAbsoluteFingerEvent(SDL_TouchFingerEvent* event)
             LiSendPenEvent(eventType, LI_TOOL_TYPE_PEN, 0, vidrelx / dst.w, vidrely / dst.h, event->pressure,
                            0.0f, 0.0f, LI_ROT_UNKNOWN, LI_TILT_UNKNOWN);
         }
-        else {
+        else
+#endif
+        {
             LiSendTouchEvent(eventType, pointerId, vidrelx / dst.w, vidrely / dst.h, event->pressure,
                              0.0f, 0.0f, LI_ROT_UNKNOWN);
         }
