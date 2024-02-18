@@ -53,9 +53,10 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 * Qt 5.9 SDK or later. Qt 6 is also supported.
 * GCC or Clang
 * Install the required packages:
-  * Debian/Ubuntu: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libqt5svg5-dev libsdl2-dev libsdl2-ttf-dev libplacebo-dev libssl-dev libavcodec-dev libva-dev libvdpau-dev libxkbcommon-dev qtwayland5 qt5-qmake qtbase5-dev qtdeclarative5-dev qtquickcontrols2-5-dev wayland-protocols qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2`
-  * RedHat/Fedora: `openssl-devel SDL2-devel SDL2_ttf-devel libplacebo-devel ffmpeg-devel qt5-qtsvg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel`
+  * Debian/Ubuntu: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libqt5svg5-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev libva-dev libvdpau-dev libxkbcommon-dev qtwayland5 qt5-qmake qtbase5-dev qtdeclarative5-dev qtquickcontrols2-5-dev wayland-protocols qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2`
+  * RedHat/Fedora: `openssl-devel SDL2-devel SDL2_ttf-devel ffmpeg-devel qt5-qtsvg-devel qt5-qtquickcontrols2-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel`
 * FFmpeg 4.0 or later is required to build. If your distro doesn't package FFmpeg 4.0 or later, you can build and install it from source on https://ffmpeg.org/
+* Building the Vulkan HDR renderer requires a `libplacebo-dev`/`libplacebo-devel` version of at least v338.0 and FFmpeg 6.1 or later.
 
 ### Steam Link Build Requirements
 * [Steam Link SDK](https://github.com/ValveSoftware/steamlink-sdk) cloned on your build system
