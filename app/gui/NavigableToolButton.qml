@@ -14,8 +14,8 @@ ToolButton {
         source: iconSource
         anchors.centerIn: parent.background
         sourceSize {
-            width: parent.background.width * 1.10
-            height: parent.background.height * 1.10
+            width: parent.background.width
+            height: parent.background.height
         }
     }
 
