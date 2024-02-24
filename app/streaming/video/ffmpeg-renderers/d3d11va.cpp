@@ -1994,8 +1994,12 @@ bool D3D11VARenderer::setupVideoTexture()
     texDesc.SampleDesc.Quality = 0;
     texDesc.SampleDesc.Count = 1;
     texDesc.Usage = D3D11_USAGE_DEFAULT;
+    texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     // The flag D3D11_BIND_RENDER_TARGET is needed to enable the use of GPU enhancement
-    texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+    StreamingPreferences streamingPreferences;
+    if(streamingPreferences.videoEnhancement && m_VideoEnhancement->isEnhancementCapable()){
+        texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+    }
     texDesc.CPUAccessFlags = 0;
     texDesc.MiscFlags = 0;
 
