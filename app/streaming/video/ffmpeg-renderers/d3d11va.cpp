@@ -183,9 +183,9 @@ D3D11VARenderer::~D3D11VARenderer()
 /**
  * \brief Set Monitor HDR MetaData information
  *
- * Get the Monitor HDT MetaData via LimeLight library
+ * Get the Monitor HDR MetaData via LimeLight library
  *
- * \param PSS_HDR_METADATA* HDRMetaData The varaible to set the metadata information
+ * \param PSS_HDR_METADATA* HDRMetaData The variable to set the metadata information
  * \return bool Return True is succeed
  */
 void D3D11VARenderer::setHDRStream(){
@@ -238,9 +238,9 @@ void D3D11VARenderer::setHDRStream(){
 /**
  * \brief Set Monitor HDR MetaData information
  *
- * Get the Monitor HDT MetaData via LimeLight library
+ * Get the Monitor HDR MetaData via LimeLight library
  *
- * \param PSS_HDR_METADATA* HDRMetaData The varaible to set the metadata information
+ * \param PSS_HDR_METADATA* HDRMetaData The variable to set the metadata information
  * \return bool Return True is succeed
  */
 void D3D11VARenderer::setHDROutPut(){
