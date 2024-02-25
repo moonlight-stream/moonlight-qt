@@ -130,7 +130,7 @@ CenteredGridView {
                     implicitHeight: 85
 
                     Image {
-                        source: "qrc:/res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg"
+                        source: "qrc:/res/play_arrow_white_48dp.svg"
                         anchors.centerIn: parent
                         sourceSize {
                             width: 75
@@ -158,7 +158,7 @@ CenteredGridView {
                     implicitHeight: 85
 
                     Image {
-                        source: "qrc:/res/stop_FILL1_wght700_GRAD200_opsz48.svg"
+                        source: "qrc:/res/stop_white_24dp.svg"
                         anchors.centerIn: parent
                         sourceSize {
                             width: 75

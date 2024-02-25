@@ -132,7 +132,7 @@ CenteredGridView {
             anchors.verticalCenter: pcIcon.verticalCenter
             anchors.verticalCenterOffset: !model.online ? -18 : -16
             visible: !model.statusUnknown && (!model.online || !model.paired)
-            source: !model.online ? "qrc:/res/warning_FILL1_wght300_GRAD200_opsz24.svg" : "qrc:/res/baseline-lock-24px.svg"
+            source: !model.online ? "qrc:/res/warning_white_48dp.svg" : "qrc:/res/baseline-lock-24px.svg"
             sourceSize {
                 width: !model.online ? 75 : 70
                 height: !model.online ? 75 : 70

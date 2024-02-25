@@ -4,10 +4,10 @@
         <file>res/desktop_windows-48px.svg</file>
         <file>res/ic_add_to_queue_white_48px.svg</file>
         <file>res/baseline-lock-24px.svg</file>
-        <file>res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/play_arrow_white_48dp.svg</file>
         <file>res/baseline-warning-24px.svg</file>
-        <file>res/warning_FILL1_wght300_GRAD200_opsz24.svg</file>
-        <file>res/stop_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/warning_white_48dp.svg</file>
+        <file>res/stop_white_24dp.svg</file>
         <file>res/no_app_image.png</file>
         <file>res/settings.svg</file>
         <file>res/arrow_left.svg</file>
