@@ -158,7 +158,7 @@ CenteredGridView {
                     implicitHeight: 85
 
                     Image {
-                        source: "qrc:/res/stop_white_24dp.svg"
+                        source: "qrc:/res/stop_white_48dp.svg"
                         anchors.centerIn: parent
                         sourceSize {
                             width: 75
