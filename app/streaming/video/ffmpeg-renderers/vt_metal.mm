@@ -199,15 +199,17 @@ public:
                 return;
             }
 
-            // Pace ourselves by waiting if too many frames are pending presentation
-            SDL_LockMutex(m_PresentationMutex);
-            if (m_PendingPresentationCount > 2) {
-                if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Presentation wait timed out after 100 ms");
+            if (m_MetalLayer.displaySyncEnabled) {
+                // Pace ourselves by waiting if too many frames are pending presentation
+                SDL_LockMutex(m_PresentationMutex);
+                if (m_PendingPresentationCount > 2) {
+                    if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+                        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                    "Presentation wait timed out after 100 ms");
+                    }
                 }
+                SDL_UnlockMutex(m_PresentationMutex);
             }
-            SDL_UnlockMutex(m_PresentationMutex);
         }
     }}
 
@@ -492,16 +494,18 @@ public:
 
         [renderEncoder endEncoding];
 
-        // Queue a completion callback on the drawable to pace our rendering
-        SDL_LockMutex(m_PresentationMutex);
-        m_PendingPresentationCount++;
-        SDL_UnlockMutex(m_PresentationMutex);
-        [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
+        if (m_MetalLayer.displaySyncEnabled) {
+            // Queue a completion callback on the drawable to pace our rendering
             SDL_LockMutex(m_PresentationMutex);
-            m_PendingPresentationCount--;
-            SDL_CondSignal(m_PresentationCond);
+            m_PendingPresentationCount++;
             SDL_UnlockMutex(m_PresentationMutex);
-        }];
+            [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
+                SDL_LockMutex(m_PresentationMutex);
+                m_PendingPresentationCount--;
+                SDL_CondSignal(m_PresentationCond);
+                SDL_UnlockMutex(m_PresentationMutex);
+            }];
+        }
 
         // Flip to the newly rendered buffer
         [commandBuffer presentDrawable:m_NextDrawable];
