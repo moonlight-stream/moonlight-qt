@@ -194,7 +194,7 @@ void D3D11VARenderer::setHDRStream(){
 
     // Prepare HDR Meta Data for Stream content
     SS_HDR_METADATA hdrMetadata;
-    if (m_VideoProcessor.p && LiGetHdrMetadata(&hdrMetadata)) {
+    if (m_VideoProcessor && LiGetHdrMetadata(&hdrMetadata)) {
 
         streamHDRMetaData.RedPrimary[0] = hdrMetadata.displayPrimaries[0].x;
         streamHDRMetaData.RedPrimary[1] = hdrMetadata.displayPrimaries[0].y;
@@ -214,7 +214,7 @@ void D3D11VARenderer::setHDRStream(){
 
         // Set HDR Stream (input) Meta data
         m_VideoContext->VideoProcessorSetStreamHDRMetaData(
-            m_VideoProcessor,
+            m_VideoProcessor.Get(),
             0,
             DXGI_HDR_METADATA_TYPE_HDR10,
             sizeof(DXGI_HDR_METADATA_HDR10),
@@ -262,10 +262,10 @@ void D3D11VARenderer::setHDROutPut(){
                 outputHDRMetaData.MaxContentLightLevel = 0;
                 outputHDRMetaData.MaxFrameAverageLightLevel = 0;
 
-                if (m_VideoProcessor.p) {
+                if (m_VideoProcessor) {
                     // Prepare HDR for the OutPut Monitor
                     m_VideoContext->VideoProcessorSetOutputHDRMetaData(
-                        m_VideoProcessor,
+                        m_VideoProcessor.Get(),
                         DXGI_HDR_METADATA_TYPE_HDR10,
                         sizeof(DXGI_HDR_METADATA_HDR10),
                         &outputHDRMetaData
@@ -438,7 +438,7 @@ void D3D11VARenderer::enableIntelVideoSuperResolution(bool activate){
         param = kIntelVpeVersion3;
 
         hr = m_VideoContext->VideoProcessorSetOutputExtension(
-            m_VideoProcessor, &GUID_INTEL_VPE_INTERFACE, sizeof(ext), &ext);
+            m_VideoProcessor.Get(), &GUID_INTEL_VPE_INTERFACE, sizeof(ext), &ext);
         if (FAILED(hr))
         {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -455,7 +455,7 @@ void D3D11VARenderer::enableIntelVideoSuperResolution(bool activate){
         }
 
         hr = m_VideoContext->VideoProcessorSetOutputExtension(
-            m_VideoProcessor, &GUID_INTEL_VPE_INTERFACE, sizeof(ext), &ext);
+            m_VideoProcessor.Get(), &GUID_INTEL_VPE_INTERFACE, sizeof(ext), &ext);
         if (FAILED(hr))
         {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -472,7 +472,7 @@ void D3D11VARenderer::enableIntelVideoSuperResolution(bool activate){
         }
 
         hr = m_VideoContext->VideoProcessorSetStreamExtension(
-            m_VideoProcessor, 0, &GUID_INTEL_VPE_INTERFACE, sizeof(ext), &ext);
+            m_VideoProcessor.Get(), 0, &GUID_INTEL_VPE_INTERFACE, sizeof(ext), &ext);
         if (FAILED(hr))
         {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -522,7 +522,7 @@ void D3D11VARenderer::enableNvidiaVideoSuperResolution(bool activate){
         UINT enable = activate;
 
         NvidiaStreamExt stream_extension_info = {kStreamExtensionVersionV1, kStreamExtensionMethodSuperResolution, enable};
-        hr = m_VideoContext->VideoProcessorSetStreamExtension(m_VideoProcessor, 0, &GUID_NVIDIA_PPE_INTERFACE, sizeof(stream_extension_info), &stream_extension_info);
+        hr = m_VideoContext->VideoProcessorSetStreamExtension(m_VideoProcessor.Get(), 0, &GUID_NVIDIA_PPE_INTERFACE, sizeof(stream_extension_info), &stream_extension_info);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "NVIDIA RTX Video Super Resolution failed: %x",
@@ -598,7 +598,7 @@ void D3D11VARenderer::enableNvidiaHDR(bool activate){
         UINT enable = activate;
 
         NvidiaStreamExt stream_extension_info = {kStreamExtensionVersionV4, kStreamExtensionMethodTrueHDR, enable, 0u};
-        hr = m_VideoContext->VideoProcessorSetStreamExtension(m_VideoProcessor, 0, &GUID_NVIDIA_TRUE_HDR_INTERFACE, sizeof(stream_extension_info), &stream_extension_info);
+        hr = m_VideoContext->VideoProcessorSetStreamExtension(m_VideoProcessor.Get(), 0, &GUID_NVIDIA_TRUE_HDR_INTERFACE, sizeof(stream_extension_info), &stream_extension_info);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "NVIDIA RTX HDR failed: %x",
@@ -944,8 +944,8 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) failed: %x",
                              hr);
             }
-            if (m_VideoProcessor.p && m_VideoProcessorEnumerator.p) {
-                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+            if (m_VideoProcessor && m_VideoProcessorEnumerator) {
+                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
             };
         }
         else {
@@ -956,8 +956,8 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709) failed: %x",
                              hr);
             }
-            if (m_VideoProcessor.p && m_VideoProcessorEnumerator.p) {
-                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
+            if (m_VideoProcessor && m_VideoProcessorEnumerator) {
+                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
             }
         }
 
@@ -1147,11 +1147,11 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
         switch (frameColorSpace) {
         case COLORSPACE_REC_2020:
             m_StreamColorSpace = m_StreamColorSpacesFixHDR[m_StreamIndex];
-            m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
+            m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
             break;
         default:
             m_StreamColorSpace = m_StreamColorSpacesFixSDR[m_StreamIndex];
-            m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
+            m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
         }
         if(m_SetStreamColorSpace){
             m_StreamIndex++;
@@ -1172,7 +1172,7 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
         // are all together at their default value, the tone tends to slight red. It is easy to see when streaming its own screen
         // using an inception effect.
         // The solution is the set Hue at -1, it doesn't impact the visual (compare to others), and it fixes the color issue.
-        m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_FILTER_HUE, true, -1);
+        m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_HUE, true, -1);
         // This Stream Color Space accepts HDR mode from Server, but NVIDIA AI-HDR will be disabled (which is fine as we already have native HDR)
         m_StreamColorSpace = m_ColorSpaces[14];
         if(m_VideoEnhancement->isVendorNVIDIA()){
@@ -1186,7 +1186,7 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
         break;
     default:
         // For SDR we can use default values.
-        m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_FILTER_HUE, true, 0);
+        m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_HUE, true, 0);
         // This Stream Color Space is SDR, which enable the use of NVIDIA AI-HDR (Moonlight's HDR needs to be enabled)
         // I don't know why, it is gray when HDR is on on Moonlight while using DXGI_FORMAT_R10G10B10A2_UNORM for the SwapChain,
         // the fix is to force using DXGI_FORMAT_R8G8B8A8_UNORM which seems somehow not impacting the color rendering
@@ -1200,7 +1200,7 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
         m_StreamIndex = 0;
     }
 
-    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
+    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
 }
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
@@ -1225,7 +1225,7 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
         // Prepare the Stream
         prepareVideoProcessorStream(frame);
         // Render to the front the frames processed by the Video Processor
-        m_VideoContext->VideoProcessorBlt(m_VideoProcessor, m_OutputView.Get(), 0, 1, &m_StreamData);
+        m_VideoContext->VideoProcessorBlt(m_VideoProcessor.Get(), m_OutputView.Get(), 0, 1, &m_StreamData);
     } else {
         // Bind our CSC shader (and constant buffer, if required)
         bindColorConversion(frame);
@@ -1259,7 +1259,7 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC content_desc;
     ZeroMemory(&content_desc, sizeof(content_desc));
 
-    if (m_VideoProcessor.p && m_VideoProcessorEnumerator.p) {
+    if (m_VideoProcessor && m_VideoProcessorEnumerator) {
         hr = m_VideoProcessorEnumerator->GetVideoProcessorContentDesc(&content_desc);
         if (FAILED(hr))
             return false;
@@ -1268,8 +1268,8 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
             content_desc.InputHeight != m_DecoderParams.height ||
             content_desc.OutputWidth != m_DisplayWidth ||
             content_desc.OutputHeight != m_DisplayHeight || reset) {
-            m_VideoProcessorEnumerator.Release();
-            m_VideoProcessor.Release();
+            m_VideoProcessorEnumerator->Release();
+            m_VideoProcessor->Release();
         }
         else {
             return true;
@@ -1292,21 +1292,21 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
     if (FAILED(hr))
         return false;
 
-    hr = m_VideoDevice->CreateVideoProcessor(m_VideoProcessorEnumerator, 0,
+    hr = m_VideoDevice->CreateVideoProcessor(m_VideoProcessorEnumerator.Get(), 0,
                                              &m_VideoProcessor);
     if (FAILED(hr))
         return false;
 
-    m_VideoContext->VideoProcessorSetStreamAutoProcessingMode(m_VideoProcessor, 0, false);
-    m_VideoContext->VideoProcessorSetStreamOutputRate(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_NORMAL, false, 0);
+    m_VideoContext->VideoProcessorSetStreamAutoProcessingMode(m_VideoProcessor.Get(), 0, false);
+    m_VideoContext->VideoProcessorSetStreamOutputRate(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_NORMAL, false, 0);
 
     // The output surface will be read by Direct3D shaders (It seems useless in our context)
-    m_VideoContext->VideoProcessorSetOutputShaderUsage(m_VideoProcessor, true);
+    m_VideoContext->VideoProcessorSetOutputShaderUsage(m_VideoProcessor.Get(), true);
 
     // Set Background color
     D3D11_VIDEO_COLOR bgColor;
     bgColor.YCbCr = { 0.0625f, 0.5f, 0.5f, 1.0f }; // black color
-    m_VideoContext->VideoProcessorSetOutputBackgroundColor(m_VideoProcessor, true, &bgColor);
+    m_VideoContext->VideoProcessorSetOutputBackgroundColor(m_VideoProcessor.Get(), true, &bgColor);
 
     ZeroMemory(&m_OutputViewDesc, sizeof(m_OutputViewDesc));
     m_OutputViewDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
@@ -1314,7 +1314,7 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
 
     hr = m_VideoDevice->CreateVideoProcessorOutputView(
         m_BackBufferResource,
-        m_VideoProcessorEnumerator,
+        m_VideoProcessorEnumerator.Get(),
         &m_OutputViewDesc,
         (ID3D11VideoProcessorOutputView**)&m_OutputView);
     if (FAILED(hr)) {
@@ -1328,7 +1328,7 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
     m_InputViewDesc.Texture2D.ArraySlice = 0;
 
     hr = m_VideoDevice->CreateVideoProcessorInputView(
-        m_VideoTexture, m_VideoProcessorEnumerator, &m_InputViewDesc, (ID3D11VideoProcessorInputView**)&m_InputView);
+        m_VideoTexture, m_VideoProcessorEnumerator.Get(), &m_InputViewDesc, (ID3D11VideoProcessorInputView**)&m_InputView);
     if (FAILED(hr))
         return false;
 
@@ -1364,9 +1364,9 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
         }
     }
 
-    m_VideoContext->VideoProcessorSetStreamSourceRect(m_VideoProcessor, 0, true, &srcRect);
-    m_VideoContext->VideoProcessorSetStreamDestRect(m_VideoProcessor, 0, true, &dstRect);
-    m_VideoContext->VideoProcessorSetStreamFrameFormat(m_VideoProcessor, 0, D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
+    m_VideoContext->VideoProcessorSetStreamSourceRect(m_VideoProcessor.Get(), 0, true, &srcRect);
+    m_VideoContext->VideoProcessorSetStreamDestRect(m_VideoProcessor.Get(), 0, true, &dstRect);
+    m_VideoContext->VideoProcessorSetStreamFrameFormat(m_VideoProcessor.Get(), 0, D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
 
     ZeroMemory(&m_StreamData, sizeof(m_StreamData));
     m_StreamData.Enable = true;
@@ -1389,22 +1389,22 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
 
     // Set OutPut ColorSpace
     if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
-        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
     } else {
-        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
     }
 
     // The section is a customization to enhance (non-AI) shlithly the frame
     // Reduce artefacts (like pixelisation around text), does work in additionto AI-enhancement for better result
-    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
+    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
     // Sharpen sligthly the picture to enhance details, does work in addition to AI-enhancement for better result
-    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 50); // (0 / 0 / 100)
+    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 50); // (0 / 0 / 100)
     // As no effect as the picture is not distorted
-    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_FILTER_ANAMORPHIC_SCALING, true, 100); // (0 / 0 / 100)
+    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_ANAMORPHIC_SCALING, true, 100); // (0 / 0 / 100)
 
 
     m_SetStreamColorSpace = true;
-    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
+    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
 
     return true;
 }
