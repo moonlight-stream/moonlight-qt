@@ -72,7 +72,7 @@ private:
     VideoEnhancement* m_VideoEnhancement;
 
     // Variable unused, but keep it as reference for debugging purpose
-    DXGI_COLOR_SPACE_TYPE ColorSpaces[26] = {
+    DXGI_COLOR_SPACE_TYPE m_ColorSpaces[26] = {
         DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709,           // 0  -       A
         DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,           // 1  -       A
         DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709,         // 2  - I   * A
@@ -101,20 +101,20 @@ private:
         DXGI_COLOR_SPACE_CUSTOM,                           // 25
     };
 
-    DXGI_COLOR_SPACE_TYPE m_StreamColorSpace = ColorSpaces[8]; // SDR-Only (HDR is 14)
-    DXGI_COLOR_SPACE_TYPE m_OutputColorSpace = ColorSpaces[12]; // SDR & HDR
+    DXGI_COLOR_SPACE_TYPE m_StreamColorSpace = m_ColorSpaces[8]; // SDR-Only (HDR is 14)
+    DXGI_COLOR_SPACE_TYPE m_OutputColorSpace = m_ColorSpaces[12]; // SDR & HDR
 
     // [TODO] Remove the timer feature once the bug with VideoProcessorSetStreamColorSpace1 is fixed
-    bool setStreamColorSpace = true;
-    long startTime;
-    long nextTime;
-    int streamIndex = 0;
-    int increment = 100;
-    DXGI_COLOR_SPACE_TYPE StreamColorSpacesFixHDR[2] = {
+    bool m_SetStreamColorSpace = true;
+    long m_StartTime;
+    long m_NextTime;
+    int m_StreamIndex = 0;
+    int m_Increment = 300;
+    DXGI_COLOR_SPACE_TYPE m_StreamColorSpacesFixHDR[2] = {
         DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020,    // 13
         DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020,      // 14
     };
-    DXGI_COLOR_SPACE_TYPE StreamColorSpacesFixSDR[2] = {
+    DXGI_COLOR_SPACE_TYPE m_StreamColorSpacesFixSDR[2] = {
         DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709,         // 9
         DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709,       // 8
     };

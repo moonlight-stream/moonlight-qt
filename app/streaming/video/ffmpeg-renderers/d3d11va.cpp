@@ -189,14 +189,12 @@ D3D11VARenderer::~D3D11VARenderer()
  * \return bool Return True is succeed
  */
 void D3D11VARenderer::setHDRStream(){
+
     DXGI_HDR_METADATA_HDR10 streamHDRMetaData;
+
     // Prepare HDR Meta Data for Stream content
     SS_HDR_METADATA hdrMetadata;
     if (m_VideoProcessor.p && LiGetHdrMetadata(&hdrMetadata)) {
-
-        // Magic constants to convert to fixed point.
-        // https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_5/ns-dxgi1_5-dxgi_hdr_metadata_hdr10
-        static constexpr int kMinLuminanceFixedPoint = 10000;
 
         streamHDRMetaData.RedPrimary[0] = hdrMetadata.displayPrimaries[0].x;
         streamHDRMetaData.RedPrimary[1] = hdrMetadata.displayPrimaries[0].y;
@@ -206,22 +204,13 @@ void D3D11VARenderer::setHDRStream(){
         streamHDRMetaData.BluePrimary[1] = hdrMetadata.displayPrimaries[2].y;
         streamHDRMetaData.WhitePoint[0] = hdrMetadata.whitePoint.x;
         streamHDRMetaData.WhitePoint[1] = hdrMetadata.whitePoint.y;
-        streamHDRMetaData.MaxMasteringLuminance = hdrMetadata.maxDisplayLuminance * kMinLuminanceFixedPoint;
+        streamHDRMetaData.MaxMasteringLuminance = hdrMetadata.maxDisplayLuminance;
         streamHDRMetaData.MinMasteringLuminance = hdrMetadata.minDisplayLuminance;
 
-        streamHDRMetaData.MaxContentLightLevel = hdrMetadata.maxContentLightLevel;
-        streamHDRMetaData.MaxFrameAverageLightLevel = hdrMetadata.maxFrameAverageLightLevel;
-        if(streamHDRMetaData.MaxContentLightLevel == 0){
-            streamHDRMetaData.MaxContentLightLevel = streamHDRMetaData.MaxFrameAverageLightLevel;
-        }
-
-        // [TODO] (Source: https://github.com/xbmc) For AMD/HDR,
-        // we apparently need to do a custom tone (MaxMasteringLuminance=10000, MinMasteringLuminance=0).
-        // Yet to be verified
-        // if(m_VideoEnhancement->isVendorAMD()){
-        //     m_StreamHDRMetaData.MaxMasteringLuminance = 10000;
-        //     m_StreamHDRMetaData.MinMasteringLuminance = 0;
-        // }
+        // As the Content is unknown since it is streamed, MaxCLL and MaxFALL cannot be evaluated from the source on the fly,
+        // therefore streamed source returns 0 as value for both. We can safetly set them to 0.
+        streamHDRMetaData.MaxContentLightLevel = 0;
+        streamHDRMetaData.MaxFrameAverageLightLevel = 0;
 
         // Set HDR Stream (input) Meta data
         m_VideoContext->VideoProcessorSetStreamHDRMetaData(
@@ -253,9 +242,6 @@ void D3D11VARenderer::setHDROutPut(){
         if (SUCCEEDED(pOutput.As(&pOutput6))){
             DXGI_OUTPUT_DESC1 desc1 {};
             if (SUCCEEDED(pOutput6->GetDesc1(&desc1))){
-                // Get Monitor ColorSpace for SDR and HDR (if the monitor is capable of HDR)
-                m_OutputColorSpace = desc1.ColorSpace;
-
                 // Magic constants to convert to fixed point.
                 // https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_5/ns-dxgi1_5-dxgi_hdr_metadata_hdr10
                 static constexpr int kPrimariesFixedPoint = 50000;
@@ -272,28 +258,22 @@ void D3D11VARenderer::setHDROutPut(){
                 outputHDRMetaData.WhitePoint[1] = desc1.WhitePoint[1] * kPrimariesFixedPoint;
                 outputHDRMetaData.MaxMasteringLuminance = desc1.MaxLuminance;
                 outputHDRMetaData.MinMasteringLuminance = desc1.MinLuminance * kMinLuminanceFixedPoint;
-                // MaxContentLightLevel is not available in DXGI_OUTPUT_DESC1 structure
-                // https://learn.microsoft.com/fr-fr/windows/win32/api/dxgi1_6/ns-dxgi1_6-dxgi_output_desc1
-                // But MaxContentLightLevel is not needed and greater or equal to MaxFullFrameLuminance, so it is safe to set a minimum for it
-                // https://professionalsupport.dolby.com/s/article/Calculation-of-MaxFALL-and-MaxCLL-metadata
-                // Also note that these are not fixed-point.
-                outputHDRMetaData.MaxContentLightLevel = desc1.MaxFullFrameLuminance;
-                outputHDRMetaData.MaxFrameAverageLightLevel = desc1.MaxFullFrameLuminance;
+                // Set it the same as streamed source which is 0 by default as it cannot be evaluated on the fly.
+                outputHDRMetaData.MaxContentLightLevel = 0;
+                outputHDRMetaData.MaxFrameAverageLightLevel = 0;
+
+                if (m_VideoProcessor.p) {
+                    // Prepare HDR for the OutPut Monitor
+                    m_VideoContext->VideoProcessorSetOutputHDRMetaData(
+                        m_VideoProcessor,
+                        DXGI_HDR_METADATA_TYPE_HDR10,
+                        sizeof(DXGI_HDR_METADATA_HDR10),
+                        &outputHDRMetaData
+                        );
+                }
             }
         }
-    }
-
-    if (m_VideoProcessor.p) {
-        // Prepare HDR for the OutPut Monitor
-        m_VideoContext->VideoProcessorSetOutputHDRMetaData(
-            m_VideoProcessor,
-            DXGI_HDR_METADATA_TYPE_HDR10,
-            sizeof(DXGI_HDR_METADATA_HDR10),
-            &outputHDRMetaData
-            );
-    }
-
-    m_SwapChain->SetHDRMetaData(DXGI_HDR_METADATA_TYPE_HDR10, sizeof(outputHDRMetaData), &outputHDRMetaData);
+    } 
 }
 
 bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
@@ -964,6 +944,9 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) failed: %x",
                              hr);
             }
+            if (m_VideoProcessor.p && m_VideoProcessorEnumerator.p) {
+                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+            };
         }
         else {
             // Restore default sRGB colorspace
@@ -972,6 +955,9 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709) failed: %x",
                              hr);
+            }
+            if (m_VideoProcessor.p && m_VideoProcessorEnumerator.p) {
+                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
             }
         }
 
@@ -1153,22 +1139,22 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
     // This is a non-blocking issue, but I need to investigate further the reason of such a behavior.
     auto now = std::chrono::system_clock::now();
     long nowTime = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-    if(setStreamColorSpace && nowTime >= nextTime){
-        nextTime = nowTime + increment;
-        if(streamIndex >= 1){
-            setStreamColorSpace = false;
+    if(m_SetStreamColorSpace && nowTime >= m_NextTime){
+        m_NextTime = nowTime + m_Increment;
+        if(m_StreamIndex >= 1){
+            m_SetStreamColorSpace = false;
         }
         switch (frameColorSpace) {
         case COLORSPACE_REC_2020:
-            m_StreamColorSpace = StreamColorSpacesFixHDR[streamIndex];
+            m_StreamColorSpace = m_StreamColorSpacesFixHDR[m_StreamIndex];
             m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
             break;
         default:
-            m_StreamColorSpace = StreamColorSpacesFixSDR[streamIndex];
+            m_StreamColorSpace = m_StreamColorSpacesFixSDR[m_StreamIndex];
             m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
         }
-        if(setStreamColorSpace){
-            streamIndex++;
+        if(m_SetStreamColorSpace){
+            m_StreamIndex++;
         }
     }
 
@@ -1187,16 +1173,16 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
         // using an inception effect.
         // The solution is the set Hue at -1, it doesn't impact the visual (compare to others), and it fixes the color issue.
         m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_FILTER_HUE, true, -1);
-        // This Stream Color Space accepts HDR mode from Server, but NVIDIA AI-HDR will be disbaled (which is fine as we already have native HDR)
-        m_StreamColorSpace = ColorSpaces[14];
+        // This Stream Color Space accepts HDR mode from Server, but NVIDIA AI-HDR will be disabled (which is fine as we already have native HDR)
+        m_StreamColorSpace = m_ColorSpaces[14];
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // [TODO] Remove this line if NVIDIA fix the issue of having VSR not working (add a gray filter)
             // while HDR is activated for Stream content (swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;)
             enableNvidiaVideoSuperResolution(); // Turn it "false" if we prefer to not see the white border around elements when VSR is active.
         }
         // Reset the fix HDR Stream
-        setStreamColorSpace = true;
-        streamIndex = 0;
+        m_SetStreamColorSpace = true;
+        m_StreamIndex = 0;
         break;
     default:
         // For SDR we can use default values.
@@ -1204,14 +1190,14 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
         // This Stream Color Space is SDR, which enable the use of NVIDIA AI-HDR (Moonlight's HDR needs to be enabled)
         // I don't know why, it is gray when HDR is on on Moonlight while using DXGI_FORMAT_R10G10B10A2_UNORM for the SwapChain,
         // the fix is to force using DXGI_FORMAT_R8G8B8A8_UNORM which seems somehow not impacting the color rendering
-        m_StreamColorSpace = ColorSpaces[8];
+        m_StreamColorSpace = m_ColorSpaces[8];
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // Always enable NVIDIA VSR for SDR Stream content
             enableNvidiaVideoSuperResolution();
         }
         // Reset the fix SDR Stream as it does work when back and forth with HDR on Server
-        setStreamColorSpace = true;
-        streamIndex = 0;
+        m_SetStreamColorSpace = true;
+        m_StreamIndex = 0;
     }
 
     m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
@@ -1267,8 +1253,8 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
     // [TODO] This timer is only used to fix a problem with VideoProcessorSetStreamColorSpace1 not properly applied at the beginning
     // These 3 lines can be removed once the bug (non-blocking) is fixed.
     auto now = std::chrono::system_clock::now();
-    startTime = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-    nextTime = startTime + increment;
+    m_StartTime = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
+    m_NextTime = m_StartTime + m_Increment;
 
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC content_desc;
     ZeroMemory(&content_desc, sizeof(content_desc));
@@ -1401,8 +1387,12 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
     // Prepare HDR Meta Data for the OutPut Monitor, will be ignored while using SDR
     setHDROutPut();
 
-    // Set OutPut ColorSpace, m_OutputColorSpace is found from the active monitor earlier in D3D11VARenderer::initialize()
-    m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, m_OutputColorSpace);
+    // Set OutPut ColorSpace
+    if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
+    } else {
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor, DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
+    }
 
     // The section is a customization to enhance (non-AI) shlithly the frame
     // Reduce artefacts (like pixelisation around text), does work in additionto AI-enhancement for better result
@@ -1413,7 +1403,7 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
     m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor, 0, D3D11_VIDEO_PROCESSOR_FILTER_ANAMORPHIC_SCALING, true, 100); // (0 / 0 / 100)
 
 
-    setStreamColorSpace = true;
+    m_SetStreamColorSpace = true;
     m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor, 0, m_StreamColorSpace);
 
     return true;
