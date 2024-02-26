@@ -22,9 +22,9 @@ private:
     bool m_UIvisible = false;
 
     // Vendors' name (PCI Special Interest Group)
-    const int VENDOR_ID_AMD = 4098;
-    const int VENDOR_ID_INTEL = 32902;
-    const int VENDOR_ID_NVIDIA = 4318;
+    const int VENDOR_ID_AMD = 0x1002;
+    const int VENDOR_ID_INTEL = 0x8086;
+    const int VENDOR_ID_NVIDIA = 0x10DE;
 
     // Minimum driver version accepted for VSR feature
     const double MIN_VSR_DRIVER_VERSION_AMD = 21910.5; // AMD Driver Version 23.19.10 (Jan 23rd, 2024)
