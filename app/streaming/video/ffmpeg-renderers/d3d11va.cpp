@@ -406,6 +406,8 @@ void D3D11VARenderer::enableAMDVideoSuperResolution(bool activate){
  * This experimental feature from Intel is available starting from Intel iGPU from CPU Gen 10th (Skylake) and Intel graphics driver 27.20.100.8681 (Sept 15, 2020)
  * Only Arc GPUs seem to provide visual improvement
  * https://www.techpowerup.com/305558/intel-outs-video-super-resolution-for-chromium-browsers-works-with-igpus-11th-gen-onward
+ * Values from Chromium source code:
+ * https://chromium.googlesource.com/chromium/src/+/master/ui/gl/swap_chain_presenter.cc
  *
  * \return void
  */
@@ -497,6 +499,8 @@ void D3D11VARenderer::enableIntelVideoSuperResolution(bool activate){
  * IMPORTANT (Feb 5th, 2024): RTX VSR seems to be limited to SDR content only,
  * it does add a grey filter if it is activated while HDR is on on stream (Host setting does not impact it).
  * It might be fixed later by NVIDIA, but the temporary solution is to disable the feature when Stream content is HDR-on
+ * Values from Chromium source code:
+ * https://chromium.googlesource.com/chromium/src/+/master/ui/gl/swap_chain_presenter.cc
  *
  * \return void
  */
@@ -573,6 +577,8 @@ void D3D11VARenderer::enableIntelHDR(bool activate){
  * can work without having the screen darker. Here are what I found:
  *  1) Moonlight HDR: Checked / SwapChain: DXGI_FORMAT_R10G10B10A2_UNORM / VideoTexture: DXGI_FORMAT_P010 => SDR convert to HDR, but with darker rendering
  *  2) Moonlight HDR: Unchecked / SwapChain: DXGI_FORMAT_R10G10B10A2_UNORM / VideoTexture: DXGI_FORMAT_NV12 => SDR convert to HDR, but with darker rendering
+ * Values from Chromium source code:
+ * https://chromium.googlesource.com/chromium/src/+/master/ui/gl/swap_chain_presenter.cc
  *
  * \return void
  */
