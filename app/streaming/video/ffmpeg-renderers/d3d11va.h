@@ -70,7 +70,6 @@ private:
     Microsoft::WRL::ComPtr<ID3D11VideoProcessorInputView> m_InputView;
     ID3D11Resource* m_BackBufferResource;
     VideoEnhancement* m_VideoEnhancement;
-    bool m_IsHDRenabled = false;
 
     // Variable unused, but keep it as reference for debugging purpose
     DXGI_COLOR_SPACE_TYPE ColorSpaces[26] = {

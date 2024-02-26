@@ -192,7 +192,6 @@ void D3D11VARenderer::setHDRStream(){
     DXGI_HDR_METADATA_HDR10 streamHDRMetaData;
     // Prepare HDR Meta Data for Stream content
     SS_HDR_METADATA hdrMetadata;
-    // if (m_VideoProcessor.p && m_IsHDRenabled && LiGetHdrMetadata(&hdrMetadata)) {
     if (m_VideoProcessor.p && LiGetHdrMetadata(&hdrMetadata)) {
 
         // Magic constants to convert to fixed point.
@@ -1139,8 +1138,8 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
  */
 void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
 {
-    //Do Nothing when Moolight's HDR is disabled
-    if(!m_IsHDRenabled){
+    //Do Nothing when Moonlight's HDR is disabled
+    if(!(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT)){
         return;
     }
 
@@ -1572,7 +1571,6 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
 
     // Check if the format is supported by this decoder
     BOOL supported;
-    m_IsHDRenabled = false;
     switch (m_DecoderParams.videoFormat)
     {
     case VIDEO_FORMAT_H264:
@@ -1618,7 +1616,6 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
             videoDevice->Release();
             return false;
         }
-        m_IsHDRenabled = true;
         break;
 
     case VIDEO_FORMAT_AV1_MAIN8:
@@ -1649,7 +1646,6 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
             videoDevice->Release();
             return false;
         }
-        m_IsHDRenabled = true;
         break;
 
     default:
