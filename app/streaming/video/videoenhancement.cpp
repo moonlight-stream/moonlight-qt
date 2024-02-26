@@ -3,7 +3,6 @@
 #include <windows.h>
 #include <dxgi.h>
 #include <d3d11.h>
-#include <regex>
 
 #include <wrl/client.h>
 
@@ -49,8 +48,6 @@ bool VideoEnhancement::setGPUinformation()
 {
     bool success = false;
 
-#ifdef Q_OS_WIN
-
     // Create a Direct3D 11 device
     ID3D11Device* pD3DDevice = nullptr;
     ID3D11DeviceContext* pContext = nullptr;
@@ -83,14 +80,22 @@ bool VideoEnhancement::setGPUinformation()
                 // Set GPU information
                 m_VendorId = adapterIdentifier.VendorId;
                 m_GPUname = description;
-                m_DriverVersion = getVideoDriverInfo();
+
+                LARGE_INTEGER umd_version;
+                pAdapter->CheckInterfaceSupport(__uuidof(IDXGIDevice), &umd_version);
+                // Integer part
+                m_DriverVersion = HIWORD(umd_version.LowPart);
+                // Decimal part
+                double digits = static_cast<double>(floor(log10(LOWORD(umd_version.LowPart))) + 1);
+                if(digits > 0){
+                    m_DriverVersion += LOWORD(umd_version.LowPart) / pow(10, digits);
+                }
 
                 qInfo() << "Active GPU: " << m_GPUname;
                 qInfo() << "Video Driver: " << m_DriverVersion;
 
             }
         }
-
     }
 
     // Release resources
@@ -98,79 +103,7 @@ bool VideoEnhancement::setGPUinformation()
     if (pDXGIDevice) pDXGIDevice->Release();
     if (pAdapter) pAdapter->Release();
 
- #endif
-
     return success;
-}
-
-/**
- * \brief Get the Video driver version
- *
- * \return int Returns the Video driver version as an integer
- */
-int VideoEnhancement::getVideoDriverInfo()
-{
-
-    HKEY hKey = nullptr;
-    const wchar_t* SUBKEY = L"SYSTEM\\CurrentControlSet\\Control\\Video";
-
-    if (ERROR_SUCCESS != RegOpenKeyExW(HKEY_LOCAL_MACHINE, SUBKEY, 0, KEY_ENUMERATE_SUB_KEYS, &hKey))
-        return m_DriverVersion;
-
-    LSTATUS sta = ERROR_SUCCESS;
-    wchar_t keyName[128] = {};
-    DWORD index = 0;
-    DWORD len;
-
-    do
-    {
-        len = sizeof(keyName) / sizeof(wchar_t);
-        sta = RegEnumKeyExW(hKey, index, keyName, &len, nullptr, nullptr, nullptr, nullptr);
-        index++;
-
-        if (sta != ERROR_SUCCESS)
-            continue;
-
-        std::wstring subkey(SUBKEY);
-        subkey.append(L"\\");
-        subkey.append(keyName);
-        subkey.append(L"\\");
-        subkey.append(L"0000");
-        DWORD lg;
-
-        wchar_t desc[128] = {};
-        lg = sizeof(desc) / sizeof(wchar_t);
-        if (ERROR_SUCCESS != RegGetValueW(HKEY_LOCAL_MACHINE, subkey.c_str(), L"DriverDesc",
-                                          RRF_RT_REG_SZ, nullptr, desc, &lg))
-            continue;
-
-        std::wstring s_desc(desc);
-        if (s_desc != m_GPUname)
-            continue;
-
-        // Driver of interest found, we read version
-        wchar_t charVersion[64] = {};
-        lg = sizeof(charVersion) / sizeof(wchar_t);
-        if (ERROR_SUCCESS != RegGetValueW(HKEY_LOCAL_MACHINE, subkey.c_str(), L"DriverVersion",
-                                          RRF_RT_REG_SZ, nullptr, charVersion, &lg))
-            continue;
-
-        std::wstring strVersion(charVersion);
-
-        // Convert driver store version to Nvidia version
-        if (isVendorNVIDIA()) // NVIDIA
-        {
-            strVersion = std::regex_replace(strVersion, std::wregex(L"\\."), L"");
-            m_DriverVersion = std::stoi(strVersion.substr(strVersion.length() - 5, 5));
-        }
-        else // AMD/Intel/WDDM
-        {
-            m_DriverVersion = std::stoi(strVersion.substr(0, strVersion.find('.')));
-        }
-    } while (sta == ERROR_SUCCESS);
-    RegCloseKey(hKey);
-
-    return m_DriverVersion;
 }
 
 /**
