@@ -1243,10 +1243,9 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
  *
  * Creating a Video Processor add additional GPU video processing method like AI Upscaling
  *
- * \param bool reset default is false, at true it forces the recreate the Video Processor
  * \return bool Returns true if the Video processor is successfully created
  */
-bool D3D11VARenderer::createVideoProcessor(bool reset)
+bool D3D11VARenderer::createVideoProcessor()
 {
     HRESULT hr;
 
@@ -1267,7 +1266,7 @@ bool D3D11VARenderer::createVideoProcessor(bool reset)
         if (content_desc.InputWidth != m_DecoderParams.width ||
             content_desc.InputHeight != m_DecoderParams.height ||
             content_desc.OutputWidth != m_DisplayWidth ||
-            content_desc.OutputHeight != m_DisplayHeight || reset) {
+            content_desc.OutputHeight != m_DisplayHeight) {
             m_VideoProcessorEnumerator->Release();
             m_VideoProcessor->Release();
         }

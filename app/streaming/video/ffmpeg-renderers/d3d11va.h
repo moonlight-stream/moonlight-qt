@@ -36,7 +36,7 @@ private:
     void bindColorConversion(AVFrame* frame);
     void prepareVideoProcessorStream(AVFrame* frame);
     void renderVideo(AVFrame* frame);
-    bool createVideoProcessor(bool reset = false);
+    bool createVideoProcessor();
     void enableAMDVideoSuperResolution(bool activate = true);
     void enableIntelVideoSuperResolution(bool activate = true);
     void enableNvidiaVideoSuperResolution(bool activate = true);
@@ -61,8 +61,6 @@ private:
 
     ID3D11VideoDevice* m_VideoDevice;
     ID3D11VideoContext2* m_VideoContext;
-    // CComPtr<ID3D11VideoProcessor> m_VideoProcessor;
-    // CComPtr<ID3D11VideoProcessorEnumerator> m_VideoProcessorEnumerator;
     Microsoft::WRL::ComPtr<ID3D11VideoProcessor> m_VideoProcessor;
     Microsoft::WRL::ComPtr<ID3D11VideoProcessorEnumerator> m_VideoProcessorEnumerator;
     D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC m_OutputViewDesc;
