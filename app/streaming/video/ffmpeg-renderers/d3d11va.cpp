@@ -1305,9 +1305,6 @@ bool D3D11VARenderer::createVideoProcessor()
     m_VideoContext->VideoProcessorSetStreamAutoProcessingMode(m_VideoProcessor.Get(), 0, false);
     m_VideoContext->VideoProcessorSetStreamOutputRate(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_NORMAL, false, 0);
 
-    // The output surface will be read by Direct3D shaders (It seems useless in our context)
-    m_VideoContext->VideoProcessorSetOutputShaderUsage(m_VideoProcessor.Get(), true);
-
     // Set Background color
     D3D11_VIDEO_COLOR bgColor;
     bgColor.YCbCr = { 0.0625f, 0.5f, 0.5f, 1.0f }; // black color
