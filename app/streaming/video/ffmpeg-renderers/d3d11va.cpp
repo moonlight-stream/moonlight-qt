@@ -724,7 +724,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // [TODO] With NVIDIA RTX, while renderering using VideoProcessor with HDR activated in Moonlight,
     // DXGI_FORMAT_R10G10B10A2_UNORM gives worse result than DXGI_FORMAT_R8G8B8A8_UNORM.
     // Without this fix, HDR off on server renders gray screen and VSR is inactive (DXGI_COLOR_SPACE_TYPE type 8).
-    // For user perspective, it is better to not see such a bug, so for the moment I choose  to force DXGI_FORMAT_R8G8B8A8_UNORM
+    // For user perspective, it is better to not see such a bug, so for the moment I choose to force DXGI_FORMAT_R8G8B8A8_UNORM
     if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_VideoEnhancement->isVendorNVIDIA()){
         swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     }
@@ -1138,32 +1138,6 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
     bool frameFullRange = isFrameFullRange(frame);
     int frameColorSpace = getFrameColorspace(frame);
 
-    // [TODO] Fix the bug with VideoProcessorSetStreamColorSpace1 not working from the first frame
-    // BUG: If I try to set m_StreamColorSpace correctly since the beginning (=14), the renderer doesn't apply the color space,
-    // The frame appear gray. The temporary fix is to start from a wrong Color space (13), and switch to 14 after few milliseconds.
-    // At set the time to 100ms to not have any visual impact at loading, but even 1ms fix the issue, the bug might be linked to the 1st frame.
-    // This is a non-blocking issue, but I need to investigate further the reason of such a behavior.
-    auto now = std::chrono::system_clock::now();
-    long nowTime = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-    if(m_SetStreamColorSpace && nowTime >= m_NextTime){
-        m_NextTime = nowTime + m_Increment;
-        if(m_StreamIndex >= 1){
-            m_SetStreamColorSpace = false;
-        }
-        switch (frameColorSpace) {
-        case COLORSPACE_REC_2020:
-            m_StreamColorSpace = m_StreamColorSpacesFixHDR[m_StreamIndex];
-            m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
-            break;
-        default:
-            m_StreamColorSpace = m_StreamColorSpacesFixSDR[m_StreamIndex];
-            m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
-        }
-        if(m_SetStreamColorSpace){
-            m_StreamIndex++;
-        }
-    }
-
     // If nothing has changed since last frame, we're done
     if (frameColorSpace == m_LastColorSpace && frameFullRange == m_LastFullRange) {
         return;
@@ -1174,39 +1148,24 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
 
     switch (frameColorSpace) {
     case COLORSPACE_REC_2020:
-        // For an unclear reason in HDR mode (D3D11 bug?), when the 4 following filters, Brightness (0), Contrast (100), hue (0) and saturation (100),
-        // are all together at their default value, the tone tends to slight red. It is easy to see when streaming its own screen
-        // using an inception effect.
-        // The solution is the set Hue at -1, it doesn't impact the visual (compare to others), and it fixes the color issue.
-        m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_HUE, true, -1);
         // This Stream Color Space accepts HDR mode from Server, but NVIDIA AI-HDR will be disabled (which is fine as we already have native HDR)
-        m_StreamColorSpace = m_ColorSpaces[14];
+        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // [TODO] Remove this line if NVIDIA fix the issue of having VSR not working (add a gray filter)
             // while HDR is activated for Stream content (swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;)
             enableNvidiaVideoSuperResolution(); // Turn it "false" if we prefer to not see the white border around elements when VSR is active.
         }
-        // Reset the fix HDR Stream
-        m_SetStreamColorSpace = true;
-        m_StreamIndex = 0;
         break;
     default:
-        // For SDR we can use default values.
-        m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_HUE, false, 0);
         // This Stream Color Space is SDR, which enable the use of NVIDIA AI-HDR (Moonlight's HDR needs to be enabled)
         // I don't know why, it is gray when HDR is on on Moonlight while using DXGI_FORMAT_R10G10B10A2_UNORM for the SwapChain,
         // the fix is to force using DXGI_FORMAT_R8G8B8A8_UNORM which seems somehow not impacting the color rendering
-        m_StreamColorSpace = m_ColorSpaces[8];
+        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // Always enable NVIDIA VSR for SDR Stream content
             enableNvidiaVideoSuperResolution();
         }
-        // Reset the fix SDR Stream as it does work when back and forth with HDR on Server
-        m_SetStreamColorSpace = true;
-        m_StreamIndex = 0;
     }
-
-    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
 }
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
@@ -1254,12 +1213,6 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
 bool D3D11VARenderer::createVideoProcessor()
 {
     HRESULT hr;
-
-    // [TODO] This timer is only used to fix a problem with VideoProcessorSetStreamColorSpace1 not properly applied at the beginning
-    // These 3 lines can be removed once the bug (non-blocking) is fixed.
-    auto now = std::chrono::system_clock::now();
-    m_StartTime = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
-    m_NextTime = m_StartTime + m_Increment;
 
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC content_desc;
     ZeroMemory(&content_desc, sizeof(content_desc));
@@ -1404,9 +1357,8 @@ bool D3D11VARenderer::createVideoProcessor()
     // As no effect as the picture is not distorted
     m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_ANAMORPHIC_SCALING, true, 100); // (0 / 0 / 100)
 
-
-    m_SetStreamColorSpace = true;
-    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, m_StreamColorSpace);
+    // Default on SDR, it will switch to HDR automatically at the 1st frame received if the Stream source has HDR active.
+    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
 
     return true;
 }

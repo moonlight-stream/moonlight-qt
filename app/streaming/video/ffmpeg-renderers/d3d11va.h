@@ -101,23 +101,6 @@ private:
         DXGI_COLOR_SPACE_CUSTOM,                           // 25
     };
 
-    DXGI_COLOR_SPACE_TYPE m_StreamColorSpace = m_ColorSpaces[8]; // SDR-Only (HDR is 14)
-    DXGI_COLOR_SPACE_TYPE m_OutputColorSpace = m_ColorSpaces[12]; // SDR & HDR
-
-    // [TODO] Remove the timer feature once the bug with VideoProcessorSetStreamColorSpace1 is fixed
-    bool m_SetStreamColorSpace = true;
-    long m_StartTime;
-    long m_NextTime;
-    int m_StreamIndex = 0;
-    int m_Increment = 300;
-    DXGI_COLOR_SPACE_TYPE m_StreamColorSpacesFixHDR[2] = {
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020,    // 13
-        DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020,      // 14
-    };
-    DXGI_COLOR_SPACE_TYPE m_StreamColorSpacesFixSDR[2] = {
-        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709,         // 9
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709,       // 8
-    };
     ID3D11ShaderResourceView* m_VideoTextureResourceView;
 
     DECODER_PARAMETERS m_DecoderParams;
