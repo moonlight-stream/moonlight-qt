@@ -7,7 +7,6 @@
 
 #include "streaming/streamutils.h"
 #include "streaming/session.h"
-#include "settings/streamingpreferences.h"
 #include "streaming/video/videoenhancement.h"
 
 #include <cmath>
@@ -817,8 +816,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
     if(m_VideoEnhancement->isEnhancementCapable()){
         // Check if the user has enable Video enhancement
-        StreamingPreferences streamingPreferences;
-        m_VideoEnhancement->enableVideoEnhancement(streamingPreferences.videoEnhancement);
+        m_VideoEnhancement->enableVideoEnhancement(m_DecoderParams.enableVideoEnhancement);
     }
 
     // Set the adapter index of the most appropriate GPU
@@ -2111,8 +2109,7 @@ bool D3D11VARenderer::setupVideoTexture()
     texDesc.Usage = D3D11_USAGE_DEFAULT;
     texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     // The flag D3D11_BIND_RENDER_TARGET is needed to enable the use of GPU enhancement
-    StreamingPreferences streamingPreferences;
-    if(streamingPreferences.videoEnhancement && m_VideoEnhancement->isEnhancementCapable()){
+    if(m_DecoderParams.enableVideoEnhancement && m_VideoEnhancement->isEnhancementCapable()){
         texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
     }
     texDesc.CPUAccessFlags = 0;
