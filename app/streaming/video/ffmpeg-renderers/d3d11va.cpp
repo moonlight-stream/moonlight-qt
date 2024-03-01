@@ -180,20 +180,28 @@ D3D11VARenderer::~D3D11VARenderer()
 }
 
 /**
- * \brief Set Monitor HDR MetaData information
+ * \brief Set HDR MetaData information for Stream and Output
  *
- * Get the Monitor HDR MetaData via LimeLight library
+ * Get the HDR MetaData via LimeLight library sent by Sunshine to apply to the Stream.
+ * Get the monitor HDR MetaData where the application is running to apply to the Output.
  *
- * \param PSS_HDR_METADATA* HDRMetaData The variable to set the metadata information
- * \return bool Return True is succeed
+ * \param bool enabled At true it enables the HDR settings
+ * \return void
  */
-void D3D11VARenderer::setHDRStream(){
+void D3D11VARenderer::setHdrMode(bool enabled){
+
+    // m_VideoProcessor needs to be available to be set,
+    // and it makes sense only when HDR is enabled from the UI
+    if(!enabled || !m_VideoProcessor || !(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT))
+        return;
 
     DXGI_HDR_METADATA_HDR10 streamHDRMetaData;
+    DXGI_HDR_METADATA_HDR10 outputHDRMetaData;
 
-    // Prepare HDR Meta Data for Stream content
+    // Prepare HDR Meta Data for Streamed content
+    bool streamSet = false;
     SS_HDR_METADATA hdrMetadata;
-    if (m_VideoProcessor && LiGetHdrMetadata(&hdrMetadata)) {
+    if (LiGetHdrMetadata(&hdrMetadata)) {
         streamHDRMetaData.RedPrimary[0] = hdrMetadata.displayPrimaries[0].x;
         streamHDRMetaData.RedPrimary[1] = hdrMetadata.displayPrimaries[0].y;
         streamHDRMetaData.GreenPrimary[0] = hdrMetadata.displayPrimaries[1].x;
@@ -218,72 +226,69 @@ void D3D11VARenderer::setHDRStream(){
             sizeof(DXGI_HDR_METADATA_HDR10),
             &streamHDRMetaData
             );
+
+        streamSet = true;
     }
-}
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Set stream HDR mode: %s", streamSet ? "enabled" : "disabled");
 
-/**
- * \brief Set Monitor HDR MetaData information
- *
- * Get the Monitor HDR MetaData via LimeLight library
- *
- * \param PSS_HDR_METADATA* HDRMetaData The variable to set the metadata information
- * \return bool Return True is succeed
- */
-void D3D11VARenderer::setHDROutPut(){
-    DXGI_HDR_METADATA_HDR10 outputHDRMetaData;
+    return;
+    // Prepare HDR Meta Data to match the monitor HDR specifications
+    // Retreive the monitor HDR metadata where the application is displayed
+    int appAdapterIndex = 0;
+    int appOutputIndex = 0;
+    bool displaySet = false;
+    if (SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(m_DecoderParams.window), &appAdapterIndex, &appOutputIndex)){
+        IDXGIAdapter1* adapter = nullptr;
+        IDXGIOutput* output = nullptr;
+        UINT outputIndex = appOutputIndex;
+        if(SUCCEEDED(m_Factory->EnumAdapters1(appAdapterIndex, &adapter))){
+            if(SUCCEEDED(adapter->EnumOutputs(outputIndex, &output))){
+                IDXGIOutput6* output6 = nullptr;
+                if (SUCCEEDED(output->QueryInterface(__uuidof(IDXGIOutput6), (void**)&output6))) {
+                    DXGI_OUTPUT_DESC1 desc1;
+                    if (output6) {
+                        output6->GetDesc1(&desc1);
+                        // Magic constants to convert to fixed point.
+                        // https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_5/ns-dxgi1_5-dxgi_hdr_metadata_hdr10
+                        static constexpr int kPrimariesFixedPoint = 50000;
+                        static constexpr int kMinLuminanceFixedPoint = 10000;
 
-    if (m_VideoProcessor){
+                        // Format Monitor HDR MetaData
+                        outputHDRMetaData.RedPrimary[0] = desc1.RedPrimary[0] * kPrimariesFixedPoint;
+                        outputHDRMetaData.RedPrimary[1] = desc1.RedPrimary[1] * kPrimariesFixedPoint;
+                        outputHDRMetaData.GreenPrimary[0] = desc1.GreenPrimary[0] * kPrimariesFixedPoint;
+                        outputHDRMetaData.GreenPrimary[1] = desc1.GreenPrimary[1] * kPrimariesFixedPoint;
+                        outputHDRMetaData.BluePrimary[0] = desc1.BluePrimary[0] * kPrimariesFixedPoint;
+                        outputHDRMetaData.BluePrimary[1] = desc1.BluePrimary[1] * kPrimariesFixedPoint;
+                        outputHDRMetaData.WhitePoint[0] = desc1.WhitePoint[0] * kPrimariesFixedPoint;
+                        outputHDRMetaData.WhitePoint[1] = desc1.WhitePoint[1] * kPrimariesFixedPoint;
+                        outputHDRMetaData.MaxMasteringLuminance = desc1.MaxLuminance;
+                        outputHDRMetaData.MinMasteringLuminance = desc1.MinLuminance * kMinLuminanceFixedPoint;
+                        // Set it the same as streamed source which is 0 by default as it cannot be evaluated on the fly.
+                        outputHDRMetaData.MaxContentLightLevel = 0;
+                        outputHDRMetaData.MaxFrameAverageLightLevel = 0;
 
-        // Retreive the monitor HDR metadata where the application is displayed
-        int appAdapterIndex = 0;
-        int appOutputIndex = 0;
-        if (SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(m_DecoderParams.window), &appAdapterIndex, &appOutputIndex)){
-            IDXGIAdapter1* adapter = nullptr;
-            IDXGIOutput* output = nullptr;
-            UINT outputIndex = appOutputIndex;
-            if(SUCCEEDED(m_Factory->EnumAdapters1(appAdapterIndex, &adapter))){
-                if(SUCCEEDED(adapter->EnumOutputs(outputIndex, &output))){
-                    IDXGIOutput6* output6 = nullptr;
-                    if (SUCCEEDED(output->QueryInterface(__uuidof(IDXGIOutput6), (void**)&output6))) {
-                        DXGI_OUTPUT_DESC1 desc1;
-                        if (output6) {
-                            output6->GetDesc1(&desc1);
-                            // Magic constants to convert to fixed point.
-                            // https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_5/ns-dxgi1_5-dxgi_hdr_metadata_hdr10
-                            static constexpr int kPrimariesFixedPoint = 50000;
-                            static constexpr int kMinLuminanceFixedPoint = 10000;
+                        // Prepare HDR for the OutPut Monitor
+                        m_VideoContext->VideoProcessorSetOutputHDRMetaData(
+                            m_VideoProcessor.Get(),
+                            DXGI_HDR_METADATA_TYPE_HDR10,
+                            sizeof(DXGI_HDR_METADATA_HDR10),
+                            &outputHDRMetaData
+                            );
 
-                            // Format Monitor HDR MetaData
-                            outputHDRMetaData.RedPrimary[0] = desc1.RedPrimary[0] * kPrimariesFixedPoint;
-                            outputHDRMetaData.RedPrimary[1] = desc1.RedPrimary[1] * kPrimariesFixedPoint;
-                            outputHDRMetaData.GreenPrimary[0] = desc1.GreenPrimary[0] * kPrimariesFixedPoint;
-                            outputHDRMetaData.GreenPrimary[1] = desc1.GreenPrimary[1] * kPrimariesFixedPoint;
-                            outputHDRMetaData.BluePrimary[0] = desc1.BluePrimary[0] * kPrimariesFixedPoint;
-                            outputHDRMetaData.BluePrimary[1] = desc1.BluePrimary[1] * kPrimariesFixedPoint;
-                            outputHDRMetaData.WhitePoint[0] = desc1.WhitePoint[0] * kPrimariesFixedPoint;
-                            outputHDRMetaData.WhitePoint[1] = desc1.WhitePoint[1] * kPrimariesFixedPoint;
-                            outputHDRMetaData.MaxMasteringLuminance = desc1.MaxLuminance;
-                            outputHDRMetaData.MinMasteringLuminance = desc1.MinLuminance * kMinLuminanceFixedPoint;
-                            // Set it the same as streamed source which is 0 by default as it cannot be evaluated on the fly.
-                            outputHDRMetaData.MaxContentLightLevel = 0;
-                            outputHDRMetaData.MaxFrameAverageLightLevel = 0;
-
-                            // Prepare HDR for the OutPut Monitor
-                            m_VideoContext->VideoProcessorSetOutputHDRMetaData(
-                                m_VideoProcessor.Get(),
-                                DXGI_HDR_METADATA_TYPE_HDR10,
-                                sizeof(DXGI_HDR_METADATA_HDR10),
-                                &outputHDRMetaData
-                                );
-                        }
+                        displaySet = true;
                     }
-                    SAFE_COM_RELEASE(output6);
                 }
-                SAFE_COM_RELEASE(output);
+                SAFE_COM_RELEASE(output6);
             }
-            SAFE_COM_RELEASE(adapter);
+            SAFE_COM_RELEASE(output);
         }
+        SAFE_COM_RELEASE(adapter);
     }
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Set display HDR mode: %s", displaySet ? "enabled" : "disabled");
+
 }
 
 bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
@@ -1501,15 +1506,6 @@ bool D3D11VARenderer::initializeVideoProcessor()
     m_StreamData.ppPastSurfacesRight = nullptr;
     m_StreamData.ppFutureSurfacesRight = nullptr;
     m_StreamData.pInputSurfaceRight = nullptr;
-
-
-    if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
-        // Prepare HDR Meta Data for Stream content
-        setHDRStream();
-
-        // Prepare HDR Meta Data for the OutPut Monitor, will be ignored while using SDR
-        setHDROutPut();
-    }
 
     // Set OutPut ColorSpace
     if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){

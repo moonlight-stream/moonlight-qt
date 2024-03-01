@@ -25,6 +25,7 @@ public:
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
+    virtual void setHdrMode(bool enabled) override;
 
 private:
     static void lockContext(void* lock_ctx);
@@ -47,8 +48,6 @@ private:
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     int getAdapterIndexByEnhancementCapabilities();
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
-    void setHDRStream();
-    void setHDROutPut();
 
     int m_DecoderSelectionPass;
 
