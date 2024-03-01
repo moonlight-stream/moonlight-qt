@@ -568,11 +568,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         return false;
     }
 
-    // If we have a WDDM 2.0 or later display driver, prefer the D3D11VA renderer
-    // in all of the following cases:
-    // - Multi-GPU systems
-    // - Windowed and borderless windowed modes
-    // - Full-screen exclusive with V-sync off
+    // If we have a WDDM 2.0 or later display driver, prefer the D3D11VA renderer.
     //
     // D3D11VA is better in this case because it can enable tearing in non-FSE
     // modes when the user has V-Sync disabled. In non-FSE V-Sync cases, D3D11VA
@@ -580,35 +576,24 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     // in windowed mode. When using D3D9, DWM will not promote us to IFlip unless
     // we're full-screen (exclusive or not).
     //
-    // We prefer D3D11VA in FSE multi-GPU cases due to a plethora of issues with
+    // We want D3D11VA in FSE multi-GPU cases due to a plethora of issues with
     // D3D9Ex PresentEx()/D3DPRESENT_DONOTWAIT on hybrid graphics systems (See
     // issues #235, #240, #386, and #951 on GitHub). Clearly this codepath is not
     // well tested by Microsoft or GPU vendors, so stick to the more common
     // D3D11-based renderer which is much more likely to behave.
     //
+    // DXVA2 video processing is also quite buggy on AMD, Intel, and Qualcomm
+    // hardware with various issues documented in initializeQuirksForAdapter().
+    // We can avoid all this by using our own shaders in the D3D11VA renderer.
+    //
     // NB: The reason we only do this for WDDM 2.0 and later is because older
     // AMD drivers (such as those for the HD 5570) render garbage when using
     // the D3D11VA renderer.
-    if (m_DecoderSelectionPass == 0 &&
-            (m_DeviceQuirks & DXVA2_QUIRK_WDDM_20_PLUS)) {
-        if (!((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN)) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Defaulting to D3D11VA for non-FSE mode");
-            d3d9ex->Release();
-            return false;
-        }
-        else if (m_DeviceQuirks & DXVA2_QUIRK_MULTI_GPU) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Defaulting to D3D11VA for multi-GPU FSE mode");
-            d3d9ex->Release();
-            return false;
-        }
-        else if (!enableVsync) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Defaulting to D3D11VA for FSE V-Sync Off mode");
-            d3d9ex->Release();
-            return false;
-        }
+    if (m_DecoderSelectionPass == 0 && (m_DeviceQuirks & DXVA2_QUIRK_WDDM_20_PLUS)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Defaulting to D3D11VA for WDDM 2.0 GPU driver");
+        d3d9ex->Release();
+        return false;
     }
 
     D3DCAPS9 deviceCaps;

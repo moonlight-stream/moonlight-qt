@@ -33,3 +33,9 @@ fragment float4 ps_draw_biplanar(Vertex v [[ stage_in ]],
     rgb.b = dot(yuv, cscParams.matrix[2]);
     return float4(rgb, 1.0f);
 }
+
+fragment float4 ps_draw_rgb(Vertex v [[ stage_in ]],
+                            texture2d<float> rgbTexture [[ texture(0) ]])
+{
+    return rgbTexture.sample(s, v.texCoords);
+}

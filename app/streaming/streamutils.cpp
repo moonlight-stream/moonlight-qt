@@ -155,7 +155,7 @@ bool StreamUtils::hasFastAes()
 #define __has_builtin(x) 0
 #endif
 
-#if __has_builtin(__builtin_cpu_supports) && defined(Q_PROCESSOR_X86)
+#if (__has_builtin(__builtin_cpu_supports) || (defined(__GNUC__) && __GNUC__ >= 6)) && defined(Q_PROCESSOR_X86)
     return __builtin_cpu_supports("aes");
 #elif defined(__BUILTIN_CPU_SUPPORTS__) && defined(Q_PROCESSOR_POWER)
     return __builtin_cpu_supports("vcrypto");

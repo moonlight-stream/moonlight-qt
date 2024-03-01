@@ -25,6 +25,7 @@ public:
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
+    virtual void setHdrMode(bool enabled) override;
 
 private:
     static void lockContext(void* lock_ctx);
@@ -36,14 +37,16 @@ private:
     void bindColorConversion(AVFrame* frame);
     void prepareVideoProcessorStream(AVFrame* frame);
     void renderVideo(AVFrame* frame);
-    bool createVideoProcessor(bool reset = false);
-    void enableAMDVideoSuperResolution(bool activate = true);
-    void enableIntelVideoSuperResolution(bool activate = true);
-    void enableNvidiaVideoSuperResolution(bool activate = true);
-    void enableAMDHDR(bool activate = true);
-    void enableIntelHDR(bool activate = true);
-    void enableNvidiaHDR(bool activate = true);
+    bool createVideoProcessor();
+    bool initializeVideoProcessor();
+    bool enableAMDVideoSuperResolution(bool activate = true, bool logInfo = true);
+    bool enableIntelVideoSuperResolution(bool activate = true, bool logInfo = true);
+    bool enableNvidiaVideoSuperResolution(bool activate = true, bool logInfo = true);
+    bool enableAMDHDR(bool activate = true, bool logInfo = true);
+    bool enableIntelHDR(bool activate = true, bool logInfo = true);
+    bool enableNvidiaHDR(bool activate = true, bool logInfo = true);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
+    int getAdapterIndexByEnhancementCapabilities();
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
     void setHDRStream();
     void setHDROutPut();
@@ -61,8 +64,8 @@ private:
 
     ID3D11VideoDevice* m_VideoDevice;
     ID3D11VideoContext2* m_VideoContext;
-    CComPtr<ID3D11VideoProcessor> m_VideoProcessor;
-    CComPtr<ID3D11VideoProcessorEnumerator> m_VideoProcessorEnumerator;
+    Microsoft::WRL::ComPtr<ID3D11VideoProcessor> m_VideoProcessor;
+    Microsoft::WRL::ComPtr<ID3D11VideoProcessorEnumerator> m_VideoProcessorEnumerator;
     D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC m_OutputViewDesc;
     D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC m_InputViewDesc;
     D3D11_VIDEO_PROCESSOR_STREAM m_StreamData;
@@ -70,10 +73,9 @@ private:
     Microsoft::WRL::ComPtr<ID3D11VideoProcessorInputView> m_InputView;
     ID3D11Resource* m_BackBufferResource;
     VideoEnhancement* m_VideoEnhancement;
-    bool m_IsHDRenabled = false;
 
     // Variable unused, but keep it as reference for debugging purpose
-    DXGI_COLOR_SPACE_TYPE ColorSpaces[26] = {
+    DXGI_COLOR_SPACE_TYPE m_ColorSpaces[26] = {
         DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709,           // 0  -       A
         DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,           // 1  -       A
         DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709,         // 2  - I   * A
@@ -102,23 +104,6 @@ private:
         DXGI_COLOR_SPACE_CUSTOM,                           // 25
     };
 
-    DXGI_COLOR_SPACE_TYPE m_StreamColorSpace = ColorSpaces[8]; // SDR-Only (HDR is 14)
-    DXGI_COLOR_SPACE_TYPE m_OutputColorSpace = ColorSpaces[12]; // SDR & HDR
-
-    // [TODO] Remove the timer feature once the bug with VideoProcessorSetStreamColorSpace1 is fixed
-    bool setStreamColorSpace = true;
-    long startTime;
-    long nextTime;
-    int streamIndex = 0;
-    int increment = 100;
-    DXGI_COLOR_SPACE_TYPE StreamColorSpacesFixHDR[2] = {
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020,    // 13
-        DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020,      // 14
-    };
-    DXGI_COLOR_SPACE_TYPE StreamColorSpacesFixSDR[2] = {
-        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709,         // 9
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709,       // 8
-    };
     ID3D11ShaderResourceView* m_VideoTextureResourceView;
 
     DECODER_PARAMETERS m_DecoderParams;

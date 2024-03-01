@@ -107,55 +107,38 @@ public:
           m_TextureCache(nullptr),
           m_CscParamsBuffer(nullptr),
           m_VideoVertexBuffer(nullptr),
-          m_PipelineState(nullptr),
+          m_OverlayTextures{},
+          m_OverlayLock(0),
+          m_VideoPipelineState(nullptr),
+          m_OverlayPipelineState(nullptr),
           m_ShaderLibrary(nullptr),
           m_CommandQueue(nullptr),
+          m_NextDrawable(nullptr),
           m_MetalView(nullptr),
-          m_DisplayLink(nullptr),
           m_LastColorSpace(-1),
           m_LastFullRange(false),
-          m_VsyncMutex(nullptr),
-          m_VsyncPassed(nullptr)
+          m_LastFrameWidth(-1),
+          m_LastFrameHeight(-1),
+          m_LastDrawableWidth(-1),
+          m_LastDrawableHeight(-1),
+          m_PresentationMutex(SDL_CreateMutex()),
+          m_PresentationCond(SDL_CreateCond()),
+          m_PendingPresentationCount(0)
     {
-        SDL_zero(m_OverlayTextFields);
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            m_OverlayUpdateBlocks[i] = dispatch_block_create(DISPATCH_BLOCK_DETACHED, ^{
-                updateOverlayOnMainThread((Overlay::OverlayType)i);
-            });
-        }
     }
 
     virtual ~VTRenderer() override
     { @autoreleasepool {
-        // We may have overlay update blocks enqueued for execution.
-        // We must cancel those to avoid a UAF.
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            dispatch_block_cancel(m_OverlayUpdateBlocks[i]);
-            Block_release(m_OverlayUpdateBlocks[i]);
+        if (m_PresentationCond != nullptr) {
+            SDL_DestroyCond(m_PresentationCond);
         }
 
-        if (m_DisplayLink != nullptr) {
-            CVDisplayLinkStop(m_DisplayLink);
-            CVDisplayLinkRelease(m_DisplayLink);
-        }
-
-        if (m_VsyncPassed != nullptr) {
-            SDL_DestroyCond(m_VsyncPassed);
-        }
-
-        if (m_VsyncMutex != nullptr) {
-            SDL_DestroyMutex(m_VsyncMutex);
+        if (m_PresentationMutex != nullptr) {
+            SDL_DestroyMutex(m_PresentationMutex);
         }
 
         if (m_HwContext != nullptr) {
             av_buffer_unref(&m_HwContext);
-        }
-
-        for (int i = 0; i < Overlay::OverlayMax; i++) {
-            if (m_OverlayTextFields[i] != nullptr) {
-                [m_OverlayTextFields[i] removeFromSuperview];
-                [m_OverlayTextFields[i] release];
-            }
         }
 
         if (m_CscParamsBuffer != nullptr) {
@@ -166,8 +149,18 @@ public:
             [m_VideoVertexBuffer release];
         }
 
-        if (m_PipelineState != nullptr) {
-            [m_PipelineState release];
+        if (m_VideoPipelineState != nullptr) {
+            [m_VideoPipelineState release];
+        }
+
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            if (m_OverlayTextures[i] != nullptr) {
+                [m_OverlayTextures[i] release];
+            }
+        }
+
+        if (m_OverlayPipelineState != nullptr) {
+            [m_OverlayPipelineState release];
         }
 
         if (m_ShaderLibrary != nullptr) {
@@ -185,117 +178,57 @@ public:
         if (m_MetalView != nullptr) {
             SDL_Metal_DestroyView(m_MetalView);
         }
-
-        // It appears to be necessary to run the event loop after destroying
-        // the AVSampleBufferDisplayLayer to avoid issue #973.
-        SDL_PumpEvents();
     }}
 
-    static
-    CVReturn
-    displayLinkOutputCallback(
-        CVDisplayLinkRef displayLink,
-        const CVTimeStamp* /* now */,
-        const CVTimeStamp* /* vsyncTime */,
-        CVOptionFlags,
-        CVOptionFlags*,
-        void *displayLinkContext)
-    {
-        auto me = reinterpret_cast<VTRenderer*>(displayLinkContext);
-
-        SDL_assert(displayLink == me->m_DisplayLink);
-
-        SDL_LockMutex(me->m_VsyncMutex);
-        SDL_CondSignal(me->m_VsyncPassed);
-        SDL_UnlockMutex(me->m_VsyncMutex);
-
-        return kCVReturnSuccess;
-    }
-
-    bool initializeVsyncCallback()
-    {
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
-        if (!SDL_GetWindowWMInfo(m_Window, &info)) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "SDL_GetWindowWMInfo() failed: %s",
-                        SDL_GetError());
-            return false;
+    void discardNextDrawable()
+    { @autoreleasepool {
+        if (!m_NextDrawable) {
+            return;
         }
 
-        SDL_assert(info.subsystem == SDL_SYSWM_COCOA);
-
-        NSScreen* screen = [info.info.cocoa.window screen];
-        CVReturn status;
-        if (screen == nullptr) {
-            // Window not visible on any display, so use a
-            // CVDisplayLink that can work with all active displays.
-            // When we become visible, we'll recreate ourselves
-            // and associate with the new screen.
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "NSWindow is not visible on any display");
-            status = CVDisplayLinkCreateWithActiveCGDisplays(&m_DisplayLink);
-        }
-        else {
-            CGDirectDisplayID displayId = [[screen deviceDescription][@"NSScreenNumber"] unsignedIntValue];
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "NSWindow on display: %x",
-                        displayId);
-            status = CVDisplayLinkCreateWithCGDisplay(displayId, &m_DisplayLink);
-        }
-        if (status != kCVReturnSuccess) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to create CVDisplayLink: %d",
-                         status);
-            return false;
-        }
-
-        status = CVDisplayLinkSetOutputCallback(m_DisplayLink, displayLinkOutputCallback, this);
-        if (status != kCVReturnSuccess) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CVDisplayLinkSetOutputCallback() failed: %d",
-                         status);
-            return false;
-        }
-
-        // The CVDisplayLink callback uses these, so we must initialize them before
-        // starting the callbacks.
-        m_VsyncMutex = SDL_CreateMutex();
-        m_VsyncPassed = SDL_CreateCond();
-
-        status = CVDisplayLinkStart(m_DisplayLink);
-        if (status != kCVReturnSuccess) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "CVDisplayLinkStart() failed: %d",
-                         status);
-            return false;
-        }
-
-        return true;
-    }
+        [m_NextDrawable release];
+        m_NextDrawable = nullptr;
+    }}
 
     virtual void waitToRender() override
-    {
-        if (m_DisplayLink != nullptr) {
-            // Vsync is enabled, so wait for a swap before returning
-            SDL_LockMutex(m_VsyncMutex);
-            if (SDL_CondWaitTimeout(m_VsyncPassed, m_VsyncMutex, 100) == SDL_MUTEX_TIMEDOUT) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "V-sync wait timed out after 100 ms");
+    { @autoreleasepool {
+        if (!m_NextDrawable) {
+            // Wait for the next available drawable before latching the frame to render
+            m_NextDrawable = [[m_MetalLayer nextDrawable] retain];
+            if (m_NextDrawable == nullptr) {
+                return;
             }
-            SDL_UnlockMutex(m_VsyncMutex);
+
+            // Pace ourselves by waiting if too many frames are pending presentation
+            SDL_LockMutex(m_PresentationMutex);
+            if (m_PendingPresentationCount > 2) {
+                if (SDL_CondWaitTimeout(m_PresentationCond, m_PresentationMutex, 100) == SDL_MUTEX_TIMEDOUT) {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Presentation wait timed out after 100 ms");
+                }
+            }
+            SDL_UnlockMutex(m_PresentationMutex);
         }
+    }}
+
+    virtual void cleanupRenderContext() override
+    {
+        // Free any unused drawable
+        discardNextDrawable();
     }
 
     bool updateVideoRegionSizeForFrame(AVFrame* frame)
     {
-        // TODO: When we support seamless resizing, implement this properly!
-        if (m_VideoVertexBuffer) {
-            return true;
-        }
-
         int drawableWidth, drawableHeight;
         SDL_Metal_GetDrawableSize(m_Window, &drawableWidth, &drawableHeight);
+
+        // Check if anything has changed since the last vertex buffer upload
+        if (m_VideoVertexBuffer &&
+                frame->width == m_LastFrameWidth && frame->height == m_LastFrameHeight &&
+                drawableWidth == m_LastDrawableWidth && drawableHeight == m_LastDrawableHeight) {
+            // Nothing to do
+            return true;
+        }
 
         // Determine the correct scaled size for the video region
         SDL_Rect src, dst;
@@ -320,12 +253,18 @@ public:
         };
 
         [m_VideoVertexBuffer release];
-        m_VideoVertexBuffer = [m_MetalLayer.device newBufferWithBytes:verts length:sizeof(verts) options:MTLResourceStorageModePrivate];
+        auto bufferOptions = MTLCPUCacheModeWriteCombined | MTLResourceStorageModeManaged;
+        m_VideoVertexBuffer = [m_MetalLayer.device newBufferWithBytes:verts length:sizeof(verts) options:bufferOptions];
         if (!m_VideoVertexBuffer) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create video vertex buffer");
             return false;
         }
+
+        m_LastFrameWidth = frame->width;
+        m_LastFrameHeight = frame->height;
+        m_LastDrawableWidth = drawableWidth;
+        m_LastDrawableHeight = drawableHeight;
 
         return true;
     }
@@ -337,6 +276,9 @@ public:
         if (colorspace != m_LastColorSpace || fullRange != m_LastFullRange) {
             CGColorSpaceRef newColorSpace;
             void* paramBuffer;
+
+            // Free any unpresented drawable since we're changing pixel formats
+            discardNextDrawable();
 
             switch (colorspace) {
             case COLORSPACE_REC_709:
@@ -374,7 +316,8 @@ public:
 
             // Create the new colorspace parameter buffer for our fragment shader
             [m_CscParamsBuffer release];
-            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:MTLResourceStorageModePrivate];
+            auto bufferOptions = MTLCPUCacheModeWriteCombined | MTLResourceStorageModeManaged;
+            m_CscParamsBuffer = [m_MetalLayer.device newBufferWithBytes:paramBuffer length:sizeof(CscParams) options:bufferOptions];
             if (!m_CscParamsBuffer) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                              "Failed to create CSC parameters buffer");
@@ -385,10 +328,30 @@ public:
             pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
             pipelineDesc.fragmentFunction = [[m_ShaderLibrary newFunctionWithName:@"ps_draw_biplanar"] autorelease];
             pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
-            m_PipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
-            if (!m_PipelineState) {
+            [m_VideoPipelineState release];
+            m_VideoPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
+            if (!m_VideoPipelineState) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to create render pipeline state");
+                             "Failed to create video pipeline state");
+                return false;
+            }
+
+            pipelineDesc = [[MTLRenderPipelineDescriptor new] autorelease];
+            pipelineDesc.vertexFunction = [[m_ShaderLibrary newFunctionWithName:@"vs_draw"] autorelease];
+            pipelineDesc.fragmentFunction = [[m_ShaderLibrary newFunctionWithName:@"ps_draw_rgb"] autorelease];
+            pipelineDesc.colorAttachments[0].pixelFormat = m_MetalLayer.pixelFormat;
+            pipelineDesc.colorAttachments[0].blendingEnabled = YES;
+            pipelineDesc.colorAttachments[0].rgbBlendOperation = MTLBlendOperationAdd;
+            pipelineDesc.colorAttachments[0].alphaBlendOperation = MTLBlendOperationAdd;
+            pipelineDesc.colorAttachments[0].sourceRGBBlendFactor = MTLBlendFactorSourceAlpha;
+            pipelineDesc.colorAttachments[0].sourceAlphaBlendFactor = MTLBlendFactorSourceAlpha;
+            pipelineDesc.colorAttachments[0].destinationRGBBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+            pipelineDesc.colorAttachments[0].destinationAlphaBlendFactor = MTLBlendFactorOneMinusSourceAlpha;
+            [m_OverlayPipelineState release];
+            m_OverlayPipelineState = [m_MetalLayer.device newRenderPipelineStateWithDescriptor:pipelineDesc error:nullptr];
+            if (!m_VideoPipelineState) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to create overlay pipeline state");
                 return false;
             }
 
@@ -433,7 +396,10 @@ public:
             return;
         }
 
-        auto nextDrawable = [m_MetalLayer nextDrawable];
+        // Don't proceed with rendering if we don't have a drawable
+        if (m_NextDrawable == nullptr) {
+            return;
+        }
 
         // Create Metal textures for the planes of the CVPixelBuffer
         std::array<CVMetalTextureRef, 2> textures;
@@ -473,32 +439,95 @@ public:
 
         // Prepare a render pass to render into the next drawable
         auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
-        renderPassDescriptor.colorAttachments[0].texture = nextDrawable.texture;
+        renderPassDescriptor.colorAttachments[0].texture = m_NextDrawable.texture;
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-
-        // Bind textures and buffers then draw the video region
         auto commandBuffer = [m_CommandQueue commandBuffer];
         auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
-        [renderEncoder setRenderPipelineState:m_PipelineState];
+
+        // Bind textures and buffers then draw the video region
+        [renderEncoder setRenderPipelineState:m_VideoPipelineState];
         for (size_t i = 0; i < textures.size(); i++) {
             [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(textures[i]) atIndex:i];
         }
         [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
-          // Free textures after completion of rendering per CVMetalTextureCache requirements
-          for (const CVMetalTextureRef &tex : textures) {
-              CFRelease(tex);
-          }
+            // Free textures after completion of rendering per CVMetalTextureCache requirements
+            for (const CVMetalTextureRef &tex : textures) {
+                CFRelease(tex);
+            }
         }];
         [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
         [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
+
+        // Now draw any overlays that are enabled
+        for (int i = 0; i < Overlay::OverlayMax; i++) {
+            id<MTLTexture> overlayTexture = nullptr;
+
+            // Try to acquire a reference on the overlay texture
+            SDL_AtomicLock(&m_OverlayLock);
+            overlayTexture = [m_OverlayTextures[i] retain];
+            SDL_AtomicUnlock(&m_OverlayLock);
+
+            if (overlayTexture) {
+                SDL_FRect renderRect = {};
+                if (i == Overlay::OverlayStatusUpdate) {
+                    // Bottom Left
+                    renderRect.x = 0;
+                    renderRect.y = 0;
+                }
+                else if (i == Overlay::OverlayDebug) {
+                    // Top left
+                    renderRect.x = 0;
+                    renderRect.y = m_LastDrawableHeight - overlayTexture.height;
+                }
+
+                renderRect.w = overlayTexture.width;
+                renderRect.h = overlayTexture.height;
+
+                // Convert screen space to normalized device coordinates
+                StreamUtils::screenSpaceToNormalizedDeviceCoords(&renderRect, m_LastDrawableWidth, m_LastDrawableHeight);
+
+                Vertex verts[] =
+                {
+                    { { renderRect.x, renderRect.y, 0.0f, 1.0f }, { 0.0f, 1.0f } },
+                    { { renderRect.x, renderRect.y+renderRect.h, 0.0f, 1.0f }, { 0.0f, 0} },
+                    { { renderRect.x+renderRect.w, renderRect.y, 0.0f, 1.0f }, { 1.0f, 1.0f} },
+                    { { renderRect.x+renderRect.w, renderRect.y+renderRect.h, 0.0f, 1.0f }, { 1.0f, 0} },
+                };
+
+                [renderEncoder setRenderPipelineState:m_OverlayPipelineState];
+                [renderEncoder setFragmentTexture:overlayTexture atIndex:0];
+                [renderEncoder setVertexBytes:verts length:sizeof(verts) atIndex:0];
+                [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:SDL_arraysize(verts)];
+
+                [overlayTexture release];
+            }
+        }
+
         [renderEncoder endEncoding];
 
+        // Queue a completion callback on the drawable to pace our rendering
+        SDL_LockMutex(m_PresentationMutex);
+        m_PendingPresentationCount++;
+        SDL_UnlockMutex(m_PresentationMutex);
+        [m_NextDrawable addPresentedHandler:^(id<MTLDrawable>) {
+            SDL_LockMutex(m_PresentationMutex);
+            m_PendingPresentationCount--;
+            SDL_CondSignal(m_PresentationCond);
+            SDL_UnlockMutex(m_PresentationMutex);
+        }];
+
         // Flip to the newly rendered buffer
-        [commandBuffer presentDrawable: nextDrawable];
+        [commandBuffer presentDrawable:m_NextDrawable];
         [commandBuffer commit];
+
+        // Wait for the command buffer to complete and free our CVMetalTextureCache references
+        [commandBuffer waitUntilCompleted];
+
+        [m_NextDrawable release];
+        m_NextDrawable = nullptr;
     }}
 
     bool checkDecoderCapabilities(PDECODER_PARAMETERS params) {
@@ -624,10 +653,21 @@ public:
             }
         }
 
-        // Configure the Metal layer for rendering
+        // Allow EDR content if we're streaming in a 10-bit format
         m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+
+        // Ideally, we don't actually want triple buffering due to increased
+        // display latency, since our render time is very short. However, we
+        // *need* 3 drawables in order to hit the offloaded "direct" display
+        // path for our Metal layer.
+        //
+        // If we only use 2 drawables, we'll be stuck in the composited path
+        // (particularly for windowed mode) and our latency will actually be
+        // higher than opting for triple buffering.
+        m_MetalLayer.maximumDrawableCount = 3;
+
+        // Allow tearing if V-Sync is off (also requires direct display path)
         m_MetalLayer.displaySyncEnabled = params->enableVsync;
-        m_MetalLayer.maximumDrawableCount = 2; // Double buffering
 
         // Create the Metal texture cache for our CVPixelBuffers
         CFStringRef keys[1] = { kCVMetalTextureUsage };
@@ -654,57 +694,57 @@ public:
 
         // Create a command queue for submission
         m_CommandQueue = [m_MetalLayer.device newCommandQueue];
-
-        if (params->enableFramePacing) {
-            if (!initializeVsyncCallback()) {
-                return false;
-            }
-        }
-
         return true;
     }}
 
-    void updateOverlayOnMainThread(Overlay::OverlayType type)
+    virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
     { @autoreleasepool {
-        // Lazy initialization for the overlay
-        if (m_OverlayTextFields[type] == nullptr) {
-            m_OverlayTextFields[type] = [[NSTextField alloc] initWithFrame:((NSView*)m_MetalView).bounds];
-            [m_OverlayTextFields[type] setBezeled:NO];
-            [m_OverlayTextFields[type] setDrawsBackground:NO];
-            [m_OverlayTextFields[type] setEditable:NO];
-            [m_OverlayTextFields[type] setSelectable:NO];
-
-            switch (type) {
-            case Overlay::OverlayDebug:
-                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentLeft];
-                break;
-            case Overlay::OverlayStatusUpdate:
-                [m_OverlayTextFields[type] setAlignment:NSTextAlignmentRight];
-                break;
-            default:
-                break;
-            }
-
-            SDL_Color color = Session::get()->getOverlayManager().getOverlayColor(type);
-            [m_OverlayTextFields[type] setTextColor:[NSColor colorWithSRGBRed:color.r / 255.0 green:color.g / 255.0 blue:color.b / 255.0 alpha:color.a / 255.0]];
-            [m_OverlayTextFields[type] setFont:[NSFont messageFontOfSize:Session::get()->getOverlayManager().getOverlayFontSize(type)]];
-
-            [(NSView*)m_MetalView addSubview: m_OverlayTextFields[type]];
+        SDL_Surface* newSurface = Session::get()->getOverlayManager().getUpdatedOverlaySurface(type);
+        bool overlayEnabled = Session::get()->getOverlayManager().isOverlayEnabled(type);
+        if (newSurface == nullptr && overlayEnabled) {
+            // The overlay is enabled and there is no new surface. Leave the old texture alone.
+            return;
         }
 
-        // Update text contents
-        [m_OverlayTextFields[type] setStringValue: [NSString stringWithUTF8String:Session::get()->getOverlayManager().getOverlayText(type)]];
+        SDL_AtomicLock(&m_OverlayLock);
+        auto oldTexture = m_OverlayTextures[type];
+        m_OverlayTextures[type] = nullptr;
+        SDL_AtomicUnlock(&m_OverlayLock);
 
-        // Unhide if it's enabled
-        [m_OverlayTextFields[type] setHidden: !Session::get()->getOverlayManager().isOverlayEnabled(type)];
+        [oldTexture release];
+
+        // If the overlay is disabled, we're done
+        if (!overlayEnabled) {
+            SDL_FreeSurface(newSurface);
+            return;
+        }
+
+        // Create a texture to hold our pixel data
+        SDL_assert(!SDL_MUSTLOCK(newSurface));
+        SDL_assert(newSurface->format->format == SDL_PIXELFORMAT_ARGB8888);
+        auto texDesc = [MTLTextureDescriptor texture2DDescriptorWithPixelFormat:MTLPixelFormatBGRA8Unorm
+                                                                          width:newSurface->w
+                                                                         height:newSurface->h
+                                                                      mipmapped:NO];
+        texDesc.cpuCacheMode = MTLCPUCacheModeWriteCombined;
+        texDesc.storageMode = MTLStorageModeManaged;
+        texDesc.usage = MTLTextureUsageShaderRead;
+        auto newTexture = [m_MetalLayer.device newTextureWithDescriptor:texDesc];
+
+        // Load the pixel data into the new texture
+        [newTexture replaceRegion:MTLRegionMake2D(0, 0, newSurface->w, newSurface->h)
+                      mipmapLevel:0
+                        withBytes:newSurface->pixels
+                      bytesPerRow:newSurface->pitch];
+
+        // The surface is no longer required
+        SDL_FreeSurface(newSurface);
+        newSurface = nullptr;
+
+        SDL_AtomicLock(&m_OverlayLock);
+        m_OverlayTextures[type] = newTexture;
+        SDL_AtomicUnlock(&m_OverlayLock);
     }}
-
-    virtual void notifyOverlayUpdated(Overlay::OverlayType type) override
-    {
-        // We must do the actual UI updates on the main thread, so queue an
-        // async callback on the main thread via GCD to do the UI update.
-        dispatch_async(dispatch_get_main_queue(), m_OverlayUpdateBlocks[type]);
-    }
 
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override
     {
@@ -743,6 +783,20 @@ public:
         return RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 
+    bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info) override
+    {
+        auto unhandledStateFlags = info->stateChangeFlags;
+
+        // We can always handle size changes
+        unhandledStateFlags &= ~WINDOW_STATE_CHANGE_SIZE;
+
+        // We can handle monitor changes
+        unhandledStateFlags &= ~WINDOW_STATE_CHANGE_DISPLAY;
+
+        // If nothing is left, we handled everything
+        return unhandledStateFlags == 0;
+    }
+
 private:
     SDL_Window* m_Window;
     AVBufferRef* m_HwContext;
@@ -750,17 +804,23 @@ private:
     CVMetalTextureCacheRef m_TextureCache;
     id<MTLBuffer> m_CscParamsBuffer;
     id<MTLBuffer> m_VideoVertexBuffer;
-    id<MTLRenderPipelineState> m_PipelineState;
+    id<MTLTexture> m_OverlayTextures[Overlay::OverlayMax];
+    SDL_SpinLock m_OverlayLock;
+    id<MTLRenderPipelineState> m_VideoPipelineState;
+    id<MTLRenderPipelineState> m_OverlayPipelineState;
     id<MTLLibrary> m_ShaderLibrary;
     id<MTLCommandQueue> m_CommandQueue;
+    id<CAMetalDrawable> m_NextDrawable;
     SDL_MetalView m_MetalView;
-    dispatch_block_t m_OverlayUpdateBlocks[Overlay::OverlayMax];
-    NSTextField* m_OverlayTextFields[Overlay::OverlayMax];
-    CVDisplayLinkRef m_DisplayLink;
     int m_LastColorSpace;
     bool m_LastFullRange;
-    SDL_mutex* m_VsyncMutex;
-    SDL_cond* m_VsyncPassed;
+    int m_LastFrameWidth;
+    int m_LastFrameHeight;
+    int m_LastDrawableWidth;
+    int m_LastDrawableHeight;
+    SDL_mutex* m_PresentationMutex;
+    SDL_cond* m_PresentationCond;
+    int m_PendingPresentationCount;
 };
 
 IFFmpegRenderer* VTRendererFactory::createRenderer() {
