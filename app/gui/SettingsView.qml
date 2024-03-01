@@ -7,7 +7,6 @@ import StreamingPreferences 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import SystemProperties 1.0
-import VideoEnhancement 1.0
 
 Flickable {
     id: settingsPage
@@ -820,7 +819,7 @@ Flickable {
                     hoverEnabled: true
                     text: qsTr("Video AI-Enhancement")
                     font.pointSize:  12
-                    visible: VideoEnhancement.isUIvisible()
+                    visible: SystemProperties.isVideoEnhancementCapable()
                     enabled: true
                     checked: StreamingPreferences.videoEnhancement
 
@@ -838,12 +837,12 @@ Flickable {
                         + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
 
                     function reinitialize() {
-                        if(!VideoEnhancement.isUIvisible()){
+                        if(!SystemProperties.isVideoEnhancementCapable()){
                             checked = false
                             visible = false
                         }
                         // Indicate if the feature is available but not officially deployed by the Vendor
-                        if(VideoEnhancement.isExperimental()){
+                        if(SystemProperties.isVideoEnhancementExperimental()){
                             text = qsTr("Video AI-Enhancement (Experimental)")
                         }
                     }

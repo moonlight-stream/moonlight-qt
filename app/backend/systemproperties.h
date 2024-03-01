@@ -31,6 +31,8 @@ public:
     Q_INVOKABLE void refreshDisplays();
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
     Q_INVOKABLE int getRefreshRate(int displayIndex);
+    Q_INVOKABLE bool isVideoEnhancementCapable();
+    Q_INVOKABLE bool isVideoEnhancementExperimental();
 
 signals:
     void unmappedGamepadsChanged();

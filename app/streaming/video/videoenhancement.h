@@ -3,11 +3,8 @@
 
 #pragma once
 
-#include <QObject>
-
-class VideoEnhancement : public QObject
+class VideoEnhancement
 {
-    Q_OBJECT
 
 private:
 
@@ -54,9 +51,8 @@ public:
     void enableUIvisible(bool visible = true);
     void setAdapterIndex(int adapterIndex);
     int getAdapterIndex();
-
-    Q_INVOKABLE bool isUIvisible();
-    Q_INVOKABLE bool isExperimental();
+    bool isUIvisible();
+    bool isExperimental();
 
 };
 
