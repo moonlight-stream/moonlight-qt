@@ -234,55 +234,54 @@ void D3D11VARenderer::setHDROutPut(){
 
     if (m_VideoProcessor){
 
-        IDXGIFactory1* factory = nullptr;
-        CreateDXGIFactory1(__uuidof(IDXGIFactory1), (void**)&factory);
-
-        IDXGIAdapter1* adapter = nullptr;
-        for (UINT adapterIndex = 0; SUCCEEDED(factory->EnumAdapters1(adapterIndex, &adapter)); ++adapterIndex) {
+        // Retreive the monitor HDR metadata where the application is displayed
+        int appAdapterIndex = 0;
+        int appOutputIndex = 0;
+        if (SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(m_DecoderParams.window), &appAdapterIndex, &appOutputIndex)){
+            IDXGIAdapter1* adapter = nullptr;
             IDXGIOutput* output = nullptr;
-            for (UINT outputIndex = 0; SUCCEEDED(adapter->EnumOutputs(outputIndex, &output)); ++outputIndex) {
-                IDXGIOutput6* output6 = nullptr;
-                if (SUCCEEDED(output->QueryInterface(__uuidof(IDXGIOutput6), (void**)&output6))) {
-                    DXGI_OUTPUT_DESC1 desc1;
-                    if (output6) {
-                        output6->GetDesc1(&desc1);
-                        // Magic constants to convert to fixed point.
-                        // https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_5/ns-dxgi1_5-dxgi_hdr_metadata_hdr10
-                        static constexpr int kPrimariesFixedPoint = 50000;
-                        static constexpr int kMinLuminanceFixedPoint = 10000;
+            UINT outputIndex = appOutputIndex;
+            if(SUCCEEDED(m_Factory->EnumAdapters1(appAdapterIndex, &adapter))){
+                if(SUCCEEDED(adapter->EnumOutputs(outputIndex, &output))){
+                    IDXGIOutput6* output6 = nullptr;
+                    if (SUCCEEDED(output->QueryInterface(__uuidof(IDXGIOutput6), (void**)&output6))) {
+                        DXGI_OUTPUT_DESC1 desc1;
+                        if (output6) {
+                            output6->GetDesc1(&desc1);
+                            // Magic constants to convert to fixed point.
+                            // https://docs.microsoft.com/en-us/windows/win32/api/dxgi1_5/ns-dxgi1_5-dxgi_hdr_metadata_hdr10
+                            static constexpr int kPrimariesFixedPoint = 50000;
+                            static constexpr int kMinLuminanceFixedPoint = 10000;
 
-                        // Format Monitor HDR MetaData
-                        outputHDRMetaData.RedPrimary[0] = desc1.RedPrimary[0] * kPrimariesFixedPoint;
-                        outputHDRMetaData.RedPrimary[1] = desc1.RedPrimary[1] * kPrimariesFixedPoint;
-                        outputHDRMetaData.GreenPrimary[0] = desc1.GreenPrimary[0] * kPrimariesFixedPoint;
-                        outputHDRMetaData.GreenPrimary[1] = desc1.GreenPrimary[1] * kPrimariesFixedPoint;
-                        outputHDRMetaData.BluePrimary[0] = desc1.BluePrimary[0] * kPrimariesFixedPoint;
-                        outputHDRMetaData.BluePrimary[1] = desc1.BluePrimary[1] * kPrimariesFixedPoint;
-                        outputHDRMetaData.WhitePoint[0] = desc1.WhitePoint[0] * kPrimariesFixedPoint;
-                        outputHDRMetaData.WhitePoint[1] = desc1.WhitePoint[1] * kPrimariesFixedPoint;
-                        outputHDRMetaData.MaxMasteringLuminance = desc1.MaxLuminance;
-                        outputHDRMetaData.MinMasteringLuminance = desc1.MinLuminance * kMinLuminanceFixedPoint;
-                        // Set it the same as streamed source which is 0 by default as it cannot be evaluated on the fly.
-                        outputHDRMetaData.MaxContentLightLevel = 0;
-                        outputHDRMetaData.MaxFrameAverageLightLevel = 0;
+                            // Format Monitor HDR MetaData
+                            outputHDRMetaData.RedPrimary[0] = desc1.RedPrimary[0] * kPrimariesFixedPoint;
+                            outputHDRMetaData.RedPrimary[1] = desc1.RedPrimary[1] * kPrimariesFixedPoint;
+                            outputHDRMetaData.GreenPrimary[0] = desc1.GreenPrimary[0] * kPrimariesFixedPoint;
+                            outputHDRMetaData.GreenPrimary[1] = desc1.GreenPrimary[1] * kPrimariesFixedPoint;
+                            outputHDRMetaData.BluePrimary[0] = desc1.BluePrimary[0] * kPrimariesFixedPoint;
+                            outputHDRMetaData.BluePrimary[1] = desc1.BluePrimary[1] * kPrimariesFixedPoint;
+                            outputHDRMetaData.WhitePoint[0] = desc1.WhitePoint[0] * kPrimariesFixedPoint;
+                            outputHDRMetaData.WhitePoint[1] = desc1.WhitePoint[1] * kPrimariesFixedPoint;
+                            outputHDRMetaData.MaxMasteringLuminance = desc1.MaxLuminance;
+                            outputHDRMetaData.MinMasteringLuminance = desc1.MinLuminance * kMinLuminanceFixedPoint;
+                            // Set it the same as streamed source which is 0 by default as it cannot be evaluated on the fly.
+                            outputHDRMetaData.MaxContentLightLevel = 0;
+                            outputHDRMetaData.MaxFrameAverageLightLevel = 0;
 
-                        // Prepare HDR for the OutPut Monitor
-                        m_VideoContext->VideoProcessorSetOutputHDRMetaData(
-                            m_VideoProcessor.Get(),
-                            DXGI_HDR_METADATA_TYPE_HDR10,
-                            sizeof(DXGI_HDR_METADATA_HDR10),
-                            &outputHDRMetaData
-                            );
+                            // Prepare HDR for the OutPut Monitor
+                            m_VideoContext->VideoProcessorSetOutputHDRMetaData(
+                                m_VideoProcessor.Get(),
+                                DXGI_HDR_METADATA_TYPE_HDR10,
+                                sizeof(DXGI_HDR_METADATA_HDR10),
+                                &outputHDRMetaData
+                                );
+                        }
                     }
-
-                    break;
+                    SAFE_COM_RELEASE(output6);
                 }
-                output6->Release();
+                SAFE_COM_RELEASE(output);
             }
-            adapter->Release();
-            // Break early if we've found an IDXGIOutput
-            if (output)
-                break;
+            SAFE_COM_RELEASE(adapter);
         }
     }
 }
@@ -448,9 +447,6 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
                     adapterIndex = index;
                 }
             }
-
-
-
         }
 
         index++;
