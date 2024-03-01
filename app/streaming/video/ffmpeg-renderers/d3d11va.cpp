@@ -446,6 +446,7 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
 
                 // Recording the highest score, which will represent the most capable adapater for Video enhancement
                 if(score > highestScore){
+                    highestScore = score;
                     adapterIndex = index;
                 }
             }
@@ -1501,11 +1502,14 @@ bool D3D11VARenderer::initializeVideoProcessor()
     m_StreamData.ppFutureSurfacesRight = nullptr;
     m_StreamData.pInputSurfaceRight = nullptr;
 
-    // Prepare HDR Meta Data for Stream content
-    setHDRStream();
 
-    // Prepare HDR Meta Data for the OutPut Monitor, will be ignored while using SDR
-    setHDROutPut();
+    if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
+        // Prepare HDR Meta Data for Stream content
+        setHDRStream();
+
+        // Prepare HDR Meta Data for the OutPut Monitor, will be ignored while using SDR
+        setHDROutPut();
+    }
 
     // Set OutPut ColorSpace
     if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
