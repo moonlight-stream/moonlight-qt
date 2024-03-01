@@ -1456,11 +1456,6 @@ bool D3D11VARenderer::initializeVideoProcessor()
     if (FAILED(hr))
         return false;
 
-    // Apply processed filters to the surface
-    RECT srcRect = { 0 };
-    srcRect.right = m_DecoderParams.width;
-    srcRect.bottom = m_DecoderParams.height;
-
     RECT dstRect = { 0 };
     dstRect.right = m_DisplayWidth;
     dstRect.bottom = m_DisplayHeight;
@@ -1469,7 +1464,7 @@ bool D3D11VARenderer::initializeVideoProcessor()
     float ratioWidth = static_cast<float>(m_DisplayWidth) / static_cast<float>(m_DecoderParams.width);
     float ratioHeight = static_cast<float>(m_DisplayHeight) / static_cast<float>(m_DecoderParams.height);
 
-    // [TODO] There is a behavior I don't understand (bug?) when the destination desRect is larger by one of its side than the source srcRect.
+    // [TODO] There is a behavior I don't understand (bug?) when the destination desRect is larger by one of its side than the source.
     // If it is bigger, the window becomes black, but if it is smaller it is fine.
     // Only one case is working when it is bigger is when the dstRest perfectly equal to the Display size.
     // Investigation: If there anything to do with pixel alignment (c.f. dxva2.cpp FFALIGN), or screenSpaceToNormalizedDeviceCoords ?
@@ -1488,7 +1483,6 @@ bool D3D11VARenderer::initializeVideoProcessor()
         }
     }
 
-    m_VideoContext->VideoProcessorSetStreamSourceRect(m_VideoProcessor.Get(), 0, true, &srcRect);
     m_VideoContext->VideoProcessorSetStreamDestRect(m_VideoProcessor.Get(), 0, true, &dstRect);
     m_VideoContext->VideoProcessorSetStreamFrameFormat(m_VideoProcessor.Get(), 0, D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
 
