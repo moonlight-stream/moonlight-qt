@@ -7,16 +7,12 @@ import StreamingPreferences 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import SystemProperties 1.0
-import VideoEnhancement 1.0
 
 Flickable {
     id: settingsPage
     objectName: qsTr("Settings")
 
     signal languageChanged()
-    signal displayModeChanged()
-    signal windowModeChanged()
-    signal videoEnhancementChanged()
 
     boundsBehavior: Flickable.OvershootBounds
 
@@ -235,9 +231,6 @@ Flickable {
                             recalculateWidth()
 
                             lastIndexValue = currentIndex
-
-                            // Signal other controls
-                            displayModeChanged()
                         }
 
                         id: resolutionComboBox
@@ -299,9 +292,6 @@ Flickable {
                             else {
                                 updateBitrateForSelection()
                             }
-
-                            // Signal other controls
-                            displayModeChanged()
                         }
 
                         NavigableDialog {
@@ -320,9 +310,6 @@ Flickable {
                             onClosed: {
                                 widthField.clear()
                                 heightField.clear()
-
-                                // Signal other controls
-                                displayModeChanged()
                             }
 
                             onRejected: {
@@ -772,25 +759,9 @@ Flickable {
                         activated(currentIndex)
                     }
 
-                    // Video Super-Resolution does not work in exclusive full screen, so auto switch do borderless window
-                    // [TODO] This may change according to what AMD and Intel will implement, if they can allow video enhancement in fullscreen
-                    function checkVSR(){
-                        if(videoEnhancementCheck.checked && model.get(currentIndex).val === StreamingPreferences.WM_FULLSCREEN){
-                            for (var i = 0; i < model.count; i++) {
-                                 var thisWm = model.get(i).val;
-                                 if (model.get(i).val === StreamingPreferences.WM_FULLSCREEN_DESKTOP) {
-                                     currentIndex = i
-                                     break
-                                 }
-                            }
-                            activated(currentIndex)
-                        }
-                    }
-
                     Component.onCompleted: {
                         reinitialize()
                         languageChanged.connect(reinitialize)
-                        videoEnhancementChanged.connect(checkVSR)
                     }
 
                     id: windowModeComboBox
@@ -800,8 +771,6 @@ Flickable {
                     textRole: "text"
                     onActivated: {
                         StreamingPreferences.windowMode = model.get(currentIndex).val
-                        // Signal others
-                        windowModeChanged()
                     }
 
                     ToolTip.delay: 1000

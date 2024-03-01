@@ -48,8 +48,6 @@ private:
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     int getAdapterIndexByEnhancementCapabilities();
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
-    void setHDRStream();
-    void setHDROutPut();
 
     int m_DecoderSelectionPass;
 
@@ -111,7 +109,6 @@ private:
     int m_DisplayHeight;
     int m_LastColorSpace;
     bool m_LastFullRange;
-    bool m_LastServerHDR;
     AVColorTransferCharacteristic m_LastColorTrc;
 
     bool m_AllowTearing;

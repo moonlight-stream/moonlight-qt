@@ -99,7 +99,6 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_VideoProcessorEnumerator(nullptr),
       m_LastColorSpace(-1),
       m_LastFullRange(false),
-      m_LastServerHDR(LiGetCurrentHostDisplayHdrMode()),
       m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
       m_AllowTearing(false),
       m_VideoGenericPixelShader(nullptr),
@@ -1020,8 +1019,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         // AVHWDeviceContext takes ownership of these objects
         d3d11vaDeviceContext->device = m_Device;
         d3d11vaDeviceContext->device_context = m_DeviceContext;
-        d3d11vaDeviceContext->video_device = m_VideoDevice;
-        d3d11vaDeviceContext->video_context = m_VideoContext;
 
         // Set lock functions that we will use to synchronize with FFmpeg's usage of our device context
         d3d11vaDeviceContext->lock = lockContext;
@@ -1685,7 +1682,6 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
 
     // Check if the format is supported by this decoder
     BOOL supported;
-    m_IsHDRenabled = false;
     switch (m_DecoderParams.videoFormat)
     {
     case VIDEO_FORMAT_H264:
@@ -1731,7 +1727,6 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
             videoDevice->Release();
             return false;
         }
-        m_IsHDRenabled = true;
         break;
 
     case VIDEO_FORMAT_AV1_MAIN8:
@@ -1762,7 +1757,6 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
             videoDevice->Release();
             return false;
         }
-        m_IsHDRenabled = true;
         break;
 
     default:

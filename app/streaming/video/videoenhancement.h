@@ -10,7 +10,6 @@ private:
 
     static VideoEnhancement* instance;
 
-    // bool m_Initialized = false;
     bool m_Enabled = false;
     bool m_UIvisible = false;
     bool m_VSRcapable = false;
