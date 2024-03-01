@@ -38,12 +38,12 @@ private:
     void renderVideo(AVFrame* frame);
     bool createVideoProcessor();
     bool initializeVideoProcessor();
-    bool enableAMDVideoSuperResolution(bool activate = true);
-    bool enableIntelVideoSuperResolution(bool activate = true);
-    bool enableNvidiaVideoSuperResolution(bool activate = true);
-    bool enableAMDHDR(bool activate = true);
-    bool enableIntelHDR(bool activate = true);
-    bool enableNvidiaHDR(bool activate = true);
+    bool enableAMDVideoSuperResolution(bool activate = true, bool logInfo = true);
+    bool enableIntelVideoSuperResolution(bool activate = true, bool logInfo = true);
+    bool enableNvidiaVideoSuperResolution(bool activate = true, bool logInfo = true);
+    bool enableAMDHDR(bool activate = true, bool logInfo = true);
+    bool enableIntelHDR(bool activate = true, bool logInfo = true);
+    bool enableNvidiaHDR(bool activate = true, bool logInfo = true);
     bool checkDecoderSupport(IDXGIAdapter* adapter);
     int getAdapterIndexByEnhancementCapabilities();
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);

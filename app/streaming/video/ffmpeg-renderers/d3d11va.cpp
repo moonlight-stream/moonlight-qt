@@ -349,7 +349,9 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         goto Exit;
     }
 
-    createVideoProcessor();
+    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        createVideoProcessor();
+    }
 
     if (!checkDecoderSupport(adapter)) {
         SAFE_COM_RELEASE(m_DeviceContext);
@@ -425,20 +427,20 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
                 int score = -1;
 
                 // Video Super Resolution
-                if(m_VideoEnhancement->isVendorAMD(adapterDesc.VendorId) && enableAMDVideoSuperResolution()){
+                if(m_VideoEnhancement->isVendorAMD(adapterDesc.VendorId) && enableAMDVideoSuperResolution(false, false)){
                     score = std::max(score, 200);
-                } else if(m_VideoEnhancement->isVendorIntel(adapterDesc.VendorId) && enableIntelVideoSuperResolution()){
+                } else if(m_VideoEnhancement->isVendorIntel(adapterDesc.VendorId) && enableIntelVideoSuperResolution(false, false)){
                     score = std::max(score, 100);
-                } else if(m_VideoEnhancement->isVendorNVIDIA(adapterDesc.VendorId) && enableNvidiaVideoSuperResolution()){
+                } else if(m_VideoEnhancement->isVendorNVIDIA(adapterDesc.VendorId) && enableNvidiaVideoSuperResolution(false, false)){
                     score = std::max(score, 300);
                 }
 
                 // SDR to HDR auto conversion
-                if(m_VideoEnhancement->isVendorAMD(adapterDesc.VendorId) && enableAMDHDR()){
+                if(m_VideoEnhancement->isVendorAMD(adapterDesc.VendorId) && enableAMDHDR(false, false)){
                     score = std::max(score, 20);
-                } else if(m_VideoEnhancement->isVendorIntel(adapterDesc.VendorId) && enableIntelHDR()){
+                } else if(m_VideoEnhancement->isVendorIntel(adapterDesc.VendorId) && enableIntelHDR(false, false)){
                     score = std::max(score, 10);
-                } else if(m_VideoEnhancement->isVendorNVIDIA(adapterDesc.VendorId) && enableNvidiaHDR()){
+                } else if(m_VideoEnhancement->isVendorNVIDIA(adapterDesc.VendorId) && enableNvidiaHDR(false, false)){
                     score = std::max(score, 30);
                 }
 
@@ -519,7 +521,7 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
  * \param bool activate Default is true, at true it enables the use of Video Super-Resolution feature
  * \return bool Return true if the capability is available
  */
-bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate){
+bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo){
     // The feature is available since Jan 23rd, 2024, with the driver 24.1.1 and on series 7000 check how to implement it
     // https://community.amd.com/t5/gaming/amd-software-24-1-1-amd-fluid-motion-frames-an-updated-ui-and/ba-p/656213
 
@@ -529,7 +531,7 @@ bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate){
     // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_HQ_Scaler_API.md
     // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/public/samples/CPPSamples/SimpleEncoder/SimpleEncoder.cpp
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD Video Super Resolution capability is not yet supported by your client's GPU.");
+    if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD Video Super Resolution capability is not yet supported by your client's GPU.");
     return false;
 }
 
@@ -545,7 +547,7 @@ bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate){
  * \param bool activate Default is true, at true it enables the use of Video Super-Resolution feature
  * \return bool Return true if the capability is available
  */
-bool D3D11VARenderer::enableIntelVideoSuperResolution(bool activate){
+bool D3D11VARenderer::enableIntelVideoSuperResolution(bool activate, bool logInfo){
     HRESULT hr;
 
     constexpr GUID GUID_INTEL_VPE_INTERFACE = {0xedd1d4b9, 0x8659, 0x4cbc, {0xa4, 0xd6, 0x98, 0x31, 0xa2, 0x16, 0x3a, 0xc3}};
@@ -616,9 +618,9 @@ bool D3D11VARenderer::enableIntelVideoSuperResolution(bool activate){
     }
 
     if(activate){
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Intel Video Super Resolution enabled");
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Intel Video Super Resolution enabled");
     } else {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Intel Video Super Resolution disabled");
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Intel Video Super Resolution disabled");
     }
 
     return true;
@@ -638,7 +640,7 @@ bool D3D11VARenderer::enableIntelVideoSuperResolution(bool activate){
  * \param bool activate Default is true, at true it enables the use of Video Super-Resolution feature
  * \return bool Return true if the capability is available
  */
-bool D3D11VARenderer::enableNvidiaVideoSuperResolution(bool activate){
+bool D3D11VARenderer::enableNvidiaVideoSuperResolution(bool activate, bool logInfo){
     HRESULT hr;
 
     // Toggle VSR
@@ -666,9 +668,9 @@ bool D3D11VARenderer::enableNvidiaVideoSuperResolution(bool activate){
     }
 
     if(activate){
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX Video Super Resolution enabled");
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX Video Super Resolution enabled");
     } else {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX Video Super Resolution disabled");
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX Video Super Resolution disabled");
     }
 
     return true;
@@ -682,11 +684,11 @@ bool D3D11VARenderer::enableNvidiaVideoSuperResolution(bool activate){
  * \param bool activate Default is true, at true it enables the use of HDR feature
  * \return bool Return true if the capability is available
  */
-bool D3D11VARenderer::enableAMDHDR(bool activate){
+bool D3D11VARenderer::enableAMDHDR(bool activate, bool logInfo){
 
     // [TODO] Feature not yet announced
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD HDR capability is not yet supported by your client's GPU.");
+    if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD HDR capability is not yet supported by your client's GPU.");
     return false;
 }
 
@@ -698,11 +700,11 @@ bool D3D11VARenderer::enableAMDHDR(bool activate){
  * \param bool activate Default is true, at true it enables the use of HDR feature
  * \return bool Return true if the capability is available
  */
-bool D3D11VARenderer::enableIntelHDR(bool activate){
+bool D3D11VARenderer::enableIntelHDR(bool activate, bool logInfo){
 
     // [TODO] Feature not yet announced
 
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Intel HDR capability is not yet supported by your client's GPU.");
+    if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Intel HDR capability is not yet supported by your client's GPU.");
     return false;
 }
 
@@ -721,7 +723,7 @@ bool D3D11VARenderer::enableIntelHDR(bool activate){
  * \param bool activate Default is true, at true it enables the use of HDR feature
  * \return bool Return true if the capability is available
  */
-bool D3D11VARenderer::enableNvidiaHDR(bool activate){
+bool D3D11VARenderer::enableNvidiaHDR(bool activate, bool logInfo){
     HRESULT hr;
 
     // Toggle HDR
@@ -750,9 +752,9 @@ bool D3D11VARenderer::enableNvidiaHDR(bool activate){
     }
 
     if(activate){
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX HDR enabled");
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX HDR enabled");
     } else {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX HDR disabled");
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "NVIDIA RTX HDR disabled");
     }
 
     return true;
@@ -1033,7 +1035,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if(m_VideoProcessor){
+    if(m_VideoProcessor && m_VideoEnhancement->isVideoEnhancementEnabled()){
         initializeVideoProcessor();
     }
 
@@ -1517,13 +1519,13 @@ bool D3D11VARenderer::initializeVideoProcessor()
     int edgeEnhancement = 0;
     if(m_VideoEnhancement->isVendorAMD()){
         noiseReduction = 30;
-        edgeEnhancement = 50;
+        edgeEnhancement = 30;
     } else if(m_VideoEnhancement->isVendorIntel()){
         noiseReduction = 30;
         edgeEnhancement = 30;
     } else if(m_VideoEnhancement->isVendorNVIDIA()){
         noiseReduction = 30;
-        edgeEnhancement = 50;
+        edgeEnhancement = 30;
     }
     // Reduce artefacts (like pixelisation around text), does work in additionto AI-enhancement for better result
     m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, noiseReduction); // (0 / 0 / 100)
