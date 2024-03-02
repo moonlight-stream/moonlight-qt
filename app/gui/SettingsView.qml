@@ -7,16 +7,12 @@ import StreamingPreferences 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
 import SystemProperties 1.0
-import VideoEnhancement 1.0
 
 Flickable {
     id: settingsPage
     objectName: qsTr("Settings")
 
     signal languageChanged()
-    signal displayModeChanged()
-    signal windowModeChanged()
-    signal videoEnhancementChanged()
 
     boundsBehavior: Flickable.OvershootBounds
 
@@ -235,9 +231,6 @@ Flickable {
                             recalculateWidth()
 
                             lastIndexValue = currentIndex
-
-                            // Signal other controls
-                            displayModeChanged()
                         }
 
                         id: resolutionComboBox
@@ -299,9 +292,6 @@ Flickable {
                             else {
                                 updateBitrateForSelection()
                             }
-
-                            // Signal other controls
-                            displayModeChanged()
                         }
 
                         NavigableDialog {
@@ -320,9 +310,6 @@ Flickable {
                             onClosed: {
                                 widthField.clear()
                                 heightField.clear()
-
-                                // Signal other controls
-                                displayModeChanged()
                             }
 
                             onRejected: {
@@ -772,25 +759,9 @@ Flickable {
                         activated(currentIndex)
                     }
 
-                    // Video Super-Resolution does not work in exclusive full screen, so auto switch do borderless window
-                    // [TODO] This may change according to what AMD and Intel will implement, if they can allow video enhancement in fullscreen
-                    function checkVSR(){
-                        if(videoEnhancementCheck.checked && model.get(currentIndex).val === StreamingPreferences.WM_FULLSCREEN){
-                            for (var i = 0; i < model.count; i++) {
-                                 var thisWm = model.get(i).val;
-                                 if (model.get(i).val === StreamingPreferences.WM_FULLSCREEN_DESKTOP) {
-                                     currentIndex = i
-                                     break
-                                 }
-                            }
-                            activated(currentIndex)
-                        }
-                    }
-
                     Component.onCompleted: {
                         reinitialize()
                         languageChanged.connect(reinitialize)
-                        videoEnhancementChanged.connect(checkVSR)
                     }
 
                     id: windowModeComboBox
@@ -800,8 +771,6 @@ Flickable {
                     textRole: "text"
                     onActivated: {
                         StreamingPreferences.windowMode = model.get(currentIndex).val
-                        // Signal others
-                        windowModeChanged()
                     }
 
                     ToolTip.delay: 1000
@@ -850,19 +819,12 @@ Flickable {
                     hoverEnabled: true
                     text: qsTr("Video AI-Enhancement")
                     font.pointSize:  12
-                    visible: VideoEnhancement.isUIvisible()
+                    visible: SystemProperties.isVideoEnhancementCapable()
                     enabled: true
                     checked: StreamingPreferences.videoEnhancement
-                    property bool checkedSaved
 
                     onCheckedChanged: {
                         StreamingPreferences.videoEnhancement = checked
-                        // The value of checkedSaved is set while changing the WindowMode, need to find a way not to.
-                        if(StreamingPreferences.windowMode !== StreamingPreferences.WM_FULLSCREEN){
-                            checkedSaved = checked
-                        }
-                        // Signal others
-                        videoEnhancementChanged()
                     }
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
@@ -871,51 +833,14 @@ Flickable {
                         qsTr("Enhance video quality by utilizing the GPU's AI-Enhancement capabilities.")
                         + qsTr("\nThis feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.")
                         + qsTr("\nNote:")
-                        + qsTr("\n  - For optimal performance, use the software in borderless window mode; this feature is not applicable in fullscreen mode.")
-                        + qsTr("\n  - If available, ensure that appropriate settings, such as VSR (Virtual Super Resolution), are enabled in your GPU driver configurations.")
+                        + qsTr("\n  - If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.")
                         + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
 
-                    function reinitialize() {
-                        if(typeof(checkedSaved) === "undefined"){
-                            checkedSaved = checked
-                        }
-                        if(!VideoEnhancement.isUIvisible()){
-                            checked = false
-                            checkedSaved = checked
-                            visible = false
-                        }
-                        // If Exclusive fullscreen is selected, disabled the VSR as it does not work in this window mode
-                        else if(StreamingPreferences.windowMode === StreamingPreferences.WM_FULLSCREEN){
-                            checked = false
-                        }
-                        else {
-                            // Get back the saved status
-                            checked = checkedSaved
-                        }
+                    Component.onCompleted: {
                         // Indicate if the feature is available but not officially deployed by the Vendor
-                        if(VideoEnhancement.isExperimental()){
+                        if(SystemProperties.isVideoEnhancementExperimental()){
                             text = qsTr("Video AI-Enhancement (Experimental)")
                         }
-                    }
-
-                    Timer {
-                            id: vsrTimer
-                            interval: 300  // 0 to make it async to get the final status of StreamingPreferences.windowMode (which is set too late in the process)
-                            running: false  // Don't start the timer immediately
-                            repeat: false   // Run only once
-
-                            onTriggered: {
-                                parent.reinitialize()
-                            }
-                        }
-
-                    Component.onCompleted: {
-                        checkedSaved = checked
-                        reinitialize()
-                        windowModeChanged.connect(() => {
-                            checked = checkedSaved
-                            vsrTimer.start()
-                        })
                     }
                 }
             }
