@@ -836,19 +836,11 @@ Flickable {
                         + qsTr("\n  - If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.")
                         + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
 
-                    function reinitialize() {
-                        if(!SystemProperties.isVideoEnhancementCapable()){
-                            checked = false
-                            visible = false
-                        }
+                    Component.onCompleted: {
                         // Indicate if the feature is available but not officially deployed by the Vendor
                         if(SystemProperties.isVideoEnhancementExperimental()){
                             text = qsTr("Video AI-Enhancement (Experimental)")
                         }
-                    }
-
-                    Component.onCompleted: {
-                        reinitialize()
                     }
                 }
             }

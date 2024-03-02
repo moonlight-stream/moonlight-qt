@@ -117,7 +117,6 @@ public:
     Q_PROPERTY(bool absoluteTouchMode MEMBER absoluteTouchMode NOTIFY absoluteTouchModeChanged)
     Q_PROPERTY(bool framePacing MEMBER framePacing NOTIFY framePacingChanged)
     Q_PROPERTY(bool videoEnhancement MEMBER videoEnhancement NOTIFY videoEnhancementChanged)
-    Q_PROPERTY(bool videoEnhancementVisible MEMBER videoEnhancementVisible NOTIFY videoEnhancementVisibleChanged)
     Q_PROPERTY(bool connectionWarnings MEMBER connectionWarnings NOTIFY connectionWarningsChanged)
     Q_PROPERTY(bool richPresence MEMBER richPresence NOTIFY richPresenceChanged)
     Q_PROPERTY(bool gamepadMouse MEMBER gamepadMouse NOTIFY gamepadMouseChanged)
@@ -155,7 +154,6 @@ public:
     bool absoluteTouchMode;
     bool framePacing;
     bool videoEnhancement;
-    bool videoEnhancementVisible;
     bool connectionWarnings;
     bool richPresence;
     bool gamepadMouse;
@@ -197,7 +195,6 @@ signals:
     void windowModeChanged();
     void framePacingChanged();
     void videoEnhancementChanged();
-    void videoEnhancementVisibleChanged();
     void connectionWarningsChanged();
     void richPresenceChanged();
     void gamepadMouseChanged();

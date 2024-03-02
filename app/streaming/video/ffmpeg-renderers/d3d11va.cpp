@@ -1506,7 +1506,7 @@ bool D3D11VARenderer::initializeVideoProcessor()
         m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
     }
 
-    // The section is a customization to enhance (non-AI) shlithly the frame
+    // The section is a customization per vendor to slightly enhance (non-AI methods) the frame appearance
     int noiseReduction = 0;
     int edgeEnhancement = 0;
     if(m_VideoEnhancement->isVendorAMD()){
@@ -1519,7 +1519,7 @@ bool D3D11VARenderer::initializeVideoProcessor()
         noiseReduction = 30;
         edgeEnhancement = 30;
     }
-    // Reduce artefacts (like pixelisation around text), does work in additionto AI-enhancement for better result
+    // Reduce artefacts (like pixelisation around text), does work in addition to AI-enhancement for better result
     m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, noiseReduction); // (0 / 0 / 100)
     // Sharpen sligthly the picture to enhance details, does work in addition to AI-enhancement for better result
     m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, edgeEnhancement); // (0 / 0 / 100)
