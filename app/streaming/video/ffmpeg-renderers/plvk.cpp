@@ -383,8 +383,9 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
     VkPresentModeKHR presentMode;
     if (params->enableVsync) {
-        // We will use mailbox mode if present, otherwise libplacebo will fall back to FIFO
-        presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+        // FIFO mode improves frame pacing compared with Mailbox, especially for
+        // platforms like X11 that lack a VSyncSource implementation for Pacer.
+        presentMode = VK_PRESENT_MODE_FIFO_KHR;
     }
     else {
         // We want immediate mode for V-Sync disabled if possible
