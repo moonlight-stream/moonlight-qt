@@ -43,7 +43,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation>Voir toutes les applis</translation>
+        <translation>Afficher toutes les applis</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
@@ -221,7 +221,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation>Voir toutes les applis</translation>
+        <translation>Afficher toutes les applis</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
