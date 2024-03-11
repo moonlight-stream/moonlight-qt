@@ -17,7 +17,7 @@
         <file>res/baseline-help_outline-24px.svg</file>
         <file>res/baseline-error_outline-24px.svg</file>
         <file>res/baseline-check_circle_outline-24px.svg</file>
-        <file>res/Discord-Logo-White.svg</file>
+        <file>res/discord.svg</file>
         <file>languages/qml_de.ts</file>
         <file>languages/qml_de.qm</file>
         <file>languages/qml_fr.ts</file>
@@ -82,5 +82,6 @@
         <file alias="d3d11_genyuv_pixel.fxc">shaders/d3d11_genyuv_pixel.fxc</file>
         <file alias="d3d11_bt601lim_pixel.fxc">shaders/d3d11_bt601lim_pixel.fxc</file>
         <file alias="d3d11_bt2020lim_pixel.fxc">shaders/d3d11_bt2020lim_pixel.fxc</file>
+        <file alias="vt_renderer.metal">shaders/vt_renderer.metal</file>
     </qresource>
 </RCC>

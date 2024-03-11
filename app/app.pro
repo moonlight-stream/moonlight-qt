@@ -153,7 +153,7 @@ win32:!winrt {
 }
 macx {
     LIBS += -lssl -lcrypto -lavcodec.60 -lavutil.58 -lopus -framework SDL2 -framework SDL2_ttf
-    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal
+    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
 
     # For libsoundio
     LIBS += -framework CoreAudio -framework AudioUnit

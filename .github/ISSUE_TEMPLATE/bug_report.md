@@ -37,12 +37,13 @@ List the games you've tried that exhibit the issue. To see if the issue is game-
  - OS: [e.g. Windows 10 1809]
  - Moonlight Version: [e.g. v0.9.0]
  - GPU: [e.g. Intel HD Graphics 520]
+ - Linux package type (if applicable): [e.g. Flatpak]
 
 **Server PC details (please complete the following information)**
  - OS: [e.g. Windows 10 1809]
- - GeForce Experience version: [e.g. 3.16.0.140]
- - Nvidia GPU driver: [e.g. 417.35]
- - Antivirus and firewall software: [e.g. Windows Defender and Windows Firewall]
+ - Sunshine or GeForce Experience version: [e.g. Sunshine v0.21.0]
+ - GPU: [e.g. AMD Radeon RX 7900 XT]
+ - GPU driver: [e.g. 24.1.1]
 
 **Moonlight Logs (please attach)**
 - On Windows, `Moonlight-###.log` files can be found in `%TEMP%`. Simply type that into the File Explorer path field to navigate there.
