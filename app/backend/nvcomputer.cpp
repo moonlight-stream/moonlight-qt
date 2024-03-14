@@ -400,6 +400,7 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
                     }
 #endif
 
+
                     if (nic.flags() & QNetworkInterface::IsPointToPoint) {
                         // Treat point-to-point links as likely VPNs.
                         // This check detects OpenVPN on Unix-like OSes.
@@ -421,6 +422,18 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
                         return ReachabilityType::RI_VPN;
                     }
 
+                    // Check if remote host IP is in private address or link-local range
+                    QHostAddress remoteHostAddress = QHostAddress(copyOfActiveAddress.address());
+                    bool remoteHostIsLocalV4 =
+                            remoteHostAddress.isInSubnet(QHostAddress("10.0.0.0"), 8) ||
+                            remoteHostAddress.isInSubnet(QHostAddress("172.16.0.0"), 12) ||
+                            remoteHostAddress.isInSubnet(QHostAddress("192.168.0.0"), 16) ||
+                            remoteHostAddress.isInSubnet(QHostAddress("169.254.0.0"), 16);
+
+                    if (!remoteHostIsLocalV4) {
+                        return ReachabilityType::RI_VPN;
+                    }
+                    
                     // Didn't meet any of our VPN heuristics. Let's see if it's on-link.
                     Q_ASSERT(addr.prefixLength() >= 0);
                     if (addr.prefixLength() >= 0 && s.localAddress().isInSubnet(addr.ip(), addr.prefixLength())) {
