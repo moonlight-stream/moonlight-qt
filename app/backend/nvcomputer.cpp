@@ -400,7 +400,6 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
                     }
 #endif
 
-
                     if (nic.flags() & QNetworkInterface::IsPointToPoint) {
                         // Treat point-to-point links as likely VPNs.
                         // This check detects OpenVPN on Unix-like OSes.
