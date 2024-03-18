@@ -8,10 +8,10 @@ Subject: [PATCH] Vulkan: Don't try to reuse old swapchain
  1 file changed, 10 insertions(+), 2 deletions(-)
 
 diff --git a/src/vulkan/swapchain.c b/src/vulkan/swapchain.c
-index 0741fbfc..88bdf6a5 100644
+index 0646e57c..c0b07ce4 100644
 --- a/src/vulkan/swapchain.c
 +++ b/src/vulkan/swapchain.c
-@@ -610,13 +610,21 @@ static bool vk_sw_recreate(pl_swapchain sw, int w, int h)
+@@ -612,13 +612,21 @@ static bool vk_sw_recreate(pl_swapchain sw, int w, int h)
      }
  #endif
  
@@ -30,8 +30,8 @@ index 0741fbfc..88bdf6a5 100644
 +    /* sinfo.oldSwapchain = p->swapchain; */
      p->swapchain = VK_NULL_HANDLE;
      VkResult res = vk->CreateSwapchainKHR(vk->dev, &sinfo, PL_VK_ALLOC, &p->swapchain);
--    vk_dev_callback(vk, (vk_cb) destroy_swapchain, vk, vk_wrap_handle(sinfo.oldSwapchain));
-+    /* vk_dev_callback(vk, (vk_cb) destroy_swapchain, vk, vk_wrap_handle(sinfo.oldSwapchain)); */
+-    vk_dev_callback(vk, VK_CB_FUNC(destroy_swapchain), vk, vk_wrap_handle(sinfo.oldSwapchain));
++    /* vk_dev_callback(vk, VK_CB_FUNC(destroy_swapchain), vk, vk_wrap_handle(sinfo.oldSwapchain)); */
      PL_VK_ASSERT(res, "vk->CreateSwapchainKHR(...)");
  
      // Get the new swapchain images
