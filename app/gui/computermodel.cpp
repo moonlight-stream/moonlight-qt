@@ -52,7 +52,7 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
             .arg(computer->remoteAddress.toString())
             .arg(computer->ipv6Address.toString())
             .arg(computer->manualAddress.toString())
-            .arg(computer->macAddress.isEmpty() ? "<NULL>" : computer->macAddress.toHex(':'))
+            .arg(computer->macAddress.isEmpty() ? "<NULL>" : QString(computer->macAddress.toHex(':')))
             .arg(computer->pairState == NvComputer::PS_PAIRED ? tr("Paired") : tr("Unpaired"))
             .arg(computer->currentGameId)
             .arg(computer->activeHttpsPort);
