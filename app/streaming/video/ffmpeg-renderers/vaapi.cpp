@@ -11,7 +11,9 @@
 #include <xf86drm.h>
 #endif
 
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
 #include <SDL_syswm.h>
+#endif
 
 #include <unistd.h>
 #include <fcntl.h>
@@ -78,6 +80,106 @@ VAAPIRenderer::~VAAPIRenderer()
 VADisplay
 VAAPIRenderer::openDisplay(SDL_Window* window)
 {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    VADisplay display;
+
+    const char *videoDriver = SDL_GetCurrentVideoDriver();
+    if (videoDriver == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unable to find SDL video driver for VAAPI");
+        return nullptr;
+    }
+
+    if (SDL_strcmp(videoDriver, "x11") == 0) {
+#ifdef HAVE_LIBVA_X11
+        m_XWindow = (Window)SDL_GetNumberProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_WINDOW_NUMBER, 0);
+        Display *xdisplay = (Display *)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_X11_DISPLAY_POINTER, NULL);
+        display = vaGetDisplay(xdisplay);
+        if (display == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to open X11 display for VAAPI");
+            return nullptr;
+        }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI X11 support!");
+        return nullptr;
+#endif
+    }
+    else if (SDL_strcmp(videoDriver, "wayland") == 0) {
+#ifdef HAVE_LIBVA_WAYLAND
+        struct wl_display *wldisplay = (struct wl_display *)SDL_GetProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_WAYLAND_DISPLAY_POINTER, NULL);
+        display = vaGetDisplayWl(wldisplay);
+        if (display == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to open Wayland display for VAAPI");
+            return nullptr;
+        }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI Wayland support!");
+        return nullptr;
+#endif
+    }
+    else if (SDL_strcmp(videoDriver, "kmsdrm") == 0) {
+#ifdef HAVE_LIBVA_DRM
+        int drmFd = SDL_GetNumberProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_KMSDRM_DRM_FD_NUMBER, 0);
+        SDL_assert(drmFd >= 0);
+
+        // It's possible to enter this function several times as we're probing VA drivers.
+        // Make sure to only duplicate the DRM FD the first time through.
+        if (m_DrmFd < 0) {
+            // If the KMSDRM FD is not a render node FD, open the render node for libva to use.
+            // Since libva 2.20, using a primary node will fail in vaGetDriverNames().
+            if (drmGetNodeTypeFromFd(drmFd) != DRM_NODE_RENDER) {
+                char* renderNodePath = drmGetRenderDeviceNameFromFd(drmFd);
+                if (renderNodePath) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Opening render node for VAAPI: %s",
+                                renderNodePath);
+                    m_DrmFd = open(renderNodePath, O_RDWR | O_CLOEXEC);
+                    free(renderNodePath);
+                    if (m_DrmFd < 0) {
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                     "Failed to open render node: %d",
+                                     errno);
+                        return nullptr;
+                    }
+                }
+                else {
+                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                                "Failed to get render node path. Using the SDL FD directly.");
+                    m_DrmFd = dup(drmFd);
+                }
+            }
+            else {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "KMSDRM FD is already a render node. Using the SDL FD directly.");
+                m_DrmFd = dup(drmFd);
+            }
+        }
+
+        display = vaGetDisplayDRM(m_DrmFd);
+        if (display == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unable to open DRM display for VAAPI");
+            return nullptr;
+        }
+#else
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Moonlight not compiled with VAAPI DRM support!");
+        return nullptr;
+#endif
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Unsupported VAAPI rendering subsystem: %s",
+                     videoDriver);
+        return nullptr;
+    }
+
+    return display;
+#else
     SDL_SysWMinfo info;
     VADisplay display;
 
@@ -173,6 +275,7 @@ VAAPIRenderer::openDisplay(SDL_Window* window)
     }
 
     return display;
+#endif
 }
 
 VAStatus
@@ -256,7 +359,11 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
             }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            if (status != VA_STATUS_SUCCESS && ((SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) || m_DecoderSelectionPass > 0)) {
+#else
             if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
+#endif
                 // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
                 // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
                 // NB: Remember to update the VA-API NVDEC condition below when modifying this!
@@ -347,7 +454,11 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         }
 
         // Prefer CUDA for XWayland and VDPAU for regular X11.
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        if ((SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
+#else
         if (m_WindowSystem == SDL_SYSWM_X11 && vendorStr.contains("VA-API NVDEC", Qt::CaseInsensitive)) {
+#endif
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Deprioritizing VAAPI for NVIDIA driver on X11/XWayland. Set FORCE_VAAPI=1 to override.");
             return false;
@@ -497,7 +608,11 @@ VAAPIRenderer::isDirectRenderingSupported()
     }
 
     // We only support direct rendering on X11 with VAEntrypointVideoProc support
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if ((SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) || m_BlacklistedForDirectRendering) {
+#else
     if (m_WindowSystem != SDL_SYSWM_X11 || m_BlacklistedForDirectRendering) {
+#endif
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using indirect rendering due to WM or blacklist");
         return false;
@@ -601,7 +716,11 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     if (!overlayEnabled) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(newSurface);
+#else
         SDL_FreeSurface(newSurface);
+#endif
         return;
     }
 
@@ -615,7 +734,11 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "vaCreateImage() failed: %d",
                          status);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_DestroySurface(newSurface);
+#else
             SDL_FreeSurface(newSurface);
+#endif
             return;
         }
 
@@ -625,7 +748,11 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "vaMapBuffer() failed: %d",
                          status);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_DestroySurface(newSurface);
+#else
             SDL_FreeSurface(newSurface);
+#endif
             vaDestroyImage(vaDeviceContext->display, newImage.image_id);
             return;
         }
@@ -640,7 +767,11 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "vaUnmapBuffer() failed: %d",
                          status);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_DestroySurface(newSurface);
+#else
             SDL_FreeSurface(newSurface);
+#endif
             vaDestroyImage(vaDeviceContext->display, newImage.image_id);
             return;
         }
@@ -662,7 +793,11 @@ void VAAPIRenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         overlayRect.h = newSurface->h;
 
         // Surface data is no longer needed
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(newSurface);
+#else
         SDL_FreeSurface(newSurface);
+#endif
 
         VASubpictureID newSubpicture;
         status = vaCreateSubpicture(vaDeviceContext->display, newImage.image_id, &newSubpicture);
@@ -708,7 +843,11 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
 
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "x11") == 0) {
+#else
     if (m_WindowSystem == SDL_SYSWM_X11) {
+#endif
 #ifdef HAVE_LIBVA_X11
         unsigned int flags = 0;
 
@@ -844,7 +983,11 @@ VAAPIRenderer::renderFrame(AVFrame* frame)
         SDL_UnlockMutex(m_OverlayMutex);
 #endif
     }
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+#else
     else if (m_WindowSystem == SDL_SYSWM_WAYLAND) {
+#endif
         // We don't support direct rendering on Wayland, so we should
         // never get called there. Many common Wayland compositors don't
         // support YUV surfaces, so direct rendering would fail.

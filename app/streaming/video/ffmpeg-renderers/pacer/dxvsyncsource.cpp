@@ -47,6 +47,12 @@ bool DxVsyncSource::initialize(SDL_Window* window, int)
         return false;
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    // Pacer should only create us on Win32
+    SDL_assert(SDL_strcmp(SDL_GetCurrentVideoDriver(), "win32") == 0);
+
+    m_Window = (HWND)SDL_GetProperty(SDL_GetWindowProperties(m_Window), SDL_PROP_WINDOW_WIN32_HWND_POINTER, NULL);
+#else
     SDL_SysWMinfo info;
 
     SDL_VERSION(&info.version);
@@ -62,6 +68,7 @@ bool DxVsyncSource::initialize(SDL_Window* window, int)
     SDL_assert(info.subsystem == SDL_SYSWM_WINDOWS);
 
     m_Window = info.info.win.window;
+#endif
 
     return true;
 }

@@ -2,7 +2,11 @@
 
 #include "utils.h"
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 #ifdef HAS_X11
 #include <X11/Xlib.h>
@@ -18,7 +22,11 @@
 bool WMUtils::isRunningX11()
 {
 #ifdef HAS_X11
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    static SDL_AtomicInt isRunningOnX11;
+#else
     static SDL_atomic_t isRunningOnX11;
+#endif
 
     // If the value is not set yet, populate it now.
     int val = SDL_AtomicGet(&isRunningOnX11);
@@ -44,7 +52,11 @@ bool WMUtils::isRunningX11()
 bool WMUtils::isRunningWayland()
 {
 #ifdef HAS_WAYLAND
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    static SDL_AtomicInt isRunningOnWayland;
+#else
     static SDL_atomic_t isRunningOnWayland;
+#endif
 
     // If the value is not set yet, populate it now.
     int val = SDL_AtomicGet(&isRunningOnWayland);

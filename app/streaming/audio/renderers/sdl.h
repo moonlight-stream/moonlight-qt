@@ -1,7 +1,11 @@
 #pragma once
 
 #include "renderer.h"
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 class SdlAudioRenderer : public IAudioRenderer
 {
@@ -19,7 +23,11 @@ public:
     virtual int getCapabilities();
 
 private:
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_AudioStream *m_AudioStream;
+#else
     SDL_AudioDeviceID m_AudioDevice;
+#endif
     void* m_AudioBuffer;
     int m_FrameSize;
 };

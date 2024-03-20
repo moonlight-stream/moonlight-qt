@@ -1,5 +1,9 @@
 #include <Limelight.h>
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include "streaming/session.h"
 #include "settings/mappingmanager.h"
 #include "path.h"
@@ -21,7 +25,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
       m_PointerRegionLockToggledByUser(false),
       m_FakeCaptureActive(false),
       m_CaptureSystemKeysMode(prefs.captureSysKeysMode),
-      m_MouseCursorCapturedVisibilityState(SDL_DISABLE),
+      m_MouseCursorCapturedVisibilityState(0),
       m_LongPressTimer(0),
       m_StreamWidth(streamWidth),
       m_StreamHeight(streamHeight),
@@ -168,6 +172,19 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     // Flush gamepad arrival and departure events which may be queued before
     // starting the gamecontroller subsystem again. This prevents us from
     // receiving duplicate arrival and departure events for the same gamepad.
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_FlushEvent(SDL_EVENT_GAMEPAD_ADDED);
+    SDL_FlushEvent(SDL_EVENT_GAMEPAD_REMOVED);
+
+    // We need to reinit this each time, since you only get
+    // an initial set of gamepad arrival events once per init.
+    SDL_assert(!SDL_WasInit(SDL_INIT_GAMEPAD));
+    if (SDL_InitSubSystem(SDL_INIT_GAMEPAD) != 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_InitSubSystem(SDL_INIT_GAMEPAD) failed: %s",
+                     SDL_GetError());
+    }
+#else
     SDL_FlushEvent(SDL_CONTROLLERDEVICEADDED);
     SDL_FlushEvent(SDL_CONTROLLERDEVICEREMOVED);
 
@@ -179,6 +196,7 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
                      "SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) failed: %s",
                      SDL_GetError());
     }
+#endif
 
 #if !SDL_VERSION_ATLEAST(2, 0, 9)
     SDL_assert(!SDL_WasInit(SDL_INIT_HAPTIC));
@@ -212,9 +230,15 @@ SdlInputHandler::~SdlInputHandler()
             SDL_HapticClose(m_GamepadState[i].haptic);
         }
 #endif
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        if (m_GamepadState[i].controller != nullptr) {
+            SDL_CloseGamepad(m_GamepadState[i].controller);
+        }
+#else
         if (m_GamepadState[i].controller != nullptr) {
             SDL_GameControllerClose(m_GamepadState[i].controller);
         }
+#endif
     }
 
     SDL_RemoveTimer(m_LongPressTimer);
@@ -227,8 +251,13 @@ SdlInputHandler::~SdlInputHandler()
     SDL_assert(!SDL_WasInit(SDL_INIT_HAPTIC));
 #endif
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_QuitSubSystem(SDL_INIT_GAMEPAD);
+    SDL_assert(!SDL_WasInit(SDL_INIT_GAMEPAD));
+#else
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
     SDL_assert(!SDL_WasInit(SDL_INIT_GAMECONTROLLER));
+#endif
 
     SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
     SDL_assert(!SDL_WasInit(SDL_INIT_JOYSTICK));
@@ -376,13 +405,21 @@ void SdlInputHandler::setCaptureActive(bool active)
         // If we're in relative mode, try to activate SDL's relative mouse mode
         if (m_AbsoluteMouseMode || SDL_SetRelativeMouseMode(SDL_TRUE) < 0) {
             // Relative mouse mode didn't work or was disabled, so we'll just hide the cursor
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            m_MouseCursorCapturedVisibilityState ? SDL_ShowCursor() : SDL_HideCursor();
+#else
             SDL_ShowCursor(m_MouseCursorCapturedVisibilityState);
+#endif
             m_FakeCaptureActive = true;
         }
 
         // Synchronize the client and host cursor when activating absolute capture
         if (m_AbsoluteMouseMode) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            float mouseX, mouseY;
+#else
             int mouseX, mouseY;
+#endif
             int windowX, windowY;
 
             // We have to use SDL_GetGlobalMouseState() because macOS may not reflect
@@ -391,13 +428,22 @@ void SdlInputHandler::setCaptureActive(bool active)
 
             // Convert global mouse state to window-relative
             SDL_GetWindowPosition(m_Window, &windowX, &windowY);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            mouseX -= (float)windowX;
+            mouseY -= (float)windowY;
+#else
             mouseX -= windowX;
             mouseY -= windowY;
+#endif
 
-            if (isMouseInVideoRegion(mouseX, mouseY)) {
+            if (isMouseInVideoRegion((int)mouseX, (int)mouseY)) {
                 // Synthesize a mouse event to synchronize the cursor
                 SDL_MouseMotionEvent motionEvent = {};
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+                motionEvent.type = SDL_EVENT_MOUSE_MOTION;
+#else
                 motionEvent.type = SDL_MOUSEMOTION;
+#endif
                 motionEvent.timestamp = SDL_GetTicks();
                 motionEvent.windowID = SDL_GetWindowID(m_Window);
                 motionEvent.x = mouseX;
@@ -409,7 +455,11 @@ void SdlInputHandler::setCaptureActive(bool active)
     else {
         if (m_FakeCaptureActive) {
             // Display the cursor again
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_ShowCursor();
+#else
             SDL_ShowCursor(SDL_ENABLE);
+#endif
             m_FakeCaptureActive = false;
         }
         else {

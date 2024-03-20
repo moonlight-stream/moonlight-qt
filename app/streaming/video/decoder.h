@@ -1,7 +1,11 @@
 #pragma once
 
 #include <Limelight.h>
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include "settings/streamingpreferences.h"
 
 #define SDL_CODE_FRAME_READY 0

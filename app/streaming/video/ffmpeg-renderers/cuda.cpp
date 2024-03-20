@@ -1,6 +1,10 @@
 #include "cuda.h"
 
+#if HAVE_SDL3
+#include <SDL3/SDL_opengl.h>
+#else
 #include <SDL_opengl.h>
+#endif
 
 CUDARenderer::CUDARenderer()
     : m_HwContext(nullptr)

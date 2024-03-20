@@ -32,7 +32,11 @@ OverlayManager::~OverlayManager()
 {
     for (int i = 0; i < OverlayType::OverlayMax; i++) {
         if (m_Overlays[i].surface != nullptr) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_DestroySurface(m_Overlays[i].surface);
+#else
             SDL_FreeSurface(m_Overlays[i].surface);
+#endif
         }
         if (m_Overlays[i].font != nullptr) {
             TTF_CloseFont(m_Overlays[i].font);
@@ -150,7 +154,11 @@ void OverlayManager::notifyOverlayUpdated(OverlayType type)
 
     // Free the old surface
     if (oldSurface != nullptr) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_DestroySurface(oldSurface);
+#else
         SDL_FreeSurface(oldSurface);
+#endif
     }
 
     if (m_Overlays[type].enabled) {

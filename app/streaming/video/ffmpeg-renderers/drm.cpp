@@ -56,7 +56,9 @@ extern "C" {
 #undef SDL_VIDEO_DRIVER_X11
 #endif
 
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
 #include <SDL_syswm.h>
+#endif
 
 #include <QDir>
 
@@ -186,7 +188,18 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     m_Main10Hdr = (params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
     m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
-#if SDL_VERSION_ATLEAST(2, 0, 15)
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "kmsdrm") == 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Sharing DRM FD with SDL");
+
+        int drmFd = SDL_GetNumberProperty(SDL_GetWindowProperties(params->window), SDL_PROP_WINDOW_KMSDRM_DRM_FD_NUMBER, 0);
+        SDL_assert(drmFd >= 0);
+        m_DrmFd = drmFd;
+        m_SdlOwnsDrmFd = true;
+    }
+    else
+#elif SDL_VERSION_ATLEAST(2, 0, 15)
     SDL_SysWMinfo info;
 
     SDL_VERSION(&info.version);
@@ -315,7 +328,11 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         // operation that the KMSDRM backend keeps pending until the next
         // time we swap buffers. We have to do this before we enumerate
         // CRTC modes below.
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_Renderer* renderer = SDL_CreateRenderer(params->window, NULL, SDL_RENDERER_SOFTWARE);
+#else
         SDL_Renderer* renderer = SDL_CreateRenderer(params->window, -1, SDL_RENDERER_SOFTWARE);
+#endif
         if (renderer != nullptr) {
             SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
             SDL_RenderClear(renderer);

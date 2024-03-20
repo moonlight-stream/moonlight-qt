@@ -105,8 +105,13 @@ void StreamUtils::screenSpaceToNormalizedDeviceCoords(SDL_Rect* src, SDL_FRect* 
 
 int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
 {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_DisplayID displayIndex = SDL_GetDisplayForWindow(window);
+    if (displayIndex == 0) {
+#else
     int displayIndex = SDL_GetWindowDisplayIndex(window);
     if (displayIndex < 0) {
+#endif
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to get current display: %s",
                      SDL_GetError());
@@ -115,6 +120,36 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
         displayIndex = 0;
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    const SDL_DisplayMode *fullscreenMode = SDL_GetWindowFullscreenMode(window);
+    const SDL_DisplayMode *currentMode = SDL_GetCurrentDisplayMode(displayIndex);
+    if (fullscreenMode) {
+        // Use the window display mode for full-screen exclusive mode
+        if (fullscreenMode->refresh_rate == 0.0f) {
+            return 60;
+        }
+        else {
+            return (int)fullscreenMode->refresh_rate;
+        }
+    }
+    else if (currentMode) {
+        // Use the current display mode for windowed and borderless
+        if (currentMode->refresh_rate == 0.0f) {
+            return 60;
+        }
+        else {
+            return (int)currentMode->refresh_rate;
+        }
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDL_GetCurrentDisplayMode() failed: %s",
+                        SDL_GetError());
+
+        // Assume 60 Hz
+        return 60;
+    }
+#else
     SDL_DisplayMode mode;
     if ((SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
         // Use the window display mode for full-screen exclusive mode
@@ -147,6 +182,7 @@ int StreamUtils::getDisplayRefreshRate(SDL_Window* window)
     }
 
     return mode.refresh_rate;
+#endif
 }
 
 bool StreamUtils::hasFastAes()
@@ -193,6 +229,23 @@ bool StreamUtils::hasFastAes()
 #endif
 }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+bool StreamUtils::getNativeDesktopMode(SDL_DisplayID displayID, SDL_DisplayMode* mode)
+{
+    // TODO: Check how to get the native resolution
+    // withoud DPI scaling for Wayland and Darwin
+    const SDL_DisplayMode *displayMode = SDL_GetDesktopDisplayMode(displayID);
+    if (!displayMode) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                        "SDL_GetDisplayMode() failed: %s",
+                        SDL_GetError());
+        return false;
+    }
+    SDL_memcpy(mode, displayMode, sizeof(SDL_DisplayMode));
+
+    return true;
+}
+#else
 bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
 {
 #ifdef Q_OS_DARWIN
@@ -262,3 +315,4 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
 
     return true;
 }
+#endif

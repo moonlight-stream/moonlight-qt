@@ -3,7 +3,11 @@
 #include <QTimer>
 #include <QEvent>
 
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 class SdlGamepadKeyNavigation : public QObject
 {
@@ -30,7 +34,11 @@ private slots:
 
 private:
     QTimer* m_PollingTimer;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    QList<SDL_Gamepad*> m_Gamepads;
+#else
     QList<SDL_GameController*> m_Gamepads;
+#endif
     bool m_Enabled;
     bool m_UiNavMode;
     bool m_FirstPoll;

@@ -1,7 +1,11 @@
 #include "input.h"
 
 #include <Limelight.h>
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 
 #include <QtMath>
 
@@ -59,7 +63,11 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
     // This is also required to handle finger up which
     // where the finger will not be in SDL_GetTouchFinger()
     // anymore.
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (event->type != SDL_EVENT_FINGER_DOWN) {
+#else
     if (event->type != SDL_FINGERDOWN) {
+#endif
         for (int i = 0; i < MAX_FINGERS; i++) {
             if (event->fingerId == m_TouchDownEvent[i].fingerId) {
                 fingerIndex = i;
@@ -106,7 +114,11 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
 
     // Start a drag timer when primary or secondary
     // fingers go down
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (event->type == SDL_EVENT_FINGER_DOWN &&
+#else
     if (event->type == SDL_FINGERDOWN &&
+#endif
             (fingerIndex == 0 || fingerIndex == 1)) {
         SDL_RemoveTimer(m_DragTimer);
         m_DragTimer = SDL_AddTimer(DRAG_ACTIVATION_DELAY,
@@ -114,7 +126,11 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
                                    this);
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (event->type == SDL_EVENT_FINGER_MOTION) {
+#else
     if (event->type == SDL_FINGERMOTION) {
+#endif
         // If it's outside the deadzone delta, cancel drags and taps
         if (qSqrt(qPow(event->x - m_TouchDownEvent[fingerIndex].x, 2) +
                   qPow(event->y - m_TouchDownEvent[fingerIndex].y, 2)) > DEAD_ZONE_DELTA) {
@@ -126,7 +142,11 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
         }
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (event->type == SDL_EVENT_FINGER_UP) {
+#else
     if (event->type == SDL_FINGERUP) {
+#endif
         // Cancel the drag timer on finger up
         SDL_RemoveTimer(m_DragTimer);
         m_DragTimer = 0;
@@ -166,10 +186,19 @@ void SdlInputHandler::handleRelativeFingerEvent(SDL_TouchFingerEvent* event)
 
     m_NumFingersDown = SDL_GetNumTouchFingers(event->touchId);
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (event->type == SDL_EVENT_FINGER_DOWN) {
+        m_TouchDownEvent[fingerIndex] = *event;
+    }
+    else if (event->type == SDL_EVENT_FINGER_UP) {
+        m_TouchDownEvent[fingerIndex] = {};
+    }
+#else
     if (event->type == SDL_FINGERDOWN) {
         m_TouchDownEvent[fingerIndex] = *event;
     }
     else if (event->type == SDL_FINGERUP) {
         m_TouchDownEvent[fingerIndex] = {};
     }
+#endif
 }

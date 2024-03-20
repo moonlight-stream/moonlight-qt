@@ -27,7 +27,11 @@ private:
     SDL_Texture* m_Texture;
     int m_ColorSpace;
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_FRect m_OverlayRects[Overlay::OverlayMax];
+#else
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
+#endif
 
     SwFrameMapper m_SwFrameMapper;
 

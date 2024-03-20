@@ -38,7 +38,11 @@ private:
     // This is fine because the majority of time spent in the mutex
     // is by the render thread, which cannot contend with itself
     // because overlays are rendered sequentially.
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_Mutex* m_OverlayMutex;
+#else
     SDL_mutex* m_OverlayMutex;
+#endif
     VdpBitmapSurface m_OverlaySurface[Overlay::OverlayMax];
     VdpRect m_OverlayRect[Overlay::OverlayMax];
     VdpOutputSurfaceRenderBlendState m_OverlayBlendState;

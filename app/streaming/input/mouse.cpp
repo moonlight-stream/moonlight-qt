@@ -1,7 +1,11 @@
 #include "input.h"
 
 #include <Limelight.h>
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#else
 #include <SDL.h>
+#endif
 #include "streaming/streamutils.h"
 
 void SdlInputHandler::handleMouseButtonEvent(SDL_MouseButtonEvent* event)
@@ -97,14 +101,14 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-        mouseInVideoRegion = isMouseInVideoRegion(event->x,
-                                                  event->y,
+        mouseInVideoRegion = isMouseInVideoRegion((int)event->x,
+                                                  (int)event->y,
                                                   windowWidth,
                                                   windowHeight);
 
         // Clamp motion to the video region
-        short x = qMin(qMax(event->x - dst.x, 0), dst.w);
-        short y = qMin(qMax(event->y - dst.y, 0), dst.h);
+        short x = qMin(qMax((int)event->x - dst.x, 0), dst.w);
+        short y = qMin(qMax((int)event->y - dst.y, 0), dst.h);
 
         // Send the mouse position update if one of the following is true:
         // a) it is in the video region now
@@ -124,7 +128,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
 
         // Adjust the cursor visibility if applicable
         if (mouseInVideoRegion ^ m_MouseWasInVideoRegion) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            mouseInVideoRegion && !m_MouseCursorCapturedVisibilityState ? SDL_HideCursor() : SDL_ShowCursor();
+#else
             SDL_ShowCursor((mouseInVideoRegion && m_MouseCursorCapturedVisibilityState == SDL_DISABLE) ? SDL_DISABLE : SDL_ENABLE);
+#endif
             if (!mouseInVideoRegion && buttonState != 0) {
                 // If we still have a button pressed on leave, wait for that to come up
                 // before we stop sending mouse position events.
@@ -151,15 +159,49 @@ void SdlInputHandler::handleMouseWheelEvent(SDL_MouseWheelEvent* event)
     }
 
     if (m_AbsoluteMouseMode) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        float mouseX, mouseY;
+        SDL_GetMouseState(&mouseX, &mouseY);
+#else
         int mouseX, mouseY;
         SDL_GetMouseState(&mouseX, &mouseY);
-        if (!isMouseInVideoRegion(mouseX, mouseY)) {
+#endif
+        if (!isMouseInVideoRegion((int)mouseX, (int)mouseY)) {
             // Ignore scroll events outside the video region
             return;
         }
     }
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (event->mouseY != 0.0f) {
+        // Invert the scroll direction if needed
+        if (m_ReverseScrollDirection) {
+            event->mouseY = -event->mouseY;
+        }
 
-#if SDL_VERSION_ATLEAST(2, 0, 18)
+#ifdef Q_OS_DARWIN
+        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
+        // from generating wild scroll deltas when scrolling quickly.
+        event->mouseY = SDL_clamp(event->mouseY, -1.0f, 1.0f);
+#endif
+
+        LiSendHighResScrollEvent((short)(event->mouseY * 120)); // WHEEL_DELTA
+    }
+
+    if (event->mouseX != 0.0f) {
+        // Invert the scroll direction if needed
+        if (m_ReverseScrollDirection) {
+            event->mouseX = -event->mouseY;
+        }
+
+#ifdef Q_OS_DARWIN
+        // HACK: Clamp the scroll values on macOS to prevent OS scroll acceleration
+        // from generating wild scroll deltas when scrolling quickly.
+        event->mouseX = SDL_clamp(event->mouseX, -1.0f, 1.0f);
+#endif
+
+        LiSendHighResHScrollEvent((short)(event->mouseX * 120)); // WHEEL_DELTA
+    }
+#elif SDL_VERSION_ATLEAST(2, 0, 18)
     if (event->preciseY != 0.0f) {
         // Invert the scroll direction if needed
         if (m_ReverseScrollDirection) {
@@ -255,7 +297,11 @@ void SdlInputHandler::updatePointerRegionLock()
     // have full control over it and we don't touch it anymore.
     if (!m_PointerRegionLockToggledByUser) {
         // Lock the pointer in true full-screen mode and leave it unlocked in other modes
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        m_PointerRegionLockActive = SDL_GetWindowFullscreenMode(m_Window) ? true : false;
+#else
         m_PointerRegionLockActive = (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN;
+#endif
     }
 
     // If region lock is enabled, grab the cursor so it can't accidentally leave our window.

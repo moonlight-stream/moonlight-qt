@@ -5,7 +5,9 @@
 
 #include <Limelight.h>
 
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
 #include <SDL_syswm.h>
+#endif
 
 SdlRenderer::SdlRenderer()
     : m_VideoFormat(0),
@@ -100,6 +102,25 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "win32") == 0) {
+        // DWM is always tear-free except in full-screen exclusive mode
+        if (SDL_GetWindowFullscreenMode(params->window)) {
+            if (params->enableVsync) {
+                rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
+            }
+        }
+    }
+    else if (SDL_strcmp(SDL_GetCurrentVideoDriver(), "wayland") == 0) {
+        // Wayland is always tear-free in all modes
+    }
+    else {
+        // For other subsystems, just set SDL_RENDERER_PRESENTVSYNC if asked
+        if (params->enableVsync) {
+            rendererFlags |= SDL_RENDERER_PRESENTVSYNC;
+        }
+    }
+#else
     SDL_SysWMinfo info;
     SDL_VERSION(&info.version);
     if (!SDL_GetWindowWMInfo(params->window, &info)) {
@@ -131,6 +152,7 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         }
         break;
     }
+#endif
 
 #ifdef Q_OS_WIN32
     // We render on a different thread than the main thread which is handling window
@@ -140,7 +162,11 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_SetHintWithPriority(SDL_HINT_RENDER_DIRECT3D_THREADSAFE, "1", SDL_HINT_OVERRIDE);
 #endif
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    m_Renderer = SDL_CreateRenderer(params->window, NULL, rendererFlags);
+#else
     m_Renderer = SDL_CreateRenderer(params->window, -1, rendererFlags);
+#endif
     if (!m_Renderer) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
@@ -162,7 +188,11 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     else {
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+        SDL_FlushEvents(SDL_EVENT_WINDOW_FIRST, SDL_EVENT_WINDOW_LAST);
+#else
         SDL_FlushEvent(SDL_WINDOWEVENT);
+#endif
     }
 
     if (!params->testOnly) {
@@ -199,7 +229,11 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             if (type == Overlay::OverlayStatusUpdate) {
                 // Bottom Left
                 SDL_Rect viewportRect;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+                SDL_GetRenderViewport(m_Renderer, &viewportRect);
+#else
                 SDL_RenderGetViewport(m_Renderer, &viewportRect);
+#endif
                 m_OverlayRects[type].x = 0;
                 m_OverlayRects[type].y = viewportRect.h - newSurface->h;
             }
@@ -213,12 +247,20 @@ void SdlRenderer::renderOverlay(Overlay::OverlayType type)
             m_OverlayRects[type].h = newSurface->h;
 
             m_OverlayTextures[type] = SDL_CreateTextureFromSurface(m_Renderer, newSurface);
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_DestroySurface(newSurface);
+#else
             SDL_FreeSurface(newSurface);
+#endif
         }
 
         // If we have an overlay texture, render it too
         if (m_OverlayTextures[type] != nullptr) {
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+            SDL_RenderTexture(m_Renderer, m_OverlayTextures[type], nullptr, &m_OverlayRects[type]);
+#else
             SDL_RenderCopy(m_Renderer, m_OverlayTextures[type], nullptr, &m_OverlayRects[type]);
+#endif
         }
     }
 }
@@ -272,6 +314,61 @@ ReadbackRetry:
         }
     }
 
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    if (m_Texture == nullptr) {
+        SDL_PropertiesID props = SDL_CreateProperties();
+
+        SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_ACCESS_NUMBER, SDL_TEXTUREACCESS_STREAMING);
+        SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_WIDTH_NUMBER, frame->width);
+        SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_HEIGHT_NUMBER, frame->height);
+
+        // Remember to keep this in sync with SdlRenderer::isPixelFormatSupported()!
+        switch (frame->format)
+        {
+        case AV_PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUVJ420P:
+            SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_FORMAT_NUMBER, SDL_PIXELFORMAT_YV12);
+            break;
+        case AV_PIX_FMT_CUDA:
+        case AV_PIX_FMT_NV12:
+            SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_FORMAT_NUMBER, SDL_PIXELFORMAT_NV12);
+            break;
+        case AV_PIX_FMT_NV21:
+            SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_FORMAT_NUMBER, SDL_PIXELFORMAT_NV21);
+            break;
+        default:
+            SDL_assert(false);
+            goto Exit;
+        }
+
+        switch (colorspace)
+        {
+        case COLORSPACE_REC_709:
+            SDL_assert(!isFrameFullRange(frame));
+            SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_COLORSPACE_NUMBER, SDL_COLORSPACE_BT709_FULL);
+            break;
+        case COLORSPACE_REC_601:
+            if (isFrameFullRange(frame)) {
+                // SDL's JPEG mode is Rec 601 Full Range
+                SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_COLORSPACE_NUMBER, SDL_COLORSPACE_JPEG);
+            }
+            else {
+                SDL_SetNumberProperty(props, SDL_PROP_TEXTURE_CREATE_COLORSPACE_NUMBER, SDL_COLORSPACE_BT601_FULL);
+            }
+            break;
+        default:
+            break;
+        }
+
+        m_Texture = SDL_CreateTextureWithProperties(m_Renderer, props);
+
+        if (!m_Texture) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SDL_CreateTextureWithProperties() failed: %s",
+                         SDL_GetError());
+            goto Exit;
+        }
+#else
     if (m_Texture == nullptr) {
         Uint32 sdlFormat;
 
@@ -318,12 +415,14 @@ ReadbackRetry:
                                       SDL_TEXTUREACCESS_STREAMING,
                                       frame->width,
                                       frame->height);
+
         if (!m_Texture) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "SDL_CreateTexture() failed: %s",
                          SDL_GetError());
             goto Exit;
         }
+#endif
 
 #ifdef HAVE_CUDA
         if (frame->format == AV_PIX_FMT_CUDA) {
@@ -430,10 +529,23 @@ ReadbackRetry:
     src.w = frame->width;
     src.h = frame->height;
     dst.x = dst.y = 0;
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_GetCurrentRenderOutputSize(m_Renderer, &dst.w, &dst.h);
+#else
     SDL_GetRendererOutputSize(m_Renderer, &dst.w, &dst.h);
+#endif
     StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
     // Ensure the viewport is set to the desired video region
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_SetRenderViewport(m_Renderer, &dst);
+
+    // Draw the video content itself
+    SDL_RenderTexture(m_Renderer, m_Texture, nullptr, nullptr);
+
+    // Reset the viewport to the full window for overlay rendering
+    SDL_SetRenderViewport(m_Renderer, nullptr);
+#else
     SDL_RenderSetViewport(m_Renderer, &dst);
 
     // Draw the video content itself
@@ -441,6 +553,7 @@ ReadbackRetry:
 
     // Reset the viewport to the full window for overlay rendering
     SDL_RenderSetViewport(m_Renderer, nullptr);
+#endif
 
     // Draw the overlays
     for (int i = 0; i < Overlay::OverlayMax; i++) {

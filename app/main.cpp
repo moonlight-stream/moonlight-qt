@@ -16,7 +16,12 @@
 // doing the same thing. This needs to be before any headers
 // that might include SDL.h themselves.
 #define SDL_MAIN_HANDLED
+#if HAVE_SDL3
+#include <SDL3/SDL.h>
+#include <SDL3/SDL_main.h>
+#else
 #include <SDL.h>
+#endif
 
 #ifdef HAVE_FFMPEG
 #include "streaming/video/ffmpeg.h"

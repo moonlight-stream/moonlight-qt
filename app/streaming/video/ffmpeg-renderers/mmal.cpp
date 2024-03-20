@@ -10,7 +10,9 @@
 #undef SDL_VIDEO_DRIVER_X11
 #endif
 
+#if !SDL_VERSION_ATLEAST(3, 0, 0)
 #include <SDL_syswm.h>
+#endif
 
 #include <QDir>
 #include <QTextStream>

@@ -3,8 +3,13 @@
 #include "renderer.h"
 
 #define SDL_USE_BUILTIN_OPENGL_DEFINITIONS 1
+#if HAVE_SDL3
+#include <SDL3/SDL_egl.h>
+#include <SDL3/SDL_opengles2.h>
+#else
 #include <SDL_egl.h>
 #include <SDL_opengles2.h>
+#endif
 
 class EGLRenderer : public IFFmpegRenderer {
 public:
@@ -37,7 +42,11 @@ private:
     unsigned m_Textures[EGL_MAX_PLANES];
     unsigned m_OverlayTextures[Overlay::OverlayMax];
     unsigned m_OverlayVbos[Overlay::OverlayMax];
+#if SDL_VERSION_ATLEAST(3, 0, 0)
+    SDL_AtomicInt m_OverlayHasValidData[Overlay::OverlayMax];
+#else
     SDL_atomic_t m_OverlayHasValidData[Overlay::OverlayMax];
+#endif
     unsigned m_ShaderProgram;
     unsigned m_OverlayShaderProgram;
     SDL_GLContext m_Context;
