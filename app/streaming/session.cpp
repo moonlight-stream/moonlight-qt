@@ -566,6 +566,21 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
 
 bool Session::initialize()
 {
+#ifdef Q_OS_DARWIN
+    // Using modesetting on modern versions of macOS is extremely unreliable
+    // and leads to hangs, deadlocks, and other nasty stuff. The only time
+    // people seem to use it is to get the full screen on notched Macs,
+    // which setting SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 also accomplishes
+    // with much less headache.
+    //
+    // https://github.com/moonlight-stream/moonlight-qt/issues/973
+    // https://github.com/moonlight-stream/moonlight-qt/issues/999
+    // https://github.com/moonlight-stream/moonlight-qt/issues/1211
+    // https://github.com/moonlight-stream/moonlight-qt/issues/1218
+    SDL_SetHint(SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES,
+                m_Preferences->windowMode == StreamingPreferences::WM_FULLSCREEN ? "0" : "1");
+#endif
+
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_InitSubSystem(SDL_INIT_VIDEO) failed: %s",
@@ -750,7 +765,12 @@ bool Session::initialize()
         }
         // Fall-through
     case StreamingPreferences::WM_FULLSCREEN:
+#ifdef Q_OS_DARWIN
+        // Don't use "real" fullscreen on macOS. See comments above.
+        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+#else
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
+#endif
         break;
     }
 
