@@ -97,10 +97,10 @@ struct Vertex
     vector_float2 texCoord;
 };
 
-class VTRenderer : public IFFmpegRenderer
+class VTMetalRenderer : public IFFmpegRenderer
 {
 public:
-    VTRenderer()
+    VTMetalRenderer()
         : m_Window(nullptr),
           m_HwContext(nullptr),
           m_MetalLayer(nullptr),
@@ -127,7 +127,7 @@ public:
     {
     }
 
-    virtual ~VTRenderer() override
+    virtual ~VTMetalRenderer() override
     { @autoreleasepool {
         if (m_PresentationCond != nullptr) {
             SDL_DestroyCond(m_PresentationCond);
@@ -289,12 +289,7 @@ public:
             case COLORSPACE_REC_2020:
                 // https://developer.apple.com/documentation/metal/hdr_content/using_color_spaces_to_display_hdr_content
                 if (frame->color_trc == AVCOL_TRC_SMPTE2084) {
-                    if (@available(macOS 11.0, *)) {
-                        m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2100_PQ);
-                    }
-                    else {
-                        m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2020);
-                    }
+                    m_MetalLayer.colorspace = newColorSpace = CGColorSpaceCreateWithName(kCGColorSpaceITUR_2100_PQ);
                     m_MetalLayer.pixelFormat = MTLPixelFormatBGR10A2Unorm;
                 }
                 else {
@@ -530,7 +525,7 @@ public:
         m_NextDrawable = nullptr;
     }}
 
-    bool checkDecoderCapabilities(PDECODER_PARAMETERS params) {
+    bool checkDecoderCapabilities(id<MTLDevice> device, PDECODER_PARAMETERS params) {
         if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
             if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_H264)) {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -549,13 +544,6 @@ public:
             // simple API to check for Main10 hardware decoding, and if we don't
             // have it, we'll silently get software decoding with horrible performance.
             if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
-                id<MTLDevice> device = MTLCreateSystemDefaultDevice();
-                if (device == nullptr) {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "Unable to get default Metal device");
-                    return false;
-                }
-
                 // Exclude all GPUs earlier than macOSGPUFamily2
                 // https://developer.apple.com/documentation/metal/mtlfeatureset/mtlfeatureset_macos_gpufamily2_v1
                 if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
@@ -564,7 +552,6 @@ public:
                         if ([device.name containsString:@" 5"]) {
                             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                         "No HEVC Main10 support on Skylake iGPU");
-                            [device release];
                             return false;
                         }
                     }
@@ -575,7 +562,6 @@ public:
                                 [device.name containsString:@" M3"]) {
                             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                         "No HEVC Main10 support on AMD GPUs until Polaris");
-                            [device release];
                             return false;
                         }
                     }
@@ -583,11 +569,8 @@ public:
                 else {
                     SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                                 "No HEVC Main10 support on macOS GPUFamily1 GPUs");
-                    [device release];
                     return false;
                 }
-
-                [device release];
             }
         }
         else if (params->videoFormat & VIDEO_FORMAT_MASK_AV1) {
@@ -610,13 +593,44 @@ public:
         return true;
     }
 
+    id<MTLDevice> getMetalDevice() {
+        if (@available(macOS 11.0, *)) {
+            NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
+            if (devices.count == 0) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "No Metal device found!");
+                return nullptr;
+            }
+
+            for (id<MTLDevice> device in devices) {
+                if (device.isLowPower || device.hasUnifiedMemory) {
+                    return device;
+                }
+            }
+
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Avoiding Metal renderer due to use of dGPU/eGPU");
+        }
+        else {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Metal renderer requires macOS Big Sur or later");
+        }
+
+        return nullptr;
+    }
+
     virtual bool initialize(PDECODER_PARAMETERS params) override
     { @autoreleasepool {
         int err;
 
         m_Window = params->window;
 
-        if (!checkDecoderCapabilities(params)) {
+        id<MTLDevice> device = getMetalDevice();
+        if (!device) {
+            return false;
+        }
+
+        if (!checkDecoderCapabilities(device, params)) {
             return false;
         }
 
@@ -643,15 +657,7 @@ public:
         m_MetalLayer = (CAMetalLayer*)SDL_Metal_GetLayer(m_MetalView);
 
         // Choose a device
-        m_MetalLayer.device = m_MetalLayer.preferredDevice;
-        if (!m_MetalLayer.device) {
-            m_MetalLayer.device = [MTLCreateSystemDefaultDevice() autorelease];
-            if (!m_MetalLayer.device) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "No Metal device found!");
-                return false;
-            }
-        }
+        m_MetalLayer.device = device;
 
         // Allow EDR content if we're streaming in a 10-bit format
         m_MetalLayer.wantsExtendedDynamicRangeContent = !!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
@@ -779,7 +785,7 @@ public:
 
     int getRendererAttributes() override
     {
-        // AVSampleBufferDisplayLayer supports HDR output
+        // Metal supports HDR output
         return RENDERER_ATTRIBUTE_HDR_SUPPORT;
     }
 
@@ -823,6 +829,6 @@ private:
     int m_PendingPresentationCount;
 };
 
-IFFmpegRenderer* VTRendererFactory::createRenderer() {
-    return new VTRenderer();
+IFFmpegRenderer* VTMetalRendererFactory::createRenderer() {
+    return new VTMetalRenderer();
 }

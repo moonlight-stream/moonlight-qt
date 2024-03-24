@@ -825,7 +825,8 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #endif
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-            return VTRendererFactory::createRenderer();
+            // Prefer the Metal renderer if hardware is compatible
+            return VTMetalRendererFactory::createRenderer();
 #endif
 #ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
@@ -863,6 +864,11 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
             return new DXVA2Renderer(pass);
         case AV_HWDEVICE_TYPE_D3D11VA:
             return new D3D11VARenderer(pass);
+#endif
+#ifdef Q_OS_DARWIN
+        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
+            // Use the older AVSampleBufferDisplayLayer if Metal cannot be used
+            return VTRendererFactory::createRenderer();
 #endif
 #ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
