@@ -79,6 +79,24 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         return;
     }
 
+    // Batch all pending mouse motion events to save CPU time
+    Sint32 x = event->x, y = event->y, xrel = event->xrel, yrel = event->yrel;
+    SDL_Event nextEvent;
+    while (SDL_PeepEvents(&nextEvent, 1, SDL_GETEVENT, SDL_MOUSEMOTION, SDL_MOUSEMOTION) > 0) {
+        event = &nextEvent.motion;
+
+        // Ignore synthetic mouse events
+        if (event->which != SDL_TOUCH_MOUSEID) {
+            x = event->x;
+            y = event->y;
+            xrel += event->xrel;
+            yrel += event->yrel;
+        }
+    }
+
+    // We should not reference the original event anymore
+    event = nullptr;
+
     if (m_AbsoluteMouseMode) {
         int windowWidth, windowHeight;
         SDL_GetWindowSize(m_Window, &windowWidth, &windowHeight);
@@ -97,14 +115,11 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         // Use the stream and window sizes to determine the video region
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
 
-        mouseInVideoRegion = isMouseInVideoRegion(event->x,
-                                                  event->y,
-                                                  windowWidth,
-                                                  windowHeight);
+        mouseInVideoRegion = isMouseInVideoRegion(x, y, windowWidth, windowHeight);
 
         // Clamp motion to the video region
-        short x = qMin(qMax(event->x - dst.x, 0), dst.w);
-        short y = qMin(qMax(event->y - dst.y, 0), dst.h);
+        x = qMin(qMax(x - dst.x, 0), dst.w);
+        y = qMin(qMax(y - dst.y, 0), dst.h);
 
         // Send the mouse position update if one of the following is true:
         // a) it is in the video region now
@@ -119,7 +134,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
             }
         }
         if (mouseInVideoRegion || m_MouseWasInVideoRegion || m_PendingMouseButtonsAllUpOnVideoRegionLeave) {
-            LiSendMousePositionEvent(x, y, dst.w, dst.h);
+            LiSendMousePositionEvent((short)x, (short)y, dst.w, dst.h);
         }
 
         // Adjust the cursor visibility if applicable
@@ -135,7 +150,7 @@ void SdlInputHandler::handleMouseMotionEvent(SDL_MouseMotionEvent* event)
         m_MouseWasInVideoRegion = mouseInVideoRegion;
     }
     else {
-        LiSendMouseMoveEvent(event->xrel, event->yrel);
+        LiSendMouseMoveEvent(xrel, yrel);
     }
 }
 
