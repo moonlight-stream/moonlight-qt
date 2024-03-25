@@ -407,6 +407,19 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
                         return ReachabilityType::RI_VPN;
                     }
 
+#ifdef Q_OS_WINDOWS
+                    if (nic.name().startsWith("iftype53_") || nic.name().startsWith("iftype131_")) {
+                        // Match by NDIS interface type. These values are Microsoft's recommended values for VPN connections:
+                        // https://learn.microsoft.com/en-US/troubleshoot/windows-client/networking/windows-connection-manager-disconnects-wlan#more-information
+                        //
+                        // The following VPNs use IF_TYPE_PROP_VIRTUAL under Windows:
+                        //  - WireguardNT VPNs
+                        //  - All WinTun-based VPNs (such as Slack Nebula)
+                        //  - OpenVPN with tap-windows6
+                        return ReachabilityType::RI_VPN;
+                    }
+#endif
+
                     if (nic.hardwareAddress().startsWith("00:FF", Qt::CaseInsensitive)) {
                         // OpenVPN TAP interfaces have a MAC address starting with 00:FF on Windows
                         return ReachabilityType::RI_VPN;
