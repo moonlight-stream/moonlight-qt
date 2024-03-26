@@ -362,17 +362,6 @@ public:
     { @autoreleasepool {
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
 
-        if (m_MetalLayer.preferredDevice != nullptr && m_MetalLayer.preferredDevice != m_MetalLayer.device) {
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "Resetting renderer after preferred device changed");
-
-            // Trigger the main thread to recreate the decoder
-            SDL_Event event;
-            event.type = SDL_RENDER_DEVICE_RESET;
-            SDL_PushEvent(&event);
-            return;
-        }
-
         // Handle changes to the frame's colorspace from last time we rendered
         if (!updateColorSpaceForFrame(frame)) {
             // Trigger the main thread to recreate the decoder
