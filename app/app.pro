@@ -199,6 +199,7 @@ SOURCES += \
     gui/sdlgamepadkeynavigation.cpp \
     streaming/video/overlaymanager.cpp \
     backend/systemproperties.cpp \
+    streaming/video/videoenhancement.cpp \
     wm.cpp
 
 HEADERS += \
@@ -207,6 +208,7 @@ HEADERS += \
     cli/pair.h \
     settings/compatfetcher.h \
     settings/mappingfetcher.h \
+    streaming/video/videoenhancement.h \
     utils.h \
     backend/computerseeker.h \
     backend/identitymanager.h \

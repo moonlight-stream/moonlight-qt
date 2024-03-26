@@ -6,6 +6,7 @@
 #include "decoder.h"
 #include "ffmpeg-renderers/renderer.h"
 #include "ffmpeg-renderers/pacer/pacer.h"
+#include "streaming/video/videoenhancement.h"
 
 extern "C" {
 #include <libavcodec/avcodec.h>
@@ -94,6 +95,7 @@ private:
     bool m_TestOnly;
     SDL_Thread* m_DecoderThread;
     SDL_atomic_t m_DecoderThreadShouldQuit;
+    VideoEnhancement* m_VideoEnhancement;
 
     // Data buffers in the queued DU are not valid
     QQueue<DECODE_UNIT> m_FrameInfoQueue;

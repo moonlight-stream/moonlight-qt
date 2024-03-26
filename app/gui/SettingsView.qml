@@ -812,6 +812,37 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
                 }
+
+                CheckBox {
+                    id: videoEnhancementCheck
+                    width: parent.width
+                    hoverEnabled: true
+                    text: qsTr("Video AI-Enhancement")
+                    font.pointSize:  12
+                    visible: SystemProperties.isVideoEnhancementCapable()
+                    enabled: true
+                    checked: StreamingPreferences.videoEnhancement
+
+                    onCheckedChanged: {
+                        StreamingPreferences.videoEnhancement = checked
+                    }
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text:
+                        qsTr("Enhance video quality by utilizing the GPU's AI-Enhancement capabilities.")
+                        + qsTr("\nThis feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.")
+                        + qsTr("\nNote:")
+                        + qsTr("\n  - If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.")
+                        + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
+
+                    Component.onCompleted: {
+                        // Indicate if the feature is available but not officially deployed by the Vendor
+                        if(SystemProperties.isVideoEnhancementExperimental()){
+                            text = qsTr("Video AI-Enhancement (Experimental)")
+                        }
+                    }
+                }
             }
         }
 
