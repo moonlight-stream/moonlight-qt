@@ -75,6 +75,8 @@ static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a 
 
 D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
     : m_DecoderSelectionPass(decoderSelectionPass),
+      m_DevicesWithFL11Support(0),
+      m_DevicesWithCodecSupport(0),
       m_Factory(nullptr),
       m_Device(nullptr),
       m_SwapChain(nullptr),
@@ -160,6 +162,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
     bool success = false;
     IDXGIAdapter1* adapter = nullptr;
     DXGI_ADAPTER_DESC1 adapterDesc;
+    D3D_FEATURE_LEVEL featureLevel;
     HRESULT hr;
 
     SDL_assert(m_Device == nullptr);
@@ -209,13 +212,18 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                            0,
                            D3D11_SDK_VERSION,
                            &m_Device,
-                           nullptr,
+                           &featureLevel,
                            &m_DeviceContext);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D11CreateDevice() failed: %x",
                      hr);
         goto Exit;
+    }
+    else if (featureLevel >= D3D_FEATURE_LEVEL_11_0) {
+        // Remember that we found a non-software D3D11 devices with support for
+        // feature level 11.0 or later (Fermi, Terascale 2, or Ivy Bridge and later)
+        m_DevicesWithFL11Support++;
     }
 
     if (!checkDecoderSupport(adapter)) {
@@ -225,6 +233,10 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         m_Device = nullptr;
 
         goto Exit;
+    }
+    else {
+        // Remember that we found a device with support for decoding this codec
+        m_DevicesWithCodecSupport++;
     }
 
     success = true;
@@ -995,6 +1007,29 @@ bool D3D11VARenderer::needsTestFrame()
     // horribly wrong and D3D11VideoDevice::CreateVideoDecoder() fails inside FFmpeg. We need to
     // catch that case before we commit to using D3D11VA.
     return true;
+}
+
+IFFmpegRenderer::InitFailureReason D3D11VARenderer::getInitFailureReason()
+{
+    // In the specific case where we found at least one D3D11 hardware device but none of the
+    // enumerated devices have support for the specified codec, tell the FFmpeg decoder not to
+    // bother trying other hwaccels. We don't want to try loading D3D9 if the device doesn't
+    // even have hardware support for the codec.
+    //
+    // NB: We use feature level 11.0 support as a gate here because we want to avoid returning
+    // this failure reason in cases where we might have an extremely old GPU with support for
+    // DXVA2 on D3D9 but not D3D11VA on D3D11. I'm unsure if any such drivers/hardware exists,
+    // but better be safe than sorry.
+    //
+    // NB2: We're also assuming that no GPU exists which lacks any D3D11 driver but has drivers
+    // for non-DX APIs like Vulkan. I believe this is a Windows Logo requirement so it should be
+    // safe to assume.
+    if (m_DevicesWithFL11Support != 0 && m_DevicesWithCodecSupport == 0) {
+        return InitFailureReason::NoHardwareSupport;
+    }
+    else {
+        return InitFailureReason::Unknown;
+    }
 }
 
 void D3D11VARenderer::lockContext(void *lock_ctx)

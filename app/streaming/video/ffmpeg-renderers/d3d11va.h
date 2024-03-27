@@ -21,6 +21,7 @@ public:
     virtual int getRendererAttributes() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
+    virtual InitFailureReason getInitFailureReason() override;
 
 private:
     static void lockContext(void* lock_ctx);
@@ -35,6 +36,8 @@ private:
     bool createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound = nullptr);
 
     int m_DecoderSelectionPass;
+    int m_DevicesWithFL11Support;
+    int m_DevicesWithCodecSupport;
 
     IDXGIFactory5* m_Factory;
     ID3D11Device* m_Device;
