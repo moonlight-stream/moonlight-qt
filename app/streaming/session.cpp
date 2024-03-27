@@ -1624,12 +1624,23 @@ void Session::execInternal()
     // If we're starting in windowed mode and the Moonlight GUI is maximized or
     // minimized, match that with the streaming window.
     if (!m_IsFullScreen && m_QtWindow != nullptr) {
-        if (m_QtWindow->windowState() & Qt::WindowMaximized) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+        // Qt 5.10+ can propagate multiple states together
+        if (m_QtWindow->windowStates() & Qt::WindowMaximized) {
             defaultWindowFlags |= SDL_WINDOW_MAXIMIZED;
         }
-        else if (m_QtWindow->windowState() & Qt::WindowMinimized) {
+        if (m_QtWindow->windowStates() & Qt::WindowMinimized) {
             defaultWindowFlags |= SDL_WINDOW_MINIMIZED;
         }
+#else
+        // Qt 5.9 only supports a single state at a time
+        if (m_QtWindow->windowState() == Qt::WindowMaximized) {
+            defaultWindowFlags |= SDL_WINDOW_MAXIMIZED;
+        }
+        else if (m_QtWindow->windowState() == Qt::WindowMinimized) {
+            defaultWindowFlags |= SDL_WINDOW_MINIMIZED;
+        }
+#endif
     }
 
     // We use only the computer name on macOS to match Apple conventions where the
@@ -2170,6 +2181,19 @@ DispatchDeferredCleanup:
     delete m_VideoDecoder;
     m_VideoDecoder = nullptr;
     SDL_AtomicUnlock(&m_DecoderLock);
+
+    // Propagate state changes from the SDL window back to the Qt window
+    //
+    // NB: We're making a conscious decision not to propagate the maximized
+    // or normal state of the window here. The thinking is that users may
+    // routinely maximize the streaming window simply to view the stream
+    // in a larger window, but they don't necessarily want the UI in such
+    // a large window.
+    if (!m_IsFullScreen && m_QtWindow != nullptr && m_Window != nullptr) {
+        if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
+            m_QtWindow->setWindowState(Qt::WindowMinimized);
+        }
+    }
 
     // This must be called after the decoder is deleted, because
     // the renderer may want to interact with the window
