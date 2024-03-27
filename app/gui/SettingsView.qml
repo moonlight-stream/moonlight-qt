@@ -834,6 +834,7 @@ Flickable {
                         + qsTr("\nThis feature effectively upscales, reduces compression artifacts and enhances the clarity of streamed content.")
                         + qsTr("\nNote:")
                         + qsTr("\n  - If available, ensure that appropriate settings (i.e. RTX Video enhancement) are enabled in your GPU driver configuration.")
+                        + qsTr("\n  - HDR rendering has divers issues depending on the GPU used, we are working on it but we advise to currently use Non-HDR.")
                         + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
 
                     Component.onCompleted: {
