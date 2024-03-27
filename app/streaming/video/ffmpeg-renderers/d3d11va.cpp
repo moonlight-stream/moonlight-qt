@@ -9,10 +9,19 @@
 #include "streaming/session.h"
 #include "streaming/video/videoenhancement.h"
 
+#include "public/common/AMFFactory.h"
+#include "public/include/core/Platform.h"
+#include "public/include/components/VideoConverter.h"
+// Video upscaling & Sharpening
+#include "public/include/components/HQScaler.h"
+// Reducing blocking artifacts
+#include "public/include/components/VQEnhancer.h"
+
 #include <cmath>
 #include <Limelight.h>
 #include <d3d11_4.h>
 #include <dxgi1_6.h>
+#include <dxgidebug.h>
 
 extern "C" {
 #include <libavutil/mastering_display_metadata.h>
@@ -22,6 +31,8 @@ extern "C" {
 #include <VersionHelpers.h>
 
 #include <dwmapi.h>
+
+using Microsoft::WRL::ComPtr;
 
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
@@ -88,31 +99,25 @@ static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a 
 
 D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
     : m_DecoderSelectionPass(decoderSelectionPass),
-      m_Factory(nullptr),
-      m_Device(nullptr),
-      m_SwapChain(nullptr),
-      m_DeviceContext(nullptr),
-      m_RenderTargetView(nullptr),
-      m_VideoDevice(nullptr),
-      m_VideoContext(nullptr),
-      m_VideoProcessor(nullptr),
-      m_VideoProcessorEnumerator(nullptr),
-      m_LastColorSpace(-1),
-      m_LastFullRange(false),
-      m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
-      m_AllowTearing(false),
-      m_VideoGenericPixelShader(nullptr),
-      m_VideoBt601LimPixelShader(nullptr),
-      m_VideoBt2020LimPixelShader(nullptr),
-      m_VideoVertexBuffer(nullptr),
-      m_VideoTexture(nullptr),
-      m_OverlayLock(0),
-      m_OverlayPixelShader(nullptr),
-      m_HwDeviceContext(nullptr)
+    m_Device(nullptr),
+    m_DeviceContext(nullptr),
+    m_RenderTargetView(nullptr),
+    m_VideoProcessor(nullptr),
+    m_VideoProcessorEnumerator(nullptr),
+    m_LastColorSpace(-1),
+    m_LastFullRange(false),
+    m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
+    m_AllowTearing(false),
+    m_OverlayLock(0),
+    m_HwDeviceContext(nullptr),
+    m_AmfContext(nullptr),
+    m_AmfInputSurface(nullptr),
+    m_AmfDenoiser(nullptr),
+    m_AmfFormatConverter(nullptr),
+    m_AmfUpScaler(nullptr),
+    m_AmfDownScaler(nullptr),
+    m_AmfInitialized(false)
 {
-    RtlZeroMemory(m_OverlayVertexBuffers, sizeof(m_OverlayVertexBuffers));
-    RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
-    RtlZeroMemory(m_OverlayTextureResourceViews, sizeof(m_OverlayTextureResourceViews));
     RtlZeroMemory(m_VideoTextureResourceViews, sizeof(m_VideoTextureResourceViews));
 
     m_ContextLock = SDL_CreateMutex();
@@ -128,41 +133,60 @@ D3D11VARenderer::~D3D11VARenderer()
 
     SDL_DestroyMutex(m_ContextLock);
 
-    SAFE_COM_RELEASE(m_VideoVertexBuffer);
-    SAFE_COM_RELEASE(m_VideoBt2020LimPixelShader);
-    SAFE_COM_RELEASE(m_VideoBt601LimPixelShader);
-    SAFE_COM_RELEASE(m_VideoGenericPixelShader);
-
     for (int i = 0; i < ARRAYSIZE(m_VideoTextureResourceViews); i++) {
         SAFE_COM_RELEASE(m_VideoTextureResourceViews[i]);
     }
 
-    SAFE_COM_RELEASE(m_VideoTexture);
-
-    for (int i = 0; i < ARRAYSIZE(m_OverlayVertexBuffers); i++) {
-        SAFE_COM_RELEASE(m_OverlayVertexBuffers[i]);
-    }
-
-    for (int i = 0; i < ARRAYSIZE(m_OverlayTextureResourceViews); i++) {
-        SAFE_COM_RELEASE(m_OverlayTextureResourceViews[i]);
-    }
-
-    for (int i = 0; i < ARRAYSIZE(m_OverlayTextures); i++) {
-        SAFE_COM_RELEASE(m_OverlayTextures[i]);
-    }
-
-    SAFE_COM_RELEASE(m_OverlayPixelShader);
-
-    SAFE_COM_RELEASE(m_BackBufferResource);
-
     SAFE_COM_RELEASE(m_RenderTargetView);
-    SAFE_COM_RELEASE(m_SwapChain);
+
+    // cleanup AMF instances
+    if(m_AmfDenoiser){
+        // Denoiser
+        m_AmfDenoiser->Terminate();
+        m_AmfDenoiser = nullptr;
+    }
+    if(m_AmfFormatConverter){
+        // Format converter
+        m_AmfFormatConverter->Terminate();
+        m_AmfFormatConverter = nullptr;
+    }
+    if(m_AmfUpScaler){
+        // Up Scaler
+        m_AmfUpScaler->Terminate();
+        m_AmfUpScaler = nullptr;
+    }
+    if(m_AmfDownScaler){
+        // Down Scaler
+        m_AmfDownScaler->Terminate();
+        m_AmfDownScaler = nullptr;
+    }
+    if(m_AmfContext){
+        // Context
+        m_AmfContext->Terminate();
+        m_AmfContext = nullptr;
+    }
+
+    g_AMFFactory.Terminate();
 
     // Force destruction of the swapchain immediately
     if (m_DeviceContext != nullptr) {
         m_DeviceContext->ClearState();
         m_DeviceContext->Flush();
     }
+
+    if(m_VideoProcessorEnumerator){
+        m_VideoProcessorEnumerator.Reset();
+    }
+    if(m_VideoProcessor){
+        m_VideoProcessor.Reset();
+    }
+
+#ifdef QT_DEBUG
+    ComPtr<ID3D11Debug> debugDevice;
+    if(FAILED(m_Device->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(debugDevice.GetAddressOf())))) {
+        debugDevice = nullptr;
+    }
+#endif
 
     if (m_HwDeviceContext != nullptr) {
         // This will release m_Device and m_DeviceContext too
@@ -171,11 +195,20 @@ D3D11VARenderer::~D3D11VARenderer()
     else {
         SAFE_COM_RELEASE(m_Device);
         SAFE_COM_RELEASE(m_DeviceContext);
-        SAFE_COM_RELEASE(m_VideoDevice);
-        SAFE_COM_RELEASE(m_VideoContext);
     }
 
-    SAFE_COM_RELEASE(m_Factory);
+// Uncomment the lines in the QT_DEBUG section if you need to debug DirectX objects
+#ifdef QT_DEBUG
+    // if(debugDevice) {
+    //     debugDevice->ReportLiveDeviceObjects(D3D11_RLDO_IGNORE_INTERNAL);
+    // }
+    // CComPtr<IDXGIDebug1> pDebugDevice;
+    // if (SUCCEEDED(DXGIGetDebugInterface1(0, IID_PPV_ARGS(&pDebugDevice))))
+    // {
+    //     pDebugDevice->ReportLiveObjects(DXGI_DEBUG_DX, DXGI_DEBUG_RLO_FLAGS(DXGI_DEBUG_RLO_DETAIL | DXGI_DEBUG_RLO_IGNORE_INTERNAL));
+    // }
+#endif
+
 }
 
 /**
@@ -226,24 +259,57 @@ void D3D11VARenderer::setHdrMode(bool enabled){
             &streamHDRMetaData
             );
 
+        // Set HDR Input for AMF Converter
+        if(m_AmfInitialized){
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_USE_DECODER_HDR_METADATA, true);
+
+            // Values taken from AMF Sample:
+            // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/5b32766b801434be61350c292127a9ac022b1268/amf/public/samples/CPPSamples/common/SwapChainDXGI.cpp#L740
+            // We can initialize with Studio range first, it will be corrected to Full range if needed once the first frame is received.
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_TRANSFER_CHARACTERISTIC, AMF_COLOR_TRANSFER_CHARACTERISTIC_SMPTE2084);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_PRIMARIES, AMF_COLOR_PRIMARIES_BT2020);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_RANGE, AMF_COLOR_RANGE_STUDIO);
+
+            AMFHDRMetadata amfHDRMetadata;
+            amfHDRMetadata.redPrimary[0]               = amf_uint16(streamHDRMetaData.RedPrimary[0]);
+            amfHDRMetadata.redPrimary[1]               = amf_uint16(streamHDRMetaData.RedPrimary[1]);
+            amfHDRMetadata.greenPrimary[0]             = amf_uint16(streamHDRMetaData.GreenPrimary[0]);
+            amfHDRMetadata.greenPrimary[1]             = amf_uint16(streamHDRMetaData.GreenPrimary[1]);
+            amfHDRMetadata.bluePrimary[0]              = amf_uint16(streamHDRMetaData.BluePrimary[0]);
+            amfHDRMetadata.bluePrimary[1]              = amf_uint16(streamHDRMetaData.BluePrimary[1]);
+            amfHDRMetadata.whitePoint[0]               = amf_uint16(streamHDRMetaData.WhitePoint[0]);
+            amfHDRMetadata.whitePoint[1]               = amf_uint16(streamHDRMetaData.WhitePoint[1]);
+            amfHDRMetadata.maxMasteringLuminance       = amf_uint32(streamHDRMetaData.MaxMasteringLuminance);
+            amfHDRMetadata.minMasteringLuminance       = amf_uint32(streamHDRMetaData.MinMasteringLuminance);
+            amfHDRMetadata.maxContentLightLevel        = 0;
+            amfHDRMetadata.maxFrameAverageLightLevel   = 0;
+
+            amf::AMFBufferPtr pHDRMetaDataBuffer;
+            m_AmfContext->AllocBuffer(amf::AMF_MEMORY_HOST, sizeof(AMFHDRMetadata), &pHDRMetaDataBuffer);
+            AMFHDRMetadata* pData = (AMFHDRMetadata*)pHDRMetaDataBuffer->GetNative();
+            memcpy(pData, &amfHDRMetadata, sizeof(AMFHDRMetadata));
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_HDR_METADATA, pData);
+
+            m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
+        }
+
         streamSet = true;
     }
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Set stream HDR mode: %s", streamSet ? "enabled" : "disabled");
 
-    return;
     // Prepare HDR Meta Data to match the monitor HDR specifications
     // Retreive the monitor HDR metadata where the application is displayed
     int appAdapterIndex = 0;
     int appOutputIndex = 0;
     bool displaySet = false;
     if (SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(m_DecoderParams.window), &appAdapterIndex, &appOutputIndex)){
-        IDXGIAdapter1* adapter = nullptr;
-        IDXGIOutput* output = nullptr;
+        ComPtr<IDXGIAdapter1> adapter;
+        ComPtr<IDXGIOutput> output;
         UINT outputIndex = appOutputIndex;
         if(SUCCEEDED(m_Factory->EnumAdapters1(appAdapterIndex, &adapter))){
             if(SUCCEEDED(adapter->EnumOutputs(outputIndex, &output))){
-                IDXGIOutput6* output6 = nullptr;
+                ComPtr<IDXGIOutput6> output6;
                 if (SUCCEEDED(output->QueryInterface(__uuidof(IDXGIOutput6), (void**)&output6))) {
                     DXGI_OUTPUT_DESC1 desc1;
                     if (output6) {
@@ -276,14 +342,44 @@ void D3D11VARenderer::setHdrMode(bool enabled){
                             &outputHDRMetaData
                             );
 
+                        // Set HDR Input for AMF Converter
+                        if(m_AmfInitialized){
+                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_USE_DECODER_HDR_METADATA, true);
+
+                            // Values taken from AMF Sample:
+                            // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/5b32766b801434be61350c292127a9ac022b1268/amf/public/samples/CPPSamples/common/SwapChainDXGI.cpp#L732
+                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_TRANSFER_CHARACTERISTIC, AMF_COLOR_TRANSFER_CHARACTERISTIC_SMPTE2084);
+                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_COLOR_PRIMARIES, AMF_COLOR_PRIMARIES_BT2020);
+                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_COLOR_RANGE, AMF_COLOR_RANGE_FULL);
+
+                            AMFHDRMetadata amfHDRMetadata;
+                            amfHDRMetadata.redPrimary[0]               = amf_uint16(outputHDRMetaData.RedPrimary[0]);
+                            amfHDRMetadata.redPrimary[1]               = amf_uint16(outputHDRMetaData.RedPrimary[1]);
+                            amfHDRMetadata.greenPrimary[0]             = amf_uint16(outputHDRMetaData.GreenPrimary[0]);
+                            amfHDRMetadata.greenPrimary[1]             = amf_uint16(outputHDRMetaData.GreenPrimary[1]);
+                            amfHDRMetadata.bluePrimary[0]              = amf_uint16(outputHDRMetaData.BluePrimary[0]);
+                            amfHDRMetadata.bluePrimary[1]              = amf_uint16(outputHDRMetaData.BluePrimary[1]);
+                            amfHDRMetadata.whitePoint[0]               = amf_uint16(outputHDRMetaData.WhitePoint[0]);
+                            amfHDRMetadata.whitePoint[1]               = amf_uint16(outputHDRMetaData.WhitePoint[1]);
+                            amfHDRMetadata.maxMasteringLuminance       = amf_uint32(outputHDRMetaData.MaxMasteringLuminance);
+                            amfHDRMetadata.minMasteringLuminance       = amf_uint32(outputHDRMetaData.MinMasteringLuminance);
+                            amfHDRMetadata.maxContentLightLevel        = 0;
+                            amfHDRMetadata.maxFrameAverageLightLevel   = 0;
+
+                            amf::AMFBufferPtr pHDRMetaDataBuffer;
+                            m_AmfContext->AllocBuffer(amf::AMF_MEMORY_HOST, sizeof(AMFHDRMetadata), &pHDRMetaDataBuffer);
+                            AMFHDRMetadata* pData = (AMFHDRMetadata*)pHDRMetaDataBuffer->GetNative();
+                            memcpy(pData, &amfHDRMetadata, sizeof(AMFHDRMetadata));
+                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_HDR_METADATA, pData);
+
+                            m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
+                        }
+
                         displaySet = true;
                     }
                 }
-                SAFE_COM_RELEASE(output6);
             }
-            SAFE_COM_RELEASE(output);
         }
-        SAFE_COM_RELEASE(adapter);
     }
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Set display HDR mode: %s", displaySet ? "enabled" : "disabled");
@@ -293,14 +389,21 @@ void D3D11VARenderer::setHdrMode(bool enabled){
 bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
 {
     bool success = false;
-    IDXGIAdapter1* adapter = nullptr;
+    ComPtr<IDXGIAdapter1> adapter;
     DXGI_ADAPTER_DESC1 adapterDesc;
     HRESULT hr;
+
+#ifdef QT_DEBUG
+    D3D_FEATURE_LEVEL featureLevel;
+    const D3D_FEATURE_LEVEL featureLevels[] = {
+        D3D_FEATURE_LEVEL_11_1,
+    };
+#endif
 
     SDL_assert(m_Device == nullptr);
     SDL_assert(m_DeviceContext == nullptr);
 
-    hr = m_Factory->EnumAdapters1(adapterIndex, &adapter);
+    hr = m_Factory->EnumAdapters1(adapterIndex, adapter.GetAddressOf());
     if (hr == DXGI_ERROR_NOT_FOUND) {
         // Expected at the end of enumeration
         goto Exit;
@@ -332,20 +435,34 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                 adapterDesc.VendorId,
                 adapterDesc.DeviceId);
 
-    hr = D3D11CreateDevice(adapter,
+#ifdef QT_DEBUG
+    // Generate more information about DirectX11 objects for debugging.
+    // https://seanmiddleditch.github.io/direct3d-11-debug-api-tricks/
+    // Notes:
+    //  * ID3D11Device Refcount: 2 => This is a normal behavior as debugDevice still need m_Device to work
+    //  * For any other object, Refcount: 0, We can ignore IntRef value
+    hr = D3D11CreateDevice(adapter.Get(),
                            D3D_DRIVER_TYPE_UNKNOWN,
                            nullptr,
-                           D3D11_CREATE_DEVICE_VIDEO_SUPPORT
-                       #ifdef QT_DEBUG
-                               | D3D11_CREATE_DEVICE_DEBUG
-                       #endif
-                           ,
+                           D3D11_CREATE_DEVICE_VIDEO_SUPPORT | D3D11_CREATE_DEVICE_DEBUG,
+                           featureLevels,
+                           ARRAYSIZE(featureLevels),
+                           D3D11_SDK_VERSION,
+                           &m_Device,
+                           &featureLevel,
+                           &m_DeviceContext);
+#else
+    hr = D3D11CreateDevice(adapter.Get(),
+                           D3D_DRIVER_TYPE_UNKNOWN,
+                           nullptr,
+                           D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
                            nullptr,
                            0,
                            D3D11_SDK_VERSION,
                            &m_Device,
                            nullptr,
                            &m_DeviceContext);
+#endif
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D11CreateDevice() failed: %x",
@@ -353,17 +470,21 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         goto Exit;
     }
 
-    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
-        createVideoProcessor();
+    if(m_VideoEnhancement->isVideoEnhancementEnabled() && !createVideoProcessor()){
+        // Disable enhancement if the Video Processor creation failed
+        m_VideoEnhancement->enableVideoEnhancement(false);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "VideoProcessor failed to be created");
     }
 
-    if (!checkDecoderSupport(adapter)) {
+    if (!checkDecoderSupport(adapter.Get())) {
         SAFE_COM_RELEASE(m_DeviceContext);
         SAFE_COM_RELEASE(m_Device);
-        SAFE_COM_RELEASE(m_VideoContext);
-        SAFE_COM_RELEASE(m_VideoDevice);
-        m_VideoProcessorEnumerator = nullptr;
-        m_VideoProcessor = nullptr;
+        if(m_VideoProcessorEnumerator){
+            m_VideoProcessorEnumerator.Reset();
+        }
+        if(m_VideoProcessor){
+            m_VideoProcessor.Reset();
+        }
 
         goto Exit;
     }
@@ -374,7 +495,6 @@ Exit:
     if (adapterNotFound != nullptr) {
         *adapterNotFound = (adapter == nullptr);
     }
-    SAFE_COM_RELEASE(adapter);
     return success;
 }
 
@@ -388,13 +508,13 @@ Exit:
  */
 int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
 {
-    IDXGIAdapter1* adapter = nullptr;
+    ComPtr<IDXGIAdapter1> adapter;
     DXGI_ADAPTER_DESC1 adapterDesc;
 
     int highestScore = -1;
     int adapterIndex = -1;
     int index = 0;
-    while(m_Factory->EnumAdapters1(index, &adapter) != DXGI_ERROR_NOT_FOUND)
+    while(m_Factory->EnumAdapters1(index, adapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND)
     {
         if (SUCCEEDED(adapter->GetDesc1(&adapterDesc))) {
 
@@ -406,13 +526,15 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
 
             SAFE_COM_RELEASE(m_DeviceContext);
             SAFE_COM_RELEASE(m_Device);
-            SAFE_COM_RELEASE(m_VideoContext);
-            SAFE_COM_RELEASE(m_VideoDevice);
-            m_VideoProcessorEnumerator = nullptr;
-            m_VideoProcessor = nullptr;
+            if(m_VideoProcessorEnumerator){
+                m_VideoProcessorEnumerator.Reset();
+            }
+            if(m_VideoProcessor){
+                m_VideoProcessor.Reset();
+            }
 
             if (SUCCEEDED(D3D11CreateDevice(
-                    adapter,
+                    adapter.Get(),
                     D3D_DRIVER_TYPE_UNKNOWN,
                     nullptr,
                     D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
@@ -424,7 +546,7 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
                     &m_DeviceContext))
                 && createVideoProcessor()){
 
-                // VSR has the priority over HDR in term of capability we want to use.
+                // VSR has the priority over SDR-to-HDR in term of capability we want to use.
                 // The priority value may change over the time,
                 // below statement has been established based on drivers' capabilities status by February 29th 2024.
 
@@ -460,19 +582,21 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
     }
 
     // Set Video enhancement information
-    if(adapterIndex >= 0 && m_Factory->EnumAdapters1(adapterIndex, &adapter) != DXGI_ERROR_NOT_FOUND){
+    if(m_Factory->EnumAdapters1(adapterIndex, adapter.GetAddressOf()) != DXGI_ERROR_NOT_FOUND){
 
         if (SUCCEEDED(adapter->GetDesc1(&adapterDesc))) {
 
             SAFE_COM_RELEASE(m_DeviceContext);
             SAFE_COM_RELEASE(m_Device);
-            SAFE_COM_RELEASE(m_VideoContext);
-            SAFE_COM_RELEASE(m_VideoDevice);
-            m_VideoProcessorEnumerator = nullptr;
-            m_VideoProcessor = nullptr;
+            if(m_VideoProcessorEnumerator){
+                m_VideoProcessorEnumerator.Reset();
+            }
+            if(m_VideoProcessor){
+                m_VideoProcessor.Reset();
+            }
 
             if (SUCCEEDED(D3D11CreateDevice(
-                    adapter,
+                    adapter.Get(),
                     D3D_DRIVER_TYPE_UNKNOWN,
                     nullptr,
                     D3D11_CREATE_DEVICE_VIDEO_SUPPORT,
@@ -486,33 +610,44 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
 
                 m_VideoEnhancement->setVendorID(adapterDesc.VendorId);
 
-                // Convert wchar[128] to string
-                std::wstring GPUname(adapterDesc.Description);
-                qInfo() << "GPU used for Video Enhancmeent: " << GPUname;
+                if(adapterIndex >= 0){
+                    // Convert wchar[128] to string
+                    std::wstring GPUname(adapterDesc.Description);
+                    qInfo() << "GPU used for Video Enhancement: " << GPUname;
 
-                if(m_VideoEnhancement->isVendorAMD()){
-                    m_VideoEnhancement->setVSRcapable(enableAMDVideoSuperResolution());
-                    m_VideoEnhancement->setHDRcapable(enableAMDHDR());
-                } else if(m_VideoEnhancement->isVendorIntel()){
-                    m_VideoEnhancement->setVSRcapable(enableIntelVideoSuperResolution());
-                    m_VideoEnhancement->setHDRcapable(enableIntelHDR());
-                } else if(m_VideoEnhancement->isVendorNVIDIA()){
-                    m_VideoEnhancement->setVSRcapable(enableNvidiaVideoSuperResolution());
-                    m_VideoEnhancement->setHDRcapable(enableNvidiaHDR());
+                    // Test, but do not active yet to ensure it will be reinitialize when needed
+                    if(m_VideoEnhancement->isVendorAMD()){
+                        m_VideoEnhancement->setVSRcapable(enableAMDVideoSuperResolution(false));
+                        m_VideoEnhancement->setHDRcapable(enableAMDHDR(false));
+                    } else if(m_VideoEnhancement->isVendorIntel()){
+                        m_VideoEnhancement->setVSRcapable(enableIntelVideoSuperResolution(false));
+                        m_VideoEnhancement->setHDRcapable(enableIntelHDR(false));
+                    } else if(m_VideoEnhancement->isVendorNVIDIA()){
+                        m_VideoEnhancement->setVSRcapable(enableNvidiaVideoSuperResolution(false));
+                        m_VideoEnhancement->setHDRcapable(enableNvidiaHDR(false));
+                    }
+
+                    // Enable the visibility of Video enhancement feature in the settings of the User interface
+                    m_VideoEnhancement->enableUIvisible();
+                } else {
+                    // Try Auto Stream Super Resolution provided by DirectX11+ and agnostic to any Vendor
+                    if (m_VideoProcessorCapabilities.AutoStreamCaps & D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_SUPER_RESOLUTION){
+                        m_AutoStreamSuperResolution = true;
+                        m_VideoEnhancement->setVSRcapable(true);
+                    }
                 }
-
-                // Enable the visibility of Video enhancement feature in the settings of the User interface
-                m_VideoEnhancement->enableUIvisible();
             }
         }
     }
 
     SAFE_COM_RELEASE(m_DeviceContext);
     SAFE_COM_RELEASE(m_Device);
-    SAFE_COM_RELEASE(m_VideoContext);
-    SAFE_COM_RELEASE(m_VideoDevice);
-    m_VideoProcessorEnumerator = nullptr;
-    m_VideoProcessor = nullptr;
+    if(m_VideoProcessorEnumerator){
+        m_VideoProcessorEnumerator.Reset();
+    }
+    if(m_VideoProcessor){
+        m_VideoProcessor.Reset();
+    }
 
     return adapterIndex;
 }
@@ -527,16 +662,159 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
  * \return bool Return true if the capability is available
  */
 bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo){
-    // The feature is available since Jan 23rd, 2024, with the driver 24.1.1 and on series 7000 check how to implement it
+    // The feature is available since Jan 23rd, 2024, with the driver 24.1.1 and on series 7000
+    // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_HQ_Scaler_API.md
     // https://community.amd.com/t5/gaming/amd-software-24-1-1-amd-fluid-motion-frames-an-updated-ui-and/ba-p/656213
 
-    // [TODO] Implement AMD Video Scaler
-    // Documentation and DX11 code sample
-    // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_VQ_Enhancer_API.md
-    // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_HQ_Scaler_API.md
-    // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/public/samples/CPPSamples/SimpleEncoder/SimpleEncoder.cpp
+    AMF_RESULT res;
+    amf::AMFCapsPtr amfCaps;
+    amf::AMFIOCapsPtr pInputCaps;
 
-    if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD Video Super Resolution capability is not yet supported by your client's GPU.");
+    // We skip if already initialized
+    if(m_AmfInitialized && activate)
+        return true;
+
+    amf::AMF_SURFACE_FORMAT inputSurfaceFormat;
+    amf::AMF_SURFACE_FORMAT outputSurfaceFormat;
+    AMF_VIDEO_CONVERTER_COLOR_PROFILE_ENUM outputColorSpace;
+    AMFColor backgroundColor = AMFConstructColor(0, 0, 0, 255);
+
+    // AMF Context initialization
+    res = g_AMFFactory.Init();
+    if (res != AMF_OK) goto Error;
+    res = g_AMFFactory.GetFactory()->CreateContext(&m_AmfContext);
+    if (res != AMF_OK) goto Error;
+    res = g_AMFFactory.GetFactory()->CreateComponent(m_AmfContext, AMFVQEnhancer, &m_AmfDenoiser);
+    if (res != AMF_OK) goto Error;
+    res = g_AMFFactory.GetFactory()->CreateComponent(m_AmfContext, AMFVideoConverter, &m_AmfFormatConverter);
+    if (res != AMF_OK) goto Error;
+    res = g_AMFFactory.GetFactory()->CreateComponent(m_AmfContext, AMFHQScaler, &m_AmfUpScaler);
+    if (res != AMF_OK) goto Error;
+    res = g_AMFFactory.GetFactory()->CreateComponent(m_AmfContext, AMFHQScaler, &m_AmfDownScaler);
+    if (res != AMF_OK) goto Error;
+
+    res = m_AmfContext->InitDX11(m_Device);
+    if (res != AMF_OK) goto Error;
+
+    // AMFHQScaler is the newest feature available (v1.4.33), so at least this one need to be accessible
+    m_AmfUpScaler->GetCaps(&amfCaps);
+    if (amfCaps != nullptr && amfCaps->GetAccelerationType() == amf::AMF_ACCEL_NOT_SUPPORTED) {
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "The hardware does not support needed AMD AMF capabilities.");
+        goto Error;
+    }
+
+    // Format initialization
+    inputSurfaceFormat = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? amf::AMF_SURFACE_P010 : amf::AMF_SURFACE_NV12;
+    outputSurfaceFormat = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? amf::AMF_SURFACE_R10G10B10A2 : amf::AMF_SURFACE_RGBA;
+    outputColorSpace = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT)
+                           ? AMF_VIDEO_CONVERTER_COLOR_PROFILE_FULL_2020
+                           : AMF_VIDEO_CONVERTER_COLOR_PROFILE_709;
+
+    // Input Surace initialization
+    res = m_AmfContext->AllocSurface(amf::AMF_MEMORY_DX11,
+                                     inputSurfaceFormat,
+                                     m_DecoderParams.width,
+                                     m_DecoderParams.height,
+                                     &m_AmfInputSurface);
+    if (res != AMF_OK) goto Error;
+
+    // Denoiser initialization (Reduce blocking artifacts)
+    m_AmfDenoiser->SetProperty(AMF_VIDEO_ENHANCER_OUTPUT_SIZE, ::AMFConstructSize(m_DecoderParams.width, m_DecoderParams.height));
+    m_AmfDenoiser->SetProperty(AMF_VIDEO_ENHANCER_ENGINE_TYPE, amf::AMF_MEMORY_DX11);
+    m_AmfDenoiser->SetProperty(AMF_VE_FCR_ATTENUATION, 0.10);
+    m_AmfDenoiser->SetProperty(AMF_VE_FCR_RADIUS, 1);
+    res = m_AmfDenoiser->Init(inputSurfaceFormat,
+                              m_DecoderParams.width,
+                              m_DecoderParams.height);
+    if (res != AMF_OK) goto Error;
+
+    // Convert to full range picture to reduce the "chroma subsampling blur" effect, and enable the use of FSR 1.1 (otherwise can only use FSR 1.0)
+    m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_MEMORY_TYPE, amf::AMF_MEMORY_DX11);
+    m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_FORMAT, outputSurfaceFormat);
+    m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_COLOR_PROFILE, outputColorSpace);
+    m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_FILL, true);
+    m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_FILL_COLOR, backgroundColor);
+    res = m_AmfFormatConverter->Init(inputSurfaceFormat,
+                               m_DecoderParams.width,
+                               m_DecoderParams.height);
+    if (res != AMF_OK) goto Error;
+
+    // Upscale initialization
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_OUTPUT_SIZE, ::AMFConstructSize(m_OutputTexture.width * m_ScaleUp, m_OutputTexture.height * m_ScaleUp));
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_ENGINE_TYPE, amf::AMF_MEMORY_DX11);
+    // VideoSR1.1 only supports upscaling ratio from 1.1x to 2.0x
+    if(
+           m_OutputTexture.width * m_ScaleUp / m_DecoderParams.width >= 1.1
+        && m_OutputTexture.width * m_ScaleUp / m_DecoderParams.width <= 2
+        && m_OutputTexture.height * m_ScaleUp / m_DecoderParams.height >= 1.1
+        && m_OutputTexture.height * m_ScaleUp / m_DecoderParams.height <= 2
+        ){
+        m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_ALGORITHM, AMF_HQ_SCALER_ALGORITHM_VIDEOSR1_1);
+    } else {
+        m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_ALGORITHM, AMF_HQ_SCALER_ALGORITHM_VIDEOSR1_0);
+    }
+
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_KEEP_ASPECT_RATIO, true);
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_FILL, true);
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_FILL_COLOR, backgroundColor);
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_FROM_SRGB, true);
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_SHARPNESS, m_ScaleUp == 1 ? 2.00 : 0.50); // We only apply sharpening when the picture is scaled
+    m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_FRAME_RATE, m_DecoderParams.frameRate);
+    // Initialize with the size of the texture that will be input
+    res = m_AmfUpScaler->Init(outputSurfaceFormat,
+                              m_DecoderParams.width,
+                              m_DecoderParams.height);
+    if (res != AMF_OK) goto Error;
+
+    // Frame Generation
+    // Cannot use, not available for DirectX11
+    // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_FRC_API.md#21-component-initialization
+
+    // Downscale (to the app window size) initialization
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_OUTPUT_SIZE, ::AMFConstructSize(m_OutputTexture.width, m_OutputTexture.height));
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_ENGINE_TYPE, amf::AMF_MEMORY_DX11);
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_ALGORITHM, AMF_HQ_SCALER_ALGORITHM_VIDEOSR1_0);
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_KEEP_ASPECT_RATIO, true);
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_FILL, true);
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_FILL_COLOR, backgroundColor);
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_FROM_SRGB, true);
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_SHARPNESS, 2.00);
+    m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_FRAME_RATE, m_DecoderParams.frameRate);
+    res = m_AmfDownScaler->Init(outputSurfaceFormat,
+                          m_OutputTexture.width * m_ScaleUp,
+                          m_OutputTexture.height * m_ScaleUp);
+    if (res != AMF_OK) goto Error;
+
+    if(!activate){
+        // Denoiser
+        m_AmfDenoiser->Terminate();
+        m_AmfDenoiser = nullptr;
+        // Format converter
+        m_AmfFormatConverter->Terminate();
+        m_AmfFormatConverter = nullptr;
+        // Up Scaler
+        m_AmfUpScaler->Terminate();
+        m_AmfUpScaler = nullptr;
+        // Down Scaler
+        m_AmfDownScaler->Terminate();
+        m_AmfDownScaler = nullptr;
+        // Context
+        m_AmfContext->Terminate();
+        m_AmfContext = nullptr;
+        // Factory
+        g_AMFFactory.Terminate();
+
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD Video Super Resolution disabled");
+    } else {
+        if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD Video Super Resolution enabled");
+    }
+
+    m_AmfInitialized = activate;
+    return true;
+
+Error:
+    if(logInfo) SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "AMD Video Super Resolution failed.");
+    m_AmfInitialized = false;
     return false;
 }
 
@@ -771,6 +1049,10 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
     m_DecoderParams = *params;
 
+    // Use only even number to avoid a crash a texture creation
+    m_DecoderParams.width = m_DecoderParams.width & ~1;
+    m_DecoderParams.height = m_DecoderParams.height & ~1;
+
     if (qgetenv("D3D11VA_ENABLED") == "0") {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "D3D11VA is disabled by environment variable");
@@ -795,7 +1077,39 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    hr = CreateDXGIFactory(__uuidof(IDXGIFactory5), (void**)&m_Factory);
+    // Use the current window size as the swapchain size
+    SDL_GetWindowSize(m_DecoderParams.window, (int*)&m_DisplayWidth, (int*)&m_DisplayHeight);
+
+    // Rounddown to even number to avoid a crash at texture creation
+    m_DisplayWidth = m_DisplayWidth & ~1;
+    m_DisplayHeight = m_DisplayHeight & ~1;
+
+    // As m_Display correponds to the application window, which may not have the same ratio as the Frame,
+    // we calculate the size of the final texture to fit in the window without distortion
+    m_OutputTexture.width = m_DisplayWidth;
+    m_OutputTexture.height = m_DisplayHeight;
+    m_OutputTexture.left = 0;
+    m_OutputTexture.top = 0;
+
+    // Sscale the source to the destination surface while keeping the same ratio
+    float ratioWidth = static_cast<float>(m_DisplayWidth) / static_cast<float>(m_DecoderParams.width);
+    float ratioHeight = static_cast<float>(m_DisplayHeight) / static_cast<float>(m_DecoderParams.height);
+
+    if(ratioHeight < ratioWidth){
+        // Adjust the Width
+        m_OutputTexture.width = static_cast<int>(std::floor(m_DecoderParams.width * ratioHeight));
+        m_OutputTexture.width = m_OutputTexture.width & ~1;
+        m_OutputTexture.left = static_cast<int>(std::floor(  abs(m_DisplayWidth - m_OutputTexture.width) / 2  ));
+        m_OutputTexture.left = m_OutputTexture.left & ~1;
+    } else if(ratioWidth < ratioHeight) {
+        // Adjust the Height
+        m_OutputTexture.height = static_cast<int>(std::floor(m_DecoderParams.height * ratioWidth));
+        m_OutputTexture.height = m_OutputTexture.height & ~1;
+        m_OutputTexture.top = static_cast<int>(std::floor(  abs(m_DisplayHeight - m_OutputTexture.height) / 2  ));
+        m_OutputTexture.top = m_OutputTexture.top & ~1;
+    }
+
+    hr = CreateDXGIFactory(__uuidof(IDXGIFactory5), (void**)m_Factory.GetAddressOf());
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateDXGIFactory() failed: %x",
@@ -806,6 +1120,8 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // If getAdapterIndex return 0+, it means that we already identified which adapter best fit for Video enhancement,
     // so we don't have to estimate it more times to speed up the launch of the streaming.
     if(m_VideoEnhancement->getAdapterIndex() < 0){
+        // This line is run only once during the application life and is necessary to display (or not)
+        // the Video enhancement checkbox if the GPU enables it
         int adapterIndex = getAdapterIndexByEnhancementCapabilities();
         if(adapterIndex >= 0){
             m_VideoEnhancement->setAdapterIndex(adapterIndex);
@@ -851,9 +1167,27 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
     // Set VSR and HDR
     if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        // We draw on a bigger output, this will give more space to any vendor Scale Up solution to generate more
+        // details with less artifacts around contrasted borders.
+        m_ScaleUp = 2;
+        if(m_DecoderParams.width == m_OutputTexture.width || m_DecoderParams.height == m_OutputTexture.height){
+            // We don't scale up when the pixel ratio is 1:1 between the input frame and the output texture,
+            // it help to keep perfect pixel matching from original
+            m_ScaleUp = 1;
+        }
+        if(m_DisplayWidth > 2560 || m_DisplayHeight > 1440){
+            // For anything bigger than 1440p, we don't scale as it will require to much ressources for low-end devices.
+            // We want to keep a ratio 1:1 pixel to avoid blur effect when the texture is scale down at rendering.
+            m_ScaleUp = 1;
+        }
         // Enable VSR feature if available
         if(m_VideoEnhancement->isVSRcapable()){
-            if(m_VideoEnhancement->isVendorAMD()){
+            // Try Auto Stream Super Resolution provided by DirectX11+ and agnostic to any Vendor
+            if (m_AutoStreamSuperResolution){
+                // The flag does exist, but not the method yet (by March 8th, 2024)
+                // We still can prepare the code once Microsof enable it.
+                // m_VideoContext->VideoProcessorSetStreamSuperResolution(m_VideoProcessor.Get(), 0, true);
+            } else if(m_VideoEnhancement->isVendorAMD()){
                 enableAMDVideoSuperResolution();
             } else if(m_VideoEnhancement->isVendorIntel()){
                 enableIntelVideoSuperResolution();
@@ -902,12 +1236,8 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     // causes performance issues (buffer starvation) on AMD GPUs.
     swapChainDesc.BufferCount = 3 + 1 + 1;
 
-    // Use the current window size as the swapchain size
-    SDL_GetWindowSize(params->window, (int*)&swapChainDesc.Width, (int*)&swapChainDesc.Height);
-
-    m_DisplayWidth = swapChainDesc.Width;
-    m_DisplayHeight = swapChainDesc.Height;
-
+    swapChainDesc.Width = m_DisplayWidth;
+    swapChainDesc.Height = m_DisplayHeight;
     if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
         swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
     }
@@ -951,7 +1281,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         // DXVA2 may let us take over for FSE V-sync off cases. However, if we don't have DXGI_FEATURE_PRESENT_ALLOW_TEARING
         // then we should not attempt to do this unless there's no other option (HDR, DXVA2 failed in pass 1, etc).
         if (!m_AllowTearing && m_DecoderSelectionPass == 0 && !(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) &&
-                (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
+            (SDL_GetWindowFlags(params->window) & SDL_WINDOW_FULLSCREEN_DESKTOP) == SDL_WINDOW_FULLSCREEN) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Defaulting to DXVA2 for FSE without DXGI_FEATURE_PRESENT_ALLOW_TEARING support");
             return false;
@@ -965,13 +1295,13 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
     // Always use windowed or borderless windowed mode.. SDL does mode-setting for us in
     // full-screen exclusive mode (SDL_WINDOW_FULLSCREEN), so this actually works out okay.
-    IDXGISwapChain1* swapChain;
+    ComPtr<IDXGISwapChain1> swapChain;
     hr = m_Factory->CreateSwapChainForHwnd(m_Device,
                                            info.info.win.window,
                                            &swapChainDesc,
                                            nullptr,
                                            nullptr,
-                                           &swapChain);
+                                           swapChain.GetAddressOf());
 
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -980,8 +1310,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    hr = swapChain->QueryInterface(__uuidof(IDXGISwapChain4), (void**)&m_SwapChain);
-    swapChain->Release();
+    hr = swapChain->QueryInterface(__uuidof(IDXGISwapChain4), (void**)m_SwapChain.GetAddressOf());
 
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1034,16 +1363,14 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
-    // Create our video texture and SRVs
-    if (!setupVideoTexture()) {
+    // Create our video textures and SRVs
+    if (!setupVideoTexture() || !setupFrameTexture()) {
         return false;
     }
 
     if(m_VideoProcessor && m_VideoEnhancement->isVideoEnhancementEnabled()){
         initializeVideoProcessor();
     }
-
-    SAFE_COM_RELEASE(m_BackBufferResource);
 
     return true;
 }
@@ -1107,7 +1434,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) failed: %x",
                              hr);
             }
-            if (m_VideoProcessor && m_VideoProcessorEnumerator) {
+            if (m_VideoProcessor) {
                 m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
             };
         }
@@ -1119,7 +1446,7 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709) failed: %x",
                              hr);
             }
-            if (m_VideoProcessor && m_VideoProcessorEnumerator) {
+            if (m_VideoProcessor) {
                 m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
             }
         }
@@ -1157,11 +1484,11 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
         return;
     }
 
-    ID3D11Texture2D* overlayTexture = m_OverlayTextures[type];
-    ID3D11Buffer* overlayVertexBuffer = m_OverlayVertexBuffers[type];
-    ID3D11ShaderResourceView* overlayTextureResourceView = m_OverlayTextureResourceViews[type];
+    ComPtr<ID3D11Texture2D> overlayTexture = m_OverlayTextures[type].Get();
+    ComPtr<ID3D11Buffer> overlayVertexBuffer = m_OverlayVertexBuffers[type].Get();
+    ComPtr<ID3D11ShaderResourceView> overlayTextureResourceView = m_OverlayTextureResourceViews[type].Get();
 
-    if (overlayTexture == nullptr) {
+    if (overlayTexture.Get() == nullptr) {
         SDL_AtomicUnlock(&m_OverlayLock);
         return;
     }
@@ -1169,27 +1496,20 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     // Reference these objects so they don't immediately go away if the
     // overlay update thread tries to release them.
     SDL_assert(overlayVertexBuffer != nullptr);
-    overlayTexture->AddRef();
-    overlayVertexBuffer->AddRef();
-    overlayTextureResourceView->AddRef();
 
     SDL_AtomicUnlock(&m_OverlayLock);
 
     // Bind vertex buffer
     UINT stride = sizeof(VERTEX);
     UINT offset = 0;
-    m_DeviceContext->IASetVertexBuffers(0, 1, &overlayVertexBuffer, &stride, &offset);
+    m_DeviceContext->IASetVertexBuffers(0, 1, overlayVertexBuffer.GetAddressOf(), &stride, &offset);
 
     // Bind pixel shader and resources
-    m_DeviceContext->PSSetShader(m_OverlayPixelShader, nullptr, 0);
-    m_DeviceContext->PSSetShaderResources(0, 1, &overlayTextureResourceView);
+    m_DeviceContext->PSSetShader(m_OverlayPixelShader.Get(), nullptr, 0);
+    m_DeviceContext->PSSetShaderResources(0, 1, overlayTextureResourceView.GetAddressOf());
 
     // Draw the overlay
     m_DeviceContext->DrawIndexed(6, 0, 0);
-
-    overlayTextureResourceView->Release();
-    overlayTexture->Release();
-    overlayVertexBuffer->Release();
 }
 
 void D3D11VARenderer::bindColorConversion(AVFrame* frame)
@@ -1199,14 +1519,14 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
 
     // We have purpose-built shaders for the common Rec 601 (SDR) and Rec 2020 (HDR) cases
     if (!fullRange && colorspace == COLORSPACE_REC_601) {
-        m_DeviceContext->PSSetShader(m_VideoBt601LimPixelShader, nullptr, 0);
+        m_DeviceContext->PSSetShader(m_VideoBt601LimPixelShader.Get(), nullptr, 0);
     }
     else if (!fullRange && colorspace == COLORSPACE_REC_2020) {
-        m_DeviceContext->PSSetShader(m_VideoBt2020LimPixelShader, nullptr, 0);
+        m_DeviceContext->PSSetShader(m_VideoBt2020LimPixelShader.Get(), nullptr, 0);
     }
     else {
         // We'll need to use the generic shader for this colorspace and color range combo
-        m_DeviceContext->PSSetShader(m_VideoGenericPixelShader, nullptr, 0);
+        m_DeviceContext->PSSetShader(m_VideoGenericPixelShader.Get(), nullptr, 0);
 
         // If nothing has changed since last frame, we're done
         if (colorspace == m_LastColorSpace && fullRange == m_LastFullRange) {
@@ -1259,11 +1579,11 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
         D3D11_SUBRESOURCE_DATA constData = {};
         constData.pSysMem = &constBuf;
 
-        ID3D11Buffer* constantBuffer;
-        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
+        ComPtr<ID3D11Buffer> constantBuffer;
+        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, constantBuffer.GetAddressOf());
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
-            constantBuffer->Release();
+            m_DeviceContext->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
+            // constantBuffer->Release();
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1306,33 +1626,41 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
     switch (frameColorSpace) {
     case COLORSPACE_REC_2020:
         // This Stream Color Space accepts HDR mode from Server, but NVIDIA AI-HDR will be disabled (which is fine as we already have native HDR)
-        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
+        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 : DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // [TODO] Remove this line if NVIDIA fix the issue of having VSR not working (add a gray filter)
             // while HDR is activated for Stream content (swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;)
             enableNvidiaVideoSuperResolution(); // Turn it "false" if we prefer to not see the white border around elements when VSR is active.
+        }
+        if(m_AmfInitialized){
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_USE_DECODER_HDR_METADATA, true);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_TRANSFER_CHARACTERISTIC, AMF_COLOR_TRANSFER_CHARACTERISTIC_SMPTE2084);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_PRIMARIES, AMF_COLOR_PRIMARIES_BT2020);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_RANGE, frameFullRange ? AMF_COLOR_RANGE_FULL : AMF_COLOR_RANGE_STUDIO);
+            m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
         }
         break;
     default:
         // This Stream Color Space is SDR, which enable the use of NVIDIA AI-HDR (Moonlight's HDR needs to be enabled)
         // I don't know why, it is gray when HDR is on on Moonlight while using DXGI_FORMAT_R10G10B10A2_UNORM for the SwapChain,
         // the fix is to force using DXGI_FORMAT_R8G8B8A8_UNORM which seems somehow not impacting the color rendering
-        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
+        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, frameFullRange ? DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709 : DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // Always enable NVIDIA VSR for SDR Stream content
             enableNvidiaVideoSuperResolution();
+        }
+        if(m_AmfInitialized){
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_USE_DECODER_HDR_METADATA, false);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_TRANSFER_CHARACTERISTIC, AMF_COLOR_TRANSFER_CHARACTERISTIC_UNDEFINED);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_PRIMARIES, AMF_COLOR_PRIMARIES_UNDEFINED);
+            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_RANGE, AMF_COLOR_RANGE_UNDEFINED);
+            m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
         }
     }
 }
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
 {
-    // Bind video rendering vertex buffer
-    UINT stride = sizeof(VERTEX);
-    UINT offset = 0;
-    m_DeviceContext->IASetVertexBuffers(0, 1, &m_VideoVertexBuffer, &stride, &offset);
-
-    // Copy this frame (minus alignment padding) into our video texture
     D3D11_BOX srcBox;
     srcBox.left = 0;
     srcBox.top = 0;
@@ -1340,7 +1668,57 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
     srcBox.bottom = m_DecoderParams.height;
     srcBox.front = 0;
     srcBox.back = 1;
-    m_DeviceContext->CopySubresourceRegion(m_VideoTexture, 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
+
+    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+
+        // Setup for AMD AMF
+        if(m_AmfInitialized){
+            // Copy this frame (minus alignment padding) into a temporary video texture
+            m_DeviceContext->CopySubresourceRegion(m_FrameTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
+            m_AmfContext->CreateSurfaceFromDX11Native(m_FrameTexture.Get(), &m_AmfInputSurface, nullptr);
+
+            amf::AMFDataPtr m_AmfData(m_AmfInputSurface);
+
+            // Denoisier => Reduce deblocking artifacts due to compressed streamed content
+            m_AmfDenoiser->SubmitInput(m_AmfData);
+            m_AmfDenoiser->QueryOutput(&m_AmfData);
+            m_AmfDenoiser->Flush();
+
+            // Format converter => To provide best color rendering
+            m_AmfFormatConverter->SubmitInput(m_AmfData);
+            m_AmfFormatConverter->QueryOutput(&m_AmfData);
+            m_AmfFormatConverter->Flush();
+
+            // Up Scaling => To a higher resolution than the application window to give more surface to the VSR to generate details and thus picture clarity
+            m_AmfUpScaler->SubmitInput(m_AmfData);
+            m_AmfUpScaler->QueryOutput(&m_AmfData);
+            m_AmfUpScaler->Flush();
+
+            // We don't need to scale down if the pixel ratio is already 1:1
+            if(m_ScaleUp != 1){
+                // Down Scaling => To avoid a blur effect if relying on VideoProcessor, this method provides clear pixel rendering
+                m_AmfDownScaler->SubmitInput(m_AmfData);
+                m_AmfDownScaler->QueryOutput(&m_AmfData);
+                m_AmfDownScaler->Flush();
+            }
+
+            amf::AMFSurfacePtr amfOutputSurface(m_AmfData);
+            m_DeviceContext->CopyResource(m_VideoTexture.Get(), (ID3D11Texture2D*)amfOutputSurface->GetPlaneAt(0)->GetNative());
+        } else {
+            // Copy this frame (minus alignment padding) into a temporary video texture
+            m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
+        }
+
+    } else {
+
+        // Bind video rendering vertex buffer
+        UINT stride = sizeof(VERTEX);
+        UINT offset = 0;
+        m_DeviceContext->IASetVertexBuffers(0, 1, m_VideoVertexBuffer.GetAddressOf(), &stride, &offset);
+        // Copy this frame (minus alignment padding) into a temporary video texture
+        m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
+
+    }
 
     // Draw the video
     if(m_VideoEnhancement->isVideoEnhancementEnabled()){
@@ -1372,19 +1750,23 @@ bool D3D11VARenderer::createVideoProcessor()
     HRESULT hr;
     D3D11_VIDEO_PROCESSOR_CONTENT_DESC content_desc;
 
-    m_VideoProcessorEnumerator = nullptr;
-    m_VideoProcessor = nullptr;
+    if(m_VideoProcessorEnumerator){
+        m_VideoProcessorEnumerator.Reset();
+    }
+    if(m_VideoProcessor){
+        m_VideoProcessor.Reset();
+    }
 
     // Get video device
     hr = m_Device->QueryInterface(__uuidof(ID3D11VideoDevice),
-                                  (void**)&m_VideoDevice);
+                                  (void**)m_VideoDevice.GetAddressOf());
     if (FAILED(hr)) {
         return false;
     }
 
     // Get video context
     hr = m_DeviceContext->QueryInterface(__uuidof(ID3D11VideoContext2),
-                                         (void**)&m_VideoContext);
+                                         (void**)m_VideoContext.GetAddressOf());
     if (FAILED(hr)) {
         return false;
     }
@@ -1399,7 +1781,7 @@ bool D3D11VARenderer::createVideoProcessor()
     content_desc.OutputHeight = m_DisplayHeight;
     content_desc.OutputFrameRate.Numerator = m_DecoderParams.frameRate;
     content_desc.OutputFrameRate.Denominator = 1;
-    content_desc.Usage = D3D11_VIDEO_USAGE_OPTIMAL_SPEED;
+    content_desc.Usage = D3D11_VIDEO_USAGE_PLAYBACK_NORMAL;
 
     hr = m_VideoDevice->CreateVideoProcessorEnumerator(&content_desc, &m_VideoProcessorEnumerator);
     if (FAILED(hr))
@@ -1409,6 +1791,11 @@ bool D3D11VARenderer::createVideoProcessor()
                                              &m_VideoProcessor);
     if (FAILED(hr))
         return false;
+
+    hr = m_VideoProcessorEnumerator->GetVideoProcessorCaps(&m_VideoProcessorCapabilities);
+    if (FAILED(hr)) {
+        return false;
+    }
 
     return true;
 }
@@ -1423,53 +1810,50 @@ bool D3D11VARenderer::createVideoProcessor()
 bool D3D11VARenderer::initializeVideoProcessor()
 {
     HRESULT hr;
+    D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputViewDesc;
+    D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC inputViewDesc;
 
-    m_VideoContext->VideoProcessorSetStreamAutoProcessingMode(m_VideoProcessor.Get(), 0, false);
     m_VideoContext->VideoProcessorSetStreamOutputRate(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_NORMAL, false, 0);
 
     // Set Background color
     D3D11_VIDEO_COLOR bgColor;
-    bgColor.YCbCr = { 0.0625f, 0.5f, 0.5f, 1.0f }; // black color
-    m_VideoContext->VideoProcessorSetOutputBackgroundColor(m_VideoProcessor.Get(), true, &bgColor);
+    bgColor.RGBA = { 0, 0, 0, 1 }; // black color
+    m_VideoContext->VideoProcessorSetOutputBackgroundColor(m_VideoProcessor.Get(), false, &bgColor);
 
-    ZeroMemory(&m_OutputViewDesc, sizeof(m_OutputViewDesc));
-    m_OutputViewDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
-    m_OutputViewDesc.Texture2D.MipSlice = 0;
+    ZeroMemory(&outputViewDesc, sizeof(outputViewDesc));
+    outputViewDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
+    outputViewDesc.Texture2D.MipSlice = 0;
 
     hr = m_VideoDevice->CreateVideoProcessorOutputView(
-        m_BackBufferResource,
+        m_BackBufferResource.Get(),
         m_VideoProcessorEnumerator.Get(),
-        &m_OutputViewDesc,
+        &outputViewDesc,
         (ID3D11VideoProcessorOutputView**)&m_OutputView);
-    if (FAILED(hr)) {
+    if (FAILED(hr))
         return false;
-    }
 
-    ZeroMemory(&m_InputViewDesc, sizeof(m_InputViewDesc));
-    m_InputViewDesc.FourCC = 0;
-    m_InputViewDesc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
-    m_InputViewDesc.Texture2D.MipSlice = 0;
-    m_InputViewDesc.Texture2D.ArraySlice = 0;
+    ZeroMemory(&inputViewDesc, sizeof(inputViewDesc));
+    inputViewDesc.FourCC = 0;
+    inputViewDesc.ViewDimension = D3D11_VPIV_DIMENSION_TEXTURE2D;
+    inputViewDesc.Texture2D.MipSlice = 0;
+    inputViewDesc.Texture2D.ArraySlice = 0;
 
     hr = m_VideoDevice->CreateVideoProcessorInputView(
-        m_VideoTexture, m_VideoProcessorEnumerator.Get(), &m_InputViewDesc, (ID3D11VideoProcessorInputView**)&m_InputView);
+        m_VideoTexture.Get(), m_VideoProcessorEnumerator.Get(), &inputViewDesc, (ID3D11VideoProcessorInputView**)&m_InputView);
     if (FAILED(hr))
         return false;
 
     RECT dstRect = { 0 };
     dstRect.right = m_DisplayWidth;
     dstRect.bottom = m_DisplayHeight;
+    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        dstRect.right = m_OutputTexture.width;
+        dstRect.bottom = m_OutputTexture.height;
 
-    // Sscale the source to the destination surface while keeping the same ratio
-    float ratioWidth = static_cast<float>(m_DisplayWidth) / static_cast<float>(m_DecoderParams.width);
-    float ratioHeight = static_cast<float>(m_DisplayHeight) / static_cast<float>(m_DecoderParams.height);
-
-    // [TODO] There is a behavior I don't understand (bug?) when the destination desRect is larger by one of its side than the source.
-    // If it is bigger, the window becomes black, but if it is smaller it is fine.
-    // Only one case is working when it is bigger is when the dstRest perfectly equal to the Display size.
-    // Investigation: If there anything to do with pixel alignment (c.f. dxva2.cpp FFALIGN), or screenSpaceToNormalizedDeviceCoords ?
-    // Fix: When bigger we strech the picture to the window, it will be deformed, but at least will not crash.
-    if(m_DisplayWidth < m_DecoderParams.width && m_DisplayHeight < m_DecoderParams.height){
+        // Scale the source to the destination surface while keeping the same ratio
+        float ratioWidth = static_cast<float>(m_DisplayWidth) / static_cast<float>(m_DecoderParams.width);
+        float ratioHeight = static_cast<float>(m_DisplayHeight) / static_cast<float>(m_DecoderParams.height);
+        // When VSR for NVIDIA is in use in Window mode, it may bug (black screen) the rendering while streatching bigger the window
         if(ratioHeight < ratioWidth){
             // Adjust the Width
             long width = static_cast<long>(std::floor(m_DecoderParams.width * ratioHeight));
@@ -1482,8 +1866,8 @@ bool D3D11VARenderer::initializeVideoProcessor()
             dstRect.bottom = dstRect.top + height;
         }
     }
-
     m_VideoContext->VideoProcessorSetStreamDestRect(m_VideoProcessor.Get(), 0, true, &dstRect);
+
     m_VideoContext->VideoProcessorSetStreamFrameFormat(m_VideoProcessor.Get(), 0, D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
 
     ZeroMemory(&m_StreamData, sizeof(m_StreamData));
@@ -1506,23 +1890,27 @@ bool D3D11VARenderer::initializeVideoProcessor()
         m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
     }
 
-    // The section is a customization per vendor to slightly enhance (non-AI methods) the frame appearance
-    int noiseReduction = 0;
-    int edgeEnhancement = 0;
+    // The section is a customization per vendor to slightly enhance (non-AI methods) the frame appearance.
+    // It does work in addition to AI-enhancement for better result.
     if(m_VideoEnhancement->isVendorAMD()){
-        noiseReduction = 30;
-        edgeEnhancement = 30;
+        // AMD has its own filters
     } else if(m_VideoEnhancement->isVendorIntel()){
-        noiseReduction = 30;
-        edgeEnhancement = 30;
+        // Reduce blocking artifacts
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
+        // Sharpen sligthly the picture to enhance details
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 30); // (0 / 0 / 100)
+
     } else if(m_VideoEnhancement->isVendorNVIDIA()){
-        noiseReduction = 30;
-        edgeEnhancement = 30;
+        // Reduce blocking artifacts
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
+        // Sharpen sligthly the picture to enhance details
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 30); // (0 / 0 / 100)
+
     }
-    // Reduce artefacts (like pixelisation around text), does work in addition to AI-enhancement for better result
-    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, noiseReduction); // (0 / 0 / 100)
-    // Sharpen sligthly the picture to enhance details, does work in addition to AI-enhancement for better result
-    m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, edgeEnhancement); // (0 / 0 / 100)
 
     // Default on SDR, it will switch to HDR automatically at the 1st frame received if the Stream source has HDR active.
     m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
@@ -1542,21 +1930,6 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         // The overlay is enabled and there is no new surface. Leave the old texture alone.
         return;
     }
-
-    SDL_AtomicLock(&m_OverlayLock);
-    ID3D11Texture2D* oldTexture = m_OverlayTextures[type];
-    m_OverlayTextures[type] = nullptr;
-
-    ID3D11Buffer* oldVertexBuffer = m_OverlayVertexBuffers[type];
-    m_OverlayVertexBuffers[type] = nullptr;
-
-    ID3D11ShaderResourceView* oldTextureResourceView = m_OverlayTextureResourceViews[type];
-    m_OverlayTextureResourceViews[type] = nullptr;
-    SDL_AtomicUnlock(&m_OverlayLock);
-
-    SAFE_COM_RELEASE(oldTextureResourceView);
-    SAFE_COM_RELEASE(oldTexture);
-    SAFE_COM_RELEASE(oldVertexBuffer);
 
     // If the overlay is disabled, we're done
     if (!overlayEnabled) {
@@ -1585,21 +1958,18 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     texData.pSysMem = newSurface->pixels;
     texData.SysMemPitch = newSurface->pitch;
 
-    ID3D11Texture2D* newTexture;
-    hr = m_Device->CreateTexture2D(&texDesc, &texData, &newTexture);
+    ComPtr<ID3D11Texture2D> newTexture;
+    hr = m_Device->CreateTexture2D(&texDesc, &texData, newTexture.GetAddressOf());
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateTexture2D() failed: %x",
                      hr);
         return;
     }
 
-    ID3D11ShaderResourceView* newTextureResourceView = nullptr;
-    hr = m_Device->CreateShaderResourceView((ID3D11Resource*)newTexture, nullptr, &newTextureResourceView);
+    ComPtr<ID3D11ShaderResourceView> newTextureResourceView;
+    hr = m_Device->CreateShaderResourceView((ID3D11Resource*)newTexture.Get(), nullptr, newTextureResourceView.GetAddressOf());
     if (FAILED(hr)) {
-        SAFE_COM_RELEASE(newTexture);
-        SDL_FreeSurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateShaderResourceView() failed: %x",
                      hr);
@@ -1648,11 +2018,9 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     D3D11_SUBRESOURCE_DATA vbData = {};
     vbData.pSysMem = verts;
 
-    ID3D11Buffer* newVertexBuffer;
-    hr = m_Device->CreateBuffer(&vbDesc, &vbData, &newVertexBuffer);
+    ComPtr<ID3D11Buffer> newVertexBuffer;
+    hr = m_Device->CreateBuffer(&vbDesc, &vbData, newVertexBuffer.GetAddressOf());
     if (FAILED(hr)) {
-        SAFE_COM_RELEASE(newTextureResourceView);
-        SAFE_COM_RELEASE(newTexture);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateBuffer() failed: %x",
                      hr);
@@ -1660,24 +2028,18 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     SDL_AtomicLock(&m_OverlayLock);
-    m_OverlayVertexBuffers[type] = newVertexBuffer;
-    m_OverlayTextures[type] = newTexture;
-    m_OverlayTextureResourceViews[type] = newTextureResourceView;
+    m_OverlayVertexBuffers[type] = newVertexBuffer.Get();
+    m_OverlayTextures[type] = newTexture.Get();
+    m_OverlayTextureResourceViews[type] = newTextureResourceView.Get();
     SDL_AtomicUnlock(&m_OverlayLock);
 }
 
 bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
 {
     HRESULT hr;
-    ID3D11VideoDevice* videoDevice;
 
-    // Derive a ID3D11VideoDevice from our ID3D11Device.
-    hr = m_Device->QueryInterface(__uuidof(ID3D11VideoDevice), (void**)&videoDevice);
-    if (FAILED(hr)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "ID3D11Device::QueryInterface(ID3D11VideoDevice) failed: %x",
-                     hr);
-        return false;
+    if(m_VideoDevice == nullptr){
+        createVideoProcessor();
     }
 
     // Check if the format is supported by this decoder
@@ -1685,87 +2047,74 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
     switch (m_DecoderParams.videoFormat)
     {
     case VIDEO_FORMAT_H264:
-        if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_H264_VLD_NOFGT, DXGI_FORMAT_NV12, &supported))) {
+        if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_H264_VLD_NOFGT, DXGI_FORMAT_NV12, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support H.264 decoding");
-            videoDevice->Release();
             return false;
         }
         else if (!supported) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support H.264 decoding to NV12 format");
-            videoDevice->Release();
             return false;
         }
         break;
 
     case VIDEO_FORMAT_H265:
-        if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN, DXGI_FORMAT_NV12, &supported))) {
+        if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN, DXGI_FORMAT_NV12, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support HEVC decoding");
-            videoDevice->Release();
             return false;
         }
         else if (!supported) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support HEVC decoding to NV12 format");
-            videoDevice->Release();
             return false;
         }
         break;
 
     case VIDEO_FORMAT_H265_MAIN10:
-        if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10, DXGI_FORMAT_P010, &supported))) {
+        if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10, DXGI_FORMAT_P010, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support HEVC Main10 decoding");
-            videoDevice->Release();
             return false;
         }
         else if (!supported) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support HEVC Main10 decoding to P010 format");
-            videoDevice->Release();
             return false;
         }
         break;
 
     case VIDEO_FORMAT_AV1_MAIN8:
-        if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_AV1_VLD_PROFILE0, DXGI_FORMAT_NV12, &supported))) {
+        if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_AV1_VLD_PROFILE0, DXGI_FORMAT_NV12, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support AV1 decoding");
-            videoDevice->Release();
             return false;
         }
         else if (!supported) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support AV1 decoding to NV12 format");
-            videoDevice->Release();
             return false;
         }
         break;
 
     case VIDEO_FORMAT_AV1_MAIN10:
-        if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_AV1_VLD_PROFILE0, DXGI_FORMAT_P010, &supported))) {
+        if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_AV1_VLD_PROFILE0, DXGI_FORMAT_P010, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support AV1 Main10 decoding");
-            videoDevice->Release();
             return false;
         }
         else if (!supported) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support AV1 Main10 decoding to P010 format");
-            videoDevice->Release();
             return false;
         }
         break;
 
     default:
         SDL_assert(false);
-        videoDevice->Release();
         return false;
     }
-
-    videoDevice->Release();
 
     DXGI_ADAPTER_DESC adapterDesc;
     hr = adapter->GetDesc(&adapterDesc);
@@ -1843,11 +2192,10 @@ bool D3D11VARenderer::setupRenderingResources()
     {
         QByteArray vertexShaderBytecode = Path::readDataFile("d3d11_vertex.fxc");
 
-        ID3D11VertexShader* vertexShader;
-        hr = m_Device->CreateVertexShader(vertexShaderBytecode.constData(), vertexShaderBytecode.length(), nullptr, &vertexShader);
+        ComPtr<ID3D11VertexShader> vertexShader;
+        hr = m_Device->CreateVertexShader(vertexShaderBytecode.constData(), vertexShaderBytecode.length(), nullptr, vertexShader.GetAddressOf());
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->VSSetShader(vertexShader, nullptr, 0);
-            vertexShader->Release();
+            m_DeviceContext->VSSetShader(vertexShader.Get(), nullptr, 0);
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1861,11 +2209,10 @@ bool D3D11VARenderer::setupRenderingResources()
             { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
-        ID3D11InputLayout* inputLayout;
-        hr = m_Device->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), vertexShaderBytecode.constData(), vertexShaderBytecode.length(), &inputLayout);
+        ComPtr<ID3D11InputLayout> inputLayout;
+        hr = m_Device->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), vertexShaderBytecode.constData(), vertexShaderBytecode.length(), inputLayout.GetAddressOf());
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->IASetInputLayout(inputLayout);
-            inputLayout->Release();
+            m_DeviceContext->IASetInputLayout(inputLayout.Get());
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1878,7 +2225,7 @@ bool D3D11VARenderer::setupRenderingResources()
     {
         QByteArray overlayPixelShaderBytecode = Path::readDataFile("d3d11_overlay_pixel.fxc");
 
-        hr = m_Device->CreatePixelShader(overlayPixelShaderBytecode.constData(), overlayPixelShaderBytecode.length(), nullptr, &m_OverlayPixelShader);
+        hr = m_Device->CreatePixelShader(overlayPixelShaderBytecode.constData(), overlayPixelShaderBytecode.length(), nullptr, m_OverlayPixelShader.GetAddressOf());
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreatePixelShader() failed: %x",
@@ -1890,7 +2237,7 @@ bool D3D11VARenderer::setupRenderingResources()
     {
         QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_genyuv_pixel.fxc");
 
-        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoGenericPixelShader);
+        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, m_VideoGenericPixelShader.GetAddressOf());
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreatePixelShader() failed: %x",
@@ -1902,7 +2249,7 @@ bool D3D11VARenderer::setupRenderingResources()
     {
         QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_bt601lim_pixel.fxc");
 
-        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoBt601LimPixelShader);
+        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, m_VideoBt601LimPixelShader.GetAddressOf());
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreatePixelShader() failed: %x",
@@ -1914,7 +2261,7 @@ bool D3D11VARenderer::setupRenderingResources()
     {
         QByteArray videoPixelShaderBytecode = Path::readDataFile("d3d11_bt2020lim_pixel.fxc");
 
-        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, &m_VideoBt2020LimPixelShader);
+        hr = m_Device->CreatePixelShader(videoPixelShaderBytecode.constData(), videoPixelShaderBytecode.length(), nullptr, m_VideoBt2020LimPixelShader.GetAddressOf());
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreatePixelShader() failed: %x",
@@ -1936,11 +2283,10 @@ bool D3D11VARenderer::setupRenderingResources()
         samplerDesc.MinLOD = 0.0f;
         samplerDesc.MaxLOD = D3D11_FLOAT32_MAX;
 
-        ID3D11SamplerState* sampler;
-        hr = m_Device->CreateSamplerState(&samplerDesc,  &sampler);
+        ComPtr<ID3D11SamplerState> sampler;
+        hr = m_Device->CreateSamplerState(&samplerDesc,  sampler.GetAddressOf());
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->PSSetSamplers(0, 1, &sampler);
-            sampler->Release();
+            m_DeviceContext->PSSetSamplers(0, 1, sampler.GetAddressOf());
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1952,7 +2298,7 @@ bool D3D11VARenderer::setupRenderingResources()
 
     // Create our render target view
     {
-        hr = m_SwapChain->GetBuffer(0, __uuidof(ID3D11Resource), (void**)&m_BackBufferResource);
+        hr = m_SwapChain->GetBuffer(0, __uuidof(ID3D11Resource), (void**)m_BackBufferResource.GetAddressOf());
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "IDXGISwapChain::GetBuffer() failed: %x",
@@ -1960,7 +2306,7 @@ bool D3D11VARenderer::setupRenderingResources()
             return false;
         }
 
-        hr = m_Device->CreateRenderTargetView(m_BackBufferResource, nullptr, &m_RenderTargetView);
+        hr = m_Device->CreateRenderTargetView(m_BackBufferResource.Get(), nullptr, &m_RenderTargetView);
         // m_BackBufferResource is still needed in createVideoProcessor(), therefore will be released later
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1985,11 +2331,10 @@ bool D3D11VARenderer::setupRenderingResources()
         indexBufferData.pSysMem = indexes;
         indexBufferData.SysMemPitch = sizeof(int);
 
-        ID3D11Buffer* indexBuffer;
-        hr = m_Device->CreateBuffer(&indexBufferDesc, &indexBufferData, &indexBuffer);
+        ComPtr<ID3D11Buffer> indexBuffer;
+        hr = m_Device->CreateBuffer(&indexBufferDesc, &indexBufferData, indexBuffer.GetAddressOf());
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->IASetIndexBuffer(indexBuffer, DXGI_FORMAT_R32_UINT, 0);
-            indexBuffer->Release();
+            m_DeviceContext->IASetIndexBuffer(indexBuffer.Get(), DXGI_FORMAT_R32_UINT, 0);
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -2034,7 +2379,7 @@ bool D3D11VARenderer::setupRenderingResources()
         D3D11_SUBRESOURCE_DATA vbData = {};
         vbData.pSysMem = verts;
 
-        hr = m_Device->CreateBuffer(&vbDesc, &vbData, &m_VideoVertexBuffer);
+        hr = m_Device->CreateBuffer(&vbDesc, &vbData, m_VideoVertexBuffer.GetAddressOf());
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateBuffer() failed: %x",
@@ -2057,11 +2402,11 @@ bool D3D11VARenderer::setupRenderingResources()
         blendDesc.RenderTarget[0].BlendOpAlpha = D3D11_BLEND_OP_ADD;
         blendDesc.RenderTarget[0].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 
-        ID3D11BlendState* blendState;
-        hr = m_Device->CreateBlendState(&blendDesc, &blendState);
+        ComPtr<ID3D11BlendState> blendState;
+        hr = m_Device->CreateBlendState(&blendDesc, blendState.GetAddressOf());
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->OMSetBlendState(blendState, nullptr, 0xffffffff);
-            blendState->Release();
+            m_DeviceContext->OMSetBlendState(blendState.Get(), nullptr, 0xffffffff);
+            // blendState->Release();
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -2093,25 +2438,37 @@ bool D3D11VARenderer::setupVideoTexture()
     HRESULT hr;
     D3D11_TEXTURE2D_DESC texDesc = {};
 
+    // Size of the output texture
     texDesc.Width = m_DecoderParams.width;
     texDesc.Height = m_DecoderParams.height;
+    if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_AmfInitialized){
+        texDesc.Width = m_OutputTexture.width;
+        texDesc.Height = m_OutputTexture.height;
+    }
     texDesc.MipLevels = 1;
     texDesc.ArraySize = 1;
-    texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_P010 : DXGI_FORMAT_NV12;
+    if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_AmfInitialized){
+        texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R10G10B10A2_UNORM : DXGI_FORMAT_R8G8B8A8_UNORM;
+    } else {
+        texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_P010 : DXGI_FORMAT_NV12;
+    }
     texDesc.SampleDesc.Quality = 0;
     texDesc.SampleDesc.Count = 1;
     texDesc.Usage = D3D11_USAGE_DEFAULT;
     texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
     // The flag D3D11_BIND_RENDER_TARGET is needed to enable the use of GPU enhancement
-    if(m_DecoderParams.enableVideoEnhancement && m_VideoEnhancement->isEnhancementCapable()){
+    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
         texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
     }
     texDesc.CPUAccessFlags = 0;
     texDesc.MiscFlags = 0;
 
-    hr = m_Device->CreateTexture2D(&texDesc, nullptr, &m_VideoTexture);
+    if(m_AmfInitialized){
+        texDesc.MiscFlags |= D3D11_RESOURCE_MISC_SHARED;
+    }
+
+    hr = m_Device->CreateTexture2D(&texDesc, nullptr, m_VideoTexture.GetAddressOf());
     if (FAILED(hr)) {
-        m_VideoTexture = nullptr;
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateTexture2D() failed: %x",
                      hr);
@@ -2124,7 +2481,7 @@ bool D3D11VARenderer::setupVideoTexture()
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.MipLevels = 1;
     srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
-    hr = m_Device->CreateShaderResourceView(m_VideoTexture, &srvDesc, &m_VideoTextureResourceViews[0]);
+    hr = m_Device->CreateShaderResourceView(m_VideoTexture.Get(), &srvDesc, &m_VideoTextureResourceViews[0]);
     if (FAILED(hr)) {
         m_VideoTextureResourceViews[0] = nullptr;
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -2134,12 +2491,42 @@ bool D3D11VARenderer::setupVideoTexture()
     }
 
     srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
-    hr = m_Device->CreateShaderResourceView(m_VideoTexture, &srvDesc, &m_VideoTextureResourceViews[1]);
+    hr = m_Device->CreateShaderResourceView(m_VideoTexture.Get(), &srvDesc, &m_VideoTextureResourceViews[1]);
     if (FAILED(hr)) {
         m_VideoTextureResourceViews[1] = nullptr;
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateShaderResourceView() failed: %x",
                      hr);
+        return false;
+    }
+
+    return true;
+}
+
+bool D3D11VARenderer::setupFrameTexture()
+{
+    // Texture description
+    D3D11_TEXTURE2D_DESC texDesc = {};
+    // Same size as the input Frame
+    texDesc.Width = m_DecoderParams.width;
+    texDesc.Height = m_DecoderParams.height;
+    texDesc.MipLevels = 1;
+    texDesc.ArraySize = 1;
+    texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_P010 : DXGI_FORMAT_NV12;
+    texDesc.SampleDesc.Quality = 0;
+    texDesc.SampleDesc.Count = 1;
+    texDesc.Usage = D3D11_USAGE_DEFAULT;
+    texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+    // The flag D3D11_BIND_RENDER_TARGET is needed to enable the use of GPU enhancement
+    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
+    }
+    texDesc.CPUAccessFlags = 0;
+    texDesc.MiscFlags = 0;
+
+    HRESULT hr = m_Device->CreateTexture2D(&texDesc, nullptr, m_FrameTexture.GetAddressOf());
+    if (FAILED(hr)) {
+        // Handle error
         return false;
     }
 

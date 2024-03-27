@@ -383,6 +383,18 @@ win32:!winrt {
         streaming/video/ffmpeg-renderers/d3d11va.h \
         streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h
 }
+win32:!winrt {
+    message(AMF enabled for AMD Drivers)
+
+    SOURCES += \
+        ../third-party/AMF/amf/public/common/AMFFactory.cpp \
+        ../third-party/AMF/amf/public/common/AMFSTL.cpp \
+        ../third-party/AMF/amf/public/common/Thread.cpp \
+        ../third-party/AMF/amf/public/common/TraceAdapter.cpp \
+        ../third-party/AMF/amf/public/common/Windows\ThreadWindows.cpp
+
+    INCLUDEPATH += $$PWD/../third-party/AMF/amf
+}
 macx {
     message(VideoToolbox renderer selected)
 

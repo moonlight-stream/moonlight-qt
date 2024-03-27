@@ -17,3 +17,6 @@
 	path = libs
 	url = https://github.com/cgutman/moonlight-qt-prebuilts.git
 	shallow = true
+[submodule "third-party/AMF"]
+	path = third-party/AMF
+	url = https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git
