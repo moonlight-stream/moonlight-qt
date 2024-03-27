@@ -80,7 +80,7 @@ private:
 
 #define DXVA2_QUIRK_NO_VP 0x01
 #define DXVA2_QUIRK_SET_DEST_FORMAT 0x02
-#define DXVA2_QUIRK_WDDM_20_PLUS 0x04
+#define DXVA2_QUIRK_WDDM_20_PLUS 0x04 // Unused
 #define DXVA2_QUIRK_MULTI_GPU 0x08
     int m_DeviceQuirks;
 };

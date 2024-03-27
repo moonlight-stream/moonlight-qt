@@ -814,12 +814,8 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     if (pass == 0) {
         switch (hwDecodeCfg->device_type) {
 #ifdef Q_OS_WIN32
-        // DXVA2 appears in the hwaccel list before D3D11VA, so we will prefer it.
-        //
-        // There is logic in DXVA2 that may elect to fail on the first selection pass
-        // to allow D3D11VA to be used in cases where it is known to be better.
-        case AV_HWDEVICE_TYPE_DXVA2:
-            return new DXVA2Renderer(pass);
+        // DXVA2 appears in the hwaccel list before D3D11VA, so we only check for D3D11VA
+        // on the first pass to ensure we prefer D3D11VA over DXVA2.
         case AV_HWDEVICE_TYPE_D3D11VA:
             return new D3D11VARenderer(pass);
 #endif
@@ -857,9 +853,9 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
             return new CUDARenderer();
 #endif
 #ifdef Q_OS_WIN32
-        // This gives DXVA2 and D3D11VA another shot at handling cases where they
-        // chose to purposefully fail in the first selection pass to allow a more
-        // optimal decoder to be tried.
+        // This gives us another shot if D3D11VA failed in the first pass.
+        // Since DXVA2 is in the hwaccel list first, we'll first try to fall back
+        // to that before giving D3D11VA another try as a last resort.
         case AV_HWDEVICE_TYPE_DXVA2:
             return new DXVA2Renderer(pass);
         case AV_HWDEVICE_TYPE_D3D11VA:
