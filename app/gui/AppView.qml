@@ -5,8 +5,9 @@ import QtQuick.Controls.Material 2.2
 import AppModel 1.0
 import ComputerManager 1.0
 import SdlGamepadKeyNavigation 1.0
+import ThemeManager 1.0
 
-CenteredGridView {
+ListView {
     property int computerIndex
     property AppModel appModel : createModel()
     property bool activated
@@ -16,9 +17,16 @@ CenteredGridView {
     id: appGrid
     focus: true
     activeFocusOnTab: true
-    topMargin: 20
-    bottomMargin: 5
-    cellWidth: 230; cellHeight: 297;
+    orientation: ListView.Horizontal;
+    spacing: ThemeManager.gameModeEnabled ? ThemeManager.spacing : 0
+
+    anchors {
+        fill: parent
+        topMargin: 100
+        leftMargin: 100
+        rightMargin: 100
+        bottomMargin: 100
+    }
 
     function computerLost()
     {
@@ -70,9 +78,41 @@ CenteredGridView {
 
     model: appModel
 
+    onCurrentItemChanged: {
+       if (currentItem) {
+           appNameTitle.text = currentItem.objectName; // Update title of app label
+       } else {
+           appNameTitle.text = ""; // delete text if no app selected
+       }
+    }
+
+    Label {
+        id: appNameTitle
+        text: ""
+
+        width: parent.width
+        anchors.bottomMargin: ThemeManager.gameModeEnabled ? ThemeManager.appImageHeight + 60 : 267 + 60
+        anchors.bottom: appGrid.bottom
+        x: 10
+        font.pointSize: ThemeManager.gameModeEnabled ? ThemeManager.appNameFontSize : 20
+        horizontalAlignment: Text.AlignHLeft
+        wrapMode: Text.Wrap
+        elide: Text.ElideRight
+
+        Binding {
+            target: appNameTitle
+            property: "text"
+            value: appModel.appName
+        }
+    }
+
     delegate: NavigableItemDelegate {
-        width: 220; height: 287;
+        id: item
+        width: ThemeManager.gameModeEnabled ? ThemeManager.appImageWidth + 20 : 220
+        height: ThemeManager.gameModeEnabled ? ThemeManager.appImageHeight + 20 : 287
         grid: appGrid
+        objectName: model.name
+        anchors.bottom: parent.bottom
 
         property alias appContextMenu: appContextMenuLoader.item
         property alias appNameText: appNameTextLoader.item
@@ -80,12 +120,22 @@ CenteredGridView {
         // Dim the app if it's hidden
         opacity: model.hidden ? 0.4 : 1.0
 
-        Image {
+        Rectangle {
+            id: hoverEffect
+            anchors.fill: parent
+            visible: item.highlighted
+            radius: 14
+            border.color: "#FFF"
+            border.width: 3
+            opacity: 0.3
+        }
+
+        background: Image {
             property bool isPlaceholder: false
 
             id: appIcon
             anchors.horizontalCenter: parent.horizontalCenter
-            y: 10
+            anchors.verticalCenter: parent.verticalCenter
             source: model.boxart
 
             onSourceSizeChanged: {
@@ -105,15 +155,35 @@ CenteredGridView {
                     isPlaceholder = false
                 }
 
-                width = 200
-                height = 267
+                width = ThemeManager.gameModeEnabled ? ThemeManager.appImageWidth : 200
+                height = ThemeManager.gameModeEnabled ? ThemeManager.appImageHeight : 267
+            }
+            Binding {
+                target: appIcon
+                property: "width"
+                value: ThemeManager.gameModeEnabled ? ThemeManager.appImageWidth : 200
+            }
+
+            Binding {
+                target: appIcon
+                property: "height"
+                value: ThemeManager.gameModeEnabled ? ThemeManager.appImageHeight : 267
             }
 
             // Display a tooltip with the full name if it's truncated
-            ToolTip.text: model.name
-            ToolTip.delay: 1000
-            ToolTip.timeout: 5000
-            ToolTip.visible: (parent.hovered || parent.highlighted) && (!appNameText || appNameText.truncated)
+            // ToolTip.text: model.name
+            // ToolTip.delay: 1000
+            // ToolTip.timeout: 5000
+            // ToolTip.visible: (!parent.hovered || parent.highlighted) && (!appNameText || appNameText.truncated)
+        }
+
+        // compatibily to Qt 5.15 and Qt 6
+        Component.onCompleted: {
+            var importByQtVersion = qtVersion.substring(0, 1) === "6" ? "Qt5Compat.GraphicalEffects" : "QtGraphicalEffects";
+            var shadowEffect = Qt.createQmlObject(
+                'import '+importByQtVersion+'; DropShadow { anchors.fill: appIcon; radius: 12; horizontalOffset: 0; verticalOffset: 0; color: "#80000000"; source: appIcon }',
+                item
+            );
         }
 
         Loader {
@@ -255,8 +325,13 @@ CenteredGridView {
         MouseArea {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton;
+            hoverEnabled: true
             onClicked: {
                 parent.onPressAndHold()
+            }
+
+            onEntered: {
+                currentIndex = model.index
             }
         }
 

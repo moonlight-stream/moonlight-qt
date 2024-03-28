@@ -7,9 +7,12 @@ import ComputerModel 1.0
 import ComputerManager 1.0
 import StreamingPreferences 1.0
 import SdlGamepadKeyNavigation 1.0
+import ThemeManager 1.0
 
 CenteredGridView {
     property ComputerModel computerModel : createModel()
+    property int nbLaunch: -1
+    property bool isFirstAutoLaunch: false
 
     id: pcGrid
     focus: true
@@ -42,6 +45,7 @@ CenteredGridView {
         if (currentIndex == -1 && SdlGamepadKeyNavigation.getConnectedGamepads() > 0) {
             currentIndex = 0
         }
+        nbLaunch++;
     }
 
     StackView.onDeactivating: {
@@ -215,6 +219,22 @@ CenteredGridView {
                         deletePcDialog.open()
                     }
                 }
+
+                NavigableMenuItem {
+                    id: favoriteMenuItem
+                    text: ThemeManager.isComputerFavorite(index) ? qsTr("Remove computer favorite") : qsTr("Set as Favorite")
+                    onTriggered: {
+                        var newFavorite = ThemeManager.isComputerFavorite(index) ? -1 : index;
+                        ThemeManager.setFavoriteComputer(newFavorite);
+                    }
+                    Component.onCompleted: {
+                        ThemeManager.favoriteComputerChanged.connect(updateFavoriteMenuItem)
+                    }
+                }
+
+                function updateFavoriteMenuItem() {
+                    favoriteMenuItem.text = ThemeManager.isComputerFavorite(index) ? qsTr("Remove computer favorite") : qsTr("Set as Favorite");
+                }
             }
         }
 
@@ -277,6 +297,36 @@ CenteredGridView {
             deletePcDialog.pcName = model.name
             deletePcDialog.open()
         }
+
+        // Connect to the dataChanged event of the model
+        Component.onCompleted: {
+            computerModel.dataChanged.connect(favoriteComputerAutoload)
+        }
+
+        // Function executed when the model's data changes
+        function favoriteComputerAutoload() {
+            // Check if the game mode is not enabled
+            if (!ThemeManager.gameModeEnabled)
+                return;
+
+            // Check if the current computer is the favorite, if it's the first auto-launch, and if the launch count is zero
+            if (index !== undefined && ThemeManager.getFavoriteComputer() === index && !isFirstAutoLaunch && nbLaunch === 0) {
+                // If the computer is not online and can be woken up, wake it up
+                if (!model.online && model.wakeable)
+                    computerModel.wakeComputer(index)
+
+                // If the computer is online and paired, launch the application
+                if (model.online && model.paired) {
+                    // Set isFirstAutoLaunch to true to prevent further automatic launches
+                    isFirstAutoLaunch = true
+                    // Create a component AppView.qml and push it onto the view stack
+                    var component = Qt.createComponent("AppView.qml")
+                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
+                    stackView.push(appView)
+                }
+            }
+        }
+
     }
 
     ErrorMessageDialog {
