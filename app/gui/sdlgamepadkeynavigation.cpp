@@ -121,7 +121,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
                         QEvent::Type::KeyPress : QEvent::Type::KeyRelease;
 
             // Swap face buttons if needed
-            if (prefs.swapFaceButtons) {
+            if (prefs.swapFaceButtonsInUi) {
                 switch (event.cbutton.button) {
                 case SDL_CONTROLLER_BUTTON_A:
                     event.cbutton.button = SDL_CONTROLLER_BUTTON_B;

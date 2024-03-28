@@ -131,7 +131,8 @@ public:
     Q_PROPERTY(bool muteOnFocusLoss MEMBER muteOnFocusLoss NOTIFY muteOnFocusLossChanged)
     Q_PROPERTY(bool backgroundGamepad MEMBER backgroundGamepad NOTIFY backgroundGamepadChanged)
     Q_PROPERTY(bool reverseScrollDirection MEMBER reverseScrollDirection NOTIFY reverseScrollDirectionChanged)
-    Q_PROPERTY(bool swapFaceButtons MEMBER swapFaceButtons NOTIFY swapFaceButtonsChanged)
+    Q_PROPERTY(bool swapFaceButtonsInUi MEMBER swapFaceButtonsInUi NOTIFY swapFaceButtonsInUiChanged)
+    Q_PROPERTY(bool swapFaceButtonsInStream MEMBER swapFaceButtonsInStream NOTIFY swapFaceButtonsInStreamChanged)
     Q_PROPERTY(bool keepAwake MEMBER keepAwake NOTIFY keepAwakeChanged)
     Q_PROPERTY(CaptureSysKeysMode captureSysKeysMode MEMBER captureSysKeysMode NOTIFY captureSysKeysModeChanged)
     Q_PROPERTY(Language language MEMBER language NOTIFY languageChanged);
@@ -160,7 +161,8 @@ public:
     bool muteOnFocusLoss;
     bool backgroundGamepad;
     bool reverseScrollDirection;
-    bool swapFaceButtons;
+    bool swapFaceButtonsInUi;
+    bool swapFaceButtonsInStream;
     bool keepAwake;
     int packetSize;
     AudioConfig audioConfig;
@@ -200,7 +202,8 @@ signals:
     void muteOnFocusLossChanged();
     void backgroundGamepadChanged();
     void reverseScrollDirectionChanged();
-    void swapFaceButtonsChanged();
+    void swapFaceButtonsInUiChanged();
+    void swapFaceButtonsInStreamChanged();
     void captureSysKeysModeChanged();
     void keepAwakeChanged();
     void languageChanged();

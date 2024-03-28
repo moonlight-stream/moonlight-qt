@@ -1343,15 +1343,15 @@ Flickable {
                 spacing: 5
 
                 CheckBox {
-                    id: swapFaceButtonsCheck
+                    id: swapFaceButtonsInUiCheck
                     width: parent.width
-                    text: qsTr("Swap A/B and X/Y gamepad buttons")
+                    text: qsTr("Swap A/B and X/Y gamepad buttons in Moonlight UI")
                     font.pointSize: 12
-                    checked: StreamingPreferences.swapFaceButtons
+                    checked: StreamingPreferences.swapFaceButtonsInUi
                     onCheckedChanged: {
                         // Check if the value changed (this is called on init too)
-                        if (StreamingPreferences.swapFaceButtons !== checked) {
-                            StreamingPreferences.swapFaceButtons = checked
+                        if (StreamingPreferences.swapFaceButtonsInUi !== checked) {
+                            StreamingPreferences.swapFaceButtonsInUi = checked
 
                             // Save and restart SdlGamepadKeyNavigation so it can pull the new value
                             StreamingPreferences.save()
@@ -1363,7 +1363,23 @@ Flickable {
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("This switches gamepads into a Nintendo-style button layout")
+                    ToolTip.text: qsTr("This switches gamepads into a Nintendo-style button layout, but only in the Moonlight UI")
+                }
+
+                CheckBox {
+                    id: swapFaceButtonsInStreamCheck
+                    width: parent.width
+                    text: qsTr("Swap A/B and X/Y gamepad buttons in streams")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.swapFaceButtonsInStream
+                    onCheckedChanged: {
+                        StreamingPreferences.swapFaceButtonsInStream = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("This switches gamepads into a Nintendo-style button layout, but only while in a stream")
                 }
 
                 CheckBox {

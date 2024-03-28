@@ -479,8 +479,14 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --reverse-scroll-direction and --no-reverse-scroll-direction options
     preferences->reverseScrollDirection = parser.getToggleOptionValue("reverse-scroll-direction", preferences->reverseScrollDirection);
 
-    // Resolve --swap-gamepad-buttons and --no-swap-gamepad-buttons options
-    preferences->swapFaceButtons = parser.getToggleOptionValue("swap-gamepad-buttons", preferences->swapFaceButtons);
+    // [DEPRECATED] Resolve --swap-gamepad-buttons and --no-swap-gamepad-buttons options
+    bool swapFaceButtons = parser.getToggleOptionValue("swap-gamepad-buttons", false);
+
+    // Resolve --swap-gamepad-buttons-in-ui and --no-swap-gamepad-buttons-in-ui options
+    preferences->swapFaceButtonsInUi = parser.getToggleOptionValue("swap-gamepad-buttons-in-ui", preferences->swapFaceButtonsInUi || swapFaceButtons);
+
+    // Resolve --swap-gamepad-buttons-in-stream and --no-swap-gamepad-buttons-in-stream options
+    preferences->swapFaceButtonsInStream = parser.getToggleOptionValue("swap-gamepad-buttons-in-stream", preferences->swapFaceButtonsInStream || swapFaceButtons);
 
     // Resolve --keep-awake and --no-keep-awake options
     preferences->keepAwake = parser.getToggleOptionValue("keep-awake", preferences->keepAwake);
