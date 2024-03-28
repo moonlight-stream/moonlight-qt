@@ -6,6 +6,7 @@ import ComputerModel 1.0
 
 import ComputerManager 1.0
 import StreamingPreferences 1.0
+import SystemProperties 1.0
 import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
@@ -215,6 +216,14 @@ CenteredGridView {
                         deletePcDialog.open()
                     }
                 }
+                NavigableMenuItem {
+                    parentMenu: pcContextMenu
+                    text: qsTr("View Details")
+                    onTriggered: {
+                        showPcDetailsDialog.pcDetails = model.details
+                        showPcDetailsDialog.open()
+                    }
+                }
             }
         }
 
@@ -393,6 +402,15 @@ CenteredGridView {
                 }
             }
         }
+    }
+
+    NavigableMessageDialog {
+        id: showPcDetailsDialog
+        property int pcIndex : -1;
+        property string pcDetails : "";
+        text: showPcDetailsDialog.pcDetails
+        imageSrc: "qrc:/res/baseline-help_outline-24px.svg"
+        standardButtons: Dialog.Ok | (SystemProperties.hasBrowser ? Dialog.Help : 0)
     }
 
     ScrollBar.vertical: ScrollBar {}
