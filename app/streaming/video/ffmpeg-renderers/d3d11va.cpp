@@ -391,6 +391,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
     bool success = false;
     ComPtr<IDXGIAdapter1> adapter;
     DXGI_ADAPTER_DESC1 adapterDesc;
+    ComPtr<ID3D11Multithread> pMultithread;
     HRESULT hr;
 
 #ifdef QT_DEBUG
@@ -468,6 +469,12 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                      "D3D11CreateDevice() failed: %x",
                      hr);
         goto Exit;
+    }
+
+    // Avoid the application to crash in case of multithread conflict on the same resource
+    if(SUCCEEDED(m_Device->QueryInterface(__uuidof(ID3D11Multithread), (void**)&pMultithread)))
+    {
+        pMultithread->SetMultithreadProtected(true);
     }
 
     if(m_VideoEnhancement->isVideoEnhancementEnabled() && !createVideoProcessor()){
@@ -735,8 +742,8 @@ bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo)
     m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_FILL, true);
     m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_FILL_COLOR, backgroundColor);
     res = m_AmfFormatConverter->Init(inputSurfaceFormat,
-                               m_DecoderParams.width,
-                               m_DecoderParams.height);
+                                     m_DecoderParams.width,
+                                     m_DecoderParams.height);
     if (res != AMF_OK) goto Error;
 
     // Upscale initialization
@@ -744,7 +751,7 @@ bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo)
     m_AmfUpScaler->SetProperty(AMF_HQ_SCALER_ENGINE_TYPE, amf::AMF_MEMORY_DX11);
     // VideoSR1.1 only supports upscaling ratio from 1.1x to 2.0x
     if(
-           m_OutputTexture.width * m_ScaleUp / m_DecoderParams.width >= 1.1
+        m_OutputTexture.width * m_ScaleUp / m_DecoderParams.width >= 1.1
         && m_OutputTexture.width * m_ScaleUp / m_DecoderParams.width <= 2
         && m_OutputTexture.height * m_ScaleUp / m_DecoderParams.height >= 1.1
         && m_OutputTexture.height * m_ScaleUp / m_DecoderParams.height <= 2
@@ -781,8 +788,8 @@ bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo)
     m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_SHARPNESS, 2.00);
     m_AmfDownScaler->SetProperty(AMF_HQ_SCALER_FRAME_RATE, m_DecoderParams.frameRate);
     res = m_AmfDownScaler->Init(outputSurfaceFormat,
-                          m_OutputTexture.width * m_ScaleUp,
-                          m_OutputTexture.height * m_ScaleUp);
+                                m_OutputTexture.width * m_ScaleUp,
+                                m_OutputTexture.height * m_ScaleUp);
     if (res != AMF_OK) goto Error;
 
     if(!activate){
@@ -1084,7 +1091,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     m_DisplayWidth = m_DisplayWidth & ~1;
     m_DisplayHeight = m_DisplayHeight & ~1;
 
-    // As m_Display correponds to the application window, which may not have the same ratio as the Frame,
+    // As m_Display corresponds to the application window, which may not have the same ratio as the Frame,
     // we calculate the size of the final texture to fit in the window without distortion
     m_OutputTexture.width = m_DisplayWidth;
     m_OutputTexture.height = m_DisplayHeight;
@@ -1203,7 +1210,12 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
             } else if(m_VideoEnhancement->isVendorIntel()){
                 enableIntelHDR();
             } else if(m_VideoEnhancement->isVendorNVIDIA()){
-                enableNvidiaHDR();
+                if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
+                    // Disable SDR->HDR feature because the screen becomes grey when activated
+                    enableNvidiaHDR(false);
+                } else {
+                    enableNvidiaHDR();
+                }
             }
         }
     }
@@ -1242,14 +1254,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;
     }
     else {
-        swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
-    }
-
-    // [TODO] With NVIDIA RTX, while renderering using VideoProcessor with HDR activated in Moonlight,
-    // DXGI_FORMAT_R10G10B10A2_UNORM gives worse result than DXGI_FORMAT_R8G8B8A8_UNORM.
-    // Without this fix, HDR off on server renders gray screen and VSR is inactive (DXGI_COLOR_SPACE_TYPE type 8).
-    // For user perspective, it is better to not see such a bug, so for the moment I choose to force DXGI_FORMAT_R8G8B8A8_UNORM
-    if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_VideoEnhancement->isVendorNVIDIA()){
         swapChainDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM;
     }
 
@@ -1330,10 +1334,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    if (!setupRenderingResources()) {
-        return false;
-    }
-
     {
         m_HwDeviceContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_D3D11VA);
         if (!m_HwDeviceContext) {
@@ -1364,7 +1364,12 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // Create our video textures and SRVs
-    if (!setupVideoTexture() || !setupFrameTexture()) {
+    if (!setupEnhancedTexture() || !setupVideoTexture() || !setupAmfTexture()) {
+        return false;
+    }
+
+    // As for Video Enhancement, the RTV uses a texture, it needs to be setup after the textures creation
+    if (!setupRenderingResources()) {
         return false;
     }
 
@@ -1434,9 +1439,6 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020) failed: %x",
                              hr);
             }
-            if (m_VideoProcessor) {
-                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
-            };
         }
         else {
             // Restore default sRGB colorspace
@@ -1446,9 +1448,6 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
                              "IDXGISwapChain::SetColorSpace1(DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709) failed: %x",
                              hr);
             }
-            if (m_VideoProcessor) {
-                m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
-            }
         }
 
         m_LastColorTrc = frame->color_trc;
@@ -1456,6 +1455,10 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
 
     // Present according to the decoder parameters
     hr = m_SwapChain->Present(0, flags);
+
+    // Unbind the shader resource view to avoid conflicts on the next frame
+    ID3D11ShaderResourceView* nullSRV[2] = { nullptr, nullptr };
+    m_DeviceContext->PSSetShaderResources(0, 2, nullSRV);
 
     // Release the context lock
     unlockContext(this);
@@ -1607,11 +1610,6 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
  */
 void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
 {
-    //Do Nothing when Moonlight's HDR is disabled
-    if(!(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT)){
-        return;
-    }
-
     bool frameFullRange = isFrameFullRange(frame);
     int frameColorSpace = getFrameColorspace(frame);
 
@@ -1624,13 +1622,15 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
     m_LastFullRange = frameFullRange;
 
     switch (frameColorSpace) {
+
     case COLORSPACE_REC_2020:
-        // This Stream Color Space accepts HDR mode from Server, but NVIDIA AI-HDR will be disabled (which is fine as we already have native HDR)
         m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 : DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020 : DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
+
         if(m_VideoEnhancement->isVendorNVIDIA()){
-            // [TODO] Remove this line if NVIDIA fix the issue of having VSR not working (add a gray filter)
-            // while HDR is activated for Stream content (swapChainDesc.Format = DXGI_FORMAT_R10G10B10A2_UNORM;)
-            enableNvidiaVideoSuperResolution(); // Turn it "false" if we prefer to not see the white border around elements when VSR is active.
+            // VSR from Nvidia does not work yet on HDR content (Observation by March 28th, 2024)
+            // https://en.wikipedia.org/wiki/Video_Super_Resolution#:~:text=The%20feature%20supports%20input%20resolutions,likely%20added%20in%20the%20future
+            enableNvidiaVideoSuperResolution(false);
         }
         if(m_AmfInitialized){
             m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_USE_DECODER_HDR_METADATA, true);
@@ -1640,13 +1640,13 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
             m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
         }
         break;
+
     default:
-        // This Stream Color Space is SDR, which enable the use of NVIDIA AI-HDR (Moonlight's HDR needs to be enabled)
-        // I don't know why, it is gray when HDR is on on Moonlight while using DXGI_FORMAT_R10G10B10A2_UNORM for the SwapChain,
-        // the fix is to force using DXGI_FORMAT_R8G8B8A8_UNORM which seems somehow not impacting the color rendering
-        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, frameFullRange ? DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709 : DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
+        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 : DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709);
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), frameFullRange ? DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709 : DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709);
+
         if(m_VideoEnhancement->isVendorNVIDIA()){
-            // Always enable NVIDIA VSR for SDR Stream content
+            // Always enable NVIDIA VSR for SDR content
             enableNvidiaVideoSuperResolution();
         }
         if(m_AmfInitialized){
@@ -1656,11 +1656,17 @@ void D3D11VARenderer::prepareVideoProcessorStream(AVFrame* frame)
             m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_RANGE, AMF_COLOR_RANGE_UNDEFINED);
             m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
         }
+
     }
 }
 
 void D3D11VARenderer::renderVideo(AVFrame* frame)
 {
+    // Bind video rendering vertex buffer
+    UINT stride = sizeof(VERTEX);
+    UINT offset = 0;
+    m_DeviceContext->IASetVertexBuffers(0, 1, m_VideoVertexBuffer.GetAddressOf(), &stride, &offset);
+
     D3D11_BOX srcBox;
     srcBox.left = 0;
     srcBox.top = 0;
@@ -1669,73 +1675,61 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
     srcBox.front = 0;
     srcBox.back = 1;
 
-    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+    // Setup for AMD AMF
+    if(m_AmfInitialized){
+        // Copy this frame (minus alignment padding) into a temporary video texture
+        m_DeviceContext->CopySubresourceRegion(m_AmfTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
+        m_AmfContext->CreateSurfaceFromDX11Native(m_AmfTexture.Get(), &m_AmfInputSurface, nullptr);
 
-        // Setup for AMD AMF
-        if(m_AmfInitialized){
-            // Copy this frame (minus alignment padding) into a temporary video texture
-            m_DeviceContext->CopySubresourceRegion(m_FrameTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
-            m_AmfContext->CreateSurfaceFromDX11Native(m_FrameTexture.Get(), &m_AmfInputSurface, nullptr);
+        amf::AMFDataPtr m_AmfData(m_AmfInputSurface);
 
-            amf::AMFDataPtr m_AmfData(m_AmfInputSurface);
+        // Denoisier => Reduce deblocking artifacts due to compressed streamed content
+        m_AmfDenoiser->SubmitInput(m_AmfData);
+        m_AmfDenoiser->QueryOutput(&m_AmfData);
+        m_AmfDenoiser->Flush();
 
-            // Denoisier => Reduce deblocking artifacts due to compressed streamed content
-            m_AmfDenoiser->SubmitInput(m_AmfData);
-            m_AmfDenoiser->QueryOutput(&m_AmfData);
-            m_AmfDenoiser->Flush();
+        // Format converter => To provide best color rendering
+        m_AmfFormatConverter->SubmitInput(m_AmfData);
+        m_AmfFormatConverter->QueryOutput(&m_AmfData);
+        m_AmfFormatConverter->Flush();
 
-            // Format converter => To provide best color rendering
-            m_AmfFormatConverter->SubmitInput(m_AmfData);
-            m_AmfFormatConverter->QueryOutput(&m_AmfData);
-            m_AmfFormatConverter->Flush();
+        // Up Scaling => To a higher resolution than the application window to give more surface to the VSR to generate details and thus picture clarity
+        m_AmfUpScaler->SubmitInput(m_AmfData);
+        m_AmfUpScaler->QueryOutput(&m_AmfData);
+        m_AmfUpScaler->Flush();
 
-            // Up Scaling => To a higher resolution than the application window to give more surface to the VSR to generate details and thus picture clarity
-            m_AmfUpScaler->SubmitInput(m_AmfData);
-            m_AmfUpScaler->QueryOutput(&m_AmfData);
-            m_AmfUpScaler->Flush();
-
-            // We don't need to scale down if the pixel ratio is already 1:1
-            if(m_ScaleUp != 1){
-                // Down Scaling => To avoid a blur effect if relying on VideoProcessor, this method provides clear pixel rendering
-                m_AmfDownScaler->SubmitInput(m_AmfData);
-                m_AmfDownScaler->QueryOutput(&m_AmfData);
-                m_AmfDownScaler->Flush();
-            }
-
-            amf::AMFSurfacePtr amfOutputSurface(m_AmfData);
-            m_DeviceContext->CopyResource(m_VideoTexture.Get(), (ID3D11Texture2D*)amfOutputSurface->GetPlaneAt(0)->GetNative());
-        } else {
-            // Copy this frame (minus alignment padding) into a temporary video texture
-            m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
+        // We don't need to scale down if the pixel ratio is already 1:1
+        if(m_ScaleUp != 1){
+            // Down Scaling => To avoid a blur effect if relying on VideoProcessor, this method provides clear pixel rendering
+            m_AmfDownScaler->SubmitInput(m_AmfData);
+            m_AmfDownScaler->QueryOutput(&m_AmfData);
+            m_AmfDownScaler->Flush();
         }
 
-    } else {
-
-        // Bind video rendering vertex buffer
-        UINT stride = sizeof(VERTEX);
-        UINT offset = 0;
-        m_DeviceContext->IASetVertexBuffers(0, 1, m_VideoVertexBuffer.GetAddressOf(), &stride, &offset);
-        // Copy this frame (minus alignment padding) into a temporary video texture
-        m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
-
+        amf::AMFSurfacePtr amfOutputSurface(m_AmfData);
+        m_DeviceContext->CopyResource(m_VideoTexture.Get(), (ID3D11Texture2D*)amfOutputSurface->GetPlaneAt(0)->GetNative());
     }
 
-    // Draw the video
     if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        // Copy this frame (minus alignment padding) into a temporary video texture
+        m_DeviceContext->CopySubresourceRegion(m_EnhancedTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
         // Prepare the Stream
         prepareVideoProcessorStream(frame);
-        // Render to the front the frames processed by the Video Processor
+        // Process operations on the output Texture
         m_VideoContext->VideoProcessorBlt(m_VideoProcessor.Get(), m_OutputView.Get(), 0, 1, &m_StreamData);
     } else {
-        // Bind our CSC shader (and constant buffer, if required)
-        bindColorConversion(frame);
-
-        // Bind SRVs for this frame
-        m_DeviceContext->PSSetShaderResources(0, 2, m_VideoTextureResourceViews);
-
-        // Draw the video
-        m_DeviceContext->DrawIndexed(6, 0, 0);
+        // Copy this frame (minus alignment padding) into a temporary video texture
+        m_DeviceContext->CopySubresourceRegion(m_VideoTexture.Get(), 0, 0, 0, 0, (ID3D11Resource*)frame->data[0], (int)(intptr_t)frame->data[1], &srcBox);
     }
+
+    // Bind our CSC shader (and constant buffer, if required)
+    bindColorConversion(frame);
+
+    // Bind SRVs for this frame
+    m_DeviceContext->PSSetShaderResources(0, 2, m_VideoTextureResourceViews);
+
+    // Process shaders on the output texture
+    m_DeviceContext->DrawIndexed(6, 0, 0);
 }
 
 /**
@@ -1810,27 +1804,9 @@ bool D3D11VARenderer::createVideoProcessor()
 bool D3D11VARenderer::initializeVideoProcessor()
 {
     HRESULT hr;
-    D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputViewDesc;
+
+    // INPUT setting
     D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC inputViewDesc;
-
-    m_VideoContext->VideoProcessorSetStreamOutputRate(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_NORMAL, false, 0);
-
-    // Set Background color
-    D3D11_VIDEO_COLOR bgColor;
-    bgColor.RGBA = { 0, 0, 0, 1 }; // black color
-    m_VideoContext->VideoProcessorSetOutputBackgroundColor(m_VideoProcessor.Get(), false, &bgColor);
-
-    ZeroMemory(&outputViewDesc, sizeof(outputViewDesc));
-    outputViewDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
-    outputViewDesc.Texture2D.MipSlice = 0;
-
-    hr = m_VideoDevice->CreateVideoProcessorOutputView(
-        m_BackBufferResource.Get(),
-        m_VideoProcessorEnumerator.Get(),
-        &outputViewDesc,
-        (ID3D11VideoProcessorOutputView**)&m_OutputView);
-    if (FAILED(hr))
-        return false;
 
     ZeroMemory(&inputViewDesc, sizeof(inputViewDesc));
     inputViewDesc.FourCC = 0;
@@ -1839,36 +1815,82 @@ bool D3D11VARenderer::initializeVideoProcessor()
     inputViewDesc.Texture2D.ArraySlice = 0;
 
     hr = m_VideoDevice->CreateVideoProcessorInputView(
-        m_VideoTexture.Get(), m_VideoProcessorEnumerator.Get(), &inputViewDesc, (ID3D11VideoProcessorInputView**)&m_InputView);
+        m_EnhancedTexture.Get(),
+        m_VideoProcessorEnumerator.Get(),
+        &inputViewDesc,
+        (ID3D11VideoProcessorInputView**)&m_InputView);
     if (FAILED(hr))
         return false;
 
-    RECT dstRect = { 0 };
-    dstRect.right = m_DisplayWidth;
-    dstRect.bottom = m_DisplayHeight;
-    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
-        dstRect.right = m_OutputTexture.width;
-        dstRect.bottom = m_OutputTexture.height;
-
-        // Scale the source to the destination surface while keeping the same ratio
-        float ratioWidth = static_cast<float>(m_DisplayWidth) / static_cast<float>(m_DecoderParams.width);
-        float ratioHeight = static_cast<float>(m_DisplayHeight) / static_cast<float>(m_DecoderParams.height);
-        // When VSR for NVIDIA is in use in Window mode, it may bug (black screen) the rendering while streatching bigger the window
-        if(ratioHeight < ratioWidth){
-            // Adjust the Width
-            long width = static_cast<long>(std::floor(m_DecoderParams.width * ratioHeight));
-            dstRect.left = static_cast<long>(std::floor(  abs(m_DisplayWidth - width) / 2  ));
-            dstRect.right = dstRect.left + width;
-        } else if(ratioWidth < ratioHeight) {
-            // Adjust the Height
-            long height = static_cast<long>(std::floor(m_DecoderParams.height * ratioWidth));
-            dstRect.top = static_cast<long>(std::floor(  abs(m_DisplayHeight - height) / 2  ));
-            dstRect.bottom = dstRect.top + height;
-        }
-    }
-    m_VideoContext->VideoProcessorSetStreamDestRect(m_VideoProcessor.Get(), 0, true, &dstRect);
+    RECT inputRect = { 0 };
+    inputRect.right = m_DisplayWidth;
+    inputRect.bottom = m_DisplayHeight;
+    m_VideoContext->VideoProcessorSetStreamDestRect(m_VideoProcessor.Get(), 0, true, &inputRect);
 
     m_VideoContext->VideoProcessorSetStreamFrameFormat(m_VideoProcessor.Get(), 0, D3D11_VIDEO_FRAME_FORMAT_PROGRESSIVE);
+
+    // Initialize Color spaces, this will be adjusted once the first frame is received
+    if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
+        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
+    } else {
+        m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709);
+    }
+
+
+    // OUTPUT setting
+    D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputViewDesc;
+
+    ZeroMemory(&outputViewDesc, sizeof(outputViewDesc));
+    outputViewDesc.ViewDimension = D3D11_VPOV_DIMENSION_TEXTURE2D;
+    outputViewDesc.Texture2D.MipSlice = 0;
+
+    hr = m_VideoDevice->CreateVideoProcessorOutputView(
+        m_VideoTexture.Get(),
+        m_VideoProcessorEnumerator.Get(),
+        &outputViewDesc,
+        (ID3D11VideoProcessorOutputView**)&m_OutputView);
+    if (FAILED(hr))
+        return false;
+
+    RECT targetRect = { 0 };
+    targetRect.right = m_DisplayWidth;
+    targetRect.bottom = m_DisplayHeight;
+    m_VideoContext->VideoProcessorSetOutputTargetRect(m_VideoProcessor.Get(), true, &targetRect);
+
+    m_VideoContext->VideoProcessorSetStreamOutputRate(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_OUTPUT_RATE_NORMAL, false, NULL);
+
+    // Set Background color
+    D3D11_VIDEO_COLOR bgColor;
+    bgColor.RGBA = { 0, 0, 0, 1 }; // black color
+    m_VideoContext->VideoProcessorSetOutputBackgroundColor(m_VideoProcessor.Get(), false, &bgColor);
+
+    // Initialize Color spaces, this will be adjusted once the first frame is received
+    if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020);
+    } else {
+        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709);
+    }
+
+    // The section is a customization per vendor to slightly enhance (non-AI methods) the frame appearance.
+    // It does work in addition to AI-enhancement for better result.
+    if(m_VideoEnhancement->isVendorAMD()){
+        // AMD has its own filters
+    } else if(m_VideoEnhancement->isVendorIntel()){
+        // Reduce blocking artifacts
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
+        // Sharpen sligthly the picture to enhance details
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 20); // (0 / 0 / 100)
+
+    } else if(m_VideoEnhancement->isVendorNVIDIA()){
+        // Reduce blocking artifacts
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
+        // Sharpen sligthly the picture to enhance details
+        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT)
+            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 20); // (0 / 0 / 100)
+    }
 
     ZeroMemory(&m_StreamData, sizeof(m_StreamData));
     m_StreamData.Enable = true;
@@ -1882,38 +1904,6 @@ bool D3D11VARenderer::initializeVideoProcessor()
     m_StreamData.ppPastSurfacesRight = nullptr;
     m_StreamData.ppFutureSurfacesRight = nullptr;
     m_StreamData.pInputSurfaceRight = nullptr;
-
-    // Set OutPut ColorSpace
-    if(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT){
-        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020);
-    } else {
-        m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709);
-    }
-
-    // The section is a customization per vendor to slightly enhance (non-AI methods) the frame appearance.
-    // It does work in addition to AI-enhancement for better result.
-    if(m_VideoEnhancement->isVendorAMD()){
-        // AMD has its own filters
-    } else if(m_VideoEnhancement->isVendorIntel()){
-        // Reduce blocking artifacts
-        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
-            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
-        // Sharpen sligthly the picture to enhance details
-        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT)
-            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 30); // (0 / 0 / 100)
-
-    } else if(m_VideoEnhancement->isVendorNVIDIA()){
-        // Reduce blocking artifacts
-        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION)
-            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_NOISE_REDUCTION, true, 30); // (0 / 0 / 100)
-        // Sharpen sligthly the picture to enhance details
-        if (m_VideoProcessorCapabilities.FilterCaps & D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT)
-            m_VideoContext->VideoProcessorSetStreamFilter(m_VideoProcessor.Get(), 0, D3D11_VIDEO_PROCESSOR_FILTER_EDGE_ENHANCEMENT, true, 30); // (0 / 0 / 100)
-
-    }
-
-    // Default on SDR, it will switch to HDR automatically at the 1st frame received if the Stream source has HDR active.
-    m_VideoContext->VideoProcessorSetStreamColorSpace1(m_VideoProcessor.Get(), 0, DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709);
 
     return true;
 }
@@ -2000,12 +1990,12 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     newSurface = nullptr;
 
     VERTEX verts[] =
-    {
-        {renderRect.x, renderRect.y, 0, 1},
-        {renderRect.x, renderRect.y+renderRect.h, 0, 0},
-        {renderRect.x+renderRect.w, renderRect.y, 1, 1},
-        {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1, 0},
-    };
+        {
+         {renderRect.x, renderRect.y, 0, 1},
+         {renderRect.x, renderRect.y+renderRect.h, 0, 0},
+         {renderRect.x+renderRect.w, renderRect.y, 1, 1},
+         {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1, 0},
+         };
 
     D3D11_BUFFER_DESC vbDesc = {};
     vbDesc.ByteWidth = sizeof(verts);
@@ -2205,10 +2195,10 @@ bool D3D11VARenderer::setupRenderingResources()
         }
 
         const D3D11_INPUT_ELEMENT_DESC vertexDesc[] =
-        {
-            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-        };
+            {
+             { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+             { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+             };
         ComPtr<ID3D11InputLayout> inputLayout;
         hr = m_Device->CreateInputLayout(vertexDesc, ARRAYSIZE(vertexDesc), vertexShaderBytecode.constData(), vertexShaderBytecode.length(), inputLayout.GetAddressOf());
         if (SUCCEEDED(hr)) {
@@ -2307,7 +2297,6 @@ bool D3D11VARenderer::setupRenderingResources()
         }
 
         hr = m_Device->CreateRenderTargetView(m_BackBufferResource.Get(), nullptr, &m_RenderTargetView);
-        // m_BackBufferResource is still needed in createVideoProcessor(), therefore will be released later
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateRenderTargetView() failed: %x",
@@ -2355,18 +2344,17 @@ bool D3D11VARenderer::setupRenderingResources()
         dst.w = m_DisplayWidth;
         dst.h = m_DisplayHeight;
         StreamUtils::scaleSourceToDestinationSurface(&src, &dst);
-
         // Convert screen space to normalized device coordinates
         SDL_FRect renderRect;
         StreamUtils::screenSpaceToNormalizedDeviceCoords(&dst, &renderRect, m_DisplayWidth, m_DisplayHeight);
 
         VERTEX verts[] =
-        {
-            {renderRect.x, renderRect.y, 0, 1.0f},
-            {renderRect.x, renderRect.y+renderRect.h, 0, 0},
-            {renderRect.x+renderRect.w, renderRect.y, 1.0f, 1.0f},
-            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1.0f, 0},
-        };
+            {
+             {renderRect.x, renderRect.y, 0, 1.0f},
+             {renderRect.x, renderRect.y+renderRect.h, 0, 0},
+             {renderRect.x+renderRect.w, renderRect.y, 1.0f, 1.0f},
+             {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1.0f, 0},
+             };
 
         D3D11_BUFFER_DESC vbDesc = {};
         vbDesc.ByteWidth = sizeof(verts);
@@ -2433,21 +2421,66 @@ bool D3D11VARenderer::setupRenderingResources()
     return true;
 }
 
+/**
+ * \brief Set the Texture used by AMD AMF
+ *
+ * Set a YUV texture to be processed by AMD AMF to upscale and denoise
+ *
+ * \return bool Returns true if the texture is created
+ */
+bool D3D11VARenderer::setupAmfTexture()
+{
+    // Texture description
+    D3D11_TEXTURE2D_DESC texDesc = {};
+    // Same size as the input Frame
+    texDesc.Width = m_DecoderParams.width;
+    texDesc.Height = m_DecoderParams.height;
+    texDesc.MipLevels = 1;
+    texDesc.ArraySize = 1;
+    texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_P010 : DXGI_FORMAT_NV12;
+    texDesc.SampleDesc.Quality = 0;
+    texDesc.SampleDesc.Count = 1;
+    texDesc.Usage = D3D11_USAGE_DEFAULT;
+    texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
+    texDesc.CPUAccessFlags = 0;
+    texDesc.MiscFlags = 0;
+
+    HRESULT hr = m_Device->CreateTexture2D(&texDesc, nullptr, m_AmfTexture.GetAddressOf());
+    if (FAILED(hr)) {
+        // Handle error
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * \brief Set the Texture used by the Shaders
+ *
+ * Set a YUV texture to be processed by the shaders to convert to colorisatin to RGBA
+ *
+ * \return bool Returns true if the texture is created
+ */
 bool D3D11VARenderer::setupVideoTexture()
 {
     HRESULT hr;
     D3D11_TEXTURE2D_DESC texDesc = {};
 
     // Size of the output texture
-    texDesc.Width = m_DecoderParams.width;
-    texDesc.Height = m_DecoderParams.height;
-    if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_AmfInitialized){
+    if(m_AmfInitialized){
         texDesc.Width = m_OutputTexture.width;
         texDesc.Height = m_OutputTexture.height;
+    } if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        texDesc.Width = m_DisplayWidth;
+        texDesc.Height = m_DisplayHeight;
+    } else {
+        texDesc.Width = m_DecoderParams.width;
+        texDesc.Height = m_DecoderParams.height;
     }
+
     texDesc.MipLevels = 1;
     texDesc.ArraySize = 1;
-    if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_AmfInitialized){
+    if(m_AmfInitialized){
         texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R10G10B10A2_UNORM : DXGI_FORMAT_R8G8B8A8_UNORM;
     } else {
         texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_P010 : DXGI_FORMAT_NV12;
@@ -2475,39 +2508,49 @@ bool D3D11VARenderer::setupVideoTexture()
         return false;
     }
 
-    // Create luminance and chrominance SRVs for each plane of the texture
-    D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
-    srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-    srvDesc.Texture2D.MostDetailedMip = 0;
-    srvDesc.Texture2D.MipLevels = 1;
-    srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
-    hr = m_Device->CreateShaderResourceView(m_VideoTexture.Get(), &srvDesc, &m_VideoTextureResourceViews[0]);
-    if (FAILED(hr)) {
-        m_VideoTextureResourceViews[0] = nullptr;
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "ID3D11Device::CreateShaderResourceView() failed: %x",
-                     hr);
-        return false;
-    }
+    if(!m_AmfInitialized){
+        // Create luminance and chrominance SRVs for each plane of the texture
+        D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc = {};
+        srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+        srvDesc.Texture2D.MostDetailedMip = 0;
+        srvDesc.Texture2D.MipLevels = 1;
+        srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16_UNORM : DXGI_FORMAT_R8_UNORM;
+        hr = m_Device->CreateShaderResourceView(m_VideoTexture.Get(), &srvDesc, &m_VideoTextureResourceViews[0]);
+        if (FAILED(hr)) {
+            m_VideoTextureResourceViews[0] = nullptr;
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateShaderResourceView() failed: %x",
+                         hr);
+            return false;
+        }
 
-    srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
-    hr = m_Device->CreateShaderResourceView(m_VideoTexture.Get(), &srvDesc, &m_VideoTextureResourceViews[1]);
-    if (FAILED(hr)) {
-        m_VideoTextureResourceViews[1] = nullptr;
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "ID3D11Device::CreateShaderResourceView() failed: %x",
-                     hr);
-        return false;
+        srvDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R16G16_UNORM : DXGI_FORMAT_R8G8_UNORM;
+        hr = m_Device->CreateShaderResourceView(m_VideoTexture.Get(), &srvDesc, &m_VideoTextureResourceViews[1]);
+        if (FAILED(hr)) {
+            m_VideoTextureResourceViews[1] = nullptr;
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateShaderResourceView() failed: %x",
+                         hr);
+            return false;
+        }
     }
 
     return true;
 }
 
-bool D3D11VARenderer::setupFrameTexture()
+/**
+ * \brief Set the Texture used by the Video Processor
+ *
+ * Set a RGBA texture to be processed by the Video processor to upscale and denoise
+ *
+ * \return bool Returns true if the texture is created
+ */
+bool D3D11VARenderer::setupEnhancedTexture()
 {
-    // Texture description
+    HRESULT hr;
     D3D11_TEXTURE2D_DESC texDesc = {};
-    // Same size as the input Frame
+
+    // Size of the output texture
     texDesc.Width = m_DecoderParams.width;
     texDesc.Height = m_DecoderParams.height;
     texDesc.MipLevels = 1;
@@ -2516,17 +2559,15 @@ bool D3D11VARenderer::setupFrameTexture()
     texDesc.SampleDesc.Quality = 0;
     texDesc.SampleDesc.Count = 1;
     texDesc.Usage = D3D11_USAGE_DEFAULT;
-    texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    // The flag D3D11_BIND_RENDER_TARGET is needed to enable the use of GPU enhancement
-    if(m_VideoEnhancement->isVideoEnhancementEnabled()){
-        texDesc.BindFlags |= D3D11_BIND_RENDER_TARGET;
-    }
+    texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE | D3D11_BIND_RENDER_TARGET;
     texDesc.CPUAccessFlags = 0;
     texDesc.MiscFlags = 0;
 
-    HRESULT hr = m_Device->CreateTexture2D(&texDesc, nullptr, m_FrameTexture.GetAddressOf());
+    hr = m_Device->CreateTexture2D(&texDesc, nullptr, m_EnhancedTexture.GetAddressOf());
     if (FAILED(hr)) {
-        // Handle error
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "ID3D11Device::CreateTexture2D() failed: %x",
+                     hr);
         return false;
     }
 

@@ -35,8 +35,9 @@ private:
     static void unlockContext(void* lock_ctx);
 
     bool setupRenderingResources();
+    bool setupAmfTexture();
     bool setupVideoTexture();
-    bool setupFrameTexture();
+    bool setupEnhancedTexture();
     void renderOverlay(Overlay::OverlayType type);
     void bindColorConversion(AVFrame* frame);
     void prepareVideoProcessorStream(AVFrame* frame);
@@ -77,36 +78,6 @@ private:
     VideoEnhancement* m_VideoEnhancement;
     bool m_AutoStreamSuperResolution = false;
 
-    // Variable unused, but keep it as reference for debugging purpose
-    DXGI_COLOR_SPACE_TYPE m_ColorSpaces[26] = {
-        DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P709,           // 0  -       A
-        DXGI_COLOR_SPACE_RGB_FULL_G10_NONE_P709,           // 1  -       A
-        DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709,         // 2  - I   * A
-        DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P2020,        // 3  -    I*
-        DXGI_COLOR_SPACE_RESERVED,                         // 4
-        DXGI_COLOR_SPACE_YCBCR_FULL_G22_NONE_P709_X601,    // 5  -  O    A
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P601,       // 6  - I     A
-        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P601,         // 7  -  O    A
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P709,       // 8  - I     A
-        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P709,         // 9  -       A
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_LEFT_P2020,      // 10 -    I
-        DXGI_COLOR_SPACE_YCBCR_FULL_G22_LEFT_P2020,        // 11 -  O
-        DXGI_COLOR_SPACE_RGB_FULL_G2084_NONE_P2020,        // 12 -  O  O
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_LEFT_P2020,    // 13 -    I
-        DXGI_COLOR_SPACE_RGB_STUDIO_G2084_NONE_P2020,      // 14 - I  I*
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G22_TOPLEFT_P2020,   // 15 -    I
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G2084_TOPLEFT_P2020, // 16 -    I
-        DXGI_COLOR_SPACE_RGB_FULL_G22_NONE_P2020,          // 17 - I  I*
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_GHLG_TOPLEFT_P2020,  // 18 -    I
-        DXGI_COLOR_SPACE_YCBCR_FULL_GHLG_TOPLEFT_P2020,    // 19 -    I
-        DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P709,         // 20 - I  I*
-        DXGI_COLOR_SPACE_RGB_STUDIO_G24_NONE_P2020,        // 21 -    I*
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P709,       // 22 -    I
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_LEFT_P2020,      // 23 - I  I
-        DXGI_COLOR_SPACE_YCBCR_STUDIO_G24_TOPLEFT_P2020,   // 24 -    I
-        DXGI_COLOR_SPACE_CUSTOM,                           // 25
-    };
-
     DECODER_PARAMETERS m_DecoderParams;
     int m_DisplayWidth;
     int m_DisplayHeight;
@@ -121,9 +92,11 @@ private:
     ComPtr<ID3D11PixelShader> m_VideoBt2020LimPixelShader;
     ComPtr<ID3D11Buffer> m_VideoVertexBuffer;
 
-    ComPtr<ID3D11Texture2D> m_FrameTexture;
+    ComPtr<ID3D11Texture2D> m_AmfTexture;
     ComPtr<ID3D11Texture2D> m_VideoTexture;
+    ComPtr<ID3D11Texture2D> m_EnhancedTexture;
     ID3D11ShaderResourceView* m_VideoTextureResourceViews[2];
+
     float m_ScaleUp = 1;
     struct {
         int width;
@@ -131,7 +104,6 @@ private:
         int left;
         int top;
     } m_OutputTexture;
-
 
     SDL_SpinLock m_OverlayLock;
     ComPtr<ID3D11Buffer> m_OverlayVertexBuffers[Overlay::OverlayMax];
