@@ -42,6 +42,8 @@
 #define SER_BACKGROUNDGAMEPAD "backgroundgamepad"
 #define SER_REVERSESCROLL "reversescroll"
 #define SER_SWAPFACEBUTTONS "swapfacebuttons"
+#define SER_SWAPFACEBUTTONSINUI "swapfacebuttonsinui"
+#define SER_SWAPFACEBUTTONSINSTREAM "swapfacebuttonsinstream"
 #define SER_CAPTURESYSKEYS "capturesyskeys"
 #define SER_KEEPAWAKE "keepawake"
 #define SER_LANGUAGE "language"
@@ -102,7 +104,11 @@ void StreamingPreferences::reload()
     muteOnFocusLoss = settings.value(SER_MUTEONFOCUSLOSS, false).toBool();
     backgroundGamepad = settings.value(SER_BACKGROUNDGAMEPAD, false).toBool();
     reverseScrollDirection = settings.value(SER_REVERSESCROLL, false).toBool();
-    swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
+    // Use legacy swapFaceButtons setting as default for new swapFaceButtonsInUi and
+    // swapFaceButtonsInStream settings
+    bool swapFaceButtons = settings.value(SER_SWAPFACEBUTTONS, false).toBool();
+    swapFaceButtonsInUi = settings.value(SER_SWAPFACEBUTTONSINUI, swapFaceButtons).toBool();
+    swapFaceButtonsInStream = settings.value(SER_SWAPFACEBUTTONSINSTREAM, swapFaceButtons).toBool();
     keepAwake = settings.value(SER_KEEPAWAKE, true).toBool();
     enableHdr = settings.value(SER_HDR, false).toBool();
     captureSysKeysMode = static_cast<CaptureSysKeysMode>(settings.value(SER_CAPTURESYSKEYS,
@@ -292,7 +298,8 @@ void StreamingPreferences::save()
     settings.setValue(SER_MUTEONFOCUSLOSS, muteOnFocusLoss);
     settings.setValue(SER_BACKGROUNDGAMEPAD, backgroundGamepad);
     settings.setValue(SER_REVERSESCROLL, reverseScrollDirection);
-    settings.setValue(SER_SWAPFACEBUTTONS, swapFaceButtons);
+    settings.setValue(SER_SWAPFACEBUTTONSINUI, swapFaceButtonsInUi);
+    settings.setValue(SER_SWAPFACEBUTTONSINSTREAM, swapFaceButtonsInStream);
     settings.setValue(SER_CAPTURESYSKEYS, captureSysKeysMode);
     settings.setValue(SER_KEEPAWAKE, keepAwake);
 }
