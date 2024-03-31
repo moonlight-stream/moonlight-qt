@@ -96,13 +96,6 @@ private:
     ComPtr<ID3D11Texture2D> m_VideoTexture;
     ComPtr<ID3D11Texture2D> m_EnhancedTexture;
     ID3D11ShaderResourceView* m_VideoTextureResourceViews[2];
-    float m_ScaleUp = 1;
-    struct {
-        int width;
-        int height;
-        int left;
-        int top;
-    } m_OutputTexture;
 
     struct {
         int width;

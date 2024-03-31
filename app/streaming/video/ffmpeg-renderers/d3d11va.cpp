@@ -259,40 +259,6 @@ void D3D11VARenderer::setHdrMode(bool enabled){
             &streamHDRMetaData
             );
 
-        // Set HDR Input for AMF Converter
-        if(m_AmfInitialized){
-            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_USE_DECODER_HDR_METADATA, true);
-
-            // Values taken from AMF Sample:
-            // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/5b32766b801434be61350c292127a9ac022b1268/amf/public/samples/CPPSamples/common/SwapChainDXGI.cpp#L740
-            // We can initialize with Studio range first, it will be corrected to Full range if needed once the first frame is received.
-            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_TRANSFER_CHARACTERISTIC, AMF_COLOR_TRANSFER_CHARACTERISTIC_SMPTE2084);
-            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_PRIMARIES, AMF_COLOR_PRIMARIES_BT2020);
-            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_COLOR_RANGE, AMF_COLOR_RANGE_STUDIO);
-
-            AMFHDRMetadata amfHDRMetadata;
-            amfHDRMetadata.redPrimary[0]               = amf_uint16(streamHDRMetaData.RedPrimary[0]);
-            amfHDRMetadata.redPrimary[1]               = amf_uint16(streamHDRMetaData.RedPrimary[1]);
-            amfHDRMetadata.greenPrimary[0]             = amf_uint16(streamHDRMetaData.GreenPrimary[0]);
-            amfHDRMetadata.greenPrimary[1]             = amf_uint16(streamHDRMetaData.GreenPrimary[1]);
-            amfHDRMetadata.bluePrimary[0]              = amf_uint16(streamHDRMetaData.BluePrimary[0]);
-            amfHDRMetadata.bluePrimary[1]              = amf_uint16(streamHDRMetaData.BluePrimary[1]);
-            amfHDRMetadata.whitePoint[0]               = amf_uint16(streamHDRMetaData.WhitePoint[0]);
-            amfHDRMetadata.whitePoint[1]               = amf_uint16(streamHDRMetaData.WhitePoint[1]);
-            amfHDRMetadata.maxMasteringLuminance       = amf_uint32(streamHDRMetaData.MaxMasteringLuminance);
-            amfHDRMetadata.minMasteringLuminance       = amf_uint32(streamHDRMetaData.MinMasteringLuminance);
-            amfHDRMetadata.maxContentLightLevel        = 0;
-            amfHDRMetadata.maxFrameAverageLightLevel   = 0;
-
-            amf::AMFBufferPtr pHDRMetaDataBuffer;
-            m_AmfContext->AllocBuffer(amf::AMF_MEMORY_HOST, sizeof(AMFHDRMetadata), &pHDRMetaDataBuffer);
-            AMFHDRMetadata* pData = (AMFHDRMetadata*)pHDRMetaDataBuffer->GetNative();
-            memcpy(pData, &amfHDRMetadata, sizeof(AMFHDRMetadata));
-            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_INPUT_HDR_METADATA, pData);
-
-            m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
-        }
-
         streamSet = true;
     }
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -341,39 +307,6 @@ void D3D11VARenderer::setHdrMode(bool enabled){
                             sizeof(DXGI_HDR_METADATA_HDR10),
                             &outputHDRMetaData
                             );
-
-                        // Set HDR Input for AMF Converter
-                        if(m_AmfInitialized){
-                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_USE_DECODER_HDR_METADATA, true);
-
-                            // Values taken from AMF Sample:
-                            // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/5b32766b801434be61350c292127a9ac022b1268/amf/public/samples/CPPSamples/common/SwapChainDXGI.cpp#L732
-                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_TRANSFER_CHARACTERISTIC, AMF_COLOR_TRANSFER_CHARACTERISTIC_SMPTE2084);
-                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_COLOR_PRIMARIES, AMF_COLOR_PRIMARIES_BT2020);
-                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_COLOR_RANGE, AMF_COLOR_RANGE_FULL);
-
-                            AMFHDRMetadata amfHDRMetadata;
-                            amfHDRMetadata.redPrimary[0]               = amf_uint16(outputHDRMetaData.RedPrimary[0]);
-                            amfHDRMetadata.redPrimary[1]               = amf_uint16(outputHDRMetaData.RedPrimary[1]);
-                            amfHDRMetadata.greenPrimary[0]             = amf_uint16(outputHDRMetaData.GreenPrimary[0]);
-                            amfHDRMetadata.greenPrimary[1]             = amf_uint16(outputHDRMetaData.GreenPrimary[1]);
-                            amfHDRMetadata.bluePrimary[0]              = amf_uint16(outputHDRMetaData.BluePrimary[0]);
-                            amfHDRMetadata.bluePrimary[1]              = amf_uint16(outputHDRMetaData.BluePrimary[1]);
-                            amfHDRMetadata.whitePoint[0]               = amf_uint16(outputHDRMetaData.WhitePoint[0]);
-                            amfHDRMetadata.whitePoint[1]               = amf_uint16(outputHDRMetaData.WhitePoint[1]);
-                            amfHDRMetadata.maxMasteringLuminance       = amf_uint32(outputHDRMetaData.MaxMasteringLuminance);
-                            amfHDRMetadata.minMasteringLuminance       = amf_uint32(outputHDRMetaData.MinMasteringLuminance);
-                            amfHDRMetadata.maxContentLightLevel        = 0;
-                            amfHDRMetadata.maxFrameAverageLightLevel   = 0;
-
-                            amf::AMFBufferPtr pHDRMetaDataBuffer;
-                            m_AmfContext->AllocBuffer(amf::AMF_MEMORY_HOST, sizeof(AMFHDRMetadata), &pHDRMetaDataBuffer);
-                            AMFHDRMetadata* pData = (AMFHDRMetadata*)pHDRMetaDataBuffer->GetNative();
-                            memcpy(pData, &amfHDRMetadata, sizeof(AMFHDRMetadata));
-                            m_AmfFormatConverter->SetProperty(AMF_VIDEO_CONVERTER_OUTPUT_HDR_METADATA, pData);
-
-                            m_AmfFormatConverter->Init(amf::AMF_SURFACE_P010, m_DecoderParams.width, m_DecoderParams.height);
-                        }
 
                         displaySet = true;
                     }
@@ -759,8 +692,8 @@ bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo)
         m_AmfFormatConverterYUVtoRGB->SetProperty(AMF_VIDEO_CONVERTER_FILL, true);
         m_AmfFormatConverterYUVtoRGB->SetProperty(AMF_VIDEO_CONVERTER_FILL_COLOR, backgroundColor);
         res = m_AmfFormatConverterYUVtoRGB->Init(SurfaceFormatYUV,
-                                         m_DecoderParams.width,
-                                         m_DecoderParams.height);
+                                                 m_DecoderParams.width,
+                                                 m_DecoderParams.height);
         if (res != AMF_OK) goto Error;
     }
 
@@ -1192,19 +1125,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
 
     // Set VSR and HDR
     if(m_VideoEnhancement->isVideoEnhancementEnabled()){
-        // We draw on a bigger output, this will give more space to any vendor Scale Up solution to generate more
-        // details with less artifacts around contrasted borders.
-        m_ScaleUp = 2;
-        if(m_DecoderParams.width == m_OutputTexture.width || m_DecoderParams.height == m_OutputTexture.height){
-            // We don't scale up when the pixel ratio is 1:1 between the input frame and the output texture,
-            // it help to keep perfect pixel matching from original
-            m_ScaleUp = 1;
-        }
-        if(m_DisplayWidth > 2560 || m_DisplayHeight > 1440){
-            // For anything bigger than 1440p, we don't scale as it will require to much ressources for low-end devices.
-            // We want to keep a ratio 1:1 pixel to avoid blur effect when the texture is scale down at rendering.
-            m_ScaleUp = 1;
-        }
         // Enable VSR feature if available
         if(m_VideoEnhancement->isVSRcapable()){
             // Try Auto Stream Super Resolution provided by DirectX11+ and agnostic to any Vendor
@@ -1356,7 +1276,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         m_HwDeviceContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_D3D11VA);
         if (!m_HwDeviceContext) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                        "Failed to allocate D3D11VA device context");
+                         "Failed to allocate D3D11VA device context");
             return false;
         }
 
@@ -1833,8 +1753,6 @@ bool D3D11VARenderer::createVideoProcessor()
 bool D3D11VARenderer::initializeVideoProcessor()
 {
     HRESULT hr;
-    D3D11_VIDEO_PROCESSOR_OUTPUT_VIEW_DESC outputViewDesc;
-    D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC inputViewDesc;
 
     // INPUT setting
     D3D11_VIDEO_PROCESSOR_INPUT_VIEW_DESC inputViewDesc;
@@ -1901,7 +1819,6 @@ bool D3D11VARenderer::initializeVideoProcessor()
     } else {
         m_VideoContext->VideoProcessorSetOutputColorSpace1(m_VideoProcessor.Get(), DXGI_COLOR_SPACE_RGB_STUDIO_G22_NONE_P709);
     }
-    m_VideoContext->VideoProcessorSetStreamDestRect(m_VideoProcessor.Get(), 0, true, &dstRect);
 
     // The section is a customization per vendor to slightly enhance (non-AI methods) the frame appearance.
     // It does work in addition to AI-enhancement for better result.
@@ -2517,11 +2434,7 @@ bool D3D11VARenderer::setupVideoTexture()
 
     texDesc.MipLevels = 1;
     texDesc.ArraySize = 1;
-    if(m_VideoEnhancement->isVideoEnhancementEnabled() && m_AmfInitialized){
-        texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_R10G10B10A2_UNORM : DXGI_FORMAT_R8G8B8A8_UNORM;
-    } else {
-        texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_P010 : DXGI_FORMAT_NV12;
-    }
+    texDesc.Format = (m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_10BIT) ? DXGI_FORMAT_P010 : DXGI_FORMAT_NV12;
     texDesc.SampleDesc.Quality = 0;
     texDesc.SampleDesc.Count = 1;
     texDesc.Usage = D3D11_USAGE_DEFAULT;
