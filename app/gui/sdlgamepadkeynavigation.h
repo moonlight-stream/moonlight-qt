@@ -5,6 +5,8 @@
 
 #include <SDL.h>
 
+#include "settings/streamingpreferences.h"
+
 class SdlGamepadKeyNavigation : public QObject
 {
     Q_OBJECT
@@ -35,4 +37,5 @@ private:
     bool m_UiNavMode;
     bool m_FirstPoll;
     Uint32 m_LastAxisNavigationEventTime;
+    StreamingPreferences m_Prefs;
 };
