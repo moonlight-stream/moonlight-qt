@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QSemaphore>
+#include <QWindow>
 
 #include <Limelight.h>
 #include <opus_multistream.h>
@@ -26,7 +27,7 @@ public:
     // Use Session::exec() or DeferredSessionCleanupTask instead.
     virtual ~Session() {};
 
-    Q_INVOKABLE void exec(int displayOriginX, int displayOriginY);
+    Q_INVOKABLE void exec(QWindow* qtWindow);
 
     static
     void getDecoderInfo(SDL_Window* window,
@@ -166,8 +167,7 @@ private:
     bool m_AudioDisabled;
     bool m_AudioMuted;
     Uint32 m_FullScreenFlag;
-    int m_DisplayOriginX;
-    int m_DisplayOriginY;
+    QWindow* m_QtWindow;
     bool m_ThreadedExec;
     bool m_UnexpectedTermination;
     SdlInputHandler* m_InputHandler;

@@ -56,6 +56,7 @@ private:
                                enum AVPixelFormat requiredFormat,
                                PDECODER_PARAMETERS params,
                                const AVCodecHWConfig* hwConfig,
+                               IFFmpegRenderer::InitFailureReason* failureReason,
                                std::function<IFFmpegRenderer*()> createRendererFunc);
 
     static IFFmpegRenderer* createHwAccelRenderer(const AVCodecHWConfig* hwDecodeCfg, int pass);

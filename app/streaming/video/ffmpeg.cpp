@@ -822,18 +822,15 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
     if (pass == 0) {
         switch (hwDecodeCfg->device_type) {
 #ifdef Q_OS_WIN32
-        // DXVA2 appears in the hwaccel list before D3D11VA, so we will prefer it.
-        //
-        // There is logic in DXVA2 that may elect to fail on the first selection pass
-        // to allow D3D11VA to be used in cases where it is known to be better.
-        case AV_HWDEVICE_TYPE_DXVA2:
-            return new DXVA2Renderer(pass);
+        // DXVA2 appears in the hwaccel list before D3D11VA, so we only check for D3D11VA
+        // on the first pass to ensure we prefer D3D11VA over DXVA2.
         case AV_HWDEVICE_TYPE_D3D11VA:
             return new D3D11VARenderer(pass);
 #endif
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
-            return VTRendererFactory::createRenderer();
+            // Prefer the Metal renderer if hardware is compatible
+            return VTMetalRendererFactory::createRenderer();
 #endif
 #ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
@@ -864,13 +861,18 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
             return new CUDARenderer();
 #endif
 #ifdef Q_OS_WIN32
-        // This gives DXVA2 and D3D11VA another shot at handling cases where they
-        // chose to purposefully fail in the first selection pass to allow a more
-        // optimal decoder to be tried.
+        // This gives us another shot if D3D11VA failed in the first pass.
+        // Since DXVA2 is in the hwaccel list first, we'll first try to fall back
+        // to that before giving D3D11VA another try as a last resort.
         case AV_HWDEVICE_TYPE_DXVA2:
             return new DXVA2Renderer(pass);
         case AV_HWDEVICE_TYPE_D3D11VA:
             return new D3D11VARenderer(pass);
+#endif
+#ifdef Q_OS_DARWIN
+        case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
+            // Use the older AVSampleBufferDisplayLayer if Metal cannot be used
+            return VTRendererFactory::createRenderer();
 #endif
 #ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
@@ -894,6 +896,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                                                enum AVPixelFormat requiredFormat,
                                                PDECODER_PARAMETERS params,
                                                const AVCodecHWConfig* hwConfig,
+                                               IFFmpegRenderer::InitFailureReason* failureReason, // Out - Optional
                                                std::function<IFFmpegRenderer*()> createRendererFunc)
 {
     DECODER_PARAMETERS testFrameDecoderParams = *params;
@@ -910,6 +913,10 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
     testFrameDecoderParams.height = 720;
 
     m_HwDecodeCfg = hwConfig;
+
+    if (failureReason != nullptr) {
+        *failureReason = IFFmpegRenderer::InitFailureReason::Unknown;
+    }
 
     // i == 0 - Indirect via EGL or DRM frontend with zero-copy DMA-BUF passing
     // i == 1 - Direct rendering or indirect via SDL read-back
@@ -942,6 +949,11 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
                 else {
                     SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION,
                                     "Decoder failed to initialize after successful test");
+
+                    if (m_BackendRenderer != nullptr && failureReason != nullptr) {
+                        *failureReason = m_BackendRenderer->getInitFailureReason();
+                    }
+
                     reset();
                 }
             }
@@ -951,6 +963,10 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
             }
         }
         else {
+            if (m_BackendRenderer != nullptr && failureReason != nullptr) {
+                *failureReason = m_BackendRenderer->getInitFailureReason();
+            }
+
             // Failed to initialize, so keep looking
             reset();
         }
@@ -968,7 +984,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                         "Trying " #RENDERER_TYPE " for codec %s due to preferred pixel format: 0x%x", \
                         decoder->name, decoder->pix_fmts[i]); \
-            if (tryInitializeRenderer(decoder, decoder->pix_fmts[i], params, nullptr, \
+            if (tryInitializeRenderer(decoder, decoder->pix_fmts[i], params, nullptr, nullptr, \
                                       []() -> IFFmpegRenderer* { return new RENDERER_TYPE(); })) { \
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                             "Chose " #RENDERER_TYPE " for codec %s due to preferred pixel format: 0x%x", \
@@ -986,7 +1002,7 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                         "Trying " #RENDERER_TYPE " for codec %s due to compatible pixel format: 0x%x", \
                         decoder->name, decoder->pix_fmts[i]); \
-            if (tryInitializeRenderer(decoder, decoder->pix_fmts[i], params, nullptr, \
+            if (tryInitializeRenderer(decoder, decoder->pix_fmts[i], params, nullptr, nullptr, \
                                       []() -> IFFmpegRenderer* { return new RENDERER_TYPE(); })) { \
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                             "Chose " #RENDERER_TYPE " for codec %s due to compatible pixel format: 0x%x", \
@@ -1014,9 +1030,15 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
             }
 
             // Initialize the hardware codec and submit a test frame if the renderer needs it
-            if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config,
+            IFFmpegRenderer::InitFailureReason failureReason;
+            if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
                                       [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, 0); })) {
                 return true;
+            }
+            else if (failureReason == IFFmpegRenderer::InitFailureReason::NoHardwareSupport) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping remaining hwaccels due lack of hardware support for specified codec");
+                break;
             }
         }
     }
@@ -1025,13 +1047,13 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
         // Supported output pixel formats are unknown. We'll just try DRM/SDL and hope it can cope.
 
 #if defined(HAVE_DRM) && defined(GL_IS_SLOW)
-        if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr,
+        if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
                                   []() -> IFFmpegRenderer* { return new DrmRenderer(); })) {
             return true;
         }
 #endif
 
-        if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr,
+        if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
                                   []() -> IFFmpegRenderer* { return new SdlRenderer(); })) {
             return true;
         }
@@ -1184,6 +1206,8 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 
     // Look for a hardware decoder first unless software-only
     if (params->vds != StreamingPreferences::VDS_FORCE_SOFTWARE) {
+        QSet<const AVCodec*> terminallyFailedHardwareDecoders;
+
         // Iterate through tier-1 hwaccel decoders
         codecIterator = NULL;
         while ((decoder = av_codec_iterate(&codecIterator))) {
@@ -1209,6 +1233,11 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
+            // Skip hardware decoders that have returned a terminal failure status
+            if (terminallyFailedHardwareDecoders.contains(decoder)) {
+                continue;
+            }
+
             // Look for the first matching hwaccel hardware decoder (pass 0)
             for (int i = 0;; i++) {
                 const AVCodecHWConfig *config = avcodec_get_hw_config(decoder, i);
@@ -1218,9 +1247,16 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 }
 
                 // Initialize the hardware codec and submit a test frame if the renderer needs it
-                if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config,
+                IFFmpegRenderer::InitFailureReason failureReason;
+                if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
                                           [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, 0); })) {
                     return true;
+                }
+                else if (failureReason == IFFmpegRenderer::InitFailureReason::NoHardwareSupport) {
+                    terminallyFailedHardwareDecoders.insert(decoder);
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Skipping remaining hwaccels due lack of hardware support for specified codec");
+                    break;
                 }
             }
         }
@@ -1250,6 +1286,11 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
+            // Skip hardware decoders that have returned a terminal failure status
+            if (terminallyFailedHardwareDecoders.contains(decoder)) {
+                continue;
+            }
+
             // Try to initialize this decoder both as hwaccel and non-hwaccel
             if (tryInitializeRendererForUnknownDecoder(decoder, params, true)) {
                 return true;
@@ -1276,6 +1317,11 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
+            // Skip hardware decoders that have returned a terminal failure status
+            if (terminallyFailedHardwareDecoders.contains(decoder)) {
+                continue;
+            }
+
             // Look for the first matching hwaccel hardware decoder (pass 1)
             // This picks up "second-tier" hwaccels like CUDA.
             for (int i = 0;; i++) {
@@ -1286,9 +1332,16 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 }
 
                 // Initialize the hardware codec and submit a test frame if the renderer needs it
-                if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config,
+                IFFmpegRenderer::InitFailureReason failureReason;
+                if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
                                           [config]() -> IFFmpegRenderer* { return createHwAccelRenderer(config, 1); })) {
                     return true;
+                }
+                else if (failureReason == IFFmpegRenderer::InitFailureReason::NoHardwareSupport) {
+                    terminallyFailedHardwareDecoders.insert(decoder);
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Skipping remaining hwaccels due lack of hardware support for specified codec");
+                    break;
                 }
             }
         }

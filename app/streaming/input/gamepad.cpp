@@ -955,6 +955,10 @@ QString SdlInputHandler::getUnmappedGamepads()
 
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
 
+    // Flush stale events so they aren't processed by the main session event loop
+    SDL_FlushEvents(SDL_JOYDEVICEADDED, SDL_JOYDEVICEREMOVED);
+    SDL_FlushEvents(SDL_CONTROLLERDEVICEADDED, SDL_CONTROLLERDEVICEREMAPPED);
+
     return ret;
 }
 

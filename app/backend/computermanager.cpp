@@ -785,7 +785,7 @@ private:
         } catch (...) {
             if (!m_Mdns) {
                 StreamingPreferences prefs;
-                int portTestResult;
+                unsigned int portTestResult;
 
                 if (prefs.detectNetworkBlocking) {
                     // We failed to connect to the specified PC. Let's test to make sure this network

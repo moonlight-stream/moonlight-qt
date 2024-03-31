@@ -373,6 +373,7 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
     s.connectToHost(copyOfActiveAddress.address(), copyOfActiveAddress.port());
     if (s.waitForConnected(3000)) {
         Q_ASSERT(!s.localAddress().isNull());
+        Q_ASSERT(!s.peerAddress().isNull());
 
         for (const QNetworkInterface& nic : QNetworkInterface::allInterfaces()) {
             // Ensure the interface is up
@@ -406,6 +407,19 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
                         return ReachabilityType::RI_VPN;
                     }
 
+#ifdef Q_OS_WINDOWS
+                    if (nic.name().startsWith("iftype53_") || nic.name().startsWith("iftype131_")) {
+                        // Match by NDIS interface type. These values are Microsoft's recommended values for VPN connections:
+                        // https://learn.microsoft.com/en-US/troubleshoot/windows-client/networking/windows-connection-manager-disconnects-wlan#more-information
+                        //
+                        // The following VPNs use IF_TYPE_PROP_VIRTUAL under Windows:
+                        //  - WireguardNT VPNs
+                        //  - All WinTun-based VPNs (such as Slack Nebula)
+                        //  - OpenVPN with tap-windows6
+                        return ReachabilityType::RI_VPN;
+                    }
+#endif
+
                     if (nic.hardwareAddress().startsWith("00:FF", Qt::CaseInsensitive)) {
                         // OpenVPN TAP interfaces have a MAC address starting with 00:FF on Windows
                         return ReachabilityType::RI_VPN;
@@ -421,9 +435,9 @@ NvComputer::ReachabilityType NvComputer::getActiveAddressReachability() const
                         return ReachabilityType::RI_VPN;
                     }
 
-                    // Didn't meet any of our VPN heuristics. Let's see if it's on-link.
+                    // Didn't meet any of our VPN heuristics. Let's see if the peer address is on-link.
                     Q_ASSERT(addr.prefixLength() >= 0);
-                    if (addr.prefixLength() >= 0 && s.localAddress().isInSubnet(addr.ip(), addr.prefixLength())) {
+                    if (addr.prefixLength() >= 0 && s.localAddress().isInSubnet(s.peerAddress(), addr.prefixLength())) {
                         return ReachabilityType::RI_LAN;
                     }
 

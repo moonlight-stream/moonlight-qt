@@ -447,13 +447,6 @@ bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapter
                 // For other GPUs, we'll avoid populating it as was our previous behavior.
                 m_DeviceQuirks |= DXVA2_QUIRK_SET_DEST_FORMAT;
             }
-
-            // Tag this display device if it has a WDDM 2.0+ driver for the decoder selection logic
-            if (HIWORD(id.DriverVersion.HighPart) >= 20) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Detected WDDM 2.0 or later display driver");
-                m_DeviceQuirks |= DXVA2_QUIRK_WDDM_20_PLUS;
-            }
         }
 
         return true;
@@ -564,34 +557,6 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     // Initialize quirks *before* calling CreateDeviceEx() to allow our below
     // logic to avoid a hang with NahimicOSD.dll's broken full-screen handling.
     if (!initializeQuirksForAdapter(d3d9ex, adapterIndex)) {
-        d3d9ex->Release();
-        return false;
-    }
-
-    // If we have a WDDM 2.0 or later display driver, prefer the D3D11VA renderer.
-    //
-    // D3D11VA is better in this case because it can enable tearing in non-FSE
-    // modes when the user has V-Sync disabled. In non-FSE V-Sync cases, D3D11VA
-    // provides lower display latency on systems that support Independent Flip
-    // in windowed mode. When using D3D9, DWM will not promote us to IFlip unless
-    // we're full-screen (exclusive or not).
-    //
-    // We want D3D11VA in FSE multi-GPU cases due to a plethora of issues with
-    // D3D9Ex PresentEx()/D3DPRESENT_DONOTWAIT on hybrid graphics systems (See
-    // issues #235, #240, #386, and #951 on GitHub). Clearly this codepath is not
-    // well tested by Microsoft or GPU vendors, so stick to the more common
-    // D3D11-based renderer which is much more likely to behave.
-    //
-    // DXVA2 video processing is also quite buggy on AMD, Intel, and Qualcomm
-    // hardware with various issues documented in initializeQuirksForAdapter().
-    // We can avoid all this by using our own shaders in the D3D11VA renderer.
-    //
-    // NB: The reason we only do this for WDDM 2.0 and later is because older
-    // AMD drivers (such as those for the HD 5570) render garbage when using
-    // the D3D11VA renderer.
-    if (m_DecoderSelectionPass == 0 && (m_DeviceQuirks & DXVA2_QUIRK_WDDM_20_PLUS)) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Defaulting to D3D11VA for WDDM 2.0 GPU driver");
         d3d9ex->Release();
         return false;
     }

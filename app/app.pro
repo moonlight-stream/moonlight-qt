@@ -399,7 +399,8 @@ macx {
     message(VideoToolbox renderer selected)
 
     SOURCES += \
-        streaming/video/ffmpeg-renderers/vt.mm
+        streaming/video/ffmpeg-renderers/vt_avsamplelayer.mm \
+        streaming/video/ffmpeg-renderers/vt_metal.mm
 
     HEADERS += \
         streaming/video/ffmpeg-renderers/vt.h

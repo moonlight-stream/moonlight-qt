@@ -158,17 +158,6 @@ private:
         L"EZFRD32.dll",
         L"EZFRD64.dll",
 
-        // These are the newer dList DLLs for Optimus hybrid graphics DDI.
-        // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/hybrid-system-ddi
-        //
-        // We forcefully block them from loading because Optimus has a bug that
-        // deadlocks DXVA2 when we present with D3DPRESENT_DONOTWAIT. This will prevent
-        // Optimus from ever using the dGPU even if the user has requested it.
-        // https://github.com/moonlight-stream/moonlight-qt/issues/240
-        // https://github.com/moonlight-stream/moonlight-qt/issues/235
-        L"nvdlist.dll",
-        L"nvdlistx.dll",
-
         // These are the older dList/AppInit DLLs for Optimus hybrid graphics DDI.
         // https://docs.microsoft.com/en-us/windows-hardware/drivers/display/hybrid-system-ddi
         //

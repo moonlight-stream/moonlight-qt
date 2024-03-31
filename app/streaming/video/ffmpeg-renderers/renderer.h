@@ -128,6 +128,24 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) = 0;
     virtual void renderFrame(AVFrame* frame) = 0;
 
+    enum class InitFailureReason
+    {
+        Unknown,
+
+        // Only return this reason code if the hardware physically lacks support for
+        // the specified codec. If the FFmpeg decoder code sees this value, it will
+        // assume trying additional hwaccel renderers will useless and give up.
+        //
+        // NB: This should only be used under very special circumstances for cases
+        // where trying additional hwaccels may be undesirable since it could lead
+        // to incorrectly skipping working hwaccels.
+        NoHardwareSupport,
+    };
+
+    virtual InitFailureReason getInitFailureReason() {
+        return InitFailureReason::Unknown;
+    }
+
     // Called for threaded renderers to allow them to wait prior to us latching
     // the next frame for rendering (as opposed to waiting on buffer swap with
     // an older frame already queued for display).
