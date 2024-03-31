@@ -99,24 +99,24 @@ static_assert(sizeof(CSC_CONST_BUF) % 16 == 0, "Constant buffer sizes must be a 
 
 D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
     : m_DecoderSelectionPass(decoderSelectionPass),
-    m_Device(nullptr),
-    m_DeviceContext(nullptr),
-    m_RenderTargetView(nullptr),
-    m_VideoProcessor(nullptr),
-    m_VideoProcessorEnumerator(nullptr),
-    m_LastColorSpace(-1),
-    m_LastFullRange(false),
-    m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
-    m_AllowTearing(false),
-    m_OverlayLock(0),
-    m_HwDeviceContext(nullptr),
-    m_AmfContext(nullptr),
-    m_AmfInputSurface(nullptr),
-    m_AmfDenoiser(nullptr),
-    m_AmfFormatConverterYUVtoRGB(nullptr),
-    m_AmfUpScaler(nullptr),
-    m_AmfFormatConverterRGBtoYUV(nullptr),
-    m_AmfInitialized(false)
+      m_Device(nullptr),
+      m_DeviceContext(nullptr),
+      m_RenderTargetView(nullptr),
+      m_VideoProcessor(nullptr),
+      m_VideoProcessorEnumerator(nullptr),
+      m_LastColorSpace(-1),
+      m_LastFullRange(false),
+      m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
+      m_AllowTearing(false),
+      m_OverlayLock(0),
+      m_HwDeviceContext(nullptr),
+      m_AmfContext(nullptr),
+      m_AmfInputSurface(nullptr),
+      m_AmfDenoiser(nullptr),
+      m_AmfFormatConverterYUVtoRGB(nullptr),
+      m_AmfUpScaler(nullptr),
+      m_AmfFormatConverterRGBtoYUV(nullptr),
+      m_AmfInitialized(false)
 {
     RtlZeroMemory(m_VideoTextureResourceViews, sizeof(m_VideoTextureResourceViews));
 
