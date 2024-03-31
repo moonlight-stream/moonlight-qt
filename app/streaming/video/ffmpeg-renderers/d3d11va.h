@@ -40,7 +40,7 @@ private:
     bool setupEnhancedTexture();
     void renderOverlay(Overlay::OverlayType type);
     void bindColorConversion(AVFrame* frame);
-    void prepareVideoProcessorStream(AVFrame* frame);
+    void prepareEnhancedOutput(AVFrame* frame);
     void renderVideo(AVFrame* frame);
     bool createVideoProcessor();
     bool initializeVideoProcessor();
@@ -97,7 +97,6 @@ private:
     ComPtr<ID3D11Texture2D> m_EnhancedTexture;
     ID3D11ShaderResourceView* m_VideoTextureResourceViews[2];
 
-    float m_ScaleUp = 1;
     struct {
         int width;
         int height;
@@ -117,12 +116,13 @@ private:
     amf::AMFContextPtr m_AmfContext;
     amf::AMFSurfacePtr m_AmfInputSurface;
     amf::AMFComponentPtr m_AmfDenoiser;
-    amf::AMFComponentPtr m_AmfFormatConverter;
-    amf::AMFComponentPtr m_AmfUpScaler;
-    // amf::AMFComponentPtr does not work for m_AmfDownScaler, have to use raw pointer
-    amf::AMFComponent* m_AmfDownScaler;
-
+    amf::AMFComponentPtr m_AmfFormatConverterYUVtoRGB;
+    // amf::AMFComponentPtr does not work for m_AmfUpScaler, have to use raw pointer
+    amf::AMFComponent* m_AmfUpScaler;
+    amf::AMFComponentPtr m_AmfFormatConverterRGBtoYUV;
+    bool m_amfRGB = false;
     bool m_AmfInitialized = false;
+    bool m_AmfUpScalerSharpness = false;
+    amf::AMF_SURFACE_FORMAT m_AmfUpScalerSurfaceFormat;
 
 };
-
