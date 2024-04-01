@@ -1586,6 +1586,9 @@ void D3D11VARenderer::prepareEnhancedOutput(AVFrame* frame)
             // VSR from Nvidia does not work yet on HDR content (Observation by March 28th, 2024)
             // https://en.wikipedia.org/wiki/Video_Super_Resolution#:~:text=The%20feature%20supports%20input%20resolutions,likely%20added%20in%20the%20future
             enableNvidiaVideoSuperResolution(false);
+        } else if(m_VideoEnhancement->isVendorIntel()){
+            // Enable VSR for Intel when the Host has HDR activated.
+            enableIntelVideoSuperResolution();
         }
         if(m_AmfInitialized){
             // Disable sharpness when HDR is enable on client side because it generates white borders
@@ -1603,6 +1606,9 @@ void D3D11VARenderer::prepareEnhancedOutput(AVFrame* frame)
         if(m_VideoEnhancement->isVendorNVIDIA()){
             // Always enable NVIDIA VSR for SDR content
             enableNvidiaVideoSuperResolution();
+        } else if(m_VideoEnhancement->isVendorIntel()){
+            // Disable VSR for Intel when the Host has HDR disactivated to avoid having a grey screen.
+            enableIntelVideoSuperResolution(false);
         }
         if(m_AmfInitialized){
             // Enable Sharpness for Non-HDR source (host)
