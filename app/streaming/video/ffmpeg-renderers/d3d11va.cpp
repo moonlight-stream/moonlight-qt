@@ -576,16 +576,14 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
                     } else if(m_VideoEnhancement->isVendorNVIDIA()){
                         m_VideoEnhancement->setVSRcapable(enableNvidiaVideoSuperResolution(false));
                         m_VideoEnhancement->setHDRcapable(enableNvidiaHDR(false));
+                    } else if (m_VideoProcessorCapabilities.AutoStreamCaps & D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_SUPER_RESOLUTION){
+                        // Try Auto Stream Super Resolution provided by DirectX11+ and agnostic to any Vendor
+                        m_AutoStreamSuperResolution = true;
+                        m_VideoEnhancement->setVSRcapable(true);
                     }
 
                     // Enable the visibility of Video enhancement feature in the settings of the User interface
                     m_VideoEnhancement->enableUIvisible();
-                } else {
-                    // Try Auto Stream Super Resolution provided by DirectX11+ and agnostic to any Vendor
-                    if (m_VideoProcessorCapabilities.AutoStreamCaps & D3D11_VIDEO_PROCESSOR_AUTO_STREAM_CAPS_SUPER_RESOLUTION){
-                        m_AutoStreamSuperResolution = true;
-                        m_VideoEnhancement->setVSRcapable(true);
-                    }
                 }
             }
         }
@@ -606,16 +604,17 @@ int D3D11VARenderer::getAdapterIndexByEnhancementCapabilities()
 /**
  * \brief Enable Video Super-Resolution for AMD GPU
  *
- * This feature is available starting from AMD series 7000 and driver AMD Software 24.1.1 (Jan 23, 2024)
+ * This feature is available since this drive 22.3.1 (March 2022)
  * https://community.amd.com/t5/gaming/amd-software-24-1-1-amd-fluid-motion-frames-an-updated-ui-and/ba-p/656213
  *
  * \param bool activate Default is true, at true it enables the use of Video Super-Resolution feature
  * \return bool Return true if the capability is available
  */
 bool D3D11VARenderer::enableAMDVideoSuperResolution(bool activate, bool logInfo){
-    // The feature is available since Jan 23rd, 2024, with the driver 24.1.1 and on series 7000
-    // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_HQ_Scaler_API.md
+    // The feature is announced since Jan 23rd, 2024, with the driver 24.1.1 and on series 7000
     // https://community.amd.com/t5/gaming/amd-software-24-1-1-amd-fluid-motion-frames-an-updated-ui-and/ba-p/656213
+    // But it is available as SDK since March 2022 (22.3.1) which mean it might also work for series 5000 and 6000 (to be tested)
+    // https://github.com/GPUOpen-LibrariesAndSDKs/AMF/blob/master/amf/doc/AMF_HQ_Scaler_API.md
 
     AMF_RESULT res;
     amf::AMFCapsPtr amfCaps;

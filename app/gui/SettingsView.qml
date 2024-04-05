@@ -819,9 +819,10 @@ Flickable {
                     hoverEnabled: true
                     text: qsTr("Video AI-Enhancement")
                     font.pointSize:  12
-                    visible: SystemProperties.isVideoEnhancementCapable()
-                    enabled: true
-                    checked: StreamingPreferences.videoEnhancement
+                    enabled: SystemProperties.isVideoEnhancementCapable()
+                    checked: {
+                        return SystemProperties.isVideoEnhancementCapable() && StreamingPreferences.videoEnhancement
+                    }
 
                     onCheckedChanged: {
                         StreamingPreferences.videoEnhancement = checked
@@ -838,8 +839,11 @@ Flickable {
                         + qsTr("\n  - Be advised that using this feature on laptops running on battery power may lead to significant battery drain.")
 
                     Component.onCompleted: {
-                        // Indicate if the feature is available but not officially deployed by the Vendor
-                        if(SystemProperties.isVideoEnhancementExperimental()){
+                        if (!SystemProperties.isVideoEnhancementCapable()){
+                            // VSR or SDR->HDR feature could not be initialized by any GPU available
+                            text = qsTr("Video AI-Enhancement (Not supported by the GPU)")
+                        } else if(SystemProperties.isVideoEnhancementExperimental()){
+                            // Indicate if the feature is available but not officially deployed by the Vendor
                             text = qsTr("Video AI-Enhancement (Experimental)")
                         }
                     }

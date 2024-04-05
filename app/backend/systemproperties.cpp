@@ -251,7 +251,7 @@ void SystemProperties::refreshDisplaysInternal()
 bool SystemProperties::isVideoEnhancementCapable()
 {
     VideoEnhancement* videoEnhancement = &VideoEnhancement::getInstance();
-    return videoEnhancement->isUIvisible();
+    return videoEnhancement->isVSRcapable() || videoEnhancement->isHDRcapable();
 }
 
 /**
