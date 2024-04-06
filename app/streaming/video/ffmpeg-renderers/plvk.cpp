@@ -14,6 +14,10 @@
 #include <vector>
 #include <set>
 
+#ifndef VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME
+#define VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME "VK_KHR_video_decode_av1"
+#endif
+
 // Keep these in sync with hwcontext_vulkan.c
 static const char *k_OptionalDeviceExtensions[] = {
     /* Misc or required by other extensions */
@@ -41,7 +45,11 @@ static const char *k_OptionalDeviceExtensions[] = {
     VK_KHR_VIDEO_DECODE_QUEUE_EXTENSION_NAME,
     VK_KHR_VIDEO_DECODE_H264_EXTENSION_NAME,
     VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME,
-    "VK_MESA_video_decode_av1",
+#if LIBAVCODEC_VERSION_MAJOR >= 61
+    VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME, // FFmpeg 7.0 uses the official Khronos AV1 extension
+#else
+    "VK_MESA_video_decode_av1", // FFmpeg 6.1 uses the Mesa AV1 extension
+#endif
 };
 
 static void pl_log_cb(void*, enum pl_log_level level, const char *msg)
@@ -234,7 +242,13 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
             videoDecodeExtension = VK_KHR_VIDEO_DECODE_H265_EXTENSION_NAME;
         }
         else if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_AV1) {
+            // FFmpeg 6.1 implemented an early Mesa extension for Vulkan AV1 decoding.
+            // FFmpeg 7.0 replaced that implementation with one based on the official extension.
+#if LIBAVCODEC_VERSION_MAJOR >= 61
+            videoDecodeExtension = VK_KHR_VIDEO_DECODE_AV1_EXTENSION_NAME;
+#else
             videoDecodeExtension = "VK_MESA_video_decode_av1";
+#endif
         }
         else {
             SDL_assert(false);
