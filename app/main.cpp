@@ -10,7 +10,7 @@
 #include <QFont>
 #include <QCursor>
 #include <QElapsedTimer>
-#include <QFile>
+#include <QTemporaryFile>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -351,6 +351,11 @@ int main(int argc, char *argv[])
     SSL_free(nullptr);
 #endif
 
+    // We keep this at function scope to ensure it stays around while we're running,
+    // becaue the Qt QPA will need to read it. Since the temporary file is only
+    // created when open() is called, this doesn't do any harm for other platforms.
+    QTemporaryFile eglfsConfigFile("eglfs_override_XXXXXX.conf");
+
     // Avoid using High DPI on EGLFS. It breaks font rendering.
     // https://bugreports.qt.io/browse/QTBUG-64377
     //
@@ -372,6 +377,7 @@ int main(int argc, char *argv[])
         if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
             qInfo() << "Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.";
             qputenv("QT_QPA_PLATFORM", "eglfs");
+            qputenv("SDL_VIDEODRIVER", "kmsdrm");
 
             if (!qEnvironmentVariableIsSet("QT_QPA_EGLFS_ALWAYS_SET_MODE")) {
                 qInfo() << "Setting display mode by default. Set QT_QPA_EGLFS_ALWAYS_SET_MODE=0 to override this.";
@@ -383,6 +389,17 @@ int main(int argc, char *argv[])
             if (!QFile("/dev/dri").exists()) {
                 qWarning() << "Unable to find a KMSDRM display device!";
                 qWarning() << "On the Raspberry Pi, you must enable the 'fake KMS' driver in raspi-config to use Moonlight outside of the GUI environment.";
+            }
+            else if (!qEnvironmentVariableIsSet("QT_QPA_EGLFS_KMS_CONFIG")) {
+                // HACK: Remove this when Qt is fixed to properly check for display support before picking a card
+                QString cardOverride = WMUtils::getDrmCardOverride();
+                if (!cardOverride.isEmpty()) {
+                    if (eglfsConfigFile.open()) {
+                        qInfo() << "Overriding default Qt EGLFS card selection to" << cardOverride;
+                        QTextStream(&eglfsConfigFile) << "{ \"device\": \"" << cardOverride << "\" }";
+                        qputenv("QT_QPA_EGLFS_KMS_CONFIG", eglfsConfigFile.fileName().toUtf8());
+                    }
+                }
             }
         }
 

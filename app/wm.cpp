@@ -1,4 +1,5 @@
 #include <QtGlobal>
+#include <QDir>
 
 #include "utils.h"
 
@@ -10,6 +11,11 @@
 
 #ifdef HAS_WAYLAND
 #include <wayland-client.h>
+#endif
+
+#ifdef HAVE_DRM
+#include <xf86drm.h>
+#include <xf86drmMode.h>
 #endif
 
 #define VALUE_SET 0x01
@@ -95,4 +101,44 @@ bool WMUtils::isRunningDesktopEnvironment()
     // if we have a WM running.
     return isRunningWindowManager();
 #endif
+}
+
+QString WMUtils::getDrmCardOverride()
+{
+#ifdef HAVE_DRM
+    QDir dir("/dev/dri");
+    QStringList cardList = dir.entryList(QStringList("card*"), QDir::Files | QDir::System);
+    if (cardList.length() == 0) {
+        return QString();
+    }
+
+    bool needsOverride = false;
+    for (const QString& card : cardList) {
+        QFile cardFd(dir.filePath(card));
+        if (!cardFd.open(QFile::ReadOnly)) {
+            continue;
+        }
+
+        auto resources = drmModeGetResources(cardFd.handle());
+        if (resources == nullptr) {
+            // If we find a card that doesn't have a display before a card that
+            // has one, we'll need to override Qt's EGLFS config because they
+            // don't properly handle cards without displays.
+            needsOverride = true;
+        }
+        else {
+            // We found a card with a display
+            drmModeFreeResources(resources);
+            if (needsOverride) {
+                // Override the default card with this one
+                return dir.filePath(card);
+            }
+            else {
+                return QString();
+            }
+        }
+    }
+#endif
+
+    return QString();
 }
