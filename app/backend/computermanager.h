@@ -72,9 +72,15 @@ private slots:
     void handleResolvedTimeout()
     {
         if (m_Addresses.isEmpty()) {
-            // Try again
-            qInfo() << "Resolving" << hostname() << "timed out. Retrying...";
-            resolve();
+            if (m_Retries-- > 0) {
+                // Try again
+                qInfo() << "Resolving" << hostname() << "timed out. Retrying...";
+                resolve();
+            }
+            else {
+                qWarning() << "Giving up on resolving" << hostname() << "after repeated failures";
+                cleanup();
+            }
         }
         else {
             Q_ASSERT(!m_Addresses.isEmpty());
@@ -92,7 +98,7 @@ signals:
     void resolvedHost(MdnsPendingComputer*,QVector<QHostAddress>&);
 
 private:
-    void resolve()
+    void cleanup()
     {
         // Delete our resolver, so we're guaranteed that nothing is referencing m_Server.
         delete m_Resolver;
@@ -101,6 +107,12 @@ private:
         // Now delete our strong reference that we held on behalf of m_Resolver.
         // The server may be destroyed after we make this call.
         m_Server.reset();
+    }
+
+    void resolve()
+    {
+        // Clean up any existing resolver object and server references
+        cleanup();
 
         // Re-acquire a strong reference if the server still exists.
         m_Server = m_ServerWeak.toStrongRef();
@@ -120,6 +132,7 @@ private:
     QSharedPointer<QMdnsEngine::Server> m_Server;
     QMdnsEngine::Resolver* m_Resolver;
     QVector<QHostAddress> m_Addresses;
+    int m_Retries = 10;
 };
 
 class ComputerPollingEntry
