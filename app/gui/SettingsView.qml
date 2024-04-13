@@ -689,7 +689,7 @@ Flickable {
 
                     Component.onCompleted: {
                         // Refresh the text after translations change
-                        languageChanged.connect(onValueChanged)
+                        languageChanged.connect(valueChanged)
                     }
                 }
 
