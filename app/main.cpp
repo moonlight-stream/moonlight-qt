@@ -570,8 +570,7 @@ int main(int argc, char *argv[])
                 runtimeVersion.major, runtimeVersion.minor, runtimeVersion.patch);
 
     // Apply the initial translation based on user preference
-    StreamingPreferences prefs;
-    prefs.retranslate();
+    StreamingPreferences::get()->retranslate();
 
     // Trickily declare the translation for dialog buttons
     QCoreApplication::translate("QPlatformTheme", "&Yes");
@@ -636,8 +635,8 @@ int main(int argc, char *argv[])
     qmlRegisterUncreatableType<Session>("Session", 1, 0, "Session", "Session cannot be created from QML");
     qmlRegisterSingletonType<ComputerManager>("ComputerManager", 1, 0,
                                               "ComputerManager",
-                                              [](QQmlEngine*, QJSEngine*) -> QObject* {
-                                                  return new ComputerManager();
+                                              [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
+                                                  return new ComputerManager(StreamingPreferences::get(qmlEngine));
                                               });
     qmlRegisterSingletonType<AutoUpdateChecker>("AutoUpdateChecker", 1, 0,
                                                 "AutoUpdateChecker",
@@ -651,13 +650,13 @@ int main(int argc, char *argv[])
                                                });
     qmlRegisterSingletonType<SdlGamepadKeyNavigation>("SdlGamepadKeyNavigation", 1, 0,
                                                       "SdlGamepadKeyNavigation",
-                                                      [](QQmlEngine*, QJSEngine*) -> QObject* {
-                                                          return new SdlGamepadKeyNavigation();
+                                                      [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
+                                                          return new SdlGamepadKeyNavigation(StreamingPreferences::get(qmlEngine));
                                                       });
     qmlRegisterSingletonType<StreamingPreferences>("StreamingPreferences", 1, 0,
                                                    "StreamingPreferences",
                                                    [](QQmlEngine* qmlEngine, QJSEngine*) -> QObject* {
-                                                       return new StreamingPreferences(qmlEngine);
+                                                       return StreamingPreferences::get(qmlEngine);
                                                    });
 
     // Create the identity manager on the main thread
@@ -688,7 +687,7 @@ int main(int argc, char *argv[])
     case GlobalCommandLineParser::StreamRequested:
         {
             initialView = "qrc:/gui/CliStartStreamSegue.qml";
-            StreamingPreferences* preferences = new StreamingPreferences(&app);
+            StreamingPreferences* preferences = StreamingPreferences::get();
             StreamCommandLineParser streamParser;
             streamParser.parse(app.arguments(), preferences);
             QString host    = streamParser.getHost();
@@ -720,7 +719,7 @@ int main(int argc, char *argv[])
             ListCommandLineParser listParser;
             listParser.parse(app.arguments());
             auto launcher = new CliListApps::Launcher(listParser.getHost(), listParser, &app);
-            launcher->execute(new ComputerManager(&app));
+            launcher->execute(new ComputerManager(StreamingPreferences::get()));
             hasGUI = false;
             break;
         }

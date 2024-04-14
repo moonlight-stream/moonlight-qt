@@ -8,8 +8,9 @@
 
 #define AXIS_NAVIGATION_REPEAT_DELAY 150
 
-SdlGamepadKeyNavigation::SdlGamepadKeyNavigation()
-    : m_Enabled(false),
+SdlGamepadKeyNavigation::SdlGamepadKeyNavigation(StreamingPreferences* prefs)
+    : m_Prefs(prefs),
+      m_Enabled(false),
       m_UiNavMode(false),
       m_FirstPoll(false),
       m_LastAxisNavigationEventTime(0)
@@ -119,7 +120,7 @@ void SdlGamepadKeyNavigation::onPollingTimerFired()
                         QEvent::Type::KeyPress : QEvent::Type::KeyRelease;
 
             // Swap face buttons if needed
-            if (m_Prefs.swapFaceButtons) {
+            if (m_Prefs->swapFaceButtons) {
                 switch (event.cbutton.button) {
                 case SDL_CONTROLLER_BUTTON_A:
                     event.cbutton.button = SDL_CONTROLLER_BUTTON_B;

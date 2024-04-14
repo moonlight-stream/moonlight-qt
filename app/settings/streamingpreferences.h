@@ -9,8 +9,7 @@ class StreamingPreferences : public QObject
     Q_OBJECT
 
 public:
-    StreamingPreferences(QObject *parent = nullptr);
-    StreamingPreferences(QQmlEngine *qmlEngine, QObject *parent = nullptr);
+    static StreamingPreferences* get(QQmlEngine *qmlEngine = nullptr);
 
     Q_INVOKABLE static int
     getDefaultBitrate(int width, int height, int fps);
@@ -206,6 +205,8 @@ signals:
     void languageChanged();
 
 private:
+    explicit StreamingPreferences(QQmlEngine *qmlEngine);
+
     QString getSuffixFromLanguage(Language lang);
 
     QQmlEngine* m_QmlEngine;

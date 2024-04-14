@@ -1,7 +1,7 @@
 #pragma once
 
 #include "nvcomputer.h"
-#include "nvpairingmanager.h"
+#include "settings/streamingpreferences.h"
 #include "settings/compatfetcher.h"
 
 #include <qmdnsengine/server.h>
@@ -218,7 +218,7 @@ class ComputerManager : public QObject
     friend class DelayedFlushThread;
 
 public:
-    explicit ComputerManager(QObject *parent = nullptr);
+    explicit ComputerManager(StreamingPreferences* prefs);
 
     virtual ~ComputerManager();
 
@@ -270,6 +270,7 @@ private:
 
     void startPollingComputer(NvComputer* computer);
 
+    StreamingPreferences* m_Prefs;
     int m_PollingRef;
     QReadWriteLock m_Lock;
     QMap<QString, NvComputer*> m_KnownHosts;
