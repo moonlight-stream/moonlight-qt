@@ -19,26 +19,30 @@ ApplicationWindow {
     property bool clearOnBack: false
 
     id: window
-    visible: true
     width: 1280
     height: 600
 
-    // Override the background color to Material 2 colors for Qt 6.5+
-    // in order to improve contrast between GFE's placeholder box art
-    // and the background of the app grid.
     Component.onCompleted: {
+        // Override the background color to Material 2 colors for Qt 6.5+
+        // in order to improve contrast between GFE's placeholder box art
+        // and the background of the app grid.
         if (SystemProperties.usesMaterial3Theme) {
             Material.background = "#303030"
         }
-    }
 
-    visibility: {
+        // Show the window according to the user's preferences
         if (SystemProperties.hasDesktopEnvironment) {
-            if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_WINDOWED) return "Windowed"
-            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) return "Maximized"
-            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) return "FullScreen"
+            if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) {
+                window.showMaximized()
+            }
+            else if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_FULLSCREEN) {
+                window.showFullScreen()
+            }
+            else {
+                window.show()
+            }
         } else {
-            return "FullScreen"
+            window.showFullScreen()
         }
     }
   
