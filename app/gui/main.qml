@@ -44,6 +44,24 @@ ApplicationWindow {
         } else {
             window.showFullScreen()
         }
+
+        // Display any modal dialogs for configuration warnings
+        if (SystemProperties.isWow64) {
+            wow64Dialog.open()
+        }
+        else if (!SystemProperties.hasHardwareAcceleration) {
+            if (SystemProperties.isRunningXWayland) {
+                xWaylandDialog.open()
+            }
+            else {
+                noHwDecoderDialog.open()
+            }
+        }
+
+        if (SystemProperties.unmappedGamepads) {
+            unmappedGamepadDialog.unmappedGamepads = SystemProperties.unmappedGamepads
+            unmappedGamepadDialog.open()
+        }
     }
   
     // This configures the maximum width of the singleton attached QML ToolTip. If left unconstrained,
@@ -157,41 +175,6 @@ ApplicationWindow {
             // Start the inactivity timer to stop polling
             // if focus does not return within a few minutes.
             inactivityTimer.restart()
-        }
-    }
-
-    property bool initialized: false
-
-    // BUG: Using onAfterSynchronizing: here causes very strange
-    // failures on Linux. Many shaders fail to compile and we
-    // eventually segfault deep inside the Qt OpenGL code.
-    onAfterRendering: {
-        // We use this callback to trigger dialog display because
-        // it only happens once the window is fully constructed.
-        // Doing it earlier can lead to the dialog appearing behind
-        // the window or otherwise without input focus.
-        if (!initialized) {
-            // Set initialized before calling anything else, because
-            // pumping the event loop can cause us to get another
-            // onAfterRendering call and potentially reenter this code.
-            initialized = true;
-
-            if (SystemProperties.isWow64) {
-                wow64Dialog.open()
-            }
-            else if (!SystemProperties.hasHardwareAcceleration) {
-                if (SystemProperties.isRunningXWayland) {
-                    xWaylandDialog.open()
-                }
-                else {
-                    noHwDecoderDialog.open()
-                }
-            }
-
-            if (SystemProperties.unmappedGamepads) {
-                unmappedGamepadDialog.unmappedGamepads = SystemProperties.unmappedGamepads
-                unmappedGamepadDialog.open()
-            }
         }
     }
 
