@@ -587,6 +587,12 @@ public:
     }
 
     id<MTLDevice> getMetalDevice() {
+        if (qgetenv("VT_FORCE_METAL") == "0") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Avoiding Metal renderer due to VT_FORCE_METAL=0 override.");
+            return nullptr;
+        }
+
         if (@available(macOS 11.0, *)) {
             NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
             if (devices.count == 0) {
@@ -601,8 +607,15 @@ public:
                 }
             }
 
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Avoiding Metal renderer due to use of dGPU/eGPU");
+            if (qgetenv("VT_FORCE_METAL") == "1") {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Using Metal renderer due to VT_FORCE_METAL=1 override.");
+                return MTLCreateSystemDefaultDevice();
+            }
+            else {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
+            }
         }
         else {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
