@@ -610,7 +610,7 @@ public:
             if (qgetenv("VT_FORCE_METAL") == "1") {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Using Metal renderer due to VT_FORCE_METAL=1 override.");
-                return MTLCreateSystemDefaultDevice();
+                return [MTLCreateSystemDefaultDevice() autorelease];
             }
             else {
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
