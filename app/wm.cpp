@@ -1,6 +1,8 @@
 #include <QtGlobal>
 #include <QDir>
 
+#include "QtCore/qjsondocument.h"
+#include "QtCore/qjsonobject.h"
 #include "utils.h"
 
 #include <SDL.h>
@@ -21,6 +23,21 @@
 #define VALUE_SET 0x01
 #define VALUE_TRUE 0x02
 
+void WMUtils::printPCPlayMessage(QString type, QString message, QString jsonString)
+{
+    fflush(stdout);
+    QJsonObject json;
+    json["id"] = "PCPLAY";
+    json["type"] = type;
+    json["message"] = message;
+    if (!jsonString.isNull() && !jsonString.isEmpty()) {
+        json["data"] = jsonString;
+    }
+    QJsonDocument doc(json);
+    QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
+    fprintf(stdout, "%s\n", jsonData.constData());
+    fflush(stdout);
+}
 bool WMUtils::isRunningX11()
 {
 #ifdef HAS_X11

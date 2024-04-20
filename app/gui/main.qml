@@ -20,7 +20,7 @@ ApplicationWindow {
 
     id: window
     width: 1280
-    height: 600
+    height: 800
 
     Component.onCompleted: {
         // Override the background color to Material 2 colors for Qt 6.5+

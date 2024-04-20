@@ -2,6 +2,7 @@
 
 #include "backend/computermanager.h"
 #include "backend/computerseeker.h"
+#include "utils.h"
 #include <QCoreApplication>
 #include <QTimer>
 
@@ -70,6 +71,8 @@ public:
                 m_ComputerSeeker->start(COMPUTER_SEEK_TIMEOUT);
 
                 emit q->searchingComputer();
+                WMUtils::printPCPlayMessage("PAIR", "START", NULL);
+
             }
             break;
         // Occurs when searched computer is found
@@ -79,6 +82,8 @@ public:
                     m_State = StateFailure;
                     QString msg = QObject::tr("%1 is already paired").arg(event.computer->name);
                     emit q->failed(msg);
+                    WMUtils::printPCPlayMessage("PAIR", "ALREADY_PAIRED", NULL);
+
                 }
                 else {
                     Q_ASSERT(!m_PredefinedPin.isEmpty());
@@ -86,6 +91,7 @@ public:
                     m_State = StatePairing;
                     m_ComputerManager->pairHost(event.computer, m_PredefinedPin);
                     emit q->pairing(event.computer->name, m_PredefinedPin);
+                    WMUtils::printPCPlayMessage("PAIR", "START2", NULL);
                 }
             }
             break;
@@ -95,10 +101,12 @@ public:
                 if (event.errorMessage.isEmpty()) {
                     m_State = StateComplete;
                     emit q->success();
+                    WMUtils::printPCPlayMessage("PAIR", "COMPLETED", NULL);
                 }
                 else {
                     m_State = StateFailure;
                     emit q->failed(event.errorMessage);
+                    WMUtils::printPCPlayMessage("PAIR", "FAILED", NULL);
                 }
             }
             break;
@@ -107,6 +115,7 @@ public:
             if (m_State == StateSeekComputer) {
                 m_State = StateFailure;
                 emit q->failed(QObject::tr("Failed to connect to %1").arg(m_ComputerName));
+                WMUtils::printPCPlayMessage("PAIR", "TIMEOUT", NULL);
             }
             break;
         }

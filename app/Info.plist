@@ -4,14 +4,16 @@
 <dict>
 	<key>CFBundleExecutable</key>
 	<string>Moonlight</string>
+        <key>CFBundleName</key>
+        <string>PCPlay</string>
 	<key>CFBundleGetInfoString</key>
 	<string>Stream games and other applications from another PC</string>
 	<key>CFBundleIconFile</key>
-	<string>moonlight</string>
+        <string>pc_play</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.moonlight-stream.Moonlight</string>
+        <string>com.pcplay</string>
 	<key>NSHighResolutionCapable</key>
-	<true/>
+        <true/>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleSignature</key>
@@ -39,10 +41,10 @@
 		<true/>
 	</dict>
 	<key>CFBundleVersion</key>
-	<string>VERSION</string>
+	<string>5.0.1</string>
 	<key>CFBundleShortVersionString</key>
-	<string>VERSION</string>
+	<string>5.0.1</string>
 	<key>CFBundleDisplayName</key>
-	<string>Moonlight</string>
+        <string>PC Play</string>
 </dict>
 </plist>

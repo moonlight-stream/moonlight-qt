@@ -1,8 +1,12 @@
 #include "listapps.h"
 
+#include "QtCore/qjsonarray.h"
+#include "QtCore/qjsondocument.h"
+#include "QtCore/qjsonobject.h"
 #include "backend/boxartmanager.h"
 #include "backend/computermanager.h"
 #include "backend/computerseeker.h"
+#include "utils.h"
 
 #include <QCoreApplication>
 #include <QTimer>
@@ -56,6 +60,8 @@ public:
         // Occurs when CLI main calls execute
         case Event::Executed:
             if (m_State == StateInit) {
+                WMUtils::printPCPlayMessage("LISTAPP", "CONNECTING", NULL);
+
                 m_State = StateSeekComputer;
                 m_ComputerManager = event.computerManager;
 
@@ -72,12 +78,14 @@ public:
                 m_BoxArtManager = new BoxArtManager(q);
 
                 if (m_Arguments.isVerbose()) {
-                    fprintf(stdout, "Establishing connection to PC...\n");
+                    fprintf(stdout, "Establishing connection to PC...");
                 }
             }
             break;
         // Occurs when computer search timed out
         case Event::ComputerSeekTimedout:
+            WMUtils::printPCPlayMessage("LISTAPP", "FAILED", NULL);
+
             if (m_State == StateSeekComputer) {
                 fprintf(stderr, "%s\n", qPrintable(QString("Failed to connect to %1").arg(m_ComputerName)));
 
@@ -95,6 +103,8 @@ public:
                         fprintf(stdout, "Loading app list...\n");
                     }
                 } else {
+                    WMUtils::printPCPlayMessage("LISTAPP", "NOT_PAIRED", NULL);
+
                     m_State = StateFailure;
                     fprintf(stderr, "%s\n", qPrintable(QObject::tr("Computer %1 has not been paired. "
                                             "Please open Moonlight to pair before retrieving games list.")
@@ -116,6 +126,8 @@ public:
     }
 
     void printApps(QVector<NvApp> apps) {
+        printAppsJSON(apps);
+
         for (int i = 0; i < apps.length(); i++) {
             fprintf(stdout, "%s\n", qPrintable(apps[i].name));
         }
@@ -137,6 +149,28 @@ public:
                                                           app.hidden ? "true" : "false",
                                                           app.directLaunch ? "true" : "false",
                                                           qPrintable(m_BoxArtManager->loadBoxArt(m_Computer, app).toDisplayString()));
+    }
+
+    void printAppsJSON(QVector<NvApp> apps) {
+        QJsonArray jsonArray;
+
+        for (const NvApp& app : apps) {
+            NvApp appCopy = app;
+            QJsonObject jsonObject;
+            jsonObject["Name"] = app.name;
+            jsonObject["ID"] = app.id;
+            jsonObject["HDR Support"] = app.hdrSupported;
+            jsonObject["App Collection Game"] = app.isAppCollectorGame;
+            jsonObject["Hidden"] = app.hidden;
+            jsonObject["Direct Launch"] = app.directLaunch;
+            jsonObject["Boxart URL"] = m_BoxArtManager->loadBoxArt(m_Computer, appCopy).toDisplayString();
+            jsonArray.append(jsonObject);
+        }
+
+        QJsonDocument jsonDoc(jsonArray);
+        QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Compact);
+
+        WMUtils::printPCPlayMessage("LISTAPP", "DATA", jsonData);
     }
 
     Launcher *q_ptr;

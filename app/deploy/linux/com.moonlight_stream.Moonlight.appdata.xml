@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <component type="desktop">
-	<id>com.moonlight_stream.Moonlight</id>
+	<id>com.pcplay</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0+</project_license>
-	<name>Moonlight</name>
+	<name>PC Play</name>
 	<summary>Stream games and other applications from another PC running Sunshine or GeForce Experience</summary>
 
 	<description>
-		<p>Moonlight can stream games and other applications from another PC with Sunshine or GeForce Experience software installed.</p>
+		<p>PC Play can stream games and other applications from another PC with Sunshine or GeForce Experience software installed.</p>
 		<p>Features include:</p>
 		<ul>
 			<li>Hardware accelerated video decoding with VAAPI, VDPAU, and NVDEC support</li>
@@ -20,9 +20,9 @@
 		</ul>
 	</description>
 
-	<url type="homepage">https://moonlight-stream.org</url>
-	<url type="bugtracker">https://github.com/moonlight-stream/moonlight-qt/issues</url>
-	<url type="help">https://github.com/moonlight-stream/moonlight-docs/wiki/Setup-Guide</url>
+	<url type="homepage">https://studio08.net</url>
+	<url type="bugtracker">https://www.reddit.com/r/xbPlay</url>
+	<url type="help">https://www.reddit.com/r/xbPlay</url>
 
 	<screenshots>
 		<screenshot type="default">
@@ -749,8 +749,8 @@
 		<category>Qt</category>
 	</categories>
 
-	<developer_name>Moonlight Game Streaming Team</developer_name>
-	<update_contact>cameron@moonlight-stream.org</update_contact>
+	<developer_name>Studio08</developer_name>
+	<update_contact>support@studio08.net</update_contact>
 
 	<launchable type="desktop-id">com.moonlight_stream.Moonlight.desktop</launchable>
 

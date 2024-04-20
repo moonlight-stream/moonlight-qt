@@ -2,6 +2,7 @@
 #include "backend/computermanager.h"
 #include "backend/computerseeker.h"
 #include "streaming/session.h"
+#include "utils.h"
 
 #include <QCoreApplication>
 #include <QTimer>
@@ -74,6 +75,7 @@ public:
                            q, &Launcher::onQuitAppCompleted);
 
                 emit q->searchingComputer();
+                WMUtils::printPCPlayMessage("STREAM", "START", NULL);
             }
             break;
         // Occurs when searched computer is found
@@ -84,12 +86,14 @@ public:
                     m_Computer = event.computer;
                     m_TimeoutTimer->start(APP_SEEK_TIMEOUT);
                     emit q->searchingApp();
+                    WMUtils::printPCPlayMessage("STREAM", "COMPUTER_FOUND", NULL);
                 } else {
                     m_State = StateFailure;
                     QString msg = QObject::tr("Computer %1 has not been paired. "
                                               "Please open Moonlight to pair before streaming.")
                             .arg(event.computer->name);
                     emit q->failed(msg);
+                    WMUtils::printPCPlayMessage("STREAM", "NOT_PAIRED", NULL);
                 }
             }
             break;
@@ -104,6 +108,7 @@ public:
                         m_State = StateStartSession;
                         session = new Session(m_Computer, app, m_Preferences);
                         emit q->sessionCreated(app.name, session);
+                        WMUtils::printPCPlayMessage("STREAM", "COMPLETED", NULL);
                     } else {
                         emit q->appQuitRequired(getCurrentAppName());
                     }
@@ -124,6 +129,7 @@ public:
             if (m_State == StateSeekApp && !event.errorMessage.isEmpty()) {
                 m_State = StateFailure;
                 emit q->failed(QObject::tr("Quitting app failed, reason: %1").arg(event.errorMessage));
+                WMUtils::printPCPlayMessage("STREAM", "QUIT_FAILED", NULL);
             }
             break;
         // Occurs when computer or app search timed out
@@ -131,10 +137,12 @@ public:
             if (m_State == StateSeekComputer) {
                 m_State = StateFailure;
                 emit q->failed(QObject::tr("Failed to connect to %1").arg(m_ComputerName));
+                WMUtils::printPCPlayMessage("STREAM", "FAILED", NULL);
             }
             if (m_State == StateSeekApp) {
                 m_State = StateFailure;
                 emit q->failed(QObject::tr("Failed to find application %1").arg(m_AppName));
+                WMUtils::printPCPlayMessage("STREAM", "INVALID_APP", NULL);
             }
             break;
         }

@@ -11,4 +11,5 @@ namespace WMUtils {
     bool isRunningWindowManager();
     bool isRunningDesktopEnvironment();
     QString getDrmCardOverride();
+    void printPCPlayMessage(QString, QString, QString);
 }

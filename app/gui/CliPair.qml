@@ -10,7 +10,7 @@ Item {
     }
 
     function onPairing(pcName, pin) {
-        stageLabel.text = qsTr("Pairing... Please enter '%1' on %2.").arg(pin).arg(pcName)
+        stageLabel.text = qsTr("Pairing... Please enter '%1' on %2. Press ESC or Back to cancel.").arg(pin).arg(pcName)
     }
 
     function onFailed(message) {
