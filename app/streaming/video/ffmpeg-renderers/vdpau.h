@@ -11,7 +11,7 @@ extern "C" {
 class VDPAURenderer : public IFFmpegRenderer
 {
 public:
-    VDPAURenderer();
+    VDPAURenderer(int decoderSelectionPass);
     virtual ~VDPAURenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
@@ -25,6 +25,7 @@ public:
 private:
     void renderOverlay(VdpOutputSurface destination, Overlay::OverlayType type);
 
+    int m_DecoderSelectionPass;
     uint32_t m_VideoWidth, m_VideoHeight;
     uint32_t m_DisplayWidth, m_DisplayHeight;
     AVBufferRef* m_HwContext;

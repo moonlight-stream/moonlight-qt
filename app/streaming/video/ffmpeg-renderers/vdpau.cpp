@@ -24,8 +24,9 @@ const VdpRGBAFormat VDPAURenderer::k_OutputFormats10Bit[] = {
     VDP_RGBA_FORMAT_R10G10B10A2
 };
 
-VDPAURenderer::VDPAURenderer()
-    : m_HwContext(nullptr),
+VDPAURenderer::VDPAURenderer(int decoderSelectionPass)
+    : m_DecoderSelectionPass(decoderSelectionPass),
+      m_HwContext(nullptr),
       m_PresentationQueueTarget(0),
       m_PresentationQueue(0),
       m_VideoMixer(0),
@@ -93,6 +94,23 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
         "/usr/lib/i386-linux-gnu/vdpau", // Ubuntu/Debian i386
     #endif
     };
+
+    // Avoid initializing VDPAU on this window on the first selection pass if:
+    // a) We know we want HDR compatibility
+    // b) The user wants to prefer Vulkan
+    //
+    // Using VDPAU may lead to side-effects that break our attempts to create
+    // a Vulkan swapchain on this window later.
+    if (m_DecoderSelectionPass == 0) {
+        if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            return false;
+        }
+        else if (qgetenv("PREFER_VULKAN") == "1") {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "Deprioritizing Vulkan-incompatible VDPAU renderer due to PREFER_VULKAN=1");
+            return false;
+        }
+    }
 
     SDL_VERSION(&info.version);
 

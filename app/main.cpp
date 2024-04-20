@@ -61,7 +61,7 @@
 
 #ifdef USE_CUSTOM_LOGGER
 static QElapsedTimer s_LoggerTime;
-static QTextStream s_LoggerStream(stdout);
+static QTextStream s_LoggerStream(stderr);
 static QMutex s_LoggerLock;
 static bool s_SuppressVerboseOutput;
 #ifdef LOG_TO_FILE
