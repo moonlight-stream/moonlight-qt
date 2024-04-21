@@ -62,7 +62,8 @@ pushd $RAW_BUILD_DATA_FOLDER
 chmod +x $INSTALLER_FOLDER/*.AppImage || fail "Failed to make AppImage executable"
 cp -R $INSTALLER_FOLDER/*.AppImage $RAW_BUILD_DATA_FOLDER
 $RAW_BUILD_DATA_FOLDER/*.AppImage --appimage-extract || fail "AppImage extraction failed!"
-zip -r linux_bin.zip squashfs-root/
+tar -czvf linux_bin.tar.gz squashfs-root/
+
 echo Zip complete
 mv $RAW_BUILD_DATA_FOLDER/linux_bin.zip $INSTALLER_FOLDER
 popd

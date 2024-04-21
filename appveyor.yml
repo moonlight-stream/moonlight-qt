@@ -69,6 +69,6 @@ after_build:
   - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$VERSION.zip -FileName PCPlay-SteamLink-r$APPVEYOR_BUILD_NUMBER.zip'
   - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/PCPlay-$VERSION.dmg -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER.dmg'
   - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/PCPlay-$VERSION-x86_64.AppImage -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
-  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/linux_bin.zip -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER-x86_64.zip'
+  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/linux_bin.tar.gz -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER-x86_64.tar.gz'
 
 deploy: off
