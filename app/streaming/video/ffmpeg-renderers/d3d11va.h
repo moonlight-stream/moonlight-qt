@@ -68,6 +68,7 @@ private:
     ComPtr<IDXGISwapChain4> m_SwapChain;
     ID3D11RenderTargetView* m_RenderTargetView;
     SDL_mutex* m_ContextLock;
+    D3D11_BOX m_SrcBox;
 
     ComPtr<ID3D11VideoDevice> m_VideoDevice;
     ComPtr<ID3D11VideoContext2> m_VideoContext;
@@ -117,13 +118,10 @@ private:
 
     // AMD (AMF)
     amf::AMFContextPtr m_AmfContext;
-    amf::AMFSurfacePtr m_AmfInputSurface;
-    amf::AMFComponentPtr m_AmfDenoiser;
-    amf::AMFComponentPtr m_AmfFormatConverterYUVtoRGB;
+    amf::AMFSurfacePtr m_AmfSurface;
+    amf::AMFDataPtr m_AmfData;
     // amf::AMFComponentPtr does not work for m_AmfUpScaler, have to use raw pointer
     amf::AMFComponent* m_AmfUpScaler;
-    amf::AMFComponentPtr m_AmfFormatConverterRGBtoYUV;
-    bool m_amfRGB = false;
     bool m_AmfInitialized = false;
     bool m_AmfUpScalerSharpness = false;
     amf::AMF_SURFACE_FORMAT m_AmfUpScalerSurfaceFormat;
