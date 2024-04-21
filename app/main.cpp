@@ -284,9 +284,9 @@ int main(int argc, char *argv[])
     // Set these here to allow us to use the default QSettings constructor.
     // These also ensure that our cache directory is named correctly. As such,
     // it is critical that these be called before Path::initialize().
-    QCoreApplication::setOrganizationName("PC Play");
+    QCoreApplication::setOrganizationName("PCPlay");
     QCoreApplication::setOrganizationDomain("studio08.net");
-    QCoreApplication::setApplicationName("PC Play");
+    QCoreApplication::setApplicationName("PCPlay");
 
     if (QFile(QDir::currentPath() + "/portable.dat").exists()) {
         QSettings::setDefaultFormat(QSettings::IniFormat);

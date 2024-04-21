@@ -83,5 +83,5 @@ if [ "$NOTARY_KEYCHAIN_PROFILE" != "" ]; then
   xcrun stapler staple -v $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg || fail "Notary ticket stapling failed!"
 fi
 
-mv $INSTALLER_FOLDER/Moonlight\ $VERSION.dmg $INSTALLER_FOLDER/Moonlight-$VERSION.dmg
+mv $INSTALLER_FOLDER/PCPlay\ $VERSION.dmg $INSTALLER_FOLDER/PCPlay-$VERSION.dmg
 echo Build successful
