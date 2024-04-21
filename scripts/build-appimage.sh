@@ -64,8 +64,8 @@ cp -R $INSTALLER_FOLDER/*.AppImage $RAW_BUILD_DATA_FOLDER
 $RAW_BUILD_DATA_FOLDER/*.AppImage --appimage-extract || fail "AppImage extraction failed!"
 tar -czvf linux_bin.tar.gz squashfs-root/
 
-echo Zip complete
-mv $RAW_BUILD_DATA_FOLDER/linux_bin.zip $INSTALLER_FOLDER
+echo Archive complete
+mv $RAW_BUILD_DATA_FOLDER/linux_bin.tar.gz $INSTALLER_FOLDER
 popd
 
 echo Extract successful
