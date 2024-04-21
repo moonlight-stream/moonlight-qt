@@ -532,7 +532,7 @@ unix:!macx: {
 }
 win32 {
     RC_ICONS = pc_play.ico
-    QMAKE_TARGET_COMPANY = PC PLAY
+    QMAKE_TARGET_COMPANY = PCPLAY
     QMAKE_TARGET_DESCRIPTION = Game Streaming Client
     QMAKE_TARGET_PRODUCT = PCPlay
 

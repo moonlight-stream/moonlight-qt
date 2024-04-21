@@ -1,5 +1,5 @@
 [Desktop Entry]
-Name=PC Play
+Name=PCPlay
 Comment=Stream games and other applications from another PC running Sunshine or GeForce Experience
 Exec=moonlight
 Icon=moonlight

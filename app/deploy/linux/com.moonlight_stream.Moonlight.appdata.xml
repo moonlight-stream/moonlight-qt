@@ -3,7 +3,7 @@
 	<id>com.pcplay</id>
 	<metadata_license>CC0-1.0</metadata_license>
 	<project_license>GPL-3.0+</project_license>
-	<name>PC Play</name>
+	<name>PCPlay</name>
 	<summary>Stream games and other applications from another PC running Sunshine or GeForce Experience</summary>
 
 	<description>
