@@ -5,6 +5,7 @@
 #include <QTranslator>
 #include <QCoreApplication>
 #include <QLocale>
+#include <QReadWriteLock>
 #include <QtMath>
 
 #include <QtDebug>
@@ -49,18 +50,50 @@
 
 #define CURRENT_DEFAULT_VER 2
 
-StreamingPreferences::StreamingPreferences(QObject *parent)
-    : QObject(parent),
-      m_QmlEngine(nullptr)
+static StreamingPreferences* s_GlobalPrefs;
+static QReadWriteLock s_GlobalPrefsLock;
+
+StreamingPreferences::StreamingPreferences(QQmlEngine *qmlEngine)
+    : m_QmlEngine(qmlEngine)
 {
     reload();
 }
 
-StreamingPreferences::StreamingPreferences(QQmlEngine *qmlEngine, QObject *parent)
-    : QObject(parent),
-      m_QmlEngine(qmlEngine)
+StreamingPreferences* StreamingPreferences::get(QQmlEngine *qmlEngine)
 {
-    reload();
+    {
+        QReadLocker readGuard(&s_GlobalPrefsLock);
+
+        // If we have a preference object and it's associated with a QML engine or
+        // if the caller didn't specify a QML engine, return the existing object.
+        if (s_GlobalPrefs && (s_GlobalPrefs->m_QmlEngine || !qmlEngine)) {
+            // The lifetime logic here relies on the QML engine also being a singleton.
+            Q_ASSERT(!qmlEngine || s_GlobalPrefs->m_QmlEngine == qmlEngine);
+            return s_GlobalPrefs;
+        }
+    }
+
+    {
+        QWriteLocker writeGuard(&s_GlobalPrefsLock);
+
+        // If we already have an preference object but the QML engine is now available,
+        // associate the QML engine with the preferences.
+        if (s_GlobalPrefs) {
+            if (!s_GlobalPrefs->m_QmlEngine) {
+                s_GlobalPrefs->m_QmlEngine = qmlEngine;
+            }
+            else {
+                // We could reach this codepath if another thread raced with us
+                // and created the object while we were outside the pref lock.
+                Q_ASSERT(!qmlEngine || s_GlobalPrefs->m_QmlEngine == qmlEngine);
+            }
+        }
+        else {
+            s_GlobalPrefs = new StreamingPreferences(qmlEngine);
+        }
+
+        return s_GlobalPrefs;
+    }
 }
 
 void StreamingPreferences::reload()

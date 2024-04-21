@@ -838,7 +838,7 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #endif
 #ifdef HAVE_LIBVDPAU
         case AV_HWDEVICE_TYPE_VDPAU:
-            return new VDPAURenderer();
+            return new VDPAURenderer(pass);
 #endif
 #ifdef HAVE_DRM
         case AV_HWDEVICE_TYPE_DRM:
@@ -880,7 +880,7 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #endif
 #ifdef HAVE_LIBVDPAU
         case AV_HWDEVICE_TYPE_VDPAU:
-            return new VDPAURenderer();
+            return new VDPAURenderer(pass);
 #endif
         default:
             return nullptr;

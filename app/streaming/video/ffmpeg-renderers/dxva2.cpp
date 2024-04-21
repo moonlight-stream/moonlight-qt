@@ -21,6 +21,11 @@
 DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0xD2,0x5C,0x15,0xB3,0xD6);
 DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile0,0xb8be4ccb,0xcf53,0x46ba,0x8d,0x59,0xd6,0xb8,0xa6,0xda,0x5d,0x2a);
 
+// This was incorrectly removed from public headers in FFmpeg 7.0
+#ifndef FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO
+#define FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO 2
+#endif
+
 #define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
 
 typedef struct _VERTEX

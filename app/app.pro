@@ -152,7 +152,7 @@ win32:!winrt {
     CONFIG += soundio discord-rpc
 }
 macx {
-    LIBS += -lssl -lcrypto -lavcodec.60 -lavutil.58 -lopus -framework SDL2 -framework SDL2_ttf
+    LIBS += -lssl -lcrypto -lavcodec.61 -lavutil.59 -lopus -framework SDL2 -framework SDL2_ttf
     LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
 
     # For libsoundio

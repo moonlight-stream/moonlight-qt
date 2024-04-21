@@ -689,7 +689,7 @@ Flickable {
 
                     Component.onCompleted: {
                         // Refresh the text after translations change
-                        languageChanged.connect(onValueChanged)
+                        languageChanged.connect(valueChanged)
                     }
                 }
 
@@ -1385,15 +1385,7 @@ Flickable {
                     font.pointSize: 12
                     checked: StreamingPreferences.swapFaceButtons
                     onCheckedChanged: {
-                        // Check if the value changed (this is called on init too)
-                        if (StreamingPreferences.swapFaceButtons !== checked) {
-                            StreamingPreferences.swapFaceButtons = checked
-
-                            // Save and restart SdlGamepadKeyNavigation so it can pull the new value
-                            StreamingPreferences.save()
-                            SdlGamepadKeyNavigation.disable()
-                            SdlGamepadKeyNavigation.enable()
-                        }
+                        StreamingPreferences.swapFaceButtons = checked
                     }
 
                     ToolTip.delay: 1000
@@ -1657,10 +1649,6 @@ Flickable {
                         if (StreamingPreferences.enableMdns != checked) {
                             StreamingPreferences.enableMdns = checked
 
-                            // We must save the updated preference to ensure
-                            // ComputerManager can observe the change internally.
-                            StreamingPreferences.save()
-
                             // Restart polling so the mDNS change takes effect
                             if (window.pollingActive) {
                                 ComputerManager.stopPollingAsync()
@@ -1677,15 +1665,7 @@ Flickable {
                     font.pointSize: 12
                     checked: StreamingPreferences.detectNetworkBlocking
                     onCheckedChanged: {
-                        // This is called on init, so only do the work if we've
-                        // actually changed the value.
-                        if (StreamingPreferences.detectNetworkBlocking != checked) {
-                            StreamingPreferences.detectNetworkBlocking = checked
-
-                            // We must save the updated preference to ensure
-                            // ComputerManager can observe the change internally.
-                            StreamingPreferences.save()
-                        }
+                        StreamingPreferences.detectNetworkBlocking = checked
                     }
                 }
             }

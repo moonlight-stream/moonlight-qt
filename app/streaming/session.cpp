@@ -542,7 +542,7 @@ bool Session::populateDecoderProperties(SDL_Window* window)
 }
 
 Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *preferences)
-    : m_Preferences(preferences ? preferences : new StreamingPreferences(this)),
+    : m_Preferences(preferences ? preferences : StreamingPreferences::get()),
       m_IsFullScreen(m_Preferences->windowMode != StreamingPreferences::WM_WINDOWED || !WMUtils::isRunningDesktopEnvironment()),
       m_Computer(computer),
       m_App(app),
@@ -2192,9 +2192,21 @@ DispatchDeferredCleanup:
     // in a larger window, but they don't necessarily want the UI in such
     // a large window.
     if (!m_IsFullScreen && m_QtWindow != nullptr && m_Window != nullptr) {
+#if QT_VERSION >= QT_VERSION_CHECK(5, 10, 0)
+        if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
+            m_QtWindow->setWindowStates(m_QtWindow->windowStates() | Qt::WindowMinimized);
+        }
+        else if (m_QtWindow->windowStates() & Qt::WindowMinimized) {
+            m_QtWindow->setWindowStates(m_QtWindow->windowStates() & ~Qt::WindowMinimized);
+        }
+#else
         if (SDL_GetWindowFlags(m_Window) & SDL_WINDOW_MINIMIZED) {
             m_QtWindow->setWindowState(Qt::WindowMinimized);
         }
+        else if (m_QtWindow->windowState() & Qt::WindowMinimized) {
+            m_QtWindow->setWindowState(Qt::WindowNoState);
+        }
+#endif
     }
 
     // This must be called after the decoder is deleted, because

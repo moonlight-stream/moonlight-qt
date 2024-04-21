@@ -12,7 +12,7 @@ class SdlGamepadKeyNavigation : public QObject
     Q_OBJECT
 
 public:
-    SdlGamepadKeyNavigation();
+    SdlGamepadKeyNavigation(StreamingPreferences* prefs);
 
     ~SdlGamepadKeyNavigation();
 
@@ -31,11 +31,11 @@ private slots:
     void onPollingTimerFired();
 
 private:
+    StreamingPreferences* m_Prefs;
     QTimer* m_PollingTimer;
     QList<SDL_GameController*> m_Gamepads;
     bool m_Enabled;
     bool m_UiNavMode;
     bool m_FirstPoll;
     Uint32 m_LastAxisNavigationEventTime;
-    StreamingPreferences m_Prefs;
 };

@@ -1,7 +1,7 @@
 #include "computermanager.h"
 #include "boxartmanager.h"
 #include "nvhttp.h"
-#include "settings/streamingpreferences.h"
+#include "nvpairingmanager.h"
 
 #include <Limelight.h>
 #include <QtEndian>
@@ -144,8 +144,8 @@ private:
     NvComputer* m_Computer;
 };
 
-ComputerManager::ComputerManager(QObject *parent)
-    : QObject(parent),
+ComputerManager::ComputerManager(StreamingPreferences* prefs)
+    : m_Prefs(prefs),
       m_PollingRef(0),
       m_MdnsBrowser(nullptr),
       m_CompatFetcher(nullptr),
@@ -352,9 +352,7 @@ void ComputerManager::startPolling()
         return;
     }
 
-    StreamingPreferences prefs;
-
-    if (prefs.enableMdns) {
+    if (m_Prefs->enableMdns) {
         // Start an MDNS query for GameStream hosts
         m_MdnsServer.reset(new QMdnsEngine::Server());
         m_MdnsBrowser = new QMdnsEngine::Browser(m_MdnsServer.data(), "_nvstream._tcp.local.");
@@ -784,10 +782,9 @@ private:
             return serverInfo;
         } catch (...) {
             if (!m_Mdns) {
-                StreamingPreferences prefs;
                 unsigned int portTestResult;
 
-                if (prefs.detectNetworkBlocking) {
+                if (m_ComputerManager->m_Prefs->detectNetworkBlocking) {
                     // We failed to connect to the specified PC. Let's test to make sure this network
                     // isn't blocking Moonlight, so we can tell the user about it.
                     portTestResult = LiTestClientConnectivity("qt.conntest.moonlight-stream.org", 443,
