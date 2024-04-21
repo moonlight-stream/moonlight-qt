@@ -26,6 +26,7 @@ mkdir $BUILD_ROOT
 mkdir $BUILD_FOLDER
 mkdir $DEPLOY_FOLDER
 mkdir $INSTALLER_FOLDER
+mkdir $RAW_BUILD_DATA_FOLDER
 
 echo Configuring the project
 pushd $BUILD_FOLDER
@@ -57,14 +58,13 @@ popd
 echo Build successful
 
 echo Extracting raw build data from the AppImage
-mkdir $RAW_BUILD_DATA_FOLDER
 pushd $RAW_BUILD_DATA_FOLDER
-chmod +x $INSTALLER_FOLDER/*.AppImage
-$INSTALLER_FOLDER/*.AppImage --appimage-extract || fail "AppImage extraction failed!"
+chmod +x $INSTALLER_FOLDER/*.AppImage || fail "Failed to make AppImage executable"
+cp -R $INSTALLER_FOLDER/*.AppImage $RAW_BUILD_DATA_FOLDER
+$RAW_BUILD_DATA_FOLDER/*.AppImage --appimage-extract || fail "AppImage extraction failed!"
+zip -r linux_bin.zip squashfs-root/
+echo Zip complete
+mv $RAW_BUILD_DATA_FOLDER/linux_bin.zip $INSTALLER_FOLDER
 popd
 
 echo Extract successful
-
-zip -r linux_bin.zip squashfs-root/
-mv $RAW_BUILD_DATA_FOLDER/linux_bin.zip $INSTALLER_FOLDER
-echo Zip successful
