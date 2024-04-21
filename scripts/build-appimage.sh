@@ -11,6 +11,7 @@ SOURCE_ROOT=$PWD
 BUILD_FOLDER=$BUILD_ROOT/build-$BUILD_CONFIG
 DEPLOY_FOLDER=$BUILD_ROOT/deploy-$BUILD_CONFIG
 INSTALLER_FOLDER=$BUILD_ROOT/installer-$BUILD_CONFIG
+RAW_BUILD_DATA_FOLDER=$BUILD_ROOT/raw-build-data-$BUILD_CONFIG
 VERSION=`cat $SOURCE_ROOT/app/version.txt`
 
 command -v qmake >/dev/null 2>&1 || fail "Unable to find 'qmake' in your PATH!"
@@ -20,6 +21,7 @@ echo Cleaning output directories
 rm -rf $BUILD_FOLDER
 rm -rf $DEPLOY_FOLDER
 rm -rf $INSTALLER_FOLDER
+rm -rf $RAW_BUILD_DATA_FOLDER
 mkdir $BUILD_ROOT
 mkdir $BUILD_FOLDER
 mkdir $DEPLOY_FOLDER
@@ -53,3 +55,13 @@ VERSION=$VERSION linuxdeployqt $DEPLOY_FOLDER/usr/share/applications/com.moonlig
 popd
 
 echo Build successful
+
+echo Extracting raw build data from the AppImage
+mkdir $RAW_BUILD_DATA_FOLDER
+pushd $RAW_BUILD_DATA_FOLDER
+chmod +x $INSTALLER_FOLDER/*.AppImage
+$INSTALLER_FOLDER/*.AppImage --appimage-extract || fail "AppImage extraction failed!"
+popd
+
+echo Build successful
+mv $RAW_BUILD_DATA_FOLDER $INSTALLER_FOLDER
