@@ -63,5 +63,8 @@ chmod +x $INSTALLER_FOLDER/*.AppImage
 $INSTALLER_FOLDER/*.AppImage --appimage-extract || fail "AppImage extraction failed!"
 popd
 
-echo Build successful
-mv $RAW_BUILD_DATA_FOLDER $INSTALLER_FOLDER
+echo Extract successful
+
+zip -r linux_bin.zip squashfs-root/
+mv $RAW_BUILD_DATA_FOLDER/linux_bin.zip $INSTALLER_FOLDER
+echo Zip successful

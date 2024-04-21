@@ -68,7 +68,7 @@ after_build:
   - cmd: 'appveyor PushArtifact build\symbols-arm64-Release\MoonlightDebuggingSymbols-arm64-%VERSION%.zip -FileName PCPlayDebuggingSymbols-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || appveyor PushArtifact build/installer-release/Moonlight-SteamLink-$VERSION.zip -FileName PCPlay-SteamLink-r$APPVEYOR_BUILD_NUMBER.zip'
   - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/PCPlay-$VERSION.dmg -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER.dmg'
-  - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/PCPlay-$VERSION.app -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER.app'
   - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/PCPlay-$VERSION-x86_64.AppImage -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
+  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/linux_bin.zip -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER-x86_64.zip'
 
 deploy: off
