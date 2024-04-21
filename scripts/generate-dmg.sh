@@ -85,3 +85,6 @@ fi
 
 mv $INSTALLER_FOLDER/PCPlay\ $VERSION.dmg $INSTALLER_FOLDER/PCPlay-$VERSION.dmg
 echo Build successful
+
+mv $BUILD_FOLDER/app/Moonlight.app $INSTALLER_FOLDER/PCPlay-$VERSION.app
+echo App Build successful
