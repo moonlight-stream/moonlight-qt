@@ -338,8 +338,10 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         // Older versions of the Gallium VAAPI driver have a nasty memory leak that
         // causes memory to be leaked for each submitted frame. I believe this is
         // resolved in the libva2 drivers (VAAPI 1.x). We will try to use VDPAU
-        // instead for old VAAPI versions or drivers affected by the RFI latency bug.
-        if ((major == 0 || m_HasRfiLatencyBug) && vendorStr.contains("Gallium", Qt::CaseInsensitive)) {
+        // instead for old VAAPI versions or drivers affected by the RFI latency bug
+        // as long as we're not streaming HDR (which is unsupported by VDPAU).
+        if ((major == 0 || (m_HasRfiLatencyBug && !(m_VideoFormat & VIDEO_FORMAT_MASK_10BIT))) &&
+                vendorStr.contains("Gallium", Qt::CaseInsensitive)) {
             // Fail and let VDPAU pick this up
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Deprioritizing VAAPI on Gallium driver. Set FORCE_VAAPI=1 to override.");
