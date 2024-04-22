@@ -27,7 +27,7 @@ ApplicationWindow {
         // in order to improve contrast between GFE's placeholder box art
         // and the background of the app grid.
         if (SystemProperties.usesMaterial3Theme) {
-            Material.background = "#303030"
+            Material.background = "#000000"
         }
 
         // Show the window according to the user's preferences
@@ -209,6 +209,9 @@ ApplicationWindow {
         height: 60
         anchors.topMargin: 5
         anchors.bottomMargin: 5
+        background: Rectangle {
+            color: "#000000"
+        }
 
         Label {
             id: titleLabel
