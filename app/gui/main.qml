@@ -26,9 +26,9 @@ ApplicationWindow {
         // Override the background color to Material 2 colors for Qt 6.5+
         // in order to improve contrast between GFE's placeholder box art
         // and the background of the app grid.
-        if (SystemProperties.usesMaterial3Theme) {
-            Material.background = "#000000"
-        }
+        // if (SystemProperties.usesMaterial3Theme) {
+        Material.background = "#000000"
+        // }
 
         // Show the window according to the user's preferences
         if (SystemProperties.hasDesktopEnvironment) {
@@ -209,8 +209,17 @@ ApplicationWindow {
         height: 60
         anchors.topMargin: 5
         anchors.bottomMargin: 5
-        background: Rectangle {
-            color: "#000000"
+        background:  Rectangle {
+            width: toolBar.width
+            height: toolBar.height
+            color: "#00FF00" // Background color
+
+            Rectangle {
+                width: toolBar.width  // Subtract 10 for the border (5 pixels on each side)
+                height: toolBar.height - 4 // Subtract 10 for the border (5 pixels on each side)
+                anchors.centerIn: parent
+                color: "#000000" // Green border color
+            }
         }
 
         Label {
@@ -281,7 +290,7 @@ ApplicationWindow {
                 ToolTip.text: qsTr("Join our community on Discord")
 
                 // TODO need to make sure browser is brought to foreground.
-                onClicked: Qt.openUrlExternally("https://moonlight-stream.org/discord");
+                onClicked: Qt.openUrlExternally("https://discord.com/invite/zxEBXxWWza");
 
                 Keys.onDownPressed: {
                     stackView.currentItem.forceActiveFocus(Qt.TabFocus)
