@@ -45,10 +45,6 @@ ApplicationWindow {
             window.showFullScreen()
         }
 
-        window.showFullScreen()
-        window.raise();
-        window.activateWindow();
-
         // Display any modal dialogs for configuration warnings
         if (SystemProperties.isWow64) {
             wow64Dialog.open()
