@@ -236,7 +236,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>本当に &apos;%1&apos; を削除しますか？</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
@@ -274,7 +274,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="609"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">GeForce Experienceがエラーを返しました: %1</translation>
+        <translation>GeForce Experienceがエラーを返しました: %1</translation>
     </message>
 </context>
 <context>
@@ -319,7 +319,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>コンピュータ %1 はペアされてません。ゲームリストを再取得する前にMoonlightwを開けてください。</translation>
     </message>
 </context>
 <context>
@@ -388,7 +388,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="129"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホーストのPCが再起不能なビデオエンコードエラーを起こしました。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
