@@ -36,6 +36,7 @@ void WMUtils::printPCPlayMessage(QString type, QString message, QString jsonStri
     QJsonDocument doc(json);
     QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
     fprintf(stderr, "%s\n", jsonData.constData());
+    qWarning() <<  jsonData.constData();
     fflush(stderr);
 }
 bool WMUtils::isRunningX11()
