@@ -25,7 +25,7 @@
 
 void WMUtils::printPCPlayMessage(QString type, QString message, QString jsonString)
 {
-    fflush(stdout);
+    fflush(stderr);
     QJsonObject json;
     json["id"] = "PCPLAY";
     json["type"] = type;
@@ -35,8 +35,8 @@ void WMUtils::printPCPlayMessage(QString type, QString message, QString jsonStri
     }
     QJsonDocument doc(json);
     QByteArray jsonData = doc.toJson(QJsonDocument::Compact);
-    fprintf(stdout, "%s\n", jsonData.constData());
-    fflush(stdout);
+    fprintf(stderr, "%s\n", jsonData.constData());
+    fflush(stderr);
 }
 bool WMUtils::isRunningX11()
 {

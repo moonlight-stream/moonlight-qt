@@ -47,7 +47,7 @@
 #if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
 // Log to file for release Windows builds
 #define USE_CUSTOM_LOGGER
-#define LOG_TO_FILE
+// #define LOG_TO_FILE
 #elif defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
 // Use stdout logger on all Linux/BSD builds
 #define USE_CUSTOM_LOGGER
