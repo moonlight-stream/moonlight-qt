@@ -86,7 +86,6 @@ public:
                     m_Computer = event.computer;
                     m_TimeoutTimer->start(APP_SEEK_TIMEOUT);
                     emit q->searchingApp();
-                    WMUtils::printPCPlayMessage("STREAM", "COMPUTER_FOUND", NULL);
                 } else {
                     m_State = StateFailure;
                     QString msg = QObject::tr("Computer %1 has not been paired. "

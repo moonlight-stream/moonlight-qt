@@ -1,5 +1,9 @@
 #include "pair.h"
 
+#include "QtCore/qjsonarray.h"
+#include "QtCore/qjsondocument.h"
+#include "QtCore/qjsonobject.h"
+#include "backend/boxartmanager.h"
 #include "backend/computermanager.h"
 #include "backend/computerseeker.h"
 #include "utils.h"
@@ -27,6 +31,7 @@ public:
         Executed,
         PairingCompleted,
         Timedout,
+        MessageUpdated
     };
 
     Event(Type type)
@@ -41,9 +46,12 @@ public:
 class LauncherPrivate
 {
     Q_DECLARE_PUBLIC(Launcher)
+    qint64 asyncCallCounts = 0;
 
 public:
-    LauncherPrivate(Launcher *q) : q_ptr(q) {}
+    LauncherPrivate(Launcher *q) : q_ptr(q) {
+        // Connect the signal to the slot
+    }
 
     void handleEvent(Event event)
     {
@@ -53,8 +61,11 @@ public:
         // Occurs when CliPair becomes visible and the UI calls launcher's execute()
         case Event::Executed:
             if (m_State == StateInit) {
+                m_BoxArtManager = new BoxArtManager(q);
+
                 m_State = StateSeekComputer;
                 m_ComputerManager = event.computerManager;
+
                 q->connect(m_ComputerManager, &ComputerManager::pairingCompleted,
                            q, &Launcher::onPairingCompleted);
 
@@ -70,6 +81,9 @@ public:
                            q, &Launcher::onTimeout);
                 m_ComputerSeeker->start(COMPUTER_SEEK_TIMEOUT);
 
+                q->connect(m_BoxArtManager, &BoxArtManager::boxArtLoadComplete, q, &Launcher::onBoxArtLoadComplete);
+
+
                 emit q->searchingComputer();
                 WMUtils::printPCPlayMessage("PAIR", "START", NULL);
 
@@ -80,10 +94,16 @@ public:
             if (m_State == StateSeekComputer) {
                 if (event.computer->pairState == NvComputer::PS_PAIRED) {
                     m_State = StateFailure;
-                    QString msg = QObject::tr("%1 is already paired").arg(event.computer->name);
-                    emit q->failed(msg);
-                    WMUtils::printPCPlayMessage("PAIR", "ALREADY_PAIRED", NULL);
 
+                    loadAppWithArtwork(event.computer->appList, event.computer);
+                    if (asyncCallCounts <= 0){ // if not waiting for artwork show done
+                        printAppList();
+                        QString msg = QObject::tr("%1 is paired and synced").arg(event.computer->name);
+                        emit q->failed(msg);
+                        WMUtils::printPCPlayMessage("PAIR", "COMPLETED", NULL);
+                    }
+
+                    // otherwise, waiting for images to cache
                 }
                 else {
                     Q_ASSERT(!m_PredefinedPin.isEmpty());
@@ -91,7 +111,6 @@ public:
                     m_State = StatePairing;
                     m_ComputerManager->pairHost(event.computer, m_PredefinedPin);
                     emit q->pairing(event.computer->name, m_PredefinedPin);
-                    WMUtils::printPCPlayMessage("PAIR", "START2", NULL);
                 }
             }
             break;
@@ -100,8 +119,14 @@ public:
             if (m_State == StatePairing) {
                 if (event.errorMessage.isEmpty()) {
                     m_State = StateComplete;
-                    emit q->success();
-                    WMUtils::printPCPlayMessage("PAIR", "COMPLETED", NULL);
+
+                    loadAppWithArtwork(event.computer->appList, event.computer);
+                    if (asyncCallCounts <= 0){ // if not waiting for artwork show done
+                        printAppList();
+                        emit q->success();
+                        WMUtils::printPCPlayMessage("PAIR", "COMPLETED", NULL);
+                    }
+
                 }
                 else {
                     m_State = StateFailure;
@@ -118,7 +143,56 @@ public:
                 WMUtils::printPCPlayMessage("PAIR", "TIMEOUT", NULL);
             }
             break;
+        case Event::MessageUpdated:
+            emit q->failed(event.errorMessage);
+            break;
         }
+    }
+
+
+    void loadAppWithArtwork(QVector<NvApp> apps, NvComputer* comput) {
+        QJsonArray jsonArray;
+
+        for (const NvApp& app : apps) {
+            NvApp appCopy = app;
+            QJsonObject jsonObject;
+            jsonObject["Name"] = app.name;
+            jsonObject["ID"] = app.id;
+            jsonObject["HDR Support"] = app.hdrSupported;
+            jsonObject["App Collection Game"] = app.isAppCollectorGame;
+            jsonObject["Hidden"] = app.hidden;
+            jsonObject["Direct Launch"] = app.directLaunch;
+            jsonObject["Boxart URL"] = m_BoxArtManager->loadBoxArt(comput, appCopy).toDisplayString();
+            jsonArray.append(jsonObject);
+
+            if (jsonObject["Boxart URL"] == "qrc:/res/no_app_image.png"){
+                asyncCallCounts++;
+            }
+        }
+
+        appsData = jsonArray;
+    }
+
+    void updateAppArtwork(NvApp app, QUrl path){
+        for (int i = 0; i < appsData.size(); ++i) {
+            QJsonValue item = appsData.at(i);
+
+            if (item.isObject()) {
+                QJsonObject jsonObject = item.toObject();
+                int id = jsonObject["ID"].toInt();
+
+                if (id == app.id){
+                    jsonObject["Boxart URL"] = path.toDisplayString();
+                    appsData[i] = jsonObject;
+                }
+            }
+        }
+    }
+
+    void printAppList(){
+        QJsonDocument jsonDoc(appsData);
+        QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Compact);
+        WMUtils::printPCPlayMessage("PAIR", "APPLIST", jsonData);
     }
 
     Launcher *q_ptr;
@@ -129,7 +203,30 @@ public:
     NvComputer *m_Computer;
     State m_State;
     QTimer *m_TimeoutTimer;
+    BoxArtManager *m_BoxArtManager;
+    QJsonArray appsData;
 };
+
+void Launcher::onBoxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image)
+{
+    Q_D(Launcher);
+
+    d->asyncCallCounts--;
+    d->updateAppArtwork(app, image);
+
+
+    QString msg;
+    if (d->asyncCallCounts > 0){
+        msg = QObject::tr("Syncing Artwork: %1 remaining").arg(d->asyncCallCounts);
+    } else {
+        msg = "Sync and Pair Complete";
+        d->printAppList();
+    }
+
+    Event event(Event::MessageUpdated);
+    event.errorMessage = msg;
+    d->handleEvent(event);
+}
 
 Launcher::Launcher(QString computer, QString predefinedPin, QObject *parent)
     : QObject(parent),
