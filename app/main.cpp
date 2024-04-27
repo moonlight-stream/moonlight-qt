@@ -519,6 +519,13 @@ int main(int argc, char *argv[])
     // SDL doing it for us behind our backs.
     SDL_SetHint("SDL_MOUSE_AUTO_CAPTURE", "0");
 
+    // SDL will try to lock the mouse cursor on Wayland if it's not visible in order to
+    // support applications that assume they can warp the cursor (which isn't possible
+    // on Wayland). We don't want this behavior because it interferes with seamless mouse
+    // mode when toggling between windowed and fullscreen modes by unexpectedly locking
+    // the mouse cursor.
+    SDL_SetHint("SDL_VIDEO_WAYLAND_EMULATE_MOUSE_WARP", "0");
+
 #ifdef QT_DEBUG
     // Allow thread naming using exceptions on debug builds. SDL doesn't use SEH
     // when throwing the exceptions, so we don't enable it for release builds out
