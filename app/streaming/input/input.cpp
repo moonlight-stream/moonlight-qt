@@ -42,14 +42,6 @@ SdlInputHandler::SdlInputHandler(StreamingPreferences& prefs, int streamWidth, i
     // Allow gamepad input when the app doesn't have focus if requested
     SDL_SetHint(SDL_HINT_JOYSTICK_ALLOW_BACKGROUND_EVENTS, prefs.backgroundGamepad ? "1" : "0");
 
-    // If absolute mouse mode is enabled, use relative mode warp (which
-    // is via normal motion events that are influenced by mouse acceleration).
-    // Otherwise, we'll use raw input capture which is straight from the device
-    // without modification by the OS.
-    SDL_SetHintWithPriority(SDL_HINT_MOUSE_RELATIVE_MODE_WARP,
-                            prefs.absoluteMouseMode ? "1" : "0",
-                            SDL_HINT_OVERRIDE);
-
 #if !SDL_VERSION_ATLEAST(2, 0, 15)
     // For older versions of SDL (2.0.14 and earlier), use SDL_HINT_GRAB_KEYBOARD
     SDL_SetHintWithPriority(SDL_HINT_GRAB_KEYBOARD,
