@@ -346,14 +346,14 @@ ApplicationWindow {
 
                 function updateAvailable(version, url)
                 {
-                    ToolTip.text = qsTr("Update available for Moonlight: Version %1").arg(version)
-                    updateButton.browserUrl = url
-                    updateButton.visible = true
+                    // ToolTip.text = qsTr("Update available for Moonlight: Version %1").arg(version)
+                    // updateButton.browserUrl = url
+                    // updateButton.visible = true
                 }
 
                 Component.onCompleted: {
-                    AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
-                    AutoUpdateChecker.start()
+                    // AutoUpdateChecker.onUpdateAvailable.connect(updateAvailable)
+                    // AutoUpdateChecker.start()
                 }
 
                 Keys.onDownPressed: {
