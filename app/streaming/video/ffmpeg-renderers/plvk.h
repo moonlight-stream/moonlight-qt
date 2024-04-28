@@ -23,6 +23,7 @@ public:
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual bool notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO) override;
     virtual int getRendererAttributes() override;
+    virtual int getDecoderColorRange() override;
     virtual int getDecoderCapabilities() override;
     virtual bool needsTestFrame() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;
