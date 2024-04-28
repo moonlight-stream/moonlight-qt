@@ -670,7 +670,7 @@ int main(int argc, char *argv[])
 
     // These are defaults that we allow the user to override
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_ACCENT")) {
-        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "Purple");
+        qputenv("QT_QUICK_CONTROLS_MATERIAL_ACCENT", "Green");
     }
     if (!qEnvironmentVariableIsSet("QT_QUICK_CONTROLS_MATERIAL_VARIANT")) {
         qputenv("QT_QUICK_CONTROLS_MATERIAL_VARIANT", "Dense");

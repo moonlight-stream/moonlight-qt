@@ -22,6 +22,23 @@ ApplicationWindow {
     width: 1280
     height: 800
 
+    Rectangle {
+            id: backgroundRect
+            width: parent.width
+            height: parent.height
+            color: "black" // Background color
+
+            Image {
+                source: "qrc:/res/app_background.jpeg"
+                fillMode: Image.PreserveAspectCrop
+                anchors.centerIn: parent
+                clip: true
+                width: parent.width
+                height: parent.height
+                opacity: 0.3
+            }
+        }
+
     Component.onCompleted: {
         // Override the background color to Material 2 colors for Qt 6.5+
         // in order to improve contrast between GFE's placeholder box art
@@ -209,16 +226,16 @@ ApplicationWindow {
         height: 60
         anchors.topMargin: 5
         anchors.bottomMargin: 5
-        background:  Rectangle {
-            width: toolBar.width
-            height: toolBar.height
-            color: "#00FF00" // Background color
-
+        background:
             Rectangle {
-                width: toolBar.width  // Subtract 10 for the border (5 pixels on each side)
-                height: toolBar.height - 4 // Subtract 10 for the border (5 pixels on each side)
-                anchors.centerIn: parent
-                color: "#000000" // Green border color
+                width: toolBar.width
+                height: toolBar.height - 1 // bring down 1px bc top 1 px is covered by window on mac
+                color: "#001100"
+                anchors.bottom: toolBar.bottom
+                anchors.horizontalCenter: toolBar.horizontalCenter
+                border {
+                    color: "green"
+                    width: 1
             }
         }
 

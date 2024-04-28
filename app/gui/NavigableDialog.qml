@@ -15,4 +15,16 @@ Dialog {
         // dialog appears.
         stackView.forceActiveFocus()
     }
+
+    background: Rectangle {
+        color: "black"
+        border {
+            color: "green"
+            width: 1
+        }
+        width: parent.width + 20
+        height: parent.height + 20
+        anchors.centerIn: parent
+        radius: 10
+    }
 }
