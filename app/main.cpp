@@ -280,6 +280,8 @@ int main(int argc, char *argv[])
 
     // Set the app version for the QCommandLineParser's showVersion() command
     QCoreApplication::setApplicationVersion(VERSION_STR);
+    // Set the PC Play version as an environment variable
+    qputenv("PC_PLAY_VERSION", "1.0.1");
 
     // Set these here to allow us to use the default QSettings constructor.
     // These also ensure that our cache directory is named correctly. As such,

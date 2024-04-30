@@ -10,7 +10,7 @@
 #include <QCoreApplication>
 #include <QTimer>
 
-#define COMPUTER_SEEK_TIMEOUT 10000
+#define COMPUTER_SEEK_TIMEOUT 20000
 
 namespace CliPair
 {
@@ -75,10 +75,8 @@ public:
                 }
 
                 m_ComputerSeeker = new ComputerSeeker(m_ComputerManager, m_ComputerName, q);
-                q->connect(m_ComputerSeeker, &ComputerSeeker::computerFound,
-                           q, &Launcher::onComputerFound);
-                q->connect(m_ComputerSeeker, &ComputerSeeker::errorTimeout,
-                           q, &Launcher::onTimeout);
+                q->connect(m_ComputerSeeker, &ComputerSeeker::computerFound, q, &Launcher::onComputerFound);
+                q->connect(m_ComputerSeeker, &ComputerSeeker::errorTimeout, q, &Launcher::onTimeout);
                 m_ComputerSeeker->start(COMPUTER_SEEK_TIMEOUT);
 
                 q->connect(m_BoxArtManager, &BoxArtManager::boxArtLoadComplete, q, &Launcher::onBoxArtLoadComplete);
@@ -92,7 +90,9 @@ public:
         // Occurs when searched computer is found
         case Event::ComputerFound:
             if (m_State == StateSeekComputer) {
-                if (event.computer->pairState == NvComputer::PS_PAIRED) {
+                if (m_ComputerName == "pc_play_auto_discover"){
+                    addHostData(event.computer);
+                } else if (event.computer->pairState == NvComputer::PS_PAIRED) {
                     m_State = StateFailure;
 
                     loadAppWithArtwork(event.computer->appList, event.computer);
@@ -137,7 +137,16 @@ public:
             break;
         // Occurs when computer search timed out
         case Event::Timedout:
-            if (m_State == StateSeekComputer) {
+            if (m_ComputerName == "pc_play_auto_discover"){
+                printHostData();
+
+                QString msg = "Added " + QString::number(hostData.size()) + " Host(s)\n\n";
+                for(int i = 0; i < hostData.size(); i++){
+                    QJsonObject data = hostData[i].toObject();
+                    msg += "Host Added: " + data["Name"].toString() + " (" +data["Address"].toString() + ")\n";
+                }
+                emit q->failed(msg);
+            } else if (m_State == StateSeekComputer) {
                 m_State = StateFailure;
                 emit q->failed(QObject::tr("Failed to connect to %1").arg(m_ComputerName));
                 WMUtils::printPCPlayMessage("PAIR", "TIMEOUT", NULL);
@@ -149,6 +158,14 @@ public:
         }
     }
 
+    void addHostData(NvComputer* computer) {
+        QJsonObject jsonObject;
+        jsonObject["Name"] = computer->name;
+        jsonObject["Address"] = computer->activeAddress.toString();
+        jsonObject["UUID"] = computer->uuid;
+
+        hostData.append(jsonObject);
+    }
 
     void loadAppWithArtwork(QVector<NvApp> apps, NvComputer* comput) {
         QJsonArray jsonArray;
@@ -195,6 +212,12 @@ public:
         WMUtils::printPCPlayMessage("PAIR", "APPLIST", jsonData);
     }
 
+    void printHostData(){
+        QJsonDocument jsonDoc(hostData);
+        QByteArray jsonData = jsonDoc.toJson(QJsonDocument::Compact);
+        WMUtils::printPCPlayMessage("PAIR", "HOSTS_DISCOVERED", jsonData);
+    }
+
     Launcher *q_ptr;
     QString m_ComputerName;
     QString m_PredefinedPin;
@@ -205,6 +228,8 @@ public:
     QTimer *m_TimeoutTimer;
     BoxArtManager *m_BoxArtManager;
     QJsonArray appsData;
+    QJsonArray hostData;
+
 };
 
 void Launcher::onBoxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image)
@@ -228,9 +253,7 @@ void Launcher::onBoxArtLoadComplete(NvComputer* computer, NvApp app, QUrl image)
     d->handleEvent(event);
 }
 
-Launcher::Launcher(QString computer, QString predefinedPin, QObject *parent)
-    : QObject(parent),
-      m_DPtr(new LauncherPrivate(this))
+Launcher::Launcher(QString computer, QString predefinedPin, QObject *parent): QObject(parent), m_DPtr(new LauncherPrivate(this))
 {
     Q_D(Launcher);
     d->m_ComputerName = computer;

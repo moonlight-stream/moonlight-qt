@@ -29,7 +29,9 @@ void ComputerSeeker::onComputerUpdated(NvComputer *computer)
     if (!m_TimeoutTimer->isActive()) {
         return;
     }
-    if (matchComputer(computer) && isOnline(computer)) {
+    if (m_ComputerName == "pc_play_auto_discover"){
+         emit computerFound(computer);
+    } else if (matchComputer(computer) && isOnline(computer)) {
         m_ComputerManager->stopPollingAsync();
         m_TimeoutTimer->stop();
         emit computerFound(computer);

@@ -1,4 +1,5 @@
 #include "commandlineparser.h"
+#include "utils.h"
 
 #include <QCommandLineParser>
 #include <QRegularExpression>
@@ -38,6 +39,7 @@ public:
         setSingleDashWordOptionMode(QCommandLineParser::ParseAsLongOptions);
         addHelpOption();
         addVersionOption();
+        addValueOption("pc_play_version", "PC Play Version");
     }
 
     void handleHelpAndVersionOptions()
@@ -47,6 +49,11 @@ public:
         }
         if (isSet("version")) {
             showVersion();
+        }
+        if (isSet("pc_play_version")){
+            QString pcPlayVersion = QString::fromUtf8(qgetenv("PC_PLAY_VERSION"));
+            WMUtils::printPCPlayMessage("VERSION", pcPlayVersion, NULL);
+            exit(0);
         }
     }
 
