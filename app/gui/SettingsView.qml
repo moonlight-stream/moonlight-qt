@@ -1640,15 +1640,7 @@ Flickable {
                     font.pointSize: 12
                     checked: StreamingPreferences.showPerformanceOverlay
                     onCheckedChanged: {
-                        // This is called on init, so only do the work if we've
-                        // actually changed the value.
-                        if (StreamingPreferences.showPerformanceOverlay != checked) {
-                            StreamingPreferences.showPerformanceOverlay = checked
-
-                            // We must save the updated preference to ensure
-                            // ComputerManager can observe the change internally.
-                            StreamingPreferences.save()
-                        }
+                        StreamingPreferences.showPerformanceOverlay = checked
                     }
 
                     ToolTip.delay: 1000
