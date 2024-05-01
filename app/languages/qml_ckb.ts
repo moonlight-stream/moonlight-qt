@@ -1,54 +1,54 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE TS>
-<TS version="2.1" language="uk" sourcelanguage="en_GB">
+<TS version="2.1" language="ckb" sourcelanguage="en_GB">
 <context>
     <name>AppView</name>
     <message>
         <location filename="../gui/AppView.qml" line="145"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Resume Game</source>
-        <translation>Відновити гру</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="173"/>
         <location filename="../gui/AppView.qml" line="308"/>
         <source>Quit Game</source>
-        <translation>Вийти з гри</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Launch Game</source>
-        <translation>Запустити гру</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="316"/>
         <source>Direct Launch</source>
-        <translation>Прямий запуск</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation>Запустити цю гру одразу ж як обраний хост, пропускаючи вибір гри.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
         <source>Hide Game</source>
-        <translation>Сховати гру</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation>Приховати цю гру в на екрані ігор. Щоб отримати доступ до прихованих ігор, клацніть правою кнопкою миші на хості та виберіть %1.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation>Переглянути усі ігри</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Ви впевнені, що хочете вийти з %1? Будь-який незбережений прогрес буде втрачено.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Під&apos;єднання до ПК...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation>З&apos;єднання... Будь ласка, введіть &apos;%1&apos; на %2.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation>З&apos;єднання успішно завершено</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -74,12 +74,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Під&apos;єднання до ПК...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation>Вихід з гри...</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -87,17 +87,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Під&apos;єднання до ПК...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>Завантаження списку ігор...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Ви впевнені, що хочете вийти з %1? Будь-який незбережений прогрес буде втрачено.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -105,7 +105,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>Налаштування геймпада</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -113,7 +113,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="358"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation>Відсутній пристрій запису звуку. Перевстановлення GeForce Experience має усунути цю помилку.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -121,132 +121,132 @@
     <message>
         <location filename="../gui/PcView.qml" line="20"/>
         <source>Computers</source>
-        <translation>Комп&apos;ютери</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="67"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation>Неможливо під&apos;єднатися до цього ПК.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="70"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>З&apos;єднання вашого ПК до інтернету, блокує Moonlight. Транслювання через інтернет може не працювати доки ви під&apos;єднані до цієї мережі.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="73"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>Натисніть на кнопку Допомога для можливих рішень проблем.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation>Автоматичне виявлення ПК вимкнено. Додайте свій ПК вручну.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="102"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation>Пошук сумісних хостів у вашій локальній мережі...</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="187"/>
         <source>Wake PC</source>
-        <translation>Розбудити ПК</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="193"/>
         <source>Test Network</source>
-        <translation>Перевірити мережу</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="202"/>
         <source>Rename PC</source>
-        <translation>Перейменувати ПК</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="211"/>
         <source>Delete PC</source>
-        <translation>Видалити ПК</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="224"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Ця версія GeForce Experience на %1 не підтримується цією збіркою MoonLight.Будь ласка оновіть Moonlight щоб транслювати з %1.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>This may take a few seconds…</source>
-        <translation>Це може зайняти кілька секунд…</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>Схоже, ця мережа не блокує Moonlight. Якщо у вас все ще виникають проблеми з під&apos;єднанням, перевірте налаштування брандмауера вашого ПК.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="338"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation>Якщо ви намагаєтеся вести трансляцію через Інтернет, встановіть застосунок Moonlight Internet Hosting Tool на свій ігровий ПК та запустіть Internet Streaming Tester, щоб перевірити під&apos;єднання до Інтернету вашого ігрового ПК.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Схоже, поточна мережа вашого ПК блокує Moonlight. Трансляція через Інтернет може не працювати доки ви під&apos;єднані до цієї мережі.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="342"/>
         <source>The following network ports were blocked:</source>
-        <translation>Заблоковані такі мережеві порти:</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="334"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>Не вдалося виконати тест мережі, оскільки жоден із серверів тестування під&apos;єднання Moonlight не був знайдений з цього ПК. Перевірте під&apos;єднання до Інтернету або спробуйте пізніше.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>PC Status: %1</source>
-        <translation>Статус ПК: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Online</source>
-        <translation>У мережі</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="171"/>
         <source>Offline</source>
-        <translation>Поза мережею</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="177"/>
         <source>View All Apps</source>
-        <translation>Переглянути усі ігри</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="300"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation>Будь ласка, введіть %1 на своєму головному ПК. Це діалогове вікно закриється, коли створення пари буде завершено.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="301"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation>Якщо на вашому комп’ютері встановлено Sunshine, перейдіть до веб-інтерфейсу користувача Sunshine, щоб ввести PIN-код.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="313"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation>Ви впевнені, що хочете видалити «%1»?</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="327"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation>Moonlight перевіряє ваше мережеве з’єднання, щоб визначити, чи заблоковані необхідні порти.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="354"/>
         <source>Enter the new name for this PC:</source>
-        <translation>Введіть нове ім&apos;я для цього ПК:</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -254,27 +254,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="588"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation>ПІН-код від ПК не збігається. Спробуйте ще раз.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="592"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Ви не можете створити пару, доки попередній сеанс не закінчено на хост-ПК. Вийдіть із запущених ігор або перезавантажте хост-ПК, а потім спробуйте створити пару знову.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="595"/>
         <source>Pairing failed. Please try again.</source>
-        <translation>З&apos;єднання не вдалося. Спробуйте ще раз.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="599"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation>Ще одна спроба з&apos;єднатися вже триває.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="609"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation>Помилка GeForce Experience: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -282,7 +282,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="659"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation>Цю гру запустив не цей ПК. Ви повинні вийти з гри на хост-ПК вручну або використовувати пристрій, з якого була запущена гра.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -290,36 +290,36 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation>%1 вже з&apos;єднано</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation>Не вдалося під&apos;єднатися до %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>З ком&apos;ютером %1 не було створено пари. Будь ласка відкрийте Moonlight щоб створити пару перед тим як запускати трансляцію.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation>Не вдалося вийти з гри, через: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation>Не вдалося знайти гру %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation>Комп&apos;ютер %1 не було з&apos;єднано. Будь ласка, запустіть Moonlight для з&apos;єднання перед тим, як отримати список ігор.</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -327,27 +327,27 @@
     <message>
         <location filename="../main.cpp" line="554"/>
         <source>&amp;Yes</source>
-        <translation>Т&amp;ак</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../main.cpp" line="555"/>
         <source>&amp;No</source>
-        <translation>&amp;Ні</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../main.cpp" line="556"/>
         <source>OK</source>
-        <translation>OK</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../main.cpp" line="557"/>
         <source>Help</source>
-        <translation>Довідка</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../main.cpp" line="558"/>
         <source>Cancel</source>
-        <translation>Скасувати</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -355,7 +355,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="13"/>
         <source>Quitting %1...</source>
-        <translation>Виходимо з %1...</translation>
+        <translation type="unfinished"></translation>
     </message>
 </context>
 <context>
@@ -363,52 +363,62 @@
     <message>
         <location filename="../streaming/session.cpp" line="111"/>
         <source>No video received from host.</source>
-        <translation>Відео трансляцію не було отримано від хост-ПК.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Перевірте ваш брандмауер та правила відкриття наступних портів: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="117"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation>Ваша мережа не справляється. Зменшіть бітрейт або спробуйте швидшу мережу.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="123"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>Щось пішло не так під час запуску трансляції на хост-ПК.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>Переконайтеся, що на вашому хост-ПК не відкрито вміст, захищений DRM. Ви також можете спробувати перезавантажити хост-ПК.</translation>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="129"/>
+        <source>The host PC reported a fatal video encoding error.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="130"/>
+        <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="135"/>
         <source>Connection terminated</source>
-        <translation>З&apos;єднання розірване</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="793"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>Версія GeForce Experience на %1 не підтримується цією збіркою Moonlight. Ви повинні оновити Moonlight для потокової передачі з %1.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="798"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation>Ваш вибір увімкнути режим миші &quot;віддалений робочий стіл&quot; може викликати проблеми в іграх.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="803"/>
         <source>HDR is not supported with software decoding.</source>
-        <translation>HDR не підтримується програмним декодуванням.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="807"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation>Ваш вибір примусити програмне декодування може викликати погану продуктивність трансляції.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="846"/>
@@ -463,16 +473,6 @@
     <message>
         <location filename="../streaming/session.cpp" line="1361"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="129"/>
-        <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../streaming/session.cpp" line="130"/>
-        <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -619,6 +619,11 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../gui/SettingsView.qml" line="729"/>
+        <source>(Recommended)</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../gui/SettingsView.qml" line="710"/>
         <location filename="../gui/SettingsView.qml" line="1121"/>
         <source>Fullscreen</source>
@@ -638,11 +643,6 @@
         <location filename="../gui/SettingsView.qml" line="720"/>
         <location filename="../gui/SettingsView.qml" line="1113"/>
         <source>Windowed</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
-        <location filename="../gui/SettingsView.qml" line="729"/>
-        <source>(Recommended)</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
@@ -793,7 +793,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1338"/>
         <source>Gamepad Settings</source>
-        <translation>Налаштування геймпада</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1348"/>
@@ -1024,12 +1024,12 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation>Перевірте ваш брандмауер та правила переадресації для наступних портів: %1</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="76"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Moonlight блокується підключенням до Інтернету цього ПК. Потокова трансляція через Інтернет може не працювати під час підключення до цієї мережі.</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="167"/>
@@ -1100,14 +1100,9 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="501"/>
-        <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
-    </message>
-    <message>
         <location filename="../gui/main.qml" line="374"/>
         <source>Help</source>
-        <translation>Довідка</translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="435"/>
@@ -1132,6 +1127,11 @@
     <message>
         <location filename="../gui/main.qml" line="471"/>
         <source>Are you sure you want to quit?</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/main.qml" line="501"/>
+        <source>Enter the IP address of your host PC:</source>
         <translation type="unfinished"></translation>
     </message>
 </context>
