@@ -69,19 +69,18 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
             break;
         }
 
-        return tr("Name: %1\nStatus: %2\nActive Address: %3\nUUID: %4\nLocal Address: %5\nRemote Address: %6\nIPv6 Address: %7\nManual Address: %8\nMAC Address: %9\nPair State: %10\nRunning Game ID: %11\nHTTPS Port: %12")
-            .arg(computer->name)
-            .arg(state)
-            .arg(computer->activeAddress.toString())
-            .arg(computer->uuid)
-            .arg(computer->localAddress.toString())
-            .arg(computer->remoteAddress.toString())
-            .arg(computer->ipv6Address.toString())
-            .arg(computer->manualAddress.toString())
-            .arg(computer->macAddress.isEmpty() ? tr("Unknown") : QString(computer->macAddress.toHex(':')))
-            .arg(pairState)
-            .arg(computer->state == NvComputer::CS_ONLINE ? QString::number(computer->currentGameId) : tr("Unknown"))
-            .arg(computer->state == NvComputer::CS_ONLINE ? QString::number(computer->activeHttpsPort) : tr("Unknown"));
+        return tr("Name: %1").arg(computer->name) + '\n' +
+               tr("Status: %1").arg(state) + '\n' +
+               tr("Active Address: %1").arg(computer->activeAddress.toString()) + '\n' +
+               tr("UUID: %1").arg(computer->uuid) + '\n' +
+               tr("Local Address: %1").arg(computer->localAddress.toString()) + '\n' +
+               tr("Remote Address: %1").arg(computer->remoteAddress.toString()) + '\n' +
+               tr("IPv6 Address: %1").arg(computer->ipv6Address.toString()) + '\n' +
+               tr("Manual Address: %1").arg(computer->manualAddress.toString()) + '\n' +
+               tr("MAC Address: %1").arg(computer->macAddress.isEmpty() ? tr("Unknown") : QString(computer->macAddress.toHex(':'))) + '\n' +
+               tr("Pair State: %1").arg(pairState) + '\n' +
+               tr("Running Game ID: %1").arg(computer->state == NvComputer::CS_ONLINE ? QString::number(computer->currentGameId) : tr("Unknown")) + '\n' +
+               tr("HTTPS Port: %1").arg(computer->state == NvComputer::CS_ONLINE ? QString::number(computer->activeHttpsPort) : tr("Unknown"));
     }
     default:
         return QVariant();
