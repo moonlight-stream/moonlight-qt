@@ -406,11 +406,10 @@ CenteredGridView {
 
     NavigableMessageDialog {
         id: showPcDetailsDialog
-        property int pcIndex : -1;
         property string pcDetails : "";
         text: showPcDetailsDialog.pcDetails
         imageSrc: "qrc:/res/baseline-help_outline-24px.svg"
-        standardButtons: Dialog.Ok | (SystemProperties.hasBrowser ? Dialog.Help : 0)
+        standardButtons: Dialog.Ok
     }
 
     ScrollBar.vertical: ScrollBar {}
