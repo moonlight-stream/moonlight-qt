@@ -91,6 +91,7 @@ public:
         LANG_PL,
         LANG_CS,
         LANG_HE,
+        LANG_CKB,
     };
     Q_ENUM(Language);
 

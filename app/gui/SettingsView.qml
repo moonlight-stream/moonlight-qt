@@ -1052,6 +1052,10 @@ Flickable {
                             text: "עִבְרִית" // Hebrew
                             val: StreamingPreferences.LANG_HE
                         } */
+                        /* ListElement {
+                            text: "کرمانجیی خواروو" // Central Kurdish
+                            val: StreamingPreferences.LANG_CKB
+                        } */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
