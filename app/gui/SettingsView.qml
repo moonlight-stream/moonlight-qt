@@ -1632,6 +1632,32 @@ Flickable {
                         StreamingPreferences.detectNetworkBlocking = checked
                     }
                 }
+
+                CheckBox {
+                    id: showPerformanceOverlay
+                    width: parent.width
+                    text: qsTr("Show performance stats while streaming")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.showPerformanceOverlay
+                    onCheckedChanged: {
+                        // This is called on init, so only do the work if we've
+                        // actually changed the value.
+                        if (StreamingPreferences.showPerformanceOverlay != checked) {
+                            StreamingPreferences.showPerformanceOverlay = checked
+
+                            // We must save the updated preference to ensure
+                            // ComputerManager can observe the change internally.
+                            StreamingPreferences.save()
+                        }
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Display real-time stream performance information while streaming.") + "\n\n" +
+                                  qsTr("You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.") + "\n\n" +
+                                  qsTr("The performance overlay is not supported on Steam Link or Raspberry Pi.")
+                }
             }
         }
     }
