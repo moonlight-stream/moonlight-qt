@@ -905,6 +905,12 @@ int PlVkRenderer::getRendererAttributes()
     return attributes;
 }
 
+int PlVkRenderer::getDecoderColorRange()
+{
+    // Explicitly set the color range to full to fix raised black levels on OLED displays
+    return COLOR_RANGE_FULL;
+}
+
 int PlVkRenderer::getDecoderCapabilities()
 {
     return CAPABILITY_REFERENCE_FRAME_INVALIDATION_HEVC |
