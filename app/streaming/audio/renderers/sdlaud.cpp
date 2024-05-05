@@ -100,12 +100,6 @@ void* SdlAudioRenderer::getAudioBuffer(int*)
 
 bool SdlAudioRenderer::submitAudio(int bytesWritten)
 {
-    // Our device may enter a permanent error status upon removal, so we need
-    // to recreate the audio device to pick up the new default audio device.
-    if (SDL_GetAudioDeviceStatus(m_AudioDevice) == SDL_AUDIO_STOPPED) {
-        return false;
-    }
-
     if (bytesWritten == 0) {
         // Nothing to do
         return true;
@@ -118,8 +112,20 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
     }
 
     // Provide backpressure on the queue to ensure too many frames don't build up
-    // in SDL's audio queue.
-    while (SDL_GetQueuedAudioSize(m_AudioDevice) / m_FrameSize > 10) {
+    // in SDL's audio queue, but don't wait forever to avoid a deadlock if the
+    // audio device fails.
+    for (int i = 0; i < 100; i++) {
+        // Our device may enter a permanent error status upon removal, so we need
+        // to recreate the audio device to pick up the new default audio device.
+        if (SDL_GetAudioDeviceStatus(m_AudioDevice) == SDL_AUDIO_STOPPED) {
+            return false;
+        }
+
+        // Only queue more samples where there are 10 frames or less in SDL's queue
+        if (SDL_GetQueuedAudioSize(m_AudioDevice) / m_FrameSize <= 10) {
+            break;
+        }
+
         SDL_Delay(1);
     }
 
