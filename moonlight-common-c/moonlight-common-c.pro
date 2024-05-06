@@ -12,9 +12,6 @@ TEMPLATE = lib
 # Build a static library
 CONFIG += staticlib
 
-# Disable warnings
-CONFIG += warn_off
-
 # Include global qmake defs
 include(../globaldefs.pri)
 
@@ -91,4 +88,9 @@ CONFIG(debug, debug|release) {
 # Older GCC versions defaulted to GNU89
 *-g++ {
     QMAKE_CFLAGS += -std=gnu99
+}
+
+# Disable unused parameter warnings on GCC and Clang
+*-g++|*-clang* {
+    QMAKE_CFLAGS_WARN_ON += -Wno-unused-parameter
 }

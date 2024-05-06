@@ -6,6 +6,13 @@ ComputerSeeker::ComputerSeeker(ComputerManager *manager, QString computerName, Q
     : QObject(parent), m_ComputerManager(manager), m_ComputerName(computerName),
       m_TimeoutTimer(new QTimer(this))
 {
+    // If we know this computer, send a WOL packet to wake it up in case it is asleep.
+    for (NvComputer * computer: m_ComputerManager->getComputers()) {
+        if (this->matchComputer(computer)) {
+            computer->wake();
+        }
+    }
+
     m_TimeoutTimer->setSingleShot(true);
     connect(m_TimeoutTimer, &QTimer::timeout,
             this, &ComputerSeeker::onTimeout);

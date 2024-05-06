@@ -101,6 +101,98 @@
     </message>
 </context>
 <context>
+    <name>ComputerModel</name>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="50"/>
+        <source>Online</source>
+        <translation type="unfinished">線上</translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="53"/>
+        <source>Offline</source>
+        <translation type="unfinished">離線</translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="56"/>
+        <location filename="../gui/computermodel.cpp" line="68"/>
+        <location filename="../gui/computermodel.cpp" line="80"/>
+        <location filename="../gui/computermodel.cpp" line="82"/>
+        <location filename="../gui/computermodel.cpp" line="83"/>
+        <source>Unknown</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="62"/>
+        <source>Paired</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="65"/>
+        <source>Unpaired</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="72"/>
+        <source>Name: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="73"/>
+        <source>Status: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="74"/>
+        <source>Active Address: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="75"/>
+        <source>UUID: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="76"/>
+        <source>Local Address: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="77"/>
+        <source>Remote Address: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="78"/>
+        <source>IPv6 Address: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="79"/>
+        <source>Manual Address: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="80"/>
+        <source>MAC Address: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="81"/>
+        <source>Pair State: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="82"/>
+        <source>Running Game ID: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/computermodel.cpp" line="83"/>
+        <source>HTTPS Port: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>GamepadMapper</name>
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
@@ -111,7 +203,7 @@
 <context>
     <name>NvHTTP</name>
     <message>
-        <location filename="../backend/nvhttp.cpp" line="358"/>
+        <location filename="../backend/nvhttp.cpp" line="359"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
         <translation>缺少音訊擷取裝置。重新安裝 GeForce Experience 可以解決此錯誤。</translation>
     </message>
@@ -119,132 +211,137 @@
 <context>
     <name>PcView</name>
     <message>
-        <location filename="../gui/PcView.qml" line="20"/>
+        <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
         <translation>電腦</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="67"/>
+        <location filename="../gui/PcView.qml" line="68"/>
         <source>Unable to connect to the specified PC.</source>
         <translation>無法連線到指定電腦。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="70"/>
+        <location filename="../gui/PcView.qml" line="71"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>Moonlight 無法由這台電腦的網路連線進行連接。在連線到此網路時，網際網路上的串流傳輸可能無法使用。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="73"/>
+        <location filename="../gui/PcView.qml" line="74"/>
         <source>Click the Help button for possible solutions.</source>
         <translation>按下說明按鈕以取得可能的解決方法。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="103"/>
+        <location filename="../gui/PcView.qml" line="104"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
         <translation>已停用自動搜尋電腦功能，需要手動新增。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="102"/>
+        <location filename="../gui/PcView.qml" line="103"/>
         <source>Searching for compatible hosts on your local network...</source>
         <translation>正在您的區域網路中搜尋相容的主機…</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="187"/>
+        <location filename="../gui/PcView.qml" line="188"/>
         <source>Wake PC</source>
         <translation>喚醒電腦</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="193"/>
+        <location filename="../gui/PcView.qml" line="194"/>
         <source>Test Network</source>
         <translation>網路測試</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="202"/>
+        <location filename="../gui/PcView.qml" line="203"/>
         <source>Rename PC</source>
         <translation>重新命名電腦</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="211"/>
+        <location filename="../gui/PcView.qml" line="212"/>
         <source>Delete PC</source>
         <translation>刪除電腦</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="224"/>
+        <location filename="../gui/PcView.qml" line="221"/>
+        <source>View Details</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/PcView.qml" line="233"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>此 Moonlight 版本不支援 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="327"/>
+        <location filename="../gui/PcView.qml" line="336"/>
         <source>This may take a few seconds…</source>
         <translation>這可能需要幾秒鐘……</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="338"/>
+        <location filename="../gui/PcView.qml" line="347"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
         <translation>此網路似乎並未封鎖 Moonlight。如果您仍然無法連線，請檢查您電腦的防火牆設定。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="338"/>
+        <location filename="../gui/PcView.qml" line="347"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
         <translation>如果您嘗試透過網際網路進行串流，請在您的遊戲電腦上安裝 Moonlight Internet Hosting Tool 並執行其中的 Internet Streaming Tester 以檢查您的電腦的網際網路連線。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="342"/>
+        <location filename="../gui/PcView.qml" line="351"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
         <translation>您電腦目前的網路連線似乎封鎖了 Moonlight。連線到此網路時，可能無法透過網際網路進行流式傳輸。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="342"/>
+        <location filename="../gui/PcView.qml" line="351"/>
         <source>The following network ports were blocked:</source>
         <translation>以下網路通訊埠被封鎖：</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="334"/>
+        <location filename="../gui/PcView.qml" line="343"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
         <translation>無法執行網路測試，因為此電腦無法連線 Moonlight 的任何連線測試伺服器。請檢查您的網際網路連線或稍後重試。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="171"/>
+        <location filename="../gui/PcView.qml" line="172"/>
         <source>PC Status: %1</source>
         <translation>電腦狀態：%1</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="171"/>
+        <location filename="../gui/PcView.qml" line="172"/>
         <source>Online</source>
         <translation>線上</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="171"/>
+        <location filename="../gui/PcView.qml" line="172"/>
         <source>Offline</source>
         <translation>離線</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="177"/>
+        <location filename="../gui/PcView.qml" line="178"/>
         <source>View All Apps</source>
         <translation>檢視所有應用程式</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="300"/>
+        <location filename="../gui/PcView.qml" line="309"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
         <translation>請在您的主機電腦上輸入 %1，配對完成後，此對話方塊將會關閉。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="301"/>
+        <location filename="../gui/PcView.qml" line="310"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
         <translation>若您的主機正在執行 Sunshine，請導覽至 Sunshine 網頁 UI 並輸入 PIN 碼。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="313"/>
+        <location filename="../gui/PcView.qml" line="322"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
         <translation>您確定要移除「%1」嗎？</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="327"/>
+        <location filename="../gui/PcView.qml" line="336"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
         <translation>Moonlight 正在測試您的網路連線以判斷是否有需要的連接埠被封鎖。</translation>
     </message>
     <message>
-        <location filename="../gui/PcView.qml" line="354"/>
+        <location filename="../gui/PcView.qml" line="363"/>
         <source>Enter the new name for this PC:</source>
         <translation>輸入此電腦的新名稱：</translation>
     </message>
@@ -252,27 +349,27 @@
 <context>
     <name>PendingPairingTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="588"/>
+        <location filename="../backend/computermanager.cpp" line="586"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
         <translation>來自電腦的 PIN 碼不相符，請重試。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="592"/>
+        <location filename="../backend/computermanager.cpp" line="590"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
         <translation>上一個工作階段仍在主機電腦上執行時，您將無法配對。結束所有正在執行的遊戲或重新啟動主機電腦，然後再次嘗試配對。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="595"/>
+        <location filename="../backend/computermanager.cpp" line="593"/>
         <source>Pairing failed. Please try again.</source>
         <translation>配對失敗，請重試。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="599"/>
+        <location filename="../backend/computermanager.cpp" line="597"/>
         <source>Another pairing attempt is already in progress.</source>
         <translation>另一個配對嘗試正在進行。</translation>
     </message>
     <message>
-        <location filename="../backend/computermanager.cpp" line="609"/>
+        <location filename="../backend/computermanager.cpp" line="607"/>
         <source>GeForce Experience returned error: %1</source>
         <translation>GeForce Experience 傳回錯誤：%1</translation>
     </message>
@@ -280,7 +377,7 @@
 <context>
     <name>PendingQuitTask</name>
     <message>
-        <location filename="../backend/computermanager.cpp" line="659"/>
+        <location filename="../backend/computermanager.cpp" line="657"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
         <translation>正在執行的遊戲不是由這台電腦啟動的。您必須手動結束主機電腦上的遊戲或使用最初啟動遊戲的裝置。</translation>
     </message>
@@ -325,27 +422,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="554"/>
+        <location filename="../main.cpp" line="583"/>
         <source>&amp;Yes</source>
         <translation>是(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="555"/>
+        <location filename="../main.cpp" line="584"/>
         <source>&amp;No</source>
         <translation>否(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="556"/>
+        <location filename="../main.cpp" line="585"/>
         <source>OK</source>
         <translation>確定</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="557"/>
+        <location filename="../main.cpp" line="586"/>
         <source>Help</source>
         <translation>說明</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="558"/>
+        <location filename="../main.cpp" line="587"/>
         <source>Cancel</source>
         <translation>取消</translation>
     </message>
@@ -361,177 +458,182 @@
 <context>
     <name>Session</name>
     <message>
-        <location filename="../streaming/session.cpp" line="111"/>
+        <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>
         <translation>沒有接收到來自主機的視訊。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="112"/>
+        <location filename="../streaming/session.cpp" line="113"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
         <translation>檢查您的防火牆和通訊埠轉送規則中的通訊埠：%1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="117"/>
+        <location filename="../streaming/session.cpp" line="118"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
         <translation>您的網路連線不佳。降低視訊位元速率或嘗試更快的連線方式。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="123"/>
+        <location filename="../streaming/session.cpp" line="124"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
         <translation>啟動串流時，您的主機電腦出現問題。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="124"/>
+        <location filename="../streaming/session.cpp" line="125"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
         <translation>確認您的主機電腦上沒有開啟任何受 DRM 保護的內容。您也可以嘗試重新啟動主機電腦。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="129"/>
+        <location filename="../streaming/session.cpp" line="130"/>
         <source>The host PC reported a fatal video encoding error.</source>
         <translation>主機電腦回報了一個嚴重的視訊編碼錯誤。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="130"/>
+        <location filename="../streaming/session.cpp" line="131"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
         <translation>嘗試停用 HDR 模式，變更串流解析度，或變更您的主機電腦顯示器解析度。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="135"/>
+        <location filename="../streaming/session.cpp" line="139"/>
         <source>Connection terminated</source>
         <translation>連線已終止</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="793"/>
+        <location filename="../streaming/session.cpp" line="140"/>
+        <source>Error code: %1</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../streaming/session.cpp" line="831"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>此 Moonlight 版本不支援 %1 上的 GeForce Experience 版本。您必須更新 Moonlight 才能從 %1 串流傳輸。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="798"/>
+        <location filename="../streaming/session.cpp" line="836"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>您選取啟動遠端桌面游標模式可能會導致遊戲出現問題。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="803"/>
+        <location filename="../streaming/session.cpp" line="841"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>軟體解碼不支援 HDR。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="807"/>
+        <location filename="../streaming/session.cpp" line="845"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>您選取強制軟體解碼的設定可能會導致串流媒體效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="846"/>
+        <location filename="../streaming/session.cpp" line="876"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>您的主機不支援 HEVC 編碼。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="862"/>
+        <location filename="../streaming/session.cpp" line="893"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>由於你選取使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="814"/>
+        <location filename="../streaming/session.cpp" line="852"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>您的主機軟體或 GPU 不支援編碼 AV1。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="839"/>
+        <location filename="../streaming/session.cpp" line="869"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>使用軟體解碼係依您的選取項目以強制啟用沒有 GPU 支援的 AV1，這可能導致較低的串流效能。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="897"/>
+        <location filename="../streaming/session.cpp" line="928"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>您的主機電腦不支援 HDR 串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="901"/>
+        <location filename="../streaming/session.cpp" line="932"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>使用 H.264 轉碼器不支援 HDR。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="913"/>
+        <location filename="../streaming/session.cpp" line="944"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>這個電腦的 GPU 不支援 AV1 Main10 HDR 串流解碼。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="930"/>
+        <location filename="../streaming/session.cpp" line="961"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>這個電腦的 GPU 不支援 10-bit HEVC 或 AV1 HDR 串流解碼。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="937"/>
+        <location filename="../streaming/session.cpp" line="968"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>您的主機電腦和用戶端電腦不支援相同的 HDR 視訊轉碼器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="989"/>
+        <location filename="../streaming/session.cpp" line="1020"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>H.264 轉碼器不支援超過 4K 的視訊解析度。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1361"/>
+        <location filename="../streaming/session.cpp" line="1404"/>
         <source>Host returned error: %1</source>
         <translation>主機返回錯誤：%1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="876"/>
+        <location filename="../streaming/session.cpp" line="907"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>由於你選取強制使用 GPU 不支援的 HEVC 格式，因此使用軟體進行解碼。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="886"/>
+        <location filename="../streaming/session.cpp" line="917"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>您的主機電腦和用戶端電腦不支援相同的視訊編解碼器。這可能會導致串流效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="889"/>
+        <location filename="../streaming/session.cpp" line="920"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>您的用戶端 GPU 不支援 H.264 解碼。這能會導致串流效能不佳。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="924"/>
+        <location filename="../streaming/session.cpp" line="955"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>此電腦的 GPU 不支援 HEVC Main10 解碼器來進行 HDR 串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="945"/>
+        <location filename="../streaming/session.cpp" line="976"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4K 串流需要 GeForce Experience 3.0 或更高的版本。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="960"/>
+        <location filename="../streaming/session.cpp" line="991"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>您選取的環場音效設定並不支援目前的音訊裝置。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="967"/>
+        <location filename="../streaming/session.cpp" line="998"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>無法開啟音訊裝置。音訊在本次工作階段中將無法使用。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="972"/>
+        <location filename="../streaming/session.cpp" line="1003"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>附加的手把沒有對應，將無法使用。請造訪 Moonlight 協助解決問題。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="985"/>
+        <location filename="../streaming/session.cpp" line="1016"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>您的主機電腦 GPU 不支援 4K 視訊串流。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1004"/>
+        <location filename="../streaming/session.cpp" line="1035"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>由於此電腦的 GPU 缺乏硬體解碼支援，故無法強制使用硬體解碼。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1007"/>
+        <location filename="../streaming/session.cpp" line="1038"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>你選取的編解碼器和強制硬體解碼設定不相容。此電腦的顯示卡不支援解碼你選取的解編碼器。</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1983"/>
+        <location filename="../streaming/session.cpp" line="2081"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>無法初始化畫面解碼器。請檢查您的串流設定並再試一次。</translation>
     </message>
@@ -625,7 +727,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="710"/>
-        <location filename="../gui/SettingsView.qml" line="1121"/>
+        <location filename="../gui/SettingsView.qml" line="1125"/>
         <source>Fullscreen</source>
         <translation>全螢幕</translation>
     </message>
@@ -641,7 +743,7 @@
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="720"/>
-        <location filename="../gui/SettingsView.qml" line="1113"/>
+        <location filename="../gui/SettingsView.qml" line="1117"/>
         <source>Windowed</source>
         <translation>視窗化</translation>
     </message>
@@ -721,132 +823,152 @@
         <translation>自動</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1063"/>
+        <location filename="../gui/SettingsView.qml" line="1067"/>
         <source>You must restart Moonlight for this change to take effect</source>
         <translation>您必須重新啟動 Moonlight 以套用此更動</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1080"/>
+        <location filename="../gui/SettingsView.qml" line="1084"/>
         <source>GUI display mode</source>
         <translation>圖形使用者介面顯示模式</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1117"/>
+        <location filename="../gui/SettingsView.qml" line="1121"/>
         <source>Maximized</source>
         <translation>最大化</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1190"/>
+        <location filename="../gui/SettingsView.qml" line="1194"/>
         <source>Input Settings</source>
         <translation>輸入設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1211"/>
+        <location filename="../gui/SettingsView.qml" line="1215"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
         <translation>這可以實現無縫滑鼠控制，而無須捕捉用戶端的滑鼠指標。這是理想的遠端桌面選擇，但在大多數遊戲中不起作用。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1213"/>
+        <location filename="../gui/SettingsView.qml" line="1217"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
         <translation>提醒：由於 GeForce Experience 的錯誤，如果您的主機電腦有多部顯示器，此選項可能無法正常運作。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1529"/>
+        <location filename="../gui/SettingsView.qml" line="1525"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
         <translation>啟用 HDR 覆寫手動解碼器選取項目。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1577"/>
+        <location filename="../gui/SettingsView.qml" line="1573"/>
         <source>AV1 (Experimental)</source>
         <translation>AV (實驗性)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1592"/>
+        <location filename="../gui/SettingsView.qml" line="1588"/>
         <source>Enable HDR (Experimental)</source>
         <translation>啟用 HDR (實驗性)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1607"/>
+        <location filename="../gui/SettingsView.qml" line="1603"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
         <translation>串流將支援 HDR，但一些遊戲可能需要你主機電腦上的 HDR 監視器以啟用 HDR 模式。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1609"/>
+        <location filename="../gui/SettingsView.qml" line="1605"/>
         <source>HDR streaming is not supported on this PC.</source>
         <translation>此電腦不支援 HDR 串流。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1232"/>
+        <location filename="../gui/SettingsView.qml" line="1643"/>
+        <source>Show performance stats while streaming</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1653"/>
+        <source>Display real-time stream performance information while streaming.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1654"/>
+        <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1655"/>
+        <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../gui/SettingsView.qml" line="1236"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
         <translation>提醒：某些鍵盤快速鍵，例如 Ctrl+Alt+Del，無法在 Windows 上被任何應用程式攔截，包括 Moonlight。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1295"/>
+        <location filename="../gui/SettingsView.qml" line="1299"/>
         <source>Use touchscreen as a virtual trackpad</source>
         <translation>將觸控式螢幕用作虛擬觸控板</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1312"/>
+        <location filename="../gui/SettingsView.qml" line="1316"/>
         <source>Swap left and right mouse buttons</source>
         <translation>交換滑鼠左右按鍵</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1324"/>
+        <location filename="../gui/SettingsView.qml" line="1328"/>
         <source>Reverse mouse scrolling direction</source>
         <translation>反轉滑鼠滾輪滾動方向</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1338"/>
+        <location filename="../gui/SettingsView.qml" line="1342"/>
         <source>Gamepad Settings</source>
         <translation>手把設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1348"/>
+        <location filename="../gui/SettingsView.qml" line="1352"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
         <translation>交換手把的 A/B 和 X/Y 按鈕</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1366"/>
+        <location filename="../gui/SettingsView.qml" line="1362"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
         <translation>這將手把切換為任天堂風格的按鈕版面配置</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1372"/>
+        <location filename="../gui/SettingsView.qml" line="1368"/>
         <source>Force gamepad #1 always connected</source>
         <translation>強制手把 #1 始終連線</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1382"/>
+        <location filename="../gui/SettingsView.qml" line="1378"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
         <translation>強制使單個手把始終與主機保持連線，即使沒有任何手把實際連線到此電腦。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1212"/>
+        <location filename="../gui/SettingsView.qml" line="1216"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
         <translation>您可以在串流時按下 Ctrl+Alt+Shift+M 以切換。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1390"/>
+        <location filename="../gui/SettingsView.qml" line="1386"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
         <translation>透過按下手把的「開始」鍵啟用滑鼠控制</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1401"/>
+        <location filename="../gui/SettingsView.qml" line="1397"/>
         <source>Process gamepad input when Moonlight is in the background</source>
         <translation>在 Moonlight 於背景工作時處理手把輸入</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1412"/>
+        <location filename="../gui/SettingsView.qml" line="1408"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
         <translation>即使不是焦點視窗，也允許 Moonlight 擷取手把輸入</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1421"/>
+        <location filename="../gui/SettingsView.qml" line="1417"/>
         <source>Host Settings</source>
         <translation>主機設定</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1461"/>
+        <location filename="../gui/SettingsView.qml" line="1457"/>
         <source>Advanced Settings</source>
         <translation>進階設定</translation>
     </message>
@@ -856,27 +978,27 @@
         <translation>音訊組態</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1134"/>
+        <location filename="../gui/SettingsView.qml" line="1138"/>
         <source>Show connection quality warnings</source>
         <translation>顯示連線品質警告</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1146"/>
+        <location filename="../gui/SettingsView.qml" line="1150"/>
         <source>Discord Rich Presence integration</source>
         <translation>Discord Rich Presence 整合</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1156"/>
+        <location filename="../gui/SettingsView.qml" line="1160"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
         <translation>更新你的 Discord 狀態，以顯示正在執行的遊戲名稱。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1383"/>
+        <location filename="../gui/SettingsView.qml" line="1379"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
         <translation>僅在遊戲啟動後不支援手把連線時才啟用此選項。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1201"/>
+        <location filename="../gui/SettingsView.qml" line="1205"/>
         <source>Optimize mouse for remote desktop instead of games</source>
         <translation>為遠端桌面而非遊戲最佳化滑鼠</translation>
     </message>
@@ -907,98 +1029,98 @@
         <translation>60 FPS</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1162"/>
+        <location filename="../gui/SettingsView.qml" line="1166"/>
         <source>Keep the display awake while streaming</source>
         <translation>串流時保持螢幕始終亮起</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1172"/>
+        <location filename="../gui/SettingsView.qml" line="1176"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
         <translation>防止螢幕保護程式啟動或是螢幕在串流時進入睡眠狀態。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1223"/>
+        <location filename="../gui/SettingsView.qml" line="1227"/>
         <source>Capture system keyboard shortcuts</source>
         <translation>擷取系統鍵盤快速鍵</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1231"/>
+        <location filename="../gui/SettingsView.qml" line="1235"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
         <translation>這可以擷取系統範圍的鍵盤快速鍵，例如 Alt + Tab，這些快速鍵通常在串流時由用戶端系統處理。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1261"/>
+        <location filename="../gui/SettingsView.qml" line="1265"/>
         <source>in fullscreen</source>
         <translation>全螢幕時</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1265"/>
+        <location filename="../gui/SettingsView.qml" line="1269"/>
         <source>always</source>
         <translation>總是</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1305"/>
+        <location filename="../gui/SettingsView.qml" line="1309"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
         <translation>選中時，觸控式螢幕就像一個觸控板。取消選中時，觸控式螢幕將直接控制滑鼠指標。</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1431"/>
+        <location filename="../gui/SettingsView.qml" line="1427"/>
         <source>Optimize game settings for streaming</source>
         <translation>最佳化遊戲設定以進行串流</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1442"/>
+        <location filename="../gui/SettingsView.qml" line="1438"/>
         <source>Quit app on host PC after ending stream</source>
         <translation>串流結束後退出主機電腦上的應用程式</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1452"/>
+        <location filename="../gui/SettingsView.qml" line="1448"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
         <translation>在結束串流時，這將關閉正在執行的應用程式或遊戲。這會導致你失去所有未儲存的遊戲進度！</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1471"/>
+        <location filename="../gui/SettingsView.qml" line="1467"/>
         <source>Video decoder</source>
         <translation>視訊解碼器</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1497"/>
-        <location filename="../gui/SettingsView.qml" line="1565"/>
+        <location filename="../gui/SettingsView.qml" line="1493"/>
+        <location filename="../gui/SettingsView.qml" line="1561"/>
         <source>Automatic (Recommended)</source>
         <translation>自動 (建議)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1501"/>
+        <location filename="../gui/SettingsView.qml" line="1497"/>
         <source>Force software decoding</source>
         <translation>強制使用軟體解碼</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1505"/>
+        <location filename="../gui/SettingsView.qml" line="1501"/>
         <source>Force hardware decoding</source>
         <translation>強制使用硬體解碼</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1535"/>
+        <location filename="../gui/SettingsView.qml" line="1531"/>
         <source>Video codec</source>
         <translation>視訊編解碼器</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1569"/>
+        <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>H.264</source>
         <translation>H.264</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1573"/>
+        <location filename="../gui/SettingsView.qml" line="1569"/>
         <source>HEVC (H.265)</source>
         <translation>HEVC (H.265)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1615"/>
+        <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
         <translation>自動尋找在區域網路中的電腦 (建議)</translation>
     </message>
     <message>
-        <location filename="../gui/SettingsView.qml" line="1640"/>
+        <location filename="../gui/SettingsView.qml" line="1632"/>
         <source>Automatically detect blocked connections (Recommended)</source>
         <translation>自動偵測被封鎖的連線 (建議)</translation>
     </message>
@@ -1055,82 +1177,82 @@
 <context>
     <name>main</name>
     <message>
-        <location filename="../gui/main.qml" line="428"/>
+        <location filename="../gui/main.qml" line="415"/>
         <source>Settings</source>
         <translation>設定</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="275"/>
+        <location filename="../gui/main.qml" line="262"/>
         <source>Version %1</source>
         <translation>版本 %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="291"/>
+        <location filename="../gui/main.qml" line="278"/>
         <source>Join our community on Discord</source>
         <translation>加入我們的 Discord 社群</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="310"/>
+        <location filename="../gui/main.qml" line="297"/>
         <source>Add PC manually</source>
         <translation>手動新增電腦</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="350"/>
+        <location filename="../gui/main.qml" line="337"/>
         <source>Update available for Moonlight: Version %1</source>
         <translation>Moonlight 有可用更新：版本 %1</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="397"/>
+        <location filename="../gui/main.qml" line="384"/>
         <source>Gamepad Mapper</source>
         <translation>手把對應</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="443"/>
+        <location filename="../gui/main.qml" line="430"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
         <translation>硬體加速無法在 XWayland 運作。若繼續使用 XWayland 可能會造成串流品質降低。請嘗試以 QT_QPA_PLATFORM=wayland 執行或切換至 X11。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="452"/>
+        <location filename="../gui/main.qml" line="439"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
         <translation>此版本的 Moonlight 尚未針對你的電腦最佳化。請下載「%1」版本的 Moonlight，以獲得最佳的串流效能。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="461"/>
+        <location filename="../gui/main.qml" line="448"/>
         <source>Moonlight detected gamepads without a mapping:</source>
         <translation>Moonlight 偵測到沒有對應的手把：</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="374"/>
+        <location filename="../gui/main.qml" line="361"/>
         <source>Help</source>
         <translation>說明</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="435"/>
+        <location filename="../gui/main.qml" line="422"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
         <translation>Moonlight 沒有偵測到有效的硬體加速視訊解碼器。在這種組態下，你的串流效能可能會嚴重下降。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="437"/>
+        <location filename="../gui/main.qml" line="424"/>
         <source>Click the Help button for more information on solving this problem.</source>
         <translation>按下說明按鈕以瞭解更多如何解決此問題的資訊。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="445"/>
+        <location filename="../gui/main.qml" line="432"/>
         <source>Click the Help button for more information.</source>
         <translation>按下說明按鈕以瞭解更多資訊。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="463"/>
+        <location filename="../gui/main.qml" line="450"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
         <translation>按下說明按鈕以取得有關如何對應手把的資訊。</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="471"/>
+        <location filename="../gui/main.qml" line="458"/>
         <source>Are you sure you want to quit?</source>
         <translation>您確定要結束嗎？</translation>
     </message>
     <message>
-        <location filename="../gui/main.qml" line="501"/>
+        <location filename="../gui/main.qml" line="488"/>
         <source>Enter the IP address of your host PC:</source>
         <translation>輸入您的主機電腦 IP 位址：</translation>
     </message>

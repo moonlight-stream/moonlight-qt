@@ -79,6 +79,8 @@ private:
 
     IAudioRenderer* createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATION opusConfig);
 
+    bool initializeAudioRenderer();
+
     bool testAudio(int audioConfiguration);
 
     int getAudioRendererCapabilities(int audioConfiguration);
@@ -184,7 +186,8 @@ private:
 
     OpusMSDecoder* m_OpusDecoder;
     IAudioRenderer* m_AudioRenderer;
-    OPUS_MULTISTREAM_CONFIGURATION m_AudioConfig;
+    OPUS_MULTISTREAM_CONFIGURATION m_ActiveAudioConfig;
+    OPUS_MULTISTREAM_CONFIGURATION m_OriginalAudioConfig;
     int m_AudioSampleCount;
     Uint32 m_DropAudioEndTime;
 

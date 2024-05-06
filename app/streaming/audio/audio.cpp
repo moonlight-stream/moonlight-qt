@@ -64,6 +64,48 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
     return nullptr;
 }
 
+bool Session::initializeAudioRenderer()
+{
+    int error;
+
+    SDL_assert(m_OriginalAudioConfig.channelCount > 0);
+    SDL_assert(m_AudioRenderer == nullptr);
+    SDL_assert(m_OpusDecoder == nullptr);
+
+    m_AudioRenderer = createAudioRenderer(&m_OriginalAudioConfig);
+
+    // We may be unable to create an audio renderer right now
+    if (m_AudioRenderer == nullptr) {
+        return false;
+    }
+
+    // Allow the chosen renderer to remap Opus channels as needed to ensure proper output
+    m_ActiveAudioConfig = m_OriginalAudioConfig;
+    m_AudioRenderer->remapChannels(&m_ActiveAudioConfig);
+
+    // Create the Opus decoder with the renderer's preferred channel mapping
+    m_OpusDecoder =
+        opus_multistream_decoder_create(m_ActiveAudioConfig.sampleRate,
+                                        m_ActiveAudioConfig.channelCount,
+                                        m_ActiveAudioConfig.streams,
+                                        m_ActiveAudioConfig.coupledStreams,
+                                        m_ActiveAudioConfig.mapping,
+                                        &error);
+    if (m_OpusDecoder == nullptr) {
+        delete m_AudioRenderer;
+        m_AudioRenderer = nullptr;
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "Failed to create decoder: %d",
+                     error);
+        return false;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Audio stream has %d channels",
+                m_ActiveAudioConfig.channelCount);
+    return true;
+}
+
 int Session::getAudioRendererCapabilities(int audioConfiguration)
 {
     // Build a fake OPUS_MULTISTREAM_CONFIGURATION to give
@@ -108,39 +150,8 @@ int Session::arInit(int /* audioConfiguration */,
                     const POPUS_MULTISTREAM_CONFIGURATION opusConfig,
                     void* /* arContext */, int /* arFlags */)
 {
-    int error;
-
-    SDL_memcpy(&s_ActiveSession->m_AudioConfig, opusConfig, sizeof(*opusConfig));
-
-    s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer(&s_ActiveSession->m_AudioConfig);
-    if (s_ActiveSession->m_AudioRenderer == nullptr) {
-        return -2;
-    }
-
-    // Allow the chosen renderer to remap Opus channels as needed to ensure proper output
-    s_ActiveSession->m_AudioRenderer->remapChannels(&s_ActiveSession->m_AudioConfig);
-
-    // Create the Opus decoder with the renderer's preferred channel mapping
-    s_ActiveSession->m_OpusDecoder =
-            opus_multistream_decoder_create(s_ActiveSession->m_AudioConfig.sampleRate,
-                                            s_ActiveSession->m_AudioConfig.channelCount,
-                                            s_ActiveSession->m_AudioConfig.streams,
-                                            s_ActiveSession->m_AudioConfig.coupledStreams,
-                                            s_ActiveSession->m_AudioConfig.mapping,
-                                            &error);
-    if (s_ActiveSession->m_OpusDecoder == NULL) {
-        delete s_ActiveSession->m_AudioRenderer;
-        s_ActiveSession->m_AudioRenderer = nullptr;
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to create decoder: %d",
-                     error);
-        return -1;
-    }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Audio stream has %d channels",
-                s_ActiveSession->m_AudioConfig.channelCount);
-
+    SDL_memcpy(&s_ActiveSession->m_OriginalAudioConfig, opusConfig, sizeof(*opusConfig));
+    s_ActiveSession->initializeAudioRenderer();
     return 0;
 }
 
@@ -194,7 +205,7 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     }
 
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
-        int desiredSize = sizeof(short) * s_ActiveSession->m_AudioConfig.samplesPerFrame * s_ActiveSession->m_AudioConfig.channelCount;
+        int desiredSize = sizeof(short) * s_ActiveSession->m_ActiveAudioConfig.samplesPerFrame * s_ActiveSession->m_ActiveAudioConfig.channelCount;
         void* buffer = s_ActiveSession->m_AudioRenderer->getAudioBuffer(&desiredSize);
         if (buffer == nullptr) {
             return;
@@ -204,13 +215,13 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
                                                  (unsigned char*)sampleData,
                                                  sampleLength,
                                                  (short*)buffer,
-                                                 desiredSize / sizeof(short) / s_ActiveSession->m_AudioConfig.channelCount,
+                                                 desiredSize / sizeof(short) / s_ActiveSession->m_ActiveAudioConfig.channelCount,
                                                  0);
 
         // Update desiredSize with the number of bytes actually populated by the decoding operation
         if (samplesDecoded > 0) {
-            SDL_assert(desiredSize >= (int)(sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount));
-            desiredSize = sizeof(short) * samplesDecoded * s_ActiveSession->m_AudioConfig.channelCount;
+            SDL_assert(desiredSize >= (int)(sizeof(short) * samplesDecoded * s_ActiveSession->m_ActiveAudioConfig.channelCount));
+            desiredSize = sizeof(short) * samplesDecoded * s_ActiveSession->m_ActiveAudioConfig.channelCount;
         }
         else {
             desiredSize = 0;
@@ -219,6 +230,9 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
         if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredSize)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Reinitializing audio renderer after failure");
+
+            opus_multistream_decoder_destroy(s_ActiveSession->m_OpusDecoder);
+            s_ActiveSession->m_OpusDecoder = nullptr;
 
             delete s_ActiveSession->m_AudioRenderer;
             s_ActiveSession->m_AudioRenderer = nullptr;
@@ -234,14 +248,13 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
         // to drop samples to account for the time we've spent blocking audio rendering
         // so we return to real-time playback and don't accumulate latency.
         Uint32 audioReinitStartTime = SDL_GetTicks();
+        if (s_ActiveSession->initializeAudioRenderer()) {
+            Uint32 audioReinitStopTime = SDL_GetTicks();
 
-        s_ActiveSession->m_AudioRenderer = s_ActiveSession->createAudioRenderer(&s_ActiveSession->m_AudioConfig);
-
-        Uint32 audioReinitStopTime = SDL_GetTicks();
-
-        s_ActiveSession->m_DropAudioEndTime = audioReinitStopTime + (audioReinitStopTime - audioReinitStartTime);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Audio reinitialization took %d ms - starting drop window",
-                    audioReinitStopTime - audioReinitStartTime);
+            s_ActiveSession->m_DropAudioEndTime = audioReinitStopTime + (audioReinitStopTime - audioReinitStartTime);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Audio reinitialization took %d ms - starting drop window",
+                        audioReinitStopTime - audioReinitStartTime);
+        }
     }
 }
