@@ -15,8 +15,10 @@
 #import <VideoToolbox/VideoToolbox.h>
 #import <AVFoundation/AVFoundation.h>
 #import <dispatch/dispatch.h>
-#import <Metal/Metal.h>
+#import <MetalFx/MetalFx.h>
 #import <MetalKit/MetalKit.h>
+
+#include "streaming/video/videoenhancement.h"
 
 struct CscParams
 {
@@ -123,8 +125,15 @@ public:
           m_LastDrawableHeight(-1),
           m_PresentationMutex(SDL_CreateMutex()),
           m_PresentationCond(SDL_CreateCond()),
-          m_PendingPresentationCount(0)
+          m_PendingPresentationCount(0),
+          m_LumaTexture(nullptr),
+          m_LumaUpscaledTexture(nullptr),
+          m_LumaUpscaler(nullptr),
+          m_ChromaTexture(nullptr),
+          m_ChromaUpscaledTexture(nullptr),
+          m_ChromaUpscaler(nullptr)
     {
+        m_VideoEnhancement = &VideoEnhancement::getInstance();
     }
 
     virtual ~VTMetalRenderer() override
@@ -169,6 +178,30 @@ public:
 
         if (m_CommandQueue != nullptr) {
             [m_CommandQueue release];
+        }
+
+        if (m_LumaTexture != nullptr) {
+            [m_LumaTexture release];
+        }
+
+        if (m_LumaUpscaledTexture != nullptr) {
+            [m_LumaUpscaledTexture release];
+        }
+
+        if (m_LumaUpscaler != nullptr) {
+            [m_LumaUpscaler release];
+        }
+
+        if (m_ChromaTexture != nullptr) {
+            [m_ChromaTexture release];
+        }
+
+        if (m_ChromaUpscaledTexture != nullptr) {
+            [m_ChromaUpscaledTexture release];
+        }
+
+        if (m_ChromaUpscaler != nullptr) {
+            [m_ChromaUpscaler release];
         }
 
         if (m_TextureCache != nullptr) {
@@ -387,62 +420,145 @@ public:
             return;
         }
 
-        // Create Metal textures for the planes of the CVPixelBuffer
-        std::array<CVMetalTextureRef, 2> textures;
-        for (size_t i = 0; i < textures.size(); i++) {
-            MTLPixelFormat fmt;
+        switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
+        case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+        case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+            m_LumaPixelFormart = MTLPixelFormatR8Unorm;
+            m_ChromaPixelFormart = MTLPixelFormatRG8Unorm;
+            break;
 
-            switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
-            case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
-            case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
-                fmt = (i == 0) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
-                break;
-
-            case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
-            case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
-                fmt = (i == 0) ? MTLPixelFormatR16Unorm : MTLPixelFormatRG16Unorm;
-                break;
-
-            default:
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Unknown pixel format: %x",
-                             CVPixelBufferGetPixelFormatType(pixBuf));
-                return;
-            }
-
-            CVReturn err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, m_TextureCache, pixBuf, nullptr, fmt,
-                                                                     CVPixelBufferGetWidthOfPlane(pixBuf, i),
-                                                                     CVPixelBufferGetHeightOfPlane(pixBuf, i),
-                                                                     i,
-                                                                     &textures[i]);
-            if (err != kCVReturnSuccess) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
-                             err);
-                return;
-            }
+        case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+        case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+            m_LumaPixelFormart = MTLPixelFormatR16Unorm;
+            m_ChromaPixelFormart = MTLPixelFormatRG16Unorm;
+            break;
+        case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange:
+        case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarFullRange:
+            m_LumaPixelFormart = MTLPixelFormatR8Unorm;
+            m_ChromaPixelFormart = MTLPixelFormatRG8Unorm;
+            break;
+        default:
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Unknown pixel format: %x",
+                         CVPixelBufferGetPixelFormatType(pixBuf));
+            return;
         }
 
+        CVReturn err;
+
+        err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                                 m_TextureCache,
+                                                                 pixBuf,
+                                                                 nullptr,
+                                                                 m_LumaPixelFormart,
+                                                                 CVPixelBufferGetWidthOfPlane(pixBuf, 0),
+                                                                 CVPixelBufferGetHeightOfPlane(pixBuf, 0),
+                                                                 0,
+                                                                 &m_cvLumaTexture);
+        if (err != kCVReturnSuccess) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                         err);
+            return;
+        }
+        m_LumaTexture = CVMetalTextureGetTexture(m_cvLumaTexture);
+
+        err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                                 m_TextureCache,
+                                                                 pixBuf,
+                                                                 nullptr,
+                                                                 m_ChromaPixelFormart,
+                                                                 CVPixelBufferGetWidthOfPlane(pixBuf, 1),
+                                                                 CVPixelBufferGetHeightOfPlane(pixBuf, 1),
+                                                                 1,
+                                                                 &m_cvChromaTexture);
+        if (err != kCVReturnSuccess) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                         err);
+            return;
+        }
+        m_ChromaTexture = CVMetalTextureGetTexture(m_cvChromaTexture);
+
         // Prepare a render pass to render into the next drawable
-        auto renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
+        MTLRenderPassDescriptor *renderPassDescriptor = [MTLRenderPassDescriptor renderPassDescriptor];
         renderPassDescriptor.colorAttachments[0].texture = m_NextDrawable.texture;
         renderPassDescriptor.colorAttachments[0].loadAction = MTLLoadActionClear;
         renderPassDescriptor.colorAttachments[0].clearColor = MTLClearColorMake(0.0, 0.0, 0.0, 0.0);
         renderPassDescriptor.colorAttachments[0].storeAction = MTLStoreActionStore;
-        auto commandBuffer = [m_CommandQueue commandBuffer];
-        auto renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+
+        id<MTLCommandBuffer> commandBuffer = [m_CommandQueue commandBuffer];
+        id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
+
+        if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+          m_LumaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 0);
+          m_LumaHeight = CVPixelBufferGetHeightOfPlane(pixBuf, 0);
+          m_ChromaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 1);
+          m_ChromaHeight = CVPixelBufferGetHeightOfPlane(pixBuf, 1);
+
+          // Setup the Spacial scaler for Luma texture
+          if(m_LumaUpscaler == nullptr){
+            MTLFXSpatialScalerDescriptor* Ldescriptor = [MTLFXSpatialScalerDescriptor new];
+            Ldescriptor.inputWidth = m_LumaWidth;
+            Ldescriptor.inputHeight = m_LumaHeight;
+            Ldescriptor.outputWidth = m_LastDrawableWidth;
+            Ldescriptor.outputHeight = m_LastDrawableHeight;
+            Ldescriptor.colorTextureFormat = m_LumaPixelFormart;
+            Ldescriptor.outputTextureFormat = m_LumaPixelFormart;
+            Ldescriptor.colorProcessingMode = MTLFXSpatialScalerColorProcessingModeLinear; // Linear has a better color rendering than Perceptual
+            m_LumaUpscaler = [Ldescriptor newSpatialScalerWithDevice:m_MetalLayer.device];
+
+            MTLTextureDescriptor *LtextureDescriptor = [[MTLTextureDescriptor alloc] init];
+            LtextureDescriptor.pixelFormat = m_LumaPixelFormart;
+            LtextureDescriptor.width = m_LastDrawableWidth;
+            LtextureDescriptor.height = m_LastDrawableHeight;
+            LtextureDescriptor.storageMode = MTLStorageModePrivate;
+            LtextureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+
+            m_LumaUpscaledTexture = [m_MetalLayer.device newTextureWithDescriptor:LtextureDescriptor];
+          }
+
+          // Setup the Spacial scaler for Chroma texture
+          if(m_ChromaUpscaler == nullptr){
+            MTLFXSpatialScalerDescriptor* Cdescriptor = [MTLFXSpatialScalerDescriptor new];
+            Cdescriptor.inputWidth = m_ChromaWidth;
+            Cdescriptor.inputHeight = m_ChromaHeight;
+            Cdescriptor.outputWidth = m_LastDrawableWidth;
+            Cdescriptor.outputHeight = m_LastDrawableHeight;
+            Cdescriptor.colorTextureFormat = m_ChromaPixelFormart;
+            Cdescriptor.outputTextureFormat = m_ChromaPixelFormart;
+            Cdescriptor.colorProcessingMode = MTLFXSpatialScalerColorProcessingModeLinear; // Linear has a better color rendering than Perceptual
+            m_ChromaUpscaler = [Cdescriptor newSpatialScalerWithDevice:m_MetalLayer.device];
+
+            MTLTextureDescriptor* CtextureDescriptor = [[MTLTextureDescriptor alloc] init];
+            CtextureDescriptor.pixelFormat = m_ChromaPixelFormart;
+            CtextureDescriptor.width = m_LastDrawableWidth;
+            CtextureDescriptor.height = m_LastDrawableHeight;
+            CtextureDescriptor.storageMode = MTLStorageModePrivate;
+            CtextureDescriptor.usage = MTLTextureUsageShaderRead | MTLTextureUsageRenderTarget;
+
+            m_ChromaUpscaledTexture = [m_MetalLayer.device newTextureWithDescriptor:CtextureDescriptor];
+          }
+        }
 
         // Bind textures and buffers then draw the video region
         [renderEncoder setRenderPipelineState:m_VideoPipelineState];
-        for (size_t i = 0; i < textures.size(); i++) {
-            [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(textures[i]) atIndex:i];
+
+        if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+            // Use scaled textures
+            [renderEncoder setFragmentTexture:m_LumaUpscaledTexture atIndex:0];
+            [renderEncoder setFragmentTexture:m_ChromaUpscaledTexture atIndex:1];
+        } else {
+            [renderEncoder setFragmentTexture:m_LumaTexture atIndex:0];
+            [renderEncoder setFragmentTexture:m_ChromaTexture atIndex:1];
         }
+
         [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
             // Free textures after completion of rendering per CVMetalTextureCache requirements
-            for (const CVMetalTextureRef &tex : textures) {
-                CFRelease(tex);
-            }
+            if(m_cvLumaTexture != nullptr) CFRelease(m_cvLumaTexture);
+            if(m_cvChromaTexture != nullptr) CFRelease(m_cvChromaTexture);
         }];
+
         [renderEncoder setFragmentBuffer:m_CscParamsBuffer offset:0 atIndex:0];
         [renderEncoder setVertexBuffer:m_VideoVertexBuffer offset:0 atIndex:0];
         [renderEncoder drawPrimitives:MTLPrimitiveTypeTriangleStrip vertexStart:0 vertexCount:4];
@@ -505,6 +621,16 @@ public:
                 SDL_CondSignal(m_PresentationCond);
                 SDL_UnlockMutex(m_PresentationMutex);
             }];
+        }
+
+        if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+          m_LumaUpscaler.colorTexture = m_LumaTexture;
+          m_LumaUpscaler.outputTexture = m_LumaUpscaledTexture;
+          m_ChromaUpscaler.colorTexture = m_ChromaTexture;
+          m_ChromaUpscaler.outputTexture = m_ChromaUpscaledTexture;
+
+          [m_LumaUpscaler encodeToCommandBuffer:commandBuffer];
+          [m_ChromaUpscaler encodeToCommandBuffer:commandBuffer];
         }
 
         // Flip to the newly rendered buffer
@@ -630,6 +756,7 @@ public:
         int err;
 
         m_Window = params->window;
+        m_DecoderParams = *params;
 
         id<MTLDevice> device = getMetalDevice();
         if (!device) {
@@ -638,6 +765,19 @@ public:
 
         if (!checkDecoderCapabilities(device, params)) {
             return false;
+        }
+
+        if (@available(macOS 13.0, *)) {
+            // Video Super Resolution from MetalFX is available starting from MacOS 13+
+            m_VideoEnhancement->setVSRcapable(true);
+            m_VideoEnhancement->setHDRcapable(false);
+            // Enable the visibility of Video enhancement feature in the settings of the User interface
+            m_VideoEnhancement->enableUIvisible();
+        }
+
+        if(m_VideoEnhancement->isEnhancementCapable()){
+            // Check if the user has enable Video enhancement
+            m_VideoEnhancement->enableVideoEnhancement(m_DecoderParams.enableVideoEnhancement);
         }
 
         err = av_hwdevice_ctx_create(&m_HwContext,
@@ -706,6 +846,7 @@ public:
 
         // Create a command queue for submission
         m_CommandQueue = [m_MetalLayer.device newCommandQueue];
+
         return true;
     }}
 
@@ -833,6 +974,23 @@ private:
     SDL_mutex* m_PresentationMutex;
     SDL_cond* m_PresentationCond;
     int m_PendingPresentationCount;
+
+    VideoEnhancement* m_VideoEnhancement;
+    DECODER_PARAMETERS m_DecoderParams;
+    id<MTLTexture> m_LumaTexture;
+    id<MTLTexture> m_LumaUpscaledTexture;
+    id<MTLFXSpatialScaler> m_LumaUpscaler;
+    id<MTLTexture> m_ChromaTexture;
+    id<MTLTexture> m_ChromaUpscaledTexture;
+    id<MTLFXSpatialScaler> m_ChromaUpscaler;
+    size_t m_LumaWidth;
+    size_t m_LumaHeight;
+    size_t m_ChromaWidth;
+    size_t m_ChromaHeight;
+    MTLPixelFormat m_LumaPixelFormart;
+    MTLPixelFormat m_ChromaPixelFormart;
+    CVMetalTextureRef m_cvLumaTexture;
+    CVMetalTextureRef m_cvChromaTexture;
 };
 
 IFFmpegRenderer* VTMetalRendererFactory::createRenderer() {
