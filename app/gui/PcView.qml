@@ -271,7 +271,7 @@ CenteredGridView {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton;
             onClicked: {
-                parent.onPressAndHold()
+                parent.pressAndHold()
             }
         }
 
