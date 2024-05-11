@@ -17,6 +17,6 @@ rm -rf $ARCHIVE_FOLDER
 mkdir $BUILD_ROOT
 mkdir $ARCHIVE_FOLDER
 
-scripts/git-archive-all.sh --format tar.gz $ARCHIVE_FOLDER/MoonlightSrc-$VERSION.tar.gz || fail "Archive failed"
+scripts/git-archive-all.sh --format tar.gz $ARCHIVE_FOLDER/PCPlaySrc-$VERSION.tar.gz || fail "Archive failed"
 
 echo Archive successful

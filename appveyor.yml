@@ -55,6 +55,7 @@ build_script:
   - cmd: 'scripts\build-arch.bat Release'
   - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt515/bin/qt515-env.sh'
+  - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/generate-src.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
   - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/Qt/6.6/macos/bin scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
@@ -70,6 +71,6 @@ after_build:
   - sh: '[ "$BUILD_TARGET" != macos ] || appveyor PushArtifact build/installer-Release/PCPlay-$VERSION.dmg -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER.dmg'
   - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/PCPlay-$VERSION-x86_64.AppImage -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER-x86_64.AppImage'
   - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/linux_bin.tar.gz -FileName PCPlay-r$APPVEYOR_BUILD_NUMBER-x86_64.tar.gz'
-  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/installer-release/linux_raw_bin.tar.gz -FileName PCPlay_raw-r$APPVEYOR_BUILD_NUMBER-x86_64.tar.gz'
+  - sh: '[ "$BUILD_TARGET" != linux ] || appveyor PushArtifact build/source/PCPlaySrc-$VERSION.tar.gz -FileName PCPlaySrc-r$APPVEYOR_BUILD_NUMBER-x86_64.tar.gz'
 
 deploy: off
