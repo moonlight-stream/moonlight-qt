@@ -193,7 +193,7 @@ bool StreamUtils::hasFastAes()
 #endif
 }
 
-bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
+bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, SDL_Rect* safeArea)
 {
 #ifdef Q_OS_DARWIN
 #define MAX_DISPLAYS 16
@@ -223,6 +223,37 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
             break;
         }
     }
+
+    safeArea->x = 0;
+    safeArea->y = 0;
+    safeArea->w = mode->w;
+    safeArea->h = mode->h;
+
+#if TARGET_CPU_ARM64
+    // Now that we found the native full-screen mode, let's look for one that matches along
+    // the width but not the height and we'll assume that's the safe area full-screen mode.
+    //
+    // There doesn't appear to be a CG API or flag that will tell us that a given mode
+    // is a "safe area" mode, so we have to use our own (brittle) heuristics. :(
+    //
+    // To avoid potential false positives, let's avoid checking for external displays, since
+    // we might have scenarios like a 1920x1200 display with an alternate 1920x1080 mode
+    // which would falsely trigger our notch detection here.
+    if (CGDisplayIsBuiltin(displayIds[displayIndex])) {
+        for (CFIndex i = 0; i < count; i++) {
+            auto cgMode = (CGDisplayModeRef)(CFArrayGetValueAtIndex(modeList, i));
+            auto cgModeWidth = static_cast<int>(CGDisplayModeGetWidth(cgMode));
+            auto cgModeHeight = static_cast<int>(CGDisplayModeGetHeight(cgMode));
+
+            // If the modes differ by more than 100, we'll assume it's not a notch mode
+            if (mode->w == cgModeWidth && mode->h != cgModeHeight && mode->h <= cgModeHeight + 100) {
+                safeArea->w = cgModeWidth;
+                safeArea->h = cgModeHeight;
+            }
+        }
+    }
+#endif
+
     CFRelease(modeList);
 
     // Now find the SDL mode that matches the CG native mode
@@ -258,7 +289,13 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
             return false;
         }
     }
+
+    safeArea->x = 0;
+    safeArea->y = 0;
+    safeArea->w = mode->w;
+    safeArea->h = mode->h;
 #endif
 
     return true;
 }
+

@@ -1200,7 +1200,8 @@ void Session::updateOptimalWindowDisplayMode()
         // If this doesn't fit the selected resolution, use the native
         // resolution of the panel (unscaled).
         if (desktopMode.w < m_ActiveVideoWidth || desktopMode.h < m_ActiveVideoHeight) {
-            if (!StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode)) {
+            SDL_Rect safeArea;
+            if (!StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea)) {
                 return;
             }
         }

@@ -74,12 +74,19 @@ SystemProperties::SystemProperties()
 
     Q_ASSERT(!monitorRefreshRates.isEmpty());
     Q_ASSERT(!monitorNativeResolutions.isEmpty());
+    Q_ASSERT(!monitorSafeAreaResolutions.isEmpty());
 }
 
 QRect SystemProperties::getNativeResolution(int displayIndex)
 {
     // Returns default constructed QRect if out of bounds
     return monitorNativeResolutions.value(displayIndex);
+}
+
+QRect SystemProperties::getSafeAreaResolution(int displayIndex)
+{
+    // Returns default constructed QRect if out of bounds
+    return monitorSafeAreaResolutions.value(displayIndex);
 }
 
 int SystemProperties::getRefreshRate(int displayIndex)
@@ -199,10 +206,12 @@ void SystemProperties::refreshDisplaysInternal()
     SDL_DisplayMode bestMode;
     for (int displayIndex = 0; displayIndex < SDL_GetNumVideoDisplays(); displayIndex++) {
         SDL_DisplayMode desktopMode;
+        SDL_Rect safeArea;
 
-        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode)) {
+        if (StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea)) {
             if (desktopMode.w <= 8192 && desktopMode.h <= 8192) {
                 monitorNativeResolutions.insert(displayIndex, QRect(0, 0, desktopMode.w, desktopMode.h));
+                monitorSafeAreaResolutions.insert(displayIndex, QRect(0, 0, safeArea.w, safeArea.h));
             }
             else {
                 SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
