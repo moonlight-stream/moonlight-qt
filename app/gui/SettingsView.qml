@@ -1052,6 +1052,10 @@ Flickable {
                             text: "עִבְרִית" // Hebrew
                             val: StreamingPreferences.LANG_HE
                         } */
+                        /* ListElement {
+                            text: "کرمانجیی خواروو" // Central Kurdish
+                            val: StreamingPreferences.LANG_CKB
+                        } */
                     }
                     // ::onActivated must be used, as it only listens for when the index is changed by a human
                     onActivated : {
@@ -1631,6 +1635,24 @@ Flickable {
                     onCheckedChanged: {
                         StreamingPreferences.detectNetworkBlocking = checked
                     }
+                }
+
+                CheckBox {
+                    id: showPerformanceOverlay
+                    width: parent.width
+                    text: qsTr("Show performance stats while streaming")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.showPerformanceOverlay
+                    onCheckedChanged: {
+                        StreamingPreferences.showPerformanceOverlay = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("Display real-time stream performance information while streaming.") + "\n\n" +
+                                  qsTr("You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.") + "\n\n" +
+                                  qsTr("The performance overlay is not supported on Steam Link or Raspberry Pi.")
                 }
             }
         }

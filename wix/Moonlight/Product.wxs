@@ -106,6 +106,10 @@
       </Component>
     </DirectoryRef>
 
+    <ComponentGroup Id="MoonlightDependencies" Directory="INSTALLFOLDER">
+      <Files Include="$(var.DeployDir)\**" />
+    </ComponentGroup>
+
     <Feature Id="ProductFeature" Title="Moonlight" Level="1" ConfigurableDirectory="INSTALLFOLDER">
       <ComponentRef Id="Moonlight" />
       <ComponentRef Id="MoonlightShortcuts" />

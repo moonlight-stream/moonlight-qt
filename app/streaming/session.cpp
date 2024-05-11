@@ -548,7 +548,6 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
       m_Window(nullptr),
       m_VideoDecoder(nullptr),
       m_DecoderLock(0),
-      m_AudioDisabled(false),
       m_AudioMuted(false),
       m_QtWindow(nullptr),
       m_UnexpectedTermination(true), // Failure prior to streaming is unexpected
@@ -993,8 +992,7 @@ bool Session::validateLaunch(SDL_Window* testWindow)
     }
 
     // If nothing worked, warn the user that audio will not work
-    m_AudioDisabled = !audioTestPassed;
-    if (m_AudioDisabled) {
+    if (!audioTestPassed) {
         emitLaunchWarning(tr("Failed to open audio device. Audio will be unavailable during this session."));
     }
 
@@ -1467,8 +1465,7 @@ bool Session::startConnectionAsync()
     }
 
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
-                                &m_VideoCallbacks,
-                                m_AudioDisabled ? nullptr : &m_AudioCallbacks,
+                                &m_VideoCallbacks, &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
     if (err != 0) {
         // We already displayed an error dialog in the stage failure
@@ -1820,6 +1817,9 @@ void Session::execInternal()
 
     // Start rich presence to indicate we're in game
     RichPresenceManager presence(*m_Preferences, m_App.name);
+
+    // Toggle the stats overlay if requested by the user
+    m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
 
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.

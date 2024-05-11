@@ -42,6 +42,46 @@ QVariant ComputerModel::data(const QModelIndex& index, int role) const
         return computer->state == NvComputer::CS_UNKNOWN;
     case ServerSupportedRole:
         return computer->isSupportedServerVersion;
+    case DetailsRole: {
+        QString state, pairState;
+
+        switch (computer->state) {
+        case NvComputer::CS_ONLINE:
+            state = tr("Online");
+            break;
+        case NvComputer::CS_OFFLINE:
+            state = tr("Offline");
+            break;
+        default:
+            state = tr("Unknown");
+            break;
+        }
+
+        switch (computer->pairState) {
+        case NvComputer::PS_PAIRED:
+            pairState = tr("Paired");
+            break;
+        case NvComputer::PS_NOT_PAIRED:
+            pairState = tr("Unpaired");
+            break;
+        default:
+            pairState = tr("Unknown");
+            break;
+        }
+
+        return tr("Name: %1").arg(computer->name) + '\n' +
+               tr("Status: %1").arg(state) + '\n' +
+               tr("Active Address: %1").arg(computer->activeAddress.toString()) + '\n' +
+               tr("UUID: %1").arg(computer->uuid) + '\n' +
+               tr("Local Address: %1").arg(computer->localAddress.toString()) + '\n' +
+               tr("Remote Address: %1").arg(computer->remoteAddress.toString()) + '\n' +
+               tr("IPv6 Address: %1").arg(computer->ipv6Address.toString()) + '\n' +
+               tr("Manual Address: %1").arg(computer->manualAddress.toString()) + '\n' +
+               tr("MAC Address: %1").arg(computer->macAddress.isEmpty() ? tr("Unknown") : QString(computer->macAddress.toHex(':'))) + '\n' +
+               tr("Pair State: %1").arg(pairState) + '\n' +
+               tr("Running Game ID: %1").arg(computer->state == NvComputer::CS_ONLINE ? QString::number(computer->currentGameId) : tr("Unknown")) + '\n' +
+               tr("HTTPS Port: %1").arg(computer->state == NvComputer::CS_ONLINE ? QString::number(computer->activeHttpsPort) : tr("Unknown"));
+    }
     default:
         return QVariant();
     }
@@ -69,6 +109,7 @@ QHash<int, QByteArray> ComputerModel::roleNames() const
     names[WakeableRole] = "wakeable";
     names[StatusUnknownRole] = "statusUnknown";
     names[ServerSupportedRole] = "serverSupported";
+    names[DetailsRole] = "details";
 
     return names;
 }
