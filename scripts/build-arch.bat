@@ -235,7 +235,7 @@ if "%ML_SYMBOL_STORE%" NEQ "" (
 )
 
 echo Building MSI
-msbuild -Restore %SOURCE_ROOT%\wix\Moonlight\Moonlight.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH%
+msbuild -Restore %SOURCE_ROOT%\wix\Moonlight\Moonlight.wixproj /p:Configuration=%BUILD_CONFIG% /p:Platform=%ARCH% /p:MSBuildProjectExtensionsPath=%BUILD_FOLDER%\
 if !ERRORLEVEL! NEQ 0 goto Error
 
 echo Copying application binary to deployment directory
