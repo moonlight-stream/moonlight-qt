@@ -201,9 +201,6 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     uint32_t displayCount = 0;
     CGGetActiveDisplayList(MAX_DISPLAYS, displayIds, &displayCount);
     if (displayIndex >= displayCount) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Too many displays: %d vs %d",
-                     displayIndex, displayCount);
         return false;
     }
 
@@ -256,18 +253,28 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
 
     CFRelease(modeList);
 
-    // Now find the SDL mode that matches the CG native mode
-    for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
-        SDL_DisplayMode thisMode;
-        if (SDL_GetDisplayMode(displayIndex, i, &thisMode) == 0) {
-            if (thisMode.w == mode->w && thisMode.h == mode->h &&
+    // Special case for probing for notched displays prior to video subsystem initialization
+    // in Session::initialize() for Darwin only!
+    if (SDL_WasInit(SDL_INIT_VIDEO)) {
+        // Now find the SDL mode that matches the CG native mode
+        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+            SDL_DisplayMode thisMode;
+            if (SDL_GetDisplayMode(displayIndex, i, &thisMode) == 0) {
+                if (thisMode.w == mode->w && thisMode.h == mode->h &&
                     thisMode.refresh_rate >= mode->refresh_rate) {
-                *mode = thisMode;
-                break;
+                    *mode = thisMode;
+                    break;
+                }
             }
         }
     }
 #else
+    SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
+
+    if (displayIndex >= SDL_GetNumVideoDisplays()) {
+        return false;
+    }
+
     // We need to get the true display resolution without DPI scaling (since we use High DPI).
     // Windows returns the real display resolution here, even if DPI scaling is enabled.
     // macOS and Wayland report a resolution that includes the DPI scaling factor. Picking
