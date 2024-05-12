@@ -44,8 +44,10 @@
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
 
-#if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
-// Log to file for release Windows builds
+#if defined(Q_OS_WIN32)
+#define IS_UNSPECIFIED_HANDLE(x) ((x) == INVALID_HANDLE_VALUE || (x) == NULL)
+
+// Log to file or console dynamically for Windows builds
 #define USE_CUSTOM_LOGGER
 #define LOG_TO_FILE
 #elif defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
@@ -56,7 +58,7 @@
 #define USE_CUSTOM_LOGGER
 #define LOG_TO_FILE
 #else
-// For debug Windows and Mac builds, use default logger
+// For debug Mac builds, use default logger
 #endif
 
 #ifdef USE_CUSTOM_LOGGER
@@ -306,13 +308,26 @@ int main(int argc, char *argv[])
         qputenv("QML_DISK_CACHE_PATH", Path::getQmlCacheDir().toUtf8());
     }
 
+#ifdef Q_OS_WIN32
+    // Grab the original std handles before we potentially redirect them later
+    HANDLE oldConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE oldConErr = GetStdHandle(STD_ERROR_HANDLE);
+#endif
+
 #ifdef USE_CUSTOM_LOGGER
 #ifdef LOG_TO_FILE
     QDir tempDir(Path::getLogDir());
-    s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
-    if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
-        s_LoggerStream.setDevice(s_LoggerFile);
+
+#ifdef Q_OS_WIN32
+    // Only log to a file if the user didn't redirect stderr somewhere else
+    if (IS_UNSPECIFIED_HANDLE(oldConErr))
+#endif
+    {
+        s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
+        if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
+            s_LoggerStream.setDevice(s_LoggerFile);
+        }
     }
 #endif
 
