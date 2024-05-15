@@ -597,15 +597,22 @@ bool Session::initialize()
         return false;
     }
 
+    LiInitializeStreamConfiguration(&m_StreamConfig);
+    m_StreamConfig.width = m_Preferences->width;
+    m_StreamConfig.height = m_Preferences->height;
+
+    int x, y, width, height;
+    getWindowDimensions(x, y, width, height);
+
     // Create a hidden window to use for decoder initialization tests
-    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+    SDL_Window* testWindow = SDL_CreateWindow("", x, y, width, height,
                                               SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
     if (!testWindow) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Failed to create test window with platform flags: %s",
                     SDL_GetError());
 
-        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+        testWindow = SDL_CreateWindow("", x, y, width, height, SDL_WINDOW_HIDDEN);
         if (!testWindow) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create window for hardware decode test: %s",
@@ -621,9 +628,6 @@ bool Session::initialize()
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
 
-    LiInitializeStreamConfiguration(&m_StreamConfig);
-    m_StreamConfig.width = m_Preferences->width;
-    m_StreamConfig.height = m_Preferences->height;
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
 
@@ -677,15 +681,25 @@ bool Session::initialize()
                 CHANNEL_MASK_FROM_AUDIO_CONFIGURATION(m_StreamConfig.audioConfiguration));
 
     // Start with all codecs and profiles in priority order
+    m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_HIGH10_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_MAIN10);
+    m_SupportedVideoFormats.append(VIDEO_FORMAT_H265_REXT10_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_H265_MAIN10);
+    m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_HIGH8_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_AV1_MAIN8);
+    m_SupportedVideoFormats.append(VIDEO_FORMAT_H265_REXT8_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_H265);
+    m_SupportedVideoFormats.append(VIDEO_FORMAT_H264_HIGH8_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_H264);
 
     // Mask off 10-bit codecs right away if HDR is not enabled
     if (!m_Preferences->enableHdr) {
         m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_10BIT);
+    }
+
+    // Mask off YUV 4:4:4 codecs right away if the option is not enabled
+    if (!m_Preferences->enableYUV444) {
+        m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_YUV444);
     }
 
     switch (m_Preferences->videoCodecConfig)
@@ -966,6 +980,37 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             !(m_SupportedVideoFormats.maskByServerCodecModes(m_Computer->serverCodecModeSupport) & VIDEO_FORMAT_MASK_10BIT)) {
             emitLaunchWarning(tr("Your host PC and client PC don't support the same HDR video codecs."));
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_10BIT);
+        }
+    }
+
+    if (m_Preferences->enableYUV444) {
+        if (!(m_Computer->serverCodecModeSupport & SCM_MASK_YUV444)) {
+            emitLaunchWarning(tr("Your host PC doesn't support YUV 4:4:4 streaming."));
+            m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_YUV444);
+        }
+        else if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE) {
+            m_SupportedVideoFormats.removeByMask(~m_SupportedVideoFormats.maskByServerCodecModes(m_Computer->serverCodecModeSupport));
+
+            if (!m_SupportedVideoFormats.isEmpty() &&
+                !(m_SupportedVideoFormats.front() & VIDEO_FORMAT_MASK_YUV444)) {
+                emitLaunchWarning(tr("Your host PC doesn't support YUV 4:4:4 streaming for selected video codec."));
+            }
+            else {
+                while (!m_SupportedVideoFormats.isEmpty() &&
+                       (m_SupportedVideoFormats.front() & VIDEO_FORMAT_MASK_YUV444) &&
+                       !isHardwareDecodeAvailable(testWindow,
+                                                  m_Preferences->videoDecoderSelection,
+                                                  m_SupportedVideoFormats.front(),
+                                                  m_StreamConfig.width,
+                                                  m_StreamConfig.height,
+                                                  m_StreamConfig.fps)) {
+                    m_SupportedVideoFormats.removeFirst();
+                }
+                if (!m_SupportedVideoFormats.isEmpty() &&
+                    !(m_SupportedVideoFormats.front() & VIDEO_FORMAT_MASK_YUV444)) {
+                    emitLaunchWarning(tr("This PC's GPU doesn't support YUV 4:4:4 decoding for selected video codec."));
+                }
+            }
         }
     }
 
