@@ -146,7 +146,7 @@ unix:!macx {
 }
 win32 {
     LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ldxgi -ld3d11
-    CONFIG += ffmpeg
+    CONFIG += ffmpeg libplacebo
 }
 win32:!winrt {
     CONFIG += soundio discord-rpc
@@ -338,6 +338,11 @@ libplacebo {
         streaming/video/ffmpeg-renderers/plvk_c.c
     HEADERS += \
         streaming/video/ffmpeg-renderers/plvk.h
+
+    win32 {
+        INCLUDEPATH += $((VULKAN_SDK))/Include
+        LIBS += libplacebo.lib
+    }
 }
 config_EGL {
     message(EGL renderer selected)

@@ -906,9 +906,16 @@ int PlVkRenderer::getRendererAttributes()
     return RENDERER_ATTRIBUTE_HDR_SUPPORT;
 }
 
+int PlVkRenderer::getDecoderColorspace()
+{
+    // We rely on libplacebo for color conversion, pick colorspace with the same primaries as sRGB
+    return COLORSPACE_REC_709;
+}
+
 int PlVkRenderer::getDecoderColorRange()
 {
-    // Explicitly set the color range to full to fix raised black levels on OLED displays
+    // Explicitly set the color range to full to fix raised black levels on OLED displays,
+    // should also reduce banding artifacts in all situations
     return COLOR_RANGE_FULL;
 }
 
