@@ -41,36 +41,33 @@ public:
 
     int maskByServerCodecModes(int serverCodecModes)
     {
-        int val = *this;
+        int mask = 0;
+
+        const QMap<int, int> mapping = {
+            {SCM_H264, VIDEO_FORMAT_H264},
+            {SCM_H264_HIGH8_444, VIDEO_FORMAT_H264_HIGH8_444},
+            {SCM_HEVC, VIDEO_FORMAT_H265},
+            {SCM_HEVC_MAIN10, VIDEO_FORMAT_H265_MAIN10},
+            {SCM_HEVC_REXT8_444, VIDEO_FORMAT_H265_REXT8_444},
+            {SCM_HEVC_REXT10_444, VIDEO_FORMAT_H265_REXT10_444},
+            {SCM_AV1_MAIN8, VIDEO_FORMAT_AV1_MAIN8},
+            {SCM_AV1_MAIN10, VIDEO_FORMAT_AV1_MAIN10},
+            {SCM_AV1_HIGH8_444, VIDEO_FORMAT_AV1_HIGH8_444},
+            {SCM_AV1_HIGH10_444, VIDEO_FORMAT_AV1_HIGH10_444},
+        };
+
+        for (QMap<int, int>::const_iterator it = mapping.cbegin(); it != mapping.cend(); ++it) {
+            if (serverCodecModes & it.key()) {
+                mask |= it.value();
+                serverCodecModes &= ~it.key();
+            }
+        }
 
         // Make sure nobody forgets to update this for new SCM values
-        SDL_assert((serverCodecModes & ~(SCM_MASK_H264 | SCM_MASK_HEVC | SCM_MASK_AV1)) == 0);
+        SDL_assert(serverCodecModes == 0);
 
-        // H.264 SCM masks
-        if (!(serverCodecModes & SCM_H264)) {
-            val &= ~VIDEO_FORMAT_H264;
-        }
-        SDL_assert((serverCodecModes & SCM_MASK_H264 & ~SCM_H264) == 0);
-
-        // HEVC SCM masks
-        if (!(serverCodecModes & SCM_HEVC)) {
-            val &= ~VIDEO_FORMAT_H265;
-        }
-        if (!(serverCodecModes & SCM_HEVC_MAIN10)) {
-            val &= ~VIDEO_FORMAT_H265_MAIN10;
-        }
-        SDL_assert((serverCodecModes & SCM_MASK_HEVC & ~(SCM_HEVC | SCM_HEVC_MAIN10)) == 0);
-
-        // AV1 SCM masks
-        if (!(serverCodecModes & SCM_AV1_MAIN8)) {
-            val &= ~VIDEO_FORMAT_AV1_MAIN8;
-        }
-        if (!(serverCodecModes & SCM_AV1_MAIN10)) {
-            val &= ~VIDEO_FORMAT_AV1_MAIN10;
-        }
-        SDL_assert((serverCodecModes & SCM_MASK_AV1 & ~(SCM_AV1_MAIN8 | SCM_AV1_MAIN10)) == 0);
-
-        return val;
+        int val = *this;
+        return val & mask;
     }
 };
 

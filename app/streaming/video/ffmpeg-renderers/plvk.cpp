@@ -917,9 +917,16 @@ int PlVkRenderer::getRendererAttributes()
     return RENDERER_ATTRIBUTE_HDR_SUPPORT;
 }
 
+int PlVkRenderer::getDecoderColorspace()
+{
+    // We rely on libplacebo for color conversion, pick colorspace with the same primaries as sRGB
+    return COLORSPACE_REC_709;
+}
+
 int PlVkRenderer::getDecoderColorRange()
 {
-    // Explicitly set the color range to full to fix raised black levels on OLED displays
+    // Explicitly set the color range to full to fix raised black levels on OLED displays,
+    // should also reduce banding artifacts in all situations
     return COLOR_RANGE_FULL;
 }
 
@@ -947,6 +954,15 @@ bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFo
         if (pixelFormat == AV_PIX_FMT_VULKAN) {
             // Vulkan frames are always supported
             return true;
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+            if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+                return pixelFormat == AV_PIX_FMT_YUV444P10;
+            }
+            else {
+                return pixelFormat == AV_PIX_FMT_YUV444P ||
+                       pixelFormat == AV_PIX_FMT_YUVJ444P;
+            }
         }
         else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
             switch (pixelFormat) {
