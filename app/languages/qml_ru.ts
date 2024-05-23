@@ -119,32 +119,32 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Неизвестно</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Сопряжено</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Не сопряжено</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Имя: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Статус: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Активный Адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
@@ -154,17 +154,17 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Локальный адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Удаленный адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6 Адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
@@ -238,7 +238,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Поиск совместимых устройств в вашей локальной сети...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="188"/>
@@ -263,7 +263,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Посмотреть Детали</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
