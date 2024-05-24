@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">Online</translation>
+        <translation>In linea</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">Offline</translation>
+        <translation>Non in linea</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -119,77 +119,77 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Sconosciuto</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Accoppiato</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Non accoppiato</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nome: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Stato: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Indirizzo attivo: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Indirizzo locale: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Indirizzo remoto: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Indirizzo IPv6: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Indirizzo manuale: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Indirizzo MAC: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Stato di accoppiamento: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ID del gioco lanciato: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Porta HTTPS: %1</translation>
     </message>
 </context>
 <context>
@@ -263,7 +263,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Vedi dettagli</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
@@ -400,7 +400,7 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>Il computer %1 non è stato accoppiato. Apri Moonlight per fare l&apos;accoppiamento prima dello streaming.</translation>
+        <translation>Il computer %1 non è stato accoppiato. Apri Moonlight per effettuare l&apos;accoppiamento prima dello streaming.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
@@ -500,7 +500,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Codice di errore: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="849"/>
@@ -744,12 +744,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>Nativo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>Nativo (eccetto notch)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="726"/>
@@ -890,22 +890,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1649"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Vedi le statistiche di performance durante la trasmissione</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1659"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Mostra le informazioni di performance sullo stream durante la trasmissione in tempo reale.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1660"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>Puoi alternarlo in ogni momento durante la trasmissione usando Ctrl+Alt+Maiusc+S or Select+L1+R1+X.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1661"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>La sovrapposizione sulle performance non è supportato su Steam Link e Raspberry Pi.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
