@@ -327,6 +327,14 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                 "Driver: %s",
                 vendorString ? vendorString : "<unknown>");
 
+    // This is the libva-vdpau-driver which is not supported by our VAAPI renderer.
+    if (vendorStr.contains("Splitted-Desktop Systems VDPAU backend for VA-API")) {
+        // Fail and let our VDPAU renderer pick this up
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Avoiding VDPAU wrapper for VAAPI decoding");
+        return false;
+    }
+
     // The Snap (core22) and Focal/Jammy Mesa drivers have a bug that causes
     // a large amount of video latency when using more than one reference frame
     // and severe rendering glitches on my Ryzen 3300U system.
@@ -370,14 +378,6 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to initialize VAAPI context: %d",
                      err);
-        return false;
-    }
-
-    // This quirk is set for the VDPAU wrapper which doesn't work with our VAAPI renderer
-    if (vaDeviceContext->driver_quirks & AV_VAAPI_DRIVER_QUIRK_SURFACE_ATTRIBUTES) {
-        // Fail and let our VDPAU renderer pick this up
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Avoiding VDPAU wrapper for VAAPI decoding");
         return false;
     }
 
