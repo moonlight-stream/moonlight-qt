@@ -79,21 +79,6 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     int err;
     VdpStatus status;
     SDL_SysWMinfo info;
-    static const char* driverPathsToTry[] = {
-    #if Q_PROCESSOR_WORDSIZE == 8
-        "/usr/lib64",
-        "/usr/lib64/vdpau", // Fedora x86_64
-    #endif
-        "/usr/lib",
-        "/usr/lib/vdpau", // Fedora i386
-    #if defined(Q_PROCESSOR_X86_64)
-        "/usr/lib/x86_64-linux-gnu",
-        "/usr/lib/x86_64-linux-gnu/vdpau", // Ubuntu/Debian x86_64
-    #elif defined(Q_PROCESSOR_X86_32)
-        "/usr/lib/i386-linux-gnu",
-        "/usr/lib/i386-linux-gnu/vdpau", // Ubuntu/Debian i386
-    #endif
-    };
 
     // Avoid initializing VDPAU on this window on the first selection pass if:
     // a) We know we want HDR compatibility
@@ -157,6 +142,22 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
     // a) They are using both distro libvdpau.so and distro VDPAU drivers (native packages)
     // b) They are using both runtime libvdpau.so and runtime VDPAU drivers (Flatpak/Snap)
     if (err < 0 && qEnvironmentVariableIsEmpty("VDPAU_DRIVER_PATH")) {
+        static const char* driverPathsToTry[] = {
+#if Q_PROCESSOR_WORDSIZE == 8
+            "/usr/lib64",
+            "/usr/lib64/vdpau", // Fedora x86_64
+#endif
+            "/usr/lib",
+            "/usr/lib/vdpau", // Fedora i386
+#if defined(Q_PROCESSOR_X86_64)
+            "/usr/lib/x86_64-linux-gnu",
+            "/usr/lib/x86_64-linux-gnu/vdpau", // Ubuntu/Debian x86_64
+#elif defined(Q_PROCESSOR_X86_32)
+            "/usr/lib/i386-linux-gnu",
+            "/usr/lib/i386-linux-gnu/vdpau", // Ubuntu/Debian i386
+#endif
+        };
+
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Trying fallback VDPAU driver paths");
 
