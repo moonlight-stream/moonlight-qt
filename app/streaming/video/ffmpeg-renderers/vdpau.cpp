@@ -149,6 +149,13 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
                                  AV_HWDEVICE_TYPE_VDPAU,
                                  nullptr, nullptr, 0);
 
+#if defined(APP_IMAGE) || defined(USE_FALLBACK_DRIVER_PATHS)
+    // AppImages will be running with our libvdpau.so which means they don't know about
+    // distro-specific driver paths. To avoid failing in this scenario, we'll hardcode
+    // some such paths here for common distros. Non-AppImage packaging mechanisms won't
+    // need this fallback because either:
+    // a) They are using both distro libvdpau.so and distro VDPAU drivers (native packages)
+    // b) They are using both runtime libvdpau.so and runtime VDPAU drivers (Flatpak/Snap)
     if (err < 0 && qEnvironmentVariableIsEmpty("VDPAU_DRIVER_PATH")) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Trying fallback VDPAU driver paths");
@@ -173,6 +180,7 @@ bool VDPAURenderer::initialize(PDECODER_PARAMETERS params)
             qunsetenv("VDPAU_DRIVER_PATH");
         }
     }
+#endif
 
     if (err < 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

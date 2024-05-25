@@ -277,6 +277,13 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
             break;
         }
 
+#if defined(APP_IMAGE) || defined(USE_FALLBACK_DRIVER_PATHS)
+        // AppImages will be running with our libva.so which means they don't know about
+        // distro-specific driver paths. To avoid failing in this scenario, we'll hardcode
+        // some such paths here for common distros. Non-AppImage packaging mechanisms won't
+        // need this fallback because either:
+        // a) They are using both distro libva.so and distro libva drivers (native packages)
+        // b) They are using both runtime libva.so and runtime libva drivers (Flatpak/Snap)
         if (qEnvironmentVariableIsEmpty("LIBVA_DRIVERS_PATH")) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Trying fallback VAAPI driver paths");
@@ -298,7 +305,9 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                     );
            setPathVar = true;
         }
-        else {
+        else
+#endif
+        {
             if (setPathVar) {
                 // Unset LIBVA_DRIVERS_PATH if we set it ourselves
                 // and we didn't find any working VAAPI drivers.
