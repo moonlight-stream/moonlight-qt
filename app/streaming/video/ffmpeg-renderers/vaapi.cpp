@@ -283,6 +283,8 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
 
             qputenv("LIBVA_DRIVERS_PATH",
         #if Q_PROCESSOR_WORDSIZE == 8
+                    "/usr/lib64/dri-nonfree:" // Fedora x86_64
+                    "/usr/lib64/dri-freeworld:" // Fedora x86_64
                     "/usr/lib64/dri:" // Fedora x86_64
                     "/usr/lib64/va/drivers:" // Gentoo x86_64
         #endif
