@@ -48,20 +48,14 @@
 #define IS_UNSPECIFIED_HANDLE(x) ((x) == INVALID_HANDLE_VALUE || (x) == NULL)
 
 // Log to file or console dynamically for Windows builds
-#define USE_CUSTOM_LOGGER
 #define LOG_TO_FILE
-#elif defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
-// Use stdout logger on all Linux/BSD builds
-#define USE_CUSTOM_LOGGER
 #elif !defined(QT_DEBUG) && defined(Q_OS_DARWIN)
 // Log to file for release Mac builds
-#define USE_CUSTOM_LOGGER
 #define LOG_TO_FILE
 #else
-// For debug Mac builds, use default logger
+// Log to console for debug Mac builds
 #endif
 
-#ifdef USE_CUSTOM_LOGGER
 static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stderr);
 static QMutex s_LoggerLock;
@@ -218,8 +212,6 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 
 #endif
 
-#endif
-
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -314,7 +306,6 @@ int main(int argc, char *argv[])
     HANDLE oldConErr = GetStdHandle(STD_ERROR_HANDLE);
 #endif
 
-#ifdef USE_CUSTOM_LOGGER
 #ifdef LOG_TO_FILE
     QDir tempDir(Path::getLogDir());
 
@@ -337,8 +328,6 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_FFMPEG
     av_log_set_callback(ffmpegLogToDiskHandler);
-#endif
-
 #endif
 
 #ifdef Q_OS_WIN32
@@ -554,10 +543,8 @@ int main(int argc, char *argv[])
     GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(app.arguments());
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::ListRequested:
-#ifdef USE_CUSTOM_LOGGER
         // Don't log to the console since it will jumble the command output
         s_SuppressVerboseOutput = true;
-#endif
 #ifdef Q_OS_WIN32
         // If we don't have stdout or stderr handles (which will normally be the case
         // since we're a /SUBSYSTEM:WINDOWS app), attach to our parent console and use
