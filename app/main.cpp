@@ -11,6 +11,7 @@
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QTemporaryFile>
+#include <QRegularExpression>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -60,6 +61,8 @@ static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stderr);
 static QMutex s_LoggerLock;
 static bool s_SuppressVerboseOutput;
+static QRegularExpression k_RikeyRegex("&rikey=\\w+");
+static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
 #ifdef LOG_TO_FILE
 // Max log file size of 10 MB
 #define MAX_LOG_SIZE_BYTES (10 * 1024 * 1024)
@@ -71,6 +74,10 @@ static QFile* s_LoggerFile;
 void logToLoggerStream(QString& message)
 {
     QMutexLocker lock(&s_LoggerLock);
+
+    // Strip session encryption keys and IVs from the logs
+    message.replace(k_RikeyRegex, "&rikey=REDACTED");
+    message.replace(k_RikeyIdRegex, "&rikeyid=REDACTED");
 
 #ifdef LOG_TO_FILE
     if (s_LogLimitReached) {
