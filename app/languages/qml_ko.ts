@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">온라인</translation>
+        <translation>온라인</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">오프라인</translation>
+        <translation>오프라인</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -119,77 +119,77 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>알 수 없음</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 됨</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 되지 않음</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>이름: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>상태: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>활성 주소: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>로컬 주소: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>원격 주소: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6 주소: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>수동 주소: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC 주소: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>페어링 상태: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>실행 중인 게임 ID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS 포트: %1</translation>
     </message>
 </context>
 <context>
@@ -263,7 +263,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>세부사항 보기</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
@@ -500,7 +500,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>에러 코드: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="849"/>
@@ -744,12 +744,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>기본</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>기본 (노치 제외)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="726"/>
@@ -885,22 +885,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1649"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>스트리밍 중 성능 지표 표시</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1659"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>스트리밍 중 실시간 스트리밍 성능에 대한 정보를 표시합니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1660"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>스트리밍 중 Ctrl+Alt+Shift+S 또는 Select+L1+R1+X를 입력하여 변경할 수 있습니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1661"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam Link 또는 Raspberry Pi에서는 성능 오버레이가 지원되지 않습니다.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
