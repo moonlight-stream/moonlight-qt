@@ -420,9 +420,11 @@ int main(int argc, char *argv[])
 #endif
     }
 
+#ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
+#endif
 
 #if defined(Q_OS_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
