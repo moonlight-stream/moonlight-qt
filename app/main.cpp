@@ -388,7 +388,6 @@ int main(int argc, char *argv[])
         if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
             qInfo() << "Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.";
             qputenv("QT_QPA_PLATFORM", "eglfs");
-            qputenv("SDL_VIDEODRIVER", "kmsdrm");
 
             if (!qEnvironmentVariableIsSet("QT_QPA_EGLFS_ALWAYS_SET_MODE")) {
                 qInfo() << "Setting display mode by default. Set QT_QPA_EGLFS_ALWAYS_SET_MODE=0 to override this.";
@@ -545,6 +544,14 @@ int main(int argc, char *argv[])
 #endif
 
     QGuiApplication app(argc, argv);
+
+#ifndef STEAM_LINK
+    // Force use of the KMSDRM backend for SDL when using Qt platform plugins
+    // that directly draw to the display without a windowing system.
+    if (QGuiApplication::platformName() == "eglfs" || QGuiApplication::platformName() == "linuxfb") {
+        qputenv("SDL_VIDEODRIVER", "kmsdrm");
+    }
+#endif
 
     GlobalCommandLineParser parser;
     GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(app.arguments());
