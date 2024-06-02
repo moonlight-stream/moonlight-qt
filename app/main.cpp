@@ -420,6 +420,13 @@ int main(int argc, char *argv[])
 #endif
     }
 
+#if !defined(Q_PROCESSOR_X86) && defined(SDL_HINT_VIDEO_X11_FORCE_EGL)
+    // Some ARM and RISC-V embedded devices don't have working GLX which can cause
+    // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
+    // on non-x86 platforms, since GLX is deprecated anyway.
+    SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+#endif
+
 #ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
