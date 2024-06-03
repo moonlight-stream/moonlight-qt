@@ -8,7 +8,7 @@
     <Font Id="2" Height="-22" Weight="500" Foreground="graytext">Segoe UI</Font>
     <Font Id="3" Height="-12" Weight="500" Foreground="windowtext" Background="window">Segoe UI</Font>
 
-    <Window Width="485" Height="300" HexStyle="100a0000" FontId="0" Caption="#(loc.Caption)">
+    <Window Width="485" Height="300" HexStyle="100a0000" FontId="0" Caption="#(loc.Caption)" IconFile="Moonlight.ico">
         <ImageControl X="11" Y="11" Width="64" Height="64" ImageFile="logo.png" Visible="yes"/>
         <Label X="80" Y="11" Width="-11" Height="64" FontId="1" Visible="yes" DisablePrefix="yes">#(loc.Title)</Label>
 

@@ -60,6 +60,7 @@
                                               LaunchTarget="[InstallFolder]\Moonlight.exe"
                                               ThemeFile="RtfTheme.xml"
                                               Theme="rtfLicense" />
+      <Payload Name="Moonlight.ico" SourceFile="..\..\app\moonlight.ico" Compressed="yes" />
     </BootstrapperApplication>
 
     <Chain>
