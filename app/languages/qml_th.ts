@@ -61,12 +61,12 @@
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังเชื่อมต่อ... โปรดใส่ &apos;%1&apos; ใน %2</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>เชื่อมต่อสำเร็จ</translation>
     </message>
 </context>
 <context>
@@ -92,7 +92,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>กำลังโหลดรายการแอพ...</translation>
+        <translation>กำลังโหลดรายการแอป...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
@@ -119,77 +119,77 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่ทราบสถานะ</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>เชื่อมต่อแล้ว</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>ยังไม่ได้เชื่อมต่อ</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ชื่อ: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>สถานะ: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ไอพีแอดเดรสปัจจุบัน: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ที่อยู่ภายใน: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ไอพีแอดเดรสภายนอก: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPV6 แอดเดรส: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ไอพีแอดเดรสที่กำหนดแอง: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>รหัส MAC: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>สถานะการเชื่อมต่อ: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังรันเกม รหัส: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>พอร์ท HTTPS: %1</translation>
     </message>
 </context>
 <context>
@@ -238,7 +238,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังหาโฮสต์ที่สามารถเชื่อมต่อได้ในเครือข่ายนี้...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="188"/>
@@ -263,7 +263,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>ดูรายละเอียด</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
@@ -278,7 +278,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>ไม่พบว่าเครือข่ายนี้มีการบล็อก Moonlight ถ้าคุณยังมีปัญหากับการเชื่อมต่อกรุณาตรวจสอบการตั้งค่า Firewall ของคอมพิวเตอร์</translation>
+        <translation>ไม่พบว่าเครือข่ายนี้มีการบล็อก Moonlight หากคุณยังมีปัญหากับการเชื่อมต่อ กรุณาตรวจสอบการตั้งค่า Firewall ของคอมพิวเตอร์</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
@@ -323,22 +323,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>โปรดใส่ %1 ในเครื่องปลายทางที่จะเชื่อมต่อ กล่องข้อความนี้จะปิดเมื่อการทำเชื่อมต่อสำเร็จ</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>หากเครื่องปลายทางกำลังรัน Sunshine ให้ไปเปิด web UI เพื่อใส่รหัส PIN</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="322"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>คุณแน่ใจหรือว่าต้องการจะลบ &apos;%1&apos; ?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight กำลังทดสอบเครื่อข่ายเพื่อหาว่า port ไหนถูกบล็อคใว้บ้าง</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
@@ -351,7 +351,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="586"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>รหัส PIN ที่ใส่ที่เครื่องปลายทางไม่ตรงกัน ลองใหม่อีกครั้ง</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="590"/>
@@ -361,17 +361,17 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="593"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>จับคู่ล้มเหลว ลองใหม่อีกครั้ง</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="597"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>มีการจับคู่อื่นกำลังดำเนินอยู่แล้ว</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="607"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>GeForce Experience รีเทิร์นค่า: %1</translation>
     </message>
 </context>
 <context>
@@ -387,7 +387,7 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 ถูกจับคู่ไปแล้ว</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
@@ -416,7 +416,7 @@
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>คอมพิวเตอร์ %1 ยังไม่ได้จับคู่ เปิด Moonlight เพื่อจับคู่ก่อนจึงจะสามารถดูลิสต์เกมได้</translation>
     </message>
 </context>
 <context>
@@ -424,27 +424,27 @@
     <message>
         <location filename="../main.cpp" line="601"/>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;ใช่</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="602"/>
         <source>&amp;No</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;ไม่</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="603"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>โอเค</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="604"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>ช่วยเหลือ</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="605"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>ยกเลิก</translation>
     </message>
 </context>
 <context>
@@ -485,12 +485,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>เครื่องปลายทางรายงานว่าการเข้ารหัสวิดีโอล้มเหลว</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="131"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>ลองปิด HDR หรือเปลี่ยนความคมชัดของสตรีม หรือเปลี่ยนความคมชัดหน้าจอของเครื่องปลายทาง</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="139"/>
@@ -500,12 +500,12 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Error code: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="849"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation>รุ่นของ GeForce Experience บน %1 ไม่รองรับ Moonlight รุ่นนี้ คุณต้องอัปเดต Moonlight เพื่อสตรีมจาก % 1</translation>
+        <translation>เวิร์ชั่นของ GeForce Experience บน %1 ไม่รองรับ Moonlight เวิร์ชั่นนี้ คุณต้องอัปเดต Moonlight เพื่อสตรีมจาก % 1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="854"/>
@@ -525,7 +525,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="894"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>คอมของคุณไม่รอบรับการเข้ารหัส HEVC</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="911"/>
@@ -535,62 +535,62 @@
     <message>
         <location filename="../streaming/session.cpp" line="870"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>ซอฟต์แวร์หรือการ์ดจอของเครื่องปลายทางไม่รองรับการเข้ารหัสแบบ AV1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="887"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังถอดรหัสโดยซอฟต์แวร์เนื่องจากคุณบังคับให้ใช้ AV1 โดยที่การ์ดจอของคุณไม่รองรับ ซึ่งอาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="946"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>เครื่องปลายทางไม่รองรับ HDR</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="950"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่รองรับ HDR กำลังเปลี่ยนไปใช้โคเดค H.264</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="962"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>การ์ดจอของคุณไม่รองรับการถอดรหัสแบบ AV1 Main10 สำหรับการสตรีมภาพแบบ HDR</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="979"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>การ์ดจอของคุณไม่รองรับการถอดรหัสแบบ HEVC 10 bit สำหรับการสตรีมภาพแบบ HDR</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="986"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation type="unfinished"></translation>
+        <translation>คอมพิวเตอร์ปลายทางและเครื่องนี้ไม่รองรับสิดัโอโคเดคสำหรับ HDR ที่เหมือนกัน</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1037"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>ความคมชัดที่เกิน 4K ไม่รองรับในวิดีโอโคเดค H.264</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1422"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>เครื่องปลายทางคินค่า error: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="925"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>กำลังถอดรหัสโดยซอฟต์แวร์เนื่องจากคุณบังคับให้ใช้ H.264 โดยที่การ์ดจอของคุณไม่รองรับ ซึ่งอาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="935"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>เครื่องปลายทางและเครื่องนี้ไม่รองรับวิดีโดโอโคเดคเดียวกัน ซึ่งอาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="938"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>การ์ดจอขอเครื่องนี้ไม่รองรับการถอดรหัวแบบ H.264 ซึ่งกาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="973"/>
@@ -615,27 +615,27 @@
     <message>
         <location filename="../streaming/session.cpp" line="1020"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation type="unfinished"></translation>
+        <translation>Gamepad ที่กำลังต่ออยู่ไม่มีแมปปิ่งจึงไม่สามารถใช้งานได้ ลองเข้าเว็ป Moonlight เพื่อหาวิธีแก้ปัญหานี้</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1033"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation type="unfinished"></translation>
+        <translation>การ์ดจอของเครื่องปลายทางไม่รองรับการสตรีมความคมชัดเกิน 4K</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1052"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถบรรลุการบังคับให้ใช้ฮาร์ดแวร์ในการถอดรหัสของคุณ เนื่องจากคอมเครื่องนี้ไม่มีการ์ดจอที่รองรับการถอดรหัสโดยฮาร์ดแวร์</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1055"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>โคเดคที่เลือกและการถอดรหัสโดยฮาร์ดแวร์ไม่สามารถเข้ากันได้ การ์ดจอของคอมเครื่องนี้ไม่รองรับการถอดรหัสโคเดคที่คุณเลือก</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="2098"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>ไม่สามารถเริ่มการถอดรหัสวิดีโอ โปรดตรวจสอบการตั้งค่าการสตรีมแล้วลองใหม่</translation>
     </message>
 </context>
 <context>
@@ -683,63 +683,63 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="372"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation type="unfinished"></translation>
+        <translation>ความคมชัดแบบปรับเองนี้ไม่ถูกรองรับอย่างเป็นทางการโดย GeForce Experience จึงจะไม่ตั้งความคมชัดที่ระบุดังกล่าวในเครื่องปลายทาง คุณจะต้องตั้งความคมชัดนี้ด้วยตัวเองเองขณะอยู่ในเกม</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="373"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation type="unfinished"></translation>
+        <translation>ความคมชัดที่ไม่รองรับโดยเครื่องปลายทางและเครื่องนีิอาจส่งผลให้ไม่สามารถสตรีมได้</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="379"/>
         <source>Enter a custom resolution:</source>
-        <translation type="unfinished"></translation>
+        <translation>โปรดใส่ความคมชัดที่ต้องการ:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="598"/>
         <source>%1 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="666"/>
         <source>Video bitrate:</source>
-        <translation type="unfinished"></translation>
+        <translation>วิดีโอ bitrate:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="674"/>
         <source>Lower the bitrate on slower connections. Raise the bitrate to increase image quality.</source>
-        <translation type="unfinished"></translation>
+        <translation>ลด bitrate หากเน็ตช้า เพิ่ม bitrate หากต้องการภาพที่สวยขึ้น</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="692"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation type="unfinished"></translation>
+        <translation>วิดีโอ bitrate: %1 Mbps</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="705"/>
         <source>Display mode</source>
-        <translation type="unfinished"></translation>
+        <translation>โหมดภาพ</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="716"/>
         <location filename="../gui/SettingsView.qml" line="1131"/>
         <source>Fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>โหมดเต็มจอ</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="785"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation type="unfinished"></translation>
+        <translation>ปกติแล้วโหมดเต็มจอจะให้ประสิทธิภาพดีที่สุด แต่ borderless windowed อาจจะดีกว่ากับฟีดเจอร์บางอย่างเช่น macOS Spaces หรือ Alt+Tab หรือการอัดสกรีนชอท หรืิอโอเวอร์เลย์บนจอ ฯลฯ</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="721"/>
         <source>Borderless windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Borderless windowed</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>ค่าดั้งเดิม</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
@@ -750,27 +750,27 @@
         <location filename="../gui/SettingsView.qml" line="726"/>
         <location filename="../gui/SettingsView.qml" line="1123"/>
         <source>Windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>หน้าต่าง</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="735"/>
         <source>(Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>(แนะนำ)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="792"/>
         <source>V-Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>V-Sync</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="802"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation type="unfinished"></translation>
+        <translation>ปิด V-Sync จะเพิ่มความเร็วการเรนเดอร์ แต่อาจทำให้เห็นการฉีกขาดของภาพได้ชัดเจนขึ้น</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="809"/>
         <source>Frame pacing</source>
-        <translation type="unfinished"></translation>
+        <translation>ความเร็วการเปลี่ยนเฟรม</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
