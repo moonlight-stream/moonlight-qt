@@ -422,27 +422,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="601"/>
+        <location filename="../main.cpp" line="611"/>
         <source>&amp;Yes</source>
         <translation>&amp;Sí</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="602"/>
+        <location filename="../main.cpp" line="612"/>
         <source>&amp;No</source>
         <translation>&amp;No</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="603"/>
+        <location filename="../main.cpp" line="613"/>
         <source>OK</source>
         <translation>Aceptar</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="604"/>
+        <location filename="../main.cpp" line="614"/>
         <source>Help</source>
         <translation>Ayuda</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="605"/>
+        <location filename="../main.cpp" line="615"/>
         <source>Cancel</source>
         <translation>Cancelar</translation>
     </message>

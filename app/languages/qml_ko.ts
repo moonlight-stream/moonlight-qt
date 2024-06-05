@@ -422,27 +422,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="601"/>
+        <location filename="../main.cpp" line="611"/>
         <source>&amp;Yes</source>
         <translation>예(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="602"/>
+        <location filename="../main.cpp" line="612"/>
         <source>&amp;No</source>
         <translation>아니요(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="603"/>
+        <location filename="../main.cpp" line="613"/>
         <source>OK</source>
         <translation>확인</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="604"/>
+        <location filename="../main.cpp" line="614"/>
         <source>Help</source>
         <translation>도움말</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="605"/>
+        <location filename="../main.cpp" line="615"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
