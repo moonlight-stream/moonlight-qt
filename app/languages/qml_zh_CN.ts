@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">在线</translation>
+        <translation>在线</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">离线</translation>
+        <translation>离线</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -144,12 +144,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>活动地址:% 1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
@@ -750,7 +750,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>原生(不包括刻痕)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="219"/>
@@ -968,22 +968,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1649"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>在流中显示性能统计数据</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1659"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>在流中显示实时流性能信息。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1660"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>你可以在任何时候使用 Ctrl + Alt + Shift + S 或选择 + L1 + R1 + X 来切换它。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1661"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Steam链接或树莓派不支持性能覆盖。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
