@@ -566,43 +566,45 @@ Session::Session(NvComputer* computer, NvApp& app, StreamingPreferences *prefere
 bool Session::initialize()
 {
 #ifdef Q_OS_DARWIN
-    // If we have a notch and the user specified one of the two native display modes
-    // (notched or notchless), override the fullscreen mode to ensure it works as expected.
-    // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=0 will place the video underneath the notch
-    // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 will place the video below the notch
-    bool shouldUseFullScreenSpaces = m_Preferences->windowMode != StreamingPreferences::WM_FULLSCREEN;
-    SDL_DisplayMode desktopMode;
-    SDL_Rect safeArea;
-    for (int displayIndex = 0; StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea); displayIndex++) {
-        // Check if this display has a notch (safeArea != desktopMode)
-        if (desktopMode.h != safeArea.h || desktopMode.w != safeArea.w) {
-            // Check if we're trying to stream at the full native resolution (including notch)
-            if (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Overriding default fullscreen mode for native fullscreen resolution");
-                shouldUseFullScreenSpaces = false;
-                break;
-            }
-            else if (m_Preferences->width == safeArea.w && m_Preferences->height == safeArea.h) {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Overriding default fullscreen mode for native safe area resolution");
-                shouldUseFullScreenSpaces = true;
-                break;
+    if (qEnvironmentVariableIntValue("I_WANT_BUGGY_FULLSCREEN") == 0) {
+        // If we have a notch and the user specified one of the two native display modes
+        // (notched or notchless), override the fullscreen mode to ensure it works as expected.
+        // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=0 will place the video underneath the notch
+        // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 will place the video below the notch
+        bool shouldUseFullScreenSpaces = m_Preferences->windowMode != StreamingPreferences::WM_FULLSCREEN;
+        SDL_DisplayMode desktopMode;
+        SDL_Rect safeArea;
+        for (int displayIndex = 0; StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea); displayIndex++) {
+            // Check if this display has a notch (safeArea != desktopMode)
+            if (desktopMode.h != safeArea.h || desktopMode.w != safeArea.w) {
+                // Check if we're trying to stream at the full native resolution (including notch)
+                if (m_Preferences->width == desktopMode.w && m_Preferences->height == desktopMode.h) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Overriding default fullscreen mode for native fullscreen resolution");
+                    shouldUseFullScreenSpaces = false;
+                    break;
+                }
+                else if (m_Preferences->width == safeArea.w && m_Preferences->height == safeArea.h) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Overriding default fullscreen mode for native safe area resolution");
+                    shouldUseFullScreenSpaces = true;
+                    break;
+                }
             }
         }
-    }
 
-    // Using modesetting on modern versions of macOS is extremely unreliable
-    // and leads to hangs, deadlocks, and other nasty stuff. The only time
-    // people seem to use it is to get the full screen on notched Macs,
-    // which setting SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 also accomplishes
-    // with much less headache.
-    //
-    // https://github.com/moonlight-stream/moonlight-qt/issues/973
-    // https://github.com/moonlight-stream/moonlight-qt/issues/999
-    // https://github.com/moonlight-stream/moonlight-qt/issues/1211
-    // https://github.com/moonlight-stream/moonlight-qt/issues/1218
-    SDL_SetHint(SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES, shouldUseFullScreenSpaces ? "1" : "0");
+        // Using modesetting on modern versions of macOS is extremely unreliable
+        // and leads to hangs, deadlocks, and other nasty stuff. The only time
+        // people seem to use it is to get the full screen on notched Macs,
+        // which setting SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 also accomplishes
+        // with much less headache.
+        //
+        // https://github.com/moonlight-stream/moonlight-qt/issues/973
+        // https://github.com/moonlight-stream/moonlight-qt/issues/999
+        // https://github.com/moonlight-stream/moonlight-qt/issues/1211
+        // https://github.com/moonlight-stream/moonlight-qt/issues/1218
+        SDL_SetHint(SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES, shouldUseFullScreenSpaces ? "1" : "0");
+    }
 #endif
 
     if (SDL_InitSubSystem(SDL_INIT_VIDEO) != 0) {
@@ -790,8 +792,13 @@ bool Session::initialize()
         // Fall-through
     case StreamingPreferences::WM_FULLSCREEN:
 #ifdef Q_OS_DARWIN
-        // Don't use "real" fullscreen on macOS. See comments above.
-        m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+        if (qEnvironmentVariableIntValue("I_WANT_BUGGY_FULLSCREEN") == 0) {
+            // Don't use "real" fullscreen on macOS by default. See comments above.
+            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN_DESKTOP;
+        }
+        else {
+            m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
+        }
 #else
         m_FullScreenFlag = SDL_WINDOW_FULLSCREEN;
 #endif
