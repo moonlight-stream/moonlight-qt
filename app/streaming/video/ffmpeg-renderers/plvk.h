@@ -37,8 +37,9 @@ private:
 
     bool mapAvFrameToPlacebo(const AVFrame *frame, pl_frame* mappedFrame);
     bool getQueue(VkQueueFlags requiredFlags, uint32_t* queueIndex, uint32_t* queueCount);
-    bool chooseVulkanDevice(PDECODER_PARAMETERS params);
-    bool tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps, PDECODER_PARAMETERS decoderParams);
+    bool chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutputRequired);
+    bool tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps,
+                             PDECODER_PARAMETERS decoderParams, bool hdrOutputRequired);
     bool isExtensionSupportedByPhysicalDevice(VkPhysicalDevice device, const char* extensionName);
     bool isPresentModeSupportedByPhysicalDevice(VkPhysicalDevice device, VkPresentModeKHR presentMode);
     bool isColorSpaceSupportedByPhysicalDevice(VkPhysicalDevice device, VkColorSpaceKHR colorSpace);
