@@ -570,7 +570,7 @@ bool Session::initialize()
     // (notched or notchless), override the fullscreen mode to ensure it works as expected.
     // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=0 will place the video underneath the notch
     // - SDL_HINT_VIDEO_MAC_FULLSCREEN_SPACES=1 will place the video below the notch
-    bool shouldUseFullScreenSpaces = true;
+    bool shouldUseFullScreenSpaces = m_Preferences->windowMode != StreamingPreferences::WM_FULLSCREEN;
     SDL_DisplayMode desktopMode;
     SDL_Rect safeArea;
     for (int displayIndex = 0; StreamUtils::getNativeDesktopMode(displayIndex, &desktopMode, &safeArea); displayIndex++) {
@@ -581,6 +581,12 @@ bool Session::initialize()
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                             "Overriding default fullscreen mode for native fullscreen resolution");
                 shouldUseFullScreenSpaces = false;
+                break;
+            }
+            else if (m_Preferences->width == safeArea.w && m_Preferences->height == safeArea.h) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Overriding default fullscreen mode for native safe area resolution");
+                shouldUseFullScreenSpaces = true;
                 break;
             }
         }
