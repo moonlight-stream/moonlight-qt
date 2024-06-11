@@ -554,15 +554,19 @@ macx {
     APP_BUNDLE_RESOURCES.files = moonlight.icns
     APP_BUNDLE_RESOURCES.path = Contents/Resources
 
-    APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true) $$files(../libs/mac/lib/*.dylib, true)
-    APP_BUNDLE_FRAMEWORKS.path = Contents/Frameworks
-
     APP_BUNDLE_PLIST.files = $$OUT_PWD/Info.plist
     APP_BUNDLE_PLIST.path = Contents
 
-    QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES APP_BUNDLE_FRAMEWORKS APP_BUNDLE_PLIST
+    QMAKE_BUNDLE_DATA += APP_BUNDLE_RESOURCES APP_BUNDLE_PLIST
 
-    QMAKE_RPATHDIR += @executable_path/../Frameworks
+    !disable-prebuilts {
+        APP_BUNDLE_FRAMEWORKS.files = $$files(../libs/mac/Frameworks/*.framework, true) $$files(../libs/mac/lib/*.dylib, true)
+        APP_BUNDLE_FRAMEWORKS.path = Contents/Frameworks
+
+        QMAKE_BUNDLE_DATA += APP_BUNDLE_FRAMEWORKS
+
+        QMAKE_RPATHDIR += @executable_path/../Frameworks
+    }
 }
 
 VERSION = "$$cat(version.txt)"
