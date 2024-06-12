@@ -1,4 +1,4 @@
-<Project Sdk="WixToolset.Sdk/4.0.4" ToolsVersion="4.0">
+<Project Sdk="WixToolset.Sdk/5.0.0" ToolsVersion="5.0">
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DefineConstants>Debug</DefineConstants>
   </PropertyGroup>
@@ -9,17 +9,6 @@
   <PropertyGroup>
     <DefineConstants>DeployDir=$(DEPLOY_FOLDER);BuildDir=$(BUILD_FOLDER)</DefineConstants>
   </PropertyGroup>
-  <ItemGroup>
-    <HarvestDirectory Include="$(DEPLOY_FOLDER)">
-      <ComponentGroupName>MoonlightDependencies</ComponentGroupName>
-      <DirectoryRefId>INSTALLFOLDER</DirectoryRefId>
-      <PreprocessorVariable>DeployDir</PreprocessorVariable>
-      <SuppressRootDirectory>true</SuppressRootDirectory>
-      <SuppressCom>true</SuppressCom>
-      <SuppressRegistry>true</SuppressRegistry>
-    </HarvestDirectory>
-    <BindPath Include="$(DEPLOY_FOLDER)" />
-  </ItemGroup>
   <PropertyGroup Condition="$(SIGN)!=''">
     <SignOutput>true</SignOutput>
   </PropertyGroup>
@@ -27,8 +16,8 @@
     <Exec Command='signtool.exe $(SIGNTOOL_PARAMS) %(SignMsi.FullPath)' />
   </Target>
   <ItemGroup>
-    <PackageReference Include="WixToolset.Firewall.wixext" Version="4.0.4" />
-    <PackageReference Include="WixToolset.Util.wixext" Version="4.0.4" />
-    <PackageReference Include="WixToolset.Heat" Version="4.0.4" />
+    <PackageReference Include="WixToolset.Firewall.wixext" Version="5.0.0" />
+    <PackageReference Include="WixToolset.Util.wixext" Version="5.0.0" />
+    <PackageReference Include="WixToolset.Heat" Version="5.0.0" />
   </ItemGroup>
 </Project>

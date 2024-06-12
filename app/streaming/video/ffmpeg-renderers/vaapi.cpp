@@ -277,12 +277,21 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
             break;
         }
 
+#if defined(APP_IMAGE) || defined(USE_FALLBACK_DRIVER_PATHS)
+        // AppImages will be running with our libva.so which means they don't know about
+        // distro-specific driver paths. To avoid failing in this scenario, we'll hardcode
+        // some such paths here for common distros. Non-AppImage packaging mechanisms won't
+        // need this fallback because either:
+        // a) They are using both distro libva.so and distro libva drivers (native packages)
+        // b) They are using both runtime libva.so and runtime libva drivers (Flatpak/Snap)
         if (qEnvironmentVariableIsEmpty("LIBVA_DRIVERS_PATH")) {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                         "Trying fallback VAAPI driver paths");
 
             qputenv("LIBVA_DRIVERS_PATH",
         #if Q_PROCESSOR_WORDSIZE == 8
+                    "/usr/lib64/dri-nonfree:" // Fedora x86_64
+                    "/usr/lib64/dri-freeworld:" // Fedora x86_64
                     "/usr/lib64/dri:" // Fedora x86_64
                     "/usr/lib64/va/drivers:" // Gentoo x86_64
         #endif
@@ -296,7 +305,9 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
                     );
            setPathVar = true;
         }
-        else {
+        else
+#endif
+        {
             if (setPathVar) {
                 // Unset LIBVA_DRIVERS_PATH if we set it ourselves
                 // and we didn't find any working VAAPI drivers.
@@ -324,6 +335,14 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Driver: %s",
                 vendorString ? vendorString : "<unknown>");
+
+    // This is the libva-vdpau-driver which is not supported by our VAAPI renderer.
+    if (vendorStr.contains("Splitted-Desktop Systems VDPAU backend for VA-API")) {
+        // Fail and let our VDPAU renderer pick this up
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Avoiding VDPAU wrapper for VAAPI decoding");
+        return false;
+    }
 
     // The Snap (core22) and Focal/Jammy Mesa drivers have a bug that causes
     // a large amount of video latency when using more than one reference frame
@@ -368,14 +387,6 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed to initialize VAAPI context: %d",
                      err);
-        return false;
-    }
-
-    // This quirk is set for the VDPAU wrapper which doesn't work with our VAAPI renderer
-    if (vaDeviceContext->driver_quirks & AV_VAAPI_DRIVER_QUIRK_SURFACE_ATTRIBUTES) {
-        // Fail and let our VDPAU renderer pick this up
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Avoiding VDPAU wrapper for VAAPI decoding");
         return false;
     }
 

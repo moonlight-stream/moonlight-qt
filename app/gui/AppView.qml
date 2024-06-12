@@ -256,7 +256,7 @@ CenteredGridView {
             anchors.fill: parent
             acceptedButtons: Qt.RightButton;
             onClicked: {
-                parent.onPressAndHold()
+                parent.pressAndHold()
             }
         }
 
@@ -350,7 +350,7 @@ CenteredGridView {
 
         function quitApp() {
             var component = Qt.createComponent("QuitSegue.qml")
-            var params = {"appName": appName, "quitRunningAppFn": appModel.quitRunningApp}
+            var params = {"appName": appName, "quitRunningAppFn": () => appModel.quitRunningApp()}
             if (segueToStream) {
                 // Store the session and app name if we're going to stream after
                 // successfully quitting the old app.

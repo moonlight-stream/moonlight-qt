@@ -30,6 +30,7 @@ public:
 
     Q_INVOKABLE void refreshDisplays();
     Q_INVOKABLE QRect getNativeResolution(int displayIndex);
+    Q_INVOKABLE QRect getSafeAreaResolution(int displayIndex);
     Q_INVOKABLE int getRefreshRate(int displayIndex);
     Q_INVOKABLE bool isVideoEnhancementCapable();
     Q_INVOKABLE bool isVideoEnhancementExperimental();
@@ -54,6 +55,7 @@ private:
     QString unmappedGamepads;
     QSize maximumResolution;
     QList<QRect> monitorNativeResolutions;
+    QList<QRect> monitorSafeAreaResolutions;
     QList<int> monitorRefreshRates;
     QString versionString;
     bool supportsHdr;

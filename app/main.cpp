@@ -11,6 +11,7 @@
 #include <QCursor>
 #include <QElapsedTimer>
 #include <QTemporaryFile>
+#include <QRegularExpression>
 
 // Don't let SDL hook our main function, since Qt is already
 // doing the same thing. This needs to be before any headers
@@ -44,26 +45,24 @@
 #include "settings/streamingpreferences.h"
 #include "gui/sdlgamepadkeynavigation.h"
 
-#if !defined(QT_DEBUG) && defined(Q_OS_WIN32)
-// Log to file for release Windows builds
-#define USE_CUSTOM_LOGGER
+#if defined(Q_OS_WIN32)
+#define IS_UNSPECIFIED_HANDLE(x) ((x) == INVALID_HANDLE_VALUE || (x) == NULL)
+
+// Log to file or console dynamically for Windows builds
 #define LOG_TO_FILE
-#elif defined(Q_OS_UNIX) && !defined(Q_OS_DARWIN)
-// Use stdout logger on all Linux/BSD builds
-#define USE_CUSTOM_LOGGER
 #elif !defined(QT_DEBUG) && defined(Q_OS_DARWIN)
 // Log to file for release Mac builds
-#define USE_CUSTOM_LOGGER
 #define LOG_TO_FILE
 #else
-// For debug Windows and Mac builds, use default logger
+// Log to console for debug Mac builds
 #endif
 
-#ifdef USE_CUSTOM_LOGGER
 static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stderr);
 static QMutex s_LoggerLock;
 static bool s_SuppressVerboseOutput;
+static QRegularExpression k_RikeyRegex("&rikey=\\w+");
+static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
 #ifdef LOG_TO_FILE
 // Max log file size of 10 MB
 #define MAX_LOG_SIZE_BYTES (10 * 1024 * 1024)
@@ -75,6 +74,10 @@ static QFile* s_LoggerFile;
 void logToLoggerStream(QString& message)
 {
     QMutexLocker lock(&s_LoggerLock);
+
+    // Strip session encryption keys and IVs from the logs
+    message.replace(k_RikeyRegex, "&rikey=REDACTED");
+    message.replace(k_RikeyIdRegex, "&rikeyid=REDACTED");
 
 #ifdef LOG_TO_FILE
     if (s_LogLimitReached) {
@@ -216,8 +219,6 @@ void ffmpegLogToDiskHandler(void* ptr, int level, const char* fmt, va_list vl)
 
 #endif
 
-#endif
-
 #ifdef Q_OS_WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
@@ -306,13 +307,25 @@ int main(int argc, char *argv[])
         qputenv("QML_DISK_CACHE_PATH", Path::getQmlCacheDir().toUtf8());
     }
 
-#ifdef USE_CUSTOM_LOGGER
+#ifdef Q_OS_WIN32
+    // Grab the original std handles before we potentially redirect them later
+    HANDLE oldConOut = GetStdHandle(STD_OUTPUT_HANDLE);
+    HANDLE oldConErr = GetStdHandle(STD_ERROR_HANDLE);
+#endif
+
 #ifdef LOG_TO_FILE
     QDir tempDir(Path::getLogDir());
-    s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
-    if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
-        s_LoggerStream.setDevice(s_LoggerFile);
+
+#ifdef Q_OS_WIN32
+    // Only log to a file if the user didn't redirect stderr somewhere else
+    if (IS_UNSPECIFIED_HANDLE(oldConErr))
+#endif
+    {
+        s_LoggerFile = new QFile(tempDir.filePath(QString("Moonlight-%1.log").arg(QDateTime::currentSecsSinceEpoch())));
+        if (s_LoggerFile->open(QIODevice::WriteOnly | QIODevice::Text)) {
+            QTextStream(stderr) << "Redirecting log output to " << s_LoggerFile->fileName() << Qt::endl;
+            s_LoggerStream.setDevice(s_LoggerFile);
+        }
     }
 #endif
 
@@ -322,8 +335,6 @@ int main(int argc, char *argv[])
 
 #ifdef HAVE_FFMPEG
     av_log_set_callback(ffmpegLogToDiskHandler);
-#endif
-
 #endif
 
 #ifdef Q_OS_WIN32
@@ -377,7 +388,6 @@ int main(int argc, char *argv[])
         if (!qEnvironmentVariableIsSet("QT_QPA_PLATFORM")) {
             qInfo() << "Unable to detect Wayland or X11, so EGLFS will be used by default. Set QT_QPA_PLATFORM to override this.";
             qputenv("QT_QPA_PLATFORM", "eglfs");
-            qputenv("SDL_VIDEODRIVER", "kmsdrm");
 
             if (!qEnvironmentVariableIsSet("QT_QPA_EGLFS_ALWAYS_SET_MODE")) {
                 qInfo() << "Setting display mode by default. Set QT_QPA_EGLFS_ALWAYS_SET_MODE=0 to override this.";
@@ -410,9 +420,18 @@ int main(int argc, char *argv[])
 #endif
     }
 
+#if !defined(Q_PROCESSOR_X86) && defined(SDL_HINT_VIDEO_X11_FORCE_EGL)
+    // Some ARM and RISC-V embedded devices don't have working GLX which can cause
+    // SDL to fail to find a working OpenGL implementation at all. Let's force EGL
+    // on non-x86 platforms, since GLX is deprecated anyway.
+    SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
+#endif
+
+#ifdef Q_OS_MACOS
     // This avoids using the default keychain for SSL, which may cause
     // password prompts on macOS.
     qputenv("QT_SSL_USE_TEMPORARY_KEYCHAIN", "1");
+#endif
 
 #if defined(Q_OS_WIN32) && QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
     if (!qEnvironmentVariableIsSet("QT_OPENGL")) {
@@ -535,25 +554,34 @@ int main(int argc, char *argv[])
 
     QGuiApplication app(argc, argv);
 
+#ifndef STEAM_LINK
+    // Force use of the KMSDRM backend for SDL when using Qt platform plugins
+    // that directly draw to the display without a windowing system.
+    if (QGuiApplication::platformName() == "eglfs" || QGuiApplication::platformName() == "linuxfb") {
+        qputenv("SDL_VIDEODRIVER", "kmsdrm");
+    }
+#endif
+
     GlobalCommandLineParser parser;
     GlobalCommandLineParser::ParseResult commandLineParserResult = parser.parse(app.arguments());
     switch (commandLineParserResult) {
     case GlobalCommandLineParser::ListRequested:
-#ifdef USE_CUSTOM_LOGGER
         // Don't log to the console since it will jumble the command output
         s_SuppressVerboseOutput = true;
-#endif
 #ifdef Q_OS_WIN32
-        // Attach to the console to be able to print output.
-        // Since we're a /SUBSYSTEM:WINDOWS app, we won't be attached by default.
+        // If we don't have stdout or stderr handles (which will normally be the case
+        // since we're a /SUBSYSTEM:WINDOWS app), attach to our parent console and use
+        // that for stdout and stderr.
+        //
+        // If we do have stdout or stderr handles, that means the user has used standard
+        // handle redirection. In that case, we don't want to override those handles.
         if (AttachConsole(ATTACH_PARENT_PROCESS)) {
-            HANDLE conOut = GetStdHandle(STD_OUTPUT_HANDLE);
-            if (conOut != INVALID_HANDLE_VALUE && conOut != NULL) {
+            // If we didn't have an old stdout/stderr handle, use the new CONOUT$ handle
+            if (IS_UNSPECIFIED_HANDLE(oldConOut)) {
                 freopen("CONOUT$", "w", stdout);
                 setvbuf(stdout, NULL, _IONBF, 0);
             }
-            HANDLE conErr = GetStdHandle(STD_ERROR_HANDLE);
-            if (conErr != INVALID_HANDLE_VALUE && conErr != NULL) {
+            if (IS_UNSPECIFIED_HANDLE(oldConErr)) {
                 freopen("CONOUT$", "w", stderr);
                 setvbuf(stderr, NULL, _IONBF, 0);
             }
@@ -746,6 +774,13 @@ int main(int argc, char *argv[])
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
     // sometimes freezing and blocking process exit.
     QThreadPool::globalInstance()->waitForDone(30000);
+
+#ifdef Q_OS_WIN32
+    // Without an explicit flush, console redirection for the list command
+    // doesn't work reliably (sometimes the target file contains no text).
+    fflush(stderr);
+    fflush(stdout);
+#endif
 
     return err;
 }

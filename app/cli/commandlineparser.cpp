@@ -316,6 +316,7 @@ StreamCommandLineParser::StreamCommandLineParser()
         {"auto",  StreamingPreferences::VCC_AUTO},
         {"H.264", StreamingPreferences::VCC_FORCE_H264},
         {"HEVC",  StreamingPreferences::VCC_FORCE_HEVC},
+        {"AV1", StreamingPreferences::VCC_FORCE_AV1},
     };
     m_VideoDecoderMap = {
         {"auto",     StreamingPreferences::VDS_AUTO},
@@ -372,6 +373,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addToggleOption("swap-gamepad-buttons", "swap A/B and X/Y gamepad buttons (Nintendo-style)");
     parser.addToggleOption("keep-awake", "prevent display sleep while streaming");
     parser.addToggleOption("performance-overlay", "show performance overlay");
+    parser.addToggleOption("hdr", "HDR streaming");
     parser.addChoiceOption("capture-system-keys", "capture system key combos", m_CaptureSysKeysModeMap.keys());
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
     parser.addChoiceOption("video-decoder", "video decoder", m_VideoDecoderMap.keys());
@@ -410,8 +412,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --fps option
     if (parser.isSet("fps")) {
         preferences->fps = parser.getIntOption("fps");
-        if (!inRange(preferences->fps, 30, 240)) {
-            parser.showError("FPS must be in range: 30 - 240");
+        if (!inRange(preferences->fps, 10, 480)) {
+            parser.showError("FPS must be in range: 10 - 480");
         }
     }
 
@@ -489,8 +491,11 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --keep-awake and --no-keep-awake options
     preferences->keepAwake = parser.getToggleOptionValue("keep-awake", preferences->keepAwake);
 
-    // Resolve --performance-overlay option
+    // Resolve --performance-overlay and --no-performance-overlay options
     preferences->showPerformanceOverlay = parser.getToggleOptionValue("performance-overlay", preferences->showPerformanceOverlay);
+
+    // Resolve --hdr and --no-hdr options
+    preferences->enableHdr = parser.getToggleOptionValue("hdr", preferences->enableHdr);
     
     // Resolve --capture-system-keys option
     if (parser.isSet("capture-system-keys")) {
