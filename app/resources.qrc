@@ -1,23 +1,22 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/ic_videogame_asset_white_48px.svg</file>
-        <file>res/desktop_windows-48px.svg</file>
-        <file>res/ic_add_to_queue_white_48px.svg</file>
-        <file>res/baseline-lock-24px.svg</file>
-        <file>res/play_arrow_white_48dp.svg</file>
-        <file>res/baseline-warning-24px.svg</file>
-        <file>res/warning_white_48dp.svg</file>
-        <file>res/stop_white_48dp.svg</file>
-        <file>res/no_app_image.png</file>
-        <file>res/settings.svg</file>
-        <file>res/arrow_left.svg</file>
-        <file>res/question_mark.svg</file>
-        <file>res/moonlight.svg</file>
-        <file>res/update.svg</file>
-        <file>res/baseline-help_outline-24px.svg</file>
-        <file>res/baseline-error_outline-24px.svg</file>
-        <file>res/baseline-check_circle_outline-24px.svg</file>
+        <file>res/add_to_queue_FILL0_wght700_GRAD200_opsz48.svg</file>
+        <file>res/arrow_back_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/check_circle_FILL0_wght700_GRAD200_opsz48.svg</file>
+        <file>res/desktop_windows_FILL0_wght700_GRAD200_opsz48.svg</file>
         <file>res/discord.svg</file>
+        <file>res/error_FILL0_wght700_GRAD200_opsz48.svg</file>
+        <file>res/help_FILL0_wght700_GRAD200_opsz48.svg</file>
+        <file>res/help_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/lock_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/moonlight.svg</file>
+        <file>res/no_app_image.png</file>
+        <file>res/play_arrow_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/settings_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/stop_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/update_FILL1_wght700_GRAD200_opsz48.svg</file>
+        <file>res/videogame_asset_FILL0_wght700_GRAD200_opsz48.svg</file>
+        <file>res/warning_FILL1_wght700_GRAD200_opsz48.svg</file>
         <file>languages/qml_de.ts</file>
         <file>languages/qml_de.qm</file>
         <file>languages/qml_fr.ts</file>
