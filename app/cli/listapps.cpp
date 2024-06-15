@@ -7,7 +7,7 @@
 #include <QCoreApplication>
 #include <QTimer>
 
-#define COMPUTER_SEEK_TIMEOUT 10000
+#define COMPUTER_SEEK_TIMEOUT 30000
 #define APP_SEEK_TIMEOUT 10000
 
 namespace CliListApps

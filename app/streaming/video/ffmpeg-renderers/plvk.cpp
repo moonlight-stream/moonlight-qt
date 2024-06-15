@@ -148,7 +148,7 @@ PlVkRenderer::~PlVkRenderer()
     pl_log_destroy(&m_Log);
 }
 
-bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
+bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutputRequired)
 {
     uint32_t physicalDeviceCount = 0;
     fn_vkEnumeratePhysicalDevices(m_PlVkInstance->instance, &physicalDeviceCount, nullptr);
@@ -161,7 +161,7 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
     // First, try the first device in the list to support device selection layers
     // that put the user's preferred GPU in the first slot.
     fn_vkGetPhysicalDeviceProperties(physicalDevices[0], &deviceProps);
-    if (tryInitializeDevice(physicalDevices[0], &deviceProps, params)) {
+    if (tryInitializeDevice(physicalDevices[0], &deviceProps, params, hdrOutputRequired)) {
         return true;
     }
     devicesTried.emplace(0);
@@ -177,7 +177,7 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
         VkPhysicalDeviceProperties deviceProps;
         fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
         if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU) {
-            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params, hdrOutputRequired)) {
                 return true;
             }
             devicesTried.emplace(i);
@@ -194,7 +194,7 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
         VkPhysicalDeviceProperties deviceProps;
         fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
         if (deviceProps.deviceType == VK_PHYSICAL_DEVICE_TYPE_DISCRETE_GPU) {
-            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+            if (tryInitializeDevice(physicalDevices[i], &deviceProps, params, hdrOutputRequired)) {
                 return true;
             }
             devicesTried.emplace(i);
@@ -210,18 +210,20 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params)
 
         VkPhysicalDeviceProperties deviceProps;
         fn_vkGetPhysicalDeviceProperties(physicalDevices[i], &deviceProps);
-        if (tryInitializeDevice(physicalDevices[i], &deviceProps, params)) {
+        if (tryInitializeDevice(physicalDevices[i], &deviceProps, params, hdrOutputRequired)) {
             return true;
         }
         devicesTried.emplace(i);
     }
 
     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                 "No suitable Vulkan devices found!");
+                 "No suitable %sVulkan devices found!",
+                 hdrOutputRequired ? "HDR-capable " : "");
     return false;
 }
 
-bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps, PDECODER_PARAMETERS decoderParams)
+bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDeviceProperties* deviceProps,
+                                       PDECODER_PARAMETERS decoderParams, bool hdrOutputRequired)
 {
     // Check the Vulkan API version first to ensure it meets libplacebo's minimum
     if (deviceProps->apiVersion < PL_VK_MIN_VERSION) {
@@ -271,7 +273,7 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
         return false;
     }
 
-    if ((decoderParams->videoFormat & VIDEO_FORMAT_MASK_10BIT) && !isColorSpaceSupportedByPhysicalDevice(device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
+    if (hdrOutputRequired && !isColorSpaceSupportedByPhysicalDevice(device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Vulkan device '%s' does not support HDR10 (ST.2084 PQ)",
                     deviceProps->deviceName);
@@ -390,8 +392,12 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // Enumerate physical devices and choose one that is suitable for our needs
-    if (!chooseVulkanDevice(params)) {
+    // Enumerate physical devices and choose one that is suitable for our needs.
+    //
+    // For HDR streaming, we try to find an HDR-capable Vulkan device first then
+    // try another search without the HDR requirement if the first attempt fails.
+    if (!chooseVulkanDevice(params, params->videoFormat & VIDEO_FORMAT_MASK_10BIT) &&
+        (!(params->videoFormat & VIDEO_FORMAT_MASK_10BIT) || !chooseVulkanDevice(params, false))) {
         return false;
     }
 
@@ -896,13 +902,8 @@ bool PlVkRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 
 int PlVkRenderer::getRendererAttributes()
 {
-    int attributes = 0;
-
-    if (isColorSpaceSupportedByPhysicalDevice(m_Vulkan->phys_device, VK_COLOR_SPACE_HDR10_ST2084_EXT)) {
-        attributes |= RENDERER_ATTRIBUTE_HDR_SUPPORT;
-    }
-
-    return attributes;
+    // This renderer supports HDR (including tone mapping to SDR displays)
+    return RENDERER_ATTRIBUTE_HDR_SUPPORT;
 }
 
 int PlVkRenderer::getDecoderColorRange()

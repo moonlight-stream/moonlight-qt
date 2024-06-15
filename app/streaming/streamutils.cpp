@@ -193,7 +193,7 @@ bool StreamUtils::hasFastAes()
 #endif
 }
 
-bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
+bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, SDL_Rect* safeArea)
 {
 #ifdef Q_OS_DARWIN
 #define MAX_DISPLAYS 16
@@ -201,9 +201,6 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
     uint32_t displayCount = 0;
     CGGetActiveDisplayList(MAX_DISPLAYS, displayIds, &displayCount);
     if (displayIndex >= displayCount) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Too many displays: %d vs %d",
-                     displayIndex, displayCount);
         return false;
     }
 
@@ -223,20 +220,61 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
             break;
         }
     }
+
+    safeArea->x = 0;
+    safeArea->y = 0;
+    safeArea->w = mode->w;
+    safeArea->h = mode->h;
+
+#if TARGET_CPU_ARM64
+    // Now that we found the native full-screen mode, let's look for one that matches along
+    // the width but not the height and we'll assume that's the safe area full-screen mode.
+    //
+    // There doesn't appear to be a CG API or flag that will tell us that a given mode
+    // is a "safe area" mode, so we have to use our own (brittle) heuristics. :(
+    //
+    // To avoid potential false positives, let's avoid checking for external displays, since
+    // we might have scenarios like a 1920x1200 display with an alternate 1920x1080 mode
+    // which would falsely trigger our notch detection here.
+    if (CGDisplayIsBuiltin(displayIds[displayIndex])) {
+        for (CFIndex i = 0; i < count; i++) {
+            auto cgMode = (CGDisplayModeRef)(CFArrayGetValueAtIndex(modeList, i));
+            auto cgModeWidth = static_cast<int>(CGDisplayModeGetWidth(cgMode));
+            auto cgModeHeight = static_cast<int>(CGDisplayModeGetHeight(cgMode));
+
+            // If the modes differ by more than 100, we'll assume it's not a notch mode
+            if (mode->w == cgModeWidth && mode->h != cgModeHeight && mode->h <= cgModeHeight + 100) {
+                safeArea->w = cgModeWidth;
+                safeArea->h = cgModeHeight;
+            }
+        }
+    }
+#endif
+
     CFRelease(modeList);
 
-    // Now find the SDL mode that matches the CG native mode
-    for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
-        SDL_DisplayMode thisMode;
-        if (SDL_GetDisplayMode(displayIndex, i, &thisMode) == 0) {
-            if (thisMode.w == mode->w && thisMode.h == mode->h &&
+    // Special case for probing for notched displays prior to video subsystem initialization
+    // in Session::initialize() for Darwin only!
+    if (SDL_WasInit(SDL_INIT_VIDEO)) {
+        // Now find the SDL mode that matches the CG native mode
+        for (int i = 0; i < SDL_GetNumDisplayModes(displayIndex); i++) {
+            SDL_DisplayMode thisMode;
+            if (SDL_GetDisplayMode(displayIndex, i, &thisMode) == 0) {
+                if (thisMode.w == mode->w && thisMode.h == mode->h &&
                     thisMode.refresh_rate >= mode->refresh_rate) {
-                *mode = thisMode;
-                break;
+                    *mode = thisMode;
+                    break;
+                }
             }
         }
     }
 #else
+    SDL_assert(SDL_WasInit(SDL_INIT_VIDEO));
+
+    if (displayIndex >= SDL_GetNumVideoDisplays()) {
+        return false;
+    }
+
     // We need to get the true display resolution without DPI scaling (since we use High DPI).
     // Windows returns the real display resolution here, even if DPI scaling is enabled.
     // macOS and Wayland report a resolution that includes the DPI scaling factor. Picking
@@ -258,7 +296,13 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode)
             return false;
         }
     }
+
+    safeArea->x = 0;
+    safeArea->y = 0;
+    safeArea->w = mode->w;
+    safeArea->h = mode->h;
 #endif
 
     return true;
 }
+
