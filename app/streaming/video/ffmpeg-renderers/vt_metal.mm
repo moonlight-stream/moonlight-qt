@@ -204,9 +204,10 @@ public:
             [m_ChromaUpscaler release];
         }
 
-        if (m_TextureCache != nullptr) {
-            CFRelease(m_TextureCache);
-        }
+        // Note: CFRelease makes the application crash sometime as the m_TextureCache seems to be cleared before it is called
+        // if (m_TextureCache != nullptr) {
+        //     CFRelease(m_TextureCache);
+        // }
 
         if (m_MetalView != nullptr) {
             SDL_Metal_DestroyView(m_MetalView);
