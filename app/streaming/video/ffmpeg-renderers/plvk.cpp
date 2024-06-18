@@ -158,6 +158,12 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutput
     std::set<uint32_t> devicesTried;
     VkPhysicalDeviceProperties deviceProps;
 
+    if (physicalDeviceCount == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "No Vulkan devices found!");
+        return false;
+    }
+
     // First, try the first device in the list to support device selection layers
     // that put the user's preferred GPU in the first slot.
     fn_vkGetPhysicalDeviceProperties(physicalDevices[0], &deviceProps);
