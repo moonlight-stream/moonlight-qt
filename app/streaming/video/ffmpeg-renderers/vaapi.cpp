@@ -224,51 +224,76 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     bool setPathVar = false;
 
     for (;;) {
+        // vaInitialize() will return the libva library version even if the function
+        // fails. This has been the case since libva v2.6 from 5 years ago. This
+        // doesn't seem to be documented anywhere, so we will be conservative to
+        // protect against changes in libva behavior by reinitializing major/minor
+        // each time and clamping it to the valid range of versions based upon
+        // the version of libva that we compiled with.
+        major = minor = 0;
         status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
-        if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Trying fallback VAAPI driver names");
+        if (status != VA_STATUS_SUCCESS) {
+            major = std::max(major, VA_MAJOR_VERSION);
+            minor = std::max(minor, VA_MINOR_VERSION);
 
-            // It would be nice to use vaSetDriverName() here, but there's no way to unset
-            // it and get back to the default driver selection logic once we've overridden
-            // the driver name using that API. As a result, we must use LIBVA_DRIVER_NAME.
-
-            if (status != VA_STATUS_SUCCESS) {
-                // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
-                // It should be picked by default on those platforms, but that doesn't
-                // always seem to be the case for some reason.
-                qputenv("LIBVA_DRIVER_NAME", "iHD");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+            // If LIBVA_DRIVER_NAME has not been set manually and we're running a
+            // version of libva less than 2.20, we'll try our own fallback names.
+            // Beginning in libva 2.20, the driver name detection code is much
+            // more robust than earlier versions and it includes DRI3 support for
+            // driver name detection under Xwayland.
+            if (!qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping VAAPI fallback driver names due to LIBVA_DRIVER_NAME");
             }
-
-            if (status != VA_STATUS_SUCCESS) {
-                // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
-                // even though the correct driver is still i965. If we hit this path, we'll
-                // explicitly try i965 to handle this case.
-                qputenv("LIBVA_DRIVER_NAME", "i965");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+            else if (major > 1 || (major == 1 && minor >= 20)) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping VAAPI fallback driver names on libva 2.20+");
             }
+            else {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Trying fallback VAAPI driver names");
 
-            if (status != VA_STATUS_SUCCESS) {
-                // The RadeonSI driver is compatible with XWayland but can't be detected by libva
-                // so try it too if all else fails.
-                qputenv("LIBVA_DRIVER_NAME", "radeonsi");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
-            }
+                // It would be nice to use vaSetDriverName() here, but there's no way to unset
+                // it and get back to the default driver selection logic once we've overridden
+                // the driver name using that API. As a result, we must use LIBVA_DRIVER_NAME.
 
-            if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
-                // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
-                // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
-                // NB: Remember to update the VA-API NVDEC condition below when modifying this!
-                qputenv("LIBVA_DRIVER_NAME", "nvidia");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
-            }
+                if (status != VA_STATUS_SUCCESS) {
+                    // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
+                    // It should be picked by default on those platforms, but that doesn't
+                    // always seem to be the case for some reason.
+                    qputenv("LIBVA_DRIVER_NAME", "iHD");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
 
-            if (status != VA_STATUS_SUCCESS) {
-                // Unset LIBVA_DRIVER_NAME if none of the drivers we tried worked. This ensures
-                // we will get a fresh start using the default driver selection behavior after
-                // setting LIBVA_DRIVERS_PATH in the code below.
-                qunsetenv("LIBVA_DRIVER_NAME");
+                if (status != VA_STATUS_SUCCESS) {
+                    // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
+                    // even though the correct driver is still i965. If we hit this path, we'll
+                    // explicitly try i965 to handle this case.
+                    qputenv("LIBVA_DRIVER_NAME", "i965");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
+
+                if (status != VA_STATUS_SUCCESS) {
+                    // The RadeonSI driver is compatible with XWayland but can't be detected by libva
+                    // so try it too if all else fails.
+                    qputenv("LIBVA_DRIVER_NAME", "radeonsi");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
+
+                if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
+                    // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
+                    // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
+                    // NB: Remember to update the VA-API NVDEC condition below when modifying this!
+                    qputenv("LIBVA_DRIVER_NAME", "nvidia");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
+
+                if (status != VA_STATUS_SUCCESS) {
+                    // Unset LIBVA_DRIVER_NAME if none of the drivers we tried worked. This ensures
+                    // we will get a fresh start using the default driver selection behavior after
+                    // setting LIBVA_DRIVERS_PATH in the code below.
+                    qunsetenv("LIBVA_DRIVER_NAME");
+                }
             }
         }
 
