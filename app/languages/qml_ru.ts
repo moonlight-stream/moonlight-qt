@@ -48,7 +48,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Вы уверены, что хотите завершить %1? Несохранённый прогресс может быть утерян.</translation>
+        <translation>Вы уверены, что хотите завершить %1? Несохранённый прогресс будет утерян.</translation>
     </message>
 </context>
 <context>
@@ -92,12 +92,12 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation>Загружается список игр...</translation>
+        <translation>Загружается список приложений...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation>Вы уверены, что хотите завершить %1? Несохранённый прогресс может быть утерян.</translation>
+        <translation>Вы уверены, что хотите завершить %1? Несохранённый прогресс будет утерян.</translation>
     </message>
 </context>
 <context>
@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">В сети</translation>
+        <translation>В сети</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">Не в сети</translation>
+        <translation>Не в сети</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -144,12 +144,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation>Активный Адрес: %1</translation>
+        <translation>Активный адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
@@ -164,32 +164,32 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation>IPv6 Адрес: %1</translation>
+        <translation>IPv6 адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Адрес вручную: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Состояние сопряжения: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Запущенная игра ID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS порт: %1</translation>
     </message>
 </context>
 <context>
@@ -197,7 +197,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation>Настройки геймпада</translation>
+        <translation>Раскладка геймпада</translation>
     </message>
 </context>
 <context>
@@ -263,7 +263,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation>Посмотреть Детали</translation>
+        <translation>Посмотреть детали</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
@@ -318,27 +318,27 @@
     <message>
         <location filename="../gui/PcView.qml" line="178"/>
         <source>View All Apps</source>
-        <translation>Показать все игры</translation>
+        <translation>Показать все приложения</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите %1 на своём хост-ПК. Это диалоговое окно закроется после завершения сопряжения.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Если на ваш хост-ПК использует Sunshine, перейдите в веб-интерфейс Sunshine и введите там PIN-код.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="322"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы уверены, что хотите удалить &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight проверяет ваше сетевое соединение, чтобы определить, заблокированы ли какие-либо необходимые порты.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
@@ -351,27 +351,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="586"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN-код от этого ПК не совпал. Пожалуйста попробуйте ещё раз.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="590"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">Нельзя создать новую пару, пока на ПК ещё активно соединение. Завершите запущенную на хосте игру или перезапустите ПК-хост, затем попробуйте ещё раз.</translation>
+        <translation>Нельзя создать новую пару, пока на хост-ПК ещё активно соединение. Завершите запущенную на хосте игру или перезапустите хост-компьютер, затем попробуйте ещё раз.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="593"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Сопряжение не удалось. Пожалуйста, попробуйте ещё раз.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="597"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Другая попытка сопряжения уже ведется.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="607"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished">Ошибка GeForce Experience: %1</translation>
+        <translation>Ошибка GeForce Experience: %1</translation>
     </message>
 </context>
 <context>
@@ -460,7 +460,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>
-        <translation>Видео не получена с раздающего компьютера.</translation>
+        <translation>Не удалось получить видео с хост-ПК.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="113"/>
@@ -500,7 +500,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Код ошибки: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="849"/>
@@ -525,7 +525,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="894"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш хост-ПК не поддерживает кодирование HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="911"/>
@@ -535,47 +535,47 @@
     <message>
         <location filename="../streaming/session.cpp" line="870"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш хост-ПК не поддерживает кодирование AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="887"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Использование программного декодирования по вашему выбору для принудительного использования AV1 без поддержки графического процессора. Это может привести к снижению производительности потоковой передачи.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="946"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш хост-ПК не поддерживает стриминг с использованием HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="950"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR не поддерживается при использовании кодека H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="962"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Графический процессор этого компьютера не поддерживает декодирование AV1 Main10 для потоковой передачи HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="979"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Графический процессор этого компьютера не поддерживает 10-битное декодирование HEVC или AV1 для потоковой передачи HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="986"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ваш хост-ПК и клиентский ПК не поддерживают одни и те же видеокодеки HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1037"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Разрешение видео выше 4K не поддерживается кодеком H.264.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1422"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Ошибка хоста: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="925"/>
@@ -683,7 +683,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="372"/>
         <source>Custom resolutions are not officially supported by GeForce Experience, so it will not set your host display resolution. You will need to set it manually while in game.</source>
-        <translation>Кастомные разрешения не поддерживаются официально в GeForce Experience, так что разрешения дисплея хост-ПК не будет изменено. Вам нужно будет задать его вручную в игре.</translation>
+        <translation>Пользовательские разрешения не поддерживаются официально в GeForce Experience, так что разрешения дисплея хост-ПК не будет изменено. Вам нужно будет задать его вручную в игре.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="373"/>
@@ -713,7 +713,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="692"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation>Битрейт видео: %1 Мб/с</translation>
+        <translation>Битрейт видео: %1 Мбит/с</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="705"/>
@@ -729,7 +729,7 @@
         <location filename="../gui/SettingsView.qml" line="716"/>
         <location filename="../gui/SettingsView.qml" line="1131"/>
         <source>Fullscreen</source>
-        <translation>На весь экран</translation>
+        <translation>Полный экран</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="785"/>
@@ -744,12 +744,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>Родное</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>Родное (исключая вырез)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="726"/>
@@ -775,7 +775,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="819"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation>Frame pacing улучшает плавность при стриме через интернет, Wi-Fi, и другие каналы с нестабильной задержкой (пингом), но увеличивает задержку. При стриме через проводной LAN желательно отключить.</translation>
+        <translation>Frame pacing улучшает плавность при стриме через интернет, Wi-Fi, и другие каналы с нестабильной задержкой (пингом), но увеличивает задержку. При стриме через проводной LAN желательно отключить</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="829"/>
@@ -870,7 +870,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1579"/>
         <source>AV1 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>AV1 (Экспериментальный)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1594"/>
@@ -890,22 +890,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1649"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Показывать статистику производительности во время потоковой передачи</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1659"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Отображение информации о производительности потока в реальном времени во время потоковой передачи.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1660"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>Вы можете переключить его в любой момент во время потоковой передачи, используя Ctrl+Alt+Shift+S или Select+L1+R1+X.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1661"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Наложение производительности не поддерживается в Steam Link или Raspberry Pi.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
@@ -940,7 +940,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1368"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation>Меняет назначения кнопок в стиль Nintendo</translation>
+        <translation>Меняет раскладку кнопок геймпада в стиль Nintendo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1374"/>
@@ -950,7 +950,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1384"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation>Хотя бы один виртуальный геймпад всегда будет &quot;подключён&quot; к хост-ПК, даже если физически к ПК-хосту не подключено ни одного.</translation>
+        <translation>Хотя бы один виртуальный геймпад всегда будет подключён к хост-ПК, даже если физически к ПК-хосту не подключено ни одного.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1222"/>
@@ -975,7 +975,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1423"/>
         <source>Host Settings</source>
-        <translation>Настройки ПК-хоста</translation>
+        <translation>Настройки хост-ПК</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1463"/>
@@ -1000,7 +1000,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1166"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation>Пишет статус в Discord с названием запущенноый игры.</translation>
+        <translation>Отображает статус в Discord с названием запущенноый игры.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1385"/>
@@ -1016,39 +1016,39 @@
         <location filename="../gui/SettingsView.qml" line="506"/>
         <location filename="../gui/SettingsView.qml" line="616"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>Пользовательский (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="521"/>
         <source>Enter a custom frame rate:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите пользовательскую частоту кадров:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="219"/>
         <location filename="../gui/SettingsView.qml" line="228"/>
         <location filename="../gui/SettingsView.qml" line="619"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>Пользовательское</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="637"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="642"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1172"/>
         <source>Keep the display awake while streaming</source>
-        <translation>Оставляйте экран включеным, пока осуществляется передача</translation>
+        <translation>Оставлять экран включеным, пока осуществляется потоковая передача</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation>Предотвращает запуск записи экрана или выключения монитора в процессе передачи.</translation>
+        <translation>Предотвращать запуск записи экрана или выключения монитора в процессе потоковой передачи.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1233"/>
@@ -1063,7 +1063,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1271"/>
         <source>in fullscreen</source>
-        <translation>только в режиме на весь экран</translation>
+        <translation>только в полноэкранном режиме</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1275"/>
@@ -1083,12 +1083,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Завершить игру на ПК-хосте при выходе</translation>
+        <translation>Завершить игру на хост-ПК при выходе</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1454"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation>Это выйдет из игры или приложения при закрытии окна Moonlight или нажатии Ctrl+Alt+Shift+Q. Несохранённый прогресс может быть утерян!</translation>
+        <translation>Это выйдет из игры или приложения при закрытии окна Moonlight или нажатии Ctrl+Alt+Shift+Q. Несохранённый прогресс будет утерян!</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1473"/>
@@ -1104,12 +1104,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1503"/>
         <source>Force software decoding</source>
-        <translation>Программный</translation>
+        <translation>Принудительно программный декодинг</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1507"/>
         <source>Force hardware decoding</source>
-        <translation>Аппаратный</translation>
+        <translation>Принудительно аппаратный декодинг</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1537"/>
@@ -1129,7 +1129,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1617"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>Автоматически найти ПК-хосты в локальной сети (рекомендуется)</translation>
+        <translation>Автоматически найти хост-ПК в локальной сети (рекомендуется)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1638"/>
@@ -1216,7 +1216,7 @@
     <message>
         <location filename="../gui/main.qml" line="384"/>
         <source>Gamepad Mapper</source>
-        <translation>Назначения кнопок геймпада</translation>
+        <translation>Назначения раскладки геймпада</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="430"/>
@@ -1231,7 +1231,7 @@
     <message>
         <location filename="../gui/main.qml" line="448"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation>Moonilght обнаружил геймпады без настроек:</translation>
+        <translation>Moonilght обнаружил геймпады без раскладки:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="361"/>
@@ -1266,7 +1266,7 @@
     <message>
         <location filename="../gui/main.qml" line="488"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Введите IP-адрес вашего хост-ПК:</translation>
     </message>
 </context>
 </TS>
