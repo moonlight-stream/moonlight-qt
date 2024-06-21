@@ -7,48 +7,48 @@
         <location filename="../gui/AppView.qml" line="145"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Tęsti Žaidimą</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="173"/>
         <location filename="../gui/AppView.qml" line="308"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Išeiti Iš Žaidimo</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Paleisti Žaidimą</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="316"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Tiesioginis Paleidimas</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Paleisti šią programėlę iškart po host&apos;o pasirinkimo, praleidžiant programėlės pasirinkimo ekraną.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Paslėpti Žaidimą</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Paslėpti šį žaidimą iš programėlių sąrašo. Norint pasiekti paslėptus žaidimus, spustelėkite dešiniuoju pelės mygtuku ant host&apos;o ir pasirinkite %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Peržiūrėti Visas Programėles</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ar tikrai norite palikti %1? Neišsaugotas progresas bus prarastas.</translation>
     </message>
 </context>
 <context>
@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Prisijungiame prie kompiuterio...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Vyksta susiejimas... Prašome įvesti &apos;%1&apos; ant %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Susiejimas užbaigtas sekmingai</translation>
     </message>
 </context>
 <context>
@@ -74,12 +74,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Prisijungiame prie kompiuterio...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>Įšeinama iš programėlės...</translation>
     </message>
 </context>
 <context>
@@ -87,17 +87,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Prisijungiame prie kompiuterio...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Kraunamas programėlių sąrašas...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ar tikrai norite palikti %1? Neišsaugotas progresas bus prarastas.</translation>
     </message>
 </context>
 <context>
@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>Online</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Offline</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -119,77 +119,77 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Nežinomas</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Susietas</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Nesusietas</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Pavadinimas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Statusas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktyvusis Adresas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Vietinis Adresas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuotolinis Adresas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6 Adresas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Rankinis Adresas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC Adresas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Susiejimo Statusas: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Paleisto Žaidimo ID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS Prievadas: %1</translation>
     </message>
 </context>
 <context>
@@ -197,7 +197,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Valdiklio Konfigūracija</translation>
     </message>
 </context>
 <context>
@@ -205,7 +205,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="359"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Trūksta garso įrašymo įrenginio. Pabandykite iš naujo parsiųsti GeForce Experience.</translation>
     </message>
 </context>
 <context>
@@ -213,27 +213,27 @@
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Kompiuteriai</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="68"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepavyko prisijungti prie šio kompiuterio.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="71"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tinklas, kuriame šiuo metu esate, blokuoja Moonlight. Transliacija internetu gali neveikti, kol esate prisijungę prie šio tinklo.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="74"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished"></translation>
+        <translation>Paspauskite Pagalbos mygtuką, kad surasti galimus problemos sprendimus.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="104"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>Automatiškas kompiuterio aptikimas išjungtas. Pridėkite savo kompiuterį rankiniu būdu.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
