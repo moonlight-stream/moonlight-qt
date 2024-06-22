@@ -7,3 +7,8 @@ struct ShaderInput
     float4 pos : SV_POSITION;
     float2 tex : TEXCOORD0;
 };
+
+cbuffer ChromaLimitBuf : register(b0)
+{
+    min16float3 chromaTexMax;
+};

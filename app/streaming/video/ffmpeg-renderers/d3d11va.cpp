@@ -728,7 +728,7 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
         ID3D11Buffer* constantBuffer;
         HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
+            m_DeviceContext->PSSetConstantBuffers(1, 1, &constantBuffer);
             constantBuffer->Release();
         }
         else {
@@ -1306,6 +1306,39 @@ bool D3D11VARenderer::setupRenderingResources()
 
         hr = m_Device->CreateBuffer(&vbDesc, &vbData, &m_VideoVertexBuffer);
         if (FAILED(hr)) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "ID3D11Device::CreateBuffer() failed: %x",
+                         hr);
+            return false;
+        }
+    }
+
+    // Create our fixed constant buffer to limit chroma texcoords and avoid sampling from alignment texels.
+    {
+        D3D11_BUFFER_DESC constDesc = {};
+        constDesc.ByteWidth = sizeof(CSC_CONST_BUF);
+        constDesc.Usage = D3D11_USAGE_IMMUTABLE;
+        constDesc.BindFlags = D3D11_BIND_CONSTANT_BUFFER;
+        constDesc.CPUAccessFlags = 0;
+        constDesc.MiscFlags = 0;
+
+        int alignedWidth = FFALIGN(m_DecoderParams.width, m_TextureAlignment);
+        int alignedHeight = FFALIGN(m_DecoderParams.height, m_TextureAlignment);
+
+        float chromaUVMax[3] = {};
+        chromaUVMax[0] = m_DecoderParams.width != alignedWidth ? ((float)(m_DecoderParams.width - 1) / alignedWidth) : 1.0f;
+        chromaUVMax[1] = m_DecoderParams.height != alignedHeight ? ((float)(m_DecoderParams.height - 1) / alignedHeight) : 1.0f;
+
+        D3D11_SUBRESOURCE_DATA constData = {};
+        constData.pSysMem = chromaUVMax;
+
+        ID3D11Buffer* constantBuffer;
+        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
+        if (SUCCEEDED(hr)) {
+            m_DeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
+            constantBuffer->Release();
+        }
+        else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "ID3D11Device::CreateBuffer() failed: %x",
                          hr);
