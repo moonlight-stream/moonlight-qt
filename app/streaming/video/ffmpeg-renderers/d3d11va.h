@@ -16,6 +16,7 @@ public:
     virtual ~D3D11VARenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override;
+    virtual bool prepareDecoderContextInGetFormat(AVCodecContext* context, AVPixelFormat pixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual int getRendererAttributes() override;
@@ -47,6 +48,7 @@ private:
     SDL_mutex* m_ContextLock;
 
     DECODER_PARAMETERS m_DecoderParams;
+    int m_TextureAlignment;
     int m_DisplayWidth;
     int m_DisplayHeight;
     int m_LastColorSpace;
@@ -70,5 +72,6 @@ private:
     ID3D11PixelShader* m_OverlayPixelShader;
 
     AVBufferRef* m_HwDeviceContext;
+    AVBufferRef* m_HwFramesContext;
 };
 
