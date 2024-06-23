@@ -450,7 +450,6 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // FIXME: We should check the actual DRM format in a real AVFrame rather
     // than just assuming it will be a certain hardcoded type like NV12 based
     // on the chosen video format.
-    m_PlaneId = 0;
     uint64_t maxZpos = 0;
     for (uint32_t i = 0; i < planeRes->count_planes; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
@@ -494,18 +493,22 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
             drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
             if (props != nullptr) {
-                // Only consider primary and overlay planes as valid render targets
                 uint64_t type;
+                uint64_t zPos = 0;
+
+                // Only consider primary and overlay planes as valid render targets
                 if (!getPropertyByName(props, "type", &type) || (type != DRM_PLANE_TYPE_PRIMARY && type != DRM_PLANE_TYPE_OVERLAY)) {
                     drmModeFreePlane(plane);
-                    continue;
                 }
-
-                // If this is a higher Z position than the last candidate plane,
-                // let's prefer this one over the previous one. Note: zpos is not
-                // a required property, but if any plane has it, all planes must.
-                uint64_t zPos = 0;
-                if (!getPropertyByName(props, "zpos", &zPos) || !m_Plane || zPos > maxZpos) {
+                // If this plane has a zpos property and it's lower (further from user) than
+                // the previous plane we found, avoid this plane in favor of the closer one.
+                //
+                // Note: zpos is not a required property, but if any plane has it, all planes must.
+                else if (getPropertyByName(props, "zpos", &zPos) && m_PlaneId && zPos < maxZpos) {
+                    drmModeFreePlane(plane);
+                }
+                else {
+                    // This plane is a better match than what we had previously!
                     m_PlaneId = plane->plane_id;
                     maxZpos = zPos;
 
@@ -513,9 +516,6 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                         drmModeFreePlane(m_Plane);
                     }
                     m_Plane = plane;
-                }
-                else {
-                    drmModeFreePlane(plane);
                 }
 
                 drmModeFreeObjectProperties(props);
