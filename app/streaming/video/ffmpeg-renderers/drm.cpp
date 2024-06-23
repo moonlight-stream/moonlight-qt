@@ -179,6 +179,24 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     return true;
 }
 
+bool DrmRenderer::getPropertyByName(drmModeObjectPropertiesPtr props, const char* name, uint64_t *value) {
+    for (uint32_t j = 0; j < props->count_props; j++) {
+        drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
+        if (prop != nullptr) {
+            if (!strcmp(prop->name, name)) {
+                *value = props->prop_values[j];
+                drmModeFreeProperty(prop);
+                return true;
+            }
+            else {
+                drmModeFreeProperty(prop);
+            }
+        }
+    }
+
+    return false;
+}
+
 bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 {
     int i;
@@ -433,9 +451,21 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // than just assuming it will be a certain hardcoded type like NV12 based
     // on the chosen video format.
     m_PlaneId = 0;
-    for (uint32_t i = 0; i < planeRes->count_planes && m_PlaneId == 0; i++) {
+    uint64_t maxZpos = 0;
+    for (uint32_t i = 0; i < planeRes->count_planes; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
+            // If the plane can't be used on our CRTC, don't consider it further
+            if (!(plane->possible_crtcs & (1 << crtcIndex))) {
+                drmModeFreePlane(plane);
+                continue;
+            }
+
+            // We don't check plane->crtc_id here because we want to be able to reuse the primary plane
+            // that may owned by Qt and in use on a CRTC prior to us taking over DRM master. When we give
+            // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
+
+            // Validate that the candidate plane supports our pixel format
             bool matchingFormat = false;
             for (uint32_t j = 0; j < plane->count_formats && !matchingFormat; j++) {
                 if (m_Main10Hdr) {
@@ -457,47 +487,38 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 }
             }
 
-            if (matchingFormat == false) {
+            if (!matchingFormat) {
                 drmModeFreePlane(plane);
                 continue;
             }
 
-            // We don't check plane->crtc_id here because we want to be able to reuse the primary plane
-            // that may owned by Qt and in use on a CRTC prior to us taking over DRM master. When we give
-            // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
-            if ((plane->possible_crtcs & (1 << crtcIndex))) {
-                drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
-                if (props != nullptr) {
-                    for (uint32_t j = 0; j < props->count_props; j++) {
-                        drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
-                        if (prop != nullptr) {
-                            if (!strcmp(prop->name, "type") &&
-                                    (props->prop_values[j] == DRM_PLANE_TYPE_PRIMARY || props->prop_values[j] == DRM_PLANE_TYPE_OVERLAY)) {
-                                m_PlaneId = plane->plane_id;
-                            }
-
-                            if (!strcmp(prop->name, "COLOR_ENCODING")) {
-                                m_ColorEncodingProp = prop;
-                            }
-                            else if (!strcmp(prop->name, "COLOR_RANGE")) {
-                                m_ColorRangeProp = prop;
-                            }
-                            else {
-                                drmModeFreeProperty(prop);
-                            }
-                        }
-                    }
-
-                    drmModeFreeObjectProperties(props);
+            drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
+            if (props != nullptr) {
+                // Only consider primary and overlay planes as valid render targets
+                uint64_t type;
+                if (!getPropertyByName(props, "type", &type) || (type != DRM_PLANE_TYPE_PRIMARY && type != DRM_PLANE_TYPE_OVERLAY)) {
+                    drmModeFreePlane(plane);
+                    continue;
                 }
-            }
 
-            // Store the plane details for use during render format testing
-            if (m_PlaneId != 0) {
-                m_Plane = plane;
-            }
-            else {
-                drmModeFreePlane(plane);
+                // If this is a higher Z position than the last candidate plane,
+                // let's prefer this one over the previous one. Note: zpos is not
+                // a required property, but if any plane has it, all planes must.
+                uint64_t zPos = 0;
+                if (!getPropertyByName(props, "zpos", &zPos) || !m_Plane || zPos > maxZpos) {
+                    m_PlaneId = plane->plane_id;
+                    maxZpos = zPos;
+
+                    if (m_Plane) {
+                        drmModeFreePlane(m_Plane);
+                    }
+                    m_Plane = plane;
+                }
+                else {
+                    drmModeFreePlane(plane);
+                }
+
+                drmModeFreeObjectProperties(props);
             }
         }
     }
@@ -506,51 +527,77 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     if (m_PlaneId == 0) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "Failed to find suitable overlay plane!");
+                     "Failed to find suitable primary/overlay plane!");
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
-    drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR);
-    if (props != nullptr) {
-        for (uint32_t j = 0; j < props->count_props; j++) {
-            drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
-            if (prop != nullptr) {
-                if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
-                    m_HdrOutputMetadataProp = prop;
-                }
-                else if (!strcmp(prop->name, "Colorspace")) {
-                    m_ColorspaceProp = prop;
-                }
-                else if (!strcmp(prop->name, "max bpc") && m_Main10Hdr) {
-                    if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Enabled 48-bit HDMI Deep Color");
+    // Populate plane properties
+    {
+        drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_PlaneId, DRM_MODE_OBJECT_PLANE);
+        if (props != nullptr) {
+            for (uint32_t j = 0; j < props->count_props; j++) {
+                drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
+                if (prop != nullptr) {
+                    if (!strcmp(prop->name, "COLOR_ENCODING")) {
+                        m_ColorEncodingProp = prop;
                     }
-                    else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Enabled 36-bit HDMI Deep Color");
-                    }
-                    else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Enabled 30-bit HDMI Deep Color");
+                    else if (!strcmp(prop->name, "COLOR_RANGE")) {
+                        m_ColorRangeProp = prop;
                     }
                     else {
-                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                     "drmModeObjectSetProperty(%s) failed: %d",
-                                     prop->name,
-                                     errno);
-                        // Non-fatal
+                        drmModeFreeProperty(prop);
                     }
-
-                    drmModeFreeProperty(prop);
-                }
-                else {
-                    drmModeFreeProperty(prop);
                 }
             }
-        }
 
-        drmModeFreeObjectProperties(props);
+            drmModeFreeObjectProperties(props);
+        }
+    }
+
+    // Populate connector properties
+    {
+        drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR);
+        if (props != nullptr) {
+            for (uint32_t j = 0; j < props->count_props; j++) {
+                drmModePropertyPtr prop = drmModeGetProperty(m_DrmFd, props->props[j]);
+                if (prop != nullptr) {
+                    if (!strcmp(prop->name, "HDR_OUTPUT_METADATA")) {
+                        m_HdrOutputMetadataProp = prop;
+                    }
+                    else if (!strcmp(prop->name, "Colorspace")) {
+                        m_ColorspaceProp = prop;
+                    }
+                    else if (!strcmp(prop->name, "max bpc") && m_Main10Hdr) {
+                        if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Enabled 48-bit HDMI Deep Color");
+                        }
+                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 12) == 0) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Enabled 36-bit HDMI Deep Color");
+                        }
+                        else if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 10) == 0) {
+                            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                        "Enabled 30-bit HDMI Deep Color");
+                        }
+                        else {
+                            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                         "drmModeObjectSetProperty(%s) failed: %d",
+                                         prop->name,
+                                         errno);
+                            // Non-fatal
+                        }
+
+                        drmModeFreeProperty(prop);
+                    }
+                    else {
+                        drmModeFreeProperty(prop);
+                    }
+                }
+            }
+
+            drmModeFreeObjectProperties(props);
+        }
     }
 
     // If we got this far, we can do direct rendering via the DRM FD.

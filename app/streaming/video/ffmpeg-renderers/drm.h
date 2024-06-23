@@ -70,6 +70,7 @@ public:
 #endif
 
 private:
+    bool getPropertyByName(drmModeObjectPropertiesPtr props, const char* name, uint64_t *value);
     const char* getDrmColorEncodingValue(AVFrame* frame);
     const char* getDrmColorRangeValue(AVFrame* frame);
     bool mapSoftwareFrame(AVFrame* frame, AVDRMFrameDescriptor* mappedFrame);
