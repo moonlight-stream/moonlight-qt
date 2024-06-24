@@ -1281,16 +1281,20 @@ bool DrmRenderer::isDirectRenderingSupported()
 
 int DrmRenderer::getDecoderColorspace()
 {
-    // The starfive driver used on the VisionFive 2 doesn't support BT.601,
-    // so we will use BT.709 instead. Rockchip doesn't support BT.709, even
-    // in some cases where it exposes COLOR_ENCODING properties, so we stick
-    // to BT.601 which seems to be the default for YUV planes on Linux.
-    if (strcmp(m_Version->name, "starfive") == 0) {
-        return COLORSPACE_REC_709;
+    if (m_ColorEncodingProp != nullptr) {
+        // Search for a COLOR_ENCODING property that fits a value we support
+        for (int i = 0; i < m_ColorEncodingProp->count_enums; i++) {
+            if (!strcmp(m_ColorEncodingProp->enums[i].name, "ITU-R BT.601 YCbCr")) {
+                return COLORSPACE_REC_601;
+            }
+            else if (!strcmp(m_ColorEncodingProp->enums[i].name, "ITU-R BT.709 YCbCr")) {
+                return COLORSPACE_REC_709;
+            }
+        }
     }
-    else {
-        return COLORSPACE_REC_601;
-    }
+
+    // Default to BT.601 if we couldn't find a valid COLOR_ENCODING property
+    return COLORSPACE_REC_601;
 }
 
 const char* DrmRenderer::getDrmColorEncodingValue(AVFrame* frame)
