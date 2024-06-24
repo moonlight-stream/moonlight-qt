@@ -445,13 +445,43 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         return DIRECT_RENDERING_INIT_FAILED;
     }
 
+    // Find the active plane (if any) on this CRTC with the highest zpos.
+    // We'll need to use a plane with a equal or greater zpos to be visible.
+    uint64_t maxActiveZpos = 0;
+    for (uint32_t i = 0; i < planeRes->count_planes; i++) {
+        drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
+        if (plane != nullptr) {
+            if (plane->crtc_id == m_CrtcId) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Plane %u is active on CRTC %u",
+                            plane->plane_id,
+                            m_CrtcId);
+
+                drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
+                if (props != nullptr) {
+                    // Only consider primary and overlay planes as valid render targets
+                    uint64_t type;
+                    if (getPropertyByName(props, "type", &type) && (type == DRM_PLANE_TYPE_PRIMARY || type == DRM_PLANE_TYPE_OVERLAY)) {
+                        uint64_t zPos;
+                        if (getPropertyByName(props, "zpos", &zPos) && zPos > maxActiveZpos) {
+                            maxActiveZpos = zPos;
+                        }
+                    }
+
+                    drmModeFreeObjectProperties(props);
+                }
+            }
+
+            drmModeFreePlane(plane);
+        }
+    }
+
     // Find a plane with the required format to render on
     //
     // FIXME: We should check the actual DRM format in a real AVFrame rather
     // than just assuming it will be a certain hardcoded type like NV12 based
     // on the chosen video format.
-    uint64_t maxZpos = 0;
-    for (uint32_t i = 0; i < planeRes->count_planes; i++) {
+    for (uint32_t i = 0; i < planeRes->count_planes && !m_PlaneId; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
             // If the plane can't be used on our CRTC, don't consider it further
@@ -494,27 +524,24 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
             if (props != nullptr) {
                 uint64_t type;
-                uint64_t zPos = 0;
+                uint64_t zPos;
 
                 // Only consider primary and overlay planes as valid render targets
                 if (!getPropertyByName(props, "type", &type) || (type != DRM_PLANE_TYPE_PRIMARY && type != DRM_PLANE_TYPE_OVERLAY)) {
                     drmModeFreePlane(plane);
                 }
                 // If this plane has a zpos property and it's lower (further from user) than
-                // the previous plane we found, avoid this plane in favor of the closer one.
+                // the highest active plane we found, avoid this plane. It won't be visible.
                 //
                 // Note: zpos is not a required property, but if any plane has it, all planes must.
-                else if (getPropertyByName(props, "zpos", &zPos) && m_PlaneId && zPos < maxZpos) {
+                else if (getPropertyByName(props, "zpos", &zPos) && zPos < maxActiveZpos) {
                     drmModeFreePlane(plane);
                 }
                 else {
-                    // This plane is a better match than what we had previously!
-                    m_PlaneId = plane->plane_id;
-                    maxZpos = zPos;
+                    SDL_assert(!m_PlaneId);
+                    SDL_assert(!m_Plane);
 
-                    if (m_Plane) {
-                        drmModeFreePlane(m_Plane);
-                    }
+                    m_PlaneId = plane->plane_id;
                     m_Plane = plane;
                 }
 
