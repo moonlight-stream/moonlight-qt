@@ -25,6 +25,9 @@
 
 #if defined(Q_OS_WIN32)
 #include "antihookingprotection.h"
+
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
 #elif defined(Q_OS_LINUX)
 #include <openssl/ssl.h>
 #endif
@@ -74,6 +77,18 @@ static QFile* s_LoggerFile;
 void logToLoggerStream(QString& message)
 {
     QMutexLocker lock(&s_LoggerLock);
+
+#if defined(QT_DEBUG) && defined(Q_OS_WIN32)
+    // Output log messages to a debugger if attached
+    if (IsDebuggerPresent()) {
+        static QString lineBuffer;
+        lineBuffer += message;
+        if (message.endsWith('\n')) {
+            OutputDebugStringW(lineBuffer.toStdWString().c_str());
+            lineBuffer.clear();
+        }
+    }
+#endif
 
     // Strip session encryption keys and IVs from the logs
     message.replace(k_RikeyRegex, "&rikey=REDACTED");
