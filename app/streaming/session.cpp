@@ -714,6 +714,11 @@ bool Session::initialize()
 
     // H.264 is always supported
     m_StreamConfig.supportedVideoFormats = VIDEO_FORMAT_H264;
+    /* Hardware decoders don't support this format, and libplacebo backend with software decoding is not yet fully implemented
+    if (m_Preferences->enableYUV444) {
+        m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H264_HIGH8_444;
+    }
+    */
 
     switch (m_Preferences->videoCodecConfig)
     {
@@ -791,9 +796,6 @@ bool Session::initialize()
 #endif
         break;
     case StreamingPreferences::VCC_FORCE_H264:
-        if (m_Preferences->enableYUV444) {
-            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H264_HIGH8_444;
-        }
         break;
     case StreamingPreferences::VCC_FORCE_HEVC:
     case StreamingPreferences::VCC_FORCE_HEVC_HDR_DEPRECATED:
