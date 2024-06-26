@@ -78,6 +78,7 @@ private:
     bool addFbForFrame(AVFrame* frame, uint32_t* newFbId, bool testMode);
 
     IFFmpegRenderer* m_BackendRenderer;
+    SDL_Window* m_Window;
     bool m_DrmPrimeBackend;
     bool m_HwAccelBackend;
     AVBufferRef* m_HwContext;
