@@ -238,112 +238,112 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Ieškome suderinamus kompiuterius jūsų vietiniame tinkle...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="188"/>
         <source>Wake PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Pažadinti kompiuterį</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="194"/>
         <source>Test Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Patikrinti tinklą</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="203"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Pervadinti kompiuterį</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="212"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Ištrinti kompiuterį</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Peržiūrėti detales</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jūsų Moonlight nepalaiko %1 GeForce Experience versijos. Norėdami transliuoti iš %1, turite atnaujinti Moonlight.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>Tai gali šiek tiek užtrukti…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Šis tinklas nebluokuoja Moonlight. Jeigu vis dar turite problemų su prisijungimu, pasitikrinkite host kompiuterio firewall nustatymus.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jei bandote transliuoti internetu, parsiųskite Moonlight Internet Hosting Tool ant jūsų host kompiuterio ir paleiskite Internet Streaming Tester, kad patikrinti jūsų kompiuterio prisijungimą prie interneto.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="351"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jūsų kompiuterio tinklas blokuoja Moonlight. Transliavimas internetu gali neveikti, kol esate prisijungę prie šio tinklo.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="351"/>
         <source>The following network ports were blocked:</source>
-        <translation type="unfinished"></translation>
+        <translation>Užblokuoti šie tinklo prievadai:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="343"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation type="unfinished"></translation>
+        <translation>Tinklo testas neatliktas, nes Moonlight nepavyko prisijungti prie testavimo serverių. Pasitikrinkite savo interneto ryšį arba bandykite vėliau.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>PC Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Kompiuterio statusas: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>Online</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Offline</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="178"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Peržiūrėti visas programėles</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Prašome įvesti %1 jūsų host kompiuteryje. Šis langas užsidarys, kai tik susiejimas bus pabaigtas.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jeigu jūsų host kompiuteryje veikia Sunshine, eikite į Sunshine žiniatinklio meniu, kad įvesti PIN kodą.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="322"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Ar tikrai norite ištrinti &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight testuoja jūsų tinklą, kad nustatyti, ar reikalingi prievadai yra užblokuoti.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
         <source>Enter the new name for this PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Įveskite šio kompiuterio naują pavadinima:</translation>
     </message>
 </context>
 <context>
@@ -351,27 +351,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="586"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>PIN kodas iš kompiuterio nesutapo. Bandykite dar kartą.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="590"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Negalite susieti, kol praeita sesija vis dar įjungta host kompiuteryje. Išeikite iš visų žaidimų ar paleiskitė kompiuterį iš naujo, po to bandykite dar kartą.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="593"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Susiejimas nepavyko. Prašome pabandyti dar kartą.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="597"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jau vyksta kitas susiejimas.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="607"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>GeForce Experience klaida: %1</translation>
     </message>
 </context>
 <context>
@@ -379,7 +379,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="657"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation type="unfinished"></translation>
+        <translation>Žaidimas nebuvo paleistas šituo kompiuteriu. Turite išeiti iš žaidimo rankiniu būdų arba naudojant prietaisą, kuris paleido šį žaidimą.</translation>
     </message>
 </context>
 <context>
@@ -387,36 +387,36 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 jau susietas</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepavyko prisijungti prie %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 dar nebuvo susietas. Prašome atidaryti Moonlight, kad susieti prieš transliuojant.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepavyko išeiti iš programėles, priežastis: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nepavyko surasti programą %1</translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>%1 dar nebuvo susietas. Prašome atidaryti Moonlight, kad susieti prieš atidarant žaidimų sąrašą.</translation>
     </message>
 </context>
 <context>
@@ -424,27 +424,27 @@
     <message>
         <location filename="../main.cpp" line="611"/>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Taip</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="612"/>
         <source>&amp;No</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Ne</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="613"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>Gerai</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="614"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Pagalba</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="615"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Atšaukti</translation>
     </message>
 </context>
 <context>
@@ -452,7 +452,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="13"/>
         <source>Quitting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Išeinama iš %1...</translation>
     </message>
 </context>
 <context>
@@ -460,57 +460,57 @@
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>
-        <translation type="unfinished"></translation>
+        <translation>Video negautas iš kompiuterio.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="113"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Patikrinkite prievadų persiuntimo taisykles ir Firewall prievadui(ams): %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="118"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jūsų tinklo ryšys neveikia gerai. Sumažinkite vaizdo kokybę (Bitrate) arba pabandykite greitesnį tinklą.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>kažkas nutiko ne taip jūsų host kompiuteryje pradedant transliaciją.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="125"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Įsitikinkite, kad šiuo metu jūsų host kompiuteryje neatidarytas joks DRM apsaugotas tūrinys. Taip pat galite pabandyti paleisti kompiuterį iš naujo.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Host kompiuteris pranešė apie vaizdo kodavimo klaidą.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="131"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pabandykite išjungti HDR režimą, pakeisti transliacijos kokybę arba pagrindinio kompiuterio ekrano skiriamąją gebą.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="139"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>Ryšys nutrauktas</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Klaidos kodas: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="849"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jūsų Moonlight nepalaiko %1 GeForce Experience versijos. Norėdami transliuoti iš %1, turite atnaujinti Moonlight.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="854"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Jūsų pasirinkimas įjungti nuotolinio darbastalio pėlę gali sukelti problemų žaidimuose.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="859"/>
