@@ -47,7 +47,6 @@ extern "C" {
 #include <sys/mman.h>
 
 #include "streaming/streamutils.h"
-#include "streaming/session.h"
 
 #include <Limelight.h>
 
@@ -326,42 +325,6 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Direct rendering via DRM is disabled");
         return DIRECT_RENDERING_INIT_FAILED;
-    }
-
-    if (!params->testOnly) {
-        // Create a dummy renderer to force SDL to complete the modesetting
-        // operation that the KMSDRM backend keeps pending until the next
-        // time we swap buffers. We have to do this before we enumerate
-        // CRTC modes below.
-        SDL_Renderer* renderer = SDL_CreateRenderer(params->window, -1, SDL_RENDERER_SOFTWARE);
-        if (renderer != nullptr) {
-            // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
-            // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
-            // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
-            // renderer. This can lead to an infinite to renderer recreation, so discard all
-            // SDL_WINDOWEVENT events after SDL_CreateRenderer().
-            Session* session = Session::get();
-            if (session != nullptr) {
-                // If we get here during a session, we need to synchronize with the event loop
-                // to ensure we don't drop any important events.
-                session->flushWindowEvents();
-            }
-            else {
-                // If we get here prior to the start of a session, just pump and flush ourselves.
-                SDL_PumpEvents();
-                SDL_FlushEvent(SDL_WINDOWEVENT);
-            }
-
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-            SDL_RenderClear(renderer);
-            SDL_RenderPresent(renderer);
-            SDL_DestroyRenderer(renderer);
-        }
-        else {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                        "SDL_CreateRenderer() failed: %s",
-                        SDL_GetError());
-        }
     }
 
     drmModeRes* resources = drmModeGetResources(m_DrmFd);
