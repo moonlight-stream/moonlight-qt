@@ -496,6 +496,11 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
 bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
-    // We can transparently handle size and display changes
+    // We can transparently handle size and display changes, except Windows where
+    // changing size appears to break the renderer (maybe due to the render thread?)
+#ifdef Q_OS_WIN32
+    return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_DISPLAY));
+#else
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
+#endif
 }
