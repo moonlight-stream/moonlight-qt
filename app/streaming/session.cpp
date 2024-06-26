@@ -1813,13 +1813,6 @@ void Session::execInternal()
                 SDL_RenderClear(renderer);
                 SDL_RenderPresent(renderer);
                 SDL_DestroyRenderer(renderer);
-
-                // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
-                // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
-                // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
-                // renderer. This can lead to an infinite to renderer recreation, so discard all
-                // SDL_WINDOWEVENT events after SDL_CreateRenderer().
-                flushWindowEvents();
             }
             else {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
