@@ -691,13 +691,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         SDL_GL_SetSwapInterval(0);
     }
 
-    if (!params->testOnly) {
-        // Draw a black frame until the video stream starts rendering
-        glClearColor(0, 0, 0, 1);
-        glClear(GL_COLOR_BUFFER_BIT);
-        SDL_GL_SwapWindow(params->window);
-    }
-
     glGenTextures(EGL_MAX_PLANES, m_Textures);
     for (size_t i = 0; i < EGL_MAX_PLANES; ++i) {
         glBindTexture(GL_TEXTURE_EXTERNAL_OES, m_Textures[i]);
@@ -875,6 +868,18 @@ void EGLRenderer::waitToRender()
             glFinish();
         }
     }
+}
+
+void EGLRenderer::prepareToRender()
+{
+    SDL_GL_MakeCurrent(m_Window, m_Context);
+    {
+        // Draw a black frame until the video stream starts rendering
+        glClearColor(0, 0, 0, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
+        SDL_GL_SwapWindow(m_Window);
+    }
+    SDL_GL_MakeCurrent(m_Window, nullptr);
 }
 
 void EGLRenderer::renderFrame(AVFrame* frame)

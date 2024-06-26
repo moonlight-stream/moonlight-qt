@@ -14,6 +14,7 @@ public:
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
     virtual void cleanupRenderContext() override;
     virtual void waitToRender() override;
+    virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool testRenderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;

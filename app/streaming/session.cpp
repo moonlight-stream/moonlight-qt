@@ -1802,24 +1802,6 @@ void Session::execInternal()
             FillRect(info.info.win.hdc, &clientRect, blackBrush);
             DeleteObject(blackBrush);
         }
-#else
-        if (strcmp(SDL_GetCurrentVideoDriver(), "KMSDRM") == 0) {
-            // Create a dummy renderer to force SDL to complete the modesetting
-            // operation that the KMSDRM backend keeps pending until the next
-            // time we swap buffers.
-            SDL_Renderer* renderer = SDL_CreateRenderer(m_Window, -1, SDL_RENDERER_SOFTWARE);
-            if (renderer != nullptr) {
-                SDL_SetRenderDrawColor(renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-                SDL_RenderClear(renderer);
-                SDL_RenderPresent(renderer);
-                SDL_DestroyRenderer(renderer);
-            }
-            else {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "SDL_CreateRenderer() for KMSDRM modesetting failed: %s",
-                             SDL_GetError());
-            }
-        }
 #endif
     }
 

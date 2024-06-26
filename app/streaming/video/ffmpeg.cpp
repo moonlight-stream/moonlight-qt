@@ -600,6 +600,9 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
         // Tell overlay manager to use this frontend renderer
         Session::get()->getOverlayManager().setOverlayRenderer(m_FrontendRenderer);
 
+        // Allow the renderer to perform final preparations for rendering
+        m_FrontendRenderer->prepareToRender();
+
         // Only create the decoder thread when instantiating the decoder for real. It will use APIs from
         // moonlight-common-c that can only be legally called with an established connection.
         m_DecoderThread = SDL_CreateThread(FFmpegVideoDecoder::decoderThreadProcThunk, "FFDecoder", (void*)this);
