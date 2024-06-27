@@ -1629,6 +1629,14 @@ Flickable {
                                                                                                   StreamingPreferences.enableYUV444);
                         slider.value = StreamingPreferences.bitrateKbps
                     }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: enabled ?
+                                      qsTr("Good for streaming desktop and text-heavy games, not very good for fast-paced games.")
+                                    :
+                                      qsTr("YUV 4:4:4 is not supported on this PC.")
                 }
 
                 CheckBox {
