@@ -18,7 +18,7 @@
 typedef struct _VERTEX
 {
     float x, y;
-    float tu, tv;
+    float tu, tv, tw;
 } VERTEX, *PVERTEX;
 
 #define CSC_MATRIX_RAW_ELEMENT_COUNT 9
@@ -872,10 +872,10 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     VERTEX verts[] =
     {
-        {renderRect.x, renderRect.y, 0, 1},
-        {renderRect.x, renderRect.y+renderRect.h, 0, 0},
-        {renderRect.x+renderRect.w, renderRect.y, 1, 1},
-        {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1, 0},
+        {renderRect.x, renderRect.y, 0, 1, 0},
+        {renderRect.x, renderRect.y+renderRect.h, 0, 0, 0},
+        {renderRect.x+renderRect.w, renderRect.y, 1, 1, 0},
+        {renderRect.x+renderRect.w, renderRect.y+renderRect.h, 1, 0, 0},
     };
 
     D3D11_BUFFER_DESC vbDesc = {};
@@ -1287,10 +1287,10 @@ bool D3D11VARenderer::setupRenderingResources()
 
         VERTEX verts[] =
         {
-            {renderRect.x, renderRect.y, 0, vMax},
-            {renderRect.x, renderRect.y+renderRect.h, 0, 0},
-            {renderRect.x+renderRect.w, renderRect.y, uMax, vMax},
-            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0},
+            {renderRect.x, renderRect.y, 0, vMax, 0},
+            {renderRect.x, renderRect.y+renderRect.h, 0, 0, 0},
+            {renderRect.x+renderRect.w, renderRect.y, uMax, vMax, 0},
+            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0, 0},
         };
 
         D3D11_BUFFER_DESC vbDesc = {};

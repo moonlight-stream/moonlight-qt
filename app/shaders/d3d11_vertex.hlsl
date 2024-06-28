@@ -1,13 +1,13 @@
 struct ShaderInput
 {
     float2 pos : POSITION;
-    float2 tex : TEXCOORD0;
+    float3 tex : TEXCOORD0;
 };
 
 struct ShaderOutput
 {
     float4 pos : SV_POSITION;
-    float2 tex : TEXCOORD0;
+    float3 tex : TEXCOORD0;
 };
 
 ShaderOutput main(ShaderInput input) 
