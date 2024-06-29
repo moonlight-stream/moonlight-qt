@@ -224,23 +224,6 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                      hr);
         goto Exit;
     }
-    else if (featureLevel <= D3D_FEATURE_LEVEL_11_0 && adapterDesc.VendorId == 0x1002) {
-        // TeraScale GPUs have trouble sampling from our YUV texture array SRVs,
-        // so we avoid using D3D11VA on older AMD GPUs. TeraScale works fine if
-        // we copy to our own internal NV12 texture instead of sampling from the
-        // decoder's output texture array directly, but that has significant perf
-        // impact for some lower-end Intel GPUs (even modern ones like the N100).
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Avoiding D3D11VA on AMD FL 11.0 GPU due to rendering bugs");
-
-        m_DeviceContext->Release();
-        m_DeviceContext = nullptr;
-        m_Device->Release();
-        m_Device = nullptr;
-
-        goto Exit;
-    }
     else if (featureLevel >= D3D_FEATURE_LEVEL_11_0) {
         // Remember that we found a non-software D3D11 devices with support for
         // feature level 11.0 or later (Fermi, Terascale 2, or Ivy Bridge and later)
