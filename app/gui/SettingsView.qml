@@ -1002,10 +1002,10 @@ Flickable {
                             text: "한국어" // Korean
                             val: StreamingPreferences.LANG_KO
                         }
-                        /* ListElement {
+                        ListElement {
                             text: "Magyar" // Hungarian
                             val: StreamingPreferences.LANG_HU
-                        } */
+                        }
                         ListElement {
                             text: "Nederlands" // Dutch
                             val: StreamingPreferences.LANG_NL
