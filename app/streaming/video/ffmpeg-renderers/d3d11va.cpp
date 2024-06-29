@@ -162,6 +162,7 @@ D3D11VARenderer::~D3D11VARenderer()
 
 bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
 {
+    const D3D_FEATURE_LEVEL supportedFeatureLevels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_11_1 };
     bool success = false;
     IDXGIAdapter1* adapter = nullptr;
     DXGI_ADAPTER_DESC1 adapterDesc;
@@ -211,8 +212,8 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                                | D3D11_CREATE_DEVICE_DEBUG
                        #endif
                            ,
-                           nullptr,
-                           0,
+                           supportedFeatureLevels,
+                           ARRAYSIZE(supportedFeatureLevels),
                            D3D11_SDK_VERSION,
                            &m_Device,
                            &featureLevel,
