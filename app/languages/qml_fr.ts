@@ -184,7 +184,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation>ID de jeu en cours d&apos;exécution&#x202f;: %1</translation>
+        <translation>ID du jeu en cours d&apos;exécution&#x202f;: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
