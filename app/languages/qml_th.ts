@@ -422,27 +422,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="611"/>
+        <location filename="../main.cpp" line="626"/>
         <source>&amp;Yes</source>
         <translation>&amp;ใช่</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="612"/>
+        <location filename="../main.cpp" line="627"/>
         <source>&amp;No</source>
         <translation>&amp;ไม่</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="613"/>
+        <location filename="../main.cpp" line="628"/>
         <source>OK</source>
         <translation>โอเค</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="614"/>
+        <location filename="../main.cpp" line="629"/>
         <source>Help</source>
         <translation>ช่วยเหลือ</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="615"/>
+        <location filename="../main.cpp" line="630"/>
         <source>Cancel</source>
         <translation>ยกเลิก</translation>
     </message>
@@ -503,137 +503,137 @@
         <translation>Error code: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="849"/>
+        <location filename="../streaming/session.cpp" line="862"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>เวิร์ชั่นของ GeForce Experience บน %1 ไม่รองรับ Moonlight เวิร์ชั่นนี้ คุณต้องอัปเดต Moonlight เพื่อสตรีมจาก % 1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="854"/>
+        <location filename="../streaming/session.cpp" line="867"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>การเลือกการตั้งค่าของคุณที่จะเปิดโหมดเมาส์ Remote Desktop อาจจะทำให้เกิดปัญหาในเกม</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="859"/>
+        <location filename="../streaming/session.cpp" line="872"/>
         <source>HDR is not supported with software decoding.</source>
         <translation>ไม่รองรับ HDR ด้วยการถอดรหัสแบบซอฟต์แวร์</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="863"/>
+        <location filename="../streaming/session.cpp" line="876"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>การเลือกการตั้งค่าของคุณเพื่อบังคับให้ถอดรหัสแบบซอฟต์แวร์อาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="894"/>
+        <location filename="../streaming/session.cpp" line="907"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>คอมของคุณไม่รอบรับการเข้ารหัส HEVC</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="911"/>
+        <location filename="../streaming/session.cpp" line="924"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>การใช้การถอดรหัสแบบซอฟต์แวร์เนื่องจากการบังคับ HEVC โดยที่การ์จอไม่รองรับ ให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="870"/>
+        <location filename="../streaming/session.cpp" line="883"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>ซอฟต์แวร์หรือการ์ดจอของเครื่องปลายทางไม่รองรับการเข้ารหัสแบบ AV1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="887"/>
+        <location filename="../streaming/session.cpp" line="900"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>กำลังถอดรหัสโดยซอฟต์แวร์เนื่องจากคุณบังคับให้ใช้ AV1 โดยที่การ์ดจอของคุณไม่รองรับ ซึ่งอาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="946"/>
+        <location filename="../streaming/session.cpp" line="959"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>เครื่องปลายทางไม่รองรับ HDR</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="950"/>
+        <location filename="../streaming/session.cpp" line="963"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>ไม่รองรับ HDR กำลังเปลี่ยนไปใช้โคเดค H.264</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="962"/>
+        <location filename="../streaming/session.cpp" line="975"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>การ์ดจอของคุณไม่รองรับการถอดรหัสแบบ AV1 Main10 สำหรับการสตรีมภาพแบบ HDR</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="979"/>
+        <location filename="../streaming/session.cpp" line="992"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>การ์ดจอของคุณไม่รองรับการถอดรหัสแบบ HEVC 10 bit สำหรับการสตรีมภาพแบบ HDR</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="986"/>
+        <location filename="../streaming/session.cpp" line="999"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>คอมพิวเตอร์ปลายทางและเครื่องนี้ไม่รองรับสิดัโอโคเดคสำหรับ HDR ที่เหมือนกัน</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1037"/>
+        <location filename="../streaming/session.cpp" line="1050"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>ความคมชัดที่เกิน 4K ไม่รองรับในวิดีโอโคเดค H.264</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1422"/>
+        <location filename="../streaming/session.cpp" line="1435"/>
         <source>Host returned error: %1</source>
         <translation>เครื่องปลายทางคินค่า error: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="925"/>
+        <location filename="../streaming/session.cpp" line="938"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>กำลังถอดรหัสโดยซอฟต์แวร์เนื่องจากคุณบังคับให้ใช้ H.264 โดยที่การ์ดจอของคุณไม่รองรับ ซึ่งอาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="935"/>
+        <location filename="../streaming/session.cpp" line="948"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>เครื่องปลายทางและเครื่องนี้ไม่รองรับวิดีโดโอโคเดคเดียวกัน ซึ่งอาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="938"/>
+        <location filename="../streaming/session.cpp" line="951"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>การ์ดจอขอเครื่องนี้ไม่รองรับการถอดรหัวแบบ H.264 ซึ่งกาจทำให้ประสิทธิภาพการสตรีมไม่ดี</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="973"/>
+        <location filename="../streaming/session.cpp" line="986"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>คอมพิวเตอร์นี้ไม่รองรับการถอดรหัส HEVC Main10 สำหรับการสตรีม HDR</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="994"/>
+        <location filename="../streaming/session.cpp" line="1007"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>ต้องใช้ GeForce Experience 3.0 หรือใหม่กว่าสำหรับการสตรีมแบบ 4K</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1009"/>
+        <location filename="../streaming/session.cpp" line="1022"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>อุปกรณ์เสียงปัจจุบัน ไม่รองรับการตั้งค่าเสียงรอบทิศทางที่คุณเลือก</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1015"/>
+        <location filename="../streaming/session.cpp" line="1028"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>ไม่สามารถเปิดอุปกรณ์เสียงได้ จะไม่สามารถใช้งานเสียงได้ในเซสชันนี้</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1020"/>
+        <location filename="../streaming/session.cpp" line="1033"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>Gamepad ที่กำลังต่ออยู่ไม่มีแมปปิ่งจึงไม่สามารถใช้งานได้ ลองเข้าเว็ป Moonlight เพื่อหาวิธีแก้ปัญหานี้</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1033"/>
+        <location filename="../streaming/session.cpp" line="1046"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>การ์ดจอของเครื่องปลายทางไม่รองรับการสตรีมความคมชัดเกิน 4K</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1052"/>
+        <location filename="../streaming/session.cpp" line="1065"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>ไม่สามารถบรรลุการบังคับให้ใช้ฮาร์ดแวร์ในการถอดรหัสของคุณ เนื่องจากคอมเครื่องนี้ไม่มีการ์ดจอที่รองรับการถอดรหัสโดยฮาร์ดแวร์</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1055"/>
+        <location filename="../streaming/session.cpp" line="1068"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>โคเดคที่เลือกและการถอดรหัสโดยฮาร์ดแวร์ไม่สามารถเข้ากันได้ การ์ดจอของคอมเครื่องนี้ไม่รองรับการถอดรหัสโคเดคที่คุณเลือก</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2098"/>
+        <location filename="../streaming/session.cpp" line="2112"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>ไม่สามารถเริ่มการถอดรหัสวิดีโอ โปรดตรวจสอบการตั้งค่าการสตรีมแล้วลองใหม่</translation>
     </message>
