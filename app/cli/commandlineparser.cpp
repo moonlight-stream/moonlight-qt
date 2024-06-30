@@ -353,6 +353,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addFlagOption("1440", "2560x1440 resolution");
     parser.addFlagOption("4K", "3840x2160 resolution");
     parser.addValueOption("resolution", "custom <width>x<height> resolution");
+    parser.addToggleOption("ignore-aspect-ratio", "ignore aspect ratio");
     parser.addToggleOption("vsync", "V-Sync");
     parser.addValueOption("fps", "FPS");
     parser.addValueOption("bitrate", "bitrate in Kbps");
@@ -440,6 +441,9 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     if (parser.isSet("display-mode")) {
         preferences->windowMode = mapValue(m_WindowModeMap, parser.getChoiceOptionValue("display-mode"));
     }
+
+    // Resolve --ignore-aspect-ratio
+    preferences->ignoreAspectRatio = parser.getToggleOptionValue("ignore-aspect-ratio", preferences->ignoreAspectRatio);
 
     // Resolve --vsync and --no-vsync options
     preferences->enableVsync = parser.getToggleOptionValue("vsync", preferences->enableVsync);
