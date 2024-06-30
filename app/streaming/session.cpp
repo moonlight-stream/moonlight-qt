@@ -472,17 +472,32 @@ bool Session::populateDecoderProperties(SDL_Window* window)
     IVideoDecoder* decoder;
 
     int videoFormat;
-    if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN10) {
+    if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_HIGH10_444) {
+        videoFormat = VIDEO_FORMAT_AV1_HIGH10_444;
+    }
+    else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN10) {
         videoFormat = VIDEO_FORMAT_AV1_MAIN10;
+    }
+    else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_HIGH8_444) {
+        videoFormat = VIDEO_FORMAT_AV1_HIGH8_444;
     }
     else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN8) {
         videoFormat = VIDEO_FORMAT_AV1_MAIN8;
     }
+    else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265_REXT10_444) {
+        videoFormat = VIDEO_FORMAT_H265_REXT10_444;
+    }
     else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265_MAIN10) {
         videoFormat = VIDEO_FORMAT_H265_MAIN10;
     }
+    else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265_REXT8_444) {
+        videoFormat = VIDEO_FORMAT_H265_REXT8_444;
+    }
     else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265) {
         videoFormat = VIDEO_FORMAT_H265;
+    }
+    else if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H264_HIGH8_444) {
+        videoFormat = VIDEO_FORMAT_H264_HIGH8_444;
     }
     else {
         videoFormat = VIDEO_FORMAT_H264;
@@ -614,15 +629,22 @@ bool Session::initialize()
         return false;
     }
 
+    LiInitializeStreamConfiguration(&m_StreamConfig);
+    m_StreamConfig.width = m_Preferences->width;
+    m_StreamConfig.height = m_Preferences->height;
+
+    int x, y, width, height;
+    getWindowDimensions(x, y, width, height);
+
     // Create a hidden window to use for decoder initialization tests
-    SDL_Window* testWindow = SDL_CreateWindow("", 0, 0, 1280, 720,
+    SDL_Window* testWindow = SDL_CreateWindow("", x, y, width, height,
                                               SDL_WINDOW_HIDDEN | StreamUtils::getPlatformWindowFlags());
     if (!testWindow) {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                     "Failed to create test window with platform flags: %s",
                     SDL_GetError());
 
-        testWindow = SDL_CreateWindow("", 0, 0, 1280, 720, SDL_WINDOW_HIDDEN);
+        testWindow = SDL_CreateWindow("", x, y, width, height, SDL_WINDOW_HIDDEN);
         if (!testWindow) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to create window for hardware decode test: %s",
@@ -638,9 +660,6 @@ bool Session::initialize()
     LiInitializeVideoCallbacks(&m_VideoCallbacks);
     m_VideoCallbacks.setup = drSetup;
 
-    LiInitializeStreamConfiguration(&m_StreamConfig);
-    m_StreamConfig.width = m_Preferences->width;
-    m_StreamConfig.height = m_Preferences->height;
     m_StreamConfig.fps = m_Preferences->fps;
     m_StreamConfig.bitrate = m_Preferences->bitrateKbps;
 
@@ -695,6 +714,11 @@ bool Session::initialize()
 
     // H.264 is always supported
     m_StreamConfig.supportedVideoFormats = VIDEO_FORMAT_H264;
+    /* Hardware decoders don't support this format, and libplacebo backend with software decoding is not yet fully implemented
+    if (m_Preferences->enableYUV444) {
+        m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H264_HIGH8_444;
+    }
+    */
 
     switch (m_Preferences->videoCodecConfig)
     {
@@ -720,13 +744,30 @@ bool Session::initialize()
 #endif
 
         // TODO: Determine if HEVC is better depending on the decoder
-        if (m_Preferences->enableHdr && isHardwareDecodeAvailable(testWindow,
-                                                                  m_Preferences->videoDecoderSelection,
-                                                                  VIDEO_FORMAT_H265_MAIN10,
-                                                                  m_StreamConfig.width,
-                                                                  m_StreamConfig.height,
-                                                                  m_StreamConfig.fps)) {
+        if (m_Preferences->enableHdr &&
+            m_Preferences->enableYUV444 && isHardwareDecodeAvailable(testWindow,
+                                                                     m_Preferences->videoDecoderSelection,
+                                                                     VIDEO_FORMAT_H265_REXT10_444,
+                                                                     m_StreamConfig.width,
+                                                                     m_StreamConfig.height,
+                                                                     m_StreamConfig.fps)) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265 | VIDEO_FORMAT_H265_MAIN10 | VIDEO_FORMAT_H265_REXT8_444 | VIDEO_FORMAT_H265_REXT10_444;
+        }
+        else if (m_Preferences->enableHdr && isHardwareDecodeAvailable(testWindow,
+                                                                       m_Preferences->videoDecoderSelection,
+                                                                       VIDEO_FORMAT_H265_MAIN10,
+                                                                       m_StreamConfig.width,
+                                                                       m_StreamConfig.height,
+                                                                       m_StreamConfig.fps)) {
             m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265 | VIDEO_FORMAT_H265_MAIN10;
+        }
+        else if (m_Preferences->enableYUV444 && isHardwareDecodeAvailable(testWindow,
+                                                                          m_Preferences->videoDecoderSelection,
+                                                                          VIDEO_FORMAT_H265_REXT8_444,
+                                                                          m_StreamConfig.width,
+                                                                          m_StreamConfig.height,
+                                                                          m_StreamConfig.fps)) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265 | VIDEO_FORMAT_H265_REXT8_444;
         }
         else if (isHardwareDecodeAvailable(testWindow,
                                            m_Preferences->videoDecoderSelection,
@@ -761,12 +802,24 @@ bool Session::initialize()
         m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265;
         if (m_Preferences->enableHdr) {
             m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+            if (m_Preferences->enableYUV444) {
+                m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_REXT10_444;
+            }
+        }
+        if (m_Preferences->enableYUV444) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_REXT8_444;
         }
         break;
     case StreamingPreferences::VCC_FORCE_AV1:
         m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_AV1_MAIN8;
         if (m_Preferences->enableHdr) {
             m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_AV1_MAIN10;
+            if (m_Preferences->enableYUV444) {
+                m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_AV1_HIGH10_444;
+            }
+        }
+        if (m_Preferences->enableYUV444) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_AV1_HIGH8_444;
         }
 
         // We'll try to fall back to HEVC first if AV1 fails. We'd rather not fall back
@@ -776,6 +829,12 @@ bool Session::initialize()
         }
         if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN10) {
             m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_MAIN10;
+        }
+        if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_HIGH8_444) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_REXT8_444;
+        }
+        if (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_HIGH10_444) {
+            m_StreamConfig.supportedVideoFormats |= VIDEO_FORMAT_H265_REXT10_444;
         }
         break;
     }
@@ -998,6 +1057,82 @@ bool Session::validateLaunch(SDL_Window* testWindow)
               ((m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_MAIN10) && (m_Computer->serverCodecModeSupport & SCM_AV1_MAIN10)))) {
             emitLaunchWarning(tr("Your host PC and client PC don't support the same HDR video codecs."));
             m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_MASK_10BIT;
+        }
+    }
+
+    if (m_Preferences->enableYUV444) {
+        switch (m_Preferences->videoCodecConfig) {
+        case StreamingPreferences::VCC_AUTO:
+            // Auto was already checked during init
+            break;
+
+        case StreamingPreferences::VCC_FORCE_H264:
+            if ((m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H264_HIGH8_444) &&
+                (!(m_Computer->serverCodecModeSupport & SCM_H264_HIGH8_444) ||
+                 !isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
+                                            VIDEO_FORMAT_H264_HIGH8_444,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps))) {
+                m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_H264_HIGH8_444;
+            }
+            break;
+
+        case StreamingPreferences::VCC_FORCE_HEVC:
+        case StreamingPreferences::VCC_FORCE_HEVC_HDR_DEPRECATED:
+            if ((m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265_REXT10_444) &&
+                (!(m_Computer->serverCodecModeSupport & SCM_HEVC_REXT10_444) ||
+                 !isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
+                                            VIDEO_FORMAT_H265_REXT10_444,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps))) {
+                m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_H265_REXT10_444;
+            }
+            // Skip 8-bit check if we passed 10-bit check
+            if (!(m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265_REXT10_444) &&
+                (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_H265_REXT8_444) &&
+                (!(m_Computer->serverCodecModeSupport & SCM_HEVC_REXT8_444) ||
+                 !isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
+                                            VIDEO_FORMAT_H265_REXT8_444,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps))) {
+                m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_H265_REXT8_444;
+            }
+            break;
+
+        case StreamingPreferences::VCC_FORCE_AV1:
+            if ((m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_HIGH10_444) &&
+                (!(m_Computer->serverCodecModeSupport & SCM_AV1_HIGH10_444) ||
+                 !isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
+                                            VIDEO_FORMAT_AV1_HIGH10_444,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps))) {
+                m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_AV1_HIGH10_444;
+            }
+            // Skip 8-bit check if we passed 10-bit check
+            if (!(m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_HIGH10_444) &&
+                (m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_AV1_HIGH8_444) &&
+                (!(m_Computer->serverCodecModeSupport & SCM_AV1_HIGH8_444) ||
+                 !isHardwareDecodeAvailable(testWindow,
+                                            m_Preferences->videoDecoderSelection,
+                                            VIDEO_FORMAT_AV1_HIGH8_444,
+                                            m_StreamConfig.width,
+                                            m_StreamConfig.height,
+                                            m_StreamConfig.fps))) {
+                m_StreamConfig.supportedVideoFormats &= ~VIDEO_FORMAT_AV1_HIGH8_444;
+            }
+            break;
+
+        default:
+            SDL_assert(false);
+            break;
         }
     }
 
