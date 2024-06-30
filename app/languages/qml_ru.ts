@@ -875,7 +875,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1594"/>
         <source>Enable HDR (Experimental)</source>
-        <translation>Включить HDR (Эксперементальна опция)</translation>
+        <translation>Включить HDR (Эксперементальная опция)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1609"/>
@@ -1099,7 +1099,7 @@
         <location filename="../gui/SettingsView.qml" line="1499"/>
         <location filename="../gui/SettingsView.qml" line="1567"/>
         <source>Automatic (Recommended)</source>
-        <translation>Автоматически (рекомендуется)</translation>
+        <translation>Автоматически (Рекомендуется)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1503"/>
@@ -1129,12 +1129,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1617"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>Автоматически найти хост-ПК в локальной сети (рекомендуется)</translation>
+        <translation>Автоматически найти хост-ПК в локальной сети (Рекомендуется)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1638"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation>Автоматически определять проблемы с подключением (рекомендуется)</translation>
+        <translation>Автоматически определять проблемы с подключением (Рекомендуется)</translation>
     </message>
 </context>
 <context>
