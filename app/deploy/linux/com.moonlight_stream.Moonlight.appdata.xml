@@ -38,7 +38,7 @@
 			<description>
 				<p>New features:</p>
 				<ul>
-					<li>HDR to SDR tonemapping is now supported by the the Vulkan renderer on Linux</li>
+					<li>HDR to SDR tonemapping is now supported by the Vulkan renderer on Linux</li>
 				</ul>
 				<p>Behavior Changes:</p>
 				<ul>
