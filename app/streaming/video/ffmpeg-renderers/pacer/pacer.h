@@ -31,7 +31,7 @@ public:
 
     void submitFrame(AVFrame* frame);
 
-    bool initialize(SDL_Window* window, int maxVideoFps, bool enablePacing);
+    bool initialize(SDL_Window* window, int maxVideoFps, bool enablePacing, int minimumLatency);
 
     void signalVsync();
 
@@ -42,30 +42,39 @@ private:
 
     static int renderThread(void* context);
 
+    static int latencyThread(void* context);
+
     void handleVsync(int timeUntilNextVsyncMillis);
 
     void enqueueFrameForRenderingAndUnlock(AVFrame* frame);
 
     void renderFrame(AVFrame* frame);
 
-    void dropFrameForEnqueue(QQueue<AVFrame*>& queue);
+    void dropFrameForEnqueue(QQueue<AVFrame*>& queue, int maxQueuedFrames);
 
     QQueue<AVFrame*> m_RenderQueue;
     QQueue<AVFrame*> m_PacingQueue;
+    QQueue<AVFrame*> m_LatencyQueue;
     QQueue<int> m_PacingQueueHistory;
     QQueue<int> m_RenderQueueHistory;
+    QQueue<int> m_LatencyQueueHistory;
     QMutex m_FrameQueueLock;
+    QMutex m_LatencyQueueLock;
     QWaitCondition m_RenderQueueNotEmpty;
     QWaitCondition m_PacingQueueNotEmpty;
+    QWaitCondition m_LatencyQueueNotEmpty;
     QWaitCondition m_VsyncSignalled;
     SDL_Thread* m_RenderThread;
     SDL_Thread* m_VsyncThread;
+    SDL_Thread* m_LatencyThread;
     bool m_Stopping;
 
     IVsyncSource* m_VsyncSource;
     IFFmpegRenderer* m_VsyncRenderer;
     int m_MaxVideoFps;
     int m_DisplayFps;
+    int m_MinimumLatency;
+    int m_MaxLatencyQueuedFrames;
     PVIDEO_STATS m_VideoStats;
     int m_RendererAttributes;
 };
