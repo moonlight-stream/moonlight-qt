@@ -34,6 +34,24 @@
 	</screenshots>
 
 	<releases>
+		<release version="6.0.1" date="2024-06-30">
+			<description>
+				<p>New features:</p>
+				<ul>
+					<li>HDR to SDR tonemapping is now supported by the the Vulkan renderer on Linux</li>
+				</ul>
+				<p>Behavior Changes:</p>
+				<ul>
+					<li>More time is now provided for PCs to wake up before displaying an error when starting a stream from the CLI</li>
+					<li>Moonlight will no longer try to guess VA driver names when running libva 2.20 or later</li>
+				</ul>
+				<p>Bugfixes:</p>
+				<ul>
+					<li>Fixed crash when the Vulkan renderer executed on a system with no Vulkan devices</li>
+					<li>Updated community-contributed translations from Weblate</li>
+				</ul>
+			</description>
+		</release>
 		<release version="6.0.0" date="2024-06-06">
 			<description>
 				<p>New features:</p>
