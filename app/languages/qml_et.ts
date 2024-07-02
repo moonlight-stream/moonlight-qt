@@ -7,48 +7,48 @@
         <location filename="../gui/AppView.qml" line="145"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Jätka Mängu</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="173"/>
         <location filename="../gui/AppView.qml" line="308"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Välju Mängust</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Ava Mäng</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="316"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Otsene käivitus</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Käivitage see äpp kohe, kui host on valitud, äppide valiku akent vältides.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Peida Mäng</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Peida see mäng äppide aknast. Peidetud mängudele juurdepääsuks vajutage parema hiirenupuga host&apos;ile ja valige %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Näita Kõik Äpid</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Kindlasti soovite katkestada %1? Salvestamata muudatused kustutatakse.</translation>
     </message>
 </context>
 <context>
@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Luuakse ühendust PC&apos;ga...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
@@ -74,12 +74,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Luuakse ühendust PC&apos;ga...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>Suletakse äpp...</translation>
     </message>
 </context>
 <context>
@@ -87,17 +87,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Luuakse ühendust PC&apos;ga...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Laen äppide nimekirja...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Olete kindel, et soovite lõpetada %1? Salvestamata muudatused kustutatakse.</translation>
     </message>
 </context>
 <context>
@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>Ühendatud</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Ühendamata</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -119,7 +119,7 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Teadmata</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
@@ -134,27 +134,27 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Nimi: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Staatus: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktiivne Aadress: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Lokaalne Aadress: 1%</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
@@ -164,17 +164,17 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6 Aadress: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Valitud Aadress: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC Aadress: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
