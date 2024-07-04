@@ -12,10 +12,13 @@ include(../globaldefs.pri)
 
 # Precompile QML files to avoid writing qmlcache on portable versions.
 # Since this binds the app against the Qt runtime version, we will only
-# do this for Windows and Mac, since they ship with the Qt runtime.
-win32|macx {
-    CONFIG(release, debug|release) {
-        CONFIG += qtquickcompiler
+# do this for Windows and Mac (when disable-prebuilts is not defined),
+# since they always ship with the matching build of the Qt runtime.
+!disable-prebuilts {
+    win32|macx {
+        CONFIG(release, debug|release) {
+            CONFIG += qtquickcompiler
+        }
     }
 }
 
