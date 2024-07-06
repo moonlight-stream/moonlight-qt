@@ -47,6 +47,10 @@ private:
 
     bool isDecoderIgnored(const AVCodec* decoder);
 
+    bool tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
+                                     int pass,
+                                     QSet<const AVCodec*>& terminallyFailedHardwareDecoders);
+
     bool tryInitializeRendererForUnknownDecoder(const AVCodec* decoder,
                                                 PDECODER_PARAMETERS params,
                                                 bool tryHwAccel);
