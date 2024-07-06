@@ -84,7 +84,7 @@ static const QMap<QString, int> k_NonHwaccelCodecInfo = {
 bool FFmpegVideoDecoder::isHardwareAccelerated()
 {
     return m_HwDecodeCfg != nullptr ||
-            (m_VideoDecoderCtx->codec->capabilities & AV_CODEC_CAP_HARDWARE) != 0;
+            (getAVCodecCapabilities(m_VideoDecoderCtx->codec) & AV_CODEC_CAP_HARDWARE) != 0;
 }
 
 bool FFmpegVideoDecoder::isAlwaysFullScreen()
@@ -1165,6 +1165,22 @@ bool FFmpegVideoDecoder::isDecoderIgnored(const AVCodec *decoder)
     return false;
 }
 
+int FFmpegVideoDecoder::getAVCodecCapabilities(const AVCodec *codec)
+{
+    int caps = codec->capabilities;
+
+    // There are a bunch of out-of-tree OMX decoder implementations
+    // from various SBC manufacturers that all seem to forget to set
+    // AV_CODEC_CAP_HARDWARE (probably because the upstream OMX code
+    // also doesn't set it). Avoid a false decoder warning on startup
+    // by setting it ourselves.
+    if (QString::fromUtf8(codec->name).endsWith("_omx", Qt::CaseInsensitive)) {
+        caps |= AV_CODEC_CAP_HARDWARE;
+    }
+
+    return caps;
+}
+
 bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params, int pass, QSet<const AVCodec*>& terminallyFailedHardwareDecoders)
 {
     const AVCodec* decoder;
@@ -1188,7 +1204,7 @@ bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
         }
 
         // Skip non-hwaccel hardware decoders
-        if (decoder->capabilities & AV_CODEC_CAP_HARDWARE) {
+        if (getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE) {
             continue;
         }
 
@@ -1322,7 +1338,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             }
 
             // Skip software/hybrid decoders and normal hwaccel decoders (which were handled in the loop above)
-            if (!(decoder->capabilities & AV_CODEC_CAP_HARDWARE)) {
+            if (!(getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE)) {
                 continue;
             }
 
@@ -1372,7 +1388,7 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             // hardware and software depending on whether an hwaccel is supplied.
             // Instead, we tell tryInitializeRendererForUnknownDecoder() not to
             // try hwaccel for this decoder.
-            if (decoder->capabilities & AV_CODEC_CAP_HARDWARE) {
+            if (getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE) {
                 continue;
             }
 

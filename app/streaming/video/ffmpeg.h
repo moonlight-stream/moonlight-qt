@@ -45,7 +45,11 @@ private:
 
     bool createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend);
 
+    static
     bool isDecoderIgnored(const AVCodec* decoder);
+
+    static
+    int getAVCodecCapabilities(const AVCodec *codec);
 
     bool tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
                                      int pass,
