@@ -951,6 +951,7 @@ bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFo
         else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
             switch (pixelFormat) {
             case AV_PIX_FMT_P010:
+            case AV_PIX_FMT_YUV420P10:
                 return true;
             default:
                 return false;
