@@ -661,16 +661,28 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
     else {
         // If we're going to need to map this as a software frame, check
         // against the set of formats we support in mapSoftwareFrame().
-        switch (pixelFormat) {
-        case AV_PIX_FMT_DRM_PRIME:
-        case AV_PIX_FMT_NV12:
-        case AV_PIX_FMT_NV21:
-        case AV_PIX_FMT_P010:
-        case AV_PIX_FMT_YUV420P:
-        case AV_PIX_FMT_YUVJ420P:
+        if (pixelFormat == AV_PIX_FMT_DRM_PRIME) {
+            // AV_PIX_FMT_DRM_PRIME is always supported
             return true;
-        default:
-            return false;
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_P010:
+                return true;
+            default:
+                return false;
+            }
+        }
+        else {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_NV12:
+            case AV_PIX_FMT_NV21:
+            case AV_PIX_FMT_YUV420P:
+            case AV_PIX_FMT_YUVJ420P:
+                return true;
+            default:
+                return false;
+            }
         }
     }
 }

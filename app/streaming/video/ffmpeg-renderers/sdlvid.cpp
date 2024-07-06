@@ -80,19 +80,24 @@ bool SdlRenderer::isRenderThreadSupported()
     return true;
 }
 
-bool SdlRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
+bool SdlRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    // Remember to keep this in sync with SdlRenderer::renderFrame()!
-    switch (pixelFormat)
-    {
-    case AV_PIX_FMT_YUV420P:
-    case AV_PIX_FMT_YUVJ420P:
-    case AV_PIX_FMT_NV12:
-    case AV_PIX_FMT_NV21:
-        return true;
-
-    default:
+    if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+        // SDL2 doesn't support 10-bit pixel formats
         return false;
+    }
+    else {
+        // Remember to keep this in sync with SdlRenderer::renderFrame()!
+        switch (pixelFormat) {
+        case AV_PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUVJ420P:
+        case AV_PIX_FMT_NV12:
+        case AV_PIX_FMT_NV21:
+            return true;
+
+        default:
+            return false;
+        }
     }
 }
 
