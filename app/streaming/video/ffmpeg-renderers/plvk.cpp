@@ -94,8 +94,9 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
     SDL_FreeSurface((SDL_Surface*)opaque);
 }
 
-PlVkRenderer::PlVkRenderer(IFFmpegRenderer* backendRenderer) :
-    m_Backend(backendRenderer)
+PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
+    m_Backend(backendRenderer),
+    m_HwAccelBackend(hwaccel)
 {
     bool ok;
 
@@ -240,7 +241,7 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     }
 
     // If we're acting as the decoder backend, we need a physical device with Vulkan video support
-    if (m_Backend == nullptr) {
+    if (m_HwAccelBackend) {
         const char* videoDecodeExtension;
 
         if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_H264) {
@@ -467,7 +468,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // We only need an hwaccel device context if we're going to act as the backend renderer too
-    if (m_Backend == nullptr) {
+    if (m_HwAccelBackend) {
         m_HwDeviceCtx = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VULKAN);
         if (m_HwDeviceCtx == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -521,13 +522,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
 {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using Vulkan video decoding");
+    if (m_HwAccelBackend) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using Vulkan video decoding");
 
-    // This should only be called when we're acting as the decoder backend
-    SDL_assert(m_Backend == nullptr);
+        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
+    }
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using Vulkan renderer");
+    }
 
-    context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
     return true;
 }
 
@@ -932,11 +937,36 @@ bool PlVkRenderer::needsTestFrame()
 
 bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    if (m_Backend) {
+    if (m_HwAccelBackend) {
+        return pixelFormat == AV_PIX_FMT_VULKAN;
+    }
+    else if (m_Backend) {
         return m_Backend->isPixelFormatSupported(videoFormat, pixelFormat);
     }
     else {
-        return IFFmpegRenderer::isPixelFormatSupported(videoFormat, pixelFormat);
+        if (pixelFormat == AV_PIX_FMT_VULKAN) {
+            // Vulkan frames are always supported
+            return true;
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_P010:
+                return true;
+            default:
+                return false;
+            }
+        }
+        else {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_NV12:
+            case AV_PIX_FMT_NV21:
+            case AV_PIX_FMT_YUV420P:
+            case AV_PIX_FMT_YUVJ420P:
+                return true;
+            default:
+                return false;
+            }
+        }
     }
 }
 
