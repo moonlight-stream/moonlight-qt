@@ -49,11 +49,18 @@ private:
     bool isDecoderIgnored(const AVCodec* decoder);
 
     static
+    bool isZeroCopyFormat(AVPixelFormat format);
+
+    static
     int getAVCodecCapabilities(const AVCodec *codec);
 
     bool tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
                                      int pass,
                                      QSet<const AVCodec*>& terminallyFailedHardwareDecoders);
+
+    bool tryInitializeNonHwAccelDecoder(PDECODER_PARAMETERS params,
+                                        bool requireZeroCopyFormat,
+                                        QSet<const AVCodec*>& terminallyFailedHardwareDecoders);
 
     bool tryInitializeRendererForUnknownDecoder(const AVCodec* decoder,
                                                 PDECODER_PARAMETERS params,

@@ -7,6 +7,7 @@
 
 extern "C" {
 #include <libavutil/mastering_display_metadata.h>
+#include <libavutil/pixdesc.h>
 }
 
 #include "ffmpeg-renderers/sdlvid.h"
@@ -1277,6 +1278,71 @@ bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
     return false;
 }
 
+bool FFmpegVideoDecoder::isZeroCopyFormat(AVPixelFormat format)
+{
+    const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get(format);
+    return (formatDesc && !!(formatDesc->flags & AV_PIX_FMT_FLAG_HWACCEL));
+}
+
+bool FFmpegVideoDecoder::tryInitializeNonHwAccelDecoder(PDECODER_PARAMETERS params, bool requireZeroCopyFormat, QSet<const AVCodec*>& terminallyFailedHardwareDecoders)
+{
+    const AVCodec* decoder;
+    void* codecIterator;
+
+    // Iterate through non-hwaccel and non-standard hwaccel hardware decoders that have AV_CODEC_CAP_HARDWARE set
+    codecIterator = NULL;
+    while ((decoder = av_codec_iterate(&codecIterator))) {
+        // Skip codecs that aren't decoders
+        if (!av_codec_is_decoder(decoder)) {
+            continue;
+        }
+
+        // Skip decoders that don't match our codec
+        if (((params->videoFormat & VIDEO_FORMAT_MASK_H264) && decoder->id != AV_CODEC_ID_H264) ||
+            ((params->videoFormat & VIDEO_FORMAT_MASK_H265) && decoder->id != AV_CODEC_ID_HEVC) ||
+            ((params->videoFormat & VIDEO_FORMAT_MASK_AV1)  && decoder->id != AV_CODEC_ID_AV1)) {
+            continue;
+        }
+
+        // Skip software/hybrid decoders and normal hwaccel decoders (which were handled in the loop above)
+        if (!(getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE)) {
+            continue;
+        }
+
+        // Skip ignored decoders
+        if (isDecoderIgnored(decoder)) {
+            continue;
+        }
+
+        // Skip decoders without zero-copy output formats if requested
+        if (requireZeroCopyFormat) {
+            bool foundZeroCopyFormat = false;
+            for (int i = 0; decoder->pix_fmts && decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+                if (isZeroCopyFormat(decoder->pix_fmts[i])) {
+                    foundZeroCopyFormat = true;
+                    break;
+                }
+            }
+
+            if (!foundZeroCopyFormat) {
+                continue;
+            }
+        }
+
+        // Skip hardware decoders that have returned a terminal failure status
+        if (terminallyFailedHardwareDecoders.contains(decoder)) {
+            continue;
+        }
+
+        // Try to initialize this decoder both as hwaccel and non-hwaccel
+        if (tryInitializeRendererForUnknownDecoder(decoder, params, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
 {
     // Increase log level until the first frame is decoded
@@ -1355,40 +1421,15 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             return true;
         }
 
-        // Iterate through non-hwaccel and non-standard hwaccel hardware decoders that have AV_CODEC_CAP_HARDWARE set
-        codecIterator = NULL;
-        while ((decoder = av_codec_iterate(&codecIterator))) {
-            // Skip codecs that aren't decoders
-            if (!av_codec_is_decoder(decoder)) {
-                continue;
-            }
-
-            // Skip decoders that don't match our codec
-            if (((params->videoFormat & VIDEO_FORMAT_MASK_H264) && decoder->id != AV_CODEC_ID_H264) ||
-                ((params->videoFormat & VIDEO_FORMAT_MASK_H265) && decoder->id != AV_CODEC_ID_HEVC) ||
-                ((params->videoFormat & VIDEO_FORMAT_MASK_AV1)  && decoder->id != AV_CODEC_ID_AV1)) {
-                continue;
-            }
-
-            // Skip software/hybrid decoders and normal hwaccel decoders (which were handled in the loop above)
-            if (!(getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE)) {
-                continue;
-            }
-
-            // Skip ignored decoders
-            if (isDecoderIgnored(decoder)) {
-                continue;
-            }
-
-            // Skip hardware decoders that have returned a terminal failure status
-            if (terminallyFailedHardwareDecoders.contains(decoder)) {
-                continue;
-            }
-
-            // Try to initialize this decoder both as hwaccel and non-hwaccel
-            if (tryInitializeRendererForUnknownDecoder(decoder, params, true)) {
-                return true;
-            }
+        // Iterate through non-hwaccel and non-standard hwaccel hardware decoders that have AV_CODEC_CAP_HARDWARE set.
+        //
+        // We first try to find decoders with a hwaccel format that can be rendered without CPU copyback.
+        // Failing that, we will accept a decoder that only supports copyback (or one with unknown pixfmts).
+        if (tryInitializeNonHwAccelDecoder(params, true /* zero copy */, terminallyFailedHardwareDecoders)) {
+            return true;
+        }
+        if (tryInitializeNonHwAccelDecoder(params, false /* zero copy */, terminallyFailedHardwareDecoders)) {
+            return true;
         }
 
         // Try the remaining tiers of hwaccel decoders
