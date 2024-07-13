@@ -54,9 +54,15 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 * GCC or Clang
 * FFmpeg 4.0 or later
 * Install the required packages:
-  * Debian/Ubuntu: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev libva-dev libvdpau-dev libxkbcommon-dev  wayland-protocols libdrm-dev qtbase6-dev qt6-declarative-dev libqt6svg6-dev qml6-module-qtquick-controls qml6-module-qtquick-templates qml6-module-qtquick-layouts qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick`
-  * RedHat/Fedora (RPM Fusion repo required): `openssl-devel SDL2-devel SDL2_ttf-devel ffmpeg-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel libdrm-devel qt6-qtsvg-devel qt6-qtdeclarative-devel`
-* Building the Vulkan HDR renderer requires a `libplacebo-dev`/`libplacebo-devel` version of at least v338.0 and FFmpeg 6.1 or later.
+  * Debian/Ubuntu:
+    * Base Requirements: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev libva-dev libvdpau-dev libxkbcommon-dev wayland-protocols libdrm-dev`
+    * Qt 6 (Recommended): `qtbase6-dev qt6-declarative-dev libqt6svg6-dev qml6-module-qtquick-controls qml6-module-qtquick-templates qml6-module-qtquick-layouts qml6-module-qtqml-workerscript qml6-module-qtquick-window qml6-module-qtquick`
+    * Qt 5: `qtbase5-dev qt5-qmake qtdeclarative5-dev qtquickcontrols2-5-dev qml-module-qtquick-controls2 qml-module-qtquick-layouts qml-module-qtquick-window2 qml-module-qtquick2 qtwayland5`
+  * RedHat/Fedora (RPM Fusion repo required):
+    * Base Requirements: `openssl-devel SDL2-devel SDL2_ttf-devel ffmpeg-devel libva-devel libvdpau-devel opus-devel pulseaudio-libs-devel alsa-lib-devel libdrm-devel`
+    * Qt 6 (Recommended): `qt6-qtsvg-devel qt6-qtdeclarative-devel`
+    * Qt 5: `qt5-qtsvg-devel qt5-qtquickcontrols2-devel`
+* Building the Vulkan renderer requires a `libplacebo-dev`/`libplacebo-devel` version of at least v7.349.0 and FFmpeg 6.1 or later.
 
 ### Steam Link Build Requirements
 * [Steam Link SDK](https://github.com/ValveSoftware/steamlink-sdk) cloned on your build system
