@@ -1,9 +1,7 @@
-$Urls = [ordered]@{ "X86" = "https://aka.ms/vs/17/release/vc_redist.x86.exe";
-                    "X64" = "https://aka.ms/vs/17/release/vc_redist.x64.exe";
+$Urls = [ordered]@{ "X64" = "https://aka.ms/vs/17/release/vc_redist.x64.exe";
                     "ARM64" = "https://aka.ms/vs/17/release/vc_redist.arm64.exe"; }
 
-$UpgradeCodes = @{ "X86" = "65E5BD06-6392-3027-8C26-853107D3CF1A";
-                   "X64" = "36F68A90-239C-34DF-B58C-64B30153CE35";
+$UpgradeCodes = @{ "X64" = "36F68A90-239C-34DF-B58C-64B30153CE35";
                    "ARM64" = "DC9BAE42-810B-423A-9E25-E4073F1C7B00"; }
 
 function Get-RedirectTarget([string]$Url) {

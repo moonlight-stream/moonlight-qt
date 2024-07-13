@@ -5,10 +5,10 @@ clone_depth: 1
 environment:
   matrix:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
-      QTDIR: C:\Qt\5.15
-      QTDIR_ARM64: C:\Qt\6.7
+      QTDIR: C:\Qt\6.7
     - APPVEYOR_BUILD_WORKER_IMAGE: macOS-Sonoma
       BUILD_TARGET: macos
+      QTDIR: $HOME/Qt/6.6
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu1604
       BUILD_TARGET: steamlink
     - APPVEYOR_BUILD_WORKER_IMAGE: Ubuntu2004
@@ -16,9 +16,9 @@ environment:
       FFMPEG_CONFIGURE_ARGS: --enable-pic --disable-static --enable-shared --disable-all --enable-avcodec --enable-avformat --enable-decoder=h264 --enable-decoder=hevc --enable-decoder=av1 --enable-hwaccel=h264_vaapi --enable-hwaccel=hevc_vaapi --enable-hwaccel=av1_vaapi --enable-hwaccel=h264_vdpau --enable-hwaccel=hevc_vdpau --enable-hwaccel=av1_vdpau --enable-libdrm --enable-hwaccel=h264_vulkan --enable-hwaccel=hevc_vulkan --enable-hwaccel=av1_vulkan --enable-libdav1d --enable-decoder=libdav1d
 
 install:
-  - cmd: 'copy /y scripts\appveyor\qmake.bat %QTDIR_ARM64%\msvc2019_arm64\bin\'
-  - cmd: 'copy /y scripts\appveyor\qtpaths.bat %QTDIR_ARM64%\msvc2019_arm64\bin\'
-  - cmd: 'copy /y scripts\appveyor\target_qt.conf %QTDIR_ARM64%\msvc2019_arm64\bin\'
+  - cmd: 'copy /y scripts\appveyor\qmake.bat %QTDIR%\msvc2019_arm64\bin\'
+  - cmd: 'copy /y scripts\appveyor\qtpaths.bat %QTDIR%\msvc2019_arm64\bin\'
+  - cmd: 'copy /y scripts\appveyor\target_qt.conf %QTDIR%\msvc2019_arm64\bin\'
   - sh: '[ "$BUILD_TARGET" != macos ] || nvm use node'
   - sh: '[ "$BUILD_TARGET" != macos ] || npm install --global create-dmg'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || sudo apt install -y libc6:i386 libstdc++6:i386'
@@ -48,19 +48,15 @@ before_build:
 build_script:
   - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019_64\bin'
   - cmd: 'scripts\build-arch.bat Release'
-  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019\bin'
-  - cmd: 'scripts\build-arch.bat Release'
-  - cmd: 'set PATH=%OLDPATH%;%QTDIR_ARM64%\msvc2019_arm64\bin'
+  - cmd: 'set PATH=%OLDPATH%;%QTDIR%\msvc2019_arm64\bin'
   - cmd: 'scripts\build-arch.bat Release'
   - cmd: 'scripts\generate-bundle.bat Release'
   - sh: '[ "$BUILD_TARGET" != linux ] || source /opt/qt515/bin/qt515-env.sh'
   - sh: '[ "$BUILD_TARGET" != linux ] || PATH=$PATH:$HOME/bin scripts/build-appimage.sh'
-  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$HOME/Qt/6.6/macos/bin scripts/generate-dmg.sh Release'
+  - sh: '[ "$BUILD_TARGET" != macos ] || PATH=$PATH:$QTDIR/macos/bin scripts/generate-dmg.sh Release'
   - sh: '[ "$BUILD_TARGET" != steamlink ] || STEAMLINK_SDK_PATH=$HOME/steamlink-sdk scripts/build-steamlink-app.sh'
 
 after_build:
-  - cmd: 'appveyor PushArtifact build\installer-x86-Release\MoonlightPortable-x86-%VERSION%.zip -FileName MoonlightPortable-x86-r%APPVEYOR_BUILD_NUMBER%.zip'
-  - cmd: 'appveyor PushArtifact build\symbols-x86-Release\MoonlightDebuggingSymbols-x86-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x86-r%APPVEYOR_BUILD_NUMBER%.zip'
   - cmd: 'appveyor PushArtifact build\installer-x64-Release\MoonlightPortable-x64-%VERSION%.zip -FileName MoonlightPortable-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
   - cmd: 'appveyor PushArtifact build\symbols-x64-Release\MoonlightDebuggingSymbols-x64-%VERSION%.zip -FileName MoonlightDebuggingSymbols-x64-r%APPVEYOR_BUILD_NUMBER%.zip'
   - cmd: 'appveyor PushArtifact build\installer-arm64-Release\MoonlightPortable-arm64-%VERSION%.zip -FileName MoonlightPortable-arm64-r%APPVEYOR_BUILD_NUMBER%.zip'
