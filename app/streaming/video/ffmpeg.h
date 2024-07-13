@@ -46,7 +46,7 @@ private:
     bool createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend);
 
     static
-    bool isDecoderIgnored(const AVCodec* decoder);
+    bool isDecoderMatchForParams(const AVCodec *decoder, PDECODER_PARAMETERS params);
 
     static
     bool isZeroCopyFormat(AVPixelFormat format);

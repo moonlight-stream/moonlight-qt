@@ -1,6 +1,5 @@
 #include <Limelight.h>
 #include "ffmpeg.h"
-#include "streaming/streamutils.h"
 #include "streaming/session.h"
 
 #include <h264_stream.h>
@@ -1181,24 +1180,6 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
     return false;
 }
 
-bool FFmpegVideoDecoder::isDecoderIgnored(const AVCodec *decoder)
-{
-    Q_UNUSED(decoder);
-
-#if defined(HAVE_MMAL) && !defined(ALLOW_EGL_WITH_MMAL)
-    // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
-    // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
-    // would rather show the missing hardware acceleration warning when the user
-    // is in Full KMS mode rather than try to use a poorly performing hwaccel.
-    // See discussion on https://github.com/jc-kynesim/rpi-ffmpeg/pull/25
-    if (strcmp(decoder->name, "h264_v4l2m2m") == 0) {
-        return true;
-    }
-#endif
-
-    return false;
-}
-
 int FFmpegVideoDecoder::getAVCodecCapabilities(const AVCodec *codec)
 {
     int caps = codec->capabilities;
@@ -1213,6 +1194,26 @@ int FFmpegVideoDecoder::getAVCodecCapabilities(const AVCodec *codec)
     }
 
     return caps;
+}
+
+bool FFmpegVideoDecoder::isDecoderMatchForParams(const AVCodec *decoder, PDECODER_PARAMETERS params)
+{
+    SDL_assert(params->videoFormat & (VIDEO_FORMAT_MASK_H264 | VIDEO_FORMAT_MASK_H265 | VIDEO_FORMAT_MASK_AV1));
+
+#if defined(HAVE_MMAL) && !defined(ALLOW_EGL_WITH_MMAL)
+    // Only enable V4L2M2M by default on non-MMAL (RPi) builds. The performance
+    // of the V4L2M2M wrapper around MMAL is not enough for 1080p 60 FPS, so we
+    // would rather show the missing hardware acceleration warning when the user
+    // is in Full KMS mode rather than try to use a poorly performing hwaccel.
+    // See discussion on https://github.com/jc-kynesim/rpi-ffmpeg/pull/25
+    if (strcmp(decoder->name, "h264_v4l2m2m") == 0) {
+        return false;
+    }
+#endif
+
+    return ((params->videoFormat & VIDEO_FORMAT_MASK_H264) && decoder->id == AV_CODEC_ID_H264) ||
+           ((params->videoFormat & VIDEO_FORMAT_MASK_H265) && decoder->id == AV_CODEC_ID_HEVC) ||
+           ((params->videoFormat & VIDEO_FORMAT_MASK_AV1)  && decoder->id == AV_CODEC_ID_AV1);
 }
 
 bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params, int pass, QSet<const AVCodec*>& terminallyFailedHardwareDecoders)
@@ -1230,20 +1231,13 @@ bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
             continue;
         }
 
-        // Skip decoders that don't match our codec
-        if (((params->videoFormat & VIDEO_FORMAT_MASK_H264) && decoder->id != AV_CODEC_ID_H264) ||
-            ((params->videoFormat & VIDEO_FORMAT_MASK_H265) && decoder->id != AV_CODEC_ID_HEVC) ||
-            ((params->videoFormat & VIDEO_FORMAT_MASK_AV1)  && decoder->id != AV_CODEC_ID_AV1)) {
+        // Skip decoders that don't match our decoding parameters
+        if (!isDecoderMatchForParams(decoder, params)) {
             continue;
         }
 
         // Skip non-hwaccel hardware decoders
         if (getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE) {
-            continue;
-        }
-
-        // Skip ignored decoders
-        if (isDecoderIgnored(decoder)) {
             continue;
         }
 
@@ -1297,20 +1291,13 @@ bool FFmpegVideoDecoder::tryInitializeNonHwAccelDecoder(PDECODER_PARAMETERS para
             continue;
         }
 
-        // Skip decoders that don't match our codec
-        if (((params->videoFormat & VIDEO_FORMAT_MASK_H264) && decoder->id != AV_CODEC_ID_H264) ||
-            ((params->videoFormat & VIDEO_FORMAT_MASK_H265) && decoder->id != AV_CODEC_ID_HEVC) ||
-            ((params->videoFormat & VIDEO_FORMAT_MASK_AV1)  && decoder->id != AV_CODEC_ID_AV1)) {
+        // Skip decoders that don't match our decoding parameters
+        if (!isDecoderMatchForParams(decoder, params)) {
             continue;
         }
 
         // Skip software/hybrid decoders and normal hwaccel decoders (which were handled in the loop above)
         if (!(getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE)) {
-            continue;
-        }
-
-        // Skip ignored decoders
-        if (isDecoderIgnored(decoder)) {
             continue;
         }
 
@@ -1449,10 +1436,8 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
                 continue;
             }
 
-            // Skip decoders that don't match our codec
-            if (((params->videoFormat & VIDEO_FORMAT_MASK_H264) && decoder->id != AV_CODEC_ID_H264) ||
-                ((params->videoFormat & VIDEO_FORMAT_MASK_H265) && decoder->id != AV_CODEC_ID_HEVC) ||
-                ((params->videoFormat & VIDEO_FORMAT_MASK_AV1)  && decoder->id != AV_CODEC_ID_AV1)) {
+            // Skip decoders that don't match our decoding parameters
+            if (!isDecoderMatchForParams(decoder, params)) {
                 continue;
             }
 
@@ -1463,11 +1448,6 @@ bool FFmpegVideoDecoder::initialize(PDECODER_PARAMETERS params)
             // Instead, we tell tryInitializeRendererForUnknownDecoder() not to
             // try hwaccel for this decoder.
             if (getAVCodecCapabilities(decoder) & AV_CODEC_CAP_HARDWARE) {
-                continue;
-            }
-
-            // Skip ignored decoders
-            if (isDecoderIgnored(decoder)) {
                 continue;
             }
 
