@@ -449,7 +449,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
     // Find the active plane (if any) on this CRTC with the highest zpos.
     // We'll need to use a plane with a equal or greater zpos to be visible.
-    uint64_t maxActiveZpos = 0;
+    uint64_t maxActiveZpos = qEnvironmentVariableIntValue("DRM_MIN_PLANE_ZPOS");
     for (uint32_t i = 0; i < planeRes->count_planes; i++) {
         drmModePlane* plane = drmModeGetPlane(m_DrmFd, planeRes->planes[i]);
         if (plane != nullptr) {
@@ -461,7 +461,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
                 drmModeObjectPropertiesPtr props = drmModeObjectGetProperties(m_DrmFd, planeRes->planes[i], DRM_MODE_OBJECT_PLANE);
                 if (props != nullptr) {
-                    // Only consider primary and overlay planes as valid render targets
+                    // Don't consider cursor planes when searching for the highest active zpos
                     uint64_t type;
                     if (getPropertyByName(props, "type", &type) && (type == DRM_PLANE_TYPE_PRIMARY || type == DRM_PLANE_TYPE_OVERLAY)) {
                         uint64_t zPos;
@@ -476,6 +476,15 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
 
             drmModeFreePlane(plane);
         }
+    }
+
+    // The Spacemit K1 driver is broken and advertises support for NV12/P010
+    // formats with the linear modifier on all planes, but doesn't actually
+    // support raw YUV formats on the primary plane. Don't ever use primary
+    // planes on Spacemit hardware to avoid triggering this bug.
+    bool ok, allowPrimaryPlane = !!qEnvironmentVariableIntValue("DRM_ALLOW_PRIMARY_PLANE", &ok);
+    if (!ok) {
+        allowPrimaryPlane = strcmp(m_Version->name, "spacemit") != 0;
     }
 
     // Find a plane with the required format to render on
@@ -528,8 +537,9 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 uint64_t type;
                 uint64_t zPos;
 
-                // Only consider primary and overlay planes as valid render targets
-                if (!getPropertyByName(props, "type", &type) || (type != DRM_PLANE_TYPE_PRIMARY && type != DRM_PLANE_TYPE_OVERLAY)) {
+                // Only consider overlay and primary (if allowed) planes as valid render targets
+                if (!getPropertyByName(props, "type", &type) ||
+                        (type != DRM_PLANE_TYPE_OVERLAY && (type != DRM_PLANE_TYPE_PRIMARY || !allowPrimaryPlane))) {
                     drmModeFreePlane(plane);
                 }
                 // If this plane has a zpos property and it's lower (further from user) than
