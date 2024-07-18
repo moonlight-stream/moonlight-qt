@@ -25,4 +25,19 @@ public:
         // 4 - Surround Left
         // 5 - Surround Right
     }
+
+    enum class AudioFormat {
+        Sint16NE,  // 16-bit signed integer (native endian)
+        Float32NE, // 32-bit floating point (native endian)
+    };
+    virtual AudioFormat getAudioBufferFormat() = 0;
+
+    int getAudioBufferSampleSize() {
+        switch (getAudioBufferFormat()) {
+        case IAudioRenderer::AudioFormat::Sint16NE:
+            return sizeof(short);
+        case IAudioRenderer::AudioFormat::Float32NE:
+            return sizeof(float);
+        }
+    }
 };

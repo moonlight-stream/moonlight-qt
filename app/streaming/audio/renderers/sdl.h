@@ -18,6 +18,8 @@ public:
 
     virtual int getCapabilities();
 
+    virtual AudioFormat getAudioBufferFormat();
+
 private:
     SDL_AudioDeviceID m_AudioDevice;
     void* m_AudioBuffer;
