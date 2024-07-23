@@ -165,10 +165,19 @@ macx {
         CONFIG += discord-rpc
     }
 
-    LIBS += -lobjc -framework VideoToolbox -framework AVFoundation -framework CoreVideo -framework CoreGraphics -framework CoreMedia -framework AppKit -framework Metal -framework QuartzCore
-
-    # For libsoundio
-    LIBS += -framework CoreAudio -framework AudioUnit
+    LIBS += -lobjc \
+        -framework Accelerate \
+        -framework AppKit \
+        -framework AudioToolbox \
+        -framework AudioUnit \
+        -framework AVFoundation \
+        -framework CoreAudio \
+        -framework CoreVideo \
+        -framework CoreGraphics \
+        -framework CoreMedia \
+        -framework Metal \
+        -framework QuartzCore \
+        -framework VideoToolbox
 
     CONFIG += ffmpeg soundio
 }
@@ -404,14 +413,23 @@ win32:!winrt {
         streaming/video/ffmpeg-renderers/pacer/dxvsyncsource.h
 }
 macx {
-    message(VideoToolbox renderer selected)
+    message(CoreAudio + VideoToolbox renderers selected)
+
+    DEFINES += HAVE_COREAUDIO
 
     SOURCES += \
+        streaming/audio/renderers/coreaudio/au_spatial_renderer.mm \
+        streaming/audio/renderers/coreaudio/coreaudio.cpp \
+        streaming/audio/renderers/coreaudio/TPCircularBuffer.c \
         streaming/video/ffmpeg-renderers/vt_base.mm \
         streaming/video/ffmpeg-renderers/vt_avsamplelayer.mm \
         streaming/video/ffmpeg-renderers/vt_metal.mm
 
     HEADERS += \
+        streaming/audio/renderers/coreaudio/au_spatial_renderer.h \
+        streaming/audio/renderers/coreaudio/coreaudio.h \
+        streaming/audio/renderers/coreaudio/coreaudio_helpers.h \
+        streaming/audio/renderers/coreaudio/TPCircularBuffer.h \
         streaming/video/ffmpeg-renderers/vt.h
 }
 soundio {
