@@ -1,0 +1,60 @@
+Moonlight CoreAudio supports 2 modes:
+
+1. A normal passthrough mode where decoded PCM from the Opus stream is passed directly to the output Audio Unit. This mode
+is used when the incoming stream is stereo or when the local output device is already multichannel, e.g. when outputting over HDMI.
+
+2. Spatial Mixer mode. This mode is used for 5.1 and 7.1 channel streams, when the output device supports spatial audio. This usually means
+the system knows that headphones are in use, or the built-in Macbook speakers are in use. Apple uses a specially tuned profile to enable
+a spatial effect from their laptop speakers.
+
+There are a lot of knobs available in the mixer to describe how you want the rendering to be done, but I have hardcoded what seem
+to be Apple's recommended defaults. For example, I can find zero documentation about what the different SpatializationAlgorithm types do,
+and UseOutputType is the right choice, apparently picking the best algorithm for the target device.
+
+kSpatializationAlgorithm_EqualPowerPanning
+kSpatializationAlgorithm_HRTF
+kSpatializationAlgorithm_SoundField
+kSpatializationAlgorithm_SphericalHead
+kSpatializationAlgorithm_StereoPassThrough
+kSpatializationAlgorithm_VectorBasedPanning
+kSpatializationAlgorithm_HRTFHQ
+kSpatializationAlgorithm_UseOutputType
+
+The CoreAudio renderer was inspired by an example app in Apple's Audio Toolbox documentation:
+
+https://developer.apple.com/documentation/audiotoolbox/generating_spatial_audio_from_a_multichannel_audio_stream
+
+In theoery, any amount of channels with any layout can be processed by SpatialMixer, with 7.1.4 Atmos as Apple's example,
+in the form of a 12-channel WAV file. Interestingly, raw multichannel WAV files get automatically spatialized when played
+with QuickTime on macOS.
+
+The design and program flow of the example app is overly complex, even though it only uses 2 AudioUnits: one in stereo for final output
+and one that is a SpatialMixer. Perhaps they really wanted to show off mixing Swift UI with advanced Obj-C++ using closures/lambdas.
+
+I've left in some sections of the code that are platform-specific (iOS needs to use different audio APIs). This will
+hopefully make it easier to port this to moonlight-ios.
+
+Apple example:
+
+AudioFileReader->pullAudioBlock() <- N channel local WAV file (the example has a few 7.1.4 samples)
+  rendering->mInputBlock()
+    AudioUnitRender(mAUSM)
+      mAUSM->process()
+        Kernel->process()
+          2-channel binaural out <- OutputAU
+
+CoreAudioRenderer:
+
+A thread-safe ring buffer is used, on one end is the Opus decoder which decodes 5ms Opus packets into PCM, 32 bits-per-channel.
+The reader is one of two AURenderCallback functions that are called by CoreAudio in a pull model.
+
+renderCallbackDirect is the simple case: simply copy the PCM into the buffers being given to us by CoreAudio.
+This mode is able to pass the interleaved PCM unchanged to the OS.
+
+In Spatial mode, renderCallbackSpatial uses an intermediate SpatialMixer, which it asks for 2-channel binaural PCM
+using m_SpatialAU.process(). m_SpatialAU is our AUSpatialRenderer class that contains a lot of setup and one callback.
+The process() method calls AudioUnitRender() which will have CoreAudio call inputCallback asking for 8 channels of PCM
+data for example. This is copied out of the ring buffer, where it is stored interleaved (each channel's data is together
+and makes up one frame) and needs to be transformed to non-interleaved format into 8 separate buffers. After this, the
+mixer does whatever it does, and process() returns. We're still in renderCallbackSpatial and it can deliver the final
+2-channel version to the final output.

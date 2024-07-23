@@ -9,6 +9,10 @@
 #include "renderers/slaud.h"
 #endif
 
+#ifdef HAVE_COREAUDIO
+#include "renderers/coreaudio/coreaudio.h"
+#endif
+
 #include "renderers/sdl.h"
 
 #include <Limelight.h>
@@ -29,6 +33,12 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
         TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
         return nullptr;
     }
+#ifdef HAVE_COREAUDIO
+    else if (mlAudio == "coreaudio") {
+        TRY_INIT_RENDERER(CoreAudioRenderer, opusConfig)
+        return nullptr;
+    }
+#endif
 #ifdef HAVE_SOUNDIO
     else if (mlAudio == "libsoundio") {
         TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
@@ -53,6 +63,11 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
 #if defined(HAVE_SLAUDIO)
     // Steam Link should always have SLAudio
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
+#endif
+
+#ifdef HAVE_COREAUDIO
+    // Native renderer for macOS/iOS/tvOS, suports spatial audio
+    TRY_INIT_RENDERER(CoreAudioRenderer, opusConfig)
 #endif
 
     // Default to SDL and use libsoundio as a fallback
@@ -261,7 +276,11 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
             s_ActiveSession->m_AudioRenderer->flipAudioStatsWindows();
         }
 
-        if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredBufferSize)) {
+        if (s_ActiveSession->m_AudioRenderer->submitAudio(desiredBufferSize)) {
+            // keep stats on how long the audio pipline took to execute
+            s_ActiveSession->m_AudioRenderer->statsTrackDecodeTime(startTimeUs);
+        }
+        else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Reinitializing audio renderer after failure");
 
@@ -271,9 +290,6 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
             delete s_ActiveSession->m_AudioRenderer;
             s_ActiveSession->m_AudioRenderer = nullptr;
         }
-
-        // keep stats on how long the audio pipline took to execute
-        s_ActiveSession->m_AudioRenderer->statsTrackDecodeTime(startTimeUs);
     }
 
     // Only try to recreate the audio renderer every 200 samples (1 second)
