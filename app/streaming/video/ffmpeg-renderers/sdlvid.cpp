@@ -86,6 +86,10 @@ bool SdlRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
         // SDL2 doesn't support 10-bit pixel formats
         return false;
     }
+    else if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+        // SDL2 doesn't support YUV444 pixel formats
+        return false;
+    }
     else {
         // Remember to keep this in sync with SdlRenderer::renderFrame()!
         switch (pixelFormat) {
@@ -108,8 +112,8 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     m_VideoFormat = params->videoFormat;
     m_SwFrameMapper.setVideoFormat(m_VideoFormat);
 
-    if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-        // SDL doesn't support rendering YUV 10-bit textures yet
+    if (params->videoFormat & (VIDEO_FORMAT_MASK_10BIT | VIDEO_FORMAT_MASK_YUV444)) {
+        // SDL doesn't support rendering YUV444 or 10-bit textures yet
         return false;
     }
 

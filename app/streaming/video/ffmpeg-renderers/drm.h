@@ -85,7 +85,7 @@ private:
     int m_DrmFd;
     bool m_SdlOwnsDrmFd;
     bool m_SupportsDirectRendering;
-    bool m_Main10Hdr;
+    int m_VideoFormat;
     uint32_t m_ConnectorId;
     uint32_t m_EncoderId;
     uint32_t m_CrtcId;

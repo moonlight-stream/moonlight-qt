@@ -96,6 +96,7 @@ private:
     AVBufferRef* m_HwContext;
     bool m_BlacklistedForDirectRendering;
     bool m_HasRfiLatencyBug;
+    bool m_RequiresExplicitPixelFormat;
 
     SDL_mutex* m_OverlayMutex;
     VAImageFormat m_OverlayFormat;

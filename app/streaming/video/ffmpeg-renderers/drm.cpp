@@ -8,6 +8,7 @@
 
 extern "C" {
     #include <libavutil/hwcontext_drm.h>
+    #include <libavutil/pixdesc.h>
 }
 
 #include <libdrm/drm_fourcc.h>
@@ -23,6 +24,11 @@ extern "C" {
 #define DRM_FORMAT_NV15 fourcc_code('N', 'V', '1', '5')
 #endif
 
+// Same as NV15 but non-subsampled
+#ifndef DRM_FORMAT_NV30
+#define DRM_FORMAT_NV30	fourcc_code('N', 'V', '3', '0')
+#endif
+
 // Special Raspberry Pi type (upstreamed)
 #ifndef DRM_FORMAT_P030
 #define DRM_FORMAT_P030	fourcc_code('P', '0', '3', '0')
@@ -31,6 +37,11 @@ extern "C" {
 // Regular P010 (not present in some old libdrm headers)
 #ifndef DRM_FORMAT_P010
 #define DRM_FORMAT_P010	fourcc_code('P', '0', '1', '0')
+#endif
+
+// Upstreamed YUV444 10-bit
+#ifndef DRM_FORMAT_Q410
+#define DRM_FORMAT_Q410	fourcc_code('Q', '4', '1', '0')
 #endif
 
 // Values for "Colorspace" connector property
@@ -68,7 +79,7 @@ DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
       m_SupportsDirectRendering(false),
-      m_Main10Hdr(false),
+      m_VideoFormat(0),
       m_ConnectorId(0),
       m_EncoderId(0),
       m_CrtcId(0),
@@ -239,7 +250,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     int i;
 
     m_Window = params->window;
-    m_Main10Hdr = (params->videoFormat & VIDEO_FORMAT_MASK_10BIT);
+    m_VideoFormat = params->videoFormat;
     m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
 #if SDL_VERSION_ATLEAST(2, 0, 15)
@@ -508,12 +519,31 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             // Validate that the candidate plane supports our pixel format
             bool matchingFormat = false;
             for (uint32_t j = 0; j < plane->count_formats && !matchingFormat; j++) {
-                if (m_Main10Hdr) {
+                if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
+                    if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
+                        switch (plane->formats[j]) {
+                        case DRM_FORMAT_Q410:
+                        case DRM_FORMAT_NV30:
+                            matchingFormat = true;
+                            break;
+                        }
+                    }
+                    else {
+                        switch (plane->formats[j]) {
+                        case DRM_FORMAT_P010:
+                        case DRM_FORMAT_P030:
+                        case DRM_FORMAT_NA12:
+                        case DRM_FORMAT_NV15:
+                            matchingFormat = true;
+                            break;
+                        }
+                    }
+                }
+                else if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
                     switch (plane->formats[j]) {
-                    case DRM_FORMAT_P010:
-                    case DRM_FORMAT_P030:
-                    case DRM_FORMAT_NA12:
-                    case DRM_FORMAT_NV15:
+                    case DRM_FORMAT_NV24:
+                    case DRM_FORMAT_NV42:
+                    case DRM_FORMAT_YUV444:
                         matchingFormat = true;
                         break;
                     }
@@ -606,7 +636,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     else if (!strcmp(prop->name, "Colorspace")) {
                         m_ColorspaceProp = prop;
                     }
-                    else if (!strcmp(prop->name, "max bpc") && m_Main10Hdr) {
+                    else if (!strcmp(prop->name, "max bpc") && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
                         if (drmModeObjectSetProperty(m_DrmFd, m_ConnectorId, DRM_MODE_OBJECT_CONNECTOR, prop->prop_id, 16) == 0) {
                             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                                         "Enabled 48-bit HDMI Deep Color");
@@ -676,8 +706,29 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
             return true;
         }
         else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+                switch (pixelFormat) {
+                case AV_PIX_FMT_YUV444P10:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+            else {
+                switch (pixelFormat) {
+                case AV_PIX_FMT_P010:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
             switch (pixelFormat) {
-            case AV_PIX_FMT_P010:
+            case AV_PIX_FMT_NV24:
+            case AV_PIX_FMT_NV42:
+            case AV_PIX_FMT_YUV444P:
+            case AV_PIX_FMT_YUVJ444P:
                 return true;
             default:
                 return false;
@@ -845,32 +896,38 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         freeFrame = false;
     }
 
+    const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get((AVPixelFormat) frame->format);
+    int planes = av_pix_fmt_count_planes((AVPixelFormat) frame->format);
+
     uint32_t drmFormat;
-    bool fullyPlanar;
-    int bpc;
 
     // NB: Keep this list updated with isPixelFormatSupported()
     switch (frame->format) {
     case AV_PIX_FMT_NV12:
         drmFormat = DRM_FORMAT_NV12;
-        fullyPlanar = false;
-        bpc = 8;
         break;
     case AV_PIX_FMT_NV21:
         drmFormat = DRM_FORMAT_NV21;
-        fullyPlanar = false;
-        bpc = 8;
         break;
     case AV_PIX_FMT_P010:
         drmFormat = DRM_FORMAT_P010;
-        fullyPlanar = false;
-        bpc = 16;
         break;
     case AV_PIX_FMT_YUV420P:
     case AV_PIX_FMT_YUVJ420P:
         drmFormat = DRM_FORMAT_YUV420;
-        fullyPlanar = true;
-        bpc = 8;
+        break;
+    case AV_PIX_FMT_NV24:
+        drmFormat = DRM_FORMAT_NV24;
+        break;
+    case AV_PIX_FMT_NV42:
+        drmFormat = DRM_FORMAT_NV42;
+        break;
+    case AV_PIX_FMT_YUV444P:
+    case AV_PIX_FMT_YUVJ444P:
+        drmFormat = DRM_FORMAT_YUV444;
+        break;
+    case AV_PIX_FMT_YUV444P10:
+        drmFormat = DRM_FORMAT_Q410;
         break;
     default:
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -884,8 +941,8 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         struct drm_mode_create_dumb createBuf = {};
 
         createBuf.width = frame->width;
-        createBuf.height = frame->height * 2; // Y + CbCr at 2x2 subsampling
-        createBuf.bpp = bpc;
+        createBuf.height = frame->height + (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
+        createBuf.bpp = av_get_padded_bits_per_pixel(formatDesc);
 
         int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
         if (err < 0) {
@@ -976,18 +1033,14 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                     planeHeight = frame->height;
                     plane.pitch = drmFrame->pitch;
                 }
-                else if (fullyPlanar) {
-                    // U/V planes are 2x2 subsampled
-                    planeHeight = frame->height / 2;
-                    plane.pitch = drmFrame->pitch / 2;
-                }
                 else {
-                    // UV/VU planes are 2x2 subsampled.
-                    //
-                    // NB: The pitch is the same between Y and UV/VU, because the 2x subsampling
-                    // is cancelled out by the 2x plane size of UV/VU vs U/V alone.
-                    planeHeight = frame->height / 2;
-                    plane.pitch = drmFrame->pitch;
+                    planeHeight = AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h);
+                    plane.pitch = AV_CEIL_RSHIFT(drmFrame->pitch, formatDesc->log2_chroma_w);
+
+                    // If UV planes are interleaved, double the pitch to count both U+V together
+                    if (planes == 2) {
+                        plane.pitch <<= 1;
+                    }
                 }
 
                 // Copy the plane data into the dumb buffer
@@ -1353,7 +1406,7 @@ bool DrmRenderer::canExportEGL() {
                     "Using EGL rendering due to environment variable");
         return true;
     }
-    else if (m_SupportsDirectRendering && m_Main10Hdr) {
+    else if (m_SupportsDirectRendering && (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT)) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Using direct rendering for HDR support");
         return false;
