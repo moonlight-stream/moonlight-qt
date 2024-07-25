@@ -1,6 +1,7 @@
 #pragma once
 
 #include <Limelight.h>
+#include <QtGlobal>
 
 class IAudioRenderer
 {
@@ -38,6 +39,8 @@ public:
             return sizeof(short);
         case IAudioRenderer::AudioFormat::Float32NE:
             return sizeof(float);
+        default:
+            Q_UNREACHABLE();
         }
     }
 };
