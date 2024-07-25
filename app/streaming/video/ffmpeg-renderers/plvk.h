@@ -55,7 +55,7 @@ private:
     // The libplacebo rendering state
     pl_log m_Log = nullptr;
     pl_vk_inst m_PlVkInstance = nullptr;
-    VkSurfaceKHR m_VkSurface = nullptr;
+    VkSurfaceKHR m_VkSurface = VK_NULL_HANDLE;
     pl_vulkan m_Vulkan = nullptr;
     pl_swapchain m_Swapchain = nullptr;
     pl_renderer m_Renderer = nullptr;
