@@ -525,33 +525,27 @@ public:
             return nullptr;
         }
 
-        if (@available(macOS 11.0, *)) {
-            NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
-            if (devices.count == 0) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "No Metal device found!");
-                return nullptr;
-            }
+        NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
+        if (devices.count == 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "No Metal device found!");
+            return nullptr;
+        }
 
-            for (id<MTLDevice> device in devices) {
-                if (device.isLowPower || device.hasUnifiedMemory) {
-                    return device;
-                }
+        for (id<MTLDevice> device in devices) {
+            if (device.isLowPower || device.hasUnifiedMemory) {
+                return device;
             }
+        }
 
-            if (qgetenv("VT_FORCE_METAL") == "1") {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Using Metal renderer due to VT_FORCE_METAL=1 override.");
-                return [MTLCreateSystemDefaultDevice() autorelease];
-            }
-            else {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
-            }
+        if (qgetenv("VT_FORCE_METAL") == "1") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using Metal renderer due to VT_FORCE_METAL=1 override.");
+            return [MTLCreateSystemDefaultDevice() autorelease];
         }
         else {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Metal renderer requires macOS Big Sur or later");
+                        "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
         }
 
         return nullptr;
