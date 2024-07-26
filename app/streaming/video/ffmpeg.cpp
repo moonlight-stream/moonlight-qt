@@ -1304,12 +1304,6 @@ bool FFmpegVideoDecoder::tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
                 break;
             }
 
-            // TODO: reexamine this
-            if ((params->videoFormat & VIDEO_FORMAT_MASK_YUV444) && config->device_type != AV_HWDEVICE_TYPE_VULKAN) {
-                // We only support YUV 4:4:4 decoding on Vulkan through libplacebo
-                continue;
-            }
-
             // Initialize the hardware codec and submit a test frame if the renderer needs it
             IFFmpegRenderer::InitFailureReason failureReason;
             if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, config, &failureReason,
