@@ -289,6 +289,11 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
                      "D3D11VA renderer is only supported on Windows 10 or later.");
         return false;
     }
+    else if (params->videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "D3D11VA renderer does not support YUV444 (TODO!)");
+        return false;
+    }
 
     if (!SDL_DXGIGetOutputInfo(SDL_GetWindowDisplayIndex(params->window),
                                &adapterIndex, &outputIndex)) {
