@@ -108,7 +108,6 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_LastColorTrc(AVCOL_TRC_UNSPECIFIED),
       m_AllowTearing(false),
       m_OverlayLock(0),
-      m_OverlayPixelShader(nullptr),
       m_HwDeviceContext(nullptr),
       m_HwFramesContext(nullptr),
       m_AmfContext(nullptr),
@@ -138,10 +137,6 @@ D3D11VARenderer::~D3D11VARenderer()
     }
 
     SAFE_COM_RELEASE(m_RenderTargetView);
-
-    if (m_HwFramesContext != nullptr) {
-        av_buffer_unref(&m_HwFramesContext);
-    }
 
     // cleanup AMF instances
     if(m_AmfUpScaler){
@@ -380,9 +375,9 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                            D3D_DRIVER_TYPE_UNKNOWN,
                            nullptr,
                            D3D11_CREATE_DEVICE_VIDEO_SUPPORT
-                       #ifdef QT_DEBUG
+#ifdef QT_DEBUG
                                | D3D11_CREATE_DEVICE_DEBUG
-                       #endif
+#endif
                            ,
                            supportedFeatureLevels,
                            ARRAYSIZE(supportedFeatureLevels),
@@ -1045,6 +1040,12 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         }
     }
 
+    if(m_BindDecoderOutputTextures){
+        // Disable Video enhancement as we do not copy the frame to process it
+        m_VideoEnhancement->enableVideoEnhancement(false);
+        m_VideoEnhancement->enableUIvisible(false);
+    }
+
     // Set VSR and HDR
     if(m_VideoEnhancement->isVideoEnhancementEnabled()){
         // Enable VSR feature if available
@@ -1194,14 +1195,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
         return false;
     }
 
-    // Surfaces must be 16 pixel aligned for H.264 and 128 pixel aligned for everything else
-    // https://github.com/FFmpeg/FFmpeg/blob/a234e5cd80224c95a205c1f3e297d8c04a1374c3/libavcodec/dxva2.c#L609-L616
-    m_TextureAlignment = (params->videoFormat & VIDEO_FORMAT_MASK_H264) ? 16 : 128;
-
-    if (!setupRenderingResources()) {
-        return false;
-    }
-
     {
         m_HwDeviceContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_D3D11VA);
         if (!m_HwDeviceContext) {
@@ -1230,6 +1223,10 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
             return false;
         }
     }
+
+    // Surfaces must be 16 pixel aligned for H.264 and 128 pixel aligned for everything else
+    // https://github.com/FFmpeg/FFmpeg/blob/a234e5cd80224c95a205c1f3e297d8c04a1374c3/libavcodec/dxva2.c#L609-L616
+    m_TextureAlignment = (params->videoFormat & VIDEO_FORMAT_MASK_H264) ? 16 : 128;
 
     {
         m_HwFramesContext = av_hwframe_ctx_alloc(m_HwDeviceContext);
@@ -1851,17 +1848,6 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
         return;
     }
 
-    SDL_AtomicLock(&m_OverlayLock);
-    ComPtr<ID3D11Texture2D> oldTexture = m_OverlayTextures[type];
-    m_OverlayTextures[type] = nullptr;
-
-    ComPtr<ID3D11Buffer> oldVertexBuffer = m_OverlayVertexBuffers[type];
-    m_OverlayVertexBuffers[type] = nullptr;
-
-    ComPtr<ID3D11ShaderResourceView> oldTextureResourceView = m_OverlayTextureResourceViews[type];
-    m_OverlayTextureResourceViews[type] = nullptr;
-    SDL_AtomicUnlock(&m_OverlayLock);
-
     // If the overlay is disabled, we're done
     if (!overlayEnabled) {
         SDL_FreeSurface(newSurface);
@@ -2325,12 +2311,12 @@ bool D3D11VARenderer::setupRenderingResources()
         float vMax = m_BindDecoderOutputTextures ? ((float)m_DecoderParams.height / FFALIGN(m_DecoderParams.height, m_TextureAlignment)) : 1.0f;
 
         VERTEX verts[] =
-        {
-            {renderRect.x, renderRect.y, 0, vMax},
-            {renderRect.x, renderRect.y+renderRect.h, 0, 0},
-            {renderRect.x+renderRect.w, renderRect.y, uMax, vMax},
-            {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0},
-        };
+            {
+             {renderRect.x, renderRect.y, 0, vMax},
+             {renderRect.x, renderRect.y+renderRect.h, 0, 0},
+             {renderRect.x+renderRect.w, renderRect.y, uMax, vMax},
+             {renderRect.x+renderRect.w, renderRect.y+renderRect.h, uMax, 0},
+             };
 
         D3D11_BUFFER_DESC vbDesc = {};
         vbDesc.ByteWidth = sizeof(verts);
@@ -2371,11 +2357,10 @@ bool D3D11VARenderer::setupRenderingResources()
         D3D11_SUBRESOURCE_DATA constData = {};
         constData.pSysMem = chromaUVMax;
 
-        ID3D11Buffer* constantBuffer;
-        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, &constantBuffer);
+        ComPtr<ID3D11Buffer> constantBuffer;
+        HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, constantBuffer.GetAddressOf());
         if (SUCCEEDED(hr)) {
-            m_DeviceContext->PSSetConstantBuffers(0, 1, &constantBuffer);
-            constantBuffer->Release();
+            m_DeviceContext->PSSetConstantBuffers(0, 1, constantBuffer.GetAddressOf());
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
