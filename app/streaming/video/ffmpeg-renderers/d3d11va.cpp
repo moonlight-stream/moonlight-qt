@@ -117,9 +117,6 @@ D3D11VARenderer::D3D11VARenderer(int decoderSelectionPass)
       m_AmfUpScaler(nullptr),
       m_AmfInitialized(false)
 {
-    RtlZeroMemory(m_OverlayVertexBuffers, sizeof(m_OverlayVertexBuffers));
-    RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
-    RtlZeroMemory(m_OverlayTextureResourceViews, sizeof(m_OverlayTextureResourceViews));
     RtlZeroMemory(m_VideoTextureResourceViews, sizeof(m_VideoTextureResourceViews));
 
     m_ContextLock = SDL_CreateMutex();
@@ -135,34 +132,12 @@ D3D11VARenderer::~D3D11VARenderer()
 
     SDL_DestroyMutex(m_ContextLock);
 
-    SAFE_COM_RELEASE(m_VideoVertexBuffer);
-    SAFE_COM_RELEASE(m_VideoBt2020LimPixelShader);
-    SAFE_COM_RELEASE(m_VideoBt601LimPixelShader);
-    SAFE_COM_RELEASE(m_VideoGenericPixelShader);
-
     for (int i = 0; i < ARRAYSIZE(m_VideoTextureResourceViews); i++) {
         SAFE_COM_RELEASE(m_VideoTextureResourceViews[i][0]);
         SAFE_COM_RELEASE(m_VideoTextureResourceViews[i][1]);
     }
 
-    SAFE_COM_RELEASE(m_VideoTexture);
-
-    for (int i = 0; i < ARRAYSIZE(m_OverlayVertexBuffers); i++) {
-        SAFE_COM_RELEASE(m_OverlayVertexBuffers[i]);
-    }
-
-    for (int i = 0; i < ARRAYSIZE(m_OverlayTextureResourceViews); i++) {
-        SAFE_COM_RELEASE(m_OverlayTextureResourceViews[i]);
-    }
-
-    for (int i = 0; i < ARRAYSIZE(m_OverlayTextures); i++) {
-        SAFE_COM_RELEASE(m_OverlayTextures[i]);
-    }
-
-    SAFE_COM_RELEASE(m_OverlayPixelShader);
-
     SAFE_COM_RELEASE(m_RenderTargetView);
-    SAFE_COM_RELEASE(m_SwapChain);
 
     if (m_HwFramesContext != nullptr) {
         av_buffer_unref(&m_HwFramesContext);
@@ -227,7 +202,6 @@ D3D11VARenderer::~D3D11VARenderer()
     // }
 #endif
 
-    SAFE_COM_RELEASE(m_Factory);
 }
 
 /**
@@ -1316,7 +1290,7 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     m_SrcBox.back = 1;
 
     // Create our video textures and SRVs
-    if (!setupEnhancedTexture() || !setupVideoTexture() || !setupAmfTexture()) {
+    if (!setupEnhancedTexture() || !setupAmfTexture()) {
         return false;
     }
 
@@ -1462,9 +1436,6 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
     SDL_assert(overlayVertexBuffer != nullptr);
 
     SDL_AtomicUnlock(&m_OverlayLock);
-    overlayTexture->AddRef();
-    overlayVertexBuffer->AddRef();
-    overlayTextureResourceView->AddRef();
 
     // Bind vertex buffer
     UINT stride = sizeof(VERTEX);
@@ -1477,10 +1448,6 @@ void D3D11VARenderer::renderOverlay(Overlay::OverlayType type)
 
     // Draw the overlay
     m_DeviceContext->DrawIndexed(6, 0, 0);
-
-    overlayTextureResourceView->Release();
-    overlayTexture->Release();
-    overlayVertexBuffer->Release();
 }
 
 void D3D11VARenderer::bindColorConversion(AVFrame* frame)
@@ -1554,7 +1521,6 @@ void D3D11VARenderer::bindColorConversion(AVFrame* frame)
         HRESULT hr = m_Device->CreateBuffer(&constDesc, &constData, constantBuffer.GetAddressOf());
         if (SUCCEEDED(hr)) {
             m_DeviceContext->PSSetConstantBuffers(1, 1, constantBuffer.GetAddressOf());
-            // constantBuffer->Release();
         }
         else {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -1896,10 +1862,6 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     m_OverlayTextureResourceViews[type] = nullptr;
     SDL_AtomicUnlock(&m_OverlayLock);
 
-    SAFE_COM_RELEASE(oldTextureResourceView);
-    SAFE_COM_RELEASE(oldTexture);
-    SAFE_COM_RELEASE(oldVertexBuffer);
-
     // If the overlay is disabled, we're done
     if (!overlayEnabled) {
         SDL_FreeSurface(newSurface);
@@ -1930,7 +1892,6 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     ComPtr<ID3D11Texture2D> newTexture;
     hr = m_Device->CreateTexture2D(&texDesc, &texData, newTexture.GetAddressOf());
     if (FAILED(hr)) {
-        SDL_FreeSurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateTexture2D() failed: %x",
                      hr);
@@ -1940,8 +1901,6 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     ComPtr<ID3D11ShaderResourceView> newTextureResourceView;
     hr = m_Device->CreateShaderResourceView((ID3D11Resource*)newTexture.Get(), nullptr, newTextureResourceView.GetAddressOf());
     if (FAILED(hr)) {
-        SAFE_COM_RELEASE(newTexture);
-        SDL_FreeSurface(newSurface);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateShaderResourceView() failed: %x",
                      hr);
@@ -1993,8 +1952,6 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     ComPtr<ID3D11Buffer> newVertexBuffer;
     hr = m_Device->CreateBuffer(&vbDesc, &vbData, newVertexBuffer.GetAddressOf());
     if (FAILED(hr)) {
-        SAFE_COM_RELEASE(newTextureResourceView);
-        SAFE_COM_RELEASE(newTexture);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "ID3D11Device::CreateBuffer() failed: %x",
                      hr);
