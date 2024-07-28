@@ -20,6 +20,7 @@ VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
     : m_DecoderSelectionPass(decoderSelectionPass),
       m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
+      m_RequiresExplicitPixelFormat(false),
       m_OverlayMutex(nullptr)
 #ifdef HAVE_EGL
     , m_EglExportType(EglExportType::Unknown),
@@ -224,51 +225,76 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
     bool setPathVar = false;
 
     for (;;) {
+        // vaInitialize() will return the libva library version even if the function
+        // fails. This has been the case since libva v2.6 from 5 years ago. This
+        // doesn't seem to be documented anywhere, so we will be conservative to
+        // protect against changes in libva behavior by reinitializing major/minor
+        // each time and clamping it to the valid range of versions based upon
+        // the version of libva that we compiled with.
+        major = minor = 0;
         status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
-        if (status != VA_STATUS_SUCCESS && qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Trying fallback VAAPI driver names");
+        if (status != VA_STATUS_SUCCESS) {
+            major = std::max(major, VA_MAJOR_VERSION);
+            minor = std::max(minor, VA_MINOR_VERSION);
 
-            // It would be nice to use vaSetDriverName() here, but there's no way to unset
-            // it and get back to the default driver selection logic once we've overridden
-            // the driver name using that API. As a result, we must use LIBVA_DRIVER_NAME.
-
-            if (status != VA_STATUS_SUCCESS) {
-                // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
-                // It should be picked by default on those platforms, but that doesn't
-                // always seem to be the case for some reason.
-                qputenv("LIBVA_DRIVER_NAME", "iHD");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+            // If LIBVA_DRIVER_NAME has not been set manually and we're running a
+            // version of libva less than 2.20, we'll try our own fallback names.
+            // Beginning in libva 2.20, the driver name detection code is much
+            // more robust than earlier versions and it includes DRI3 support for
+            // driver name detection under Xwayland.
+            if (!qEnvironmentVariableIsEmpty("LIBVA_DRIVER_NAME")) {
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping VAAPI fallback driver names due to LIBVA_DRIVER_NAME");
             }
-
-            if (status != VA_STATUS_SUCCESS) {
-                // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
-                // even though the correct driver is still i965. If we hit this path, we'll
-                // explicitly try i965 to handle this case.
-                qputenv("LIBVA_DRIVER_NAME", "i965");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+            else if (major > 1 || (major == 1 && minor >= 20)) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Skipping VAAPI fallback driver names on libva 2.20+");
             }
+            else {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Trying fallback VAAPI driver names");
 
-            if (status != VA_STATUS_SUCCESS) {
-                // The RadeonSI driver is compatible with XWayland but can't be detected by libva
-                // so try it too if all else fails.
-                qputenv("LIBVA_DRIVER_NAME", "radeonsi");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
-            }
+                // It would be nice to use vaSetDriverName() here, but there's no way to unset
+                // it and get back to the default driver selection logic once we've overridden
+                // the driver name using that API. As a result, we must use LIBVA_DRIVER_NAME.
 
-            if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
-                // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
-                // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
-                // NB: Remember to update the VA-API NVDEC condition below when modifying this!
-                qputenv("LIBVA_DRIVER_NAME", "nvidia");
-                status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
-            }
+                if (status != VA_STATUS_SUCCESS) {
+                    // The iHD driver supports newer hardware like Ice Lake and Comet Lake.
+                    // It should be picked by default on those platforms, but that doesn't
+                    // always seem to be the case for some reason.
+                    qputenv("LIBVA_DRIVER_NAME", "iHD");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
 
-            if (status != VA_STATUS_SUCCESS) {
-                // Unset LIBVA_DRIVER_NAME if none of the drivers we tried worked. This ensures
-                // we will get a fresh start using the default driver selection behavior after
-                // setting LIBVA_DRIVERS_PATH in the code below.
-                qunsetenv("LIBVA_DRIVER_NAME");
+                if (status != VA_STATUS_SUCCESS) {
+                    // The Iris driver in Mesa 20.0 returns a bogus VA driver (iris_drv_video.so)
+                    // even though the correct driver is still i965. If we hit this path, we'll
+                    // explicitly try i965 to handle this case.
+                    qputenv("LIBVA_DRIVER_NAME", "i965");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
+
+                if (status != VA_STATUS_SUCCESS) {
+                    // The RadeonSI driver is compatible with XWayland but can't be detected by libva
+                    // so try it too if all else fails.
+                    qputenv("LIBVA_DRIVER_NAME", "radeonsi");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
+
+                if (status != VA_STATUS_SUCCESS && (m_WindowSystem != SDL_SYSWM_X11 || m_DecoderSelectionPass > 0)) {
+                    // The unofficial nvidia VAAPI driver over NVDEC/CUDA works well on Wayland,
+                    // but we'd rather use CUDA for XWayland and VDPAU for regular X11.
+                    // NB: Remember to update the VA-API NVDEC condition below when modifying this!
+                    qputenv("LIBVA_DRIVER_NAME", "nvidia");
+                    status = tryVaInitialize(vaDeviceContext, params, &major, &minor);
+                }
+
+                if (status != VA_STATUS_SUCCESS) {
+                    // Unset LIBVA_DRIVER_NAME if none of the drivers we tried worked. This ensures
+                    // we will get a fresh start using the default driver selection behavior after
+                    // setting LIBVA_DRIVERS_PATH in the code below.
+                    qunsetenv("LIBVA_DRIVER_NAME");
+                }
             }
         }
 
@@ -380,6 +406,8 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         // vaPutSurface() so we must also not directly render on XWayland.
         m_BlacklistedForDirectRendering = vendorStr.contains("iHD");
     }
+
+    m_RequiresExplicitPixelFormat = vendorStr.contains("i965");
 
     // This will populate the driver_quirks
     err = av_hwdevice_ctx_init(m_HwContext);
@@ -897,18 +925,21 @@ VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag, VADRMPRIMESurfaceDescri
     }
 
     // These attributes are required for i965 to create a surface that can
-    // be successfully exported via vaExportSurfaceHandle(). iHD doesn't
-    // need these, but it doesn't seem to hurt either.
-    attrs[attributeCount].type = VASurfaceAttribPixelFormat;
-    attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
-    attrs[attributeCount].value.type = VAGenericValueTypeInteger;
-    attrs[attributeCount].value.value.i = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-                VA_FOURCC_P010 : VA_FOURCC_NV12;
-    attributeCount++;
+    // be successfully exported via vaExportSurfaceHandle(). YUV444 is not
+    // handled here but i965 supports no hardware with YUV444 decoding.
+    if (m_RequiresExplicitPixelFormat && !(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444)) {
+        attrs[attributeCount].type = VASurfaceAttribPixelFormat;
+        attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
+        attrs[attributeCount].value.type = VAGenericValueTypeInteger;
+        attrs[attributeCount].value.value.i =
+            (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ? VA_FOURCC_P010 : VA_FOURCC_NV12;
+        attributeCount++;
+    }
 
     st = vaCreateSurfaces(vaDeviceContext->display,
                           (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-                              VA_RT_FORMAT_YUV420_10 : VA_RT_FORMAT_YUV420,
+                              ((m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) ? VA_RT_FORMAT_YUV444_10 : VA_RT_FORMAT_YUV420_10) :
+                              ((m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) ? VA_RT_FORMAT_YUV444 : VA_RT_FORMAT_YUV420),
                           1280,
                           720,
                           &surfaceId,
@@ -961,6 +992,9 @@ VAAPIRenderer::canExportEGL() {
 AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
     switch (m_EglExportType) {
     case EglExportType::Separate:
+        // YUV444 surfaces can be in a variety of different formats, so we need to
+        // use the composed export that returns an opaque format-agnostic texture.
+        SDL_assert(!(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444));
         return (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
                    AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
 

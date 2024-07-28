@@ -12,10 +12,13 @@ include(../globaldefs.pri)
 
 # Precompile QML files to avoid writing qmlcache on portable versions.
 # Since this binds the app against the Qt runtime version, we will only
-# do this for Windows and Mac, since they ship with the Qt runtime.
-win32|macx {
-    CONFIG(release, debug|release) {
-        CONFIG += qtquickcompiler
+# do this for Windows and Mac (when disable-prebuilts is not defined),
+# since they always ship with the matching build of the Qt runtime.
+!disable-prebuilts {
+    win32|macx {
+        CONFIG(release, debug|release) {
+            CONFIG += qtquickcompiler
+        }
     }
 }
 
@@ -147,6 +150,10 @@ unix:if(!macx|disable-prebuilts) {
 win32 {
     LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ldxgi -ld3d11
     CONFIG += ffmpeg
+    contains(QT_ARCH, x86_64) {
+        LIBS += -llibplacebo
+        CONFIG += libplacebo
+    }
 }
 win32:!winrt {
     CONFIG += soundio discord-rpc
@@ -249,6 +256,7 @@ ffmpeg {
     DEFINES += HAVE_FFMPEG
     SOURCES += \
         streaming/video/ffmpeg.cpp \
+        streaming/video/ffmpeg-renderers/genhwaccel.cpp \
         streaming/video/ffmpeg-renderers/sdlvid.cpp \
         streaming/video/ffmpeg-renderers/swframemapper.cpp \
         streaming/video/ffmpeg-renderers/pacer/pacer.cpp
@@ -256,6 +264,7 @@ ffmpeg {
     HEADERS += \
         streaming/video/ffmpeg.h \
         streaming/video/ffmpeg-renderers/renderer.h \
+        streaming/video/ffmpeg-renderers/genhwaccel.h \
         streaming/video/ffmpeg-renderers/sdlvid.h \
         streaming/video/ffmpeg-renderers/swframemapper.h \
         streaming/video/ffmpeg-renderers/pacer/pacer.h
@@ -403,6 +412,7 @@ macx {
     message(VideoToolbox renderer selected)
 
     SOURCES += \
+        streaming/video/ffmpeg-renderers/vt_base.mm \
         streaming/video/ffmpeg-renderers/vt_avsamplelayer.mm \
         streaming/video/ffmpeg-renderers/vt_metal.mm
 
@@ -479,7 +489,8 @@ TRANSLATIONS += \
     languages/qml_pl.ts \
     languages/qml_cs.ts \
     languages/qml_he.ts \
-    languages/qml_ckb.ts
+    languages/qml_ckb.ts \
+    languages/qml_lt.ts
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

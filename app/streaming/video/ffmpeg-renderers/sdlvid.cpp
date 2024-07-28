@@ -54,6 +54,14 @@ bool SdlRenderer::prepareDecoderContext(AVCodecContext*, AVDictionary**)
     return true;
 }
 
+void SdlRenderer::prepareToRender()
+{
+    // Draw a black frame until the video stream starts rendering
+    SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(m_Renderer);
+    SDL_RenderPresent(m_Renderer);
+}
+
 bool SdlRenderer::isRenderThreadSupported()
 {
     SDL_RendererInfo info;
@@ -72,19 +80,28 @@ bool SdlRenderer::isRenderThreadSupported()
     return true;
 }
 
-bool SdlRenderer::isPixelFormatSupported(int, AVPixelFormat pixelFormat)
+bool SdlRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    // Remember to keep this in sync with SdlRenderer::renderFrame()!
-    switch (pixelFormat)
-    {
-    case AV_PIX_FMT_YUV420P:
-    case AV_PIX_FMT_YUVJ420P:
-    case AV_PIX_FMT_NV12:
-    case AV_PIX_FMT_NV21:
-        return true;
-
-    default:
+    if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+        // SDL2 doesn't support 10-bit pixel formats
         return false;
+    }
+    else if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+        // SDL2 doesn't support YUV444 pixel formats
+        return false;
+    }
+    else {
+        // Remember to keep this in sync with SdlRenderer::renderFrame()!
+        switch (pixelFormat) {
+        case AV_PIX_FMT_YUV420P:
+        case AV_PIX_FMT_YUVJ420P:
+        case AV_PIX_FMT_NV12:
+        case AV_PIX_FMT_NV21:
+            return true;
+
+        default:
+            return false;
+        }
     }
 }
 
@@ -95,8 +112,8 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
     m_VideoFormat = params->videoFormat;
     m_SwFrameMapper.setVideoFormat(m_VideoFormat);
 
-    if (params->videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-        // SDL doesn't support rendering YUV 10-bit textures yet
+    if (params->videoFormat & (VIDEO_FORMAT_MASK_10BIT | VIDEO_FORMAT_MASK_YUV444)) {
+        // SDL doesn't support rendering YUV444 or 10-bit textures yet
         return false;
     }
 
@@ -163,13 +180,6 @@ bool SdlRenderer::initialize(PDECODER_PARAMETERS params)
         // If we get here prior to the start of a session, just pump and flush ourselves.
         SDL_PumpEvents();
         SDL_FlushEvent(SDL_WINDOWEVENT);
-    }
-
-    if (!params->testOnly) {
-        // Draw a black frame until the video stream starts rendering
-        SDL_SetRenderDrawColor(m_Renderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(m_Renderer);
-        SDL_RenderPresent(m_Renderer);
     }
 
 #ifdef Q_OS_WIN32
@@ -495,6 +505,11 @@ bool SdlRenderer::testRenderFrame(AVFrame* frame)
 
 bool SdlRenderer::notifyWindowChanged(PWINDOW_STATE_CHANGE_INFO info)
 {
-    // We can transparently handle size and display changes
+    // We can transparently handle size and display changes, except Windows where
+    // changing size appears to break the renderer (maybe due to the render thread?)
+#ifdef Q_OS_WIN32
+    return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_DISPLAY));
+#else
     return !(info->stateChangeFlags & ~(WINDOW_STATE_CHANGE_SIZE | WINDOW_STATE_CHANGE_DISPLAY));
+#endif
 }

@@ -32,7 +32,7 @@ if /I "%BUILD_CONFIG%"=="debug" (
     )
 )
 
-set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 b28642b756ebec4884d1063dfa4de803a6dcecdc /v
+set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 8b9d0d682ad9459e54f05a79694bc10f9876e297 /v
 
 set BUILD_ROOT=%cd%\build
 set SOURCE_ROOT=%cd%
@@ -41,11 +41,6 @@ set INSTALLER_FOLDER=%BUILD_ROOT%\installer-%BUILD_CONFIG%
 set /p VERSION=<%SOURCE_ROOT%\app\version.txt
 
 rem Ensure that all architectures have been built before the final bundle
-if not exist "%BUILD_ROOT%\build-x86-%BUILD_CONFIG%\Moonlight.msi" (
-    echo Unable to build bundle - missing binaries for %BUILD_CONFIG% x86
-    echo You must run 'build-arch.bat %BUILD_CONFIG% x86' first
-    exit /b 1
-)
 if not exist "%BUILD_ROOT%\build-x64-%BUILD_CONFIG%\Moonlight.msi" (
     echo Unable to build bundle - missing binaries for %BUILD_CONFIG% x64
     echo You must run 'build-arch.bat %BUILD_CONFIG% x64' first

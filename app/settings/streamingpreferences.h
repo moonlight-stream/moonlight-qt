@@ -12,7 +12,7 @@ public:
     static StreamingPreferences* get(QQmlEngine *qmlEngine = nullptr);
 
     Q_INVOKABLE static int
-    getDefaultBitrate(int width, int height, int fps);
+    getDefaultBitrate(int width, int height, int fps, bool yuv444);
 
     Q_INVOKABLE void save();
 
@@ -92,6 +92,7 @@ public:
         LANG_CS,
         LANG_HE,
         LANG_CKB,
+        LANG_LT,
     };
     Q_ENUM(Language);
 
@@ -125,6 +126,7 @@ public:
     Q_PROPERTY(AudioConfig audioConfig MEMBER audioConfig NOTIFY audioConfigChanged)
     Q_PROPERTY(VideoCodecConfig videoCodecConfig MEMBER videoCodecConfig NOTIFY videoCodecConfigChanged)
     Q_PROPERTY(bool enableHdr MEMBER enableHdr NOTIFY enableHdrChanged)
+    Q_PROPERTY(bool enableYUV444 MEMBER enableYUV444 NOTIFY enableYUV444Changed)
     Q_PROPERTY(VideoDecoderSelection videoDecoderSelection MEMBER videoDecoderSelection NOTIFY videoDecoderSelectionChanged)
     Q_PROPERTY(WindowMode windowMode MEMBER windowMode NOTIFY windowModeChanged)
     Q_PROPERTY(WindowMode recommendedFullScreenMode MEMBER recommendedFullScreenMode CONSTANT)
@@ -170,6 +172,7 @@ public:
     AudioConfig audioConfig;
     VideoCodecConfig videoCodecConfig;
     bool enableHdr;
+    bool enableYUV444;
     VideoDecoderSelection videoDecoderSelection;
     WindowMode windowMode;
     WindowMode recommendedFullScreenMode;
@@ -192,6 +195,7 @@ signals:
     void audioConfigChanged();
     void videoCodecConfigChanged();
     void enableHdrChanged();
+    void enableYUV444Changed();
     void videoDecoderSelectionChanged();
     void uiDisplayModeChanged();
     void windowModeChanged();

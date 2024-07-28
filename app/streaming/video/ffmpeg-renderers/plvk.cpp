@@ -94,8 +94,9 @@ void PlVkRenderer::overlayUploadComplete(void* opaque)
     SDL_FreeSurface((SDL_Surface*)opaque);
 }
 
-PlVkRenderer::PlVkRenderer(IFFmpegRenderer* backendRenderer) :
-    m_Backend(backendRenderer)
+PlVkRenderer::PlVkRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer) :
+    m_Backend(backendRenderer),
+    m_HwAccelBackend(hwaccel)
 {
     bool ok;
 
@@ -157,6 +158,12 @@ bool PlVkRenderer::chooseVulkanDevice(PDECODER_PARAMETERS params, bool hdrOutput
 
     std::set<uint32_t> devicesTried;
     VkPhysicalDeviceProperties deviceProps;
+
+    if (physicalDeviceCount == 0) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "No Vulkan devices found!");
+        return false;
+    }
 
     // First, try the first device in the list to support device selection layers
     // that put the user's preferred GPU in the first slot.
@@ -234,7 +241,7 @@ bool PlVkRenderer::tryInitializeDevice(VkPhysicalDevice device, VkPhysicalDevice
     }
 
     // If we're acting as the decoder backend, we need a physical device with Vulkan video support
-    if (m_Backend == nullptr) {
+    if (m_HwAccelBackend) {
         const char* videoDecodeExtension;
 
         if (decoderParams->videoFormat & VIDEO_FORMAT_MASK_H264) {
@@ -461,7 +468,7 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
     }
 
     // We only need an hwaccel device context if we're going to act as the backend renderer too
-    if (m_Backend == nullptr) {
+    if (m_HwAccelBackend) {
         m_HwDeviceCtx = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_VULKAN);
         if (m_HwDeviceCtx == nullptr) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -515,13 +522,17 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
 bool PlVkRenderer::prepareDecoderContext(AVCodecContext *context, AVDictionary **)
 {
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Using Vulkan video decoding");
+    if (m_HwAccelBackend) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using Vulkan video decoding");
 
-    // This should only be called when we're acting as the decoder backend
-    SDL_assert(m_Backend == nullptr);
+        context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
+    }
+    else {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using Vulkan renderer");
+    }
 
-    context->hw_device_ctx = av_buffer_ref(m_HwDeviceCtx);
     return true;
 }
 
@@ -906,9 +917,16 @@ int PlVkRenderer::getRendererAttributes()
     return RENDERER_ATTRIBUTE_HDR_SUPPORT;
 }
 
+int PlVkRenderer::getDecoderColorspace()
+{
+    // We rely on libplacebo for color conversion, pick colorspace with the same primaries as sRGB
+    return COLORSPACE_REC_709;
+}
+
 int PlVkRenderer::getDecoderColorRange()
 {
-    // Explicitly set the color range to full to fix raised black levels on OLED displays
+    // Explicitly set the color range to full to fix raised black levels on OLED displays,
+    // should also reduce banding artifacts in all situations
     return COLOR_RANGE_FULL;
 }
 
@@ -926,11 +944,59 @@ bool PlVkRenderer::needsTestFrame()
 
 bool PlVkRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat)
 {
-    if (m_Backend) {
+    if (m_HwAccelBackend) {
+        return pixelFormat == AV_PIX_FMT_VULKAN;
+    }
+    else if (m_Backend) {
         return m_Backend->isPixelFormatSupported(videoFormat, pixelFormat);
     }
     else {
-        return IFFmpegRenderer::isPixelFormatSupported(videoFormat, pixelFormat);
+        if (pixelFormat == AV_PIX_FMT_VULKAN) {
+            // Vulkan frames are always supported
+            return true;
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+            if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+                switch (pixelFormat) {
+                case AV_PIX_FMT_P410:
+                case AV_PIX_FMT_YUV444P10:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+            else {
+                switch (pixelFormat) {
+                case AV_PIX_FMT_NV24:
+                case AV_PIX_FMT_NV42:
+                case AV_PIX_FMT_YUV444P:
+                case AV_PIX_FMT_YUVJ444P:
+                    return true;
+                default:
+                    return false;
+                }
+            }
+        }
+        else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_P010:
+            case AV_PIX_FMT_YUV420P10:
+                return true;
+            default:
+                return false;
+            }
+        }
+        else {
+            switch (pixelFormat) {
+            case AV_PIX_FMT_NV12:
+            case AV_PIX_FMT_NV21:
+            case AV_PIX_FMT_YUV420P:
+            case AV_PIX_FMT_YUVJ420P:
+                return true;
+            default:
+                return false;
+            }
+        }
     }
 }
 

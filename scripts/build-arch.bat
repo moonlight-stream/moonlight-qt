@@ -88,7 +88,7 @@ if not x%QT_PATH:_arm64=%==x%QT_PATH% (
 
 echo Detected target architecture: %ARCH%
 
-set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 b28642b756ebec4884d1063dfa4de803a6dcecdc /v
+set SIGNTOOL_PARAMS=sign /tr http://timestamp.digicert.com /td sha256 /fd sha256 /sha1 8b9d0d682ad9459e54f05a79694bc10f9876e297 /v
 
 set BUILD_ROOT=%cd%\build
 set SOURCE_ROOT=%cd%

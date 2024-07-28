@@ -23,6 +23,7 @@ public:
     virtual ~D3D11VARenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary**) override;
+    virtual bool prepareDecoderContextInGetFormat(AVCodecContext* context, AVPixelFormat pixelFormat) override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual void notifyOverlayUpdated(Overlay::OverlayType) override;
     virtual int getRendererAttributes() override;
@@ -37,7 +38,8 @@ private:
 
     bool setupRenderingResources();
     bool setupAmfTexture();
-    bool setupVideoTexture();
+    bool setupVideoTexture(); // for !m_BindDecoderOutputTextures
+    bool setupTexturePoolViews(AVD3D11VAFramesContext* frameContext); // for m_BindDecoderOutputTextures
     bool setupEnhancedTexture();
     void renderOverlay(Overlay::OverlayType type);
     void bindColorConversion(AVFrame* frame);
@@ -68,6 +70,7 @@ private:
     ComPtr<IDXGISwapChain4> m_SwapChain;
     ID3D11RenderTargetView* m_RenderTargetView;
     SDL_mutex* m_ContextLock;
+    bool m_BindDecoderOutputTextures;
     D3D11_BOX m_SrcBox;
 
     ComPtr<ID3D11VideoDevice> m_VideoDevice;
@@ -83,6 +86,7 @@ private:
     bool m_AutoStreamSuperResolution = false;
 
     DECODER_PARAMETERS m_DecoderParams;
+    int m_TextureAlignment;
     int m_DisplayWidth;
     int m_DisplayHeight;
     int m_LastColorSpace;
@@ -97,9 +101,13 @@ private:
     ComPtr<ID3D11Buffer> m_VideoVertexBuffer;
 
     ComPtr<ID3D11Texture2D> m_AmfTexture;
+    // Only valid if !m_BindDecoderOutputTextures
     ComPtr<ID3D11Texture2D> m_VideoTexture;
     ComPtr<ID3D11Texture2D> m_EnhancedTexture;
-    ID3D11ShaderResourceView* m_VideoTextureResourceViews[2];
+
+    // Only index 0 is valid if !m_BindDecoderOutputTextures
+#define DECODER_BUFFER_POOL_SIZE 17
+    ID3D11ShaderResourceView* m_VideoTextureResourceViews[DECODER_BUFFER_POOL_SIZE][2];
 
     struct {
         int width;
@@ -115,6 +123,7 @@ private:
     ComPtr<ID3D11PixelShader> m_OverlayPixelShader;
 
     AVBufferRef* m_HwDeviceContext;
+    AVBufferRef* m_HwFramesContext;
 
     // AMD (AMF)
     amf::AMFContextPtr m_AmfContext;

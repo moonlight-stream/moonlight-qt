@@ -765,11 +765,15 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
 
-    if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
-        m_Desc.Format = (D3DFORMAT)MAKEFOURCC('P','0','1','0');
+    if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
+        m_Desc.Format = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
+            (D3DFORMAT)MAKEFOURCC('Y','4','1','0') :
+            (D3DFORMAT)MAKEFOURCC('A','Y','U','V');
     }
     else {
-        m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
+        m_Desc.Format = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
+            (D3DFORMAT)MAKEFOURCC('P','0','1','0') :
+            (D3DFORMAT)MAKEFOURCC('N','V','1','2');
     }
 
     if (!initializeDevice(params->window, params->enableVsync)) {

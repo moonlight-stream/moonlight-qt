@@ -59,6 +59,40 @@ bool MmalRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**
     return true;
 }
 
+void MmalRenderer::prepareToRender()
+{
+    // Create a renderer and draw a black background for the area not covered by the MMAL overlay.
+    // On the KMSDRM backend, this triggers the modeset that puts the CRTC into the mode we selected.
+    m_BackgroundRenderer = SDL_CreateRenderer(m_Window, -1, SDL_RENDERER_SOFTWARE);
+    if (m_BackgroundRenderer == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_CreateRenderer() failed: %s",
+                     SDL_GetError());
+        return;
+    }
+
+    // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
+    // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
+    // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
+    // renderer. This can lead to an infinite to renderer recreation, so discard all
+    // SDL_WINDOWEVENT events after SDL_CreateRenderer().
+    Session* session = Session::get();
+    if (session != nullptr) {
+        // If we get here during a session, we need to synchronize with the event loop
+        // to ensure we don't drop any important events.
+        session->flushWindowEvents();
+    }
+    else {
+        // If we get here prior to the start of a session, just pump and flush ourselves.
+        SDL_PumpEvents();
+        SDL_FlushEvent(SDL_WINDOWEVENT);
+    }
+
+    SDL_SetRenderDrawColor(m_BackgroundRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
+    SDL_RenderClear(m_BackgroundRenderer);
+    SDL_RenderPresent(m_BackgroundRenderer);
+}
+
 void MmalRenderer::updateDisplayRegion()
 {
     MMAL_STATUS_T status;
@@ -123,9 +157,6 @@ bool MmalRenderer::initialize(PDECODER_PARAMETERS params)
     m_Window = params->window;
     m_VideoWidth = params->width;
     m_VideoHeight = params->height;
-
-    // Clear the background if possible
-    setupBackground(params);
 
     status = mmal_component_create(MMAL_COMPONENT_DEFAULT_VIDEO_RENDERER, &m_Renderer);
     if (status != MMAL_SUCCESS) {
@@ -215,42 +246,6 @@ int MmalRenderer::getDecoderColorspace()
     // MMAL seems to always use Rec. 709 colorspace for rendering
     // even when we try to set something else in the input format.
     return COLORSPACE_REC_709;
-}
-
-void MmalRenderer::setupBackground(PDECODER_PARAMETERS params)
-{
-    if (!params->testOnly) {
-        // Create a renderer and draw a black background for the area not covered by the MMAL overlay.
-        // On the KMSDRM backend, this triggers the modeset that puts the CRTC into the mode we selected.
-        m_BackgroundRenderer = SDL_CreateRenderer(params->window, -1, SDL_RENDERER_SOFTWARE);
-        if (m_BackgroundRenderer == nullptr) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                        "SDL_CreateRenderer() failed: %s",
-                        SDL_GetError());
-            return;
-        }
-
-        // SDL_CreateRenderer() can end up having to recreate our window (SDL_RecreateWindow())
-        // to ensure it's compatible with the renderer's OpenGL context. If that happens, we
-        // can get spurious SDL_WINDOWEVENT events that will cause us to (again) recreate our
-        // renderer. This can lead to an infinite to renderer recreation, so discard all
-        // SDL_WINDOWEVENT events after SDL_CreateRenderer().
-        Session* session = Session::get();
-        if (session != nullptr) {
-            // If we get here during a session, we need to synchronize with the event loop
-            // to ensure we don't drop any important events.
-            session->flushWindowEvents();
-        }
-        else {
-            // If we get here prior to the start of a session, just pump and flush ourselves.
-            SDL_PumpEvents();
-            SDL_FlushEvent(SDL_WINDOWEVENT);
-        }
-
-        SDL_SetRenderDrawColor(m_BackgroundRenderer, 0, 0, 0, SDL_ALPHA_OPAQUE);
-        SDL_RenderClear(m_BackgroundRenderer);
-        SDL_RenderPresent(m_BackgroundRenderer);
-    }
 }
 
 void MmalRenderer::InputPortCallback(MMAL_PORT_T*, MMAL_BUFFER_HEADER_T* buffer)

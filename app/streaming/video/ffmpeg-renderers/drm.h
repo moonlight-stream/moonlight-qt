@@ -52,6 +52,7 @@ public:
     virtual ~DrmRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual enum AVPixelFormat getPreferredPixelFormat(int videoFormat) override;
     virtual bool isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) override;
@@ -70,19 +71,21 @@ public:
 #endif
 
 private:
+    bool getPropertyByName(drmModeObjectPropertiesPtr props, const char* name, uint64_t *value);
     const char* getDrmColorEncodingValue(AVFrame* frame);
     const char* getDrmColorRangeValue(AVFrame* frame);
     bool mapSoftwareFrame(AVFrame* frame, AVDRMFrameDescriptor* mappedFrame);
     bool addFbForFrame(AVFrame* frame, uint32_t* newFbId, bool testMode);
 
     IFFmpegRenderer* m_BackendRenderer;
+    SDL_Window* m_Window;
     bool m_DrmPrimeBackend;
     bool m_HwAccelBackend;
     AVBufferRef* m_HwContext;
     int m_DrmFd;
     bool m_SdlOwnsDrmFd;
     bool m_SupportsDirectRendering;
-    bool m_Main10Hdr;
+    int m_VideoFormat;
     uint32_t m_ConnectorId;
     uint32_t m_EncoderId;
     uint32_t m_CrtcId;

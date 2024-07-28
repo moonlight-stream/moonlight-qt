@@ -13,6 +13,7 @@ public:
     virtual ~SdlRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
+    virtual void prepareToRender() override;
     virtual void renderFrame(AVFrame* frame) override;
     virtual bool isRenderThreadSupported() override;
     virtual bool isPixelFormatSupported(int videoFormat, enum AVPixelFormat pixelFormat) override;

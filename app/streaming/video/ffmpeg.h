@@ -46,7 +46,22 @@ private:
 
     bool createFrontendRenderer(PDECODER_PARAMETERS params, bool useAlternateFrontend);
 
-    bool isDecoderIgnored(const AVCodec* decoder);
+    static
+    bool isDecoderMatchForParams(const AVCodec *decoder, PDECODER_PARAMETERS params);
+
+    static
+    bool isZeroCopyFormat(AVPixelFormat format);
+
+    static
+    int getAVCodecCapabilities(const AVCodec *codec);
+
+    bool tryInitializeHwAccelDecoder(PDECODER_PARAMETERS params,
+                                     int pass,
+                                     QSet<const AVCodec*>& terminallyFailedHardwareDecoders);
+
+    bool tryInitializeNonHwAccelDecoder(PDECODER_PARAMETERS params,
+                                        bool requireZeroCopyFormat,
+                                        QSet<const AVCodec*>& terminallyFailedHardwareDecoders);
 
     bool tryInitializeRendererForUnknownDecoder(const AVCodec* decoder,
                                                 PDECODER_PARAMETERS params,
@@ -106,4 +121,10 @@ private:
     static const uint8_t k_HEVCMain10TestFrame[];
     static const uint8_t k_AV1Main8TestFrame[];
     static const uint8_t k_AV1Main10TestFrame[];
+    static const uint8_t k_h264High_444TestFrame[];
+    static const uint8_t k_HEVCRExt8_444TestFrame[];
+    static const uint8_t k_HEVCRExt10_444TestFrame[];
+    static const uint8_t k_AV1High8_444TestFrame[];
+    static const uint8_t k_AV1High10_444TestFrame[];
+
 };

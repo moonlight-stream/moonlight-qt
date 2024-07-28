@@ -66,6 +66,8 @@
         <file>languages/qml_he.qm</file>
         <file>languages/qml_ckb.ts</file>
         <file>languages/qml_ckb.qm</file>
+        <file>languages/qml_lt.ts</file>
+        <file>languages/qml_lt.qm</file>
         <!-- Don't include pt_BR until it is more complete -->
         <!--file>languages/qml_pt_BR.qm</file-->
         <!--file>languages/qml_pt_BR.ts</file-->
