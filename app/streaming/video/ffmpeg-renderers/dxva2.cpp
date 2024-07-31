@@ -20,6 +20,7 @@
 
 DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0xD2,0x5C,0x15,0xB3,0xD6);
 DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile0,0xb8be4ccb,0xcf53,0x46ba,0x8d,0x59,0xd6,0xb8,0xa6,0xda,0x5d,0x2a);
+DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile1,0x6936ff0f,0x45b1,0x4163,0x9c,0xc1,0x64,0x6e,0xf6,0x94,0x61,0x08);
 
 // This was incorrectly removed from public headers in FFmpeg 7.0
 #ifndef FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO
@@ -199,6 +200,12 @@ bool DXVA2Renderer::initializeDecoder()
         }
         else if (m_VideoFormat == VIDEO_FORMAT_AV1_MAIN8 || m_VideoFormat == VIDEO_FORMAT_AV1_MAIN10) {
             if (IsEqualGUID(guids[i], DXVA2_ModeAV1_VLD_Profile0)) {
+                chosenDeviceGuid = guids[i];
+                break;
+            }
+        }
+        else if (m_VideoFormat == VIDEO_FORMAT_AV1_HIGH8_444 || m_VideoFormat == VIDEO_FORMAT_AV1_HIGH10_444) {
+            if (IsEqualGUID(guids[i], DXVA2_ModeAV1_VLD_Profile1)) {
                 chosenDeviceGuid = guids[i];
                 break;
             }
