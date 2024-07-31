@@ -10,6 +10,8 @@ extern "C" {
 #include <libavcodec/dxva2.h>
 }
 
+#include <wrl/client.h>
+
 class DXVA2Renderer : public IFFmpegRenderer
 {
 public:
@@ -55,21 +57,22 @@ private:
     int m_DisplayHeight;
 
     struct dxva_context m_DXVAContext;
-    IDirect3DSurface9* m_DecSurfaces[19];
+    std::array<Microsoft::WRL::ComPtr<IDirect3DSurface9>, 19> m_DecSurfaces;
+    std::array<IDirect3DSurface9*, 19> m_DecSurfacesRaw; // Referenced by m_DecSurfaces
     DXVA2_ConfigPictureDecode m_Config;
-    IDirectXVideoDecoderService* m_DecService;
-    IDirectXVideoDecoder* m_Decoder;
+    Microsoft::WRL::ComPtr<IDirectXVideoDecoderService> m_DecService;
+    Microsoft::WRL::ComPtr<IDirectXVideoDecoder> m_Decoder;
     int m_SurfacesUsed;
     AVBufferPool* m_Pool;
 
     SDL_SpinLock m_OverlayLock;
-    IDirect3DVertexBuffer9* m_OverlayVertexBuffers[Overlay::OverlayMax];
-    IDirect3DTexture9* m_OverlayTextures[Overlay::OverlayMax];
+    std::array<Microsoft::WRL::ComPtr<IDirect3DVertexBuffer9>, Overlay::OverlayMax> m_OverlayVertexBuffers;
+    std::array<Microsoft::WRL::ComPtr<IDirect3DTexture9>, Overlay::OverlayMax> m_OverlayTextures;
 
-    IDirect3DDevice9Ex* m_Device;
-    IDirect3DSurface9* m_RenderTarget;
-    IDirectXVideoProcessorService* m_ProcService;
-    IDirectXVideoProcessor* m_Processor;
+    Microsoft::WRL::ComPtr<IDirect3DDevice9Ex> m_Device;
+    Microsoft::WRL::ComPtr<IDirect3DSurface9> m_RenderTarget;
+    Microsoft::WRL::ComPtr<IDirectXVideoProcessorService> m_ProcService;
+    Microsoft::WRL::ComPtr<IDirectXVideoProcessor> m_Processor;
     DXVA2_ValueRange m_BrightnessRange;
     DXVA2_ValueRange m_ContrastRange;
     DXVA2_ValueRange m_HueRange;
