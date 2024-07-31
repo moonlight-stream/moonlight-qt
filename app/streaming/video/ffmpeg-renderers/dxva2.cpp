@@ -60,16 +60,16 @@ DXVA2Renderer::~DXVA2Renderer()
     m_ProcService.Reset();
     m_Processor.Reset();
 
-    for (int i = 0; i < m_OverlayVertexBuffers.size(); i++) {
-        m_OverlayVertexBuffers[i].Reset();
+    for (auto& buffer : m_OverlayVertexBuffers) {
+        buffer.Reset();
     }
 
-    for (int i = 0; i < m_OverlayTextures.size(); i++) {
-        m_OverlayTextures[i].Reset();
+    for (auto& texture : m_OverlayTextures) {
+        texture.Reset();
     }
 
-    for (int i = 0; i < m_DecSurfaces.size(); i++) {
-        m_DecSurfaces[i].Reset();
+    for (auto& surface : m_DecSurfaces) {
+        surface.Reset();
     }
 
     if (m_Pool != nullptr) {

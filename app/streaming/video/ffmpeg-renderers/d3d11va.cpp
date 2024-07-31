@@ -109,28 +109,28 @@ D3D11VARenderer::~D3D11VARenderer()
     SDL_DestroyMutex(m_ContextLock);
 
     m_VideoVertexBuffer.Reset();
-    for (auto shader : m_VideoPixelShaders) {
+    for (auto& shader : m_VideoPixelShaders) {
         shader.Reset();
     }
 
-    for (int i = 0; i < m_VideoTextureResourceViews.size(); i++) {
-        for (int j = 0; j < m_VideoTextureResourceViews[i].size(); j++) {
-            m_VideoTextureResourceViews[i][j].Reset();
+    for (auto& textureSrvs : m_VideoTextureResourceViews) {
+        for (auto& srv : textureSrvs) {
+            srv.Reset();
         }
     }
 
     m_VideoTexture.Reset();
 
-    for (int i = 0; i < m_OverlayVertexBuffers.size(); i++) {
-        m_OverlayVertexBuffers[i].Reset();
+    for (auto& buffer : m_OverlayVertexBuffers) {
+        buffer.Reset();
     }
 
-    for (int i = 0; i < m_OverlayTextureResourceViews.size(); i++) {
-        m_OverlayTextureResourceViews[i].Reset();
+    for (auto& srv : m_OverlayTextureResourceViews) {
+        srv.Reset();
     }
 
-    for (int i = 0; i < m_OverlayTextures.size(); i++) {
-        m_OverlayTextures[i].Reset();
+    for (auto& texture : m_OverlayTextures) {
+        texture.Reset();
     }
 
     m_OverlayPixelShader.Reset();
