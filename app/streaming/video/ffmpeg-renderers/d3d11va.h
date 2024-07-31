@@ -24,11 +24,21 @@ public:
     virtual bool needsTestFrame() override;
     virtual InitFailureReason getInitFailureReason() override;
 
+    enum PixelShaders {
+        GENERIC_YUV_420,
+        BT_601_LIMITED_YUV_420,
+        BT_2020_LIMITED_YUV_420,
+        GENERIC_AYUV,
+        GENERIC_Y410,
+        _COUNT
+    };
+
 private:
     static void lockContext(void* lock_ctx);
     static void unlockContext(void* lock_ctx);
 
     bool setupRenderingResources();
+    std::vector<DXGI_FORMAT> getVideoTextureSRVFormats();
     bool setupVideoTexture(); // for !m_BindDecoderOutputTextures
     bool setupTexturePoolViews(AVD3D11VAFramesContext* frameContext); // for m_BindDecoderOutputTextures
     void renderOverlay(Overlay::OverlayType type);
@@ -51,6 +61,7 @@ private:
 
     DECODER_PARAMETERS m_DecoderParams;
     int m_TextureAlignment;
+    DXGI_FORMAT m_TextureFormat;
     int m_DisplayWidth;
     int m_DisplayHeight;
     int m_LastColorSpace;
@@ -59,9 +70,7 @@ private:
 
     bool m_AllowTearing;
 
-    ID3D11PixelShader* m_VideoGenericPixelShader;
-    ID3D11PixelShader* m_VideoBt601LimPixelShader;
-    ID3D11PixelShader* m_VideoBt2020LimPixelShader;
+    std::array<ID3D11PixelShader*, PixelShaders::_COUNT> m_VideoPixelShaders;
     ID3D11Buffer* m_VideoVertexBuffer;
 
     // Only valid if !m_BindDecoderOutputTextures

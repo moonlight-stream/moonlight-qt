@@ -86,6 +86,8 @@
         <file alias="d3d11_genyuv_pixel.fxc">shaders/d3d11_genyuv_pixel.fxc</file>
         <file alias="d3d11_bt601lim_pixel.fxc">shaders/d3d11_bt601lim_pixel.fxc</file>
         <file alias="d3d11_bt2020lim_pixel.fxc">shaders/d3d11_bt2020lim_pixel.fxc</file>
+        <file alias="d3d11_ayuv_pixel.fxc">shaders/d3d11_ayuv_pixel.fxc</file>
+        <file alias="d3d11_y410_pixel.fxc">shaders/d3d11_y410_pixel.fxc</file>
         <file alias="vt_renderer.metal">shaders/vt_renderer.metal</file>
     </qresource>
 </RCC>
