@@ -351,7 +351,7 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         // Skip copying to our own internal texture on Intel GPUs due to
         // significant performance impact of the extra copy. See:
         // https://github.com/moonlight-stream/moonlight-qt/issues/1304
-        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
+        m_BindDecoderOutputTextures = (adapterDesc.VendorId == 0x8086) && !m_VideoEnhancement->isVideoEnhancementEnabled();
     }
     else {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -1043,7 +1043,6 @@ bool D3D11VARenderer::initialize(PDECODER_PARAMETERS params)
     if(m_BindDecoderOutputTextures){
         // Disable Video enhancement as we do not copy the frame to process it
         m_VideoEnhancement->enableVideoEnhancement(false);
-        m_VideoEnhancement->enableUIvisible(false);
     }
 
     // Set VSR and HDR
