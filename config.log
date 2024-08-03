@@ -1,0 +1,14 @@
+executing config test SL
++ cd /Users/andyxia/Documents/ml/moonlight-qt/config.tests/SL && /opt/homebrew/bin/qmake  -spec /opt/homebrew/share/qt/mkspecs/macx-clang "CONFIG -= qt debug_and_release app_bundle lib_bundle" /Users/andyxia/Documents/ml/moonlight-qt/config.tests/SL
++ cd /Users/andyxia/Documents/ml/moonlight-qt/config.tests/SL && MAKEFLAGS= make
+> /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang++ -c -pipe -stdlib=libc++ -O2 -std=gnu++1z  -arch arm64 -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.5.sdk -mmacosx-version-min=14.0 -Wall -Wextra  -I. -I/opt/homebrew/share/qt/mkspecs/macx-clang -o main.o main.cpp
+> main.cpp:1:10: fatal error: 'SLVideo.h' file not found
+> #include <SLVideo.h>
+>          ^~~~~~~~~~~
+> 1 error generated.
+> make: *** [main.o] Error 1
+test SL FAILED
+executing config test EGL
++ cd /Users/andyxia/Documents/ml/moonlight-qt/config.tests/EGL && /opt/homebrew/bin/qmake  -spec /opt/homebrew/share/qt/mkspecs/macx-clang "CONFIG -= qt debug_and_release app_bundle lib_bundle" /Users/andyxia/Documents/ml/moonlight-qt/config.tests/EGL
+> Project ERROR: sdl2 development package not found
+test EGL FAILED
