@@ -72,13 +72,6 @@ private:
 
     int m_AdapterIndex = 0;
     int m_OutputIndex = 0;
-    // Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
-    // Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
-    // // Cannot convert to ComPtr because of av_buffer_unref()
-    // ID3D11Device* m_Device;
-    // ID3D11DeviceContext* m_DeviceContext;
-    // ID3D11RenderTargetView* m_RenderTargetView;
-
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
     Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
