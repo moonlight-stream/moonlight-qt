@@ -15,8 +15,13 @@
 
 using Microsoft::WRL::ComPtr;
 
-// Custom decoder GUID for Intel HEVC 444
-DEFINE_GUID(D3D11_DECODER_PROFILE_HEVC_VLD_Main444_10_Intel,0x6a6a81ba,0x912a,0x485d,0xb5,0x7f,0xcc,0xd2,0xd3,0x7b,0x8d,0x94);
+// Custom GUIDs for Intel's HEVC HEVC RExt profiles
+DEFINE_GUID(D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444_Intel,  0x41a5af96,0xe415,0x4b0c,0x9d,0x03,0x90,0x78,0x58,0xe2,0x3e,0x78);
+DEFINE_GUID(D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444_Intel,0x6a6a81ba,0x912a,0x485d,0xb5,0x7f,0xcc,0xd2,0xd3,0x7b,0x8d,0x94);
+
+// Standard DXVA GUIDs for HEVC RExt profiles (only present in Win11 24H2 SDK or later)
+DEFINE_GUID(D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444_Standard,   0x4008018f, 0xf537, 0x4b36, 0x98, 0xcf, 0x61, 0xaf, 0x8a, 0x2c, 0x1a, 0x33);
+DEFINE_GUID(D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444_Standard, 0x0dabeffa, 0x4458, 0x4602, 0xbc, 0x03, 0x07, 0x95, 0x65, 0x9d, 0x61, 0x7c);
 
 typedef struct _VERTEX
 {
@@ -1020,13 +1025,11 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
         break;
 
     case VIDEO_FORMAT_H265_REXT8_444:
-        if (adapterDesc.VendorId != 0x8086) {
-            // This custom D3D11VA profile is only supported on Intel GPUs
-            return false;
-        }
-        else if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_Main444_10_Intel, DXGI_FORMAT_AYUV, &supported))) {
+        if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444_Standard, DXGI_FORMAT_AYUV, &supported)) &&
+            FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444_Intel, DXGI_FORMAT_AYUV, &supported)))
+        {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "GPU doesn't support HEVC Main 444 8-bit decoding");
+                         "GPU doesn't support HEVC Main 444 8-bit decoding via D3D11VA");
             return false;
         }
         else if (!supported) {
@@ -1037,13 +1040,10 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
         break;
 
     case VIDEO_FORMAT_H265_REXT10_444:
-        if (adapterDesc.VendorId != 0x8086) {
-            // This custom D3D11VA profile is only supported on Intel GPUs
-            return false;
-        }
-        else if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_Main444_10_Intel, DXGI_FORMAT_Y410, &supported))) {
+        if (FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444_Standard, DXGI_FORMAT_Y410, &supported)) &&
+            FAILED(videoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444_Intel, DXGI_FORMAT_Y410, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "GPU doesn't support HEVC Main 444 10-bit decoding");
+                         "GPU doesn't support HEVC Main 444 10-bit decoding via D3D11VA");
             return false;
         }
         else if (!supported) {
