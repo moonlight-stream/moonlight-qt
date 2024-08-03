@@ -1501,7 +1501,7 @@ bool D3D11VARenderer::setupVideoTexture()
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.MipLevels = 1;
-    int srvIndex = 0;
+    size_t srvIndex = 0;
     for (DXGI_FORMAT srvFormat : getVideoTextureSRVFormats()) {
         SDL_assert(srvIndex < m_VideoTextureResourceViews[0].size());
 
@@ -1531,15 +1531,15 @@ bool D3D11VARenderer::setupTexturePoolViews(AVD3D11VAFramesContext* frameContext
     srvDesc.Texture2DArray.ArraySize = 1;
 
     // Create luminance and chrominance SRVs for each texture in the pool
-    for (int i = 0; i < m_VideoTextureResourceViews.size(); i++) {
+    for (size_t i = 0; i < m_VideoTextureResourceViews.size(); i++) {
         HRESULT hr;
 
         // Our rendering logic depends on the texture index working to map into our SRV array
-        SDL_assert(i == frameContext->texture_infos[i].index);
+        SDL_assert(i == (size_t)frameContext->texture_infos[i].index);
 
         srvDesc.Texture2DArray.FirstArraySlice = frameContext->texture_infos[i].index;
 
-        int srvIndex = 0;
+        size_t srvIndex = 0;
         for (DXGI_FORMAT srvFormat : getVideoTextureSRVFormats()) {
             SDL_assert(srvIndex < m_VideoTextureResourceViews[i].size());
 
