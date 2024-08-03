@@ -4,7 +4,6 @@
 
 #include <d3d11_4.h>
 #include <dxgi1_5.h>
-#include <wrl/client.h>
 #include <CGuid.h>
 #include <atlbase.h>
 #include "streaming/video/videoenhancement.h"
@@ -14,7 +13,7 @@ extern "C" {
 #include <libavutil/hwcontext_d3d11va.h>
 }
 
-using Microsoft::WRL::ComPtr;
+#include <wrl/client.h>
 
 class D3D11VARenderer : public IFFmpegRenderer
 {
@@ -32,12 +31,22 @@ public:
     virtual void setHdrMode(bool enabled) override;
     virtual InitFailureReason getInitFailureReason() override;
 
+    enum PixelShaders {
+        GENERIC_YUV_420,
+        BT_601_LIMITED_YUV_420,
+        BT_2020_LIMITED_YUV_420,
+        GENERIC_AYUV,
+        GENERIC_Y410,
+        _COUNT
+    };
+
 private:
     static void lockContext(void* lock_ctx);
     static void unlockContext(void* lock_ctx);
 
     bool setupRenderingResources();
     bool setupAmfTexture();
+    std::vector<DXGI_FORMAT> getVideoTextureSRVFormats();
     bool setupVideoTexture(); // for !m_BindDecoderOutputTextures
     bool setupTexturePoolViews(AVD3D11VAFramesContext* frameContext); // for m_BindDecoderOutputTextures
     bool setupEnhancedTexture();
@@ -63,30 +72,37 @@ private:
 
     int m_AdapterIndex = 0;
     int m_OutputIndex = 0;
-    ComPtr<IDXGIFactory5> m_Factory;
-    // Cannt convert to ComPtr because of av_buffer_unref()
-    ID3D11Device* m_Device;
-    ID3D11DeviceContext* m_DeviceContext;
-    ComPtr<IDXGISwapChain4> m_SwapChain;
-    ID3D11RenderTargetView* m_RenderTargetView;
+    // Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
+    // Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
+    // // Cannot convert to ComPtr because of av_buffer_unref()
+    // ID3D11Device* m_Device;
+    // ID3D11DeviceContext* m_DeviceContext;
+    // ID3D11RenderTargetView* m_RenderTargetView;
+
+    Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
+    Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
+    Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
+    Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_DeviceContext;
+    Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
     D3D11_BOX m_SrcBox;
 
-    ComPtr<ID3D11VideoDevice> m_VideoDevice;
-    ComPtr<ID3D11VideoContext2> m_VideoContext;
-    ComPtr<ID3D11VideoProcessor> m_VideoProcessor;
-    ComPtr<ID3D11VideoProcessorEnumerator> m_VideoProcessorEnumerator;
+    Microsoft::WRL::ComPtr<ID3D11VideoDevice> m_VideoDevice;
+    Microsoft::WRL::ComPtr<ID3D11VideoContext2> m_VideoContext;
+    Microsoft::WRL::ComPtr<ID3D11VideoProcessor> m_VideoProcessor;
+    Microsoft::WRL::ComPtr<ID3D11VideoProcessorEnumerator> m_VideoProcessorEnumerator;
     D3D11_VIDEO_PROCESSOR_CAPS m_VideoProcessorCapabilities;
     D3D11_VIDEO_PROCESSOR_STREAM m_StreamData;
-    ComPtr<ID3D11VideoProcessorOutputView> m_OutputView;
-    ComPtr<ID3D11VideoProcessorInputView> m_InputView;
-    ComPtr<ID3D11Resource> m_BackBufferResource;
+    Microsoft::WRL::ComPtr<ID3D11VideoProcessorOutputView> m_OutputView;
+    Microsoft::WRL::ComPtr<ID3D11VideoProcessorInputView> m_InputView;
+    Microsoft::WRL::ComPtr<ID3D11Resource> m_BackBufferResource;
     VideoEnhancement* m_VideoEnhancement;
     bool m_AutoStreamSuperResolution = false;
 
     DECODER_PARAMETERS m_DecoderParams;
     int m_TextureAlignment;
+    DXGI_FORMAT m_TextureFormat;
     int m_DisplayWidth;
     int m_DisplayHeight;
     int m_LastColorSpace;
@@ -95,19 +111,17 @@ private:
 
     bool m_AllowTearing;
 
-    ComPtr<ID3D11PixelShader> m_VideoGenericPixelShader;
-    ComPtr<ID3D11PixelShader> m_VideoBt601LimPixelShader;
-    ComPtr<ID3D11PixelShader> m_VideoBt2020LimPixelShader;
-    ComPtr<ID3D11Buffer> m_VideoVertexBuffer;
+    std::array<Microsoft::WRL::ComPtr<ID3D11PixelShader>, PixelShaders::_COUNT> m_VideoPixelShaders;
+    Microsoft::WRL::ComPtr<ID3D11Buffer> m_VideoVertexBuffer;
 
-    ComPtr<ID3D11Texture2D> m_AmfTexture;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_AmfTexture;
     // Only valid if !m_BindDecoderOutputTextures
-    ComPtr<ID3D11Texture2D> m_VideoTexture;
-    ComPtr<ID3D11Texture2D> m_EnhancedTexture;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_VideoTexture;
+    Microsoft::WRL::ComPtr<ID3D11Texture2D> m_EnhancedTexture;
 
     // Only index 0 is valid if !m_BindDecoderOutputTextures
 #define DECODER_BUFFER_POOL_SIZE 17
-    ID3D11ShaderResourceView* m_VideoTextureResourceViews[DECODER_BUFFER_POOL_SIZE][2];
+    std::array<std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, 2>, DECODER_BUFFER_POOL_SIZE> m_VideoTextureResourceViews;
 
     struct {
         int width;
@@ -117,10 +131,10 @@ private:
     } m_OutputTexture;
 
     SDL_SpinLock m_OverlayLock;
-    ComPtr<ID3D11Buffer> m_OverlayVertexBuffers[Overlay::OverlayMax];
-    ComPtr<ID3D11Texture2D> m_OverlayTextures[Overlay::OverlayMax];
-    ComPtr<ID3D11ShaderResourceView> m_OverlayTextureResourceViews[Overlay::OverlayMax];
-    ComPtr<ID3D11PixelShader> m_OverlayPixelShader;
+    std::array<Microsoft::WRL::ComPtr<ID3D11Buffer>, Overlay::OverlayMax> m_OverlayVertexBuffers;
+    std::array<Microsoft::WRL::ComPtr<ID3D11Texture2D>, Overlay::OverlayMax> m_OverlayTextures;
+    std::array<Microsoft::WRL::ComPtr<ID3D11ShaderResourceView>, Overlay::OverlayMax> m_OverlayTextureResourceViews;
+    Microsoft::WRL::ComPtr<ID3D11PixelShader> m_OverlayPixelShader;
 
     AVBufferRef* m_HwDeviceContext;
     AVBufferRef* m_HwFramesContext;
