@@ -20,13 +20,14 @@
 
 DEFINE_GUID(DXVADDI_Intel_ModeH264_E, 0x604F8E68,0x4951,0x4C54,0x88,0xFE,0xAB,0xD2,0x5C,0x15,0xB3,0xD6);
 DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile0,0xb8be4ccb,0xcf53,0x46ba,0x8d,0x59,0xd6,0xb8,0xa6,0xda,0x5d,0x2a);
+DEFINE_GUID(DXVA2_ModeAV1_VLD_Profile1,0x6936ff0f,0x45b1,0x4163,0x9c,0xc1,0x64,0x6e,0xf6,0x94,0x61,0x08);
 
 // This was incorrectly removed from public headers in FFmpeg 7.0
 #ifndef FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO
 #define FF_DXVA2_WORKAROUND_INTEL_CLEARVIDEO 2
 #endif
 
-#define SAFE_COM_RELEASE(x) if (x) { (x)->Release(); }
+using Microsoft::WRL::ComPtr;
 
 typedef struct _VERTEX
 {
@@ -36,24 +37,14 @@ typedef struct _VERTEX
 
 DXVA2Renderer::DXVA2Renderer(int decoderSelectionPass) :
     m_DecoderSelectionPass(decoderSelectionPass),
-    m_DecService(nullptr),
-    m_Decoder(nullptr),
     m_SurfacesUsed(0),
     m_Pool(nullptr),
     m_OverlayLock(0),
-    m_Device(nullptr),
-    m_RenderTarget(nullptr),
-    m_ProcService(nullptr),
-    m_Processor(nullptr),
     m_FrameIndex(0),
     m_BlockingPresent(false),
     m_DeviceQuirks(0)
 {
-    RtlZeroMemory(m_DecSurfaces, sizeof(m_DecSurfaces));
     RtlZeroMemory(&m_DXVAContext, sizeof(m_DXVAContext));
-
-    RtlZeroMemory(m_OverlayVertexBuffers, sizeof(m_OverlayVertexBuffers));
-    RtlZeroMemory(m_OverlayTextures, sizeof(m_OverlayTextures));
 
     // Use MMCSS scheduling for lower scheduling latency while we're streaming
     DwmEnableMMCSS(TRUE);
@@ -63,23 +54,23 @@ DXVA2Renderer::~DXVA2Renderer()
 {
     DwmEnableMMCSS(FALSE);
 
-    SAFE_COM_RELEASE(m_DecService);
-    SAFE_COM_RELEASE(m_Decoder);
-    SAFE_COM_RELEASE(m_Device);
-    SAFE_COM_RELEASE(m_RenderTarget);
-    SAFE_COM_RELEASE(m_ProcService);
-    SAFE_COM_RELEASE(m_Processor);
+    m_DecService.Reset();
+    m_Decoder.Reset();
+    m_Device.Reset();
+    m_RenderTarget.Reset();
+    m_ProcService.Reset();
+    m_Processor.Reset();
 
-    for (int i = 0; i < ARRAYSIZE(m_OverlayVertexBuffers); i++) {
-        SAFE_COM_RELEASE(m_OverlayVertexBuffers[i]);
+    for (auto& buffer : m_OverlayVertexBuffers) {
+        buffer.Reset();
     }
 
-    for (int i = 0; i < ARRAYSIZE(m_OverlayTextures); i++) {
-        SAFE_COM_RELEASE(m_OverlayTextures[i]);
+    for (auto& texture : m_OverlayTextures) {
+        texture.Reset();
     }
 
-    for (int i = 0; i < ARRAYSIZE(m_DecSurfaces); i++) {
-        SAFE_COM_RELEASE(m_DecSurfaces[i]);
+    for (auto& surface : m_DecSurfaces) {
+        surface.Reset();
     }
 
     if (m_Pool != nullptr) {
@@ -96,12 +87,12 @@ AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, FF_POOL_SIZE_TYPE)
 {
     DXVA2Renderer* me = reinterpret_cast<DXVA2Renderer*>(opaque);
 
-    if (me->m_SurfacesUsed < ARRAYSIZE(me->m_DecSurfaces)) {
+    if (me->m_SurfacesUsed < me->m_DecSurfaces.size()) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "DXVA2 decoder surface high-water mark: %d",
                     me->m_SurfacesUsed);
-        return av_buffer_create((uint8_t*)me->m_DecSurfaces[me->m_SurfacesUsed++],
-                                sizeof(*me->m_DecSurfaces), ffPoolDummyDelete, 0, 0);
+        return av_buffer_create((uint8_t*)me->m_DecSurfacesRaw[me->m_SurfacesUsed++],
+                                sizeof(me->m_DecSurfacesRaw[0]), ffPoolDummyDelete, 0, 0);
     }
 
     return NULL;
@@ -110,10 +101,10 @@ AVBufferRef* DXVA2Renderer::ffPoolAlloc(void* opaque, FF_POOL_SIZE_TYPE)
 bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context, AVDictionary**)
 {
     // m_DXVAContext.workaround and report_id already initialized elsewhere
-    m_DXVAContext.decoder = m_Decoder;
+    m_DXVAContext.decoder = m_Decoder.Get();
     m_DXVAContext.cfg = &m_Config;
-    m_DXVAContext.surface = m_DecSurfaces;
-    m_DXVAContext.surface_count = ARRAYSIZE(m_DecSurfaces);
+    m_DXVAContext.surface = m_DecSurfacesRaw.data();
+    m_DXVAContext.surface_count = (unsigned int)m_DecSurfacesRaw.size();
 
     context->hwaccel_context = &m_DXVAContext;
 
@@ -124,7 +115,7 @@ bool DXVA2Renderer::prepareDecoderContext(AVCodecContext* context, AVDictionary*
     )
 #endif
 
-    m_Pool = av_buffer_pool_init2(ARRAYSIZE(m_DecSurfaces), this, ffPoolAlloc, nullptr);
+    m_Pool = av_buffer_pool_init2(m_DecSurfaces.size(), this, ffPoolAlloc, nullptr);
     if (!m_Pool) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Failed create buffer pool");
@@ -162,8 +153,7 @@ bool DXVA2Renderer::initializeDecoder()
         return false;
     }
 
-    hr = DXVA2CreateVideoService(m_Device, IID_IDirectXVideoDecoderService,
-                                 reinterpret_cast<void**>(&m_DecService));
+    hr = DXVA2CreateVideoService(m_Device.Get(), IID_IDirectXVideoDecoderService, &m_DecService);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "DXVA2CreateVideoService(IID_IDirectXVideoDecoderService) failed: %x",
@@ -214,6 +204,12 @@ bool DXVA2Renderer::initializeDecoder()
                 break;
             }
         }
+        else if (m_VideoFormat == VIDEO_FORMAT_AV1_HIGH8_444 || m_VideoFormat == VIDEO_FORMAT_AV1_HIGH10_444) {
+            if (IsEqualGUID(guids[i], DXVA2_ModeAV1_VLD_Profile1)) {
+                chosenDeviceGuid = guids[i];
+                break;
+            }
+        }
     }
 
     CoTaskMemFree(guids);
@@ -255,12 +251,12 @@ bool DXVA2Renderer::initializeDecoder()
     SDL_assert(m_Desc.SampleHeight % 16 == 0);
     hr = m_DecService->CreateSurface(m_Desc.SampleWidth,
                                      m_Desc.SampleHeight,
-                                     ARRAYSIZE(m_DecSurfaces) - 1,
+                                     (UINT)m_DecSurfacesRaw.size() - 1,
                                      m_Desc.Format,
                                      D3DPOOL_DEFAULT,
                                      0,
                                      DXVA2_VideoDecoderRenderTarget,
-                                     m_DecSurfaces,
+                                     m_DecSurfacesRaw.data(),
                                      nullptr);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -269,8 +265,14 @@ bool DXVA2Renderer::initializeDecoder()
         return false;
     }
 
+    // Transfer ownership into ComPtrs
+    for (int i = 0; i < m_DecSurfaces.size(); i++) {
+        m_DecSurfaces[i].Attach(m_DecSurfacesRaw[i]);
+    }
+
     hr = m_DecService->CreateVideoDecoder(chosenDeviceGuid, &m_Desc, &m_Config,
-                                          m_DecSurfaces, ARRAYSIZE(m_DecSurfaces),
+                                          m_DecSurfacesRaw.data(),
+                                          (UINT)m_DecSurfacesRaw.size(),
                                           &m_Decoder);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -301,8 +303,7 @@ bool DXVA2Renderer::initializeRenderer()
     m_DisplayHeight = renderTargetDesc.Height;
 
     if (!(m_DeviceQuirks & DXVA2_QUIRK_NO_VP)) {
-        hr = DXVA2CreateVideoService(m_Device, IID_IDirectXVideoProcessorService,
-                                     reinterpret_cast<void**>(&m_ProcService));
+        hr = DXVA2CreateVideoService(m_Device.Get(), IID_IDirectXVideoProcessorService, &m_ProcService);
 
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -386,7 +387,7 @@ bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapter
     HRESULT hr;
 
     SDL_assert(m_DeviceQuirks == 0);
-    SDL_assert(m_Device == nullptr);
+    SDL_assert(!m_Device);
 
     {
         bool ok;
@@ -466,7 +467,7 @@ bool DXVA2Renderer::initializeQuirksForAdapter(IDirect3D9Ex* d3d9ex, int adapter
 
 bool DXVA2Renderer::isDecoderBlacklisted()
 {
-    IDirect3D9* d3d9;
+    ComPtr<IDirect3D9> d3d9;
     HRESULT hr;
     bool result = false;
 
@@ -523,8 +524,6 @@ bool DXVA2Renderer::isDecoderBlacklisted()
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GetDeviceCaps() failed: %x", hr);
         }
-
-        d3d9->Release();
     }
     else {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -547,7 +546,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
     SDL_VERSION(&info.version);
     SDL_GetWindowWMInfo(window, &info);
 
-    IDirect3D9Ex* d3d9ex;
+    ComPtr<IDirect3D9Ex> d3d9ex;
     HRESULT hr = Direct3DCreate9Ex(D3D_SDK_VERSION, &d3d9ex);
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -561,8 +560,7 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
 
     // Initialize quirks *before* calling CreateDeviceEx() to allow our below
     // logic to avoid a hang with NahimicOSD.dll's broken full-screen handling.
-    if (!initializeQuirksForAdapter(d3d9ex, adapterIndex)) {
-        d3d9ex->Release();
+    if (!initializeQuirksForAdapter(d3d9ex.Get(), adapterIndex)) {
         return false;
     }
 
@@ -588,7 +586,6 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
         if (FAILED(hr)) {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "GPU/driver doesn't support A2R10G10B10");
-            d3d9ex->Release();
             return false;
         }
     }
@@ -685,9 +682,6 @@ bool DXVA2Renderer::initializeDevice(SDL_Window* window, bool enableVsync)
                                 &d3dpp,
                                 d3dpp.Windowed ? nullptr : &currentMode,
                                 &m_Device);
-
-    d3d9ex->Release();
-
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateDeviceEx() failed: %x",
@@ -765,11 +759,15 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
     m_Desc.SampleFormat.VideoTransferFunction = DXVA2_VideoTransFunc_Unknown;
     m_Desc.SampleFormat.SampleFormat = DXVA2_SampleProgressiveFrame;
 
-    if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
-        m_Desc.Format = (D3DFORMAT)MAKEFOURCC('P','0','1','0');
+    if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
+        m_Desc.Format = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
+            (D3DFORMAT)MAKEFOURCC('Y','4','1','0') :
+            (D3DFORMAT)MAKEFOURCC('A','Y','U','V');
     }
     else {
-        m_Desc.Format = (D3DFORMAT)MAKEFOURCC('N','V','1','2');
+        m_Desc.Format = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
+            (D3DFORMAT)MAKEFOURCC('P','0','1','0') :
+            (D3DFORMAT)MAKEFOURCC('N','V','1','2');
     }
 
     if (!initializeDevice(params->window, params->enableVsync)) {
@@ -806,15 +804,9 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
 
     SDL_AtomicLock(&m_OverlayLock);
-    IDirect3DTexture9* oldTexture = m_OverlayTextures[type];
-    m_OverlayTextures[type] = nullptr;
-
-    IDirect3DVertexBuffer9* oldVertexBuffer = m_OverlayVertexBuffers[type];
-    m_OverlayVertexBuffers[type] = nullptr;
+    ComPtr<IDirect3DTexture9> oldTexture = std::move(m_OverlayTextures[type]);
+    ComPtr<IDirect3DVertexBuffer9> oldVertexBuffer = std::move(m_OverlayVertexBuffers[type]);
     SDL_AtomicUnlock(&m_OverlayLock);
-
-    SAFE_COM_RELEASE(oldTexture);
-    SAFE_COM_RELEASE(oldVertexBuffer);
 
     // If the overlay is disabled, we're done
     if (!overlayEnabled) {
@@ -824,7 +816,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
 
     // Create a dynamic texture to populate with our pixel data
     SDL_assert(!SDL_MUSTLOCK(newSurface));
-    IDirect3DTexture9* newTexture = nullptr;
+    ComPtr<IDirect3DTexture9> newTexture;
     hr = m_Device->CreateTexture(newSurface->w,
                                  newSurface->h,
                                  1,
@@ -845,7 +837,6 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     hr = newTexture->LockRect(0, &lockedRect, nullptr, D3DLOCK_DISCARD);
     if (FAILED(hr)) {
         SDL_FreeSurface(newSurface);
-        SAFE_COM_RELEASE(newTexture);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDirect3DTexture9::LockRect() failed: %x",
                      hr);
@@ -886,7 +877,7 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         {renderRect.x+renderRect.w, renderRect.y, 0, 1, 1, 0}
     };
 
-    IDirect3DVertexBuffer9* newVertexBuffer = nullptr;
+    ComPtr<IDirect3DVertexBuffer9> newVertexBuffer;
     hr = m_Device->CreateVertexBuffer(sizeof(verts),
                                       D3DUSAGE_WRITEONLY,
                                       D3DFVF_XYZRHW | D3DFVF_TEX1,
@@ -894,7 +885,6 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
                                       &newVertexBuffer,
                                       nullptr);
     if (FAILED(hr)) {
-        SAFE_COM_RELEASE(newTexture);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "CreateVertexBuffer() failed: %x",
                      hr);
@@ -904,8 +894,6 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     PVOID targetVertexBuffer = nullptr;
     hr = newVertexBuffer->Lock(0, 0, &targetVertexBuffer, 0);
     if (FAILED(hr)) {
-        SAFE_COM_RELEASE(newTexture);
-        SAFE_COM_RELEASE(newVertexBuffer);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "IDirect3DVertexBuffer9::Lock() failed: %x",
                      hr);
@@ -917,8 +905,8 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
     newVertexBuffer->Unlock();
 
     SDL_AtomicLock(&m_OverlayLock);
-    m_OverlayVertexBuffers[type] = newVertexBuffer;
-    m_OverlayTextures[type] = newTexture;
+    m_OverlayVertexBuffers[type] = std::move(newVertexBuffer);
+    m_OverlayTextures[type] = std::move(newTexture);
     SDL_AtomicUnlock(&m_OverlayLock);
 }
 
@@ -935,36 +923,30 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
         return;
     }
 
-    IDirect3DTexture9* overlayTexture = m_OverlayTextures[type];
-    IDirect3DVertexBuffer9* overlayVertexBuffer = m_OverlayVertexBuffers[type];
+    // Reference these objects so they don't immediately go away if the
+    // overlay update thread tries to release them.
+    ComPtr<IDirect3DTexture9> overlayTexture = m_OverlayTextures[type];
+    ComPtr<IDirect3DVertexBuffer9> overlayVertexBuffer = m_OverlayVertexBuffers[type];
+    SDL_AtomicUnlock(&m_OverlayLock);
 
     if (overlayTexture == nullptr) {
-        SDL_AtomicUnlock(&m_OverlayLock);
         return;
     }
 
-    // Reference these objects so they don't immediately go away if the
-    // overlay update thread tries to release them.
-    SDL_assert(overlayVertexBuffer != nullptr);
-    overlayTexture->AddRef();
-    overlayVertexBuffer->AddRef();
-
-    SDL_AtomicUnlock(&m_OverlayLock);
-
-    hr = m_Device->SetTexture(0, overlayTexture);
+    hr = m_Device->SetTexture(0, overlayTexture.Get());
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SetTexture() failed: %x",
                      hr);
-        goto Exit;
+        return;
     }
 
-    hr = m_Device->SetStreamSource(0, overlayVertexBuffer, 0, sizeof(VERTEX));
+    hr = m_Device->SetStreamSource(0, overlayVertexBuffer.Get(), 0, sizeof(VERTEX));
     if (FAILED(hr)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SetStreamSource() failed: %x",
                      hr);
-        goto Exit;
+        return;
     }
 
     hr = m_Device->DrawPrimitive(D3DPT_TRIANGLEFAN, 0, 2);
@@ -972,12 +954,8 @@ void DXVA2Renderer::renderOverlay(Overlay::OverlayType type)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "DrawPrimitive() failed: %x",
                      hr);
-        goto Exit;
+        return;
     }
-
-Exit:
-    overlayTexture->Release();
-    overlayVertexBuffer->Release();
 }
 
 int DXVA2Renderer::getDecoderColorspace()
@@ -1154,13 +1132,12 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
     }
 
     if (m_Processor) {
-        hr = m_Processor->VideoProcessBlt(m_RenderTarget, &bltParams, &sample, 1, nullptr);
+        hr = m_Processor->VideoProcessBlt(m_RenderTarget.Get(), &bltParams, &sample, 1, nullptr);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "VideoProcessBlt() failed, falling back to StretchRect(): %x",
                          hr);
-            m_Processor->Release();
-            m_Processor = nullptr;
+            m_Processor.Reset();
         }
     }
 
@@ -1169,7 +1146,7 @@ void DXVA2Renderer::renderFrame(AVFrame *frame)
         SDL_assert(m_Desc.SampleFormat.VideoTransferMatrix == DXVA2_VideoTransferMatrix_BT601);
 
         // This function doesn't trigger any of Intel's garbage video "enhancements"
-        hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget, &sample.DstRect, D3DTEXF_NONE);
+        hr = m_Device->StretchRect(surface, &sample.SrcRect, m_RenderTarget.Get(), &sample.DstRect, D3DTEXF_NONE);
         if (FAILED(hr)) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "StretchRect() failed: %x",

@@ -283,7 +283,8 @@ Flickable {
 
                                 StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
                                                                                                           StreamingPreferences.height,
-                                                                                                          StreamingPreferences.fps);
+                                                                                                          StreamingPreferences.fps,
+                                                                                                          StreamingPreferences.enableYUV444);
                                 slider.value = StreamingPreferences.bitrateKbps
                             }
 
@@ -448,7 +449,8 @@ Flickable {
 
                                 StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
                                                                                                           StreamingPreferences.height,
-                                                                                                          StreamingPreferences.fps);
+                                                                                                          StreamingPreferences.fps,
+                                                                                                          StreamingPreferences.enableYUV444);
                                 slider.value = StreamingPreferences.bitrateKbps
                             }
 
@@ -1613,6 +1615,31 @@ Flickable {
                                       qsTr("The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.")
                                     :
                                       qsTr("HDR streaming is not supported on this PC.")
+                }
+
+                CheckBox {
+                    id: enableYUV444
+                    width: parent.width
+                    text: qsTr("Enable YUV 4:4:4 (Experimental)")
+                    font.pointSize: 12
+
+                    checked: StreamingPreferences.enableYUV444
+                    onCheckedChanged: {
+                        StreamingPreferences.enableYUV444 = checked
+                        StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                  StreamingPreferences.height,
+                                                                                                  StreamingPreferences.fps,
+                                                                                                  StreamingPreferences.enableYUV444);
+                        slider.value = StreamingPreferences.bitrateKbps
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: enabled ?
+                                      qsTr("Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.")
+                                    :
+                                      qsTr("YUV 4:4:4 is not supported on this PC.")
                 }
 
                 CheckBox {

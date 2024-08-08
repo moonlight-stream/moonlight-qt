@@ -59,6 +59,11 @@ while [[ "$#" -gt 0 ]]; do
       rm $LIB_PATH/mac/lib/libavcodec* $LIB_PATH/mac/lib/libavutil* $LIB_PATH/mac/lib/libavformat*
       shift
       ;;
+    --libplacebo_win)
+      rm -r $LIB_PATH/windows/include/*/libplacebo
+      rm $LIB_PATH/windows/lib/*/libplacebo*
+      shift
+      ;;
     --)
       shift;
       break

@@ -150,6 +150,10 @@ unix:if(!macx|disable-prebuilts) {
 win32 {
     LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ldxgi -ld3d11
     CONFIG += ffmpeg
+    contains(QT_ARCH, x86_64) {
+        LIBS += -llibplacebo
+        CONFIG += libplacebo
+    }
 }
 win32:!winrt {
     CONFIG += soundio discord-rpc
@@ -250,6 +254,7 @@ ffmpeg {
     DEFINES += HAVE_FFMPEG
     SOURCES += \
         streaming/video/ffmpeg.cpp \
+        streaming/video/ffmpeg-renderers/genhwaccel.cpp \
         streaming/video/ffmpeg-renderers/sdlvid.cpp \
         streaming/video/ffmpeg-renderers/swframemapper.cpp \
         streaming/video/ffmpeg-renderers/pacer/pacer.cpp
@@ -257,6 +262,7 @@ ffmpeg {
     HEADERS += \
         streaming/video/ffmpeg.h \
         streaming/video/ffmpeg-renderers/renderer.h \
+        streaming/video/ffmpeg-renderers/genhwaccel.h \
         streaming/video/ffmpeg-renderers/sdlvid.h \
         streaming/video/ffmpeg-renderers/swframemapper.h \
         streaming/video/ffmpeg-renderers/pacer/pacer.h
@@ -392,6 +398,7 @@ macx {
     message(VideoToolbox renderer selected)
 
     SOURCES += \
+        streaming/video/ffmpeg-renderers/vt_base.mm \
         streaming/video/ffmpeg-renderers/vt_avsamplelayer.mm \
         streaming/video/ffmpeg-renderers/vt_metal.mm
 

@@ -19,6 +19,8 @@ public:
 
     virtual int getCapabilities();
 
+    virtual AudioFormat getAudioBufferFormat();
+
 private:
     int scoreChannelLayout(const struct SoundIoChannelLayout* layout, const OPUS_MULTISTREAM_CONFIGURATION* opusConfig);
 

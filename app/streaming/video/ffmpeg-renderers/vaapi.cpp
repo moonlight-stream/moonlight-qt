@@ -20,6 +20,7 @@ VAAPIRenderer::VAAPIRenderer(int decoderSelectionPass)
     : m_DecoderSelectionPass(decoderSelectionPass),
       m_HwContext(nullptr),
       m_BlacklistedForDirectRendering(false),
+      m_RequiresExplicitPixelFormat(false),
       m_OverlayMutex(nullptr)
 #ifdef HAVE_EGL
     , m_EglExportType(EglExportType::Unknown),
@@ -405,6 +406,8 @@ VAAPIRenderer::initialize(PDECODER_PARAMETERS params)
         // vaPutSurface() so we must also not directly render on XWayland.
         m_BlacklistedForDirectRendering = vendorStr.contains("iHD");
     }
+
+    m_RequiresExplicitPixelFormat = vendorStr.contains("i965");
 
     // This will populate the driver_quirks
     err = av_hwdevice_ctx_init(m_HwContext);
@@ -922,18 +925,21 @@ VAAPIRenderer::canExportSurfaceHandle(int layerTypeFlag, VADRMPRIMESurfaceDescri
     }
 
     // These attributes are required for i965 to create a surface that can
-    // be successfully exported via vaExportSurfaceHandle(). iHD doesn't
-    // need these, but it doesn't seem to hurt either.
-    attrs[attributeCount].type = VASurfaceAttribPixelFormat;
-    attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
-    attrs[attributeCount].value.type = VAGenericValueTypeInteger;
-    attrs[attributeCount].value.value.i = (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-                VA_FOURCC_P010 : VA_FOURCC_NV12;
-    attributeCount++;
+    // be successfully exported via vaExportSurfaceHandle(). YUV444 is not
+    // handled here but i965 supports no hardware with YUV444 decoding.
+    if (m_RequiresExplicitPixelFormat && !(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444)) {
+        attrs[attributeCount].type = VASurfaceAttribPixelFormat;
+        attrs[attributeCount].flags = VA_SURFACE_ATTRIB_SETTABLE;
+        attrs[attributeCount].value.type = VAGenericValueTypeInteger;
+        attrs[attributeCount].value.value.i =
+            (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ? VA_FOURCC_P010 : VA_FOURCC_NV12;
+        attributeCount++;
+    }
 
     st = vaCreateSurfaces(vaDeviceContext->display,
                           (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
-                              VA_RT_FORMAT_YUV420_10 : VA_RT_FORMAT_YUV420,
+                              ((m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) ? VA_RT_FORMAT_YUV444_10 : VA_RT_FORMAT_YUV420_10) :
+                              ((m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) ? VA_RT_FORMAT_YUV444 : VA_RT_FORMAT_YUV420),
                           1280,
                           720,
                           &surfaceId,
@@ -986,6 +992,9 @@ VAAPIRenderer::canExportEGL() {
 AVPixelFormat VAAPIRenderer::getEGLImagePixelFormat() {
     switch (m_EglExportType) {
     case EglExportType::Separate:
+        // YUV444 surfaces can be in a variety of different formats, so we need to
+        // use the composed export that returns an opaque format-agnostic texture.
+        SDL_assert(!(m_VideoFormat & VIDEO_FORMAT_MASK_YUV444));
         return (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) ?
                    AV_PIX_FMT_P010 : AV_PIX_FMT_NV12;
 

@@ -97,7 +97,7 @@ struct Vertex
     vector_float2 texCoord;
 };
 
-class VTMetalRenderer : public IFFmpegRenderer
+class VTMetalRenderer : public VTBaseRenderer
 {
 public:
     VTMetalRenderer()
@@ -394,12 +394,16 @@ public:
 
             switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
             case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+            case kCVPixelFormatType_444YpCbCr8BiPlanarVideoRange:
             case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+            case kCVPixelFormatType_444YpCbCr8BiPlanarFullRange:
                 fmt = (i == 0) ? MTLPixelFormatR8Unorm : MTLPixelFormatRG8Unorm;
                 break;
 
             case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+            case kCVPixelFormatType_444YpCbCr10BiPlanarFullRange:
             case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+            case kCVPixelFormatType_444YpCbCr10BiPlanarVideoRange:
                 fmt = (i == 0) ? MTLPixelFormatR16Unorm : MTLPixelFormatRG16Unorm;
                 break;
 
@@ -518,74 +522,6 @@ public:
         m_NextDrawable = nullptr;
     }}
 
-    bool checkDecoderCapabilities(id<MTLDevice> device, PDECODER_PARAMETERS params) {
-        if (params->videoFormat & VIDEO_FORMAT_MASK_H264) {
-            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_H264)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "No HW accelerated H.264 decode via VT");
-                return false;
-            }
-        }
-        else if (params->videoFormat & VIDEO_FORMAT_MASK_H265) {
-            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_HEVC)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "No HW accelerated HEVC decode via VT");
-                return false;
-            }
-
-            // HEVC Main10 requires more extensive checks because there's no
-            // simple API to check for Main10 hardware decoding, and if we don't
-            // have it, we'll silently get software decoding with horrible performance.
-            if (params->videoFormat == VIDEO_FORMAT_H265_MAIN10) {
-                // Exclude all GPUs earlier than macOSGPUFamily2
-                // https://developer.apple.com/documentation/metal/mtlfeatureset/mtlfeatureset_macos_gpufamily2_v1
-                if ([device supportsFeatureSet:MTLFeatureSet_macOS_GPUFamily2_v1]) {
-                    if ([device.name containsString:@"Intel"]) {
-                        // 500-series Intel GPUs are Skylake and don't support Main10 hardware decoding
-                        if ([device.name containsString:@" 5"]) {
-                            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                        "No HEVC Main10 support on Skylake iGPU");
-                            return false;
-                        }
-                    }
-                    else if ([device.name containsString:@"AMD"]) {
-                        // FirePro D, M200, and M300 series GPUs don't support Main10 hardware decoding
-                        if ([device.name containsString:@"FirePro D"] ||
-                                [device.name containsString:@" M2"] ||
-                                [device.name containsString:@" M3"]) {
-                            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                        "No HEVC Main10 support on AMD GPUs until Polaris");
-                            return false;
-                        }
-                    }
-                }
-                else {
-                    SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                                "No HEVC Main10 support on macOS GPUFamily1 GPUs");
-                    return false;
-                }
-            }
-        }
-        else if (params->videoFormat & VIDEO_FORMAT_MASK_AV1) {
-        #if __MAC_OS_X_VERSION_MAX_ALLOWED >= 130000
-            if (!VTIsHardwareDecodeSupported(kCMVideoCodecType_AV1)) {
-                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                            "No HW accelerated AV1 decode via VT");
-                return false;
-            }
-
-            // 10-bit is part of the Main profile for AV1, so it will always
-            // be present on hardware that supports 8-bit.
-        #else
-            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                        "AV1 requires building with Xcode 14 or later");
-            return false;
-        #endif
-        }
-
-        return true;
-    }
-
     id<MTLDevice> getMetalDevice() {
         if (qgetenv("VT_FORCE_METAL") == "0") {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
@@ -593,33 +529,27 @@ public:
             return nullptr;
         }
 
-        if (@available(macOS 11.0, *)) {
-            NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
-            if (devices.count == 0) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "No Metal device found!");
-                return nullptr;
-            }
+        NSArray<id<MTLDevice>> *devices = [MTLCopyAllDevices() autorelease];
+        if (devices.count == 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "No Metal device found!");
+            return nullptr;
+        }
 
-            for (id<MTLDevice> device in devices) {
-                if (device.isLowPower || device.hasUnifiedMemory) {
-                    return device;
-                }
+        for (id<MTLDevice> device in devices) {
+            if (device.isLowPower || device.hasUnifiedMemory) {
+                return device;
             }
+        }
 
-            if (qgetenv("VT_FORCE_METAL") == "1") {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Using Metal renderer due to VT_FORCE_METAL=1 override.");
-                return [MTLCreateSystemDefaultDevice() autorelease];
-            }
-            else {
-                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                            "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
-            }
+        if (qgetenv("VT_FORCE_METAL") == "1") {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Using Metal renderer due to VT_FORCE_METAL=1 override.");
+            return [MTLCreateSystemDefaultDevice() autorelease];
         }
         else {
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Metal renderer requires macOS Big Sur or later");
+                        "Avoiding Metal renderer due to use of dGPU/eGPU. Use VT_FORCE_METAL=1 to override.");
         }
 
         return nullptr;
