@@ -1625,12 +1625,15 @@ Flickable {
 
                     checked: StreamingPreferences.enableYUV444
                     onCheckedChanged: {
-                        StreamingPreferences.enableYUV444 = checked
-                        StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
-                                                                                                  StreamingPreferences.height,
-                                                                                                  StreamingPreferences.fps,
-                                                                                                  StreamingPreferences.enableYUV444);
-                        slider.value = StreamingPreferences.bitrateKbps
+                        // This is called on init, so only reset to default bitrate when checked state changes.
+                        if (StreamingPreferences.enableYUV444 != checked) {
+                            StreamingPreferences.enableYUV444 = checked
+                            StreamingPreferences.bitrateKbps = StreamingPreferences.getDefaultBitrate(StreamingPreferences.width,
+                                                                                                      StreamingPreferences.height,
+                                                                                                      StreamingPreferences.fps,
+                                                                                                      StreamingPreferences.enableYUV444);
+                            slider.value = StreamingPreferences.bitrateKbps
+                        }
                     }
 
                     ToolTip.delay: 1000
