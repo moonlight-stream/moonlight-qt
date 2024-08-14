@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Verbindung zum Host wird aufgebaut&#xa0;...</translation>
+        <translation>Verbindung zum PC wird hergestellt ...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
@@ -74,7 +74,7 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Verbindung zum Host wird aufgebaut ...</translation>
+        <translation>Verbindung zum PC wird hergestellt ...</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
@@ -87,7 +87,7 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation>Verbindung zum Host wird aufgebaut ...</translation>
+        <translation>Verbindung zum PC wird hergestellt ...</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
@@ -134,12 +134,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Name: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Status: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
@@ -149,7 +149,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
@@ -164,7 +164,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation>IPv6 Adresse: %1</translation>
+        <translation>IPv6-Adresse: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
@@ -174,7 +174,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation>MAC Adresse: %1</translation>
+        <translation>MAC-Adresse: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
@@ -189,7 +189,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS-Port: %1</translation>
     </message>
 </context>
 <context>
@@ -213,37 +213,37 @@
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
-        <translation>Hosts</translation>
+        <translation>Computer</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="68"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation>Verbindung zum Host fehlgeschlagen.</translation>
+        <translation>Es kann keine Verbindung zum angegebenen PC hergestellt werden.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="71"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Die Internetverbindung des Hosts blockiert Moonlight. Solange eine Verbindung mit diesem Netzwerk besteht, wird das Streamen übers Internet möglicherweise nicht funktionieren.</translation>
+        <translation>Die Internetverbindung dieses PCs blockiert Moonlight. Solange eine Verbindung mit diesem Netzwerk besteht, wird das Streamen übers Internet möglicherweise nicht funktionieren.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="74"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation>Drücken Sie den Hilfeknopf für mögliche Lösungen.</translation>
+        <translation>Klicken Sie auf die Schaltfläche Hilfe für mögliche Lösungen.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="104"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation>Die automatische Suche nach Hosts ist deaktiviert. Fügen Sie Ihren Host manuell hinzu.</translation>
+        <translation>Die automatische PC-Erkennung ist deaktiviert. Fügen Sie Ihren PC manuell hinzu.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation>Suche nach kompatiblen Hosts im lokalen Netzwerk…</translation>
+        <translation>In Ihrem lokalen Netzwerk wird nach kompatiblen Hosts gesucht ...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="188"/>
         <source>Wake PC</source>
-        <translation>Host aufwecken</translation>
+        <translation>PC aufwecken</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="194"/>
@@ -253,12 +253,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="203"/>
         <source>Rename PC</source>
-        <translation>Host umbenennen</translation>
+        <translation>PC umbenennen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="212"/>
         <source>Delete PC</source>
-        <translation>Host entfernen</translation>
+        <translation>PC löschen</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
@@ -278,7 +278,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation>Dieses Netzwerk scheint Moonlight nicht zu blocken. Wenn Sie trotzdem Probleme beim Verbinden haben, prüfen Sie die Firewall Ihres Hosts.</translation>
+        <translation>Dieses Netzwerk scheint Moonlight nicht zu blockieren. Wenn Sie weiterhin Probleme mit der Verbindung haben, überprüfen Sie die Firewall-Einstellungen Ihres PCs.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
@@ -288,7 +288,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="351"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation>Die Internetverbindung dieses Hosts blockiert Moonlight. Solange eine Verbindung mit diesem Netzwerk besteht, wird das Streamen übers Internet möglicherweise nicht funktionieren.</translation>
+        <translation>Die aktuelle Netzwerkverbindung Ihres PCs scheint Moonlight zu blockieren. Solange eine Verbindung mit diesem Netzwerk besteht, wird das Streamen übers Internet möglicherweise nicht funktionieren.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="351"/>
@@ -298,12 +298,12 @@
     <message>
         <location filename="../gui/PcView.qml" line="343"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation>Der Netzwerktest von diesem Host konnte nicht ausgeführt werden, da keine Verbindung zu den Testservern von Moonlight aufgebaut werden konnte. Prüfen Sie Ihre Internetverbindung oder versuchen Sie es später noch einmal.</translation>
+        <translation>Der Netzwerktest konnte nicht durchgeführt werden, weil keiner der Verbindungstest-Server von Moonlight von diesem PC aus erreichbar war. Überprüfen Sie Ihre Internetverbindung oder versuchen Sie es später noch einmal.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>PC Status: %1</source>
-        <translation>Host Status: %1</translation>
+        <translation>PC-Status: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
@@ -323,7 +323,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation>Bitte geben Sie %1 auf Ihrem Host-PC ein. Dieses Fenster schließt sich nach erfolgreichem Pairing.</translation>
+        <translation>Bitte geben Sie %1 auf Ihrem Host-PC ein. Dieser Dialog wird geschlossen, wenn die Kopplung abgeschlossen ist.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
@@ -343,7 +343,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
         <source>Enter the new name for this PC:</source>
-        <translation>Geben Sie einen neuen Namen für diesen Host ein:</translation>
+        <translation>Geben Sie den neuen Namen für diesen PC ein:</translation>
     </message>
 </context>
 <context>
@@ -356,7 +356,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="590"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation>Während auf dem Host eine Streaming-Session läuft, können Sie keinen neuen Client koppeln. Beenden Sie zuerst alle laufenden Apps oder starten Sie den Host neu. Versuchen Sie es danach erneut.</translation>
+        <translation>Sie können keine Kopplung durchführen, während auf dem Host-PC noch eine vorherige Sitzung läuft. Beenden Sie alle laufenden Spiele oder starten Sie den Host-PC neu und versuchen Sie dann erneut, die Kopplung durchzuführen.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="593"/>
@@ -400,7 +400,7 @@
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation>Host %1 wurde noch nicht gekoppelt. Bitte öffnen Sie Moonlight zum Koppeln.</translation>
+        <translation>Der Computer %1 wurde nicht gekoppelt. Bitte öffnen Sie Moonlight, um die Verbindung herzustellen, bevor Sie streamen.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
@@ -475,22 +475,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation>Auf Ihrem Host ist etwas beim Starten vom Stream schiefgelaufen.</translation>
+        <translation>Beim Starten des Streams ist auf Ihrem Host-PC etwas schiefgelaufen.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="125"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation>Stellen Sie sicher, dass Sie keine DRM geschützten Inhalte auf Ihrem Host geöffnet haben. Sie können auch einen Neustart des Hosts probieren.</translation>
+        <translation>Stellen Sie sicher, dass Sie keine DRM-geschützten Inhalte auf Ihrem Host-PC geöffnet haben. Sie können auch versuchen, Ihren Host-PC neu zu starten.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation>Der Host-PC hat einen schwerwiegenden Video-Codierungsfehler gemeldet.</translation>
+        <translation>Der Host-PC hat einen schwerwiegenden Videokodierungsfehler gemeldet.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="131"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation>Versuchen Sie, den HDR-Modus zu deaktivieren, die Streaming-Auflösung zu ändern oder die Bildschirmauflösung des Hosts zu ändern.</translation>
+        <translation>Versuchen Sie, den HDR-Modus zu deaktivieren, die Streaming-Auflösung zu ändern oder die Bildschirmauflösung des Host-PCs zu ändern.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="139"/>
@@ -525,7 +525,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="907"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation>Der Host-PC unterstützt keine HEVC Enkodierung.</translation>
+        <translation>Ihr Host-PC unterstützt die HEVC-Kodierung nicht.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="924"/>
@@ -535,7 +535,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="883"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation>Der Host unterstützt keine Software oder GPU AV1 Enkodierung.</translation>
+        <translation>Ihre Host-Software oder Ihre GPU unterstützt die AV1-Kodierung nicht.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="900"/>
@@ -545,7 +545,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="959"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation>Der Host-PC unterstützt kein HDR-Streaming.</translation>
+        <translation>Ihr Host-PC unterstützt kein HDR-Streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="963"/>
@@ -565,7 +565,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="999"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation>Der Host-PC und Client-PC unterstützen nicht die gleichen HDR Video Codecs.</translation>
+        <translation>Ihr Host-PC und Ihr Client-PC unterstützen nicht die gleichen HDR-Videocodecs.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1050"/>
@@ -620,7 +620,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1046"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
-        <translation>Die Grafikkarte des Hosts unterstützt keine Videoauflösung über 4K zum Streamen.</translation>
+        <translation>Die GPU Ihres Host-PCs unterstützt keine Streaming-Videoauflösungen über 4K.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1065"/>
@@ -688,7 +688,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="373"/>
         <source>Resolutions that are not supported by your client or host PC may cause streaming errors.</source>
-        <translation>Auflösung die nicht von Ihrem Host oder Client unterstützt sind, können zu Fehlern beim Streamen führen.</translation>
+        <translation>Auflösungen, die von Ihrem Client oder Host-PC nicht unterstützt werden, können Streaming-Fehler verursachen.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="379"/>
@@ -800,7 +800,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="886"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation>Schalte die Host-Lautsprecher während des Streamens stumm</translation>
+        <translation>Stummschaltung der Host-PC-Lautsprecher beim Streaming</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="896"/>
@@ -860,7 +860,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1223"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation>HINWEIS: Aufgrund eines Fehlers in GeForce Experience funktioniert diese Option möglicherweise nicht richtig, wenn Ihr Host mehrere Monitore hat.</translation>
+        <translation>HINWEIS: Aufgrund eines Fehlers in GeForce Experience funktioniert diese Option möglicherweise nicht richtig, wenn Ihr Host-PC mehrere Monitore hat.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1531"/>
@@ -1078,7 +1078,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1444"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation>Schließe die App auf dem Host nach dem Beenden des Streams</translation>
+        <translation>App auf dem Host-PC nach Beendigung des Streams beenden</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1454"/>
@@ -1129,7 +1129,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1617"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation>Suche automatisch im lokalen Netzwerk nach Hosts (empfohlen)</translation>
+        <translation>Automatisches Auffinden von PCs im lokalen Netzwerk (empfohlen)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1638"/>
@@ -1206,7 +1206,7 @@
     <message>
         <location filename="../gui/main.qml" line="297"/>
         <source>Add PC manually</source>
-        <translation>Host hinzufügen</translation>
+        <translation>PC manuell hinzufügen</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="337"/>
@@ -1266,7 +1266,7 @@
     <message>
         <location filename="../gui/main.qml" line="488"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation>Geben Sie die IP des Host-PC ein:</translation>
+        <translation>Geben Sie die IP-Adresse Ihres Host-PCs ein:</translation>
     </message>
 </context>
 </TS>
