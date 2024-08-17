@@ -48,7 +48,7 @@ namespace DrmDefs
 
 class DrmRenderer : public IFFmpegRenderer {
 public:
-    DrmRenderer(bool hwaccel = false, IFFmpegRenderer *backendRenderer = nullptr);
+    DrmRenderer(AVHWDeviceType hwDeviceType = AV_HWDEVICE_TYPE_NONE, IFFmpegRenderer *backendRenderer = nullptr);
     virtual ~DrmRenderer() override;
     virtual bool initialize(PDECODER_PARAMETERS params) override;
     virtual bool prepareDecoderContext(AVCodecContext* context, AVDictionary** options) override;
@@ -80,7 +80,7 @@ private:
     IFFmpegRenderer* m_BackendRenderer;
     SDL_Window* m_Window;
     bool m_DrmPrimeBackend;
-    bool m_HwAccelBackend;
+    AVHWDeviceType m_HwDeviceType;
     AVBufferRef* m_HwContext;
     int m_DrmFd;
     bool m_SdlOwnsDrmFd;

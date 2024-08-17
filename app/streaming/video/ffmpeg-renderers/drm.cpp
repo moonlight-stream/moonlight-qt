@@ -71,10 +71,10 @@ extern "C" {
 
 #include <QDir>
 
-DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
+DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer)
     : m_BackendRenderer(backendRenderer),
       m_DrmPrimeBackend(backendRenderer && backendRenderer->canExportDrmPrime()),
-      m_HwAccelBackend(hwaccel),
+      m_HwDeviceType(hwDeviceType),
       m_HwContext(nullptr),
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
@@ -180,7 +180,7 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     // https://doc-en.rvspace.org/VisionFive2/DG_Multimedia/JH7110_SDK/hevc_omx.html
     av_dict_set(options, "omx_pix_fmt", "nv12", 0);
 
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
     }
 
@@ -316,47 +316,50 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 }
             }
         }
-
-        if (m_DrmFd < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to open DRM device: %d",
-                          errno);
-            return false;
-        }
     }
-
-    // Fetch version details about the DRM driver to use later
-    m_Version = drmGetVersion(m_DrmFd);
-    if (m_Version == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmGetVersion() failed: %d",
-                     errno);
-        return false;
-    }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "GPU driver: %s", m_Version->name);
 
     // Create the device context first because it is needed whether we can
     // actually use direct rendering or not.
-    m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
-    if (m_HwContext == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_alloc(DRM) failed");
-        return false;
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_DRM) {
+        // A real DRM FD is required for DRM-backed hwaccels
+        if (m_DrmFd < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to open DRM device: %d",
+                         errno);
+            return false;
+        }
+
+        m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
+        if (m_HwContext == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_alloc(DRM) failed");
+            return false;
+        }
+
+        AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+        AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
+
+        drmDeviceContext->fd = m_DrmFd;
+
+        int err = av_hwdevice_ctx_init(m_HwContext);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_init(DRM) failed: %d",
+                         err);
+            return false;
+        }
     }
-
-    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
-    AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
-
-    drmDeviceContext->fd = m_DrmFd;
-
-    int err = av_hwdevice_ctx_init(m_HwContext);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_init(DRM) failed: %d",
-                     err);
-        return false;
+    else if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
+        // We got some other non-DRM hwaccel that outputs DRM_PRIME frames.
+        // Create it with default parameters and hope for the best.
+        int err = av_hwdevice_ctx_create(&m_HwContext, m_HwDeviceType, nullptr, nullptr, 0);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_create(%u) failed: %d",
+                         m_HwDeviceType,
+                         err);
+            return false;
+        }
     }
 
     // Still return true if we fail to initialize DRM direct rendering
@@ -367,6 +370,24 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // == nullptr), we want to fail if we can't render directly since
     // that's the whole point it's trying to use us for.
     const bool DIRECT_RENDERING_INIT_FAILED = (m_BackendRenderer == nullptr);
+
+    if (m_DrmFd < 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Direct rendering via DRM is unavailable due to lack of DRM devices");
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    // Fetch version details about the DRM driver to use later
+    m_Version = drmGetVersion(m_DrmFd);
+    if (m_Version == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmGetVersion() failed: %d",
+                     errno);
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "GPU driver: %s", m_Version->name);
 
     // If we're not sharing the DRM FD with SDL, that means we don't
     // have DRM master, so we can't call drmModeSetPlane(). We can
@@ -692,7 +713,7 @@ enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int videoFormat)
 }
 
 bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) {
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         return pixelFormat == AV_PIX_FMT_DRM_PRIME;
     }
     else if (m_DrmPrimeBackend) {
@@ -765,7 +786,7 @@ int DrmRenderer::getRendererAttributes()
     // Restrict streaming resolution to 1080p on the Pi 4 while in the desktop environment.
     // EGL performance is extremely poor and just barely hits 1080p60 on Bookworm. This also
     // covers the MMAL H.264 case which maxes out at 1080p60 too.
-    if (!m_SupportsDirectRendering &&
+    if (!m_SupportsDirectRendering && m_Version &&
             (strcmp(m_Version->name, "vc4") == 0 || strcmp(m_Version->name, "v3d") == 0) &&
             qgetenv("RPI_ALLOW_EGL_4K") != "1") {
         drmDevicePtr device;

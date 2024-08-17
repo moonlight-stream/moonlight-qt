@@ -324,7 +324,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
             // not currently support this (and even if it did, Mesa and Wayland don't
             // currently have protocols to actually get that metadata to the display).
             if (m_BackendRenderer->canExportDrmPrime()) {
-                m_FrontendRenderer = new DrmRenderer(false, m_BackendRenderer);
+                m_FrontendRenderer = new DrmRenderer(AV_HWDEVICE_TYPE_NONE, m_BackendRenderer);
                 if (m_FrontendRenderer->initialize(params) && (m_FrontendRenderer->getRendererAttributes() & RENDERER_ATTRIBUTE_HDR_SUPPORT)) {
                     return true;
                 }
@@ -385,7 +385,7 @@ bool FFmpegVideoDecoder::createFrontendRenderer(PDECODER_PARAMETERS params, bool
 
 #if (defined(VULKAN_IS_SLOW) || defined(GL_IS_SLOW)) && defined(HAVE_DRM)
         // Try DrmRenderer first if we have a slow GPU
-        m_FrontendRenderer = new DrmRenderer(false, m_BackendRenderer);
+        m_FrontendRenderer = new DrmRenderer(AV_HWDEVICE_TYPE_NONE, m_BackendRenderer);
         if (m_FrontendRenderer->initialize(params)) {
             return true;
         }
@@ -899,14 +899,23 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #endif
 #ifdef HAVE_DRM
         case AV_HWDEVICE_TYPE_DRM:
-            return new DrmRenderer(true);
+            return new DrmRenderer(hwDecodeCfg->device_type);
 #endif
 #ifdef HAVE_LIBPLACEBO_VULKAN
         case AV_HWDEVICE_TYPE_VULKAN:
             return new PlVkRenderer(true);
 #endif
         default:
-            return nullptr;
+            switch (hwDecodeCfg->pix_fmt) {
+#ifdef HAVE_DRM
+            case AV_PIX_FMT_DRM_PRIME:
+                // Support out-of-tree non-DRM hwaccels that output DRM_PRIME frames
+                // https://patchwork.ffmpeg.org/project/ffmpeg/list/?series=12604
+                return new DrmRenderer(hwDecodeCfg->device_type);
+#endif
+            default:
+                return nullptr;
+            }
         }
     }
     // Second pass for our second-tier hwaccel implementations
