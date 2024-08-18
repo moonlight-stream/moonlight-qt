@@ -177,9 +177,11 @@ CenteredGridView {
                     parentMenu: pcContextMenu
                     text: qsTr("View All Apps")
                     onTriggered: {
-                        var component = Qt.createComponent("AppView.qml")
-                        var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name, "showHiddenGames": true})
-                        stackView.push(appView)
+                        stackView.push(Qt.resolvedUrl("AppView.qml"), {
+                            "computerIndex": index,
+                            "objectName": model.name,
+                            "showHiddenGames": true
+                        })
                     }
                     visible: model.online && model.paired
                 }
@@ -236,9 +238,10 @@ CenteredGridView {
                 }
                 else if (model.paired) {
                     // go to game view
-                    var component = Qt.createComponent("AppView.qml")
-                    var appView = component.createObject(stackView, {"computerIndex": index, "objectName": model.name})
-                    stackView.push(appView)
+                    stackView.push(Qt.resolvedUrl("AppView.qml"), {
+                        "computerIndex": index,
+                        "objectName": model.name
+                    })
                 }
                 else {
                     var pin = computerModel.generatePinString()

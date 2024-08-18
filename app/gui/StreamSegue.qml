@@ -63,8 +63,7 @@ Item {
     function quitStarting()
     {
         // Avoid the push transition animation
-        var component = Qt.createComponent("QuitSegue.qml")
-        stackView.replace(stackView.currentItem, component.createObject(stackView, {"appName": appName}), StackView.Immediate)
+        stackView.replace(stackView.currentItem, Qt.resolvedUrl("QuitSegue.qml"), {"appName": appName}, StackView.Immediate)
 
         // Show the Qt window again to show quit segue
         window.visible = true

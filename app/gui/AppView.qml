@@ -8,7 +8,7 @@ import SdlGamepadKeyNavigation 1.0
 
 CenteredGridView {
     property int computerIndex
-    property AppModel appModel : createModel()
+    property AppModel appModel
     property bool activated
     property bool showHiddenGames
     property bool showGames
@@ -27,6 +27,7 @@ CenteredGridView {
     }
 
     Component.onCompleted: {
+        appModel = createModel()
         // Don't show any highlighted item until interacting with them.
         // We do this here instead of onActivated to avoid losing the user's
         // selection when backing out of a different page of the app.
@@ -222,13 +223,11 @@ CenteredGridView {
                 return
             }
 
-            var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView, {
-                                                   "appName": model.name,
-                                                   "session": appModel.createSessionForApp(index),
-                                                   "isResume": runningId === model.appid
-                                               })
-            stackView.push(segue)
+            stackView.push(Qt.resolvedUrl("StreamSegue.qml"), {
+                "appName": model.name,
+                "session": appModel.createSessionForApp(index),
+                "isResume": runningId === model.appid
+            })
         }
 
         onClicked: {
@@ -349,8 +348,11 @@ CenteredGridView {
         standardButtons: Dialog.Yes | Dialog.No
 
         function quitApp() {
-            var component = Qt.createComponent("QuitSegue.qml")
-            var params = {"appName": appName, "quitRunningAppFn": () => appModel.quitRunningApp()}
+            var params = {
+                "appName": appName,
+                "quitRunningAppFn": function() { appModel.quitRunningApp() }
+            }
+
             if (segueToStream) {
                 // Store the session and app name if we're going to stream after
                 // successfully quitting the old app.
@@ -362,7 +364,7 @@ CenteredGridView {
                 params.nextSession = null
             }
 
-            stackView.push(component.createObject(stackView, params))
+            stackView.push(Qt.resolvedUrl("QuitSegue.qml"), params)
         }
 
         onAccepted: quitApp()

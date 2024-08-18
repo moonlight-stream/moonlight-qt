@@ -23,9 +23,10 @@ Item {
 
         // If we're supposed to launch another game after this, do so now
         if (error === undefined && nextSession !== null) {
-            var component = Qt.createComponent("StreamSegue.qml")
-            var segue = component.createObject(stackView, {"appName": nextAppName, "session": nextSession})
-            stackView.replace(segue)
+            stackView.replace(Qt.resolvedUrl("StreamSegue.qml"), {
+                "appName": nextAppName,
+                "session": nextSession
+            })
         }
         else {
             // Exit this view

@@ -7,10 +7,9 @@ GridView {
     property bool hasBrokenMargins: this.synchronousDrag === undefined
 
     property int minMargin: 10
-    property real availableWidth: (parent.width - 2 * minMargin)
-    property int itemsPerRow: availableWidth / cellWidth
-    property real horizontalMargin: itemsPerRow < count && availableWidth >= cellWidth ?
-                                        (availableWidth % cellWidth) / 2 : minMargin
+    property real availableWidth
+    property int itemsPerRow 
+    property real horizontalMargin
 
     function updateMargins() {
         leftMargin = horizontalMargin
@@ -27,6 +26,11 @@ GridView {
     }
 
     Component.onCompleted: {
+        availableWidth = (parent.width - 2 * minMargin)
+        itemsPerRow = availableWidth / cellWidth
+        horizontalMargin = itemsPerRow < count && availableWidth >= cellWidth ?
+                                        (availableWidth % cellWidth) / 2 : minMargin
+
         if (hasBrokenMargins) {
             // This will cause an anchor conflict with the parent StackView
             // which breaks animation, but otherwise the grid will not be
