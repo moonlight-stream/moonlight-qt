@@ -820,6 +820,45 @@ Flickable {
                     ToolTip.visible: hovered
                     ToolTip.text: qsTr("Frame pacing reduces micro-stutter by delaying frames that come in too early")
                 }
+
+                Label {
+                    width: parent.width
+                    id: minimumLatencyTitle
+                    text: qsTr("Minimum latency:")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                }
+
+                Label {
+                    width: parent.width
+                    id: minimumLatencyDesc
+                    text: qsTr("A lower bound on display latency. Set higher to account for more jitter in your connection, at the cost of increased display latency.")
+                    font.pointSize: 9
+                    wrapMode: Text.Wrap
+                }
+
+                Slider {
+                    id: minimumLatencySlider
+
+                    value: StreamingPreferences.minimumLatency
+
+                    stepSize: 1
+                    from : 0
+                    to: 50
+
+                    snapMode: "SnapOnRelease"
+                    width: Math.min(minimumLatencyDesc.implicitWidth, parent.width)
+
+                    onValueChanged: {
+                        minimumLatencyTitle.text = qsTr("Minimum latency: %1 msec").arg(value)
+                        StreamingPreferences.minimumLatency = value
+                    }
+
+                    Component.onCompleted: {
+                        // Refresh the text after translations change
+                        languageChanged.connect(onValueChanged)
+                    }
+                }
             }
         }
 

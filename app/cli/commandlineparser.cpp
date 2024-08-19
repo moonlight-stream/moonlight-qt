@@ -378,6 +378,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     parser.addChoiceOption("capture-system-keys", "capture system key combos", m_CaptureSysKeysModeMap.keys());
     parser.addChoiceOption("video-codec", "video codec", m_VideoCodecMap.keys());
     parser.addChoiceOption("video-decoder", "video decoder", m_VideoDecoderMap.keys());
+    parser.addValueOption("minimum-latency", "Minimum latency");
 
     if (!parser.parse(args)) {
         parser.showError(parser.errorText());
@@ -511,6 +512,13 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --video-decoder option
     if (parser.isSet("video-decoder")) {
         preferences->videoDecoderSelection = mapValue(m_VideoDecoderMap, parser.getChoiceOptionValue("video-decoder"));
+    }
+
+    if (parser.isSet("minimum-latency")) {
+        preferences->minimumLatency = parser.getIntOption("minimum-latency");
+        if (!inRange(preferences->minimumLatency, 0, 50)) {
+            parser.showError("Minimum latency must be in range: 0 - 50");
+        }
     }
 
     // This method will not return and terminates the process if --version or
