@@ -962,8 +962,17 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         struct drm_mode_create_dumb createBuf = {};
 
         createBuf.width = frame->width;
-        createBuf.height = frame->height + (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
-        createBuf.bpp = av_get_padded_bits_per_pixel(formatDesc);
+        createBuf.height = frame->height;
+        createBuf.bpp = formatDesc->comp[0].step * 8;
+
+        // For planar formats, we need to add additional space to the "height"
+        // of the dumb buffer to account for the chroma plane(s). Chroma for
+        // packed formats is already covered by the bpp value since the step
+        // value of the Y component will also include the space for chroma
+        // since it's all packed into a single plane.
+        if (planes > 1) {
+            createBuf.height += (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
+        }
 
         int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
         if (err < 0) {
@@ -1056,7 +1065,9 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 }
                 else {
                     planeHeight = AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h);
-                    plane.pitch = AV_CEIL_RSHIFT(drmFrame->pitch, formatDesc->log2_chroma_w);
+
+                    // First argument to AV_CEIL_RSHIFT() *must* be signed for correct behavior!
+                    plane.pitch = AV_CEIL_RSHIFT((ptrdiff_t)drmFrame->pitch, formatDesc->log2_chroma_w);
 
                     // If UV planes are interleaved, double the pitch to count both U+V together
                     if (planes == 2) {
