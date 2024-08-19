@@ -97,8 +97,12 @@ static const std::map<uint32_t, AVPixelFormat> k_DrmToAvFormatMap
     {DRM_FORMAT_NV42, AV_PIX_FMT_NV42},
     {DRM_FORMAT_YUV444, AV_PIX_FMT_YUV444P},
     {DRM_FORMAT_Q410, AV_PIX_FMT_YUV444P10LE},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 34, 100)
     {DRM_FORMAT_XYUV8888, AV_PIX_FMT_VUYX},
+#endif
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 36, 100)
     {DRM_FORMAT_Y410, AV_PIX_FMT_XV30LE},
+#endif
 
     // These mappings are lies, but they're close enough for our purposes.
     //
@@ -125,8 +129,12 @@ static const std::map<AVPixelFormat, uint32_t> k_AvToDrmFormatMap
     {AV_PIX_FMT_YUV444P, DRM_FORMAT_YUV444},
     {AV_PIX_FMT_YUVJ444P, DRM_FORMAT_YUV444},
     {AV_PIX_FMT_YUV444P10LE, DRM_FORMAT_Q410},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 34, 100)
     {AV_PIX_FMT_VUYX, DRM_FORMAT_XYUV8888},
+#endif
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 36, 100)
     {AV_PIX_FMT_XV30LE, DRM_FORMAT_Y410},
+#endif
 };
 
 DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer)
