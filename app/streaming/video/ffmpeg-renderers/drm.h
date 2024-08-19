@@ -10,6 +10,8 @@
 #include <xf86drm.h>
 #include <xf86drmMode.h>
 
+#include <set>
+
 // Newer libdrm headers have these HDR structs, but some older ones don't.
 namespace DrmDefs
 {
@@ -76,6 +78,7 @@ private:
     const char* getDrmColorRangeValue(AVFrame* frame);
     bool mapSoftwareFrame(AVFrame* frame, AVDRMFrameDescriptor* mappedFrame);
     bool addFbForFrame(AVFrame* frame, uint32_t* newFbId, bool testMode);
+    static bool drmFormatMatchesVideoFormat(uint32_t drmFormat, int videoFormat);
 
     IFFmpegRenderer* m_BackendRenderer;
     SDL_Window* m_Window;
@@ -101,6 +104,7 @@ private:
     drmVersionPtr m_Version;
     uint32_t m_HdrOutputMetadataBlobId;
     SDL_Rect m_OutputRect;
+    std::set<uint32_t> m_SupportedPlaneFormats;
 
     static constexpr int k_SwFrameCount = 2;
     SwFrameMapper m_SwFrameMapper;
