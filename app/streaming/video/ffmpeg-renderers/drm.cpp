@@ -39,9 +39,19 @@ extern "C" {
 #define DRM_FORMAT_P010	fourcc_code('P', '0', '1', '0')
 #endif
 
-// Upstreamed YUV444 10-bit
+// Upstreamed fully-planar YUV444 10-bit
 #ifndef DRM_FORMAT_Q410
 #define DRM_FORMAT_Q410	fourcc_code('Q', '4', '1', '0')
+#endif
+
+// Upstreamed packed YUV444 10-bit
+#ifndef DRM_FORMAT_Y410
+#define DRM_FORMAT_Y410 fourcc_code('Y', '4', '1', '0')
+#endif
+
+// Upstreamed packed YUV444 8-bit
+#ifndef DRM_FORMAT_XYUV8888
+#define DRM_FORMAT_XYUV8888 fourcc_code('X', 'Y', 'U', 'V')
 #endif
 
 // Values for "Colorspace" connector property
@@ -545,6 +555,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                         switch (plane->formats[j]) {
                         case DRM_FORMAT_Q410:
                         case DRM_FORMAT_NV30:
+                        case DRM_FORMAT_Y410:
                             matchingFormat = true;
                             break;
                         }
@@ -565,6 +576,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                     case DRM_FORMAT_NV24:
                     case DRM_FORMAT_NV42:
                     case DRM_FORMAT_YUV444:
+                    case DRM_FORMAT_XYUV8888:
                         matchingFormat = true;
                         break;
                     }
@@ -729,7 +741,8 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
         else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
             if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
                 switch (pixelFormat) {
-                case AV_PIX_FMT_YUV444P10:
+                case AV_PIX_FMT_YUV444P10LE:
+                case AV_PIX_FMT_XV30LE:
                     return true;
                 default:
                     return false;
@@ -737,7 +750,7 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
             }
             else {
                 switch (pixelFormat) {
-                case AV_PIX_FMT_P010:
+                case AV_PIX_FMT_P010LE:
                     return true;
                 default:
                     return false;
@@ -750,6 +763,7 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
             case AV_PIX_FMT_NV42:
             case AV_PIX_FMT_YUV444P:
             case AV_PIX_FMT_YUVJ444P:
+            case AV_PIX_FMT_VUYX:
                 return true;
             default:
                 return false;
@@ -930,7 +944,7 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
     case AV_PIX_FMT_NV21:
         drmFormat = DRM_FORMAT_NV21;
         break;
-    case AV_PIX_FMT_P010:
+    case AV_PIX_FMT_P010LE:
         drmFormat = DRM_FORMAT_P010;
         break;
     case AV_PIX_FMT_YUV420P:
@@ -947,8 +961,14 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
     case AV_PIX_FMT_YUVJ444P:
         drmFormat = DRM_FORMAT_YUV444;
         break;
-    case AV_PIX_FMT_YUV444P10:
+    case AV_PIX_FMT_YUV444P10LE:
         drmFormat = DRM_FORMAT_Q410;
+        break;
+    case AV_PIX_FMT_VUYX:
+        drmFormat = DRM_FORMAT_XYUV8888;
+        break;
+    case AV_PIX_FMT_XV30LE:
+        drmFormat = DRM_FORMAT_Y410;
         break;
     default:
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
