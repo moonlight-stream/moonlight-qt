@@ -712,7 +712,7 @@ bool Session::initialize()
                                        m_Preferences->enableHdr ? VIDEO_FORMAT_AV1_MAIN10 : VIDEO_FORMAT_AV1_MAIN8,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
-                                       m_StreamConfig.fps)) {
+                                       m_StreamConfig.fps) && !m_Preferences->enableHdr && !m_Preferences->enableYUV444) {
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_AV1);
         }
 #else
@@ -725,7 +725,7 @@ bool Session::initialize()
                                        m_Preferences->enableHdr ? VIDEO_FORMAT_H265_MAIN10 : VIDEO_FORMAT_H265,
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
-                                       m_StreamConfig.fps)) {
+                                       m_StreamConfig.fps) && !m_Preferences->enableHdr && !m_Preferences->enableYUV444) {
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H265);
         }
 
