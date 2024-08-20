@@ -720,7 +720,12 @@ bool Session::initialize()
                                    m_StreamConfig.width,
                                    m_StreamConfig.height,
                                    m_StreamConfig.fps) != DecoderAvailability::Hardware) {
-            m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_H265);
+            // Deprioritize HEVC unless the user forced software decoding and enabled HDR.
+            // We need HEVC in that case because we cannot support 10-bit content with H.264,
+            // which would ordinarily be prioritized for software decoding performance.
+            if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE || !m_Preferences->enableHdr) {
+                m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_H265);
+            }
         }
 
 #if 0
@@ -733,11 +738,20 @@ bool Session::initialize()
                                    m_StreamConfig.width,
                                    m_StreamConfig.height,
                                    m_StreamConfig.fps) != DecoderAvailability::Hardware) {
-            m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1 & VIDEO_FORMAT_MASK_YUV444);
+            // Deprioritize AV1 unless the user forced software decoding and enabled HDR.
+            // We want to keep AV1 at the top of the list for HDR with software decoding
+            // because dav1d is higher performance than FFmpeg's HEVC software decoder.
+            if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE || !m_Preferences->enableHdr) {
+                m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
+            }
         }
 #else
-        // Deprioritize AV1 by default in Auto mode
-        m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
+        // Deprioritize AV1 unless the user forced software decoding and enabled HDR.
+        // We want to keep AV1 at the top of the list for HDR with software decoding
+        // because dav1d is higher performance than FFmpeg's HEVC software decoder.
+        if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE || !m_Preferences->enableHdr) {
+            m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
+        }
 #endif
 
 #ifdef Q_OS_DARWIN
