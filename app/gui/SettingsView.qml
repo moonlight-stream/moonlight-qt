@@ -918,6 +918,46 @@ Flickable {
         }
 
         GroupBox {
+            id: hostSettingsGroupBox
+            width: (parent.width - (parent.leftPadding + parent.rightPadding))
+            padding: 12
+            title: "<font color=\"skyblue\">" + qsTr("Host Settings") + "</font>"
+            font.pointSize: 12
+
+            Column {
+                anchors.fill: parent
+                spacing: 5
+
+                CheckBox {
+                    id: optimizeGameSettingsCheck
+                    width: parent.width
+                    text: qsTr("Optimize game settings for streaming")
+                    font.pointSize:  12
+                    checked: StreamingPreferences.gameOptimizations
+                    onCheckedChanged: {
+                        StreamingPreferences.gameOptimizations = checked
+                    }
+                }
+
+                CheckBox {
+                    id: quitAppAfter
+                    width: parent.width
+                    text: qsTr("Quit app on host PC after ending stream")
+                    font.pointSize: 12
+                    checked: StreamingPreferences.quitAppAfter
+                    onCheckedChanged: {
+                        StreamingPreferences.quitAppAfter = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!")
+                }
+            }
+        }
+
+        GroupBox {
             id: uiSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
@@ -1423,46 +1463,6 @@ Flickable {
         }
 
         GroupBox {
-            id: hostSettingsGroupBox
-            width: (parent.width - (parent.leftPadding + parent.rightPadding))
-            padding: 12
-            title: "<font color=\"skyblue\">" + qsTr("Host Settings") + "</font>"
-            font.pointSize: 12
-
-            Column {
-                anchors.fill: parent
-                spacing: 5
-
-                CheckBox {
-                    id: optimizeGameSettingsCheck
-                    width: parent.width
-                    text: qsTr("Optimize game settings for streaming")
-                    font.pointSize:  12
-                    checked: StreamingPreferences.gameOptimizations
-                    onCheckedChanged: {
-                        StreamingPreferences.gameOptimizations = checked
-                    }
-                }
-
-                CheckBox {
-                    id: quitAppAfter
-                    width: parent.width
-                    text: qsTr("Quit app on host PC after ending stream")
-                    font.pointSize: 12
-                    checked: StreamingPreferences.quitAppAfter
-                    onCheckedChanged: {
-                        StreamingPreferences.quitAppAfter = checked
-                    }
-
-                    ToolTip.delay: 1000
-                    ToolTip.timeout: 5000
-                    ToolTip.visible: hovered
-                    ToolTip.text: qsTr("This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!")
-                }
-            }
-        }
-
-        GroupBox {
             id: advancedSettingsGroupBox
             width: (parent.width - (parent.leftPadding + parent.rightPadding))
             padding: 12
@@ -1654,12 +1654,14 @@ Flickable {
                     checked: StreamingPreferences.unlockBitrate
                     onCheckedChanged: {
                         StreamingPreferences.unlockBitrate = checked
+                        StreamingPreferences.bitrateKbps = Math.min(StreamingPreferences.bitrateKbps, slider.to)
+                        slider.value = StreamingPreferences.bitrateKbps
                     }
 
                     ToolTip.delay: 1000
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
-                    ToolTip.text: qsTr("This enables extremely high bitrates and should only be used when streaming over an Ethernet LAN connection.")
+                    ToolTip.text: qsTr("This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.")
                 }
 
                 CheckBox {
