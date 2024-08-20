@@ -7,6 +7,10 @@
 #include "cuda.h"
 #endif
 
+extern "C" {
+#include <libswscale/swscale.h>
+}
+
 class SdlRenderer : public IFFmpegRenderer {
 public:
     SdlRenderer();
@@ -23,12 +27,19 @@ public:
 private:
     void renderOverlay(Overlay::OverlayType type);
 
+    static void ffNoopFree(void *opaque, uint8_t *data);
+
     int m_VideoFormat;
     SDL_Renderer* m_Renderer;
     SDL_Texture* m_Texture;
     int m_ColorSpace;
     SDL_Texture* m_OverlayTextures[Overlay::OverlayMax];
     SDL_Rect m_OverlayRects[Overlay::OverlayMax];
+
+    // Used for CPU conversion of YUV to RGB if needed
+    bool m_NeedsYuvToRgbConversion;
+    SwsContext* m_SwsContext;
+    AVFrame* m_RgbFrame;
 
     SwFrameMapper m_SwFrameMapper;
 
