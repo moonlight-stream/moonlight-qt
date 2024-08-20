@@ -148,12 +148,8 @@ unix:if(!macx|disable-prebuilts) {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11
-    CONFIG += ffmpeg
-    contains(QT_ARCH, x86_64) {
-        LIBS += -llibplacebo
-        CONFIG += libplacebo
-    }
+    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -llibplacebo
+    CONFIG += ffmpeg libplacebo
 }
 win32:!winrt {
     CONFIG += soundio discord-rpc
