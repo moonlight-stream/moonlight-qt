@@ -685,7 +685,7 @@ Flickable {
 
                     stepSize: 500
                     from : 500
-                    to: 150000
+                    to: StreamingPreferences.unlockBitrate ? 500000 : 150000
 
                     snapMode: "SnapOnRelease"
                     width: Math.min(bitrateDesc.implicitWidth, parent.width)
@@ -1643,6 +1643,23 @@ Flickable {
                                       qsTr("Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.")
                                     :
                                       qsTr("YUV 4:4:4 is not supported on this PC.")
+                }
+
+                CheckBox {
+                    id: unlockBitrate
+                    width: parent.width
+                    text: qsTr("Unlock bitrate limit (Experimental)")
+                    font.pointSize: 12
+
+                    checked: StreamingPreferences.unlockBitrate
+                    onCheckedChanged: {
+                        StreamingPreferences.unlockBitrate = checked
+                    }
+
+                    ToolTip.delay: 1000
+                    ToolTip.timeout: 5000
+                    ToolTip.visible: hovered
+                    ToolTip.text: qsTr("This enables extremely high bitrates and should only be used when streaming over an Ethernet LAN connection.")
                 }
 
                 CheckBox {
