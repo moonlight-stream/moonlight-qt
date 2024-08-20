@@ -39,6 +39,24 @@ public:
         }
     }
 
+    void
+    deprioritizeByMask(int mask)
+    {
+        QList<int> deprioritizedList;
+
+        int i = 0;
+        while (i < this->length()) {
+            if (this->value(i) & mask) {
+                deprioritizedList.append(this->takeAt(i));
+            }
+            else {
+                i++;
+            }
+        }
+
+        this->append(std::move(deprioritizedList));
+    }
+
     int maskByServerCodecModes(int serverCodecModes)
     {
         int mask = 0;

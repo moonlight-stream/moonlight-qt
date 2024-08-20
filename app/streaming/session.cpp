@@ -705,29 +705,39 @@ bool Session::initialize()
     switch (m_Preferences->videoCodecConfig)
     {
     case StreamingPreferences::VCC_AUTO:
+        // Codecs are checked in order of ascending decode complexity to ensure
+        // the the deprioritized list prefers lighter codecs for software decoding
+
+        // H.264 is already the lowest priority codec, so we don't need to do
+        // any probing for deprioritization for it here.
+
+        if (!isHardwareDecodeAvailable(testWindow,
+                                       m_Preferences->videoDecoderSelection,
+                                       m_Preferences->enableYUV444 ?
+                                            (m_Preferences->enableHdr ? VIDEO_FORMAT_H265_REXT10_444 : VIDEO_FORMAT_H265_REXT8_444) :
+                                            (m_Preferences->enableHdr ? VIDEO_FORMAT_H265_MAIN10 : VIDEO_FORMAT_H265),
+                                       m_StreamConfig.width,
+                                       m_StreamConfig.height,
+                                       m_StreamConfig.fps)) {
+            m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_H265);
+        }
+
 #if 0
         // TODO: Determine if AV1 is better depending on the decoder
         if (!isHardwareDecodeAvailable(testWindow,
                                        m_Preferences->videoDecoderSelection,
-                                       m_Preferences->enableHdr ? VIDEO_FORMAT_AV1_MAIN10 : VIDEO_FORMAT_AV1_MAIN8,
+                                       m_Preferences->enableYUV444 ?
+                                            (m_Preferences->enableHdr ? VIDEO_FORMAT_AV1_HIGH10_444 : VIDEO_FORMAT_AV1_HIGH8_444) :
+                                            (m_Preferences->enableHdr ? VIDEO_FORMAT_AV1_MAIN10 : VIDEO_FORMAT_AV1_MAIN8),
                                        m_StreamConfig.width,
                                        m_StreamConfig.height,
-                                       m_StreamConfig.fps) && !m_Preferences->enableHdr && !m_Preferences->enableYUV444) {
-            m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_AV1);
+                                       m_StreamConfig.fps)) {
+            m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1 & VIDEO_FORMAT_MASK_YUV444);
         }
 #else
-        // Don't use AV1 by default in Auto mode
-        m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_AV1);
+        // Deprioritize AV1 by default in Auto mode
+        m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
 #endif
-
-        if (!isHardwareDecodeAvailable(testWindow,
-                                       m_Preferences->videoDecoderSelection,
-                                       m_Preferences->enableHdr ? VIDEO_FORMAT_H265_MAIN10 : VIDEO_FORMAT_H265,
-                                       m_StreamConfig.width,
-                                       m_StreamConfig.height,
-                                       m_StreamConfig.fps) && !m_Preferences->enableHdr && !m_Preferences->enableYUV444) {
-            m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H265);
-        }
 
 #ifdef Q_OS_DARWIN
         {
