@@ -402,9 +402,17 @@ void Session::getDecoderInfo(SDL_Window* window,
         delete decoder;
     }
     else {
-        // HDR can only be supported by a hardware codec that can handle 10-bit video.
-        // If we made it this far, we don't have one, so HDR will not be available.
-        isHdrSupported = false;
+        // If we found no hardware decoders with HDR, check for a renderer
+        // that supports HDR rendering with software decoded frames.
+        if (chooseDecoder(StreamingPreferences::VDS_FORCE_SOFTWARE,
+                          window, VIDEO_FORMAT_H265_MAIN10, 1920, 1080, 60,
+                          false, false, true, decoder) ||
+            chooseDecoder(StreamingPreferences::VDS_FORCE_SOFTWARE,
+                          window, VIDEO_FORMAT_AV1_MAIN10, 1920, 1080, 60,
+                          false, false, true, decoder)) {
+            isHdrSupported = decoder->isHdrSupported();
+            delete decoder;
+        }
     }
 
     // Try a regular hardware accelerated HEVC decoder now
