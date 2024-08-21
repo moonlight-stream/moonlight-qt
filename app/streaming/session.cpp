@@ -693,33 +693,25 @@ bool Session::initialize()
     m_SupportedVideoFormats.append(VIDEO_FORMAT_H264_HIGH8_444);
     m_SupportedVideoFormats.append(VIDEO_FORMAT_H264);
 
-    // Mask off 10-bit codecs right away if HDR is not enabled
-    if (!m_Preferences->enableHdr) {
-        m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_10BIT);
-    }
-
-    // Mask off YUV 4:4:4 codecs right away if the option is not enabled
-    if (!m_Preferences->enableYUV444) {
-        m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_YUV444);
-    }
-
     switch (m_Preferences->videoCodecConfig)
     {
     case StreamingPreferences::VCC_AUTO:
+    {
         // Codecs are checked in order of ascending decode complexity to ensure
         // the the deprioritized list prefers lighter codecs for software decoding
 
         // H.264 is already the lowest priority codec, so we don't need to do
         // any probing for deprioritization for it here.
 
-        if (getDecoderAvailability(testWindow,
-                                   m_Preferences->videoDecoderSelection,
-                                   m_Preferences->enableYUV444 ?
-                                        (m_Preferences->enableHdr ? VIDEO_FORMAT_H265_REXT10_444 : VIDEO_FORMAT_H265_REXT8_444) :
-                                        (m_Preferences->enableHdr ? VIDEO_FORMAT_H265_MAIN10 : VIDEO_FORMAT_H265),
-                                   m_StreamConfig.width,
-                                   m_StreamConfig.height,
-                                   m_StreamConfig.fps) != DecoderAvailability::Hardware) {
+        auto hevcDA = getDecoderAvailability(testWindow,
+                                             m_Preferences->videoDecoderSelection,
+                                             m_Preferences->enableYUV444 ?
+                                                 (m_Preferences->enableHdr ? VIDEO_FORMAT_H265_REXT10_444 : VIDEO_FORMAT_H265_REXT8_444) :
+                                                 (m_Preferences->enableHdr ? VIDEO_FORMAT_H265_MAIN10 : VIDEO_FORMAT_H265),
+                                             m_StreamConfig.width,
+                                             m_StreamConfig.height,
+                                             m_StreamConfig.fps);
+        if (hevcDA != DecoderAvailability::Hardware) {
             // Deprioritize HEVC unless the user forced software decoding and enabled HDR.
             // We need HEVC in that case because we cannot support 10-bit content with H.264,
             // which would ordinarily be prioritized for software decoding performance.
@@ -738,18 +730,18 @@ bool Session::initialize()
                                    m_StreamConfig.width,
                                    m_StreamConfig.height,
                                    m_StreamConfig.fps) != DecoderAvailability::Hardware) {
-            // Deprioritize AV1 unless the user forced software decoding and enabled HDR.
+            // Deprioritize AV1 unless we can't hardware decode HEVC and have HDR enabled.
             // We want to keep AV1 at the top of the list for HDR with software decoding
             // because dav1d is higher performance than FFmpeg's HEVC software decoder.
-            if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE || !m_Preferences->enableHdr) {
+            if (hevcDA == DecoderAvailability::Hardware || !m_Preferences->enableHdr) {
                 m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
             }
         }
 #else
-        // Deprioritize AV1 unless the user forced software decoding and enabled HDR.
+        // Deprioritize AV1 unless we can't hardware decode HEVC and have HDR enabled.
         // We want to keep AV1 at the top of the list for HDR with software decoding
         // because dav1d is higher performance than FFmpeg's HEVC software decoder.
-        if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE || !m_Preferences->enableHdr) {
+        if (hevcDA == DecoderAvailability::Hardware || !m_Preferences->enableHdr) {
             m_SupportedVideoFormats.deprioritizeByMask(VIDEO_FORMAT_MASK_AV1);
         }
 #endif
@@ -771,6 +763,7 @@ bool Session::initialize()
         }
 #endif
         break;
+    }
     case StreamingPreferences::VCC_FORCE_H264:
         m_SupportedVideoFormats.removeByMask(~VIDEO_FORMAT_MASK_H264);
         break;
@@ -783,6 +776,34 @@ bool Session::initialize()
         // straight to H.264 if the user asked for AV1 and the host doesn't support it.
         m_SupportedVideoFormats.removeByMask(~(VIDEO_FORMAT_MASK_AV1 | VIDEO_FORMAT_MASK_H265));
         break;
+    }
+
+    // NB: Since deprioritization puts codecs in reverse order (at the bottom of the list),
+    // we want to deprioritize for the most critical attributes last to ensure they are the
+    // lowest priority codecs during server negotiation. Here we do that with YUV 4:4:4 and
+    // HDR to ensure we never pick a codec profile that doesn't meet the user's requirement
+    // if we can avoid it.
+
+    // Mask off YUV 4:4:4 codecs if the option is not enabled
+    if (!m_Preferences->enableYUV444) {
+        m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_YUV444);
+    }
+    else {
+        // Deprioritize YUV 4:2:0 codecs if the user wants YUV 4:4:4
+        //
+        // NB: Since this happens first before deprioritizing HDR, we will
+        // pick a YUV 4:4:4 profile instead of a 10-bit profile if they
+        // aren't both available together for any codec.
+        m_SupportedVideoFormats.deprioritizeByMask(~VIDEO_FORMAT_MASK_YUV444);
+    }
+
+    // Mask off 10-bit codecs if HDR is not enabled
+    if (!m_Preferences->enableHdr) {
+        m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_10BIT);
+    }
+    else {
+        // Deprioritize 8-bit codecs if HDR is enabled
+        m_SupportedVideoFormats.deprioritizeByMask(~VIDEO_FORMAT_MASK_10BIT);
     }
 
     switch (m_Preferences->windowMode)
@@ -966,27 +987,43 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_10BIT);
         }
         else if (m_Preferences->videoCodecConfig != StreamingPreferences::VCC_AUTO) { // Auto was already checked during init
+            bool displayedHdrSoftwareDecodeWarning = false;
+
             // Check that the available HDR-capable codecs on the client and server are compatible
             if (m_SupportedVideoFormats.maskByServerCodecModes(m_Computer->serverCodecModeSupport & SCM_AV1_MAIN10)) {
-                if (getDecoderAvailability(testWindow,
-                                           m_Preferences->videoDecoderSelection,
-                                           VIDEO_FORMAT_AV1_MAIN10,
-                                           m_StreamConfig.width,
-                                           m_StreamConfig.height,
-                                           m_StreamConfig.fps) == DecoderAvailability::None) {
+                auto da = getDecoderAvailability(testWindow,
+                                                 m_Preferences->videoDecoderSelection,
+                                                 VIDEO_FORMAT_AV1_MAIN10,
+                                                 m_StreamConfig.width,
+                                                 m_StreamConfig.height,
+                                                 m_StreamConfig.fps);
+                if (da == DecoderAvailability::None) {
                     emitLaunchWarning(tr("This PC's GPU doesn't support AV1 Main10 decoding for HDR streaming."));
                     m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_AV1_MAIN10);
                 }
+                else if (da == DecoderAvailability::Software &&
+                           m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE &&
+                           !displayedHdrSoftwareDecodeWarning) {
+                    emitLaunchWarning(tr("Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance."));
+                    displayedHdrSoftwareDecodeWarning = true;
+                }
             }
             if (m_SupportedVideoFormats.maskByServerCodecModes(m_Computer->serverCodecModeSupport & SCM_HEVC_MAIN10)) {
-                if (getDecoderAvailability(testWindow,
-                                           m_Preferences->videoDecoderSelection,
-                                           VIDEO_FORMAT_H265_MAIN10,
-                                           m_StreamConfig.width,
-                                           m_StreamConfig.height,
-                                           m_StreamConfig.fps) == DecoderAvailability::None) {
+                auto da = getDecoderAvailability(testWindow,
+                                                 m_Preferences->videoDecoderSelection,
+                                                 VIDEO_FORMAT_H265_MAIN10,
+                                                 m_StreamConfig.width,
+                                                 m_StreamConfig.height,
+                                                 m_StreamConfig.fps);
+                if (da == DecoderAvailability::None) {
                     emitLaunchWarning(tr("This PC's GPU doesn't support HEVC Main10 decoding for HDR streaming."));
                     m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_H265_MAIN10);
+                }
+                else if (da == DecoderAvailability::Software &&
+                         m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE &&
+                         !displayedHdrSoftwareDecodeWarning) {
+                    emitLaunchWarning(tr("Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance."));
+                    displayedHdrSoftwareDecodeWarning = true;
                 }
             }
         }
@@ -1007,14 +1044,14 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             emitLaunchWarning(tr("Your host PC doesn't support YUV 4:4:4 streaming."));
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_YUV444);
         }
-        else if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE) {
+        else {
             m_SupportedVideoFormats.removeByMask(~m_SupportedVideoFormats.maskByServerCodecModes(m_Computer->serverCodecModeSupport));
 
             if (!m_SupportedVideoFormats.isEmpty() &&
                 !(m_SupportedVideoFormats.front() & VIDEO_FORMAT_MASK_YUV444)) {
                 emitLaunchWarning(tr("Your host PC doesn't support YUV 4:4:4 streaming for selected video codec."));
             }
-            else {
+            else if (m_Preferences->videoDecoderSelection != StreamingPreferences::VDS_FORCE_SOFTWARE) {
                 while (!m_SupportedVideoFormats.isEmpty() &&
                        (m_SupportedVideoFormats.front() & VIDEO_FORMAT_MASK_YUV444) &&
                        getDecoderAvailability(testWindow,
