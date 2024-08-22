@@ -34,8 +34,9 @@ using Microsoft::WRL::ComPtr;
 #pragma comment(lib, "d3d11.lib")
 #pragma comment(lib, "dxgi.lib")
 
-// Custom decoder GUID for Intel HEVC 444
-DEFINE_GUID(D3D11_DECODER_PROFILE_HEVC_VLD_Main444_10_Intel,0x6a6a81ba,0x912a,0x485d,0xb5,0x7f,0xcc,0xd2,0xd3,0x7b,0x8d,0x94);
+// Standard DXVA GUIDs for HEVC RExt profiles (redefined for compatibility with pre-24H2 SDKs)
+DEFINE_GUID(k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444,   0x4008018f, 0xf537, 0x4b36, 0x98, 0xcf, 0x61, 0xaf, 0x8a, 0x2c, 0x1a, 0x33);
+DEFINE_GUID(k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444, 0x0dabeffa, 0x4458, 0x4602, 0xbc, 0x03, 0x07, 0x95, 0x65, 0x9d, 0x61, 0x7c);
 
 typedef struct _VERTEX
 {
@@ -330,7 +331,7 @@ void D3D11VARenderer::setHdrMode(bool enabled){
 
 bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
 {
-    const D3D_FEATURE_LEVEL supportedFeatureLevels[] = { D3D_FEATURE_LEVEL_11_0, D3D_FEATURE_LEVEL_11_1 };
+    const D3D_FEATURE_LEVEL supportedFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
     bool success = false;
     ComPtr<IDXGIAdapter1> adapter;
     DXGI_ADAPTER_DESC1 adapterDesc;
@@ -410,6 +411,13 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D11CreateDevice() failed: %x",
                      hr);
+        goto Exit;
+    }
+    else if (adapterDesc.VendorId == 0x8086 && featureLevel <= D3D_FEATURE_LEVEL_11_0 && !qEnvironmentVariableIntValue("D3D11VA_ENABLED")) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Avoiding D3D11VA on old pre-FL11.1 Intel GPU. Set D3D11VA_ENABLED=1 to override.");
+        m_DeviceContext.Reset();
+        m_Device.Reset();
         goto Exit;
     }
     else if (featureLevel >= D3D_FEATURE_LEVEL_11_0) {
@@ -2065,13 +2073,10 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
         break;
 
     case VIDEO_FORMAT_H265_REXT8_444:
-        if (adapterDesc.VendorId != 0x8086) {
-            // This custom D3D11VA profile is only supported on Intel GPUs
-            return false;
-        }
-        else if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_Main444_10_Intel, DXGI_FORMAT_AYUV, &supported))) {
+        if (FAILED(videoDevice->CheckVideoDecoderFormat(&k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444, DXGI_FORMAT_AYUV, &supported)))
+        {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "GPU doesn't support HEVC Main 444 8-bit decoding");
+                         "GPU doesn't support HEVC Main 444 8-bit decoding via D3D11VA");
             return false;
         }
         else if (!supported) {
@@ -2082,13 +2087,9 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
         break;
 
     case VIDEO_FORMAT_H265_REXT10_444:
-        if (adapterDesc.VendorId != 0x8086) {
-            // This custom D3D11VA profile is only supported on Intel GPUs
-            return false;
-        }
-        else if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&D3D11_DECODER_PROFILE_HEVC_VLD_Main444_10_Intel, DXGI_FORMAT_Y410, &supported))) {
+        if (FAILED(videoDevice->CheckVideoDecoderFormat(&k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444, DXGI_FORMAT_Y410, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "GPU doesn't support HEVC Main 444 10-bit decoding");
+                         "GPU doesn't support HEVC Main 444 10-bit decoding via D3D11VA");
             return false;
         }
         else if (!supported) {
@@ -2603,7 +2604,7 @@ bool D3D11VARenderer::setupVideoTexture()
     srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
     srvDesc.Texture2D.MostDetailedMip = 0;
     srvDesc.Texture2D.MipLevels = 1;
-    int srvIndex = 0;
+    size_t srvIndex = 0;
     for (DXGI_FORMAT srvFormat : getVideoTextureSRVFormats()) {
         SDL_assert(srvIndex < m_VideoTextureResourceViews[0].size());
 
@@ -2633,15 +2634,15 @@ bool D3D11VARenderer::setupTexturePoolViews(AVD3D11VAFramesContext* frameContext
     srvDesc.Texture2DArray.ArraySize = 1;
 
     // Create luminance and chrominance SRVs for each texture in the pool
-    for (int i = 0; i < m_VideoTextureResourceViews.size(); i++) {
+    for (size_t i = 0; i < m_VideoTextureResourceViews.size(); i++) {
         HRESULT hr;
 
         // Our rendering logic depends on the texture index working to map into our SRV array
-        SDL_assert(i == frameContext->texture_infos[i].index);
+        SDL_assert(i == (size_t)frameContext->texture_infos[i].index);
 
         srvDesc.Texture2DArray.FirstArraySlice = frameContext->texture_infos[i].index;
 
-        int srvIndex = 0;
+        size_t srvIndex = 0;
         for (DXGI_FORMAT srvFormat : getVideoTextureSRVFormats()) {
             SDL_assert(srvIndex < m_VideoTextureResourceViews[i].size());
 

@@ -73,7 +73,7 @@ unix:if(!macx|disable-prebuilts) {
 
     !disable-ffmpeg {
         packagesExist(libavcodec) {
-            PKGCONFIG += libavcodec libavutil
+            PKGCONFIG += libavcodec libavutil libswscale
             CONFIG += ffmpeg
 
             !disable-libva {
@@ -148,19 +148,15 @@ unix:if(!macx|disable-prebuilts) {
     }
 }
 win32 {
-    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lopus -ldxgi -ld3d11
-    CONFIG += ffmpeg
-    contains(QT_ARCH, x86_64) {
-        LIBS += -llibplacebo
-        CONFIG += libplacebo
-    }
+    LIBS += -llibssl -llibcrypto -lSDL2 -lSDL2_ttf -lavcodec -lavutil -lswscale -lopus -ldxgi -ld3d11 -llibplacebo
+    CONFIG += ffmpeg libplacebo
 }
 win32:!winrt {
     CONFIG += soundio discord-rpc
 }
 macx {
     !disable-prebuilts {
-        LIBS += -lssl -lcrypto -lavcodec.61 -lavutil.59 -lopus -framework SDL2 -framework SDL2_ttf
+        LIBS += -lssl -lcrypto -lavcodec.61 -lavutil.59 -lswscale.8 -lopus -framework SDL2 -framework SDL2_ttf
         CONFIG += discord-rpc
     }
 

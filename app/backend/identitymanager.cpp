@@ -95,6 +95,14 @@ void IdentityManager::createCredentials(QSettings& settings)
     BIO_free(biokey);
     BIO_free(biocert);
 
+    // Check that the new keypair is valid before persisting it
+    if (getSslCertificate().isNull()) {
+        qFatal("Newly generated certificate is unreadable");
+    }
+    if (getSslKey().isNull()) {
+        qFatal("Newly generated private key is unreadable");
+    }
+
     settings.setValue(SER_CERT, m_CachedPemCert);
     settings.setValue(SER_KEY, m_CachedPrivateKey);
 
@@ -123,10 +131,10 @@ IdentityManager::IdentityManager()
 
     // We should have valid credentials now. If not, we're screwed
     if (getSslCertificate().isNull()) {
-        qFatal("Newly generated certificate is unreadable");
+        qFatal("Certificate is unreadable");
     }
     if (getSslKey().isNull()) {
-        qFatal("Newly generated private key is unreadable");
+        qFatal("Private key is unreadable");
     }
 }
 

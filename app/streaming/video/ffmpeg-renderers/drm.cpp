@@ -39,9 +39,19 @@ extern "C" {
 #define DRM_FORMAT_P010	fourcc_code('P', '0', '1', '0')
 #endif
 
-// Upstreamed YUV444 10-bit
+// Upstreamed fully-planar YUV444 10-bit
 #ifndef DRM_FORMAT_Q410
 #define DRM_FORMAT_Q410	fourcc_code('Q', '4', '1', '0')
+#endif
+
+// Upstreamed packed YUV444 10-bit
+#ifndef DRM_FORMAT_Y410
+#define DRM_FORMAT_Y410 fourcc_code('Y', '4', '1', '0')
+#endif
+
+// Upstreamed packed YUV444 8-bit
+#ifndef DRM_FORMAT_XYUV8888
+#define DRM_FORMAT_XYUV8888 fourcc_code('X', 'Y', 'U', 'V')
 #endif
 
 // Values for "Colorspace" connector property
@@ -71,10 +81,66 @@ extern "C" {
 
 #include <QDir>
 
-DrmRenderer::DrmRenderer(bool hwaccel, IFFmpegRenderer *backendRenderer)
+#include <map>
+
+// This map is used to lookup characteristics of a given DRM format
+//
+// All DRM formats that we want to try when selecting a plane must
+// be listed here.
+static const std::map<uint32_t, AVPixelFormat> k_DrmToAvFormatMap
+{
+    {DRM_FORMAT_NV12, AV_PIX_FMT_NV12},
+    {DRM_FORMAT_NV21, AV_PIX_FMT_NV21},
+    {DRM_FORMAT_P010, AV_PIX_FMT_P010LE},
+    {DRM_FORMAT_YUV420, AV_PIX_FMT_YUV420P},
+    {DRM_FORMAT_NV24, AV_PIX_FMT_NV24},
+    {DRM_FORMAT_NV42, AV_PIX_FMT_NV42},
+    {DRM_FORMAT_YUV444, AV_PIX_FMT_YUV444P},
+    {DRM_FORMAT_Q410, AV_PIX_FMT_YUV444P10LE},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 34, 100)
+    {DRM_FORMAT_XYUV8888, AV_PIX_FMT_VUYX},
+#endif
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 36, 100)
+    {DRM_FORMAT_Y410, AV_PIX_FMT_XV30LE},
+#endif
+
+    // These mappings are lies, but they're close enough for our purposes.
+    //
+    // We don't support dumb buffers with these formats, so they just need
+    // to have accurate bit depth and chroma subsampling values.
+    {DRM_FORMAT_NA12, AV_PIX_FMT_P010LE},
+    {DRM_FORMAT_NV15, AV_PIX_FMT_P010LE},
+    {DRM_FORMAT_P030, AV_PIX_FMT_P010LE},
+    {DRM_FORMAT_NV30, AV_PIX_FMT_P410LE},
+};
+
+// This map is used to determine the required DRM format for dumb buffer upload.
+//
+// AV pixel formats in this list must have exactly one valid linear DRM format.
+static const std::map<AVPixelFormat, uint32_t> k_AvToDrmFormatMap
+{
+    {AV_PIX_FMT_NV12, DRM_FORMAT_NV12},
+    {AV_PIX_FMT_NV21, DRM_FORMAT_NV21},
+    {AV_PIX_FMT_P010LE, DRM_FORMAT_P010},
+    {AV_PIX_FMT_YUV420P, DRM_FORMAT_YUV420},
+    {AV_PIX_FMT_YUVJ420P, DRM_FORMAT_YUV420},
+    {AV_PIX_FMT_NV24, DRM_FORMAT_NV24},
+    {AV_PIX_FMT_NV42, DRM_FORMAT_NV42},
+    {AV_PIX_FMT_YUV444P, DRM_FORMAT_YUV444},
+    {AV_PIX_FMT_YUVJ444P, DRM_FORMAT_YUV444},
+    {AV_PIX_FMT_YUV444P10LE, DRM_FORMAT_Q410},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 34, 100)
+    {AV_PIX_FMT_VUYX, DRM_FORMAT_XYUV8888},
+#endif
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 36, 100)
+    {AV_PIX_FMT_XV30LE, DRM_FORMAT_Y410},
+#endif
+};
+
+DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRenderer)
     : m_BackendRenderer(backendRenderer),
       m_DrmPrimeBackend(backendRenderer && backendRenderer->canExportDrmPrime()),
-      m_HwAccelBackend(hwaccel),
+      m_HwDeviceType(hwDeviceType),
       m_HwContext(nullptr),
       m_DrmFd(-1),
       m_SdlOwnsDrmFd(false),
@@ -180,7 +246,7 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
     // https://doc-en.rvspace.org/VisionFive2/DG_Multimedia/JH7110_SDK/hevc_omx.html
     av_dict_set(options, "omx_pix_fmt", "nv12", 0);
 
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         context->hw_device_ctx = av_buffer_ref(m_HwContext);
     }
 
@@ -316,47 +382,50 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
                 }
             }
         }
-
-        if (m_DrmFd < 0) {
-            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                         "Failed to open DRM device: %d",
-                          errno);
-            return false;
-        }
     }
-
-    // Fetch version details about the DRM driver to use later
-    m_Version = drmGetVersion(m_DrmFd);
-    if (m_Version == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "drmGetVersion() failed: %d",
-                     errno);
-        return false;
-    }
-
-    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "GPU driver: %s", m_Version->name);
 
     // Create the device context first because it is needed whether we can
     // actually use direct rendering or not.
-    m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
-    if (m_HwContext == nullptr) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_alloc(DRM) failed");
-        return false;
+    if (m_HwDeviceType == AV_HWDEVICE_TYPE_DRM) {
+        // A real DRM FD is required for DRM-backed hwaccels
+        if (m_DrmFd < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to open DRM device: %d",
+                         errno);
+            return false;
+        }
+
+        m_HwContext = av_hwdevice_ctx_alloc(AV_HWDEVICE_TYPE_DRM);
+        if (m_HwContext == nullptr) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_alloc(DRM) failed");
+            return false;
+        }
+
+        AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
+        AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
+
+        drmDeviceContext->fd = m_DrmFd;
+
+        int err = av_hwdevice_ctx_init(m_HwContext);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_init(DRM) failed: %d",
+                         err);
+            return false;
+        }
     }
-
-    AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
-    AVDRMDeviceContext* drmDeviceContext = (AVDRMDeviceContext*)deviceContext->hwctx;
-
-    drmDeviceContext->fd = m_DrmFd;
-
-    int err = av_hwdevice_ctx_init(m_HwContext);
-    if (err < 0) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "av_hwdevice_ctx_init(DRM) failed: %d",
-                     err);
-        return false;
+    else if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
+        // We got some other non-DRM hwaccel that outputs DRM_PRIME frames.
+        // Create it with default parameters and hope for the best.
+        int err = av_hwdevice_ctx_create(&m_HwContext, m_HwDeviceType, nullptr, nullptr, 0);
+        if (err < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "av_hwdevice_ctx_create(%u) failed: %d",
+                         m_HwDeviceType,
+                         err);
+            return false;
+        }
     }
 
     // Still return true if we fail to initialize DRM direct rendering
@@ -367,6 +436,24 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // == nullptr), we want to fail if we can't render directly since
     // that's the whole point it's trying to use us for.
     const bool DIRECT_RENDERING_INIT_FAILED = (m_BackendRenderer == nullptr);
+
+    if (m_DrmFd < 0) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Direct rendering via DRM is unavailable due to lack of DRM devices");
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    // Fetch version details about the DRM driver to use later
+    m_Version = drmGetVersion(m_DrmFd);
+    if (m_Version == nullptr) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmGetVersion() failed: %d",
+                     errno);
+        return DIRECT_RENDERING_INIT_FAILED;
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "GPU driver: %s", m_Version->name);
 
     // If we're not sharing the DRM FD with SDL, that means we don't
     // have DRM master, so we can't call drmModeSetPlane(). We can
@@ -517,47 +604,14 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
             // control back to Qt, it will repopulate the plane with the FB it owns and render as normal.
 
             // Validate that the candidate plane supports our pixel format
-            bool matchingFormat = false;
-            for (uint32_t j = 0; j < plane->count_formats && !matchingFormat; j++) {
-                if (m_VideoFormat & VIDEO_FORMAT_MASK_10BIT) {
-                    if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
-                        switch (plane->formats[j]) {
-                        case DRM_FORMAT_Q410:
-                        case DRM_FORMAT_NV30:
-                            matchingFormat = true;
-                            break;
-                        }
-                    }
-                    else {
-                        switch (plane->formats[j]) {
-                        case DRM_FORMAT_P010:
-                        case DRM_FORMAT_P030:
-                        case DRM_FORMAT_NA12:
-                        case DRM_FORMAT_NV15:
-                            matchingFormat = true;
-                            break;
-                        }
-                    }
-                }
-                else if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
-                    switch (plane->formats[j]) {
-                    case DRM_FORMAT_NV24:
-                    case DRM_FORMAT_NV42:
-                    case DRM_FORMAT_YUV444:
-                        matchingFormat = true;
-                        break;
-                    }
-                }
-                else {
-                    switch (plane->formats[j]) {
-                    case DRM_FORMAT_NV12:
-                        matchingFormat = true;
-                        break;
-                    }
+            m_SupportedPlaneFormats.clear();
+            for (uint32_t j = 0; j < plane->count_formats; j++) {
+                if (drmFormatMatchesVideoFormat(plane->formats[j], m_VideoFormat)) {
+                    m_SupportedPlaneFormats.emplace(plane->formats[j]);
                 }
             }
 
-            if (!matchingFormat) {
+            if (m_SupportedPlaneFormats.empty()) {
                 drmModeFreePlane(plane);
                 continue;
             }
@@ -692,7 +746,7 @@ enum AVPixelFormat DrmRenderer::getPreferredPixelFormat(int videoFormat)
 }
 
 bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFormat) {
-    if (m_HwAccelBackend) {
+    if (m_HwDeviceType != AV_HWDEVICE_TYPE_NONE) {
         return pixelFormat == AV_PIX_FMT_DRM_PRIME;
     }
     else if (m_DrmPrimeBackend) {
@@ -705,44 +759,19 @@ bool DrmRenderer::isPixelFormatSupported(int videoFormat, AVPixelFormat pixelFor
             // AV_PIX_FMT_DRM_PRIME is always supported
             return true;
         }
-        else if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-            if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
-                switch (pixelFormat) {
-                case AV_PIX_FMT_YUV444P10:
-                    return true;
-                default:
-                    return false;
-                }
+        else {
+            auto avToDrmTuple = k_AvToDrmFormatMap.find(pixelFormat);
+            if (avToDrmTuple == k_AvToDrmFormatMap.end()) {
+                return false;
+            }
+
+            // If we've been called after initialize(), use the actual supported plane formats
+            if (!m_SupportedPlaneFormats.empty()) {
+                return m_SupportedPlaneFormats.find(avToDrmTuple->second) != m_SupportedPlaneFormats.end();
             }
             else {
-                switch (pixelFormat) {
-                case AV_PIX_FMT_P010:
-                    return true;
-                default:
-                    return false;
-                }
-            }
-        }
-        else if (videoFormat & VIDEO_FORMAT_MASK_YUV444) {
-            switch (pixelFormat) {
-            case AV_PIX_FMT_NV24:
-            case AV_PIX_FMT_NV42:
-            case AV_PIX_FMT_YUV444P:
-            case AV_PIX_FMT_YUVJ444P:
-                return true;
-            default:
-                return false;
-            }
-        }
-        else {
-            switch (pixelFormat) {
-            case AV_PIX_FMT_NV12:
-            case AV_PIX_FMT_NV21:
-            case AV_PIX_FMT_YUV420P:
-            case AV_PIX_FMT_YUVJ420P:
-                return true;
-            default:
-                return false;
+                // If we've been called before initialize(), use any valid plane format for our video formats
+                return drmFormatMatchesVideoFormat(avToDrmTuple->second, videoFormat);
             }
         }
     }
@@ -765,7 +794,7 @@ int DrmRenderer::getRendererAttributes()
     // Restrict streaming resolution to 1080p on the Pi 4 while in the desktop environment.
     // EGL performance is extremely poor and just barely hits 1080p60 on Bookworm. This also
     // covers the MMAL H.264 case which maxes out at 1080p60 too.
-    if (!m_SupportsDirectRendering &&
+    if (!m_SupportsDirectRendering && m_Version &&
             (strcmp(m_Version->name, "vc4") == 0 || strcmp(m_Version->name, "v3d") == 0) &&
             qgetenv("RPI_ALLOW_EGL_4K") != "1") {
         drmDevicePtr device;
@@ -899,37 +928,8 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
     const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get((AVPixelFormat) frame->format);
     int planes = av_pix_fmt_count_planes((AVPixelFormat) frame->format);
 
-    uint32_t drmFormat;
-
-    // NB: Keep this list updated with isPixelFormatSupported()
-    switch (frame->format) {
-    case AV_PIX_FMT_NV12:
-        drmFormat = DRM_FORMAT_NV12;
-        break;
-    case AV_PIX_FMT_NV21:
-        drmFormat = DRM_FORMAT_NV21;
-        break;
-    case AV_PIX_FMT_P010:
-        drmFormat = DRM_FORMAT_P010;
-        break;
-    case AV_PIX_FMT_YUV420P:
-    case AV_PIX_FMT_YUVJ420P:
-        drmFormat = DRM_FORMAT_YUV420;
-        break;
-    case AV_PIX_FMT_NV24:
-        drmFormat = DRM_FORMAT_NV24;
-        break;
-    case AV_PIX_FMT_NV42:
-        drmFormat = DRM_FORMAT_NV42;
-        break;
-    case AV_PIX_FMT_YUV444P:
-    case AV_PIX_FMT_YUVJ444P:
-        drmFormat = DRM_FORMAT_YUV444;
-        break;
-    case AV_PIX_FMT_YUV444P10:
-        drmFormat = DRM_FORMAT_Q410;
-        break;
-    default:
+    auto drmFormatTuple = k_AvToDrmFormatMap.find((AVPixelFormat) frame->format);
+    if (drmFormatTuple == k_AvToDrmFormatMap.end()) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "Unable to map frame with unsupported format: %d",
                      frame->format);
@@ -941,8 +941,17 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         struct drm_mode_create_dumb createBuf = {};
 
         createBuf.width = frame->width;
-        createBuf.height = frame->height + (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
-        createBuf.bpp = av_get_padded_bits_per_pixel(formatDesc);
+        createBuf.height = frame->height;
+        createBuf.bpp = formatDesc->comp[0].step * 8;
+
+        // For planar formats, we need to add additional space to the "height"
+        // of the dumb buffer to account for the chroma plane(s). Chroma for
+        // packed formats is already covered by the bpp value since the step
+        // value of the Y component will also include the space for chroma
+        // since it's all packed into a single plane.
+        if (planes > 1) {
+            createBuf.height += (2 * AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h));
+        }
 
         int err = drmIoctl(m_DrmFd, DRM_IOCTL_MODE_CREATE_DUMB, &createBuf);
         if (err < 0) {
@@ -1012,7 +1021,7 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
         mappedFrame->nb_layers = 1;
 
         auto &layer = mappedFrame->layers[0];
-        layer.format = drmFormat;
+        layer.format = drmFormatTuple->second;
 
         // Prepare to write to the dumb buffer from the CPU
         struct dma_buf_sync sync;
@@ -1035,7 +1044,9 @@ bool DrmRenderer::mapSoftwareFrame(AVFrame *frame, AVDRMFrameDescriptor *mappedF
                 }
                 else {
                     planeHeight = AV_CEIL_RSHIFT(frame->height, formatDesc->log2_chroma_h);
-                    plane.pitch = AV_CEIL_RSHIFT(drmFrame->pitch, formatDesc->log2_chroma_w);
+
+                    // First argument to AV_CEIL_RSHIFT() *must* be signed for correct behavior!
+                    plane.pitch = AV_CEIL_RSHIFT((ptrdiff_t)drmFrame->pitch, formatDesc->log2_chroma_w);
 
                     // If UV planes are interleaved, double the pitch to count both U+V together
                     if (planes == 2) {
@@ -1193,6 +1204,29 @@ bool DrmRenderer::addFbForFrame(AVFrame *frame, uint32_t* newFbId, bool testMode
     else {
         return true;
     }
+}
+
+bool DrmRenderer::drmFormatMatchesVideoFormat(uint32_t drmFormat, int videoFormat)
+{
+    auto drmToAvTuple = k_DrmToAvFormatMap.find(drmFormat);
+    if (drmToAvTuple == k_DrmToAvFormatMap.end()) {
+        return false;
+    }
+
+    const int expectedPixelDepth = (videoFormat & VIDEO_FORMAT_MASK_10BIT) ? 10 : 8;
+    const int expectedLog2ChromaW = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+    const int expectedLog2ChromaH = (videoFormat & VIDEO_FORMAT_MASK_YUV444) ? 0 : 1;
+
+    const AVPixFmtDescriptor* formatDesc = av_pix_fmt_desc_get(drmToAvTuple->second);
+    if (!formatDesc) {
+        // This shouldn't be possible but handle it anyway
+        SDL_assert(formatDesc);
+        return false;
+    }
+
+    return formatDesc->comp[0].depth == expectedPixelDepth &&
+           formatDesc->log2_chroma_w == expectedLog2ChromaW &&
+           formatDesc->log2_chroma_h == expectedLog2ChromaH;
 }
 
 void DrmRenderer::renderFrame(AVFrame* frame)

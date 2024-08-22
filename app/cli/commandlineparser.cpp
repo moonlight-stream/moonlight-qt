@@ -421,8 +421,8 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     // Resolve --bitrate option
     if (parser.isSet("bitrate")) {
         preferences->bitrateKbps = parser.getIntOption("bitrate");
-        if (!inRange(preferences->bitrateKbps, 500, 150000)) {
-            parser.showError("Bitrate must be in range: 500 - 150000");
+        if (!inRange(preferences->bitrateKbps, 500, 500000)) {
+            parser.showError("Bitrate must be in range: 500 - 500000");
         }
     } else if (displaySet || parser.isSet("fps")) {
         preferences->bitrateKbps = preferences->getDefaultBitrate(

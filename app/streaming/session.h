@@ -39,6 +39,24 @@ public:
         }
     }
 
+    void
+    deprioritizeByMask(int mask)
+    {
+        QList<int> deprioritizedList;
+
+        int i = 0;
+        while (i < this->length()) {
+            if (this->value(i) & mask) {
+                deprioritizedList.append(this->takeAt(i));
+            }
+            else {
+                i++;
+            }
+        }
+
+        this->append(std::move(deprioritizedList));
+    }
+
     int maskByServerCodecModes(int serverCodecModes)
     {
         int mask = 0;
@@ -154,10 +172,16 @@ private:
 
     void updateOptimalWindowDisplayMode();
 
+    enum class DecoderAvailability {
+        None,
+        Software,
+        Hardware
+    };
+
     static
-    bool isHardwareDecodeAvailable(SDL_Window* window,
-                                   StreamingPreferences::VideoDecoderSelection vds,
-                                   int videoFormat, int width, int height, int frameRate);
+    DecoderAvailability getDecoderAvailability(SDL_Window* window,
+                                               StreamingPreferences::VideoDecoderSelection vds,
+                                               int videoFormat, int width, int height, int frameRate);
 
     static
     bool chooseDecoder(StreamingPreferences::VideoDecoderSelection vds,
