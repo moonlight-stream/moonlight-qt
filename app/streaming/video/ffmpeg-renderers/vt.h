@@ -16,7 +16,7 @@ public:
 class VTMetalRendererFactory {
 public:
     static
-    IFFmpegRenderer* createRenderer();
+    IFFmpegRenderer* createRenderer(bool hwAccel);
 };
 
 class VTRendererFactory {

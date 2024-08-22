@@ -887,7 +887,7 @@ IFFmpegRenderer* FFmpegVideoDecoder::createHwAccelRenderer(const AVCodecHWConfig
 #ifdef Q_OS_DARWIN
         case AV_HWDEVICE_TYPE_VIDEOTOOLBOX:
             // Prefer the Metal renderer if hardware is compatible
-            return VTMetalRendererFactory::createRenderer();
+            return VTMetalRendererFactory::createRenderer(true);
 #endif
 #ifdef HAVE_LIBVA
         case AV_HWDEVICE_TYPE_VAAPI:
@@ -1154,6 +1154,13 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
 #if defined(HAVE_LIBPLACEBO_VULKAN) && !defined(VULKAN_IS_SLOW)
         if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
                                   []() -> IFFmpegRenderer* { return new PlVkRenderer(); })) {
+            return true;
+        }
+#endif
+
+#ifdef Q_OS_DARWIN
+        if (tryInitializeRenderer(decoder, AV_PIX_FMT_NONE, params, nullptr, nullptr,
+                                  []() -> IFFmpegRenderer* { return VTMetalRendererFactory::createRenderer(false); })) {
             return true;
         }
 #endif
