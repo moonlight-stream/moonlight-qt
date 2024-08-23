@@ -2073,7 +2073,7 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
         break;
 
     case VIDEO_FORMAT_H265_REXT8_444:
-        if (FAILED(videoDevice->CheckVideoDecoderFormat(&k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444, DXGI_FORMAT_AYUV, &supported)))
+        if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN_444, DXGI_FORMAT_AYUV, &supported)))
         {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support HEVC Main 444 8-bit decoding via D3D11VA");
@@ -2087,7 +2087,7 @@ bool D3D11VARenderer::checkDecoderSupport(IDXGIAdapter* adapter)
         break;
 
     case VIDEO_FORMAT_H265_REXT10_444:
-        if (FAILED(videoDevice->CheckVideoDecoderFormat(&k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444, DXGI_FORMAT_Y410, &supported))) {
+        if (FAILED(m_VideoDevice->CheckVideoDecoderFormat(&k_D3D11_DECODER_PROFILE_HEVC_VLD_MAIN10_444, DXGI_FORMAT_Y410, &supported))) {
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "GPU doesn't support HEVC Main 444 10-bit decoding via D3D11VA");
             return false;

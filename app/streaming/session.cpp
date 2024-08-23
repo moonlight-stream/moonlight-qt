@@ -407,10 +407,10 @@ void Session::getDecoderInfo(SDL_Window* window,
         // that supports HDR rendering with software decoded frames.
         if (chooseDecoder(StreamingPreferences::VDS_FORCE_SOFTWARE,
                           window, VIDEO_FORMAT_H265_MAIN10, 1920, 1080, 60,
-                          false, false, true, decoder) ||
+                          false, false, false, true, decoder) ||
             chooseDecoder(StreamingPreferences::VDS_FORCE_SOFTWARE,
                           window, VIDEO_FORMAT_AV1_MAIN10, 1920, 1080, 60,
-                          false, false, true, decoder)) {
+                          false, false, false, true, decoder)) {
             isHdrSupported = decoder->isHdrSupported();
             delete decoder;
         }
