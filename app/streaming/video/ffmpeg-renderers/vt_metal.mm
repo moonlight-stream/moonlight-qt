@@ -542,8 +542,8 @@ public:
         size_t planes = getFramePlaneCount(frame);
         SDL_assert(planes <= MAX_VIDEO_PLANES);
 
-        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
-            CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
+        CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {            
 
             // Create Metal textures for the planes of the CVPixelBuffer
             for (size_t i = 0; i < planes; i++) {
@@ -620,7 +620,7 @@ public:
         id<MTLCommandBuffer> commandBuffer = [m_CommandQueue commandBuffer];
         id<MTLRenderCommandEncoder> renderEncoder = [commandBuffer renderCommandEncoderWithDescriptor:renderPassDescriptor];
 
-        if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        if(frame->format == AV_PIX_FMT_VIDEOTOOLBOX && m_VideoEnhancement->isVideoEnhancementEnabled()){
           m_LumaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 0);
           m_LumaHeight = CVPixelBufferGetHeightOfPlane(pixBuf, 0);
           m_ChromaWidth = CVPixelBufferGetWidthOfPlane(pixBuf, 1);
@@ -758,7 +758,7 @@ public:
             }];
         }
 
-        if(m_VideoEnhancement->isVideoEnhancementEnabled()){
+        if(frame->format == AV_PIX_FMT_VIDEOTOOLBOX && m_VideoEnhancement->isVideoEnhancementEnabled()){
           m_LumaUpscaler.colorTexture = m_LumaTexture;
           m_LumaUpscaler.outputTexture = m_LumaUpscaledTexture;
           m_ChromaUpscaler.colorTexture = m_ChromaTexture;
