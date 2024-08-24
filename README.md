@@ -52,7 +52,7 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 ### Linux/Unix Build Requirements
 * Qt 6 is recommended, but Qt 5.9 or later is also supported (replace `qmake6` with `qmake` when using Qt 5).
 * GCC or Clang
-* FFmpeg 5.0 or later
+* FFmpeg 4.0 or later
 * Install the required packages:
   * Debian/Ubuntu:
     * Base Requirements: `libegl1-mesa-dev libgl1-mesa-dev libopus-dev libsdl2-dev libsdl2-ttf-dev libssl-dev libavcodec-dev libavformat-dev libswscale-dev libva-dev libvdpau-dev libxkbcommon-dev wayland-protocols libdrm-dev`
