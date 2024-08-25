@@ -414,7 +414,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     if (parser.isSet("fps")) {
         preferences->fps = parser.getIntOption("fps");
         if (!inRange(preferences->fps, 10, 480)) {
-            parser.showError("FPS must be in range: 10 - 480");
+            fprintf(stderr, "Warning: FPS is out of the supported range (10 - 480 FPS). Performance may suffer!\n");
         }
     }
 
@@ -422,7 +422,7 @@ void StreamCommandLineParser::parse(const QStringList &args, StreamingPreference
     if (parser.isSet("bitrate")) {
         preferences->bitrateKbps = parser.getIntOption("bitrate");
         if (!inRange(preferences->bitrateKbps, 500, 500000)) {
-            parser.showError("Bitrate must be in range: 500 - 500000");
+            fprintf(stderr, "Warning: Bitrate is out of the supported range (500 - 500000 Kbps). Performance may suffer!\n");
         }
     } else if (displaySet || parser.isSet("fps")) {
         preferences->bitrateKbps = preferences->getDefaultBitrate(
