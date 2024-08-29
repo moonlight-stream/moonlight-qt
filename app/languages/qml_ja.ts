@@ -119,17 +119,17 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>不明</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>ペアされました</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>ペア解除</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
@@ -179,7 +179,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ペア状況</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
@@ -189,7 +189,7 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPSポート</translation>
     </message>
 </context>
 <context>
@@ -263,7 +263,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>詳細表示</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
@@ -490,7 +490,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="131"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDRモードを無効にしたり、ストリーミング解像度を変更したり、ホストPCのディスプレイ解像度を変更したりしてみてください。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="139"/>
@@ -500,7 +500,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>エラーコード: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="862"/>
@@ -525,7 +525,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="907"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストPCがHEVCエンコーディングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="924"/>
@@ -535,62 +535,62 @@
     <message>
         <location filename="../streaming/session.cpp" line="883"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストソフトウェアまたはGPUがAV1エンコーディングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="900"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>GPUサポートなしでAV1を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="959"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストPCがHDRストリーミングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="963"/>
         <source>HDR is not supported using the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDRはH.264コーデックでは対応していません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="975"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>このPCのGPUはHDRストリーミング用のAV1 Main10デコーディングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="992"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>このPCのGPUはHDRストリーミング用の10ビットHEVCまたはAV1デコーディングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="999"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストPCとクライアントPCが同じHDRビデオコーデックをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1050"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>4Kを超えるビデオ解像度はH.264コーデックではサポートされていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1435"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストがエラーを返しました：%1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="938"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>GPUサポートなしでH.264を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="948"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストPCとクライアントPCが同じビデオコーデックをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="951"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>クライアントのGPUがH.264デコーディングをサポートしていません。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="986"/>
@@ -744,12 +744,12 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>ネイティブ</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>ネイティブ（ノッチ除く）</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="726"/>
@@ -865,42 +865,42 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1531"/>
         <source>Enabling HDR overrides manual decoder selections.</source>
-        <translation type="unfinished"></translation>
+        <translation>HDR を有効にすると、手動で選択したデコーダーが上書きされます。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1594"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>HDRを有効にする（実験的）</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1609"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>ストリームはHDR対応になりますが、一部のゲームではHDRモードを有効にするためにホストPCにHDRモニターが必要な場合があります。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>このPCではHDRストリーミングはサポートされていません。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1649"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>ストリーミング中にパフォーマンス統計を表示する</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1659"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>ストリーミング中にリアルタイムのストリーム パフォーマンス情報を表示します。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1660"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>ストリーミング中はいつでも、Ctrl+Alt+Shift+SまたはSelect+L1+R1+Xを使用して切り替えることができます。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1661"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>パフォーマンスオーバーレイはSteam LinkまたはRaspberry Piではサポートされていません。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1242"/>
@@ -1011,39 +1011,39 @@
         <location filename="../gui/SettingsView.qml" line="506"/>
         <location filename="../gui/SettingsView.qml" line="616"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタム (%1 FPS)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="521"/>
         <source>Enter a custom frame rate:</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタムフレームを入力:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="219"/>
         <location filename="../gui/SettingsView.qml" line="228"/>
         <location filename="../gui/SettingsView.qml" line="619"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>カスタム</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="637"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="642"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 FPS</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1172"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>ストリーミング中にディスプレイをスリープさせない</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1182"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>ストリーミング中にスクリーンセーバーの起動やディスプレイのスリープを防止します</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1233"/>
@@ -1124,7 +1124,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1579"/>
         <source>AV1 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>AV1 (実験的)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1617"/>
@@ -1241,7 +1241,7 @@
     <message>
         <location filename="../gui/main.qml" line="422"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlightはハードウェアアクセラレーションされたビデオデコーダーを検出できませんでした。この構成ではストリーミングのパフォーマンスが著しく低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="424"/>
@@ -1266,7 +1266,7 @@
     <message>
         <location filename="../gui/main.qml" line="488"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストPCのIPアドレスを入力してください:</translation>
     </message>
 </context>
 </TS>
