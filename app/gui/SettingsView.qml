@@ -1056,10 +1056,10 @@ Flickable {
                             text: "Svenska" // Swedish
                             val: StreamingPreferences.LANG_SV
                         }
-                        /* ListElement {
+                        ListElement {
                             text: "Türkçe" // Turkish
                             val: StreamingPreferences.LANG_TR
-                        } */
+                        }
                         /* ListElement {
                             text: "Українська" // Ukrainian
                             val: StreamingPreferences.LANG_UK
