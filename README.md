@@ -43,6 +43,9 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 * [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
 * Select **MSVC** option during Qt installation. MinGW is not supported.
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
+* Graphics Tools (only if running debug builds)
+  * Install "Graphics Tools" in the Optional Features page of the Windows Settings app.
+  * Alternatively, run `dism /online /add-capability /capabilityname:Tools.Graphics.DirectX~~~~0.0.1.0` and reboot.
 
 ### macOS Build Requirements
 * Qt 6.4 SDK or later
