@@ -1169,7 +1169,12 @@ IFFmpegRenderer::InitFailureReason D3D11VARenderer::getInitFailureReason()
     // NB2: We're also assuming that no GPU exists which lacks any D3D11 driver but has drivers
     // for non-DX APIs like Vulkan. I believe this is a Windows Logo requirement so it should be
     // safe to assume.
-    if (m_DevicesWithFL11Support != 0 && m_DevicesWithCodecSupport == 0) {
+    //
+    // NB3: Sigh, there *are* GPUs drivers with greater codec support available via Vulkan than
+    // D3D11VA even when both D3D11 and Vulkan APIs are supported. This is the case for HEVC RExt
+    // profiles that were not supported by Microsoft until the Windows 11 24H2 SDK. Don't report
+    // that hardware support is missing for YUV444 profiles since the Vulkan driver may support it.
+    if (m_DevicesWithFL11Support != 0 && m_DevicesWithCodecSupport == 0 && !(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444)) {
         return InitFailureReason::NoHardwareSupport;
     }
     else {
