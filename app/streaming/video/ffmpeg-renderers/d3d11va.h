@@ -67,6 +67,7 @@ private:
     SupportedFenceType m_FenceType;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
+    bool m_UseFenceHack;
 
     DECODER_PARAMETERS m_DecoderParams;
     int m_TextureAlignment;
