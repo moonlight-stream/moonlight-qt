@@ -2,8 +2,8 @@
 
 #include "renderer.h"
 
-#include <d3d11_1.h>
-#include <dxgi1_5.h>
+#include <d3d11_4.h>
+#include <dxgi1_6.h>
 
 extern "C" {
 #include <libavutil/hwcontext_d3d11va.h>
@@ -53,11 +53,19 @@ private:
     int m_DevicesWithFL11Support;
     int m_DevicesWithCodecSupport;
 
+    enum class SupportedFenceType {
+        None,
+        NonMonitored,
+        Monitored,
+    };
+
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
     Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_DeviceContext;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
+    Microsoft::WRL::ComPtr<ID3D11Fence> m_DecodeFence;
+    SupportedFenceType m_FenceType;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
 

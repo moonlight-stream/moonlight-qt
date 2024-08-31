@@ -109,6 +109,8 @@ D3D11VARenderer::~D3D11VARenderer()
 
     SDL_DestroyMutex(m_ContextLock);
 
+    m_DecodeFence.Reset();
+
     m_VideoVertexBuffer.Reset();
     for (auto& shader : m_VideoPixelShaders) {
         shader.Reset();
@@ -242,6 +244,26 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         // Remember that we found a non-software D3D11 devices with support for
         // feature level 11.0 or later (Fermi, Terascale 2, or Ivy Bridge and later)
         m_DevicesWithFL11Support++;
+    }
+
+    // Check which fence types are supported by this GPU
+    {
+        m_FenceType = SupportedFenceType::None;
+
+        ComPtr<IDXGIAdapter4> adapter4;
+        if (SUCCEEDED(adapter.As(&adapter4))) {
+            DXGI_ADAPTER_DESC3 desc3;
+            if (SUCCEEDED(adapter4->GetDesc3(&desc3))) {
+                if (desc3.Flags & DXGI_ADAPTER_FLAG3_SUPPORT_MONITORED_FENCES) {
+                    // Monitored fences must be used when they are supported
+                    m_FenceType = SupportedFenceType::Monitored;
+                }
+                else if (desc3.Flags & DXGI_ADAPTER_FLAG3_SUPPORT_NON_MONITORED_FENCES) {
+                    // Non-monitored fences must only be used when monitored fences are unsupported
+                    m_FenceType = SupportedFenceType::NonMonitored;
+                }
+            }
+        }
     }
 
     if (!checkDecoderSupport(adapter.Get())) {
@@ -564,6 +586,20 @@ void D3D11VARenderer::renderFrame(AVFrame* frame)
     // Acquire the context lock for rendering to prevent concurrent
     // access from inside FFmpeg's decoding code
     lockContext(this);
+
+    // Ensure decoding operations have completed using a dummy fence.
+    // This is not necessary on modern GPU drivers, but it is required
+    // on some older GPU drivers that don't properly synchronize the
+    // video engine with 3D operations.
+    if (m_BindDecoderOutputTextures && m_DecodeFence) {
+        ComPtr<ID3D11DeviceContext4> deviceContext4;
+        if (SUCCEEDED(m_DeviceContext.As(&deviceContext4))) {
+            auto desiredFenceValue = m_DecodeFence->GetCompletedValue() + 1;
+            if (SUCCEEDED(deviceContext4->Signal(m_DecodeFence.Get(), desiredFenceValue))) {
+                deviceContext4->Wait(m_DecodeFence.Get(), desiredFenceValue);
+            }
+        }
+    }
 
     // Clear the back buffer
     const float clearColor[4] = {0.0f, 0.0f, 0.0f, 0.0f};
@@ -1455,6 +1491,27 @@ bool D3D11VARenderer::setupRenderingResources()
         viewport.MaxDepth = 1;
 
         m_DeviceContext->RSSetViewports(1, &viewport);
+    }
+
+    // Create our decoding fence if the GPU supports fences
+    if (m_FenceType != SupportedFenceType::None) {
+        ComPtr<ID3D11Device5> device5;
+        if (SUCCEEDED(m_Device.As(&device5))) {
+            hr = device5->CreateFence(0,
+                                      m_FenceType == SupportedFenceType::Monitored ?
+                                          D3D11_FENCE_FLAG_NONE : D3D11_FENCE_FLAG_NON_MONITORED,
+                                      IID_PPV_ARGS(&m_DecodeFence));
+            if (FAILED(hr)) {
+                // Non-fatal
+                SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                            "ID3D11Device5::CreateFence() failed: %x",
+                            hr);
+            }
+        }
+        else {
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "ID3D11Device5::CreateFence() not available until Windows 10 1703");
+        }
     }
 
     return true;
