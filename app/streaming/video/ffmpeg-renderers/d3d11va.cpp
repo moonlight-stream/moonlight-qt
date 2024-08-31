@@ -971,7 +971,7 @@ void D3D11VARenderer::notifyOverlayUpdated(Overlay::OverlayType type)
     }
     else if (type == Overlay::OverlayDebug) {
         // Top left
-        renderRect.x = 0;
+        renderRect.x = (m_DisplayWidth - newSurface->w) / 2;
         renderRect.y = m_DisplayHeight - newSurface->h;
     }
 
