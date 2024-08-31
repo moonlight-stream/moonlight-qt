@@ -155,7 +155,10 @@ D3D11VARenderer::~D3D11VARenderer()
 
 bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
 {
-    const D3D_FEATURE_LEVEL supportedFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
+    const D3D_FEATURE_LEVEL supportedFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1,
+                                                         D3D_FEATURE_LEVEL_11_0,
+                                                         D3D_FEATURE_LEVEL_10_1,
+                                                         D3D_FEATURE_LEVEL_10_0 };
     bool success = false;
     ComPtr<IDXGIAdapter1> adapter;
     DXGI_ADAPTER_DESC1 adapterDesc;
@@ -229,13 +232,6 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "D3D11CreateDevice() failed: %x",
                      hr);
-        goto Exit;
-    }
-    else if (adapterDesc.VendorId == 0x8086 && featureLevel <= D3D_FEATURE_LEVEL_11_0 && !qEnvironmentVariableIntValue("D3D11VA_ENABLED")) {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Avoiding D3D11VA on old pre-FL11.1 Intel GPU. Set D3D11VA_ENABLED=1 to override.");
-        m_DeviceContext.Reset();
-        m_Device.Reset();
         goto Exit;
     }
     else if (featureLevel >= D3D_FEATURE_LEVEL_11_0) {
@@ -822,7 +818,6 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
                          srvIndex);
             return;
         }
-
 
         // Ensure decoding operations have completed using a dummy fence.
         // This is not necessary on modern GPU drivers, but it is required
