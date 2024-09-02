@@ -595,7 +595,7 @@
         <location filename="../streaming/session.cpp" line="1015"/>
         <location filename="../streaming/session.cpp" line="1033"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>La decodificación de software se utiliza debido a su elección de forzar HDR sin compatibilidad con tarjetas gráficas. Esto puede resultar en un rendimiento deficiente de la transmisión.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1027"/>
@@ -605,7 +605,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1052"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>El host de tu ordenador no admite la transmisión YUV 4:4:4.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1060"/>
