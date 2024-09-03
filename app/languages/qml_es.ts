@@ -610,17 +610,17 @@
     <message>
         <location filename="../streaming/session.cpp" line="1060"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>El PC anfitrión no admite la transmisión YUV 4:4:4 para el códec de vídeo seleccionado.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1075"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Uso de decodificación por software debido a su selección para forzar YUV 4:4:4 sin soporte GPU. Esto puede causar un bajo rendimiento en el streaming.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1081"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>La GPU de este PC no es compatible con la descodificación YUV 4:4:4 para el códec de vídeo seleccionado.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1090"/>
@@ -1153,27 +1153,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Activar YUV 4:4:4 (Experimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Bueno para la transmisión de juegos de escritorio y de texto pesado, pero no se recomienda para juegos de ritmo rápido.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1633"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4 no es compatible con este PC.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1639"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Desbloqueo del límite de bits (Experimental)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1652"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Esto desbloquea tasas de bits de vídeo extremadamente altas para su uso con hosts Sunshine. Solo debe utilizarse cuando se transmita a través de una conexión LAN Ethernet.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1658"/>
