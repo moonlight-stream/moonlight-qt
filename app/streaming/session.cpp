@@ -1724,6 +1724,36 @@ void Session::exec(QWindow* qtWindow)
     }
 }
 
+#ifdef Q_OS_WIN32
+HHOOK g_hook = NULL;
+HWND g_appWindow = NULL;
+
+// Hook procedure
+LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
+    if (nCode == HC_ACTION) {
+        KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
+
+        if (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN || wParam == WM_SYSKEYUP || wParam == WM_KEYUP) {
+            // Check for Alt+Tab combination
+            if (pKeyBoard->vkCode == VK_TAB && (GetAsyncKeyState(VK_MENU) & 0x8000)) {
+                HWND foregroundWindow = GetForegroundWindow();
+                if (foregroundWindow == g_appWindow) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Alt+Tab intercepted and blocked!");
+                    char modifiers = 0;
+                    modifiers |= MODIFIER_ALT;
+                    short keyCode = 0x09;
+                    LiSendKeyboardEvent(0x8000 | keyCode,
+                                        (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN) ? KEY_ACTION_DOWN : KEY_ACTION_UP,
+                                        modifiers);
+                    return 1; // Block the key
+                }
+            }
+        }
+    }
+    return CallNextHookEx(g_hook, nCode, wParam, lParam);
+}
+#endif
+
 void Session::execInternal()
 {
     // Complete initialization in this deferred context to avoid
@@ -1968,10 +1998,25 @@ void Session::execInternal()
 
     // Toggle the stats overlay if requested by the user
     m_OverlayManager.setOverlayState(Overlay::OverlayDebug, m_Preferences->showPerformanceOverlay);
-
     // Hijack this thread to be the SDL main thread. We have to do this
     // because we want to suspend all Qt processing until the stream is over.
     SDL_Event event;
+#ifdef Q_OS_WIN32
+    SDL_SysWMinfo wmInfo;
+    SDL_VERSION(&wmInfo.version);
+    if (SDL_GetWindowWMInfo(m_Window, &wmInfo)) {
+        g_appWindow = wmInfo.info.win.window;
+        g_hook = SetWindowsHookEx(WH_KEYBOARD_LL, LowLevelKeyboardProc, NULL, 0);
+        if (g_hook == NULL) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "SetWindowsHookEx failed: %s", GetLastError());
+        }
+    } else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "get window info failed", GetLastError());
+    }
+
+#endif
     for (;;) {
 #if SDL_VERSION_ATLEAST(2, 0, 18) && !defined(STEAM_LINK)
         // SDL 2.0.18 has a proper wait event implementation that uses platform
