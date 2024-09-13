@@ -1584,6 +1584,24 @@ bool Session::startConnectionAsync()
         }
     }
 
+    // If the user has chosen YUV444 without adjusting the bitrate but the host doesn't
+    // support YUV444 streaming, use the default non-444 bitrate for the stream instead.
+    // This should provide equivalent image quality for YUV420 as the stream would have
+    // had if the host supported YUV444 (though obviously with 4:2:0 subsampling).
+    // If the user has adjusted the bitrate from default, we'll assume they really wanted
+    // that value and not second guess them.
+    if (m_Preferences->enableYUV444 &&
+        !(m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_YUV444) &&
+        m_StreamConfig.bitrate == StreamingPreferences::getDefaultBitrate(m_StreamConfig.width,
+                                                                          m_StreamConfig.height,
+                                                                          m_StreamConfig.fps,
+                                                                          true)) {
+        m_StreamConfig.bitrate = StreamingPreferences::getDefaultBitrate(m_StreamConfig.width,
+                                                                         m_StreamConfig.height,
+                                                                         m_StreamConfig.fps,
+                                                                         false);
+    }
+
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
