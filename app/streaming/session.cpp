@@ -1813,17 +1813,6 @@ void Session::execInternal()
         SDL_VERSION(&info.version);
 
         if (SDL_GetWindowWMInfo(m_Window, &info) && info.subsystem == SDL_SYSWM_WINDOWS) {
-            RECT clientRect;
-            HBRUSH blackBrush;
-
-            // Draw a black background (otherwise our window will be bright white).
-            //
-            // TODO: Remove when SDL does this itself
-            blackBrush = CreateSolidBrush(0);
-            GetClientRect(info.info.win.window, &clientRect);
-            FillRect(info.info.win.hdc, &clientRect, blackBrush);
-            DeleteObject(blackBrush);
-
             // If dark mode is enabled, propagate that to our SDL window
             if (darkModeEnabled) {
                 if (FAILED(DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled)))) {
@@ -1871,25 +1860,6 @@ void Session::execInternal()
     // Enter full screen if requested
     if (m_IsFullScreen) {
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
-
-#ifdef Q_OS_WIN32
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
-
-        // Draw a black background again after entering full-screen to avoid visual artifacts
-        // where the old window decorations were before.
-        //
-        // TODO: Remove when SDL does this itself
-        if (SDL_GetWindowWMInfo(m_Window, &info) && info.subsystem == SDL_SYSWM_WINDOWS) {
-            RECT clientRect;
-            HBRUSH blackBrush;
-
-            blackBrush = CreateSolidBrush(0);
-            GetClientRect(info.info.win.window, &clientRect);
-            FillRect(info.info.win.hdc, &clientRect, blackBrush);
-            DeleteObject(blackBrush);
-        }
-#endif
     }
 
     bool needsFirstEnterCapture = false;
