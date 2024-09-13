@@ -650,16 +650,17 @@ bool FFmpegVideoDecoder::completeInitialization(const AVCodec* decoder, enum AVP
 
 void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
 {
+    dst.receivedVideoBytes += src.receivedVideoBytes;
     dst.receivedFrames += src.receivedFrames;
     dst.decodedFrames += src.decodedFrames;
     dst.renderedFrames += src.renderedFrames;
     dst.totalFrames += src.totalFrames;
     dst.networkDroppedFrames += src.networkDroppedFrames;
     dst.pacerDroppedFrames += src.pacerDroppedFrames;
-    dst.totalReassemblyTime += src.totalReassemblyTime;
-    dst.totalDecodeTime += src.totalDecodeTime;
-    dst.totalPacerTime += src.totalPacerTime;
-    dst.totalRenderTime += src.totalRenderTime;
+    dst.totalReassemblyTimeUs += src.totalReassemblyTimeUs;
+    dst.totalDecodeTimeUs += src.totalDecodeTimeUs;
+    dst.totalPacerTimeUs += src.totalPacerTimeUs;
+    dst.totaldecodeTimeUs += src.totaldecodeTimeUs;
 
     if (dst.minHostProcessingLatency == 0) {
         dst.minHostProcessingLatency = src.minHostProcessingLatency;
@@ -681,20 +682,20 @@ void FFmpegVideoDecoder::addVideoStats(VIDEO_STATS& src, VIDEO_STATS& dst)
         SDL_assert(dst.lastRtt > 0);
     }
 
-    Uint32 now = SDL_GetTicks();
-
     // Initialize the measurement start point if this is the first video stat window
-    if (!dst.measurementStartTimestamp) {
-        dst.measurementStartTimestamp = src.measurementStartTimestamp;
+    if (!dst.measurementStartUs) {
+        dst.measurementStartUs = src.measurementStartUs;
     }
 
     // The following code assumes the global measure was already started first
-    SDL_assert(dst.measurementStartTimestamp <= src.measurementStartTimestamp);
+    SDL_assert(dst.measurementStartUs <= src.measurementStartUs);
 
-    dst.totalFps = (float)dst.totalFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
-    dst.receivedFps = (float)dst.receivedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
-    dst.decodedFps = (float)dst.decodedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
-    dst.renderedFps = (float)dst.renderedFrames / ((float)(now - dst.measurementStartTimestamp) / 1000);
+    double timeDiffSecs     = (double)(LiGetMicroseconds() - dst.measurementStartUs) / 1000000.0;
+    dst.totalFps            = (double)dst.totalFrames / timeDiffSecs;
+    dst.receivedFps         = (double)dst.receivedFrames / timeDiffSecs;
+    dst.decodedFps          = (double)dst.decodedFrames / timeDiffSecs;
+    dst.renderedFps         = (double)dst.renderedFrames / timeDiffSecs;
+    dst.videoMegabitsPerSec = (double)(dst.receivedVideoBytes * 8) / 1000000.0 / timeDiffSecs;
 }
 
 void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, int length)
@@ -776,13 +777,21 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
     if (stats.receivedFps > 0) {
         if (m_VideoDecoderCtx != nullptr) {
+            PRTP_VIDEO_STATS rtpVideoStats = LiGetRTPVideoStats();
+            float fecOverhead = (float)rtpVideoStats->packetCountFec * 1.0 / (rtpVideoStats->packetCountVideo + rtpVideoStats->packetCountFec);
+            bool useKb = stats.videoMegabitsPerSec < 1 ? true : false;
+
             ret = snprintf(&output[offset],
                            length - offset,
-                           "Video stream: %dx%d %.2f FPS (Codec: %s)\n",
+                           "Video stream: %dx%d %.2f FPS (Codec: %s)\n"
+                           "Bitrate: %.1f %s, +%.0f%% forward error-correction\n",
                            m_VideoDecoderCtx->width,
                            m_VideoDecoderCtx->height,
                            stats.totalFps,
-                           codecString);
+                           codecString,
+                           useKb ? stats.videoMegabitsPerSec * 1000 : stats.videoMegabitsPerSec,
+                           useKb ? "kbps" : "Mbps",
+                           fecOverhead * 100.0);
             if (ret < 0 || ret >= length - offset) {
                 SDL_assert(false);
                 return;
@@ -793,12 +802,8 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
         ret = snprintf(&output[offset],
                        length - offset,
-                       "Incoming frame rate from network: %.2f FPS\n"
-                       "Decoding frame rate: %.2f FPS\n"
-                       "Rendering frame rate: %.2f FPS\n",
-                       stats.receivedFps,
-                       stats.decodedFps,
-                       stats.renderedFps);
+                       "FPS incoming/decoding/rendering: %.2f/%.2f/%.2f\n",
+                       stats.receivedFps, stats.decodedFps, stats.renderedFps);
         if (ret < 0 || ret >= length - offset) {
             SDL_assert(false);
             return;
@@ -843,9 +848,9 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
                        (float)stats.networkDroppedFrames / stats.totalFrames * 100,
                        (float)stats.pacerDroppedFrames / stats.decodedFrames * 100,
                        rttString,
-                       (float)stats.totalDecodeTime / stats.decodedFrames,
-                       (float)stats.totalPacerTime / stats.renderedFrames,
-                       (float)stats.totalRenderTime / stats.renderedFrames);
+                       (double)(stats.totalDecodeTimeUs / 1000.0) / stats.decodedFrames,
+                       (double)(stats.totalPacerTimeUs / 1000.0) / stats.renderedFrames,
+                       (double)(stats.totaldecodeTimeUs / 1000.0) / stats.renderedFrames);
         if (ret < 0 || ret >= length - offset) {
             SDL_assert(false);
             return;
@@ -862,10 +867,8 @@ void FFmpegVideoDecoder::logVideoStats(VIDEO_STATS& stats, const char* title)
         stringifyVideoStats(stats, videoStatsStr, sizeof(videoStatsStr));
 
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "%s", title);
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "----------------------------------------------------------\n%s",
-                    videoStatsStr);
+                    "\n%s\n------------------\n%s",
+                    title, videoStatsStr);
     }
 }
 
@@ -1656,7 +1659,7 @@ void FFmpegVideoDecoder::decoderThreadProc()
                     av_log_set_level(AV_LOG_INFO);
 
                     // Capture a frame timestamp to measuring pacing delay
-                    frame->pkt_dts = SDL_GetTicks();
+                    frame->pkt_dts = LiGetMicroseconds();
 
                     if (!m_FrameInfoQueue.isEmpty()) {
                         // Data buffers in the DU are not valid here!
@@ -1665,7 +1668,7 @@ void FFmpegVideoDecoder::decoderThreadProc()
                         // Count time in avcodec_send_packet() and avcodec_receive_frame()
                         // as time spent decoding. Also count time spent in the decode unit
                         // queue because that's directly caused by decoder latency.
-                        m_ActiveWndVideoStats.totalDecodeTime += LiGetMillis() - du.enqueueTimeMs;
+                        m_ActiveWndVideoStats.totalDecodeTimeUs += (LiGetMicroseconds() - du.enqueueTimeUs);
 
                         // Store the presentation time
                         frame->pts = du.presentationTimeMs;
@@ -1741,18 +1744,19 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
     }
 
     if (!m_LastFrameNumber) {
-        m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
+        m_ActiveWndVideoStats.measurementStartUs = LiGetMicroseconds();
         m_LastFrameNumber = du->frameNumber;
     }
     else {
         // Any frame number greater than m_LastFrameNumber + 1 represents a dropped frame
         m_ActiveWndVideoStats.networkDroppedFrames += du->frameNumber - (m_LastFrameNumber + 1);
         m_ActiveWndVideoStats.totalFrames += du->frameNumber - (m_LastFrameNumber + 1);
+        m_ActiveWndVideoStats.receivedVideoBytes += (uint64_t)du->fullLength;
         m_LastFrameNumber = du->frameNumber;
     }
 
     // Flip stats windows roughly every second
-    if (SDL_TICKS_PASSED(SDL_GetTicks(), m_ActiveWndVideoStats.measurementStartTimestamp + 1000)) {
+    if (LiGetMicroseconds() > m_ActiveWndVideoStats.measurementStartUs + 1000000) {
         // Update overlay stats if it's enabled
         if (Session::get()->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebug)) {
             VIDEO_STATS lastTwoWndStats = {};
@@ -1771,7 +1775,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         // Move this window into the last window slot and clear it for next window
         SDL_memcpy(&m_LastWndVideoStats, &m_ActiveWndVideoStats, sizeof(m_ActiveWndVideoStats));
         SDL_zero(m_ActiveWndVideoStats);
-        m_ActiveWndVideoStats.measurementStartTimestamp = SDL_GetTicks();
+        m_ActiveWndVideoStats.measurementStartUs = LiGetMicroseconds();
     }
 
     if (du->frameHostProcessingLatency != 0) {
@@ -1814,7 +1818,7 @@ int FFmpegVideoDecoder::submitDecodeUnit(PDECODE_UNIT du)
         m_Pkt->flags = 0;
     }
 
-    m_ActiveWndVideoStats.totalReassemblyTime += du->enqueueTimeMs - du->receiveTimeMs;
+    m_ActiveWndVideoStats.totalReassemblyTimeUs += (du->enqueueTimeUs - du->receiveTimeUs);
 
     err = avcodec_send_packet(m_VideoDecoderCtx, m_Pkt);
     if (err < 0) {

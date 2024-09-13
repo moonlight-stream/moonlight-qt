@@ -208,7 +208,7 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     CGDirectDisplayID displayIds[MAX_DISPLAYS];
     uint32_t displayCount = 0;
     CGGetActiveDisplayList(MAX_DISPLAYS, displayIds, &displayCount);
-    if (displayIndex >= displayCount) {
+    if (displayIndex >= (int)displayCount) {
         return false;
     }
 

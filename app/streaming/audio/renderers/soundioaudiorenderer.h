@@ -21,6 +21,14 @@ public:
 
     virtual AudioFormat getAudioBufferFormat();
 
+    const char * getRendererName() {
+        if (m_SoundIo != nullptr) {
+            const char *backend = soundio_backend_name(m_SoundIo->current_backend);
+            snprintf(m_Name, 12 + strlen(backend), "libsoundio/%s", backend );
+        }
+        return m_Name;
+    }
+
 private:
     int scoreChannelLayout(const struct SoundIoChannelLayout* layout, const OPUS_MULTISTREAM_CONFIGURATION* opusConfig);
 
@@ -41,4 +49,5 @@ private:
     double m_AudioPacketDuration;
     double m_Latency;
     bool m_Errored;
+    char m_Name[24];
 };
