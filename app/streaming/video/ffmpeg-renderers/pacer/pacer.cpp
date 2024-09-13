@@ -333,14 +333,14 @@ void Pacer::signalVsync()
 void Pacer::renderFrame(AVFrame* frame)
 {
     // Count time spent in Pacer's queues
-    Uint32 beforeRender = SDL_GetTicks();
-    m_VideoStats->totalPacerTime += beforeRender - frame->pkt_dts;
+    uint64_t beforeRender = LiGetMicroseconds();
+    m_VideoStats->totalPacerTimeUs += (beforeRender - (uint64_t)frame->pkt_dts);
 
     // Render it
     m_VsyncRenderer->renderFrame(frame);
-    Uint32 afterRender = SDL_GetTicks();
+    uint64_t afterRender = LiGetMicroseconds();
 
-    m_VideoStats->totalRenderTime += afterRender - beforeRender;
+    m_VideoStats->totaldecodeTimeUs += (afterRender - beforeRender);
     m_VideoStats->renderedFrames++;
     av_frame_free(&frame);
 

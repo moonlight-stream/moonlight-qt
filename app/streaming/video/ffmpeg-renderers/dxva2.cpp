@@ -866,6 +866,11 @@ void DXVA2Renderer::notifyOverlayUpdated(Overlay::OverlayType type)
         renderRect.x = 0;
         renderRect.y = 0;
     }
+    else if (type == Overlay::OverlayDebugAudio) {
+        // Top right
+        renderRect.x = m_DisplayWidth - newSurface->w;
+        renderRect.y = 0;
+    }
 
     renderRect.w = newSurface->w;
     renderRect.h = newSurface->h;

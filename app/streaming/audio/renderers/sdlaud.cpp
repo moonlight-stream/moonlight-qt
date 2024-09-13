@@ -5,7 +5,8 @@
 
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),
-      m_AudioBuffer(nullptr)
+      m_AudioBuffer(nullptr),
+      m_Name("SDL")
 {
     SDL_assert(!SDL_WasInit(SDL_INIT_AUDIO));
 
@@ -59,6 +60,8 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
         return false;
     }
 
+    setOpusConfig(opusConfig);
+
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Desired audio buffer: %u samples (%u bytes)",
                 want.samples,
@@ -69,9 +72,10 @@ bool SdlAudioRenderer::prepareForPlayback(const OPUS_MULTISTREAM_CONFIGURATION* 
                 have.samples,
                 have.size);
 
+    const char *driver = SDL_GetCurrentAudioDriver();
+    snprintf(m_Name, 5 + strlen(driver), "SDL/%s", driver);
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "SDL audio driver: %s",
-                SDL_GetCurrentAudioDriver());
+                "SDL audio driver: %s", driver);
 
     // Start playback
     SDL_PauseAudioDevice(m_AudioDevice, 0);
@@ -110,6 +114,8 @@ bool SdlAudioRenderer::submitAudio(int bytesWritten)
     // Don't queue if there's already more than 30 ms of audio data waiting
     // in Moonlight's audio queue.
     if (LiGetPendingAudioDuration() > 30) {
+        m_ActiveWndAudioStats.totalGlitches++;
+        m_ActiveWndAudioStats.droppedOverload++;
         return true;
     }
 
