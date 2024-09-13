@@ -233,22 +233,10 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
     bool ok;
     m_BindDecoderOutputTextures = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_BIND", &ok);
     if (!ok) {
-        D3D11_FEATURE_DATA_D3D11_OPTIONS2 options = {};
-        m_Device->CheckFeatureSupport(D3D11_FEATURE_D3D11_OPTIONS2, &options, sizeof(options));
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Unified memory: %s",
-                    options.UnifiedMemoryArchitecture ? "yes" : "no");
-
         // Skip copying to our own internal texture on Intel GPUs due to
         // significant performance impact of the extra copy. See:
         // https://github.com/moonlight-stream/moonlight-qt/issues/1304
-        //
-        // We also don't copy for modern UMA GPUs from other vendors to
-        // avoid performance impact due to shared system memory accesses.
-        m_BindDecoderOutputTextures =
-            adapterDesc.VendorId == 0x8086 ||
-            (featureLevel >= D3D_FEATURE_LEVEL_11_1 && options.UnifiedMemoryArchitecture);
+        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
     }
     else {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
