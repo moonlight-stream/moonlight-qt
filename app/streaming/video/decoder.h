@@ -15,21 +15,22 @@ typedef struct _VIDEO_STATS {
     uint32_t totalFrames;
     uint32_t networkDroppedFrames;
     uint32_t pacerDroppedFrames;
-    uint16_t minHostProcessingLatency;
-    uint16_t maxHostProcessingLatency;
-    uint32_t totalHostProcessingLatency;
-    uint32_t framesWithHostProcessingLatency;
-    uint32_t totalReassemblyTime;
-    uint32_t totalDecodeTime;
-    uint32_t totalPacerTime;
-    uint32_t totalRenderTime;
-    uint32_t lastRtt;
-    uint32_t lastRttVariance;
-    float totalFps;
-    float receivedFps;
-    float decodedFps;
-    float renderedFps;
-    uint32_t measurementStartTimestamp;
+    uint16_t minHostProcessingLatency;         // low-res from RTP
+    uint16_t maxHostProcessingLatency;         // low-res from RTP
+    uint32_t totalHostProcessingLatency;       // low-res from RTP
+    uint32_t framesWithHostProcessingLatency;  // low-res from RTP
+    uint64_t totalReassemblyTimeUs;            // high-res (1us)
+    uint64_t totalDecodeTimeUs;                // high-res (1us)
+    uint64_t totalPacerTimeUs;                 // high-res (1us)
+    uint64_t totalRenderTimeUs;                // high-res (1us)
+    uint32_t lastRtt;                          // low-res from enet (1ms)
+    uint32_t lastRttVariance;                  // low-res from enet (1ms)
+    double totalFps;                           // high-res
+    double receivedFps;                        // high-res
+    double decodedFps;                         // high-res
+    double renderedFps;                        // high-res
+    double videoMegabitsPerSec;                // current video bitrate in Mbps, not including FEC overhead
+    uint64_t measurementStartUs;               // microseconds
 } VIDEO_STATS, *PVIDEO_STATS;
 
 typedef struct _DECODER_PARAMETERS {
