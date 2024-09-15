@@ -413,6 +413,11 @@ void Session::getDecoderInfo(SDL_Window* window,
             isHdrSupported = decoder->isHdrSupported();
             delete decoder;
         }
+        else {
+            // We weren't compiled with an HDR-capable renderer or we don't
+            // have the required GPU driver support for any HDR renderers.
+            isHdrSupported = false;
+        }
     }
 
     // Try a regular hardware accelerated HEVC decoder now
