@@ -724,7 +724,23 @@ bool Session::initialize()
                                              m_StreamConfig.width,
                                              m_StreamConfig.height,
                                              m_StreamConfig.fps);
-        if (hevcDA != DecoderAvailability::Hardware) {
+        if (hevcDA == DecoderAvailability::None && m_Preferences->enableHdr) {
+            // Remove all 10-bit HEVC profiles
+            m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H265 & VIDEO_FORMAT_MASK_10BIT);
+
+            // Check if we have 10-bit AV1 support
+            auto av1DA = getDecoderAvailability(testWindow,
+                                                m_Preferences->videoDecoderSelection,
+                                                m_Preferences->enableYUV444 ? VIDEO_FORMAT_AV1_HIGH10_444 : VIDEO_FORMAT_AV1_MAIN10,
+                                                m_StreamConfig.width,
+                                                m_StreamConfig.height,
+                                                m_StreamConfig.fps);
+            if (av1DA == DecoderAvailability::None) {
+                // Remove all 10-bit AV1 profiles
+                m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_AV1 & VIDEO_FORMAT_MASK_10BIT);
+            }
+        }
+        else if (hevcDA != DecoderAvailability::Hardware) {
             // Deprioritize HEVC unless the user forced software decoding and enabled HDR.
             // We need HEVC in that case because we cannot support 10-bit content with H.264,
             // which would ordinarily be prioritized for software decoding performance.
@@ -994,6 +1010,9 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             emitLaunchWarning(tr("HDR is not supported using the H.264 codec."));
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_10BIT);
         }
+        else if (!(m_SupportedVideoFormats & VIDEO_FORMAT_MASK_10BIT)) {
+            emitLaunchWarning(tr("This PC's GPU doesn't support 10-bit HEVC or AV1 decoding for HDR streaming."));
+        }
         // Check that the server GPU supports HDR
         else if (m_SupportedVideoFormats.maskByServerCodecModes(m_Computer->serverCodecModeSupport & SCM_MASK_10BIT) == 0) {
             emitLaunchWarning(tr("Your host PC doesn't support HDR streaming."));
@@ -1039,9 +1058,6 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                     displayedHdrSoftwareDecodeWarning = true;
                 }
             }
-        }
-        else if (!(m_SupportedVideoFormats & VIDEO_FORMAT_MASK_10BIT)) {
-            emitLaunchWarning(tr("This PC's GPU doesn't support 10-bit HEVC or AV1 decoding for HDR streaming."));
         }
 
         // Check for compatibility between server and client codecs
