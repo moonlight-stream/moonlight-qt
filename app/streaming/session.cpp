@@ -738,9 +738,20 @@ bool Session::initialize()
             if (av1DA == DecoderAvailability::None) {
                 // Remove all 10-bit AV1 profiles
                 m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_AV1 & VIDEO_FORMAT_MASK_10BIT);
+
+                // There are no available 10-bit profiles, so reprobe for 8-bit HEVC
+                // and we'll proceed as normal for an SDR streaming scenario.
+                SDL_assert(!(m_SupportedVideoFormats & VIDEO_FORMAT_MASK_10BIT));
+                hevcDA = getDecoderAvailability(testWindow,
+                                                m_Preferences->videoDecoderSelection,
+                                                m_Preferences->enableYUV444 ? VIDEO_FORMAT_H265_REXT8_444 : VIDEO_FORMAT_H265,
+                                                m_StreamConfig.width,
+                                                m_StreamConfig.height,
+                                                m_StreamConfig.fps);
             }
         }
-        else if (hevcDA != DecoderAvailability::Hardware) {
+
+        if (hevcDA != DecoderAvailability::Hardware) {
             // Deprioritize HEVC unless the user forced software decoding and enabled HDR.
             // We need HEVC in that case because we cannot support 10-bit content with H.264,
             // which would ordinarily be prioritized for software decoding performance.
