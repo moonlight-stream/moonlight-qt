@@ -548,6 +548,11 @@ VAAPIRenderer::isDirectRenderingSupported()
                     "Using indirect rendering for 10-bit video");
         return false;
     }
+    else if (m_VideoFormat & VIDEO_FORMAT_MASK_YUV444) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using indirect rendering for YUV 4:4:4 video");
+        return false;
+    }
 
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
