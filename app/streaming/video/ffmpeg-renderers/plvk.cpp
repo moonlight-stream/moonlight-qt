@@ -62,6 +62,9 @@ static void pl_log_cb(void*, enum pl_log_level level, const char *msg)
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_WARN:
+        if (strncmp(msg, "Masking `", 9) == 0) {
+            return;
+        }
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_INFO:
