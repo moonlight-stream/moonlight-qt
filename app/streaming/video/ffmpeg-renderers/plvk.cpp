@@ -56,23 +56,23 @@ static void pl_log_cb(void*, enum pl_log_level level, const char *msg)
 {
     switch (level) {
     case PL_LOG_FATAL:
-        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogCritical(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_ERR:
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_WARN:
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_INFO:
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_DEBUG:
-        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogDebug(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     case PL_LOG_NONE:
     case PL_LOG_TRACE:
-        SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, "%s", msg);
+        SDL_LogVerbose(SDL_LOG_CATEGORY_APPLICATION, "libplacebo: %s", msg);
         break;
     }
 }
