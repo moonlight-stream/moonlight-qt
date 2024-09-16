@@ -422,27 +422,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="626"/>
+        <location filename="../main.cpp" line="620"/>
         <source>&amp;Yes</source>
         <translation>예(&amp;Y)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="627"/>
+        <location filename="../main.cpp" line="621"/>
         <source>&amp;No</source>
         <translation>아니요(&amp;N)</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="628"/>
+        <location filename="../main.cpp" line="622"/>
         <source>OK</source>
         <translation>확인</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="629"/>
+        <location filename="../main.cpp" line="623"/>
         <source>Help</source>
         <translation>도움말</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="630"/>
+        <location filename="../main.cpp" line="624"/>
         <source>Cancel</source>
         <translation>취소</translation>
     </message>
@@ -503,12 +503,12 @@
         <translation>에러 코드: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="899"/>
+        <location filename="../streaming/session.cpp" line="931"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>%1의 GeForce Experience 버전은 이 빌드의 Moonlight에서 지원되지 않습니다. %1에서 스트리밍하려면 Moonlight를 업데이트 해야 합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="904"/>
+        <location filename="../streaming/session.cpp" line="936"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>원격 데스크톱 마우스 모드를 활성화하도록 선택하면 게임에서 문제가 발생할 수 있습니다.</translation>
     </message>
@@ -517,148 +517,148 @@
         <translation type="vanished">HDR는 소프트웨어 디코딩에서 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="908"/>
+        <location filename="../streaming/session.cpp" line="940"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>소프트웨어 디코딩을 강제하도록 선택하면 스트리밍 성능이 저하 될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="938"/>
+        <location filename="../streaming/session.cpp" line="970"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>호스트 PC가 HEVC 인코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="955"/>
+        <location filename="../streaming/session.cpp" line="987"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>HEVC 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="914"/>
+        <location filename="../streaming/session.cpp" line="946"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>호스트 소프트웨어 또는 GPU가 AV1 인코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="931"/>
+        <location filename="../streaming/session.cpp" line="963"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>AV1 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="994"/>
+        <location filename="../streaming/session.cpp" line="1029"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>호스트 PC가 HDR 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="989"/>
+        <location filename="../streaming/session.cpp" line="1021"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>HDR는 H.264 코덱 사용 시 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1009"/>
+        <location filename="../streaming/session.cpp" line="1044"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>이 PC의 GPU는 HDR 스트리밍을 위한 AV1 Main10 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1039"/>
+        <location filename="../streaming/session.cpp" line="1025"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>이 PC의 GPU는 HDR 스트리밍을 위한 10-bit HEVC 또는 AV1 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1045"/>
+        <location filename="../streaming/session.cpp" line="1077"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>호스트 PC와 클라이언트 PC는 동일한 HDR 비디오 코덱을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1138"/>
+        <location filename="../streaming/session.cpp" line="1170"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>4K 이상의 비디오 해상도는 H.264 코덱에서 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1522"/>
+        <location filename="../streaming/session.cpp" line="1554"/>
         <source>Host returned error: %1</source>
         <translation>호스트가 오류를 반환하였습니다: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="969"/>
+        <location filename="../streaming/session.cpp" line="1001"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>H.264 사용을 강제하도록 선택하였으나 GPU 미지원으로 인해 소프트웨어 디코딩을 사용 중입니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="979"/>
+        <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>호스트 PC와 클라이언트 PC가 동일한 비디오 코덱을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="982"/>
+        <location filename="../streaming/session.cpp" line="1014"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>클라이언트 GPU가 H.264 디코딩을 지원하지 않습니다. 이로 인해 스트리밍 성능이 저하될 수 있습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1015"/>
-        <location filename="../streaming/session.cpp" line="1033"/>
+        <location filename="../streaming/session.cpp" line="1050"/>
+        <location filename="../streaming/session.cpp" line="1068"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1027"/>
+        <location filename="../streaming/session.cpp" line="1062"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>이 PC의 GPU는 HDR 스트리밍을 위한 HEVC Main10 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1052"/>
+        <location filename="../streaming/session.cpp" line="1084"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1060"/>
+        <location filename="../streaming/session.cpp" line="1092"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1075"/>
+        <location filename="../streaming/session.cpp" line="1107"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1081"/>
+        <location filename="../streaming/session.cpp" line="1113"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1090"/>
+        <location filename="../streaming/session.cpp" line="1122"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>4K 스트리밍에는 GeForce Experience 3.0 이상이 필요합니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1105"/>
+        <location filename="../streaming/session.cpp" line="1137"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>선택한 서라운드 사운드 설정은 현재 오디오 장치에서 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1111"/>
+        <location filename="../streaming/session.cpp" line="1143"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>오디오 장치를 열지 못했습니다. 이 세션에서는 오디오를 사용할 수 없습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1116"/>
+        <location filename="../streaming/session.cpp" line="1148"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>연결된 게임 패드에 매핑이 없으며 사용할 수 없습니다. 이 문제를 해결하려면 Moonlight 도움말을 방문하십시오.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1134"/>
+        <location filename="../streaming/session.cpp" line="1166"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>호스트 PC의 GPU가 4K 이상의 비디오 해상도 스트리밍을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1152"/>
+        <location filename="../streaming/session.cpp" line="1184"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>이 PC의 GPU가 하드웨어 디코딩을 지원하지 않아 하드웨어 디코딩을 강제하도록 선택하였으나 지원되지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1155"/>
+        <location filename="../streaming/session.cpp" line="1187"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>선택한 코덱과 하드웨어 디코딩을 강제하도록 선택한 설정이 호환되지 않습니다. 이 PC의 GPU는 선택한 코덱의 디코딩을 지원하지 않습니다.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2199"/>
+        <location filename="../streaming/session.cpp" line="2219"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>비디오 디코더를 초기화 할 수 없습니다. 스트리밍 설정을 확인하고 다시 시도하십시오.</translation>
     </message>

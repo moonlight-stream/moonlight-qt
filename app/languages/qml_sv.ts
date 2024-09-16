@@ -422,27 +422,27 @@
 <context>
     <name>QPlatformTheme</name>
     <message>
-        <location filename="../main.cpp" line="626"/>
+        <location filename="../main.cpp" line="620"/>
         <source>&amp;Yes</source>
         <translation>&amp;Ja</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="627"/>
+        <location filename="../main.cpp" line="621"/>
         <source>&amp;No</source>
         <translation>&amp;Nej</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="628"/>
+        <location filename="../main.cpp" line="622"/>
         <source>OK</source>
         <translation>Okej</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="629"/>
+        <location filename="../main.cpp" line="623"/>
         <source>Help</source>
         <translation>Hjälp</translation>
     </message>
     <message>
-        <location filename="../main.cpp" line="630"/>
+        <location filename="../main.cpp" line="624"/>
         <source>Cancel</source>
         <translation>Avbryt</translation>
     </message>
@@ -503,12 +503,12 @@
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="899"/>
+        <location filename="../streaming/session.cpp" line="931"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
         <translation>Versionen av GeForce Experience på %1 stöds inte av den här versionen av Moonlight. Du måste uppdatera Moonlight för att kunna strömma från %1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="904"/>
+        <location filename="../streaming/session.cpp" line="936"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
         <translation>Om du väljer att sätta på musläget för fjärrskrivbord kan det orsaka beskymmer i spel.</translation>
     </message>
@@ -517,148 +517,148 @@
         <translation type="vanished">HDR stöds inte med mjukvaruavkodning.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="908"/>
+        <location filename="../streaming/session.cpp" line="940"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
         <translation>Om du väljer inställningar för att tvinga fram mjukvaruavkodning kan det leda till dålig strömningsprestanda.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="938"/>
+        <location filename="../streaming/session.cpp" line="970"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
         <translation>Din värddator har inte stöd för kodning av HEVC.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="955"/>
+        <location filename="../streaming/session.cpp" line="987"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
         <translation>Användning av mjukvaruavkodning på grund av ditt val att tvinga fram HEVC utan GPU-stöd. Detta kan leda till dålig strömningsprestanda.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="914"/>
+        <location filename="../streaming/session.cpp" line="946"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
         <translation>Din värdprogramvara eller GPU stöder inte kodning AV1.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="931"/>
+        <location filename="../streaming/session.cpp" line="963"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
         <translation>Använder programvaruavkodning på grund av ditt val för att tvinga AV1 utan GPU-stöd. Detta kan orsaka dålig streamingprestanda.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="994"/>
+        <location filename="../streaming/session.cpp" line="1029"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
         <translation>Din värddator har inte stöd för strömning av HDR.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="989"/>
+        <location filename="../streaming/session.cpp" line="1021"/>
         <source>HDR is not supported using the H.264 codec.</source>
         <translation>HDR stöds inte med H.264-codec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1009"/>
+        <location filename="../streaming/session.cpp" line="1044"/>
         <source>This PC&apos;s GPU doesn&apos;t support AV1 Main10 decoding for HDR streaming.</source>
         <translation>Denna PC:s GPU stöder inte AV1 Main10-avkodning för HDR-streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1039"/>
+        <location filename="../streaming/session.cpp" line="1025"/>
         <source>This PC&apos;s GPU doesn&apos;t support 10-bit HEVC or AV1 decoding for HDR streaming.</source>
         <translation>Denna PC:s GPU stöder inte 10-bitars HEVC eller AV1-avkodning för HDR-streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1045"/>
+        <location filename="../streaming/session.cpp" line="1077"/>
         <source>Your host PC and client PC don&apos;t support the same HDR video codecs.</source>
         <translation>Din värddator och klientdator har inte stöd för samma HDR-videocodec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1138"/>
+        <location filename="../streaming/session.cpp" line="1170"/>
         <source>Video resolutions over 4K are not supported by the H.264 codec.</source>
         <translation>Videoupplösningar över 4K stöds inte av H.264-codec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1522"/>
+        <location filename="../streaming/session.cpp" line="1554"/>
         <source>Host returned error: %1</source>
         <translation>Värden returnerade fel: %1</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="969"/>
+        <location filename="../streaming/session.cpp" line="1001"/>
         <source>Using software decoding due to your selection to force H.264 without GPU support. This may cause poor streaming performance.</source>
         <translation>Användning av mjukvaruavkodning på grund av att du valt att tvinga fram H.264 utan GPU-stöd. Detta kan leda till dålig strömningsprestanda.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="979"/>
+        <location filename="../streaming/session.cpp" line="1011"/>
         <source>Your host PC and client PC don&apos;t support the same video codecs. This may cause poor streaming performance.</source>
         <translation>Värddatorn och klientdatorn har inte stöd för samma video codecs. Detta kan orsaka dålig strömningsprestanda.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="982"/>
+        <location filename="../streaming/session.cpp" line="1014"/>
         <source>Your client GPU doesn&apos;t support H.264 decoding. This may cause poor streaming performance.</source>
         <translation>Klientens GPU stöder inte H.264-avkodning. Detta kan leda till dålig strömingsprestanda.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1015"/>
-        <location filename="../streaming/session.cpp" line="1033"/>
+        <location filename="../streaming/session.cpp" line="1050"/>
+        <location filename="../streaming/session.cpp" line="1068"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1027"/>
+        <location filename="../streaming/session.cpp" line="1062"/>
         <source>This PC&apos;s GPU doesn&apos;t support HEVC Main10 decoding for HDR streaming.</source>
         <translation>Den här datorns GPU stöder inte HEVC Main10-avkodning för HDR-strömning.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1052"/>
+        <location filename="../streaming/session.cpp" line="1084"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1060"/>
+        <location filename="../streaming/session.cpp" line="1092"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1075"/>
+        <location filename="../streaming/session.cpp" line="1107"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1081"/>
+        <location filename="../streaming/session.cpp" line="1113"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1090"/>
+        <location filename="../streaming/session.cpp" line="1122"/>
         <source>GeForce Experience 3.0 or higher is required for 4K streaming.</source>
         <translation>GeForce Experience 3.0 eller högre krävs för 4K-streaming.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1105"/>
+        <location filename="../streaming/session.cpp" line="1137"/>
         <source>Your selected surround sound setting is not supported by the current audio device.</source>
         <translation>Den valda surroundljudsinställningen stöds inte av den aktuella ljudenheten.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1111"/>
+        <location filename="../streaming/session.cpp" line="1143"/>
         <source>Failed to open audio device. Audio will be unavailable during this session.</source>
         <translation>Misslyckades med att öppna en ljudenhet. Ljudet kommer inte att vara tillgängligt under den här sessionen.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1116"/>
+        <location filename="../streaming/session.cpp" line="1148"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
         <translation>En ansluten gamepad har ingen mappning och kan inte användas. Besök Moonlight-hjälpen för att lösa detta.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1134"/>
+        <location filename="../streaming/session.cpp" line="1166"/>
         <source>Your host PC&apos;s GPU doesn&apos;t support streaming video resolutions over 4K.</source>
         <translation>Värddatorns grafikprocessor har inte stöd för strömmande videoupplösningar över 4K.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1152"/>
+        <location filename="../streaming/session.cpp" line="1184"/>
         <source>Your selection to force hardware decoding cannot be satisfied due to missing hardware decoding support on this PC&apos;s GPU.</source>
         <translation>Ditt val att tvinga fram hårdvaruavkodning kan inte uppfyllas på grund av att stöd för hårdvaruavkodning saknas på den här datorns GPU.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="1155"/>
+        <location filename="../streaming/session.cpp" line="1187"/>
         <source>Your codec selection and force hardware decoding setting are not compatible. This PC&apos;s GPU lacks support for decoding your chosen codec.</source>
         <translation>Ditt val av codec och inställningen för maskinvaruavkodning är inte förenliga med varandra. Den här datorns GPU saknar stöd för avkodning av den valda codec.</translation>
     </message>
     <message>
-        <location filename="../streaming/session.cpp" line="2199"/>
+        <location filename="../streaming/session.cpp" line="2219"/>
         <source>Unable to initialize video decoder. Please check your streaming settings and try again.</source>
         <translation>Det går inte att börja videoavkodningen. Kontrollera dina strömningsinställningar och försök igen.</translation>
     </message>
