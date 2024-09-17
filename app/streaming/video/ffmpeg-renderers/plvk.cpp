@@ -661,11 +661,16 @@ void PlVkRenderer::waitToRender()
         return;
     }
 
+#ifndef Q_OS_WIN32
     // With libplacebo's Vulkan backend, all swap_buffers does is wait for queued
     // presents to finish. This happens to be exactly what we want to do here, since
     // it lets us wait to select a queued frame for rendering until we know that we
     // can present without blocking in renderFrame().
+    //
+    // NB: This seems to cause performance problems with the Windows display stack
+    // (particularly on Nvidia) so we will only do this for non-Windows platforms.
     pl_swapchain_swap_buffers(m_Swapchain);
+#endif
 
     // Handle the swapchain being resized
     int vkDrawableW, vkDrawableH;
@@ -817,6 +822,12 @@ void PlVkRenderer::renderFrame(AVFrame *frame)
         SDL_PushEvent(&event);
         goto UnmapExit;
     }
+
+#ifdef Q_OS_WIN32
+    // On Windows, we swap buffers here instead of waitToRender()
+    // to avoid some performance problems on Nvidia GPUs.
+    pl_swapchain_swap_buffers(m_Swapchain);
+#endif
 
 UnmapExit:
     // Delete any textures that need to be destroyed
