@@ -1153,7 +1153,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>Включить YUV 4:4:4 (Эксперементальна опция)</translation>
+        <translation>Включить YUV 4:4:4 (Эксперементальная опция)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>
