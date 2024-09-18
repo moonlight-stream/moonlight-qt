@@ -1727,28 +1727,29 @@ void Session::exec(QWindow* qtWindow)
 #ifdef Q_OS_WIN32
 HHOOK g_hook = NULL;
 HWND g_appWindow = NULL;
-
 // Hook procedure
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
-    if (nCode == HC_ACTION) {
-        KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
+    if (nCode != HC_ACTION) {
+        return CallNextHookEx(g_hook, nCode, wParam, lParam);
+    }
+    KBDLLHOOKSTRUCT* pKeyBoard = (KBDLLHOOKSTRUCT*)lParam;
 
-        if (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN || wParam == WM_SYSKEYUP || wParam == WM_KEYUP) {
-            // Check for Alt+Tab combination
-            if (pKeyBoard->vkCode == VK_TAB && (GetAsyncKeyState(VK_MENU) & 0x8000)) {
-                HWND foregroundWindow = GetForegroundWindow();
-                if (foregroundWindow == g_appWindow) {
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Alt+Tab intercepted and blocked!");
-                    char modifiers = 0;
-                    modifiers |= MODIFIER_ALT;
-                    short keyCode = 0x09;
-                    LiSendKeyboardEvent(0x8000 | keyCode,
-                                        (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN) ? KEY_ACTION_DOWN : KEY_ACTION_UP,
-                                        modifiers);
-                    return 1; // Block the key
-                }
-            }
-        }
+    HWND foregroundWindow = GetForegroundWindow();
+    bool isOurAppActive = (foregroundWindow == g_appWindow);
+
+    if (!isOurAppActive) {
+        return CallNextHookEx(g_hook, nCode, wParam, lParam);
+    }
+    // Check for Alt+Tab combination
+    if (pKeyBoard->vkCode == VK_TAB && (GetAsyncKeyState(VK_MENU) & 0x8000)) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Alt+Tab intercepted and blocked!: %d", wParam);
+        char modifiers = 0;
+        modifiers |= MODIFIER_ALT;
+        short keyCode = 0x09;
+        LiSendKeyboardEvent(0x8000 | keyCode,
+                            (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN) ? KEY_ACTION_DOWN : KEY_ACTION_UP,
+                            modifiers);
+        return 1; // Block the key
     }
     return CallNextHookEx(g_hook, nCode, wParam, lParam);
 }
