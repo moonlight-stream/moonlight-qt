@@ -56,7 +56,7 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished">PCとの接続を確立しています...</translation>
+        <translation>PCとの接続を確立しています...</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished">オンライン</translation>
+        <translation>オンライン</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished">オフライン</translation>
+        <translation>オフライン</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -351,12 +351,12 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="586"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation>コンピュータのPINが一致しませんでした。再度お試しください。</translation>
+        <translation>PCからのPINが一致しませんでした。再度お試しください。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="590"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished">ホストPCで前回のセッションが実行している間はペアリングできません。実行中のゲームを終了するかホストPCを再起動した後に、再度ペアリングしてください。</translation>
+        <translation>ホストPCで前回のセッションが実行している間はペアリングできません。実行中のゲームを終了するか、ホストPCを再起動した後に再度ペアリングしてください。</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="593"/>
@@ -595,7 +595,7 @@
         <location filename="../streaming/session.cpp" line="1050"/>
         <location filename="../streaming/session.cpp" line="1068"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>GPUサポートなしでHDRを強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1062"/>
@@ -605,22 +605,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="1084"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストPCがYUV 4:4:4ストリーミングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1092"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>ホストPCが選択されたビデオコーデックでのYUV 4:4:4ストリーミングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1107"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>GPUサポートなしでYUV 4:4:4を強制する選択をしたため、ソフトウェアデコーディングを使用しています。これによりストリーミングのパフォーマンスが低下する可能性があります。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1113"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>このPCのGPUは選択されたビデオコーデックでのYUV 4:4:4ストリーミングをサポートしていません。</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1122"/>
@@ -1153,27 +1153,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4を有効にする（実験的）</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>デスクトップやテキスト中心のゲームのストリーミングには適していますが、動きの速いゲームには推奨されません。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1633"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4は、このPCではサポートされていません。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1639"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>ビットレートの制限を解除する（実験的）</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1652"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Sunshineホストで非常に高いビデオビットレートを使用できるようにします。有線LAN接続でのストリーミング時のみ使用すべきです。</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1658"/>
