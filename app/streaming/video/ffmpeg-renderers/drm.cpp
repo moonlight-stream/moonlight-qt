@@ -166,6 +166,7 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_ColorspaceProp(nullptr),
       m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
+      m_OutputRect{},
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
 #ifdef HAVE_EGL
@@ -296,6 +297,30 @@ void DrmRenderer::prepareToRender()
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "SDL_CreateRenderer() failed: %s",
                      SDL_GetError());
+    }
+
+    // Set the output rect to match the new CRTC size after modesetting
+    m_OutputRect.x = m_OutputRect.y = 0;
+    drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, m_CrtcId);
+    if (crtc != nullptr) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "CRTC size after modesetting: %ux%u",
+                    crtc->width,
+                    crtc->height);
+        m_OutputRect.w = crtc->width;
+        m_OutputRect.h = crtc->height;
+        drmModeFreeCrtc(crtc);
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmModeGetCrtc() failed: %d",
+                     errno);
+
+        SDL_GetWindowSize(m_Window, &m_OutputRect.w, &m_OutputRect.h);
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Guessing CRTC is window size: %dx%d",
+                    m_OutputRect.w,
+                    m_OutputRect.h);
     }
 }
 
@@ -523,12 +548,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     int crtcIndex = -1;
     for (int i = 0; i < resources->count_crtcs; i++) {
         if (resources->crtcs[i] == m_CrtcId) {
-            drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, resources->crtcs[i]);
             crtcIndex = i;
-            m_OutputRect.x = m_OutputRect.y = 0;
-            m_OutputRect.w = crtc->width;
-            m_OutputRect.h = crtc->height;
-            drmModeFreeCrtc(crtc);
             break;
         }
     }
@@ -1239,6 +1259,8 @@ void DrmRenderer::renderFrame(AVFrame* frame)
 {
     int err;
     SDL_Rect src, dst;
+
+    SDL_assert(m_OutputRect.w > 0 && m_OutputRect.h > 0);
 
     src.x = src.y = 0;
     src.w = frame->width;
