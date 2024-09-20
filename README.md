@@ -93,4 +93,6 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 2. Write code
 3. Send Pull Requests
 
+[![Open in DevZero](https://assets.devzero.io/open-in-devzero.svg)](https://www.devzero.io/dashboard/recipes/new?repo-url=https://github.com/moonlight-stream/moonlight-qt)
+
 Check out our [website](https://moonlight-stream.org) for project links and information.
