@@ -1,6 +1,7 @@
 #include "streamutils.h"
 
 #include <Qt>
+#include <QDir>
 
 #ifdef Q_OS_DARWIN
 #include <ApplicationServices/ApplicationServices.h>
@@ -8,6 +9,13 @@
 
 #ifdef Q_OS_WINDOWS
 #include <Windows.h>
+#endif
+
+#ifdef Q_OS_UNIX
+#include <unistd.h>
+#include <fcntl.h>
+
+#include <SDL_syswm.h>
 #endif
 
 #ifdef Q_OS_LINUX
@@ -306,3 +314,90 @@ bool StreamUtils::getNativeDesktopMode(int displayIndex, SDL_DisplayMode* mode, 
     return true;
 }
 
+int StreamUtils::getDrmFdForWindow(SDL_Window* window, bool* mustClose)
+{
+    *mustClose = false;
+
+#if defined(SDL_VIDEO_DRIVER_KMSDRM) && SDL_VERSION_ATLEAST(2, 0, 15)
+    SDL_SysWMinfo info;
+    SDL_VERSION(&info.version);
+    if (!SDL_GetWindowWMInfo(window, &info)) {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "SDL_GetWindowWMInfo() failed: %s",
+                     SDL_GetError());
+        return -1;
+    }
+
+    if (info.subsystem == SDL_SYSWM_KMSDRM) {
+        // If SDL has an FD, share that
+        if (info.info.kmsdrm.drm_fd >= 0) {
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Sharing DRM FD with SDL");
+            return info.info.kmsdrm.drm_fd;
+        }
+        else {
+            char path[128];
+            snprintf(path, sizeof(path), "/dev/dri/card%u", info.info.kmsdrm.dev_index);
+            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                        "Opening DRM FD from SDL by path: %s",
+                        path);
+            int fd = open(path, O_RDWR | O_CLOEXEC);
+            if (fd >= 0) {
+                *mustClose = true;
+            }
+            return fd;
+        }
+    }
+#endif
+
+    return -1;
+}
+
+int StreamUtils::getDrmFd(bool preferRenderNode)
+{
+#ifdef Q_OS_UNIX
+    const char* userDevice = SDL_getenv("DRM_DEV");
+    if (userDevice != nullptr) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Opening user-specified DRM device: %s",
+                    userDevice);
+
+        return open(userDevice, O_RDWR | O_CLOEXEC);
+    }
+    else {
+        QDir driDir("/dev/dri");
+        int fd;
+
+        // We have to explicitly ask for devices to be returned
+        driDir.setFilter(QDir::Files | QDir::System);
+
+        if (preferRenderNode) {
+            // Try a render node first since we aren't using DRM for output in this codepath
+            for (QFileInfo& node : driDir.entryInfoList(QStringList("renderD*"))) {
+                QByteArray absolutePath = node.absoluteFilePath().toUtf8();
+                fd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
+                if (fd >= 0) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                                "Opened DRM render node: %s",
+                                absolutePath.constData());
+                    return fd;
+                }
+            }
+        }
+
+        // If that fails, try to use a primary node and hope for the best
+        for (QFileInfo& node : driDir.entryInfoList(QStringList("card*"))) {
+            QByteArray absolutePath = node.absoluteFilePath().toUtf8();
+            fd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
+            if (fd >= 0) {
+                SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                            "Opened DRM primary node: %s",
+                            absolutePath.constData());
+                return fd;
+            }
+        }
+    }
+#endif
+
+    return -1;
+}

@@ -36,4 +36,10 @@ public:
 
     static
     bool hasFastAes();
+
+    static
+    int getDrmFdForWindow(SDL_Window* window, bool* needsClose);
+
+    static
+    int getDrmFd(bool preferRenderNode);
 };
