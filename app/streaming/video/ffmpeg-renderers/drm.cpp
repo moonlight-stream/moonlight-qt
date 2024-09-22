@@ -141,7 +141,7 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_HwContext(nullptr),
       m_DrmFd(-1),
       m_DrmIsMaster(false),
-      m_SdlOwnsDrmFd(false),
+      m_MustCloseDrmFd(false),
       m_SupportsDirectRendering(false),
       m_VideoFormat(0),
       m_ConnectorId(0),
@@ -225,7 +225,7 @@ DrmRenderer::~DrmRenderer()
         av_buffer_unref(&m_HwContext);
     }
 
-    if (!m_SdlOwnsDrmFd && m_DrmFd != -1) {
+    if (m_MustCloseDrmFd && m_DrmFd != -1) {
         close(m_DrmFd);
     }
 }
@@ -346,7 +346,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
     // Try to get the FD that we're sharing with SDL
-    m_DrmFd = StreamUtils::getDrmFdForWindow(m_Window, &m_SdlOwnsDrmFd);
+    m_DrmFd = StreamUtils::getDrmFdForWindow(m_Window, &m_MustCloseDrmFd);
     if (m_DrmFd >= 0) {
         // If we got a DRM FD for the window, we can render to it
         m_DrmIsMaster = true;
@@ -354,17 +354,19 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
         // If we just opened a new FD, let's drop master on it
         // so SDL can take master for Vulkan rendering. We'll
         // regrab master later if we end up direct rendering.
-        if (!m_SdlOwnsDrmFd) {
+        if (m_MustCloseDrmFd) {
             drmDropMaster(m_DrmFd);
         }
     }
     else {
         // Try to open any DRM render node
         m_DrmFd = StreamUtils::getDrmFd(true);
-
-        // Drop master in case we somehow got a primary node
         if (m_DrmFd >= 0) {
+            // Drop master in case we somehow got a primary node
             drmDropMaster(m_DrmFd);
+
+            // This is a new FD that we must close
+            m_MustCloseDrmFd = true;
         }
     }
 
