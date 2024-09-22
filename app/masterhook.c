@@ -36,8 +36,8 @@
 int g_QtDrmMasterFd = -1;
 struct stat g_DrmMasterStat;
 
-// The DRM master FD created for SDL
-int g_SdlDrmMasterFd = -1;
+bool removeSdlFd(int fd);
+bool createSdlFd();
 
 int drmIsMaster(int fd)
 {
@@ -111,23 +111,21 @@ int open64(const char *pathname, int flags, ...)
 // after SDL closes its DRM FD.
 int close(int fd)
 {
+    // Remove this entry from the SDL FD table
+    bool lastSdlFd = removeSdlFd(fd);
+
     // Call the real thing
     int ret = ((typeof(close)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd);
-    if (ret == 0) {
-        // If we just closed the SDL DRM master FD, restore master
-        // to the Qt DRM FD. This works because the Qt DRM master FD
-        // was master once before, so we can set it as master again
-        // using drmSetMaster() without CAP_SYS_ADMIN.
-        if (g_SdlDrmMasterFd != -1 && fd == g_SdlDrmMasterFd) {
-            if (drmSetMaster(g_QtDrmMasterFd) < 0) {
-                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                             "Failed to restore master to Qt DRM FD: %d",
-                             errno);
-            }
 
-            g_SdlDrmMasterFd = -1;
+    // If we closed the last SDL FD, restore master to the Qt FD
+    if (ret == 0 && lastSdlFd) {
+        if (drmSetMaster(g_QtDrmMasterFd) < 0) {
+            SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                         "Failed to restore master to Qt DRM FD: %d",
+                         errno);
         }
     }
+
     return ret;
 }
 
