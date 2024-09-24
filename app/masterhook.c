@@ -36,8 +36,12 @@
 int g_QtDrmMasterFd = -1;
 struct stat g_DrmMasterStat;
 
+// Last CRTC state for us to restore later
+drmModeCrtcPtr g_QtCrtcState;
+uint32_t* g_QtCrtcConnectors;
+int g_QtCrtcConnectorCount;
+
 bool removeSdlFd(int fd);
-bool createSdlFd();
 
 int drmIsMaster(int fd)
 {
@@ -62,7 +66,16 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     }
 
     // Call into the real thing
-    return ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtcId, bufferId, x, y, connectors, count, mode);
+    int err = ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtcId, bufferId, x, y, connectors, count, mode);
+    if (err == 0 && fd == g_QtDrmMasterFd) {
+        // Store the CRTC configuration so we can restore it later
+        drmModeFreeCrtc(g_QtCrtcState);
+        g_QtCrtcState = drmModeGetCrtc(fd, crtcId);
+        g_QtCrtcConnectors = calloc(count, sizeof(*g_QtCrtcConnectors));
+        memcpy(g_QtCrtcConnectors, connectors, count * sizeof(*connectors));
+        g_QtCrtcConnectorCount = count;
+    }
+    return err;
 }
 
 // This hook will handle atomic DRM rendering
@@ -123,6 +136,24 @@ int close(int fd)
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                          "Failed to restore master to Qt DRM FD: %d",
                          errno);
+        }
+
+        // Reset the CRTC state to how Qt configured it
+        if (g_QtCrtcState) {
+            int err = ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, "drmModeSetCrtc"))(g_QtDrmMasterFd,
+                                                                                    g_QtCrtcState->crtc_id,
+                                                                                    g_QtCrtcState->buffer_id,
+                                                                                    g_QtCrtcState->x,
+                                                                                    g_QtCrtcState->y,
+                                                                                    g_QtCrtcConnectors,
+                                                                                    g_QtCrtcConnectorCount,
+                                                                                    g_QtCrtcState->mode_valid ?
+                                                                                          &g_QtCrtcState->mode : NULL);
+            if (err < 0) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "Failed to restore CRTC state to Qt DRM FD: %d",
+                             errno);
+            }
         }
     }
 

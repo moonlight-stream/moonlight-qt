@@ -149,9 +149,15 @@ int openHook(const char *funcname, const char *pathname, int flags, va_list va)
                     }
                 }
 
-                // Insert the FD into the table
-                g_SdlDrmMasterFds[freeFdIndex] = fd;
-                g_SdlDrmMasterFdCount++;
+                if (fd >= 0) {
+                    // Start with DRM master on the new FD
+                    drmSetMaster(fd);
+
+                    // Insert the FD into the table
+                    g_SdlDrmMasterFds[freeFdIndex] = fd;
+                    g_SdlDrmMasterFdCount++;
+                }
+
                 SDL_AtomicUnlock(&g_FdTableLock);
             }
         }
