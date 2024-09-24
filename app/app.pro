@@ -156,7 +156,7 @@ win32:!winrt {
 }
 macx {
     !disable-prebuilts {
-        LIBS += -lssl -lcrypto -lavcodec.61 -lavutil.59 -lswscale.8 -lopus -framework SDL2 -framework SDL2_ttf
+        LIBS += -lssl.3 -lcrypto.3 -lavcodec.61 -lavutil.59 -lswscale.8 -lopus -framework SDL2 -framework SDL2_ttf
         CONFIG += discord-rpc
     }
 
@@ -486,7 +486,8 @@ TRANSLATIONS += \
     languages/qml_cs.ts \
     languages/qml_he.ts \
     languages/qml_ckb.ts \
-    languages/qml_lt.ts
+    languages/qml_lt.ts \
+    languages/qml_et.ts
 
 # Additional import path used to resolve QML modules in Qt Creator's code model
 QML_IMPORT_PATH =

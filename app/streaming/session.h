@@ -260,6 +260,7 @@ private:
     SdlInputHandler* m_InputHandler;
     int m_MouseEmulationRefCount;
     int m_FlushingWindowEventsRef;
+    QList<QString> m_LaunchWarnings;
 
     bool m_AsyncConnectionSuccess;
     int m_PortTestResults;

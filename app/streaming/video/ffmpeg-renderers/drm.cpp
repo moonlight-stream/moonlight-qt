@@ -72,15 +72,6 @@ extern "C" {
 
 #include <Limelight.h>
 
-// HACK: Avoid including X11 headers which conflict with QDir
-#ifdef SDL_VIDEO_DRIVER_X11
-#undef SDL_VIDEO_DRIVER_X11
-#endif
-
-#include <SDL_syswm.h>
-
-#include <QDir>
-
 #include <map>
 
 // This map is used to lookup characteristics of a given DRM format
@@ -93,8 +84,10 @@ static const std::map<uint32_t, AVPixelFormat> k_DrmToAvFormatMap
     {DRM_FORMAT_NV21, AV_PIX_FMT_NV21},
     {DRM_FORMAT_P010, AV_PIX_FMT_P010LE},
     {DRM_FORMAT_YUV420, AV_PIX_FMT_YUV420P},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 27, 100)
     {DRM_FORMAT_NV24, AV_PIX_FMT_NV24},
     {DRM_FORMAT_NV42, AV_PIX_FMT_NV42},
+#endif
     {DRM_FORMAT_YUV444, AV_PIX_FMT_YUV444P},
     {DRM_FORMAT_Q410, AV_PIX_FMT_YUV444P10LE},
 #if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 34, 100)
@@ -111,7 +104,9 @@ static const std::map<uint32_t, AVPixelFormat> k_DrmToAvFormatMap
     {DRM_FORMAT_NA12, AV_PIX_FMT_P010LE},
     {DRM_FORMAT_NV15, AV_PIX_FMT_P010LE},
     {DRM_FORMAT_P030, AV_PIX_FMT_P010LE},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(57, 9, 100)
     {DRM_FORMAT_NV30, AV_PIX_FMT_P410LE},
+#endif
 };
 
 // This map is used to determine the required DRM format for dumb buffer upload.
@@ -124,8 +119,10 @@ static const std::map<AVPixelFormat, uint32_t> k_AvToDrmFormatMap
     {AV_PIX_FMT_P010LE, DRM_FORMAT_P010},
     {AV_PIX_FMT_YUV420P, DRM_FORMAT_YUV420},
     {AV_PIX_FMT_YUVJ420P, DRM_FORMAT_YUV420},
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(56, 27, 100)
     {AV_PIX_FMT_NV24, DRM_FORMAT_NV24},
     {AV_PIX_FMT_NV42, DRM_FORMAT_NV42},
+#endif
     {AV_PIX_FMT_YUV444P, DRM_FORMAT_YUV444},
     {AV_PIX_FMT_YUVJ444P, DRM_FORMAT_YUV444},
     {AV_PIX_FMT_YUV444P10LE, DRM_FORMAT_Q410},
@@ -143,7 +140,8 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_HwDeviceType(hwDeviceType),
       m_HwContext(nullptr),
       m_DrmFd(-1),
-      m_SdlOwnsDrmFd(false),
+      m_DrmIsMaster(false),
+      m_MustCloseDrmFd(false),
       m_SupportsDirectRendering(false),
       m_VideoFormat(0),
       m_ConnectorId(0),
@@ -160,6 +158,7 @@ DrmRenderer::DrmRenderer(AVHWDeviceType hwDeviceType, IFFmpegRenderer *backendRe
       m_ColorspaceProp(nullptr),
       m_Version(nullptr),
       m_HdrOutputMetadataBlobId(0),
+      m_OutputRect{},
       m_SwFrameMapper(this),
       m_CurrentSwFrameIdx(0)
 #ifdef HAVE_EGL
@@ -226,7 +225,7 @@ DrmRenderer::~DrmRenderer()
         av_buffer_unref(&m_HwContext);
     }
 
-    if (!m_SdlOwnsDrmFd && m_DrmFd != -1) {
+    if (m_MustCloseDrmFd && m_DrmFd != -1) {
         close(m_DrmFd);
     }
 }
@@ -258,6 +257,9 @@ bool DrmRenderer::prepareDecoderContext(AVCodecContext* context, AVDictionary** 
 
 void DrmRenderer::prepareToRender()
 {
+    // Retake DRM master if we dropped it earlier
+    drmSetMaster(m_DrmFd);
+
     // Create a dummy renderer to force SDL to complete the modesetting
     // operation that the KMSDRM backend keeps pending until the next
     // time we swap buffers. We have to do this before we enumerate
@@ -291,6 +293,30 @@ void DrmRenderer::prepareToRender()
                      "SDL_CreateRenderer() failed: %s",
                      SDL_GetError());
     }
+
+    // Set the output rect to match the new CRTC size after modesetting
+    m_OutputRect.x = m_OutputRect.y = 0;
+    drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, m_CrtcId);
+    if (crtc != nullptr) {
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "CRTC size after modesetting: %ux%u",
+                    crtc->width,
+                    crtc->height);
+        m_OutputRect.w = crtc->width;
+        m_OutputRect.h = crtc->height;
+        drmModeFreeCrtc(crtc);
+    }
+    else {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                     "drmModeGetCrtc() failed: %d",
+                     errno);
+
+        SDL_GetWindowSize(m_Window, &m_OutputRect.w, &m_OutputRect.h);
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Guessing CRTC is window size: %dx%d",
+                    m_OutputRect.w,
+                    m_OutputRect.h);
+    }
 }
 
 bool DrmRenderer::getPropertyByName(drmModeObjectPropertiesPtr props, const char* name, uint64_t *value) {
@@ -319,68 +345,28 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     m_VideoFormat = params->videoFormat;
     m_SwFrameMapper.setVideoFormat(params->videoFormat);
 
-#if SDL_VERSION_ATLEAST(2, 0, 15)
-    SDL_SysWMinfo info;
+    // Try to get the FD that we're sharing with SDL
+    m_DrmFd = StreamUtils::getDrmFdForWindow(m_Window, &m_MustCloseDrmFd);
+    if (m_DrmFd >= 0) {
+        // If we got a DRM FD for the window, we can render to it
+        m_DrmIsMaster = true;
 
-    SDL_VERSION(&info.version);
-
-    if (!SDL_GetWindowWMInfo(params->window, &info)) {
-        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                     "SDL_GetWindowWMInfo() failed: %s",
-                     SDL_GetError());
-        return false;
-    }
-
-    if (info.subsystem == SDL_SYSWM_KMSDRM) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Sharing DRM FD with SDL");
-
-        SDL_assert(info.info.kmsdrm.drm_fd >= 0);
-        m_DrmFd = info.info.kmsdrm.drm_fd;
-        m_SdlOwnsDrmFd = true;
-    }
-    else
-#endif
-    {
-        const char* userDevice = SDL_getenv("DRM_DEV");
-        if (userDevice != nullptr) {
-            SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                        "Opening user-specified DRM device: %s",
-                        userDevice);
-
-            m_DrmFd = open(userDevice, O_RDWR | O_CLOEXEC);
+        // If we just opened a new FD, let's drop master on it
+        // so SDL can take master for Vulkan rendering. We'll
+        // regrab master later if we end up direct rendering.
+        if (m_MustCloseDrmFd) {
+            drmDropMaster(m_DrmFd);
         }
-        else {
-            QDir driDir("/dev/dri");
+    }
+    else {
+        // Try to open any DRM render node
+        m_DrmFd = StreamUtils::getDrmFd(true);
+        if (m_DrmFd >= 0) {
+            // Drop master in case we somehow got a primary node
+            drmDropMaster(m_DrmFd);
 
-            // We have to explicitly ask for devices to be returned
-            driDir.setFilter(QDir::Files | QDir::System);
-
-            // Try a render node first since we aren't using DRM for output in this codepath
-            for (QFileInfo& node : driDir.entryInfoList(QStringList("renderD*"))) {
-                QByteArray absolutePath = node.absoluteFilePath().toUtf8();
-                m_DrmFd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
-                if (m_DrmFd >= 0) {
-                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                "Opened DRM render node: %s",
-                                absolutePath.constData());
-                    break;
-                }
-            }
-
-            // If that fails, try to use a primary node and hope for the best
-            if (m_DrmFd < 0) {
-                for (QFileInfo& node : driDir.entryInfoList(QStringList("card*"))) {
-                    QByteArray absolutePath = node.absoluteFilePath().toUtf8();
-                    m_DrmFd = open(absolutePath.constData(), O_RDWR | O_CLOEXEC);
-                    if (m_DrmFd >= 0) {
-                        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                                    "Opened DRM primary node: %s",
-                                    absolutePath.constData());
-                        break;
-                    }
-                }
-            }
+            // This is a new FD that we must close
+            m_MustCloseDrmFd = true;
         }
     }
 
@@ -458,7 +444,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     // If we're not sharing the DRM FD with SDL, that means we don't
     // have DRM master, so we can't call drmModeSetPlane(). We can
     // use EGLRenderer or SDLRenderer to render in this situation.
-    if (!m_SdlOwnsDrmFd) {
+    if (!m_DrmIsMaster) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                     "Direct rendering via DRM is disabled");
         return DIRECT_RENDERING_INIT_FAILED;
@@ -517,12 +503,7 @@ bool DrmRenderer::initialize(PDECODER_PARAMETERS params)
     int crtcIndex = -1;
     for (int i = 0; i < resources->count_crtcs; i++) {
         if (resources->crtcs[i] == m_CrtcId) {
-            drmModeCrtc* crtc = drmModeGetCrtc(m_DrmFd, resources->crtcs[i]);
             crtcIndex = i;
-            m_OutputRect.x = m_OutputRect.y = 0;
-            m_OutputRect.w = crtc->width;
-            m_OutputRect.h = crtc->height;
-            drmModeFreeCrtc(crtc);
             break;
         }
     }
@@ -1233,6 +1214,8 @@ void DrmRenderer::renderFrame(AVFrame* frame)
 {
     int err;
     SDL_Rect src, dst;
+
+    SDL_assert(m_OutputRect.w > 0 && m_OutputRect.h > 0);
 
     src.x = src.y = 0;
     src.w = frame->width;

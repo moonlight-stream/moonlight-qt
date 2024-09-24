@@ -85,7 +85,7 @@ Item {
 
         function quitApp() {
             var component = Qt.createComponent("QuitSegue.qml")
-            var params = {"appName": appName, "quitRunningAppFn": () => launcher.quitRunningApp()}
+            var params = {"appName": appName, "quitRunningAppFn": function() { launcher.quitRunningApp() }}
             stackView.push(component.createObject(stackView, params))
         }
 

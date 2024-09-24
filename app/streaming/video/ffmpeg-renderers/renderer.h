@@ -228,12 +228,14 @@ public:
 
     virtual AVPixelFormat getPreferredPixelFormat(int videoFormat) {
         if (videoFormat & VIDEO_FORMAT_MASK_10BIT) {
-            // 10-bit YUV 4:2:0
-            return AV_PIX_FMT_P010;
+            return (videoFormat & VIDEO_FORMAT_MASK_YUV444) ?
+                AV_PIX_FMT_YUV444P10 : // 10-bit 3-plane YUV 4:4:4
+                AV_PIX_FMT_P010;       // 10-bit 2-plane YUV 4:2:0
         }
         else {
-            // Planar YUV 4:2:0
-            return AV_PIX_FMT_YUV420P;
+            return (videoFormat & VIDEO_FORMAT_MASK_YUV444) ?
+                       AV_PIX_FMT_YUV444P : // 8-bit 3-plane YUV 4:4:4
+                       AV_PIX_FMT_YUV420P;  // 8-bit 3-plane YUV 4:2:0
         }
     }
 

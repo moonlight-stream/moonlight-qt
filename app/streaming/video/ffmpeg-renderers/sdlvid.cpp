@@ -343,6 +343,8 @@ ReadbackRetry:
             m_RgbFrame->format = AV_PIX_FMT_BGR0;
 
             sws_freeContext(m_SwsContext);
+
+#if LIBSWSCALE_VERSION_INT >= AV_VERSION_INT(6, 1, 100)
             m_SwsContext = sws_alloc_context();
             if (!m_SwsContext) {
                 SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
@@ -377,6 +379,19 @@ ReadbackRetry:
                              av_make_error_string(string, sizeof(string), err));
                 goto Exit;
             }
+#else
+            SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                        "CPU color conversion is slow on FFmpeg 4.x. Update FFmpeg for better performance.");
+
+            m_SwsContext = sws_getContext(frame->width, frame->height, (AVPixelFormat)frame->format,
+                                          m_RgbFrame->width, m_RgbFrame->height, (AVPixelFormat)m_RgbFrame->format,
+                                          0, nullptr, nullptr, nullptr);
+            if (!m_SwsContext) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "sws_getContext() failed");
+                goto Exit;
+            }
+#endif
         }
         else {
             // SDL will perform YUV conversion on the GPU
@@ -526,10 +541,18 @@ ReadbackRetry:
         m_RgbFrame->data[0] = pixels;
         m_RgbFrame->linesize[0] = texturePitch;
 
+#if LIBSWSCALE_VERSION_INT >= AV_VERSION_INT(6, 1, 100)
         // Perform multi-threaded color conversion into the locked texture buffer
         err = sws_scale_frame(m_SwsContext, m_RgbFrame, frame);
+#else
+        // Perform a single-threaded color conversion using the legacy swscale API
+        err = sws_scale(m_SwsContext, frame->data, frame->linesize, 0, frame->height,
+                        m_RgbFrame->data, m_RgbFrame->linesize);
+#endif
+
         av_buffer_unref(&m_RgbFrame->buf[0]);
         SDL_UnlockTexture(m_Texture);
+
         if (err < 0) {
             char string[AV_ERROR_MAX_STRING_SIZE];
             SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,

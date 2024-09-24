@@ -42,7 +42,7 @@ while [[ "$#" -gt 0 ]]; do
       ;;
     --openssl_mac)
       rm -r $LIB_PATH/mac/include/openssl
-	    rm $LIB_PATH/mac/lib/libssl.a $LIB_PATH/mac/lib/libcrypto.a
+	    rm $LIB_PATH/mac/lib/libssl*.dylib $LIB_PATH/mac/lib/libcrypto*.dylib
       shift
       ;;
     --ffmpeg_win)

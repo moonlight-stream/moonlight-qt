@@ -28,7 +28,73 @@
 
 extern int g_QtDrmMasterFd;
 extern struct stat g_DrmMasterStat;
-extern int g_SdlDrmMasterFd;
+
+#define MAX_SDL_FD_COUNT 8
+int g_SdlDrmMasterFds[MAX_SDL_FD_COUNT];
+int g_SdlDrmMasterFdCount = 0;
+SDL_SpinLock g_FdTableLock = 0;
+
+// Caller must hold g_FdTableLock
+int getSdlFdEntryIndex(bool unused)
+{
+    for (int i = 0; i < MAX_SDL_FD_COUNT; i++) {
+        // We slightly bend the FD rules here by treating 0
+        // as invalid since that's our global default value.
+        if (unused && g_SdlDrmMasterFds[i] <= 0) {
+            return i;
+        }
+        else if (!unused && g_SdlDrmMasterFds[i] > 0) {
+            return i;
+        }
+    }
+
+    return -1;
+}
+
+// Returns true if the final SDL FD was removed
+bool removeSdlFd(int fd)
+{
+    SDL_AtomicLock(&g_FdTableLock);
+    if (g_SdlDrmMasterFdCount != 0) {
+        // Clear the entry for this fd from the table
+        for (int i = 0; i < MAX_SDL_FD_COUNT; i++) {
+            if (fd == g_SdlDrmMasterFds[i]) {
+                g_SdlDrmMasterFds[i] = -1;
+                g_SdlDrmMasterFdCount--;
+                break;
+            }
+        }
+
+        if (g_SdlDrmMasterFdCount == 0) {
+            SDL_AtomicUnlock(&g_FdTableLock);
+            return true;
+        }
+    }
+    SDL_AtomicUnlock(&g_FdTableLock);
+    return false;
+}
+
+// Returns the previous master FD or -1 if none
+int takeMasterFromSdlFd()
+{
+    int fd = -1;
+
+    // Since all SDL FDs are actually dups of each other
+    // we can take master from any one of them.
+    SDL_AtomicLock(&g_FdTableLock);
+    int fdIndex = getSdlFdEntryIndex(false);
+    if (fdIndex != -1) {
+        fd = g_SdlDrmMasterFds[fdIndex];
+    }
+    SDL_AtomicUnlock(&g_FdTableLock);
+
+    if (fd >= 0 && drmDropMaster(fd) == 0) {
+        return fd;
+    }
+    else {
+        return -1;
+    }
+}
 
 int openHook(const char *funcname, const char *pathname, int flags, va_list va)
 {
@@ -55,32 +121,67 @@ int openHook(const char *funcname, const char *pathname, int flags, va_list va)
             fstat(fd, &fdstat);
             if (g_DrmMasterStat.st_dev == fdstat.st_dev &&
                     g_DrmMasterStat.st_ino == fdstat.st_ino) {
+                int freeFdIndex;
+                int allocatedFdIndex;
+
                 // It is our device. Time to do the magic!
+                SDL_AtomicLock(&g_FdTableLock);
 
-                // This code assumes SDL only ever opens a single FD
-                // for a given DRM device.
-                SDL_assert(g_SdlDrmMasterFd == -1);
-
-                // Drop master on Qt's FD so we can pick it up for SDL.
-                if (drmDropMaster(g_QtDrmMasterFd) < 0) {
+                // Get a free index for us to put the new entry
+                freeFdIndex = getSdlFdEntryIndex(true);
+                if (freeFdIndex < 0) {
+                    SDL_AtomicUnlock(&g_FdTableLock);
+                    SDL_assert(freeFdIndex >= 0);
                     SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                 "Failed to drop master on Qt DRM FD: %d",
-                                 errno);
+                                 "No unused SDL FD table entries!");
                     // Hope for the best
                     return fd;
                 }
 
-                // We are not allowed to call drmSetMaster() without CAP_SYS_ADMIN,
-                // but since we just dropped the master, we can become master by
-                // simply creating a new FD. Let's do it.
-                close(fd);
-                if (__OPEN_NEEDS_MODE(flags)) {
-                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags, mode);
+                // Check if we have an allocated entry already
+                allocatedFdIndex = getSdlFdEntryIndex(false);
+                if (allocatedFdIndex >= 0) {
+                    // Close fd that we opened earlier (skipping our close() hook)
+                    ((typeof(close)*)dlsym(RTLD_NEXT, "close"))(fd);
+
+                    // dup() an existing FD into the unused slot
+                    fd = dup(g_SdlDrmMasterFds[allocatedFdIndex]);
                 }
                 else {
-                    fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags);
+                    // Drop master on Qt's FD so we can pick it up for SDL.
+                    if (drmDropMaster(g_QtDrmMasterFd) < 0) {
+                        SDL_AtomicUnlock(&g_FdTableLock);
+                        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                                     "Failed to drop master on Qt DRM FD: %d",
+                                     errno);
+                        // Hope for the best
+                        return fd;
+                    }
+
+                    // Close fd that we opened earlier (skipping our close() hook)
+                    ((typeof(close)*)dlsym(RTLD_NEXT, "close"))(fd);
+
+                    // We are not allowed to call drmSetMaster() without CAP_SYS_ADMIN,
+                    // but since we just dropped the master, we can become master by
+                    // simply creating a new FD. Let's do it.
+                    if (__OPEN_NEEDS_MODE(flags)) {
+                        fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags, mode);
+                    }
+                    else {
+                        fd = ((typeof(open)*)dlsym(RTLD_NEXT, funcname))(pathname, flags);
+                    }
                 }
-                g_SdlDrmMasterFd = fd;
+
+                if (fd >= 0) {
+                    // Start with DRM master on the new FD
+                    drmSetMaster(fd);
+
+                    // Insert the FD into the table
+                    g_SdlDrmMasterFds[freeFdIndex] = fd;
+                    g_SdlDrmMasterFdCount++;
+                }
+
+                SDL_AtomicUnlock(&g_FdTableLock);
             }
         }
     }

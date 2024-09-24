@@ -101,6 +101,7 @@
               Source="$(var.BuildDir)\app\$(var.Configuration)\Moonlight.exe">
           <fire:FirewallException Id="MoonlightFirewallException"
                                   Scope="any"
+                                  IgnoreFailure="yes"
                                   Name="$(var.FullName)" />
         </File>
       </Component>

@@ -381,12 +381,11 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
     }
 
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                "Detected GPU %d: %S (%x:%x) (decoder output: %s)",
+                "Detected GPU %d: %S (%x:%x)",
                 adapterIndex,
                 adapterDesc.Description,
                 adapterDesc.VendorId,
-                adapterDesc.DeviceId,
-                m_BindDecoderOutputTextures ? "bind" : "copy");
+                adapterDesc.DeviceId);
 
     // D3D11_CREATE_DEVICE_DEBUG generates more information about DirectX11 objects for debugging.
     // https://seanmiddleditch.github.io/direct3d-11-debug-api-tricks/
@@ -436,6 +435,55 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         // Disable enhancement if the Video Processor creation failed
         m_VideoEnhancement->enableVideoEnhancement(false);
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "VideoProcessor failed to be created");
+    }
+
+    bool ok;
+    m_BindDecoderOutputTextures = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_BIND", &ok);
+    if (!ok) {
+        // Skip copying to our own internal texture on Intel GPUs due to
+        // significant performance impact of the extra copy. See:
+        // https://github.com/moonlight-stream/moonlight-qt/issues/1304
+        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
+    }
+    else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
+    }
+
+    m_UseFenceHack = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_FENCE", &ok);
+    if (!ok) {
+        // Old Intel GPUs (HD 4000) require a fence to properly synchronize
+        // the video engine with the 3D engine for texture sampling.
+        m_UseFenceHack = adapterDesc.VendorId == 0x8086 && featureLevel < D3D_FEATURE_LEVEL_11_1;
+    }
+    else {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Using D3D11VA_FORCE_FENCE to override default fence workaround logic");
+    }
+
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                "Decoder texture access: %s (fence: %s)",
+                m_BindDecoderOutputTextures ? "bind" : "copy",
+                (m_BindDecoderOutputTextures && m_UseFenceHack) ? "yes" : "no");
+
+    // Check which fence types are supported by this GPU
+    {
+        m_FenceType = SupportedFenceType::None;
+
+        ComPtr<IDXGIAdapter4> adapter4;
+        if (SUCCEEDED(adapter.As(&adapter4))) {
+            DXGI_ADAPTER_DESC3 desc3;
+            if (SUCCEEDED(adapter4->GetDesc3(&desc3))) {
+                if (desc3.Flags & DXGI_ADAPTER_FLAG3_SUPPORT_MONITORED_FENCES) {
+                    // Monitored fences must be used when they are supported
+                    m_FenceType = SupportedFenceType::Monitored;
+                }
+                else if (desc3.Flags & DXGI_ADAPTER_FLAG3_SUPPORT_NON_MONITORED_FENCES) {
+                    // Non-monitored fences must only be used when monitored fences are unsupported
+                    m_FenceType = SupportedFenceType::NonMonitored;
+                }
+            }
+        }
     }
 
     if (!checkDecoderSupport(adapter.Get())) {
@@ -1666,6 +1714,26 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
                          srvIndex);
             return;
         }
+
+        // Ensure decoding operations have completed using a dummy fence.
+        // This is not necessary on modern GPU drivers, but it is required
+        // on some older Intel GPU drivers that don't properly synchronize
+        // the video engine with 3D operations.
+        if (m_UseFenceHack && m_FenceType != SupportedFenceType::None) {
+            ComPtr<ID3D11Device5> device5;
+            ComPtr<ID3D11DeviceContext4> deviceContext4;
+            if (SUCCEEDED(m_Device.As(&device5)) && SUCCEEDED(m_DeviceContext.As(&deviceContext4))) {
+                ComPtr<ID3D11Fence> fence;
+                if (SUCCEEDED(device5->CreateFence(0,
+                                                   m_FenceType == SupportedFenceType::Monitored ?
+                                                       D3D11_FENCE_FLAG_NONE : D3D11_FENCE_FLAG_NON_MONITORED,
+                                                   IID_PPV_ARGS(&fence)))) {
+                    if (SUCCEEDED(deviceContext4->Signal(fence.Get(), 1))) {
+                        deviceContext4->Wait(fence.Get(), 1);
+                    }
+                }
+            }
+        }
     }
     else if(m_AmfInitialized){
         // AMD (RDNA2+)
@@ -2214,7 +2282,12 @@ IFFmpegRenderer::InitFailureReason D3D11VARenderer::getInitFailureReason()
     // NB2: We're also assuming that no GPU exists which lacks any D3D11 driver but has drivers
     // for non-DX APIs like Vulkan. I believe this is a Windows Logo requirement so it should be
     // safe to assume.
-    if (m_DevicesWithFL11Support != 0 && m_DevicesWithCodecSupport == 0) {
+    //
+    // NB3: Sigh, there *are* GPUs drivers with greater codec support available via Vulkan than
+    // D3D11VA even when both D3D11 and Vulkan APIs are supported. This is the case for HEVC RExt
+    // profiles that were not supported by Microsoft until the Windows 11 24H2 SDK. Don't report
+    // that hardware support is missing for YUV444 profiles since the Vulkan driver may support it.
+    if (m_DevicesWithFL11Support != 0 && m_DevicesWithCodecSupport == 0 && !(m_DecoderParams.videoFormat & VIDEO_FORMAT_MASK_YUV444)) {
         return InitFailureReason::NoHardwareSupport;
     }
     else {

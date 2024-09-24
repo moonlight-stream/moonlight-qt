@@ -3,7 +3,7 @@
 #include "renderer.h"
 
 #include <d3d11_4.h>
-#include <dxgi1_5.h>
+#include <dxgi1_6.h>
 #include <CGuid.h>
 #include <atlbase.h>
 #include "streaming/video/videoenhancement.h"
@@ -72,11 +72,19 @@ private:
 
     int m_AdapterIndex = 0;
     int m_OutputIndex = 0;
+
+    enum class SupportedFenceType {
+        None,
+        NonMonitored,
+        Monitored,
+    };
+
     Microsoft::WRL::ComPtr<IDXGIFactory5> m_Factory;
     Microsoft::WRL::ComPtr<ID3D11Device> m_Device;
     Microsoft::WRL::ComPtr<IDXGISwapChain4> m_SwapChain;
     Microsoft::WRL::ComPtr<ID3D11DeviceContext> m_DeviceContext;
     Microsoft::WRL::ComPtr<ID3D11RenderTargetView> m_RenderTargetView;
+    SupportedFenceType m_FenceType;
     SDL_mutex* m_ContextLock;
     bool m_BindDecoderOutputTextures;
     D3D11_BOX m_SrcBox;
@@ -92,6 +100,7 @@ private:
     Microsoft::WRL::ComPtr<ID3D11Resource> m_BackBufferResource;
     VideoEnhancement* m_VideoEnhancement;
     bool m_AutoStreamSuperResolution = false;
+    bool m_UseFenceHack;
 
     DECODER_PARAMETERS m_DecoderParams;
     int m_TextureAlignment;

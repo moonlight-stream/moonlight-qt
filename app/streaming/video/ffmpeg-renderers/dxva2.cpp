@@ -717,6 +717,11 @@ bool DXVA2Renderer::initialize(PDECODER_PARAMETERS params)
         // the HDR colorspace and HDR display metadata required to enable HDR mode properly.
         return false;
     }
+    else if (params->videoFormat & VIDEO_FORMAT_MASK_YUV444) {
+        // It's theoretically possible to use YUV444 with D3D9, but probably not worth actually
+        // implementing because any YUV444-capable hardware supports D3D11 or Vulkan.
+        return false;
+    }
 #ifndef Q_PROCESSOR_X86
     else if (qgetenv("DXVA2_ENABLED") != "1" && m_DecoderSelectionPass == 0) {
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,

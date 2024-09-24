@@ -828,6 +828,10 @@ public:
             return false;
         }
 
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
+                    "Selected Metal device: %s",
+                    device.name.UTF8String);
+
         if (m_HwAccel && !checkDecoderCapabilities(device, params)) {
             return false;
         }
