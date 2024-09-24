@@ -69,8 +69,15 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     // Call into the real thing
     int err = ((typeof(drmModeSetCrtc)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtcId, bufferId, x, y, connectors, count, mode);
     if (err == 0 && fd == g_QtDrmMasterFd) {
+        // Free old CRTC state (if any)
+        if (g_QtCrtcState) {
+            drmModeFreeCrtc(g_QtCrtcState);
+        }
+        if (g_QtCrtcConnectors) {
+            free(g_QtCrtcConnectors);
+        }
+
         // Store the CRTC configuration so we can restore it later
-        drmModeFreeCrtc(g_QtCrtcState);
         g_QtCrtcState = drmModeGetCrtc(fd, crtcId);
         g_QtCrtcConnectors = calloc(count, sizeof(*g_QtCrtcConnectors));
         memcpy(g_QtCrtcConnectors, connectors, count * sizeof(*connectors));
