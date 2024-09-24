@@ -51,6 +51,7 @@ int getSdlFdEntryIndex(bool unused)
     return -1;
 }
 
+// Returns true if the final SDL FD was removed
 bool removeSdlFd(int fd)
 {
     SDL_AtomicLock(&g_FdTableLock);
@@ -71,6 +72,28 @@ bool removeSdlFd(int fd)
     }
     SDL_AtomicUnlock(&g_FdTableLock);
     return false;
+}
+
+// Returns the previous master FD or -1 if none
+int takeMasterFromSdlFd()
+{
+    int fd = -1;
+
+    // Since all SDL FDs are actually dups of each other
+    // we can take master from any one of them.
+    SDL_AtomicLock(&g_FdTableLock);
+    int fdIndex = getSdlFdEntryIndex(false);
+    if (fdIndex != -1) {
+        fd = g_SdlDrmMasterFds[fdIndex];
+    }
+    SDL_AtomicUnlock(&g_FdTableLock);
+
+    if (fd >= 0 && drmDropMaster(fd) == 0) {
+        return fd;
+    }
+    else {
+        return -1;
+    }
 }
 
 int openHook(const char *funcname, const char *pathname, int flags, va_list va)

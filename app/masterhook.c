@@ -42,6 +42,7 @@ uint32_t* g_QtCrtcConnectors;
 int g_QtCrtcConnectorCount;
 
 bool removeSdlFd(int fd);
+int takeMasterFromSdlFd(void);
 
 int drmIsMaster(int fd)
 {
@@ -78,6 +79,24 @@ int drmModeSetCrtc(int fd, uint32_t crtcId, uint32_t bufferId,
     return err;
 }
 
+// This hook will temporarily retake DRM master to allow Qt to render while SDL has a DRM FD open
+int drmModePageFlip(int fd, uint32_t crtc_id, uint32_t fb_id, uint32_t flags, void *user_data)
+{
+    // Call into the real thing
+    int err = ((typeof(drmModePageFlip)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtc_id, fb_id, flags, user_data);
+    if (err == -EACCES && fd == g_QtDrmMasterFd) {
+        // If SDL took master from us, try to grab it back temporarily
+        int oldMasterFd = takeMasterFromSdlFd();
+        drmSetMaster(fd);
+        err = ((typeof(drmModePageFlip)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, crtc_id, fb_id, flags, user_data);
+        drmDropMaster(fd);
+        if (oldMasterFd != -1) {
+            drmSetMaster(oldMasterFd);
+        }
+    }
+    return err;
+}
+
 // This hook will handle atomic DRM rendering
 int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
                         uint32_t flags, void *user_data)
@@ -93,7 +112,18 @@ int drmModeAtomicCommit(int fd, drmModeAtomicReqPtr req,
     }
 
     // Call into the real thing
-    return ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+    int err = ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+    if (err == -EACCES && fd == g_QtDrmMasterFd) {
+        // If SDL took master from us, try to grab it back temporarily
+        int oldMasterFd = takeMasterFromSdlFd();
+        drmSetMaster(fd);
+        err = ((typeof(drmModeAtomicCommit)*)dlsym(RTLD_NEXT, __FUNCTION__))(fd, req, flags, user_data);
+        drmDropMaster(fd);
+        if (oldMasterFd != -1) {
+            drmSetMaster(oldMasterFd);
+        }
+    }
+    return err;
 }
 
 // This hook will handle SDL's open() on the DRM device. We just need to
