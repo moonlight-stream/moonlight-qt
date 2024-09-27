@@ -538,75 +538,70 @@ public:
             return;
         }
 
-        std::array<CVMetalTextureRef, MAX_VIDEO_PLANES> cvMetalTextures;
         size_t planes = getFramePlaneCount(frame);
         SDL_assert(planes <= MAX_VIDEO_PLANES);
 
         CVPixelBufferRef pixBuf = reinterpret_cast<CVPixelBufferRef>(frame->data[3]);
-        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {            
+        if (frame->format == AV_PIX_FMT_VIDEOTOOLBOX) {
 
             // Create Metal textures for the planes of the CVPixelBuffer
-            for (size_t i = 0; i < planes; i++) {
 
-                switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
-                  case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
-                  case kCVPixelFormatType_444YpCbCr8BiPlanarVideoRange:
-                  case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
-                  case kCVPixelFormatType_444YpCbCr8BiPlanarFullRange:
-                  case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange:
-                  case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarFullRange:
-                      m_LumaPixelFormart = MTLPixelFormatR8Unorm;
-                      m_ChromaPixelFormart = MTLPixelFormatRG8Unorm;
-                      break;
-                  case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
-                  case kCVPixelFormatType_444YpCbCr10BiPlanarFullRange:
-                  case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
-                  case kCVPixelFormatType_444YpCbCr10BiPlanarVideoRange:
-                      m_LumaPixelFormart = MTLPixelFormatR16Unorm;
-                      m_ChromaPixelFormart = MTLPixelFormatRG16Unorm;
-                      break;
-                  default:
-                      SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                   "Unknown pixel format: %x",
-                                   CVPixelBufferGetPixelFormatType(pixBuf));
-                      return;
-                }
+            switch (CVPixelBufferGetPixelFormatType(pixBuf)) {
+              case kCVPixelFormatType_420YpCbCr8BiPlanarVideoRange:
+              case kCVPixelFormatType_444YpCbCr8BiPlanarVideoRange:
+              case kCVPixelFormatType_420YpCbCr8BiPlanarFullRange:
+              case kCVPixelFormatType_444YpCbCr8BiPlanarFullRange:
+              case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarVideoRange:
+              case kCVPixelFormatType_Lossless_420YpCbCr8BiPlanarFullRange:
+                  m_LumaPixelFormart = MTLPixelFormatR8Unorm;
+                  m_ChromaPixelFormart = MTLPixelFormatRG8Unorm;
+                  break;
+              case kCVPixelFormatType_420YpCbCr10BiPlanarFullRange:
+              case kCVPixelFormatType_444YpCbCr10BiPlanarFullRange:
+              case kCVPixelFormatType_420YpCbCr10BiPlanarVideoRange:
+              case kCVPixelFormatType_444YpCbCr10BiPlanarVideoRange:
+                  m_LumaPixelFormart = MTLPixelFormatR16Unorm;
+                  m_ChromaPixelFormart = MTLPixelFormatRG16Unorm;
+                  break;
+              default:
+                  SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                               "Unknown pixel format: %x",
+                               CVPixelBufferGetPixelFormatType(pixBuf));
+                  return;
+            }
 
-                CVReturn err;
+            CVReturn err;
 
-                err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-                                                                         m_TextureCache,
-                                                                         pixBuf,
-                                                                         nullptr,
-                                                                         m_LumaPixelFormart,
-                                                                         CVPixelBufferGetWidthOfPlane(pixBuf, 0),
-                                                                         CVPixelBufferGetHeightOfPlane(pixBuf, 0),
-                                                                         0,
-                                                                         &m_cvLumaTexture);
-                if (err != kCVReturnSuccess) {
-                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                 "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
-                                 err);
-                    return;
-                }
-                m_LumaTexture = CVMetalTextureGetTexture(m_cvLumaTexture);
+            err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                                     m_TextureCache,
+                                                                     pixBuf,
+                                                                     nullptr,
+                                                                     m_LumaPixelFormart,
+                                                                     CVPixelBufferGetWidthOfPlane(pixBuf, 0),
+                                                                     CVPixelBufferGetHeightOfPlane(pixBuf, 0),
+                                                                     0,
+                                                                     &m_cvLumaTexture);
+            if (err != kCVReturnSuccess) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                             err);
+                return;
+            }
 
-                err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
-                                                                         m_TextureCache,
-                                                                         pixBuf,
-                                                                         nullptr,
-                                                                         m_ChromaPixelFormart,
-                                                                         CVPixelBufferGetWidthOfPlane(pixBuf, 1),
-                                                                         CVPixelBufferGetHeightOfPlane(pixBuf, 1),
-                                                                         1,
-                                                                         &m_cvChromaTexture);
-                if (err != kCVReturnSuccess) {
-                    SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
-                                 "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
-                                 err);
-                    return;
-                }
-                m_ChromaTexture = CVMetalTextureGetTexture(m_cvChromaTexture);
+            err = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault,
+                                                                     m_TextureCache,
+                                                                     pixBuf,
+                                                                     nullptr,
+                                                                     m_ChromaPixelFormart,
+                                                                     CVPixelBufferGetWidthOfPlane(pixBuf, 1),
+                                                                     CVPixelBufferGetHeightOfPlane(pixBuf, 1),
+                                                                     1,
+                                                                     &m_cvChromaTexture);
+            if (err != kCVReturnSuccess) {
+                SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
+                             "CVMetalTextureCacheCreateTextureFromImage() failed: %d",
+                             err);
+                return;
             }
         }
 
@@ -678,9 +673,11 @@ public:
                 // Use scaled textures
                 [renderEncoder setFragmentTexture:m_LumaUpscaledTexture atIndex:0];
                 [renderEncoder setFragmentTexture:m_ChromaUpscaledTexture atIndex:1];
+                m_LumaTexture = CVMetalTextureGetTexture(m_cvLumaTexture);
+                m_ChromaTexture = CVMetalTextureGetTexture(m_cvChromaTexture);
             } else {
-                [renderEncoder setFragmentTexture:m_LumaTexture atIndex:0];
-                [renderEncoder setFragmentTexture:m_ChromaTexture atIndex:1];
+                [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(m_cvLumaTexture) atIndex:0];
+                [renderEncoder setFragmentTexture:CVMetalTextureGetTexture(m_cvChromaTexture) atIndex:1];
             }
 
             [commandBuffer addCompletedHandler:^(id<MTLCommandBuffer>) {
