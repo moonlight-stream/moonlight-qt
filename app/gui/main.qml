@@ -12,6 +12,7 @@ import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
+    property bool gamepadInputActive: false
 
     // Set by SettingsView to force the back operation to pop all
     // pages except the initial view. This is required when doing
@@ -22,7 +23,7 @@ ApplicationWindow {
     width: 1280
     height: 600
 
-    Component.onCompleted: {
+    function doEarlyInit() {
         // Override the background color to Material 2 colors for Qt 6.5+
         // in order to improve contrast between GFE's placeholder box art
         // and the background of the app grid.
@@ -30,6 +31,11 @@ ApplicationWindow {
             Material.background = "#303030"
         }
 
+        SdlGamepadKeyNavigation.enable()
+        gamepadInputActive = true
+    }
+
+    Component.onCompleted: {
         // Show the window according to the user's preferences
         if (SystemProperties.hasDesktopEnvironment) {
             if (StreamingPreferences.uiDisplayMode == StreamingPreferences.UI_MAXIMIZED) {
@@ -84,6 +90,14 @@ ApplicationWindow {
         initialItem: initialView
         anchors.fill: parent
         focus: true
+
+        onEmptyChanged: {
+            // Hijack this callback to perform our very early init
+            // that runs before the first StackView item is pushed
+            if (!empty) {
+                doEarlyInit();
+            }
+        }
 
         onCurrentItemChanged: {
             // Ensure focus travels to the next view when going back
@@ -147,6 +161,11 @@ ApplicationWindow {
                 ComputerManager.stopPollingAsync()
                 pollingActive = false
             }
+
+            if (gamepadInputActive) {
+                SdlGamepadKeyNavigation.disable()
+                gamepadInputActive = false
+            }
         }
         else if (active) {
             // When we become visible and active again, start polling
@@ -156,6 +175,10 @@ ApplicationWindow {
             if (!pollingActive) {
                 ComputerManager.startPolling()
                 pollingActive = true
+            }
+            if (!gamepadInputActive) {
+                SdlGamepadKeyNavigation.enable()
+                gamepadInputActive = true
             }
         }
     }
@@ -170,11 +193,22 @@ ApplicationWindow {
                 ComputerManager.startPolling()
                 pollingActive = true
             }
+            if (!gamepadInputActive) {
+                SdlGamepadKeyNavigation.enable()
+                gamepadInputActive = true
+            }
         }
         else {
             // Start the inactivity timer to stop polling
             // if focus does not return within a few minutes.
             inactivityTimer.restart()
+
+            // Immediately stop gamepad input since we aren't
+            // the active window anymore.
+            if (gamepadInputActive) {
+                SdlGamepadKeyNavigation.disable()
+                gamepadInputActive = false
+            }
         }
     }
 
