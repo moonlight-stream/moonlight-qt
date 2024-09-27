@@ -13,6 +13,7 @@ You can follow development on our [Discord server](https://moonlight-stream.org/
 ## Features
  - Hardware accelerated video decoding on Windows, Mac, and Linux
  - H.264, HEVC, and AV1 codec support (AV1 requires Sunshine and a supported host GPU)
+ - YUV 4:4:4 support (Sunshine only)
  - HDR streaming support
  - 7.1 surround sound audio support
  - 10-point multitouch support (Sunshine only)
@@ -39,7 +40,7 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
 ## Building
 
 ### Windows Build Requirements
-* Qt 5.15 SDK or later. Qt 6 is also supported for x64 and ARM64 builds.
+* Qt 6.7 SDK or later (earlier versions may work but are not officially supported)
 * [Visual Studio 2022](https://visualstudio.microsoft.com/downloads/) (Community edition is fine)
 * Select **MSVC** option during Qt installation. MinGW is not supported.
 * [7-Zip](https://www.7-zip.org/) (only if building installers for non-development PCs)
@@ -48,8 +49,8 @@ Hosting for Moonlight's Debian and L4T package repositories is graciously provid
   * Alternatively, run `dism /online /add-capability /capabilityname:Tools.Graphics.DirectX~~~~0.0.1.0` and reboot.
 
 ### macOS Build Requirements
-* Qt 6.4 SDK or later
-* Xcode 13 or later
+* Qt 6.7 SDK or later (earlier versions may work but are not officially supported)
+* Xcode 14 or later (earlier versions may work but are not officially supported)
 * [create-dmg](https://github.com/sindresorhus/create-dmg) (only if building DMGs for use on non-development Macs)
 
 ### Linux/Unix Build Requirements

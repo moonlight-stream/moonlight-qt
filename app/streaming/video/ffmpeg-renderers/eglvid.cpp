@@ -315,54 +315,6 @@ int EGLRenderer::loadAndBuildShader(int shaderType,
     return shader;
 }
 
-bool EGLRenderer::openDisplay(unsigned int platform, void* nativeDisplay)
-{
-    PFNEGLGETPLATFORMDISPLAYPROC eglGetPlatformDisplayProc;
-    PFNEGLGETPLATFORMDISPLAYEXTPROC eglGetPlatformDisplayEXTProc;
-
-    m_EGLDisplay = EGL_NO_DISPLAY;
-
-    // NB: eglGetPlatformDisplay() and eglGetPlatformDisplayEXT() have slightly different definitions
-    eglGetPlatformDisplayProc = (typeof(eglGetPlatformDisplayProc))eglGetProcAddress("eglGetPlatformDisplay");
-    eglGetPlatformDisplayEXTProc = (typeof(eglGetPlatformDisplayEXTProc))eglGetProcAddress("eglGetPlatformDisplayEXT");
-
-    if (m_EGLDisplay == EGL_NO_DISPLAY) {
-        // eglGetPlatformDisplay() is part of the EGL 1.5 core specification
-        if (eglGetPlatformDisplayProc != nullptr) {
-            m_EGLDisplay = eglGetPlatformDisplayProc(platform, nativeDisplay, nullptr);
-            if (m_EGLDisplay == EGL_NO_DISPLAY) {
-                EGL_LOG(Warn, "eglGetPlatformDisplay() failed: %d", eglGetError());
-            }
-        }
-    }
-
-    if (m_EGLDisplay == EGL_NO_DISPLAY) {
-        // eglGetPlatformDisplayEXT() is an extension for EGL 1.4
-        const EGLExtensions eglExtensions(EGL_NO_DISPLAY);
-        if (eglExtensions.isSupported("EGL_EXT_platform_base")) {
-            if (eglGetPlatformDisplayEXTProc != nullptr) {
-                m_EGLDisplay = eglGetPlatformDisplayEXTProc(platform, nativeDisplay, nullptr);
-                if (m_EGLDisplay == EGL_NO_DISPLAY) {
-                    EGL_LOG(Warn, "eglGetPlatformDisplayEXT() failed: %d", eglGetError());
-                }
-            }
-            else {
-                EGL_LOG(Warn, "EGL_EXT_platform_base supported but no eglGetPlatformDisplayEXT() export!");
-            }
-        }
-    }
-
-    if (m_EGLDisplay == EGL_NO_DISPLAY) {
-        // Finally, if all else fails, use eglGetDisplay()
-        m_EGLDisplay = eglGetDisplay((EGLNativeDisplayType)nativeDisplay);
-        if (m_EGLDisplay == EGL_NO_DISPLAY) {
-            EGL_LOG(Error, "eglGetDisplay() failed: %d", eglGetError());
-        }
-    }
-
-    return m_EGLDisplay != EGL_NO_DISPLAY;
-}
-
 unsigned EGLRenderer::compileShader(const char* vertexShaderSrc, const char* fragmentShaderSrc) {
     unsigned shader = 0;
 
@@ -539,37 +491,6 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
         EGL_LOG(Error, "SDL_GetWindowWMInfo() failed: %s", SDL_GetError());
         return false;
     }
-    switch (info.subsystem) {
-#ifdef SDL_VIDEO_DRIVER_WAYLAND
-    case SDL_SYSWM_WAYLAND:
-        if (!openDisplay(EGL_PLATFORM_WAYLAND_KHR, info.info.wl.display)) {
-            return false;
-        }
-        break;
-#endif
-#ifdef SDL_VIDEO_DRIVER_X11
-    case SDL_SYSWM_X11:
-        if (!openDisplay(EGL_PLATFORM_X11_KHR, info.info.x11.display)) {
-            return false;
-        }
-        break;
-#endif
-#if SDL_VERSION_ATLEAST(2, 0, 15) && defined(SDL_VIDEO_DRIVER_KMSDRM)
-    case SDL_SYSWM_KMSDRM:
-        if (!openDisplay(EGL_PLATFORM_GBM_KHR, info.info.kmsdrm.gbm_dev)) {
-            return false;
-        }
-        break;
-#endif
-    default:
-        EGL_LOG(Error, "not compatible with SYSWM");
-        return false;
-    }
-
-    if (m_EGLDisplay == EGL_NO_DISPLAY) {
-        EGL_LOG(Error, "Cannot get EGL display: %d", eglGetError());
-        return false;
-    }
 
     if (!(m_Context = SDL_GL_CreateContext(params->window))) {
         EGL_LOG(Error, "Cannot create OpenGL context: %s", SDL_GetError());
@@ -596,6 +517,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
 
     // We can use GL_UNPACK_ROW_LENGTH for a more optimized upload of non-tightly-packed textures
     m_HasExtUnpackSubimage = SDL_GL_ExtensionSupported("GL_EXT_unpack_subimage");
+
+    m_EGLDisplay = eglGetCurrentDisplay();
+    if (m_EGLDisplay == EGL_NO_DISPLAY) {
+        EGL_LOG(Error, "Cannot get EGL display: %d", eglGetError());
+        return false;
+    }
 
     const EGLExtensions eglExtensions(m_EGLDisplay);
     if (!eglExtensions.isSupported("EGL_KHR_image_base") &&

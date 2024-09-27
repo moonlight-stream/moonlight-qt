@@ -86,7 +86,8 @@ private:
     AVHWDeviceType m_HwDeviceType;
     AVBufferRef* m_HwContext;
     int m_DrmFd;
-    bool m_SdlOwnsDrmFd;
+    bool m_DrmIsMaster;
+    bool m_MustCloseDrmFd;
     bool m_SupportsDirectRendering;
     int m_VideoFormat;
     uint32_t m_ConnectorId;

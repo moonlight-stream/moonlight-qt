@@ -413,6 +413,11 @@ void Session::getDecoderInfo(SDL_Window* window,
             isHdrSupported = decoder->isHdrSupported();
             delete decoder;
         }
+        else {
+            // We weren't compiled with an HDR-capable renderer or we don't
+            // have the required GPU driver support for any HDR renderers.
+            isHdrSupported = false;
+        }
     }
 
     // Try a regular hardware accelerated HEVC decoder now
@@ -719,6 +724,33 @@ bool Session::initialize()
                                              m_StreamConfig.width,
                                              m_StreamConfig.height,
                                              m_StreamConfig.fps);
+        if (hevcDA == DecoderAvailability::None && m_Preferences->enableHdr) {
+            // Remove all 10-bit HEVC profiles
+            m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_H265 & VIDEO_FORMAT_MASK_10BIT);
+
+            // Check if we have 10-bit AV1 support
+            auto av1DA = getDecoderAvailability(testWindow,
+                                                m_Preferences->videoDecoderSelection,
+                                                m_Preferences->enableYUV444 ? VIDEO_FORMAT_AV1_HIGH10_444 : VIDEO_FORMAT_AV1_MAIN10,
+                                                m_StreamConfig.width,
+                                                m_StreamConfig.height,
+                                                m_StreamConfig.fps);
+            if (av1DA == DecoderAvailability::None) {
+                // Remove all 10-bit AV1 profiles
+                m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_AV1 & VIDEO_FORMAT_MASK_10BIT);
+
+                // There are no available 10-bit profiles, so reprobe for 8-bit HEVC
+                // and we'll proceed as normal for an SDR streaming scenario.
+                SDL_assert(!(m_SupportedVideoFormats & VIDEO_FORMAT_MASK_10BIT));
+                hevcDA = getDecoderAvailability(testWindow,
+                                                m_Preferences->videoDecoderSelection,
+                                                m_Preferences->enableYUV444 ? VIDEO_FORMAT_H265_REXT8_444 : VIDEO_FORMAT_H265,
+                                                m_StreamConfig.width,
+                                                m_StreamConfig.height,
+                                                m_StreamConfig.fps);
+            }
+        }
+
         if (hevcDA != DecoderAvailability::Hardware) {
             // Deprioritize HEVC unless the user forced software decoding and enabled HDR.
             // We need HEVC in that case because we cannot support 10-bit content with H.264,
@@ -870,27 +902,35 @@ bool Session::initialize()
         return false;
     }
 
+    // Display launch warnings in Qt only after destroying SDL's window.
+    // This avoids conflicts between the windows on display subsystems
+    // such as KMSDRM that only support a single window.
+    for (const auto &text : m_LaunchWarnings) {
+        // Emit the warning to the UI
+        emit displayLaunchWarning(text);
+
+        // Wait a little bit so the user can actually read what we just said.
+        // This wait is a little longer than the actual toast timeout (3 seconds)
+        // to allow it to transition off the screen before continuing.
+        uint32_t start = SDL_GetTicks();
+        while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
+            SDL_Delay(5);
+
+            if (!m_ThreadedExec) {
+                // Pump the UI loop while we wait if we're on the main thread
+                QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
+                QCoreApplication::sendPostedEvents();
+            }
+        }
+    }
+
     return true;
 }
 
 void Session::emitLaunchWarning(QString text)
 {
-    // Emit the warning to the UI
-    emit displayLaunchWarning(text);
-
-    // Wait a little bit so the user can actually read what we just said.
-    // This wait is a little longer than the actual toast timeout (3 seconds)
-    // to allow it to transition off the screen before continuing.
-    uint32_t start = SDL_GetTicks();
-    while (!SDL_TICKS_PASSED(SDL_GetTicks(), start + 3500)) {
-        SDL_Delay(5);
-
-        if (!m_ThreadedExec) {
-            // Pump the UI loop while we wait if we're on the main thread
-            QCoreApplication::processEvents(QEventLoop::ExcludeUserInputEvents);
-            QCoreApplication::sendPostedEvents();
-        }
-    }
+    // Queue this launch warning to be displayed after validation
+    m_LaunchWarnings.append(text);
 }
 
 bool Session::validateLaunch(SDL_Window* testWindow)
@@ -989,6 +1029,9 @@ bool Session::validateLaunch(SDL_Window* testWindow)
             emitLaunchWarning(tr("HDR is not supported using the H.264 codec."));
             m_SupportedVideoFormats.removeByMask(VIDEO_FORMAT_MASK_10BIT);
         }
+        else if (!(m_SupportedVideoFormats & VIDEO_FORMAT_MASK_10BIT)) {
+            emitLaunchWarning(tr("This PC's GPU doesn't support 10-bit HEVC or AV1 decoding for HDR streaming."));
+        }
         // Check that the server GPU supports HDR
         else if (m_SupportedVideoFormats.maskByServerCodecModes(m_Computer->serverCodecModeSupport & SCM_MASK_10BIT) == 0) {
             emitLaunchWarning(tr("Your host PC doesn't support HDR streaming."));
@@ -1034,9 +1077,6 @@ bool Session::validateLaunch(SDL_Window* testWindow)
                     displayedHdrSoftwareDecodeWarning = true;
                 }
             }
-        }
-        else if (!(m_SupportedVideoFormats & VIDEO_FORMAT_MASK_10BIT)) {
-            emitLaunchWarning(tr("This PC's GPU doesn't support 10-bit HEVC or AV1 decoding for HDR streaming."));
         }
 
         // Check for compatibility between server and client codecs
@@ -1584,6 +1624,24 @@ bool Session::startConnectionAsync()
         }
     }
 
+    // If the user has chosen YUV444 without adjusting the bitrate but the host doesn't
+    // support YUV444 streaming, use the default non-444 bitrate for the stream instead.
+    // This should provide equivalent image quality for YUV420 as the stream would have
+    // had if the host supported YUV444 (though obviously with 4:2:0 subsampling).
+    // If the user has adjusted the bitrate from default, we'll assume they really wanted
+    // that value and not second guess them.
+    if (m_Preferences->enableYUV444 &&
+        !(m_StreamConfig.supportedVideoFormats & VIDEO_FORMAT_MASK_YUV444) &&
+        m_StreamConfig.bitrate == StreamingPreferences::getDefaultBitrate(m_StreamConfig.width,
+                                                                          m_StreamConfig.height,
+                                                                          m_StreamConfig.fps,
+                                                                          true)) {
+        m_StreamConfig.bitrate = StreamingPreferences::getDefaultBitrate(m_StreamConfig.width,
+                                                                         m_StreamConfig.height,
+                                                                         m_StreamConfig.fps,
+                                                                         false);
+    }
+
     int err = LiStartConnection(&hostInfo, &m_StreamConfig, &k_ConnCallbacks,
                                 &m_VideoCallbacks, &m_AudioCallbacks,
                                 NULL, 0, NULL, 0);
@@ -1813,17 +1871,6 @@ void Session::execInternal()
         SDL_VERSION(&info.version);
 
         if (SDL_GetWindowWMInfo(m_Window, &info) && info.subsystem == SDL_SYSWM_WINDOWS) {
-            RECT clientRect;
-            HBRUSH blackBrush;
-
-            // Draw a black background (otherwise our window will be bright white).
-            //
-            // TODO: Remove when SDL does this itself
-            blackBrush = CreateSolidBrush(0);
-            GetClientRect(info.info.win.window, &clientRect);
-            FillRect(info.info.win.hdc, &clientRect, blackBrush);
-            DeleteObject(blackBrush);
-
             // If dark mode is enabled, propagate that to our SDL window
             if (darkModeEnabled) {
                 if (FAILED(DwmSetWindowAttribute(info.info.win.window, DWMWA_USE_IMMERSIVE_DARK_MODE, &darkModeEnabled, sizeof(darkModeEnabled)))) {
@@ -1871,25 +1918,6 @@ void Session::execInternal()
     // Enter full screen if requested
     if (m_IsFullScreen) {
         SDL_SetWindowFullscreen(m_Window, m_FullScreenFlag);
-
-#ifdef Q_OS_WIN32
-        SDL_SysWMinfo info;
-        SDL_VERSION(&info.version);
-
-        // Draw a black background again after entering full-screen to avoid visual artifacts
-        // where the old window decorations were before.
-        //
-        // TODO: Remove when SDL does this itself
-        if (SDL_GetWindowWMInfo(m_Window, &info) && info.subsystem == SDL_SYSWM_WINDOWS) {
-            RECT clientRect;
-            HBRUSH blackBrush;
-
-            blackBrush = CreateSolidBrush(0);
-            GetClientRect(info.info.win.window, &clientRect);
-            FillRect(info.info.win.hdc, &clientRect, blackBrush);
-            DeleteObject(blackBrush);
-        }
-#endif
     }
 
     bool needsFirstEnterCapture = false;

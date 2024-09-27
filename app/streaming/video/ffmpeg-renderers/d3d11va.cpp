@@ -155,10 +155,7 @@ D3D11VARenderer::~D3D11VARenderer()
 
 bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapterNotFound)
 {
-    const D3D_FEATURE_LEVEL supportedFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1,
-                                                         D3D_FEATURE_LEVEL_11_0,
-                                                         D3D_FEATURE_LEVEL_10_1,
-                                                         D3D_FEATURE_LEVEL_10_0 };
+    const D3D_FEATURE_LEVEL supportedFeatureLevels[] = { D3D_FEATURE_LEVEL_11_1, D3D_FEATURE_LEVEL_11_0 };
     bool success = false;
     ComPtr<IDXGIAdapter1> adapter;
     DXGI_ADAPTER_DESC1 adapterDesc;
@@ -220,6 +217,13 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
                      hr);
         goto Exit;
     }
+    else if (adapterDesc.VendorId == 0x8086 && featureLevel <= D3D_FEATURE_LEVEL_11_0 && !qEnvironmentVariableIntValue("D3D11VA_ENABLED")) {
+        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
+                    "Avoiding D3D11VA on old pre-FL11.1 Intel GPU. Set D3D11VA_ENABLED=1 to override.");
+        m_DeviceContext.Reset();
+        m_Device.Reset();
+        goto Exit;
+    }
     else if (featureLevel >= D3D_FEATURE_LEVEL_11_0) {
         // Remember that we found a non-software D3D11 devices with support for
         // feature level 11.0 or later (Fermi, Terascale 2, or Ivy Bridge and later)
@@ -229,22 +233,10 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
     bool ok;
     m_BindDecoderOutputTextures = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_BIND", &ok);
     if (!ok) {
-        D3D11_FEATURE_DATA_D3D11_OPTIONS2 options = {};
-        m_Device->CheckFeatureSupport(D3D11_FEATURE_D3D11_OPTIONS2, &options, sizeof(options));
-
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
-                    "Unified memory: %s",
-                    options.UnifiedMemoryArchitecture ? "yes" : "no");
-
         // Skip copying to our own internal texture on Intel GPUs due to
         // significant performance impact of the extra copy. See:
         // https://github.com/moonlight-stream/moonlight-qt/issues/1304
-        //
-        // We also don't copy for modern UMA GPUs from other vendors to
-        // avoid performance impact due to shared system memory accesses.
-        m_BindDecoderOutputTextures =
-            adapterDesc.VendorId == 0x8086 ||
-            (featureLevel >= D3D_FEATURE_LEVEL_11_1 && options.UnifiedMemoryArchitecture);
+        m_BindDecoderOutputTextures = adapterDesc.VendorId == 0x8086;
     }
     else {
         SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
@@ -845,6 +837,7 @@ void D3D11VARenderer::renderVideo(AVFrame* frame)
                          srvIndex);
             return;
         }
+
 
         // Ensure decoding operations have completed using a dummy fence.
         // This is not necessary on modern GPU drivers, but it is required
