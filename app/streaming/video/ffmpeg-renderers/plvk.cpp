@@ -378,14 +378,8 @@ bool PlVkRenderer::initialize(PDECODER_PARAMETERS params)
 
     pl_vk_inst_params vkInstParams = pl_vk_inst_default_params;
     {
-        bool ok;
-        vkInstParams.debug_extra = !!qEnvironmentVariableIntValue("PLVK_DEBUG_EXTRA", &ok);
-        vkInstParams.debug = vkInstParams.debug_extra || !!qEnvironmentVariableIntValue("PLVK_DEBUG", &ok);
-#ifdef QT_DEBUG
-        if (!ok) {
-            vkInstParams.debug = true;
-        }
-#endif
+        vkInstParams.debug_extra = !!qEnvironmentVariableIntValue("PLVK_DEBUG_EXTRA");
+        vkInstParams.debug = vkInstParams.debug_extra || !!qEnvironmentVariableIntValue("PLVK_DEBUG");
     }
     vkInstParams.get_proc_addr = (PFN_vkGetInstanceProcAddr)SDL_Vulkan_GetVkGetInstanceProcAddr();
     vkInstParams.extensions = instanceExtensions.data();
