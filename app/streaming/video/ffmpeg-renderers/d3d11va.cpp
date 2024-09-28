@@ -367,19 +367,6 @@ bool D3D11VARenderer::createDeviceByAdapterIndex(int adapterIndex, bool* adapter
         goto Exit;
     }
 
-    bool ok;
-    m_BindDecoderOutputTextures = !!qEnvironmentVariableIntValue("D3D11VA_FORCE_BIND", &ok);
-    if (!ok) {
-        // Skip copying to our own internal texture on Intel GPUs due to
-        // significant performance impact of the extra copy. See:
-        // https://github.com/moonlight-stream/moonlight-qt/issues/1304
-        m_BindDecoderOutputTextures = (adapterDesc.VendorId == 0x8086) && !m_VideoEnhancement->isVideoEnhancementEnabled();
-    }
-    else {
-        SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
-                    "Using D3D11VA_FORCE_BIND to override default bind/copy logic");
-    }
-
     SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION,
                 "Detected GPU %d: %S (%x:%x)",
                 adapterIndex,
