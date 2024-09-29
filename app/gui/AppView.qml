@@ -87,6 +87,7 @@ CenteredGridView {
             anchors.horizontalCenter: parent.horizontalCenter
             y: 10
             source: model.boxart
+            fillMode: Image.PreserveAspectCrop
 
             onSourceSizeChanged: {
                 // Nearly all of Nvidia's official box art does not match the dimensions of placeholder
