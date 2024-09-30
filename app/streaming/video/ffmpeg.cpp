@@ -1076,15 +1076,15 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
 #define TRY_PREFERRED_PIXEL_FORMAT(RENDERER_TYPE) \
     { \
         RENDERER_TYPE renderer; \
-        if (renderer.getPreferredPixelFormat(params->videoFormat) == decoder->pix_fmts[i]) { \
+        if (renderer.getPreferredPixelFormat(params->videoFormat) == decoder_pix_fmts[i]) { \
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                         "Trying " #RENDERER_TYPE " for codec %s due to preferred pixel format: 0x%x", \
-                        decoder->name, decoder->pix_fmts[i]); \
-            if (tryInitializeRenderer(decoder, decoder->pix_fmts[i], params, nullptr, nullptr, \
+                        decoder->name, decoder_pix_fmts[i]); \
+            if (tryInitializeRenderer(decoder, decoder_pix_fmts[i], params, nullptr, nullptr, \
                                       []() -> IFFmpegRenderer* { return new RENDERER_TYPE(); })) { \
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                             "Chose " #RENDERER_TYPE " for codec %s due to preferred pixel format: 0x%x", \
-                            decoder->name, decoder->pix_fmts[i]); \
+                            decoder->name, decoder_pix_fmts[i]); \
                 return true; \
             } \
         } \
@@ -1093,16 +1093,16 @@ bool FFmpegVideoDecoder::tryInitializeRenderer(const AVCodec* decoder,
 #define TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(RENDERER_TYPE) \
     { \
         RENDERER_TYPE renderer; \
-        if (decoder->pix_fmts[i] != renderer.getPreferredPixelFormat(params->videoFormat) && \
-            renderer.isPixelFormatSupported(params->videoFormat, decoder->pix_fmts[i])) { \
+        if (decoder_pix_fmts[i] != renderer.getPreferredPixelFormat(params->videoFormat) && \
+            renderer.isPixelFormatSupported(params->videoFormat, decoder_pix_fmts[i])) { \
             SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                         "Trying " #RENDERER_TYPE " for codec %s due to compatible pixel format: 0x%x", \
-                        decoder->name, decoder->pix_fmts[i]); \
-            if (tryInitializeRenderer(decoder, decoder->pix_fmts[i], params, nullptr, nullptr, \
+                        decoder->name, decoder_pix_fmts[i]); \
+            if (tryInitializeRenderer(decoder, decoder_pix_fmts[i], params, nullptr, nullptr, \
                                       []() -> IFFmpegRenderer* { return new RENDERER_TYPE(); })) { \
                 SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, \
                             "Chose " #RENDERER_TYPE " for codec %s due to compatible pixel format: 0x%x", \
-                            decoder->name, decoder->pix_fmts[i]); \
+                            decoder->name, decoder_pix_fmts[i]); \
                 return true; \
             } \
         } \
@@ -1115,6 +1115,16 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
     if (!decoder) {
         return false;
     }
+
+    const AVPixelFormat* decoder_pix_fmts;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+    if (avcodec_get_supported_config(nullptr, decoder, AV_CODEC_CONFIG_PIX_FORMAT, 0,
+                                     (const void**)&decoder_pix_fmts, nullptr) < 0) {
+        decoder_pix_fmts = nullptr;
+    }
+#else
+    decoder_pix_fmts = decoder->pix_fmts;
+#endif
 
     // This might be a hwaccel decoder, so try any hw configs first
     if (tryHwAccel) {
@@ -1141,7 +1151,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
         }
     }
 
-    if (decoder->pix_fmts == NULL) {
+    if (decoder_pix_fmts == NULL) {
         // Supported output pixel formats are unknown. We'll just try DRM/SDL and hope it can cope.
 
 #if defined(HAVE_DRM) && defined(GL_IS_SLOW)
@@ -1177,11 +1187,11 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
     // Even if it didn't completely deadlock us, the performance would likely be atrocious.
     if (strcmp(decoder->name, "h264_mmal") == 0) {
 #ifdef HAVE_MMAL
-        for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+        for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
             TRY_PREFERRED_PIXEL_FORMAT(MmalRenderer);
         }
 
-        for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+        for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
             TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(MmalRenderer);
         }
 #endif
@@ -1191,7 +1201,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
     }
 
     // Check if any of our decoders prefer any of the pixel formats first
-    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
 #ifdef HAVE_DRM
         TRY_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
@@ -1204,7 +1214,7 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
     }
 
     // Nothing prefers any of them. Let's see if anyone will tolerate one.
-    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
 #ifdef HAVE_DRM
         TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(DrmRenderer);
 #endif
@@ -1219,10 +1229,10 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
 #if defined(HAVE_LIBPLACEBO_VULKAN) && defined(VULKAN_IS_SLOW)
     // If we got here with VULKAN_IS_SLOW, DrmRenderer didn't work,
     // so we have to resort to PlVkRenderer.
-    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
         TRY_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
     }
-    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
         TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(PlVkRenderer);
     }
 #endif
@@ -1230,10 +1240,10 @@ bool FFmpegVideoDecoder::tryInitializeRendererForUnknownDecoder(const AVCodec* d
 #ifdef GL_IS_SLOW
     // If we got here with GL_IS_SLOW, DrmRenderer didn't work, so we have
     // to resort to SdlRenderer.
-    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
         TRY_PREFERRED_PIXEL_FORMAT(SdlRenderer);
     }
-    for (int i = 0; decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+    for (int i = 0; decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
         TRY_SUPPORTED_NON_PREFERRED_PIXEL_FORMAT(SdlRenderer);
     }
 #endif
@@ -1369,9 +1379,18 @@ bool FFmpegVideoDecoder::tryInitializeNonHwAccelDecoder(PDECODER_PARAMETERS para
 
         // Skip decoders without zero-copy output formats if requested
         if (requireZeroCopyFormat) {
+            const AVPixelFormat* decoder_pix_fmts;
+#if LIBAVCODEC_VERSION_INT >= AV_VERSION_INT(61, 13, 100)
+            if (avcodec_get_supported_config(nullptr, decoder, AV_CODEC_CONFIG_PIX_FORMAT, 0,
+                                             (const void**)&decoder_pix_fmts, nullptr) < 0) {
+                decoder_pix_fmts = nullptr;
+            }
+#else
+            decoder_pix_fmts = decoder->pix_fmts;
+#endif
             bool foundZeroCopyFormat = false;
-            for (int i = 0; decoder->pix_fmts && decoder->pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
-                if (isZeroCopyFormat(decoder->pix_fmts[i])) {
+            for (int i = 0; decoder_pix_fmts && decoder_pix_fmts[i] != AV_PIX_FMT_NONE; i++) {
+                if (isZeroCopyFormat(decoder_pix_fmts[i])) {
                     foundZeroCopyFormat = true;
                     break;
                 }
