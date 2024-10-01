@@ -43,7 +43,7 @@
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Vidu ĉiujn programojn</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
@@ -119,17 +119,17 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Nekonata</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Parigita</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Ne parigita</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
@@ -213,7 +213,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Komputiloj</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="68"/>
@@ -318,7 +318,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="178"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Vidu ĉiujn programojn</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
@@ -424,27 +424,27 @@
     <message>
         <location filename="../main.cpp" line="620"/>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Jes</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="621"/>
         <source>&amp;No</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Ne</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="622"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>Bone</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="623"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Helpo</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="624"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Nuligi</translation>
     </message>
 </context>
 <context>
@@ -500,7 +500,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Erarkodo: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="931"/>
@@ -668,7 +668,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="13"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Agordoj</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="116"/>
@@ -688,22 +688,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="250"/>
         <source>720p</source>
-        <translation type="unfinished"></translation>
+        <translation>720p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="256"/>
         <source>1080p</source>
-        <translation type="unfinished"></translation>
+        <translation>1080p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="262"/>
         <source>1440p</source>
-        <translation type="unfinished"></translation>
+        <translation>1440p</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="268"/>
         <source>4K</source>
-        <translation type="unfinished"></translation>
+        <translation>4K</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="373"/>
@@ -748,13 +748,13 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="737"/>
         <source>(Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>(rekomendata)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <location filename="../gui/SettingsView.qml" line="1181"/>
         <source>Fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>Plenekrane</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="787"/>
@@ -780,7 +780,7 @@
         <location filename="../gui/SettingsView.qml" line="728"/>
         <location filename="../gui/SettingsView.qml" line="1173"/>
         <source>Windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Fenestra</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="794"/>
@@ -845,17 +845,17 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="964"/>
         <source>UI Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Fasadaj agordoj</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="974"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Lingvo</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1000"/>
         <source>Automatic</source>
-        <translation type="unfinished"></translation>
+        <translation>Aŭtomata</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1123"/>
