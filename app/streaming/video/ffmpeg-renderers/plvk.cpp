@@ -582,7 +582,7 @@ bool PlVkRenderer::populateQueues(int videoFormat)
 
     fn_vkGetPhysicalDeviceQueueFamilyProperties2(m_Vulkan->phys_device, &queueFamilyCount, queueFamilies.data());
 
-#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(58, 34, 100)
+#if LIBAVUTIL_VERSION_INT >= AV_VERSION_INT(59, 34, 100)
     Q_UNUSED(videoFormat);
 
     for (uint32_t i = 0; i < queueFamilyCount; i++) {
