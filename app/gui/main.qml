@@ -23,6 +23,7 @@ ApplicationWindow {
     width: 1280
     height: 600
 
+    // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
         // Override the background color to Material 2 colors for Qt 6.5+
         // in order to improve contrast between GFE's placeholder box art
@@ -87,16 +88,14 @@ ApplicationWindow {
 
     StackView {
         id: stackView
-        initialItem: initialView
         anchors.fill: parent
         focus: true
 
-        onEmptyChanged: {
-            // Hijack this callback to perform our very early init
-            // that runs before the first StackView item is pushed
-            if (!empty) {
-                doEarlyInit();
-            }
+        Component.onCompleted: {
+            // Perform our early initialization before constructing
+            // the initial view and pushing it to the StackView
+            doEarlyInit()
+            push(initialView)
         }
 
         onCurrentItemChanged: {
