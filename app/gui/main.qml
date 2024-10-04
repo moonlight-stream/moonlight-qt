@@ -264,7 +264,7 @@ ApplicationWindow {
                 // Only make the button visible if the user has navigated somewhere.
                 visible: stackView.depth > 1
 
-                iconSource: "qrc:/res/arrow_left.svg"
+                iconSource: "qrc:/res/arrow_back_FILL1_wght700_GRAD200_opsz48.svg"
 
                 onClicked: goBack()
 
@@ -322,7 +322,7 @@ ApplicationWindow {
                 id: addPcButton
                 visible: qmltypeof(stackView.currentItem, "PcView")
 
-                iconSource:  "qrc:/res/ic_add_to_queue_white_48px.svg"
+                iconSource:  "qrc:/res/add_to_queue_FILL0_wght700_GRAD200_opsz48.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -349,7 +349,7 @@ ApplicationWindow {
 
                 id: updateButton
 
-                iconSource: "qrc:/res/update.svg"
+                iconSource: "qrc:/res/update_FILL1_wght700_GRAD200_opsz48.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -386,7 +386,7 @@ ApplicationWindow {
                 id: helpButton
                 visible: SystemProperties.hasBrowser
 
-                iconSource: "qrc:/res/question_mark.svg"
+                iconSource: "qrc:/res/help_FILL1_wght700_GRAD200_opsz48.svg"
 
                 ToolTip.delay: 1000
                 ToolTip.timeout: 3000
@@ -416,7 +416,7 @@ ApplicationWindow {
                 ToolTip.visible: hovered
                 ToolTip.text: qsTr("Gamepad Mapper")
 
-                iconSource: "qrc:/res/ic_videogame_asset_white_48px.svg"
+                iconSource: "qrc:/res/videogame_asset_FILL0_wght700_GRAD200_opsz48.svg"
 
                 onClicked: navigateTo("qrc:/gui/GamepadMapper.qml", "GamepadMapper")
 
@@ -428,7 +428,7 @@ ApplicationWindow {
             NavigableToolButton {
                 id: settingsButton
 
-                iconSource:  "qrc:/res/settings.svg"
+                iconSource:  "qrc:/res/settings_FILL1_wght700_GRAD200_opsz48.svg"
 
                 onClicked: navigateTo("qrc:/gui/SettingsView.qml", "SettingsView")
 
