@@ -335,6 +335,16 @@ CenteredGridView {
                     ToolTip.timeout: 5000
                     ToolTip.visible: hovered
                 }
+                NavigableMenuItem {
+                    parentMenu: appContextMenu
+                    text: qsTr("View Details")
+                    onTriggered: {
+                        showAppDetailsDialog.name = model.name
+                        showAppDetailsDialog.hdrSupported = model.hdrSupported
+                        showAppDetailsDialog.appid = model.appid
+                        showAppDetailsDialog.open()
+                    }
+                }
             }
         }
     }
@@ -366,6 +376,18 @@ CenteredGridView {
         }
 
         onAccepted: quitApp()
+    }
+
+    NavigableMessageDialog {
+        id: showAppDetailsDialog
+        property string name: ""
+        property bool hdrSupported: false
+        property int appid: 0
+        text: qsTr("Name: %1").arg(name) + "\n" +
+              qsTr("HDR Supported: %1").arg(hdrSupported ? qsTr("Yes") : qsTr("Unknown")) + "\n" +
+              qsTr("ID: %1").arg(appid)
+        imageSrc: "qrc:/res/baseline-help_outline-24px.svg"
+        standardButtons: Dialog.Ok
     }
 
     ScrollBar.vertical: ScrollBar {}
