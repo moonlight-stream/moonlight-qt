@@ -1,0 +1,24 @@
+CoreAudioRenderer TODO
+----------------------
+Test the lower-quality surround modes that have coupled streams, is that broken on headphones or when spatialized?
+From https://people.xiph.org/~xiphmont/demo/opus/demo3.shtml
+
+    Surround masking takes advantage of cross-channel masking between free-field loudspeakers. Obviously, we can't do that for stereo, as stereo is often listened to on headphones or nearfield monitors, but for surround encodings played on typical surround placements with listeners placed well within the soundfield, there's considerable savings to be had by assuming freefield masking. We only need to make slight modifications to ensure that the encode still sounds good when downmixed to stereo for playback on non-surround systems.
+
+Refactor into more logical/cleaner C++ classes.
+Refactor audio stats code and implement for other backends.
+
+New options for audio:
+Packet size: 2.5/5/10/20
+Surround channel mode (coupled/mono)
+Bitrate: 96/128/256/510 (256k max per channel for multichannel)
+VBR: yes/no
+RTP FEC (audio)
+
+2-line overlay stats version:
+
+Line 1: 1280x800 @ 60 FPS, HEVC 10-bit HDR, 15.0 Mbps (+20% FEC)
+Line 2: Latency: 1ms ± 1ms, Decode: 6.67ms, Render: 3.78ms, Host: 1.00ms, Loss: 0%
+
+Line 1: 7.1 Opus @ 48 kHz, 512 kbps (+33% FEC), spatial audio (AirPods)
+Line 2: Latency: 12.9ms, Decode: 0.06ms, Packet Loss: 0%

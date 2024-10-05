@@ -20,8 +20,11 @@ public:
 
     virtual AudioFormat getAudioBufferFormat();
 
+    const char * getRendererName() { return m_Name; }
+
 private:
     SDL_AudioDeviceID m_AudioDevice;
     void* m_AudioBuffer;
     int m_FrameSize;
+    char m_Name[24];
 };

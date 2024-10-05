@@ -9,6 +9,10 @@
 #include "renderers/slaud.h"
 #endif
 
+#ifdef HAVE_COREAUDIO
+#include "renderers/coreaudio/coreaudio.h"
+#endif
+
 #include "renderers/sdl.h"
 
 #include <Limelight.h>
@@ -29,6 +33,12 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
         TRY_INIT_RENDERER(SdlAudioRenderer, opusConfig)
         return nullptr;
     }
+#ifdef HAVE_COREAUDIO
+    else if (mlAudio == "coreaudio") {
+        TRY_INIT_RENDERER(CoreAudioRenderer, opusConfig)
+        return nullptr;
+    }
+#endif
 #ifdef HAVE_SOUNDIO
     else if (mlAudio == "libsoundio") {
         TRY_INIT_RENDERER(SoundIoAudioRenderer, opusConfig)
@@ -53,6 +63,11 @@ IAudioRenderer* Session::createAudioRenderer(const POPUS_MULTISTREAM_CONFIGURATI
 #if defined(HAVE_SLAUDIO)
     // Steam Link should always have SLAudio
     TRY_INIT_RENDERER(SLAudioRenderer, opusConfig)
+#endif
+
+#ifdef HAVE_COREAUDIO
+    // Native renderer for macOS/iOS/tvOS, suports spatial audio
+    TRY_INIT_RENDERER(CoreAudioRenderer, opusConfig)
 #endif
 
     // Default to SDL and use libsoundio as a fallback
@@ -157,6 +172,8 @@ int Session::arInit(int /* audioConfiguration */,
 
 void Session::arCleanup()
 {
+    s_ActiveSession->m_AudioRenderer->logGlobalAudioStats();
+
     delete s_ActiveSession->m_AudioRenderer;
     s_ActiveSession->m_AudioRenderer = nullptr;
 
@@ -205,6 +222,8 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
     }
 
     if (s_ActiveSession->m_AudioRenderer != nullptr) {
+        uint64_t startTimeUs = LiGetMicroseconds();
+
         int sampleSize = s_ActiveSession->m_AudioRenderer->getAudioBufferSampleSize();
         int frameSize = sampleSize * s_ActiveSession->m_ActiveAudioConfig.channelCount;
         int desiredBufferSize = frameSize * s_ActiveSession->m_ActiveAudioConfig.samplesPerFrame;
@@ -239,7 +258,29 @@ void Session::arDecodeAndPlaySample(char* sampleData, int sampleLength)
             desiredBufferSize = 0;
         }
 
-        if (!s_ActiveSession->m_AudioRenderer->submitAudio(desiredBufferSize)) {
+        // used to display the raw audio bitrate
+        s_ActiveSession->m_AudioRenderer->statsAddOpusBytesReceived(sampleLength);
+
+        // Once a second, maybe grab stats from the last two windows for display, then shift to the next stats window
+        if (LiGetMicroseconds() > s_ActiveSession->m_AudioRenderer->getActiveWndAudioStats().measurementStartUs + 1000000) {
+            if (s_ActiveSession->getOverlayManager().isOverlayEnabled(Overlay::OverlayDebugAudio)) {
+                AUDIO_STATS lastTwoWndAudioStats = {};
+                s_ActiveSession->m_AudioRenderer->snapshotAudioStats(lastTwoWndAudioStats);
+
+                s_ActiveSession->m_AudioRenderer->stringifyAudioStats(lastTwoWndAudioStats,
+                                                                      s_ActiveSession->getOverlayManager().getOverlayText(Overlay::OverlayDebugAudio),
+                                                                      s_ActiveSession->getOverlayManager().getOverlayMaxTextLength());
+                s_ActiveSession->getOverlayManager().setOverlayTextUpdated(Overlay::OverlayDebugAudio);
+            }
+
+            s_ActiveSession->m_AudioRenderer->flipAudioStatsWindows();
+        }
+
+        if (s_ActiveSession->m_AudioRenderer->submitAudio(desiredBufferSize)) {
+            // keep stats on how long the audio pipline took to execute
+            s_ActiveSession->m_AudioRenderer->statsTrackDecodeTime(startTimeUs);
+        }
+        else {
             SDL_LogWarn(SDL_LOG_CATEGORY_APPLICATION,
                         "Reinitializing audio renderer after failure");
 
