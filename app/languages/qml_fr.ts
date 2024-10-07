@@ -1007,7 +1007,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1690"/>
         <source>Show performance stats while streaming</source>
-        <translation>Afficher les statistiques de peformance lors du stream</translation>
+        <translation>Afficher les statistiques de performance lors du stream</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1700"/>
