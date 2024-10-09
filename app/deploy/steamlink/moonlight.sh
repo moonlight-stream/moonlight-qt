@@ -14,4 +14,4 @@ renice -10 -p $(pidof PE_Single_CPU)
 
 # Renice Moonlight itself to avoid preemption by background tasks
 # Write output to a logfile in /tmp
-exec nice -n -10 ./bin/moonlight > /tmp/moonlight.log
+exec nice -n -10 ./bin/moonlight > /tmp/moonlight.log 2>&1
