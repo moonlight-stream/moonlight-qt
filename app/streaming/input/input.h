@@ -120,6 +120,8 @@ public:
     static
     QString getUnmappedGamepads();
 
+    bool* _in_alt_tab_pressed{nullptr};
+
 private:
     enum KeyCombo {
         KeyComboQuit,

@@ -1727,6 +1727,7 @@ void Session::exec(QWindow* qtWindow)
 #ifdef Q_OS_WIN32
 HHOOK g_hook = NULL;
 HWND g_appWindow = NULL;
+bool alt_tab_pressed = false;
 // Hook procedure
 LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (nCode != HC_ACTION) {
@@ -1740,15 +1741,21 @@ LRESULT CALLBACK LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam) {
     if (!isOurAppActive) {
         return CallNextHookEx(g_hook, nCode, wParam, lParam);
     }
+    // static bool last_down_status = false;
     // Check for Alt+Tab combination
     if (pKeyBoard->vkCode == VK_TAB && (GetAsyncKeyState(VK_MENU) & 0x8000)) {
-        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Alt+Tab intercepted and blocked!: %d", wParam);
+        SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Alt+Tab intercepted and blocked!: %s", (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN) ? "down" : "up");
         char modifiers = 0;
         modifiers |= MODIFIER_ALT;
         short keyCode = 0x09;
+        //if (last_down_status && (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN)) {
+        //    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "Alt+Tab down repeated, ignore this time");
+        //}
+        alt_tab_pressed = (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN);
         LiSendKeyboardEvent(0x8000 | keyCode,
-                            (wParam == WM_SYSKEYDOWN || wParam == WM_KEYDOWN) ? KEY_ACTION_DOWN : KEY_ACTION_UP,
+                            alt_tab_pressed ? KEY_ACTION_DOWN : KEY_ACTION_UP,
                             modifiers);
+
         return 1; // Block the key
     }
     return CallNextHookEx(g_hook, nCode, wParam, lParam);
@@ -1886,6 +1893,7 @@ void Session::execInternal()
             return;
         }
     }
+    m_InputHandler->_in_alt_tab_pressed = &alt_tab_pressed;
 
     // HACK: Remove once proper Dark Mode support lands in SDL
 #ifdef Q_OS_WIN32

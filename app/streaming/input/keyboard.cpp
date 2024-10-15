@@ -337,6 +337,11 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
                 keyCode = 0xA3;
                 break;
             case SDL_SCANCODE_LALT:
+                if (event->state == SDL_RELEASED && *_in_alt_tab_pressed) {
+                    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "fix alt+tab pressed, but tab release do not sence");
+                    LiSendKeyboardEvent(short(0x8000) | short(0x09), KEY_ACTION_UP, 0);
+                    *_in_alt_tab_pressed = false;
+                }
                 keyCode = 0xA4;
                 break;
             case SDL_SCANCODE_RALT:
@@ -430,6 +435,7 @@ void SdlInputHandler::handleKeyEvent(SDL_KeyboardEvent* event)
         m_KeysDown.remove(keyCode);
     }
 
+    SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "mod: %d, key: %d is %s", modifiers, keyCode , event->state == SDL_PRESSED ? "press" : "up");
     LiSendKeyboardEvent(0x8000 | keyCode,
                         event->state == SDL_PRESSED ?
                             KEY_ACTION_DOWN : KEY_ACTION_UP,
