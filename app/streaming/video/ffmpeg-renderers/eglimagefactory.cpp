@@ -1,5 +1,7 @@
 #include "eglimagefactory.h"
 
+#include <vector>
+
 // Don't take a dependency on libdrm just for these constants
 #ifndef DRM_FORMAT_MOD_INVALID
 #define DRM_FORMAT_MOD_INVALID ((1ULL << 56) - 1)
@@ -449,8 +451,8 @@ bool EglImageFactory::supportsImportingFormat(EGLDisplay dpy, EGLint format)
         return false;
     }
 
-    EGLint formats[numFormats];
-    if (!m_eglQueryDmaBufFormatsEXT(dpy, numFormats, formats, &numFormats)) {
+    std::vector<EGLint> formats(numFormats);
+    if (!m_eglQueryDmaBufFormatsEXT(dpy, numFormats, formats.data(), &numFormats)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "eglQueryDmaBufFormatsEXT() #2 failed: %d", eglGetError());
         return false;
@@ -491,8 +493,8 @@ bool EglImageFactory::supportsImportingModifier(EGLDisplay dpy, EGLint format, E
         return false;
     }
 
-    EGLuint64KHR modifiers[numModifiers];
-    if (!m_eglQueryDmaBufModifiersEXT(dpy, format, numModifiers, modifiers, nullptr, &numModifiers)) {
+    std::vector<EGLuint64KHR> modifiers(numModifiers);
+    if (!m_eglQueryDmaBufModifiersEXT(dpy, format, numModifiers, modifiers.data(), nullptr, &numModifiers)) {
         SDL_LogError(SDL_LOG_CATEGORY_APPLICATION,
                      "eglQueryDmaBufModifiersEXT() #2 failed: %d", eglGetError());
         return false;
