@@ -76,10 +76,8 @@ Item {
             streamSegueErrorDialog.text += "\n\n" + qsTr("This PC's Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.")
         }
 
-        if (window.gamepadInputActive) {
-            // Re-enable GUI gamepad usage now
-            SdlGamepadKeyNavigation.enable()
-        }
+        // Re-enable GUI gamepad usage now
+        SdlGamepadKeyNavigation.enable()
 
         if (quitAfter) {
             if (streamSegueErrorDialog.text) {
@@ -121,10 +119,8 @@ Item {
         // Show the toolbar again when popped off the stack
         toolBar.visible = true
 
-        if (window.gamepadInputActive) {
-            // Re-enable GUI gamepad usage now
-            SdlGamepadKeyNavigation.enable()
-        }
+        // Re-enable GUI gamepad usage now
+        SdlGamepadKeyNavigation.enable()
     }
 
     StackView.onActivated: {

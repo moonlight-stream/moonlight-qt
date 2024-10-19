@@ -12,7 +12,6 @@ import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
-    property bool gamepadInputActive: false
 
     // Set by SettingsView to force the back operation to pop all
     // pages except the initial view. This is required when doing
@@ -33,7 +32,6 @@ ApplicationWindow {
         }
 
         SdlGamepadKeyNavigation.enable()
-        gamepadInputActive = true
     }
 
     Component.onCompleted: {
@@ -160,11 +158,6 @@ ApplicationWindow {
                 ComputerManager.stopPollingAsync()
                 pollingActive = false
             }
-
-            if (gamepadInputActive) {
-                SdlGamepadKeyNavigation.disable()
-                gamepadInputActive = false
-            }
         }
         else if (active) {
             // When we become visible and active again, start polling
@@ -175,11 +168,10 @@ ApplicationWindow {
                 ComputerManager.startPolling()
                 pollingActive = true
             }
-            if (!gamepadInputActive) {
-                SdlGamepadKeyNavigation.enable()
-                gamepadInputActive = true
-            }
         }
+
+        // Poll for gamepad input only when the window is in focus
+        SdlGamepadKeyNavigation.notifyWindowFocus(visible && active)
     }
 
     onActiveChanged: {
@@ -192,23 +184,15 @@ ApplicationWindow {
                 ComputerManager.startPolling()
                 pollingActive = true
             }
-            if (!gamepadInputActive) {
-                SdlGamepadKeyNavigation.enable()
-                gamepadInputActive = true
-            }
         }
         else {
             // Start the inactivity timer to stop polling
             // if focus does not return within a few minutes.
             inactivityTimer.restart()
-
-            // Immediately stop gamepad input since we aren't
-            // the active window anymore.
-            if (gamepadInputActive) {
-                SdlGamepadKeyNavigation.disable()
-                gamepadInputActive = false
-            }
         }
+
+        // Poll for gamepad input only when the window is in focus
+        SdlGamepadKeyNavigation.notifyWindowFocus(visible && active)
     }
 
     // Workaround for lack of instanceof in Qt 5.9.
