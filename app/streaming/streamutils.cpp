@@ -348,6 +348,8 @@ int StreamUtils::getDrmFdForWindow(SDL_Window* window, bool* mustClose)
             return fd;
         }
     }
+#else
+    Q_UNUSED(window);
 #endif
 
     return -1;
@@ -397,6 +399,8 @@ int StreamUtils::getDrmFd(bool preferRenderNode)
             }
         }
     }
+#else
+    Q_UNUSED(preferRenderNode);
 #endif
 
     return -1;

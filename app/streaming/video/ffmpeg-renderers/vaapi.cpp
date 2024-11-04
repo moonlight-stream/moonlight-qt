@@ -1,5 +1,7 @@
 #include <QString>
 
+#include <vector>
+
 // HACK: Include before vaapi.h to prevent conflicts with Xlib.h
 #include <streaming/session.h>
 
@@ -573,9 +575,9 @@ VAAPIRenderer::isDirectRenderingSupported()
 
     AVHWDeviceContext* deviceContext = (AVHWDeviceContext*)m_HwContext->data;
     AVVAAPIDeviceContext* vaDeviceContext = (AVVAAPIDeviceContext*)deviceContext->hwctx;
-    VAEntrypoint entrypoints[vaMaxNumEntrypoints(vaDeviceContext->display)];
+    std::vector<VAEntrypoint> entrypoints(vaMaxNumEntrypoints(vaDeviceContext->display));
     int entrypointCount;
-    VAStatus status = vaQueryConfigEntrypoints(vaDeviceContext->display, VAProfileNone, entrypoints, &entrypointCount);
+    VAStatus status = vaQueryConfigEntrypoints(vaDeviceContext->display, VAProfileNone, entrypoints.data(), &entrypointCount);
     if (status == VA_STATUS_SUCCESS) {
         for (int i = 0; i < entrypointCount; i++) {
             // Without VAEntrypointVideoProc support, the driver will crash inside vaPutSurface()
