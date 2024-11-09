@@ -40,7 +40,7 @@ install:
 before_build:
   - 'git -c submodule.libs.update=none submodule update --init --recursive'
   - cmd: 'git submodule update --init --recursive'
-  - sh: '[ "$BUILD_TARGET" != macos ] || git submodule update --init --recursive'
+  - sh: '[ "$BUILD_TARGET" = linux ] || git submodule update --init --recursive'
   - cmd: 'set OLDPATH=%PATH%'
   - cmd: 'set /p VERSION=<app\version.txt'
   - sh: 'export VERSION=`cat app/version.txt`'
