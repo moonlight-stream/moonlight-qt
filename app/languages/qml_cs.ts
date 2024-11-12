@@ -119,17 +119,17 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Neznámé</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Spárováno</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Nespárované</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
@@ -139,12 +139,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Status: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Aktivní adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
@@ -154,42 +154,42 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Lokální adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Vzdálená adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6 adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Manuální adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC adresa: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Stav párování: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>ID spuštěné hry: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS port: %1</translation>
     </message>
 </context>
 <context>
@@ -238,7 +238,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Hledání kompatibilních zažízení na lokální síti...</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="188"/>
@@ -263,7 +263,7 @@
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Zobrazit detaily</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
@@ -323,22 +323,22 @@
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Prosím zadejte %1 na vašem hostitelském zařízení. Toto dialogové okno zmizí po úspěšném spárování.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Pokud je na Vašem hostitelském počítači spuštěn Sunshine, přejděte do webového rozhraní Sunshine pro zadání pinu.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="322"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Jste si jisti, že chcete smazat &apos;%1&apos;?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight testuje vaše síťové spojení aby otestoval, jestli jsou některé potřebné porty blokovány.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
@@ -500,7 +500,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Chybový kód: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="931"/>
@@ -544,7 +544,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1029"/>
         <source>Your host PC doesn&apos;t support HDR streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš hostitelský počítač nepodporuje streamování v režimu HDR.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1021"/>
@@ -574,7 +574,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1554"/>
         <source>Host returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Host vrátil chybu: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1001"/>
@@ -595,7 +595,7 @@
         <location filename="../streaming/session.cpp" line="1050"/>
         <location filename="../streaming/session.cpp" line="1068"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Používání softwarového dekódování v důsledku volby používat režim HDR bez podpory grafické karty. Může způsobovat špatnou kvalitu streamu.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1062"/>
@@ -605,7 +605,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1084"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Váš hostitelský počítač nepodporuje streamování YUV 4:4:4.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1092"/>
