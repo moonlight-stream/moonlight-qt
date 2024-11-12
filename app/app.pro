@@ -69,7 +69,12 @@ macx:!disable-prebuilts {
 
 unix:if(!macx|disable-prebuilts) {
     CONFIG += link_pkgconfig
-    PKGCONFIG += openssl sdl2 SDL2_ttf opus
+    PKGCONFIG += openssl sdl2 SDL2_ttf
+
+    # We have our own optimized libopus.a for Steam Link
+    if(!config_SL|disable-prebuilts) {
+        PKGCONFIG += opus
+    }
 
     !disable-ffmpeg {
         packagesExist(libavcodec) {
@@ -365,6 +370,13 @@ config_EGL {
 }
 config_SL {
     message(Steam Link build configuration selected)
+
+    !disable-prebuilts {
+        # Link against our NEON-optimized libopus build
+        LIBS += -L$$PWD/../libs/steamlink/lib
+        INCLUDEPATH += $$PWD/../libs/steamlink/include
+        LIBS += -lopus -larmasm -lNE10
+    }
 
     DEFINES += EMBEDDED_BUILD STEAM_LINK HAVE_SLVIDEO HAVE_SLAUDIO
     LIBS += -lSLVideo -lSLAudio

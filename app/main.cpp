@@ -62,22 +62,37 @@
 
 static QElapsedTimer s_LoggerTime;
 static QTextStream s_LoggerStream(stderr);
-static QMutex s_LoggerLock;
+static QThreadPool s_LoggerThread;
 static bool s_SuppressVerboseOutput;
 static QRegularExpression k_RikeyRegex("&rikey=\\w+");
 static QRegularExpression k_RikeyIdRegex("&rikeyid=[\\d-]+");
 #ifdef LOG_TO_FILE
 // Max log file size of 10 MB
-#define MAX_LOG_SIZE_BYTES (10 * 1024 * 1024)
-static int s_LogBytesWritten = 0;
-static bool s_LogLimitReached = false;
+static const uint64_t k_MaxLogSizeBytes = 10 * 1024 * 1024;
+static QAtomicInteger<uint64_t> s_LogBytesWritten = 0;
 static QFile* s_LoggerFile;
 #endif
 
+class LoggerTask : public QRunnable
+{
+public:
+    LoggerTask(const QString& msg) : m_Msg(msg)
+    {
+        setAutoDelete(true);
+    }
+
+    void run() override
+    {
+        s_LoggerStream << m_Msg;
+        s_LoggerStream.flush();
+    }
+
+private:
+    QString m_Msg;
+};
+
 void logToLoggerStream(QString& message)
 {
-    QMutexLocker lock(&s_LoggerLock);
-
 #if defined(QT_DEBUG) && defined(Q_OS_WIN32)
     // Output log messages to a debugger if attached
     if (IsDebuggerPresent()) {
@@ -95,26 +110,25 @@ void logToLoggerStream(QString& message)
     message.replace(k_RikeyIdRegex, "&rikeyid=REDACTED");
 
 #ifdef LOG_TO_FILE
-    if (s_LogLimitReached) {
+    auto oldLogSize = s_LogBytesWritten.fetchAndAddRelaxed(message.size());
+    if (oldLogSize >= k_MaxLogSizeBytes) {
         return;
     }
-    else if (s_LogBytesWritten >= MAX_LOG_SIZE_BYTES) {
+    else if (oldLogSize >= k_MaxLogSizeBytes - message.size()) {
+        s_LoggerThread.waitForDone();
         s_LoggerStream << "Log size limit reached!";
 #if QT_VERSION >= QT_VERSION_CHECK(5, 14, 0)
         s_LoggerStream << Qt::endl;
 #else
         s_LoggerStream << endl;
 #endif
-        s_LogLimitReached = true;
+        s_LoggerStream.flush();
         return;
-    }
-    else {
-        s_LogBytesWritten += message.size();
     }
 #endif
 
-    s_LoggerStream << message;
-    s_LoggerStream.flush();
+    // Queue the log message to be written asynchronously
+    s_LoggerThread.start(new LoggerTask(message));
 }
 
 void sdlLogToDiskHandler(void*, int category, SDL_LogPriority priority, const char* message)
@@ -343,6 +357,9 @@ int main(int argc, char *argv[])
         }
     }
 #endif
+
+    // Serialize log messages on a single thread
+    s_LoggerThread.setMaxThreadCount(1);
 
     s_LoggerTime.start();
     qInstallMessageHandler(qtLogToDiskHandler);
@@ -783,6 +800,9 @@ int main(int argc, char *argv[])
     // Give worker tasks time to properly exit. Fixes PendingQuitTask
     // sometimes freezing and blocking process exit.
     QThreadPool::globalInstance()->waitForDone(30000);
+
+    // Wait for pending log messages to be printed
+    s_LoggerThread.waitForDone();
 
 #ifdef Q_OS_WIN32
     // Without an explicit flush, console redirection for the list command

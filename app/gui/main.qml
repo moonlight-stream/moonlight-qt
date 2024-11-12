@@ -12,7 +12,6 @@ import SdlGamepadKeyNavigation 1.0
 
 ApplicationWindow {
     property bool pollingActive: false
-    property bool gamepadInputActive: false
 
     // Set by SettingsView to force the back operation to pop all
     // pages except the initial view. This is required when doing
@@ -23,6 +22,7 @@ ApplicationWindow {
     width: 1280
     height: 600
 
+    // This function runs prior to creation of the initial StackView item
     function doEarlyInit() {
         // Override the background color to Material 2 colors for Qt 6.5+
         // in order to improve contrast between GFE's placeholder box art
@@ -32,7 +32,6 @@ ApplicationWindow {
         }
 
         SdlGamepadKeyNavigation.enable()
-        gamepadInputActive = true
     }
 
     Component.onCompleted: {
@@ -87,16 +86,14 @@ ApplicationWindow {
 
     StackView {
         id: stackView
-        initialItem: initialView
         anchors.fill: parent
         focus: true
 
-        onEmptyChanged: {
-            // Hijack this callback to perform our very early init
-            // that runs before the first StackView item is pushed
-            if (!empty) {
-                doEarlyInit();
-            }
+        Component.onCompleted: {
+            // Perform our early initialization before constructing
+            // the initial view and pushing it to the StackView
+            doEarlyInit()
+            push(initialView)
         }
 
         onCurrentItemChanged: {
@@ -161,11 +158,6 @@ ApplicationWindow {
                 ComputerManager.stopPollingAsync()
                 pollingActive = false
             }
-
-            if (gamepadInputActive) {
-                SdlGamepadKeyNavigation.disable()
-                gamepadInputActive = false
-            }
         }
         else if (active) {
             // When we become visible and active again, start polling
@@ -176,11 +168,10 @@ ApplicationWindow {
                 ComputerManager.startPolling()
                 pollingActive = true
             }
-            if (!gamepadInputActive) {
-                SdlGamepadKeyNavigation.enable()
-                gamepadInputActive = true
-            }
         }
+
+        // Poll for gamepad input only when the window is in focus
+        SdlGamepadKeyNavigation.notifyWindowFocus(visible && active)
     }
 
     onActiveChanged: {
@@ -193,23 +184,15 @@ ApplicationWindow {
                 ComputerManager.startPolling()
                 pollingActive = true
             }
-            if (!gamepadInputActive) {
-                SdlGamepadKeyNavigation.enable()
-                gamepadInputActive = true
-            }
         }
         else {
             // Start the inactivity timer to stop polling
             // if focus does not return within a few minutes.
             inactivityTimer.restart()
-
-            // Immediately stop gamepad input since we aren't
-            // the active window anymore.
-            if (gamepadInputActive) {
-                SdlGamepadKeyNavigation.disable()
-                gamepadInputActive = false
-            }
         }
+
+        // Poll for gamepad input only when the window is in focus
+        SdlGamepadKeyNavigation.notifyWindowFocus(visible && active)
     }
 
     // Workaround for lack of instanceof in Qt 5.9.

@@ -13,6 +13,7 @@ SdlGamepadKeyNavigation::SdlGamepadKeyNavigation(StreamingPreferences* prefs)
       m_Enabled(false),
       m_UiNavMode(false),
       m_FirstPoll(false),
+      m_HasFocus(false),
       m_LastAxisNavigationEventTime(0)
 {
     m_PollingTimer = new QTimer(this);
@@ -63,13 +64,10 @@ void SdlGamepadKeyNavigation::enable()
         }
     }
 
-    // Flush events on the first poll
-    m_FirstPoll = true;
-
-    // Poll every 50 ms for a new joystick event
-    m_PollingTimer->start(50);
-
     m_Enabled = true;
+
+    // Start the polling timer if the window is focused
+    updateTimerState();
 }
 
 void SdlGamepadKeyNavigation::disable()
@@ -78,7 +76,9 @@ void SdlGamepadKeyNavigation::disable()
         return;
     }
 
-    m_PollingTimer->stop();
+    m_Enabled = false;
+    updateTimerState();
+    Q_ASSERT(!m_PollingTimer->isActive());
 
     while (!m_Gamepads.isEmpty()) {
         SDL_GameControllerClose(m_Gamepads[0]);
@@ -86,8 +86,12 @@ void SdlGamepadKeyNavigation::disable()
     }
 
     SDL_QuitSubSystem(SDL_INIT_GAMECONTROLLER);
+}
 
-    m_Enabled = false;
+void SdlGamepadKeyNavigation::notifyWindowFocus(bool hasFocus)
+{
+    m_HasFocus = hasFocus;
+    updateTimerState();
 }
 
 void SdlGamepadKeyNavigation::onPollingTimerFired()
@@ -258,6 +262,20 @@ void SdlGamepadKeyNavigation::sendKey(QEvent::Type type, Qt::Key key, Qt::Keyboa
     if (focusWindow != nullptr) {
         QKeyEvent keyPressEvent(type, key, modifiers);
         app->sendEvent(focusWindow, &keyPressEvent);
+    }
+}
+
+void SdlGamepadKeyNavigation::updateTimerState()
+{
+    if (m_PollingTimer->isActive() && (!m_HasFocus || !m_Enabled)) {
+        m_PollingTimer->stop();
+    }
+    else if (!m_PollingTimer->isActive() && m_HasFocus && m_Enabled) {
+        // Flush events on the first poll
+        m_FirstPoll = true;
+
+        // Poll every 50 ms for a new joystick event
+        m_PollingTimer->start(50);
     }
 }
 
