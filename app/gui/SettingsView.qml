@@ -831,6 +831,7 @@ Flickable {
                     checked: {
                         return SystemProperties.isVideoEnhancementCapable() && StreamingPreferences.videoEnhancement
                     }
+                    property bool keepValue: checked;
 
                     onCheckedChanged: {
                         StreamingPreferences.videoEnhancement = checked
@@ -1557,6 +1558,16 @@ Flickable {
                     onActivated: {
                         if (enabled) {
                             StreamingPreferences.videoDecoderSelection = decoderListModel.get(currentIndex).val
+                        }
+                    }
+                    onCurrentIndexChanged: {
+                        if(decoderListModel.get(currentIndex).val === StreamingPreferences.VDS_FORCE_SOFTWARE){
+                            videoEnhancementCheck.enabled = false;
+                            videoEnhancementCheck.keepValue = videoEnhancementCheck.checked;
+                            videoEnhancementCheck.checked = false;
+                        } else {
+                            videoEnhancementCheck.enabled = true;
+                            videoEnhancementCheck.checked = videoEnhancementCheck.keepValue;
                         }
                     }
                 }
