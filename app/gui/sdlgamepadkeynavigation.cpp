@@ -55,7 +55,8 @@ void SdlGamepadKeyNavigation::enable()
     SDL_FlushEvent(SDL_CONTROLLERDEVICEADDED);
 
     // Open all currently attached game controllers
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+    int numJoysticks = SDL_NumJoysticks();
+    for (int i = 0; i < numJoysticks; i++) {
         if (SDL_IsGameController(i)) {
             SDL_GameController* gc = SDL_GameControllerOpen(i);
             if (gc != nullptr) {
@@ -289,7 +290,8 @@ int SdlGamepadKeyNavigation::getConnectedGamepads()
     Q_ASSERT(m_Enabled);
 
     int count = 0;
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+    int numJoysticks = SDL_NumJoysticks();
+    for (int i = 0; i < numJoysticks; i++) {
         if (SDL_IsGameController(i)) {
             count++;
         }
