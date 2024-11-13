@@ -881,6 +881,78 @@ Flickable {
                     }
                 }
 
+                Label {
+                    width: parent.width
+                    id: resSpatialAudioTitle
+                    text: qsTr("Spatial audio")
+                    font.pointSize: 12
+                    wrapMode: Text.Wrap
+                    visible: Qt.platform.os == "osx"
+                }
+
+                Row {
+                    spacing: 5
+                    width: parent.width
+                    visible: Qt.platform.os == "osx"
+
+                    AutoResizingComboBox {
+                        // ignore setting the index at first, and actually set it when the component is loaded
+                        Component.onCompleted: {
+                            var saved_sac = StreamingPreferences.spatialAudioConfig
+                            currentIndex = 0
+                            for (var i = 0; i < spatialAudioListModel.count; i++) {
+                                var el_audio = spatialAudioListModel.get(i).val;
+                                if (saved_sac === el_audio) {
+                                    currentIndex = i
+                                    break
+                                }
+                            }
+                            activated(currentIndex)
+                        }
+
+                        id: spatialAudioComboBox
+                        enabled: StreamingPreferences.audioConfig != StreamingPreferences.AC_STEREO
+                        textRole: "text"
+                        model: ListModel {
+                            id: spatialAudioListModel
+                            ListElement {
+                                text: qsTr("Enabled")
+                                val: StreamingPreferences.SAC_AUTO
+                            }
+                            ListElement {
+                                text: qsTr("Disabled")
+                                val: StreamingPreferences.SAC_DISABLED
+                            }
+                        }
+
+                        // ::onActivated must be used, as it only listens for when the index is changed by a human
+                        onActivated : {
+                            StreamingPreferences.spatialAudioConfig = spatialAudioListModel.get(currentIndex).val
+                        }
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Spatial audio will be used when using any type of headphones, built-in Macbook speakers, and 2-channel USB devices.")
+                    }
+
+                    CheckBox {
+                        id: spatialHeadTracking
+                        enabled: StreamingPreferences.audioConfig != StreamingPreferences.AC_STEREO && StreamingPreferences.spatialAudioConfig != StreamingPreferences.SAC_DISABLED
+                        width: parent.width
+                        text: qsTr("Enable head-tracking")
+                        font.pointSize: 12
+                        checked: StreamingPreferences.spatialHeadTracking
+                        onCheckedChanged: {
+                            StreamingPreferences.spatialHeadTracking = checked
+                        }
+
+                        ToolTip.delay: 1000
+                        ToolTip.timeout: 5000
+                        ToolTip.visible: hovered
+                        ToolTip.text: qsTr("Requires supported Apple or Beats headphones")
+                    }
+                }
 
                 CheckBox {
                     id: audioPcCheck
@@ -1176,7 +1248,7 @@ Flickable {
                         ListElement {
                             text: qsTr("Maximized")
                             val: StreamingPreferences.UI_MAXIMIZED
-                        }   
+                        }
                         ListElement {
                             text: qsTr("Fullscreen")
                             val: StreamingPreferences.UI_FULLSCREEN
