@@ -851,6 +851,8 @@ Flickable {
                         if (!SystemProperties.isVideoEnhancementCapable()){
                             // VSR or SDR->HDR feature could not be initialized by any GPU available
                             text = qsTr("Video AI-Enhancement (Not supported by the GPU)")
+                            enabled = false;
+                            checked = false;
                         } else if(SystemProperties.isVideoEnhancementExperimental()){
                             // Indicate if the feature is available but not officially deployed by the Vendor
                             text = qsTr("Video AI-Enhancement (Experimental)")
