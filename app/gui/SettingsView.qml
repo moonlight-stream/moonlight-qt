@@ -832,7 +832,6 @@ Flickable {
                         return SystemProperties.isVideoEnhancementCapable() && StreamingPreferences.videoEnhancement
                     }
                     property bool keepValue: checked;
-
                     onCheckedChanged: {
                         StreamingPreferences.videoEnhancement = checked
                     }
