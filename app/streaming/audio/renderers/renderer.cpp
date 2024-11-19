@@ -115,7 +115,7 @@ int IAudioRenderer::stringifyAudioStats(AUDIO_STATS& stats, char *output, int le
     output[offset] = 0;
 
     double opusFrameSize = (double)m_opusConfig->samplesPerFrame / 48.0;
-    PRTP_AUDIO_STATS rtpAudioStats = LiGetRTPAudioStats();
+    const RTP_AUDIO_STATS* rtpAudioStats = LiGetRTPAudioStats();
     double fecOverhead = (double)rtpAudioStats->packetCountFec * 1.0 / (rtpAudioStats->packetCountAudio + rtpAudioStats->packetCountFec);
 
     int ret = snprintf(

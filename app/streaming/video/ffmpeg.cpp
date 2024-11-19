@@ -787,7 +787,7 @@ void FFmpegVideoDecoder::stringifyVideoStats(VIDEO_STATS& stats, char* output, i
 
     if (stats.receivedFps > 0) {
         if (m_VideoDecoderCtx != nullptr) {
-            PRTP_VIDEO_STATS rtpVideoStats = LiGetRTPVideoStats();
+            const RTP_VIDEO_STATS* rtpVideoStats = LiGetRTPVideoStats();
             float fecOverhead = (float)rtpVideoStats->packetCountFec * 1.0 / (rtpVideoStats->packetCountVideo + rtpVideoStats->packetCountFec);
             bool useKb = stats.videoMegabitsPerSec < 1 ? true : false;
 
