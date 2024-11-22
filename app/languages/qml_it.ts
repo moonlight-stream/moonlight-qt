@@ -595,7 +595,7 @@
         <location filename="../streaming/session.cpp" line="1050"/>
         <location filename="../streaming/session.cpp" line="1068"/>
         <source>Using software decoding due to your selection to force HDR without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Decoding software in uso secondo la tua preferenza del forzare HDR senza il supporto della GPU. Questo potrebbe causare prestazioni scadenti.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1062"/>
@@ -605,22 +605,22 @@
     <message>
         <location filename="../streaming/session.cpp" line="1084"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il tuo PC host non supporta lo streaming YUV 4:4:4.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1092"/>
         <source>Your host PC doesn&apos;t support YUV 4:4:4 streaming for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il tuo pc host non supporta lo streaming YUV 4:4:4 per il codec video selezionato.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1107"/>
         <source>Using software decoding due to your selection to force YUV 4:4:4 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Il decoding software è in uso in quanto hai scelto di forzare YUV 4:4:4 senza il supporto da parte della GPU. Questo potrebbe causare prestazioni di streaming scadenti.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1113"/>
         <source>This PC&apos;s GPU doesn&apos;t support YUV 4:4:4 decoding for selected video codec.</source>
-        <translation type="unfinished"></translation>
+        <translation>La GPU di questo PC non supporta il decoding YUV 4:4:4 per il codec video selezionato.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1122"/>
@@ -1153,27 +1153,27 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Abilita YUV 4:4:4 (Sperimentale)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Buono per fare lo streaming del desktop e giochi che comprendono molto testo, ma non raccomandato per giochi frenetici e veloci.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1633"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4 non è supportato su questo PC.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1639"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Sblocca il limite del bitrate (Sperimentale)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1652"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Questo sblocca bitrate estremamente elevati per l&apos;utilizzo con gli host Sunshine. Dovrebbe solamente essere usato durante lo streaming attraverso una connessione LAN.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1658"/>
