@@ -7,48 +7,48 @@
         <location filename="../gui/AppView.qml" line="145"/>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Resume Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Продължаване на играта</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="173"/>
         <location filename="../gui/AppView.qml" line="308"/>
         <source>Quit Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Изход от играта</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="303"/>
         <source>Launch Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Пускане на играта</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="316"/>
         <source>Direct Launch</source>
-        <translation type="unfinished"></translation>
+        <translation>Директно пускане</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="320"/>
         <source>Launch this app immediately when the host is selected, bypassing the app selection grid.</source>
-        <translation type="unfinished"></translation>
+        <translation>Пускане на това приложение веднага щом бъде избран отдалечения компютър. Така ще се пропусне списъка за избор на приложение.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="329"/>
         <source>Hide Game</source>
-        <translation type="unfinished"></translation>
+        <translation>Скриване на играта</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>Hide this game from the app grid. To access hidden games, right-click on the host and choose %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Скриване на играта от списъка с приложения. За да видите скритите игри, натиснете с десния бутон на мишката върху отдалечения компютър и изберете %1.</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="333"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Преглед на всички приложения</translation>
     </message>
     <message>
         <location filename="../gui/AppView.qml" line="348"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Наистина ли искате да затворите %1? Ако имате незапазен напредък, той ще бъде загубен.</translation>
     </message>
 </context>
 <context>
@@ -56,17 +56,17 @@
     <message>
         <location filename="../gui/CliPair.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Установяване на връзка с компютъра…</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="13"/>
         <source>Pairing... Please enter &apos;%1&apos; on %2.</source>
-        <translation type="unfinished"></translation>
+        <translation>Сдвояване… Моля, въведете „%1“ на %2.</translation>
     </message>
     <message>
         <location filename="../gui/CliPair.qml" line="85"/>
         <source>Pairing completed successfully</source>
-        <translation type="unfinished"></translation>
+        <translation>Сдвояването завърши успешно</translation>
     </message>
 </context>
 <context>
@@ -74,12 +74,12 @@
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Установяване на връзка с компютъра…</translation>
     </message>
     <message>
         <location filename="../gui/CliQuitStreamSegue.qml" line="13"/>
         <source>Quitting app...</source>
-        <translation type="unfinished"></translation>
+        <translation>Затваряне на приложението…</translation>
     </message>
 </context>
 <context>
@@ -87,17 +87,17 @@
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="9"/>
         <source>Establishing connection to PC...</source>
-        <translation type="unfinished"></translation>
+        <translation>Установяване на връзка с компютъра…</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="13"/>
         <source>Loading app list...</source>
-        <translation type="unfinished"></translation>
+        <translation>Зареждане на списъка с приложения…</translation>
     </message>
     <message>
         <location filename="../gui/CliStartStreamSegue.qml" line="82"/>
         <source>Are you sure you want to quit %1? Any unsaved progress will be lost.</source>
-        <translation type="unfinished"></translation>
+        <translation>Наистина ли искате да затворите %1! Ако имате незапазен напредък, той ще бъде загубен.</translation>
     </message>
 </context>
 <context>
@@ -105,12 +105,12 @@
     <message>
         <location filename="../gui/computermodel.cpp" line="50"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>На линия</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="53"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Извън линия</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="56"/>
@@ -119,77 +119,77 @@
         <location filename="../gui/computermodel.cpp" line="82"/>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>Unknown</source>
-        <translation type="unfinished"></translation>
+        <translation>Неизвестно</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="62"/>
         <source>Paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Сдвоен</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="65"/>
         <source>Unpaired</source>
-        <translation type="unfinished"></translation>
+        <translation>Несдвоен</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="72"/>
         <source>Name: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Име: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="73"/>
         <source>Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Състояние: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="74"/>
         <source>Active Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Активен адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="75"/>
         <source>UUID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>UUID: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="76"/>
         <source>Local Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Локален адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="77"/>
         <source>Remote Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Отдалечен адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="78"/>
         <source>IPv6 Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>IPv6 адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="79"/>
         <source>Manual Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Ръчен адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="80"/>
         <source>MAC Address: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>MAC адрес: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="81"/>
         <source>Pair State: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Състояние на сдвояване: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="82"/>
         <source>Running Game ID: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Идентификатор на пуснатата игра: %1</translation>
     </message>
     <message>
         <location filename="../gui/computermodel.cpp" line="83"/>
         <source>HTTPS Port: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>HTTPS порт: %1</translation>
     </message>
 </context>
 <context>
