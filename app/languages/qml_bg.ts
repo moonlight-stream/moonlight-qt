@@ -205,7 +205,7 @@
     <message>
         <location filename="../backend/nvhttp.cpp" line="359"/>
         <source>Missing audio capture device. Reinstalling GeForce Experience should resolve this error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Липсва устройство за запис на звук. Преинсталирането на GeForce Experience би трябвало да разреши този проблем.</translation>
     </message>
 </context>
 <context>
@@ -213,137 +213,137 @@
     <message>
         <location filename="../gui/PcView.qml" line="21"/>
         <source>Computers</source>
-        <translation type="unfinished"></translation>
+        <translation>Компютри</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="68"/>
         <source>Unable to connect to the specified PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не може да се установи връзка с избрания компютър.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="71"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Връзката с Интернет на този компютър блокира Moonlight. Излъчването по Интернет може да не работи, докато компютърът е свързан към тази мрежа.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="74"/>
         <source>Click the Help button for possible solutions.</source>
-        <translation type="unfinished"></translation>
+        <translation>Натиснете бутона за Помощ, за да разгледате възможните решения.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="104"/>
         <source>Automatic PC discovery is disabled. Add your PC manually.</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматичното откриване на компютри е изключено. Добавете компютъра си ръчно.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="103"/>
         <source>Searching for compatible hosts on your local network...</source>
-        <translation type="unfinished"></translation>
+        <translation>Търсене на съвместими компютри в локалната мрежа…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="188"/>
         <source>Wake PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Събуждане на компютъра</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="194"/>
         <source>Test Network</source>
-        <translation type="unfinished"></translation>
+        <translation>Тест на мрежата</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="203"/>
         <source>Rename PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Преименуване на компютъра</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="212"/>
         <source>Delete PC</source>
-        <translation type="unfinished"></translation>
+        <translation>Изтриване на компютъра</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="221"/>
         <source>View Details</source>
-        <translation type="unfinished"></translation>
+        <translation>Преглед на подробностите</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="233"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Версията на GeForce Experience на %1 не се поддържа от тази версия на Moonlight. Трябва да обновите Moonlight, ако искате да имате достъп до %1.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>This may take a few seconds…</source>
-        <translation type="unfinished"></translation>
+        <translation>Това може да отнеме няколко секунди…</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
         <source>This network does not appear to be blocking Moonlight. If you still have trouble connecting, check your PC&apos;s firewall settings.</source>
-        <translation type="unfinished"></translation>
+        <translation>Тази мрежа изглежда не блокира Moonlight. Ако все още имате проблеми с връзката, проверете настройките на защитната стена на компютъра си.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="347"/>
         <source>If you are trying to stream over the Internet, install the Moonlight Internet Hosting Tool on your gaming PC and run the included Internet Streaming Tester to check your gaming PC&apos;s Internet connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ако се опитвате да осъществите достъп през Интернет, инсталирайте „Moonlight Internet Hosting Tool“ на компютъра си и стартирайте включения тестер за достъп през Интернет, за да проверите връзката на компютъра си с Интернет.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="351"/>
         <source>Your PC&apos;s current network connection seems to be blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Текущата мрежова връзка на компютъра блокира Moonlight. Достъпът през Интернет може да не работи, докато компютърът е свързан към тази мрежа.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="351"/>
         <source>The following network ports were blocked:</source>
-        <translation type="unfinished"></translation>
+        <translation>Следните мрежови портове са блокирани:</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="343"/>
         <source>The network test could not be performed because none of Moonlight&apos;s connection testing servers were reachable from this PC. Check your Internet connection or try again later.</source>
-        <translation type="unfinished"></translation>
+        <translation>Тестът на мрежата не може да бъде извършен, тъй като нито един от сървърите за тестване на връзката на Moonlight не е достъпен от този компютър. Проверете връзката си с Интернет или опитайте отново по-късно.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>PC Status: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Състояние на компютъра: %1</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>Online</source>
-        <translation type="unfinished"></translation>
+        <translation>На линия</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="172"/>
         <source>Offline</source>
-        <translation type="unfinished"></translation>
+        <translation>Извън линия</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="178"/>
         <source>View All Apps</source>
-        <translation type="unfinished"></translation>
+        <translation>Преглед на всички приложения</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="309"/>
         <source>Please enter %1 on your host PC. This dialog will close when pairing is completed.</source>
-        <translation type="unfinished"></translation>
+        <translation>Моля, въведете %1 на отдалечения компютър. Този прозорец ще се затвори след като сдвояването завърши.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="310"/>
         <source>If your host PC is running Sunshine, navigate to the Sunshine web UI to enter the PIN.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ако на отдалечения компютър работи Sunshine, отворете уеб интерфейса на Sunshine и въведете ПИН кода.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="322"/>
         <source>Are you sure you want to remove &apos;%1&apos;?</source>
-        <translation type="unfinished"></translation>
+        <translation>Наистина ли искате да премахнете „%1“?</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="336"/>
         <source>Moonlight is testing your network connection to determine if any required ports are blocked.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight тества мрежовата връзка, за да определи дали някой от необходимите портове не е блокиран.</translation>
     </message>
     <message>
         <location filename="../gui/PcView.qml" line="363"/>
         <source>Enter the new name for this PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Въведете новото име за този компютър:</translation>
     </message>
 </context>
 <context>
@@ -351,27 +351,27 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="586"/>
         <source>The PIN from the PC didn&apos;t match. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>ПИН кодът от компютъра не съвпада. Опитайте отново.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="590"/>
         <source>You cannot pair while a previous session is still running on the host PC. Quit any running games or reboot the host PC, then try pairing again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Не може да извършва сдвояване, докато на отдалечения компютър все още има работеща друга сесия. Затворете всички работещи игри или рестартирайте отдалечения компютър, а след това опитайте сдвояването отново.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="593"/>
         <source>Pairing failed. Please try again.</source>
-        <translation type="unfinished"></translation>
+        <translation>Неуспешно сдвояване. Опитайте отново.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="597"/>
         <source>Another pairing attempt is already in progress.</source>
-        <translation type="unfinished"></translation>
+        <translation>В момента е в ход друг опит за сдвояване.</translation>
     </message>
     <message>
         <location filename="../backend/computermanager.cpp" line="607"/>
         <source>GeForce Experience returned error: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>GeForce Experience върна грешка: %1</translation>
     </message>
 </context>
 <context>
@@ -379,7 +379,7 @@
     <message>
         <location filename="../backend/computermanager.cpp" line="657"/>
         <source>The running game wasn&apos;t started by this PC. You must quit the game on the host PC manually or use the device that originally started the game.</source>
-        <translation type="unfinished"></translation>
+        <translation>Работещата игра не е стартирана от този компютър. Трябва да затворите играта на отдалечения компютър, или да използвате устройството, от което е била стартирана.</translation>
     </message>
 </context>
 <context>
@@ -387,36 +387,36 @@
     <message>
         <location filename="../cli/pair.cpp" line="80"/>
         <source>%1 is already paired</source>
-        <translation type="unfinished"></translation>
+        <translation>Сдвояването с %1 вече е направено</translation>
     </message>
     <message>
         <location filename="../cli/pair.cpp" line="109"/>
         <location filename="../cli/quitstream.cpp" line="76"/>
         <location filename="../cli/startstream.cpp" line="133"/>
         <source>Failed to connect to %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Неуспешно свързване с %1</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="88"/>
         <location filename="../cli/startstream.cpp" line="89"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Компютърът „%1“ не е сдвоен. Отворете Moonlight, за да извършите сдвояването, преди да започнете излъчването.</translation>
     </message>
     <message>
         <location filename="../cli/quitstream.cpp" line="102"/>
         <location filename="../cli/startstream.cpp" line="126"/>
         <source>Quitting app failed, reason: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Затварянето на приложението беше неуспешно. Причина: %1</translation>
     </message>
     <message>
         <location filename="../cli/startstream.cpp" line="137"/>
         <source>Failed to find application %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Приложението „%1“ не може да бъде намерено</translation>
     </message>
     <message>
         <location filename="../cli/listapps.cpp" line="99"/>
         <source>Computer %1 has not been paired. Please open Moonlight to pair before retrieving games list.</source>
-        <translation type="unfinished"></translation>
+        <translation>Компютърът „%1“ не е сдвоен. Отворете Moonlight, за да извършите сдвояването, преди да може да получите списъка с приложения.</translation>
     </message>
 </context>
 <context>
@@ -424,27 +424,27 @@
     <message>
         <location filename="../main.cpp" line="620"/>
         <source>&amp;Yes</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Да</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="621"/>
         <source>&amp;No</source>
-        <translation type="unfinished"></translation>
+        <translation>&amp;Не</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="622"/>
         <source>OK</source>
-        <translation type="unfinished"></translation>
+        <translation>Добре</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="623"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Помощ</translation>
     </message>
     <message>
         <location filename="../main.cpp" line="624"/>
         <source>Cancel</source>
-        <translation type="unfinished"></translation>
+        <translation>Отказ</translation>
     </message>
 </context>
 <context>
@@ -452,7 +452,7 @@
     <message>
         <location filename="../gui/QuitSegue.qml" line="13"/>
         <source>Quitting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Затваряне на %1…</translation>
     </message>
 </context>
 <context>
@@ -460,57 +460,57 @@
     <message>
         <location filename="../streaming/session.cpp" line="112"/>
         <source>No video received from host.</source>
-        <translation type="unfinished"></translation>
+        <translation>От отдалечения компютър не се получава видео.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="113"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверете защитната стена и правилата за препращане на портове за следния порт или портове: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="118"/>
         <source>Your network connection isn&apos;t performing well. Reduce your video bitrate setting or try a faster connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Мрежовата връзка не работи добре. Намалете настройката за побитова скорост на видеото или опитайте с по-бърза връзка.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="124"/>
         <source>Something went wrong on your host PC when starting the stream.</source>
-        <translation type="unfinished"></translation>
+        <translation>Нещо на отдалечения компютър се обърка при стартирането на потока.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="125"/>
         <source>Make sure you don&apos;t have any DRM-protected content open on your host PC. You can also try restarting your host PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Уверете се, че на отдалечения компютър няма отворено съдържание, защитено чрез DRM. Може да опитате и да рестартирате отдалечения компютър.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="130"/>
         <source>The host PC reported a fatal video encoding error.</source>
-        <translation type="unfinished"></translation>
+        <translation>Отдалеченият компютър докладва критична грешка при кодиране на видеото.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="131"/>
         <source>Try disabling HDR mode, changing the streaming resolution, or changing your host PC&apos;s display resolution.</source>
-        <translation type="unfinished"></translation>
+        <translation>Опитайте да изключите режима HDR, да промените резолюцията на потока или резолюцията на екрана на отдалечения компютър.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="139"/>
         <source>Connection terminated</source>
-        <translation type="unfinished"></translation>
+        <translation>Връзката е прекратена</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="140"/>
         <source>Error code: %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Код на грешката: %1</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="931"/>
         <source>The version of GeForce Experience on %1 is not supported by this build of Moonlight. You must update Moonlight to stream from %1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Версията на GeForce Experience на %1 не се поддържа от тази версия на Moonlight. Трябва да обновите Moonlight, ако искате да имате достъп до %1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="936"/>
         <source>Your selection to enable remote desktop mouse mode may cause problems in games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Изборът да включите режима на мишката за отдалечен работен плот може да предизвика проблеми в някои игри.</translation>
     </message>
     <message>
         <source>HDR is not supported with software decoding.</source>
@@ -519,27 +519,27 @@
     <message>
         <location filename="../streaming/session.cpp" line="940"/>
         <source>Your settings selection to force software decoding may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Избраната настройка за принудително софтуерно декодиране може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="970"/>
         <source>Your host PC doesn&apos;t support encoding HEVC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Отдалеченият компютър не поддържа кодиране чрез HEVC.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="987"/>
         <source>Using software decoding due to your selection to force HEVC without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Поради избраното принудително декодиране чрез HEVC, което видео картата не поддържа, ще се използва софтуерно декодиране. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="946"/>
         <source>Your host software or GPU doesn&apos;t support encoding AV1.</source>
-        <translation type="unfinished"></translation>
+        <translation>Софтуерът или видео картата на отдалечения компютър не поддържа кодиране чрез AV1.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="963"/>
         <source>Using software decoding due to your selection to force AV1 without GPU support. This may cause poor streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Поради избраното принудително декодиране чрез AV1, което видео картата не поддържа, ще се използва софтуерно декодиране. Това може да доведе до влошена производителност на излъчването.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1029"/>
