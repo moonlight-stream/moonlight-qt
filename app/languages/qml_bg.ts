@@ -738,154 +738,154 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="694"/>
         <source>Video bitrate: %1 Mbps</source>
-        <translation type="unfinished"></translation>
+        <translation>Побитова скорост на видеото: %1 Мбит/сек</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="707"/>
         <source>Display mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Екранен режим</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="737"/>
         <source>(Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>(Препоръчително)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="718"/>
         <location filename="../gui/SettingsView.qml" line="1181"/>
         <source>Fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>Цял екран</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="787"/>
         <source>Fullscreen generally provides the best performance, but borderless windowed may work better with features like macOS Spaces, Alt+Tab, screenshot tools, on-screen overlays, etc.</source>
-        <translation type="unfinished"></translation>
+        <translation>Режимът на цял екран обикновено дава най-добра производителност, но безрамковият прозорец може да работи по-добре с функционалности като Пространствата на MacOS, използването на Alt+Tab, инструменти за екранни снимки, наслагване на допълнителни слоеве по време на игра и т.н.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="723"/>
         <source>Borderless windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Безрамков прозорец</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="182"/>
         <source>Native</source>
-        <translation type="unfinished"></translation>
+        <translation>Локална</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="183"/>
         <source>Native (Excluding Notch)</source>
-        <translation type="unfinished"></translation>
+        <translation>Локална (без вдлъбнатина)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="728"/>
         <location filename="../gui/SettingsView.qml" line="1173"/>
         <source>Windowed</source>
-        <translation type="unfinished"></translation>
+        <translation>Прозорец</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="794"/>
         <source>V-Sync</source>
-        <translation type="unfinished"></translation>
+        <translation>Вертикална синхронизация</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="804"/>
         <source>Disabling V-Sync allows sub-frame rendering latency, but it can display visible tearing</source>
-        <translation type="unfinished"></translation>
+        <translation>Изключването на вертикалната синхронизация позволява изчертаване на кадрите дори при забавяне под продължителността на един кадър, но може да предизвика накъсване на картината</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="811"/>
         <source>Frame pacing</source>
-        <translation type="unfinished"></translation>
+        <translation>Темпо на кадрите</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="821"/>
         <source>Frame pacing reduces micro-stutter by delaying frames that come in too early</source>
-        <translation type="unfinished"></translation>
+        <translation>Темпото на кадрите намалява малките засичания като задържа малко кадрите, които идват твърде рано</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="831"/>
         <source>Audio Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Звукови настройки</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="866"/>
         <source>Stereo</source>
-        <translation type="unfinished"></translation>
+        <translation>Стерео</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="870"/>
         <source>5.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>5.1 обемен звук</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="874"/>
         <source>7.1 surround sound</source>
-        <translation type="unfinished"></translation>
+        <translation>7.1 обемен звук</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="888"/>
         <source>Mute host PC speakers while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Заглушаване на говорителите на отдалечения компютър по време на излъчване</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="898"/>
         <source>You must restart any game currently in progress for this setting to take effect</source>
-        <translation type="unfinished"></translation>
+        <translation>Трябва да рестартирате пуснатата в момента игра (ако има такава), за да влезе в сила тази настройка</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="904"/>
         <source>Mute audio stream when Moonlight is not the active window</source>
-        <translation type="unfinished"></translation>
+        <translation>Заглушаване на звука, когато прозорецът на Moonlight не е на фокус</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="915"/>
         <source>Mutes Moonlight&apos;s audio when you Alt+Tab out of the stream or click on a different window.</source>
-        <translation type="unfinished"></translation>
+        <translation>Заглушава звука от Moonlight, когато превключите към друг прозорец чрез Alt+Tab или по друг начин.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="964"/>
         <source>UI Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки на интерфейса</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="974"/>
         <source>Language</source>
-        <translation type="unfinished"></translation>
+        <translation>Език</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1000"/>
         <source>Automatic</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматично</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1123"/>
         <source>You must restart Moonlight for this change to take effect</source>
-        <translation type="unfinished"></translation>
+        <translation>Трябва да рестартирате Moonlight, за да влезе в сила тази промяна</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1140"/>
         <source>GUI display mode</source>
-        <translation type="unfinished"></translation>
+        <translation>Режим на показване на интерфейса</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1177"/>
         <source>Maximized</source>
-        <translation type="unfinished"></translation>
+        <translation>Увеличено</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1250"/>
         <source>Input Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки за въвеждане</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1271"/>
         <source>This enables seamless mouse control without capturing the client&apos;s mouse cursor. It is ideal for remote desktop usage but will not work in most games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Това включва естественото управление на мишката без прихващане на клиентския курсор в рамките на програмата. Подходящо е за ползване на отдалечен работен плот, но може да не работи в много игри.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1273"/>
         <source>NOTE: Due to a bug in GeForce Experience, this option may not work properly if your host PC has multiple monitors.</source>
-        <translation type="unfinished"></translation>
+        <translation>ЗАБЕЛЕЖКА: Поради проблем в GeForce Experience, тази настройка може да не работи добре, ако отдалеченият компютър има повече от един монитор.</translation>
     </message>
     <message>
         <source>Enabling HDR overrides manual decoder selections.</source>
@@ -894,276 +894,276 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1588"/>
         <source>Enable HDR (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Включване на HDR (експериментално)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1603"/>
         <source>The stream will be HDR-capable, but some games may require an HDR monitor on your host PC to enable HDR mode.</source>
-        <translation type="unfinished"></translation>
+        <translation>Излъчването ще е съвместимо с HDR, но някои игри може да изискват мониторът на отдалечения компютър да поддържа HDR, за да се включи този режим.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1605"/>
         <source>HDR streaming is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Излъчването с HDR не се поддържа на този компютър.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1690"/>
         <source>Show performance stats while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Показване на статистика за производителността</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1700"/>
         <source>Display real-time stream performance information while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Показване на информация относно производителността на поточното предаване в реално време.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1701"/>
         <source>You can toggle it at any time while streaming using Ctrl+Alt+Shift+S or Select+L1+R1+X.</source>
-        <translation type="unfinished"></translation>
+        <translation>Можете да превключите това по всяко време чрез Ctrl+Alt+Shift+S или Select+L1+R1+X.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1702"/>
         <source>The performance overlay is not supported on Steam Link or Raspberry Pi.</source>
-        <translation type="unfinished"></translation>
+        <translation>Слоят за следене на производителността не се поддържа на Steam Link и Raspberry Pi.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1292"/>
         <source>NOTE: Certain keyboard shortcuts like Ctrl+Alt+Del on Windows cannot be intercepted by any application, including Moonlight.</source>
-        <translation type="unfinished"></translation>
+        <translation>ЗАБЕЛЕЖКА: Някои клавишни комбинации, като например Ctrl+Alt+Del под Уиндоус, не могат да бъдат прихващани от никое приложение, включително Moonlight.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1355"/>
         <source>Use touchscreen as a virtual trackpad</source>
-        <translation type="unfinished"></translation>
+        <translation>Използване на сензорния екран като сензорен панел</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1372"/>
         <source>Swap left and right mouse buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Размяна на левия и десния бутон на мишката</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1384"/>
         <source>Reverse mouse scrolling direction</source>
-        <translation type="unfinished"></translation>
+        <translation>Обръщане на посоката на превъртане с колелцето на мишката</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1398"/>
         <source>Gamepad Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки на контролера</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1408"/>
         <source>Swap A/B and X/Y gamepad buttons</source>
-        <translation type="unfinished"></translation>
+        <translation>Размяна на бутоните A/B и X/Y на контролера</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1418"/>
         <source>This switches gamepads into a Nintendo-style button layout</source>
-        <translation type="unfinished"></translation>
+        <translation>Това разменя бутоните на контролера, така че да наподобяват разположението им при Нинтендо</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1424"/>
         <source>Force gamepad #1 always connected</source>
-        <translation type="unfinished"></translation>
+        <translation>Контролер №1 винаги да изглежда включен</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1434"/>
         <source>Forces a single gamepad to always stay connected to the host, even if no gamepads are actually connected to this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>Един контролер принудително ще изглежда, че е свързан към отдалечения компютър, дори ако на този компютър всъщност няма свързани контролери.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1272"/>
         <source>You can toggle this while streaming using Ctrl+Alt+Shift+M.</source>
-        <translation type="unfinished"></translation>
+        <translation>Можете да превключите това по всяко време чрез Ctrl+Alt+Shift+M.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1442"/>
         <source>Enable mouse control with gamepads by holding the &apos;Start&apos; button</source>
-        <translation type="unfinished"></translation>
+        <translation>Управление на курсора на мишката с контролер, чрез задържане на бутона „Start“ в натиснато положение</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1453"/>
         <source>Process gamepad input when Moonlight is in the background</source>
-        <translation type="unfinished"></translation>
+        <translation>Прихващане на командите от контролера дори когато Moonlight е на заден план</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1464"/>
         <source>Allows Moonlight to capture gamepad inputs even if it&apos;s not the current window in focus</source>
-        <translation type="unfinished"></translation>
+        <translation>Позволява на Moonlight да получава и предава команди от контролера, дори когато прозорецът не е на фокус</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="924"/>
         <source>Host Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки на отдалечения компютър</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1473"/>
         <source>Advanced Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Разширени настройки</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="841"/>
         <source>Audio configuration</source>
-        <translation type="unfinished"></translation>
+        <translation>Режим на звука</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1194"/>
         <source>Show connection quality warnings</source>
-        <translation type="unfinished"></translation>
+        <translation>Показване на предупредителни съобщения относно качеството на връзката</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1206"/>
         <source>Discord Rich Presence integration</source>
-        <translation type="unfinished"></translation>
+        <translation>Интеграция с Discord</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1216"/>
         <source>Updates your Discord status to display the name of the game you&apos;re streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Задава състоянието в Discord, така че да показва името на пуснатата игра.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1435"/>
         <source>Only enable this option when streaming a game that doesn&apos;t support gamepads being connected after startup.</source>
-        <translation type="unfinished"></translation>
+        <translation>Това е необходимо, само ако конкретна игра не поддържа включването на контролери след стартирането си.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1261"/>
         <source>Optimize mouse for remote desktop instead of games</source>
-        <translation type="unfinished"></translation>
+        <translation>Оптимизиране на мишката за работен плот, вместо за игри</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="508"/>
         <location filename="../gui/SettingsView.qml" line="618"/>
         <source>Custom (%1 FPS)</source>
-        <translation type="unfinished"></translation>
+        <translation>Персонализирано (%1 кадри/сек)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="523"/>
         <source>Enter a custom frame rate:</source>
-        <translation type="unfinished"></translation>
+        <translation>Въведете персонализирана честота на кадрите:</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="219"/>
         <location filename="../gui/SettingsView.qml" line="228"/>
         <location filename="../gui/SettingsView.qml" line="621"/>
         <source>Custom</source>
-        <translation type="unfinished"></translation>
+        <translation>Персонализирано</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="639"/>
         <source>30 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>30 кадъра/сек</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="644"/>
         <source>60 FPS</source>
-        <translation type="unfinished"></translation>
+        <translation>60 кадъра/сек</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1222"/>
         <source>Keep the display awake while streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Поддържане на екрана включен по време на излъчване</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1232"/>
         <source>Prevents the screensaver from starting or the display from going to sleep while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Предотвратява стартирането на предпазителя на екрана, както и изключването на му, докато трае поточното предаване.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1283"/>
         <source>Capture system keyboard shortcuts</source>
-        <translation type="unfinished"></translation>
+        <translation>Прихващане на системните клавишни комбинации</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1291"/>
         <source>This enables the capture of system-wide keyboard shortcuts like Alt+Tab that would normally be handled by the client OS while streaming.</source>
-        <translation type="unfinished"></translation>
+        <translation>Това позволява да се прихващат системните клавишни комбинации, като Alt+Tab, които иначе биха били хванати от клиентската операционна система.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1321"/>
         <source>in fullscreen</source>
-        <translation type="unfinished"></translation>
+        <translation>на цял екран</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1325"/>
         <source>always</source>
-        <translation type="unfinished"></translation>
+        <translation>винаги</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1365"/>
         <source>When checked, the touchscreen acts like a trackpad. When unchecked, the touchscreen will directly control the mouse pointer.</source>
-        <translation type="unfinished"></translation>
+        <translation>Ако е включено, сензорният екран ще работи като сензорен панел. Ако е изключено, сензорният екран ще управлява директно курсора на мишката.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="934"/>
         <source>Optimize game settings for streaming</source>
-        <translation type="unfinished"></translation>
+        <translation>Оптимизиране на игралните настройки за поточно предаване</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="945"/>
         <source>Quit app on host PC after ending stream</source>
-        <translation type="unfinished"></translation>
+        <translation>Затваряне на приложението на отдалечения компютър при приключване на излъчването</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="955"/>
         <source>This will close the app or game you are streaming when you end your stream. You will lose any unsaved progress!</source>
-        <translation type="unfinished"></translation>
+        <translation>Това ще затвори приложението или играта, която работи, когато прекратите излъчването. Всички незапазени данни ще бъдат загубени!</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1483"/>
         <source>Video decoder</source>
-        <translation type="unfinished"></translation>
+        <translation>Видео декодер</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1508"/>
         <location filename="../gui/SettingsView.qml" line="1561"/>
         <source>Automatic (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматично (препоръчително)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1512"/>
         <source>Force software decoding</source>
-        <translation type="unfinished"></translation>
+        <translation>Принудително софтуерно декодиране</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1516"/>
         <source>Force hardware decoding</source>
-        <translation type="unfinished"></translation>
+        <translation>Принудително хардуерно декодиране</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1531"/>
         <source>Video codec</source>
-        <translation type="unfinished"></translation>
+        <translation>Метод на кодиране на видеото</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1565"/>
         <source>H.264</source>
-        <translation type="unfinished"></translation>
+        <translation>H.264</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1569"/>
         <source>HEVC (H.265)</source>
-        <translation type="unfinished"></translation>
+        <translation>HEVC (H.265)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1573"/>
         <source>AV1 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>AV1 (експериментално)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Включване на YUV 4:4:4 (експериментално)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>
         <source>Good for streaming desktop and text-heavy games, but not recommended for fast-paced games.</source>
-        <translation type="unfinished"></translation>
+        <translation>Подходящо за работен плот и игри богати на текст, но не се препоръчва за динамични игри.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1633"/>
         <source>YUV 4:4:4 is not supported on this PC.</source>
-        <translation type="unfinished"></translation>
+        <translation>YUV 4:4:4 не се поддържа на този компютър.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1639"/>
