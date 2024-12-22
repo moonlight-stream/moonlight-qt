@@ -1168,22 +1168,22 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1639"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation type="unfinished"></translation>
+        <translation>Вдигане на ограниченията на побитовата скорост (експериментално)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1652"/>
         <source>This unlocks extremely high video bitrates for use with Sunshine hosts. It should only be used when streaming over an Ethernet LAN connection.</source>
-        <translation type="unfinished"></translation>
+        <translation>Това отключва много високите побитови скорости, които могат да се ползват със Sunshine. Препоръчително е да се ползва само когато излъчването е в локалната мрежа.</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1658"/>
         <source>Automatically find PCs on the local network (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматично откриване на компютри в локалната мрежа (препоръчително)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1679"/>
         <source>Automatically detect blocked connections (Recommended)</source>
-        <translation type="unfinished"></translation>
+        <translation>Автоматично разпознаване на блокирани връзки (препоръчително)</translation>
     </message>
 </context>
 <context>
@@ -1191,48 +1191,48 @@
     <message>
         <location filename="../gui/StreamSegue.qml" line="11"/>
         <source>Resuming %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Продължаване на %1…</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="12"/>
         <location filename="../gui/StreamSegue.qml" line="19"/>
         <source>Starting %1...</source>
-        <translation type="unfinished"></translation>
+        <translation>Стартиране на %1…</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="25"/>
         <source>Starting %1 failed: Error %2</source>
-        <translation type="unfinished"></translation>
+        <translation>Стартирането на %1 беше неуспешно: Грешка %2</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="28"/>
         <source>Check your firewall and port forwarding rules for port(s): %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Проверете защитната стена и правилата за препращане на портове за следния порт или портове: %1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="76"/>
         <source>This PC&apos;s Internet connection is blocking Moonlight. Streaming over the Internet may not work while connected to this network.</source>
-        <translation type="unfinished"></translation>
+        <translation>Връзката с Интернет на този компютър блокира Moonlight. Излъчването по Интернет може да не работи, докато компютърът е свързан към тази мрежа.</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="167"/>
         <source>Tip:</source>
-        <translation type="unfinished"></translation>
+        <translation>Съвет:</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="167"/>
         <source>Press %1 to disconnect your session</source>
-        <translation type="unfinished"></translation>
+        <translation>Натиснете %1, за да излезете от сесията</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Start+Select+L1+R1</source>
-        <translation type="unfinished"></translation>
+        <translation>Start+Select+L1+R1</translation>
     </message>
     <message>
         <location filename="../gui/StreamSegue.qml" line="168"/>
         <source>Ctrl+Alt+Shift+Q</source>
-        <translation type="unfinished"></translation>
+        <translation>Ctrl+Alt+Shift+Q</translation>
     </message>
 </context>
 <context>
@@ -1240,27 +1240,27 @@
     <message>
         <location filename="../gui/main.qml" line="415"/>
         <source>Settings</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройки</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="262"/>
         <source>Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Версия %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="278"/>
         <source>Join our community on Discord</source>
-        <translation type="unfinished"></translation>
+        <translation>Присъединете се към общността ни в Discord</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="297"/>
         <source>Add PC manually</source>
-        <translation type="unfinished"></translation>
+        <translation>Ръчно добавяне на компютър</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="337"/>
         <source>Update available for Moonlight: Version %1</source>
-        <translation type="unfinished"></translation>
+        <translation>Има нова версия на Moonlight: %1</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="384"/>
@@ -1270,12 +1270,12 @@
     <message>
         <location filename="../gui/main.qml" line="430"/>
         <source>Hardware acceleration doesn&apos;t work on XWayland. Continuing on XWayland may result in poor streaming performance. Try running with QT_QPA_PLATFORM=wayland or switch to X11.</source>
-        <translation type="unfinished"></translation>
+        <translation>Хардуерното ускорение не работи на XWayland. Ако продължите с XWayland, е възможно да имате проблеми с производителността. Опитайте да пуснете с QT_QPA_PLATFORM=wayland или превключете на X11.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="439"/>
         <source>This version of Moonlight isn&apos;t optimized for your PC. Please download the &apos;%1&apos; version of Moonlight for the best streaming performance.</source>
-        <translation type="unfinished"></translation>
+        <translation>Тази версия на Moonlight не е оптимизирана за този компютър. Моля, свалете версията на Moonlight за „%1“ за по-добра производителност на поточното предаване.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="448"/>
@@ -1285,22 +1285,22 @@
     <message>
         <location filename="../gui/main.qml" line="361"/>
         <source>Help</source>
-        <translation type="unfinished"></translation>
+        <translation>Помощ</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="422"/>
         <source>No functioning hardware accelerated video decoder was detected by Moonlight. Your streaming performance may be severely degraded in this configuration.</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight установи, че не разполагате с работещ хардуерно ускорен декодер за видеото. Производителността на поточното предаване може да бъде значително намалена в тази конфигурация.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="424"/>
         <source>Click the Help button for more information on solving this problem.</source>
-        <translation type="unfinished"></translation>
+        <translation>Натиснете бутона Помощ за повече информация как да решите този проблем.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="432"/>
         <source>Click the Help button for more information.</source>
-        <translation type="unfinished"></translation>
+        <translation>Натиснете бутона Помощ за повече информация.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="450"/>
@@ -1310,12 +1310,12 @@
     <message>
         <location filename="../gui/main.qml" line="458"/>
         <source>Are you sure you want to quit?</source>
-        <translation type="unfinished"></translation>
+        <translation>Наистина ли искате да излезете?</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="488"/>
         <source>Enter the IP address of your host PC:</source>
-        <translation type="unfinished"></translation>
+        <translation>Въведете IP адреса на отдалечения компютър:</translation>
     </message>
 </context>
 </TS>
