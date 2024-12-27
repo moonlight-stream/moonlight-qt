@@ -913,7 +913,8 @@ QString SdlInputHandler::getUnmappedGamepads()
     MappingManager mappingManager;
     mappingManager.applyMappings();
 
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+    int numJoysticks = SDL_NumJoysticks();
+    for (int i = 0; i < numJoysticks; i++) {
         if (!SDL_IsGameController(i)) {
             char guidStr[33];
             SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(i),
@@ -973,7 +974,8 @@ int SdlInputHandler::getAttachedGamepadMask()
     }
 
     count = mask = 0;
-    for (int i = 0; i < SDL_NumJoysticks(); i++) {
+    int numJoysticks = SDL_NumJoysticks();
+    for (int i = 0; i < numJoysticks; i++) {
         if (SDL_IsGameController(i)) {
             char guidStr[33];
             SDL_JoystickGetGUIDString(SDL_JoystickGetDeviceGUID(i),
