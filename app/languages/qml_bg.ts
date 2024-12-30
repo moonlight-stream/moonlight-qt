@@ -197,7 +197,7 @@
     <message>
         <location filename="../gui/GamepadMapper.qml" line="4"/>
         <source>Gamepad Mapping</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройка на контролера</translation>
     </message>
 </context>
 <context>
@@ -640,7 +640,7 @@
     <message>
         <location filename="../streaming/session.cpp" line="1148"/>
         <source>An attached gamepad has no mapping and won&apos;t be usable. Visit the Moonlight help to resolve this.</source>
-        <translation type="unfinished"></translation>
+        <translation>Включеният контролер няма настройка на бутоните и няма да може да се ползва. Прегледайте помощта на Moonlight, за да разрешите този проблем.</translation>
     </message>
     <message>
         <location filename="../streaming/session.cpp" line="1166"/>
@@ -1265,7 +1265,7 @@
     <message>
         <location filename="../gui/main.qml" line="384"/>
         <source>Gamepad Mapper</source>
-        <translation type="unfinished"></translation>
+        <translation>Настройка на бутоните на контролера</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="430"/>
@@ -1280,7 +1280,7 @@
     <message>
         <location filename="../gui/main.qml" line="448"/>
         <source>Moonlight detected gamepads without a mapping:</source>
-        <translation type="unfinished"></translation>
+        <translation>Moonlight засече контролери без настройка на бутоните:</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="361"/>
@@ -1305,7 +1305,7 @@
     <message>
         <location filename="../gui/main.qml" line="450"/>
         <source>Click the Help button for information on how to map your gamepads.</source>
-        <translation type="unfinished"></translation>
+        <translation>Натиснете бутона за Помощ, за да разберете как да настроите контролерите си.</translation>
     </message>
     <message>
         <location filename="../gui/main.qml" line="458"/>
