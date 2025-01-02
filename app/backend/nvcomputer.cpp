@@ -49,7 +49,7 @@ NvComputer::NvComputer(QSettings& settings)
         this->appList.append(app);
     }
     settings.endArray();
-    sortAppList();
+    // sortAppList();
 
     this->currentGameId = 0;
     this->pairState = PS_UNKNOWN;

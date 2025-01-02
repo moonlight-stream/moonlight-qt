@@ -1,6 +1,7 @@
 #include "nvcomputer.h"
 #include <Limelight.h>
 
+#include <QHostInfo>
 #include <QDebug>
 #include <QUuid>
 #include <QtNetwork/QNetworkReply>
@@ -206,6 +207,7 @@ NvHTTP::startApp(QString verb,
             openConnectionToString(m_BaseUrlHttps,
                                    verb,
                                    "appid="+QString::number(appId)+
+                                   "&clientname="+QHostInfo::localHostName().toUtf8()+
                                    "&mode="+QString::number(streamConfig->width)+"x"+
                                    QString::number(streamConfig->height)+"x"+
                                    // Using an FPS value over 60 causes SOPS to default to 720p60,
