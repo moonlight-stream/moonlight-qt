@@ -899,7 +899,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1588"/>
         <source>Enable HDR (Experimental)</source>
-        <translation>Включить HDR (Эксперементальная опция)</translation>
+        <translation>Включить HDR (Экспериментальная опция)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1603"/>
@@ -1153,7 +1153,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1611"/>
         <source>Enable YUV 4:4:4 (Experimental)</source>
-        <translation>Включить YUV 4:4:4 (Эксперементальна опция)</translation>
+        <translation>Включить YUV 4:4:4 (Экспериментальная опция)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1631"/>
@@ -1168,7 +1168,7 @@
     <message>
         <location filename="../gui/SettingsView.qml" line="1639"/>
         <source>Unlock bitrate limit (Experimental)</source>
-        <translation>Разблокировка ограничения битрейта (Эксперементальная опция)</translation>
+        <translation>Разблокировка ограничения битрейта (Экспериментальная опция)</translation>
     </message>
     <message>
         <location filename="../gui/SettingsView.qml" line="1652"/>
