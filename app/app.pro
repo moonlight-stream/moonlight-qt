@@ -214,6 +214,7 @@ SOURCES += \
     wm.cpp
 
 HEADERS += \
+    SDL_compat.h \
     backend/nvaddress.h \
     backend/nvapp.h \
     cli/pair.h \

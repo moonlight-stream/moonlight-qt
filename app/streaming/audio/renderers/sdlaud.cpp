@@ -1,7 +1,6 @@
 #include "sdl.h"
 
 #include <Limelight.h>
-#include <SDL.h>
 
 SdlAudioRenderer::SdlAudioRenderer()
     : m_AudioDevice(0),

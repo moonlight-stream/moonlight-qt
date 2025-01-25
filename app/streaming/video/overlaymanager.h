@@ -2,7 +2,7 @@
 
 #include <QString>
 
-#include <SDL.h>
+#include "SDL_compat.h"
 #include <SDL_ttf.h>
 
 namespace Overlay {

@@ -1,6 +1,6 @@
 #include "soundioaudiorenderer.h"
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #include <QtGlobal>
 

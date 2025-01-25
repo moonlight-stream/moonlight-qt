@@ -3,7 +3,7 @@
 
 #include <QDir>
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #define SER_GAMEPADMAPPING "gcmapping"
 

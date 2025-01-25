@@ -4,7 +4,7 @@
 #include "backend/richpresencemanager.h"
 
 #include <Limelight.h>
-#include <SDL.h>
+#include "SDL_compat.h"
 #include "utils.h"
 
 #ifdef HAVE_FFMPEG

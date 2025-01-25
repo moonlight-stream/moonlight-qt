@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 #include "streaming/video/decoder.h"
 #include "streaming/video/overlaymanager.h"

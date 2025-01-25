@@ -647,14 +647,12 @@ bool EGLRenderer::initialize(PDECODER_PARAMETERS params)
     // Detach the context from this thread, so the render thread can attach it
     SDL_GL_MakeCurrent(m_Window, nullptr);
 
-#ifdef SDL_HINT_VIDEO_X11_FORCE_EGL
     if (err == GL_NO_ERROR) {
         // If we got a working GL implementation via EGL, avoid using GLX from now on.
         // GLX will cause problems if we later want to use EGL again on this window.
         SDL_LogInfo(SDL_LOG_CATEGORY_APPLICATION, "EGL passed preflight checks. Using EGL for GL context creation.");
         SDL_SetHint(SDL_HINT_VIDEO_X11_FORCE_EGL, "1");
     }
-#endif
 
     return err == GL_NO_ERROR;
 }

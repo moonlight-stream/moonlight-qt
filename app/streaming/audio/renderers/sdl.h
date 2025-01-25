@@ -1,7 +1,7 @@
 #pragma once
 
 #include "renderer.h"
-#include <SDL.h>
+#include "SDL_compat.h"
 
 class SdlAudioRenderer : public IAudioRenderer
 {

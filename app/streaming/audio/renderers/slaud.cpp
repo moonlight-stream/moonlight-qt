@@ -1,6 +1,6 @@
 #include "slaud.h"
 
-#include <SDL.h>
+#include "SDL_compat.h"
 
 SLAudioRenderer::SLAudioRenderer()
     : m_AudioContext(nullptr),
